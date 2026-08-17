@@ -566,7 +566,7 @@ test('AC-8.1.5 — appending into a shipped Pattern triggers the naming prompt f
   await page.locator('[data-action="append-pattern"]').click();
   await page.locator('.dialog-button').first().click();
 
-  await expect(page.locator('.dialog-message')).toContainText('ships with the app');
+  await expect(page.locator('.dialog-message')).toContainText('built-in pattern');
   await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(0);
 });
@@ -631,7 +631,7 @@ test('AC-10.1.6 — duplicating a shipped Pattern triggers the naming prompt fir
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
 
   await page.locator('[data-action="duplicate-pattern"]').click();
-  await expect(page.locator('.dialog-message')).toContainText('ships with the app');
+  await expect(page.locator('.dialog-message')).toContainText('built-in pattern');
   await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(0);
 });

@@ -8,22 +8,37 @@
 import { automaticTags } from '../core/pattern.js';
 
 /** Automatic Tags render as outlined chips with no removal control (D-007). */
-export const AUTOMATIC_TAGS = ['custom', 'swing', 'percussive', 'melodic'];
+export const AUTOMATIC_TAGS = ['built-in', 'custom', 'swing', 'percussive', 'melodic'];
 
 /**
- * Every Pattern with its provenance and derived Tags attached for display.
- * Derived on read, never persisted (data-model §4).
+ * Every Pattern with its provenance and Tags shaped for display.
+ *
+ * Three kinds of Tag, and the difference is who may remove them:
+ *   autoTags   — derived from the Pattern (built-in, custom, swing, sound mode).
+ *                Computed on read, never persisted (data-model §4). Not removable.
+ *   lockedTags — a built-in Pattern's own Tags. They describe what it is, and
+ *                are not the musician's to delete.
+ *   userTags   — Tags the musician added. Removable, on any Pattern.
+ *
+ * @param {Function} [addedTagsFor] looks up Tags added to a built-in Pattern
  */
-export function buildEntries(shipped, owned) {
-  const entries = [
-    ...shipped.map((p) => ({ pattern: p, owned: false })),
-    ...owned.map((p) => ({ pattern: p, owned: true })),
+export function buildEntries(shipped, owned, addedTagsFor = () => []) {
+  return [
+    ...shipped.map((p) => ({
+      pattern: p,
+      owned: false,
+      autoTags: automaticTags(p, false),
+      lockedTags: p.tags ?? [],
+      userTags: addedTagsFor(p.id),
+    })),
+    ...owned.map((p) => ({
+      pattern: p,
+      owned: true,
+      autoTags: automaticTags(p, true),
+      lockedTags: [],
+      userTags: p.tags ?? [],
+    })),
   ];
-  return entries.map((e) => ({
-    ...e,
-    autoTags: automaticTags(e.pattern, e.owned),
-    userTags: e.pattern.tags ?? [],
-  }));
 }
 
 /** Alphabetical by name, then by rating (highest first) within a name. */
@@ -39,14 +54,15 @@ export function sortEntries(entries) {
 export function filterEntries(entries, { query = '', tag = null, minRating = 0 } = {}) {
   const q = query.trim().toLowerCase();
   return entries.filter((e) => {
-    if (tag && ![...e.autoTags, ...e.userTags].some((t) => String(t).toLowerCase() === tag.toLowerCase())) {
+    const allTagsOn = [...e.autoTags, ...e.lockedTags, ...e.userTags];
+    if (tag && !allTagsOn.some((t) => String(t).toLowerCase() === tag.toLowerCase())) {
       return false;
     }
     // Rating narrows whatever the Tag and query filters already produced,
     // rather than replacing them (AC-6.1.6).
     if (minRating > 0 && (e.pattern.rating ?? 0) < minRating) return false;
     if (!q) return true;
-    const haystack = [e.pattern.name, ...e.autoTags, ...e.userTags].join(' ').toLowerCase();
+    const haystack = [e.pattern.name, ...allTagsOn].join(' ').toLowerCase();
     return haystack.includes(q);
   });
 }
@@ -57,6 +73,7 @@ export function allTags(entries) {
   const user = new Set();
   for (const e of entries) {
     for (const t of e.autoTags) auto.add(t);
+    for (const t of e.lockedTags) user.add(String(t));
     for (const t of e.userTags) user.add(String(t));
   }
   return [
@@ -140,7 +157,7 @@ export function renderLibrary(root, entries, viewState, handlers) {
 }
 
 function renderEntry(entry, viewState, handlers) {
-  const { pattern, owned, autoTags, userTags } = entry;
+  const { pattern, owned, autoTags, lockedTags, userTags } = entry;
 
   const item = el('li', 'pattern-item');
   item.dataset.patternId = pattern.id;
@@ -155,23 +172,41 @@ function renderEntry(entry, viewState, handlers) {
   item.appendChild(renderStars(pattern, handlers));
 
   const tags = el('div', 'pattern-tags');
-  // Automatic Tags: outlined, no removal control — you cannot delete them, and
-  // the absent "×" says so without a glyph to interpret (AC-5.3.5).
+
+  // Automatic and built-in Tags: outlined, no removal control. The absent "×"
+  // is what says "not yours to delete" — no glyph to interpret (AC-5.3.5).
   for (const t of autoTags) {
     const chip = el('span', 'tag-chip automatic', { textContent: t });
     chip.dataset.automatic = 'true';
     tags.appendChild(chip);
   }
+  for (const t of lockedTags) {
+    const chip = el('span', 'tag-chip automatic locked', { textContent: t });
+    chip.dataset.automatic = 'true';
+    chip.dataset.locked = 'true';
+    tags.appendChild(chip);
+  }
+
+  // The musician's own Tags: filled, with a "×".
   for (const t of userTags) {
     const chip = el('span', 'tag-chip user', { textContent: t });
     chip.dataset.automatic = 'false';
     const remove = el('button', 'tag-remove', { type: 'button', textContent: '×' });
     remove.dataset.action = 'remove-tag';
     remove.dataset.tag = t;
+    remove.setAttribute('title', `Remove tag "${t}"`);
     remove.addEventListener('click', () => handlers.onRemoveTag(pattern.id, t));
     chip.appendChild(remove);
     tags.appendChild(chip);
   }
+
+  // Adding a Tag works on any Pattern, built-in included.
+  const add = el('button', 'tag-add', { type: 'button', textContent: '+ tag' });
+  add.dataset.action = 'add-tag';
+  add.setAttribute('title', 'Add a tag');
+  add.addEventListener('click', () => handlers.onAddTagPrompt(pattern.id));
+  tags.appendChild(add);
+
   item.appendChild(tags);
 
   return item;

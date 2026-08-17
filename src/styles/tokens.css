@@ -430,3 +430,10 @@ body {
 .dialog-error { margin: 0 0 12px; font: 500 12px/1.4 system-ui, sans-serif; color: #ff8f6b; }
 /* A long picker scrolls inside the dialog rather than truncating its options. */
 .dialog-actions { max-height: 60vh; overflow-y: auto; }
+
+.tag-add {
+  padding: 3px 8px; border-radius: 999px;
+  font: 500 11px/1.4 system-ui, sans-serif;
+  color: var(--brand); background: transparent;
+  border: 1px dashed var(--brand); cursor: pointer;
+}

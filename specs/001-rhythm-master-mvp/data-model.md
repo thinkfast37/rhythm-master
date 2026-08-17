@@ -164,7 +164,7 @@ never does either (*N* not > 2).
 | Derived value | Computed from | Spec |
 |---|---|---|
 | Default Accent Level | Slot's metric position | FR-003 |
-| Automatic Tag `custom` | Pattern is user-owned | US-5.3 |
+| Automatic Tag `built-in` / `custom` | which store the Pattern came from | US-5.3 |
 | Automatic Tag `swing` | any Subdivision Group has swing ≠ 0 | US-5.3 |
 | Automatic Tag `percussive` / `melodic` | `soundMode` | US-5.3 |
 | Beat note value | Time Signature denominator | FR-002 |
@@ -232,10 +232,14 @@ cannot live on the Pattern, so they live here, keyed by Pattern id:
 {
   "schemaVersion": 1,
   "byPatternId": {
-    "s_12": { "rating": 4, "tags": ["warmup"] }
+    "s_12": { "rating": 4, "addedTags": ["warmup"] }
   }
 }
 ```
+
+`addedTags` sits **alongside** the Pattern's own tags rather than replacing them. A built-in
+Pattern's own tags describe what it is and are not the musician's to remove; the ones they
+add are theirs, and are.
 
 This is deliberately **not** Local Metadata. Local Metadata is app-local bookkeeping *about*
 a Pattern and is barred from every export (FR-006). A rating is the musician's own content —

@@ -119,7 +119,8 @@ export function askNewPatternName(suggestion, validate = null) {
 
     const text = document.createElement('p');
     text.className = 'dialog-message';
-    text.textContent = 'This Pattern ships with the app. Name your own copy to start editing.';
+    text.textContent =
+      'This is a built-in pattern. Give your version a name to start editing it.';
     box.appendChild(text);
 
     const input = document.createElement('input');
@@ -179,5 +180,65 @@ export function askNewPatternName(suggestion, validate = null) {
     backdrop.appendChild(box);
     root.appendChild(backdrop);
     input.select();
+  });
+}
+
+/**
+ * A single free-text prompt. Resolves to the trimmed text, or null if cancelled.
+ * Used for adding a Tag, where a full naming dialog would be overkill.
+ */
+export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
+  const root = ensureHost();
+  return new Promise((resolve) => {
+    root.innerHTML = '';
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    const box = document.createElement('div');
+    box.className = 'dialog';
+    box.setAttribute('role', 'dialog');
+
+    const text = document.createElement('p');
+    text.className = 'dialog-message';
+    text.textContent = message;
+    box.appendChild(text);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'dialog-input';
+    input.placeholder = placeholder;
+    box.appendChild(input);
+
+    const finish = (value) => {
+      root.innerHTML = '';
+      resolve(value);
+    };
+
+    const row = document.createElement('div');
+    row.className = 'dialog-actions';
+
+    const ok = document.createElement('button');
+    ok.type = 'button';
+    ok.className = 'dialog-button primary';
+    ok.textContent = confirmLabel;
+    ok.addEventListener('click', () => finish(input.value.trim() || null));
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'dialog-button';
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', () => finish(null));
+
+    // Enter commits, so adding several tags in a row does not need the mouse.
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') finish(input.value.trim() || null);
+      if (e.key === 'Escape') finish(null);
+    });
+
+    row.append(ok, cancel);
+    box.appendChild(row);
+    backdrop.appendChild(box);
+    root.appendChild(backdrop);
+    input.focus();
   });
 }

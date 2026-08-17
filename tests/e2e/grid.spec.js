@@ -171,7 +171,7 @@ test('AC-7.3.1 — editing a shipped Pattern asks for a name before the edit app
   expect(owned).toBe(false);
 
   await page.locator('.slot').first().click();
-  await expect(page.locator('.dialog-message')).toContainText('ships with the app');
+  await expect(page.locator('.dialog-message')).toContainText('built-in pattern');
 
   await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
   // Cancelling discards the edit entirely.

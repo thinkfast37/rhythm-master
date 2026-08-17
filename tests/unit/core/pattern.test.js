@@ -224,11 +224,12 @@ describe('core/pattern — whole-Pattern operations', () => {
 });
 
 describe('core/pattern — derived Tags', () => {
-  it('AC-5.3.1 — Sound Mode and ownership produce automatic Tags', () => {
+  it('AC-5.3.1 — Sound Mode and provenance produce automatic Tags', () => {
     const p = create();
-    expect(automaticTags(p, false)).toEqual(['percussive']);
-    expect(automaticTags(p, true)).toEqual(expect.arrayContaining(['percussive', 'custom']));
-    expect(automaticTags({ ...p, soundMode: 'melodic' }, false)).toEqual(['melodic']);
+    // Provenance reads as a Tag rather than as prose about the software.
+    expect(automaticTags(p, false)).toEqual(['built-in', 'percussive']);
+    expect(automaticTags(p, true)).toEqual(['custom', 'percussive']);
+    expect(automaticTags({ ...p, soundMode: 'melodic' }, false)).toEqual(['built-in', 'melodic']);
   });
 
   it('AC-5.3.2 — the swing Tag is derived from actual swing, not stored', () => {

@@ -75,10 +75,10 @@ export function renderHeader(root, pattern, state, handlers = {}) {
     undoButton.addEventListener('click', () => handlers.onUndo());
     root.appendChild(undoButton);
   }
+  // Provenance reads as a Tag in the library, not as a sentence here.
   root.appendChild(
     el('p', 'pattern-meta', {
       textContent:
-        `${state.isOwned ? 'Yours' : 'Ships with the app'} · ` +
         `${pattern.measures.length} measure${pattern.measures.length === 1 ? '' : 's'} · ` +
         `${pattern.measures.map((m) => m.timeSignature).join(', ')}`,
     })

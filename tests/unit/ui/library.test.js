@@ -46,11 +46,26 @@ describe('ui/library', () => {
     expect(entries.find((e) => e.pattern.name === 'Mine').owned).toBe(true);
   });
 
-  it('AC-5.3.1 — automatic Tags are derived, and owned Patterns carry "custom"', () => {
+  it('AC-5.3.1 — automatic Tags mark provenance: built-in versus custom', () => {
     const entries = buildEntries([p('Shipped')], [p('Mine')]);
-    expect(entries[0].autoTags).toEqual(['percussive']);
-    expect(entries[1].autoTags).toEqual(expect.arrayContaining(['percussive', 'custom']));
+    expect(entries[0].autoTags).toEqual(['built-in', 'percussive']);
+    expect(entries[1].autoTags).toEqual(['custom', 'percussive']);
     expect(entries[1].pattern.tags).toEqual([]);
+  });
+
+  it('AC-5.3.2 — a built-in Pattern’s own Tags are locked; Tags you add to it are not', () => {
+    const shipped = { ...p('Bossa'), tags: ['Latin'] };
+    const entries = buildEntries([shipped], [], (id) => (id === 'bossa' ? ['warmup'] : []));
+
+    expect(entries[0].lockedTags).toEqual(['Latin']);
+    expect(entries[0].userTags).toEqual(['warmup']);
+  });
+
+  it('AC-5.3.2 — every Tag on a Pattern you own is yours to remove', () => {
+    const mine = { ...p('Mine'), tags: ['groove'] };
+    const entries = buildEntries([], [mine]);
+    expect(entries[0].lockedTags).toEqual([]);
+    expect(entries[0].userTags).toEqual(['groove']);
   });
 
   it('AC-5.2.1 — search matches Pattern names, case-insensitively', () => {
@@ -85,17 +100,24 @@ describe('ui/library', () => {
     expect(filterEntries(entries, { tag: 'warmup' })).toHaveLength(1);
   });
 
-  it('AC-5.3.6 — automatic Tags are listed before user Tags', () => {
+  it('AC-5.3.6 — automatic Tags are listed before the rest', () => {
     const entries = buildEntries([{ ...p('A'), tags: ['zebra', 'apple'] }], []);
     const tags = allTags(entries);
-    expect(tags[0]).toEqual({ name: 'percussive', automatic: true });
-    expect(tags.slice(1).map((t) => t.name)).toEqual(['apple', 'zebra']);
-    expect(tags.slice(1).every((t) => t.automatic === false)).toBe(true);
+    expect(tags.filter((t) => t.automatic).map((t) => t.name)).toEqual(['built-in', 'percussive']);
+    expect(tags.filter((t) => !t.automatic).map((t) => t.name)).toEqual(['apple', 'zebra']);
+  });
+
+  it('AC-5.3.6 — a built-in Pattern’s own Tags are filterable like any other', () => {
+    const entries = buildEntries([{ ...p('A'), tags: ['Latin'] }], []);
+    expect(filterEntries(entries, { tag: 'latin' })).toHaveLength(1);
+    expect(filterEntries(entries, { tag: 'built-in' })).toHaveLength(1);
+    expect(filterEntries(entries, { query: 'latin' })).toHaveLength(1);
   });
 
   it('AC-5.3.7 — only Tags actually in use are listed', () => {
     const tags = allTags(buildEntries([p('A')], [])).map((t) => t.name);
     expect(tags).toContain('percussive');
+    expect(tags).toContain('built-in');
     expect(tags).not.toContain('melodic');
     expect(tags).not.toContain('custom');
   });

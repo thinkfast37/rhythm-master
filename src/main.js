@@ -50,6 +50,7 @@ import { findDuplicates, findFamily, isDuplicate } from './core/similarity.js';
 import * as localMetaStore from './storage/localMeta.js';
 import {
   ask,
+  askForText,
   confirm,
   confirmRecipeChange,
   askApplyToAllMeasures,
@@ -189,7 +190,11 @@ export function loadPattern(pattern, { owned }) {
  * applied, plus owned Patterns as they are.
  */
 function libraryEntries() {
-  return buildEntries(seedStore.loadAll().map(overlayStore.applyTo), patternStore.loadAll());
+  return buildEntries(
+    seedStore.loadAll().map(overlayStore.applyTo),
+    patternStore.loadAll(),
+    overlayStore.addedTagsFor
+  );
 }
 
 export function setTransportPosition(position) {
@@ -409,33 +414,76 @@ const handlers = {
   onRate(id, rating) {
     const owned = patternStore.findById(id);
     if (owned) patternStore.upsert({ ...owned, rating });
-    else overlayStore.update(id, { rating });
+    else overlayStore.setRating(id, rating);
 
     if (state.pattern.id === id) state.pattern = { ...state.pattern, rating };
     render();
   },
 
+  /**
+   * Adding a Tag works on any Pattern, built-in included. On a built-in one it
+   * goes to the overlay store, alongside — not replacing — the Pattern's own
+   * Tags.
+   */
   onAddTag(id, tag) {
     const name = String(tag).trim();
     if (!name) return;
+
     const owned = patternStore.findById(id);
-    const existing = owned ? (owned.tags ?? []) : (overlayStore.applyTo(seedStore.findById(id)).tags ?? []);
-    // De-duplicate case-insensitively, keeping the spelling already stored.
-    if (existing.some((t) => String(t).toLowerCase() === name.toLowerCase())) return;
-    const tags = [...existing, name];
-    if (owned) patternStore.upsert({ ...owned, tags });
-    else overlayStore.update(id, { tags });
-    if (state.pattern.id === id) state.pattern = { ...state.pattern, tags };
+    const existing = owned ? (owned.tags ?? []) : overlayStore.addedTagsFor(id);
+    const builtIn = owned ? [] : (seedStore.findById(id)?.tags ?? []);
+
+    // De-duplicate case-insensitively against both kinds: re-adding a Tag the
+    // Pattern already carries should be a no-op, not a second copy.
+    const taken = [...existing, ...builtIn].some(
+      (t) => String(t).toLowerCase() === name.toLowerCase()
+    );
+    if (taken) return;
+
+    const next = [...existing, name];
+    if (owned) patternStore.upsert({ ...owned, tags: next });
+    else overlayStore.setAddedTags(id, next);
+
+    if (state.pattern.id === id && owned) state.pattern = { ...state.pattern, tags: next };
     render();
   },
 
+  async onAddTagPrompt(id) {
+    const name = await askForText({
+      message: 'Add a tag',
+      placeholder: 'e.g. warmup',
+      confirmLabel: 'Add',
+    });
+    if (name) handlers.onAddTag(id, name);
+  },
+
+  /**
+   * Only the musician's own Tags can be removed. A built-in Pattern's own Tags
+   * describe what it is and are not theirs to delete — the UI gives them no
+   * removal control, and this refuses even if something calls it directly.
+   */
   onRemoveTag(id, tag) {
     const owned = patternStore.findById(id);
-    const source = owned ?? overlayStore.applyTo(seedStore.findById(id));
-    const tags = (source.tags ?? []).filter((t) => String(t).toLowerCase() !== String(tag).toLowerCase());
-    if (owned) patternStore.upsert({ ...owned, tags });
-    else overlayStore.update(id, { tags });
-    if (state.pattern.id === id) state.pattern = { ...state.pattern, tags };
+
+    if (owned) {
+      const tags = (owned.tags ?? []).filter(
+        (t) => String(t).toLowerCase() !== String(tag).toLowerCase()
+      );
+      patternStore.upsert({ ...owned, tags });
+      if (state.pattern.id === id) state.pattern = { ...state.pattern, tags };
+      render();
+      return;
+    }
+
+    const builtIn = seedStore.findById(id)?.tags ?? [];
+    if (builtIn.some((t) => String(t).toLowerCase() === String(tag).toLowerCase())) return;
+
+    overlayStore.setAddedTags(
+      id,
+      overlayStore.addedTagsFor(id).filter(
+        (t) => String(t).toLowerCase() !== String(tag).toLowerCase()
+      )
+    );
     render();
   },
 
@@ -444,19 +492,16 @@ const handlers = {
   /**
    * An explicit copy under a new name. This is the second of the two moments a
    * duplicate warning may fire — the other is the forced-naming prompt on a
-   * shipped Pattern. Duplicates that emerge from ongoing edits surface only in
+   * built-in Pattern. Duplicates that emerge from ongoing edits surface only in
    * the standing view, because auto-save has no discrete moment to interrupt.
    */
   async onMakeCopy() {
-    // Make Copy applies only to a Pattern you already own. Editing a shipped
+    // Make Copy applies only to a Pattern you already own. Editing a built-in
     // one goes through the forced-naming flow instead (AC-7.4.6).
     if (!state.isOwned) return null;
 
-    const name = await askNewPatternName(
-      `${state.pattern.name} copy`,
-      uniqueNameValidator()
-    );
-    if (name === null) return;
+    const name = await askNewPatternName(`${state.pattern.name} copy`, uniqueNameValidator());
+    if (name === null) return null;
 
     const copy = { ...structuredClone(state.pattern), id: patternStore.nextId(), name, rating: 0 };
 
@@ -466,15 +511,16 @@ const handlers = {
         `This is note-for-note identical to "${clash[0].name}". Make the copy anyway?`,
         { confirmLabel: 'Make Copy', cancelLabel: 'Cancel' }
       );
-      if (!proceed) return;
+      if (!proceed) return null;
     }
 
     patternStore.upsert(copy);
     loadPattern(copy, { owned: true });
+    return copy;
   },
 
   async onDelete() {
-    if (!state.isOwned) return; // shipped Patterns are never deletable
+    if (!state.isOwned) return; // built-in Patterns are never deletable
     const proceed = await confirm(`Delete "${state.pattern.name}" permanently?`, {
       confirmLabel: 'Delete',
     });
@@ -759,7 +805,7 @@ async function promptLibraryDuplicates() {
   for (const { owned, shipped } of unresolvedLibraryDuplicates()) {
     const choice = await ask({
       message:
-        `"${owned.name}" is now identical to "${shipped.name}", which ships with the app. ` +
+        `"${owned.name}" is now identical to the built-in pattern "${shipped.name}". ` +
         'Remove your copy, or keep it?',
       options: [
         { label: 'Remove mine', value: 'remove' },

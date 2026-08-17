@@ -824,6 +824,8 @@ exist).
   - **When** the user looks for a way to remove the `swing` Tag directly
   - **Then** no removal control is available for it — no "×" affordance appears on it at any point
   - **And** it renders as an outlined chip, while a user-typed Tag like "warmup" on the same Pattern renders as a filled chip carrying a "×" — so the two are told apart by chip treatment rather than by colour alone
+  - **And** a built-in Pattern's own Tags (such as "Latin") render the same locked way: they describe what the Pattern is and are not the musician's to delete, though Tags they add to that same Pattern are theirs to remove
+  - **And** provenance is itself an automatic Tag — `built-in` or `custom` — rather than prose about the software, so where a Pattern came from filters and reads like any other Tag
 
 - **AC-5.3.6** — User Tag de-duplication is case-insensitive
   - **Given** a Pattern already tagged "Warmup"

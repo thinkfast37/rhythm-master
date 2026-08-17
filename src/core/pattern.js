@@ -22,8 +22,15 @@ export const MAX_TEMPO = 220;
 export const DEFAULT_TEMPO = 80;
 export const DEFAULT_TIME_SIGNATURE = '4/4';
 
-/** Tags the app derives rather than stores (data-model §4). */
-export const AUTOMATIC_TAGS = ['custom', 'swing', 'percussive', 'melodic'];
+/**
+ * Tags the app derives rather than stores (data-model §4).
+ *
+ * `built-in` and `custom` are how the app says where a Pattern came from. They
+ * replace prose like "ships with the app" — provenance is a property of the
+ * Pattern, so it reads as a Tag alongside the others rather than as a sentence
+ * about the software.
+ */
+export const AUTOMATIC_TAGS = ['built-in', 'custom', 'swing', 'percussive', 'melodic'];
 
 const clone = (v) => structuredClone(v);
 
@@ -204,8 +211,7 @@ export function duplicate(pattern) {
  * @param {boolean} isOwned  whether the Pattern came from the user's own store
  */
 export function automaticTags(pattern, isOwned) {
-  const tags = [pattern.soundMode];
-  if (isOwned) tags.push('custom');
+  const tags = [isOwned ? 'custom' : 'built-in', pattern.soundMode];
   const swung = pattern.measures.some((m) =>
     m.beats.some((b) => Object.values(b.swing ?? {}).some((s) => s > 0))
   );
