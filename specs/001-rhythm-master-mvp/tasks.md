@@ -59,32 +59,32 @@ Nothing in this phase renders anything.
 
 ### The pure core
 
-- [ ] T012 [P] Implement `src/core/meter.js` — `beatCount`, `beatNoteValue`, `isSupported`, `beatDurationSeconds` over the closed Time Signature set, per contracts/core-api.md
-- [ ] T013 [P] Implement `src/core/recipes.js` — the closed Recipe catalogue, `recipesFor`, `slotCount`, `subdivisionGroups`, `isMixedFeel`, `defaultRecipeFor`, resolving Slot count from `(recipe, beatNoteValue)` so `straight-16ths` yields 4 on a quarter Beat and 2 on an eighth
-- [ ] T014 [P] Implement `src/core/accents.js` — `metricLevel`, `defaultAccent`, `effectiveAccent`, computing defaults from position and never storing them (FR-003)
-- [ ] T015 [P] Implement `src/core/pitch.js` — `resolve(pitch, key)` returning `{midiNote, frequency}`, and `isSupportedKey` over the 12 keys
-- [ ] T016 [P] Implement `src/core/swing.js` — `swungOffsets(groupSlotCount, swing, slotDuration)`, straight groups only
-- [ ] T017 Implement `src/core/pattern.js` — construction and immutable mutators (`create`, `addMeasure`, `removeMeasure`, `setTimeSignature`, `setTimeSignatureAll`, `setRecipe`, `cycleAccent`, `setPitch`, `append`, `duplicate`, `countActiveSlots`, `validate`), every mutator returning a new Pattern
-- [ ] T018 Implement `src/core/timeline.js` — `buildTimeline(pattern)` composing meter, Recipe, accent, swing and pitch into one ordered absolute-time event list, plus `loopDurationSeconds`
+- [X] T012 [P] Implement `src/core/meter.js` — `beatCount`, `beatNoteValue`, `isSupported`, `beatDurationSeconds` over the closed Time Signature set, per contracts/core-api.md
+- [X] T013 [P] Implement `src/core/recipes.js` — the closed Recipe catalogue, `recipesFor`, `slotCount`, `subdivisionGroups`, `isMixedFeel`, `defaultRecipeFor`, resolving Slot count from `(recipe, beatNoteValue)` so `straight-16ths` yields 4 on a quarter Beat and 2 on an eighth
+- [X] T014 [P] Implement `src/core/accents.js` — `metricLevel`, `defaultAccent`, `effectiveAccent`, computing defaults from position and never storing them (FR-003)
+- [X] T015 [P] Implement `src/core/pitch.js` — `resolve(pitch, key)` returning `{midiNote, frequency}`, and `isSupportedKey` over the 12 keys
+- [X] T016 [P] Implement `src/core/swing.js` — `swungOffsets(groupSlotCount, swing, slotDuration)`, straight groups only
+- [X] T017 Implement `src/core/pattern.js` — construction and immutable mutators (`create`, `addMeasure`, `removeMeasure`, `setTimeSignature`, `setTimeSignatureAll`, `setRecipe`, `cycleAccent`, `setPitch`, `append`, `duplicate`, `countActiveSlots`, `validate`), every mutator returning a new Pattern
+- [X] T018 Implement `src/core/timeline.js` — `buildTimeline(pattern)` composing meter, Recipe, accent, swing and pitch into one ordered absolute-time event list, plus `loopDurationSeconds`
 
 ### Core tests
 
-- [ ] T019 [P] Unit tests for meter in `tests/unit/core/meter.test.js` — every supported Time Signature, asserting beat count equals numerator with no implied grouping (AC-1.2.1–AC-1.2.4)
-- [ ] T020 [P] Unit tests for recipes in `tests/unit/core/recipes.test.js` — both menus, Slot counts and Subdivision Groups for every Recipe on both Beat note values (AC-1.3.1, AC-1.3.2, AC-1.3.4, AC-1.3.5)
-- [ ] T021 [P] Unit tests for accents in `tests/unit/core/accents.test.js` — the full Beat-level and Slot-level tables, including that 3-Slot, 5-Slot and 2-Slot Recipes never produce Medium (AC-3.1.1–AC-3.1.15)
-- [ ] T022 [P] Unit tests for pitch in `tests/unit/core/pitch.test.js` — every degree across the full octave range in all 12 keys
-- [ ] T023 [P] Unit tests for swing in `tests/unit/core/swing.test.js` — boundary values 0 and 100 on 2-Slot and 4-Slot groups
-- [ ] T024 [P] Unit tests for pattern mutators in `tests/unit/core/pattern.test.js` — including that no mutator mutates its argument, and validation rules from data-model §7
-- [ ] T025 [P] Unit tests for timeline in `tests/unit/core/timeline.test.js` — event ordering and absolute times across a mixed-meter, mixed-Recipe Pattern
+- [X] T019 [P] Unit tests for meter in `tests/unit/core/meter.test.js` — every supported Time Signature, asserting beat count equals numerator with no implied grouping (AC-1.2.1–AC-1.2.4)
+- [X] T020 [P] Unit tests for recipes in `tests/unit/core/recipes.test.js` — both menus, Slot counts and Subdivision Groups for every Recipe on both Beat note values (AC-1.3.1, AC-1.3.2, AC-1.3.4, AC-1.3.5)
+- [X] T021 [P] Unit tests for accents in `tests/unit/core/accents.test.js` — the full Beat-level and Slot-level tables, including that 3-Slot, 5-Slot and 2-Slot Recipes never produce Medium (AC-3.1.1–AC-3.1.15)
+- [X] T022 [P] Unit tests for pitch in `tests/unit/core/pitch.test.js` — every degree across the full octave range in all 12 keys
+- [X] T023 [P] Unit tests for swing in `tests/unit/core/swing.test.js` — boundary values 0 and 100 on 2-Slot and 4-Slot groups
+- [X] T024 [P] Unit tests for pattern mutators in `tests/unit/core/pattern.test.js` — including that no mutator mutates its argument, and validation rules from data-model §7
+- [X] T025 [P] Unit tests for timeline in `tests/unit/core/timeline.test.js` — event ordering and absolute times across a mixed-meter, mixed-Recipe Pattern
 
 ### Persistence and app state
 
-- [ ] T026 [P] Implement `src/storage/patterns.js` over the `rm.patterns.v1` key, per data-model §6
-- [ ] T027 [P] Implement `src/storage/localMeta.js` over `rm.localMeta.v1`, exposing no path that merges into a Pattern (FR-006)
-- [ ] T028 [P] Implement `src/storage/settings.js` over `rm.settings.v1`
-- [ ] T029 Implement `src/storage/migrate.js` — ordered upgrade functions applied on read, upgrading rather than discarding, and refusing to downgrade a store newer than the app (FR-005)
-- [ ] T030 Implement the app state container and render loop in `src/main.js` — holds the current Pattern, dispatches mutations through `core/pattern.js`, re-renders from `(pattern, transportPosition)` alone (FR-013)
-- [ ] T031 [P] Unit tests for storage and migration in `tests/unit/storage/` — round-trip, version handling, and the FR-006 serialization test asserting no Local Metadata key reaches any Pattern, MIDI, or submission payload
+- [X] T026 [P] Implement `src/storage/patterns.js` over the `rm.patterns.v1` key, per data-model §6
+- [X] T027 [P] Implement `src/storage/localMeta.js` over `rm.localMeta.v1`, exposing no path that merges into a Pattern (FR-006)
+- [X] T028 [P] Implement `src/storage/settings.js` over `rm.settings.v1`
+- [X] T029 Implement `src/storage/migrate.js` — ordered upgrade functions applied on read, upgrading rather than discarding, and refusing to downgrade a store newer than the app (FR-005)
+- [X] T030 Implement the app state container and render loop in `src/main.js` — holds the current Pattern, dispatches mutations through `core/pattern.js`, re-renders from `(pattern, transportPosition)` alone (FR-013)
+- [X] T031 [P] Unit tests for storage and migration in `tests/unit/storage/` — round-trip, version handling, and the FR-006 serialization test asserting no Local Metadata key reaches any Pattern, MIDI, or submission payload
 
 **Checkpoint**: The musical core is complete and exhaustively tested; Patterns persist. Nothing is visible yet.
 
