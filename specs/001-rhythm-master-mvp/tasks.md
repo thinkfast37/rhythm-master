@@ -791,7 +791,27 @@ record is complete rather than starting mid-stream.
 
   AC-15.1.14/2 asserts each `.beats` container's own `scrollWidth` as well as the page's, because `overflow-x: hidden` on the body means an over-wide Measure is CLIPPED rather than scrolled — it would hide half a Measure while every page-level overflow check still passed.
 
-- [X] T169 **[bug]** T167's layout pass measured on every render, which timed out the densest Melodic e2e test on CI — `src/ui/beat-layout.js`.
+- [X] T169 **[bug]** Submit did nothing: the whole hand-off half of US-13.1 was unbuilt — `specs/001-rhythm-master-mvp/spec.md` (Cases added to AC-13.1.1, AC-13.1.3, AC-13.1.4; AC-13.1.4 clarified), `specs/001-rhythm-master-mvp/plan.md` (P-035), `src/export/submit.js`, `src/storage/localMeta.js`, `src/ui/dialogs.js`, `src/ui/controls.js`, `src/styles/tokens.css`, `src/main.js`. Implements P-035, AC-13.1.1–AC-13.1.5.
+
+  Reported: "there is a submit button in export & actions, it doesn't seem to do anything." Correct, and it had never done anything. `handlers.onSubmit` built the submission and **returned** it; `renderActions`'s click handler discarded the return value. Nothing opened the URL, nothing showed a link, and no clipboard path existed anywhere in `src/`. The one observable effect was a lie: it stamped `submittedAt`, marking as submitted a Pattern that was never sent.
+
+  T111–T113 built `export/submit.js` and stopped there. The gate could not see it: `submit.js` is pure, so the URL builder's unit tests reported AC-13.1.1 as covered while the criterion is about a link on a screen — the `core/` -cannot-prove-a-UI-criterion failure mode from §2b, reached through `export/`. US-13.1 read 0 of 5 criteria proven in the matrix, and the whole epic was in fact unbuilt from the button inwards.
+
+  **Three places where the code contradicted an AC**, all corrected in the code per §2a, none by revising the criterion: `MAX_URL_LENGTH` was 6000 against AC-13.1.3's stated 8,000; `buildIssueTitle` produced "New Patterns: 3 submissions" against AC-13.1.2's "Bulk Pattern Submission (3 patterns)"; and AC-13.1.4's exclusion of already-submitted, unedited Patterns had no implementation at all — `submittedAt` was written and never read.
+
+  **"Edited since" needed defining, and AC-13.1.4 never did.** A Pattern carries no modified timestamp, and adding one would change the stored Pattern shape to answer a bookkeeping question. Decided by comparing submission payloads: `submissionDigest` (FNV-1a over the submission shape) is stored beside `submittedAt` as Local Metadata, and `selectForBulk` includes a Pattern when the digest differs. Strictly more truthful than a timestamp — an edit that is undone before the next bulk run is correctly not an edit — and it keeps everything about submission tracking inside `rm.localMeta.v1`, which is what AC-13.1.5 requires. AC-13.1.4 carries a dated clarification recording this.
+
+  **The submission is recorded when the link is followed, not when Submit is pressed.** Pressing Submit and closing the dialog is not a submission, and marking it as one would exclude that Pattern from the next bulk run (AC-13.1.4) so it silently never goes anywhere. `showSubmission` takes an `onOpened` callback wired to the link's own click.
+
+  Bulk submission is a second control, `Submit All…`, beside Submit. It copies the full text to the clipboard unconditionally (AC-13.1.2), not only in the oversized case — these Patterns exist in one browser and nowhere else, so a submission GitHub rejects for length must not lose them. `copyToClipboard` falls back from the async Clipboard API to `execCommand`, since the app is also opened from `file://` and over plain HTTP on a phone, where the API is unavailable.
+
+- [X] T170 **[bug]** Tests for T169 — `tests/unit/export/export.test.js`, `tests/e2e/submission.spec.js`. Covers AC-13.1.1/1–/3, AC-13.1.2, AC-13.1.3/1–/2, AC-13.1.4/1–/3, AC-13.1.5.
+
+  AC-13.1.1 and AC-13.1.3 are UI-level (T6), so the new e2e file proves them at the DOM: Submit opens a dialog carrying a real `<a>` whose `href` holds the title, label and body; clicking it opens a second tab on github.com; and only then does `submittedAt` appear. github.com is stubbed at the context — the app is offline by design and a test that depends on a third party fails for reasons of its own. That stub is also how AC-13.1.1/3 is proved: every request the app makes is visible, and none is to `api.github.com`.
+
+  The pure tests were renamed to their criteria verbatim. Three had drifted: two named AC-13.1.2 while proving payload shape, and one named AC-13.1.4 while proving that a small payload fits in a URL — the criterion AC-13.1.4 actually states, exclusion of already-submitted Patterns, had no test at all. That is the T5 `mismatched` finding the baseline had been carrying since the gate landed.
+
+- [X] T171 **[bug]** T167's layout pass measured on every render, which timed out the densest Melodic e2e test on CI — `src/ui/beat-layout.js`.
 
   The deploy's verify job failed twice on `AC-2.2.15/3` — 8 Measures of 12/8 Melodic, 192 Slots at 390px — timing out at 30s where it had taken 9.8s on the run before.
 

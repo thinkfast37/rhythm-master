@@ -16,7 +16,7 @@ export const KEY = 'rm.localMeta.v1';
 const EMPTY = { byPatternId: {} };
 
 /** Every key this store may hold — asserted against exports by the FR-006 test. */
-export const LOCAL_META_FIELDS = ['submittedAt', 'duplicateResolved'];
+export const LOCAL_META_FIELDS = ['submittedAt', 'submittedDigest', 'duplicateResolved'];
 
 export function loadAll() {
   return readStore(KEY, EMPTY).byPatternId ?? {};
