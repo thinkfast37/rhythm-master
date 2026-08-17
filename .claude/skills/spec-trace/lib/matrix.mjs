@@ -225,7 +225,6 @@ function renderTable(rows) {
 
 /** The master matrix — the whole application, written to a committed file. */
 export function renderMaster(rows, { generatedFor }) {
-  const t = tally(rows);
   const accepted = rows.filter((r) => r.status.accepted && !r.status.waived).length;
 
   return `# Traceability Matrix
