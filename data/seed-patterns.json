@@ -31938,6 +31938,209 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Another One Bites the Dust \u2014 Bass",
+      "soundMode": "melodic",
+      "tempo": 104,
+      "tags": [
+        "Song"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  },
+                  "accent": 2
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "1",
+                    "octaveOffset": -1
+                  }
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                },
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "2",
+                    "octaveOffset": -1
+                  }
+                }
+              ]
+            },
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-16ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                },
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "6",
+                    "octaveOffset": -2
+                  }
+                },
+                {
+                  "on": true,
+                  "pitch": {
+                    "degree": "5",
+                    "octaveOffset": -2
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "key": "G"
     }
   ]
 }

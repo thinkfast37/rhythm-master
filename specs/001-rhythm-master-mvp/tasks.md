@@ -919,3 +919,15 @@ record is complete rather than starting mid-stream.
   **It closes, and never deletes.** The issue is the record of what a Contributor sent and what was decided, including the case where the write is wrong and `validate:seed` sends it back — and a deleted issue leaves nothing to revert to.
 
   **Also fixed: an append was rewriting lines it did not add.** Found on a dry run against #32 — `appendPatterns` wrote with a plain `JSON.stringify`, which emits literal non-ASCII where the shipped file uses `\uXXXX` escapes, so appending one Pattern also rewrote 13 existing em-dashed names. The values were identical and the diff was still wrong: "appended, never inserted" is a rule a reviewer has to be able to *see* holding, and a real mistake hides easily in fourteen lines of noise. The write now matches the file's own convention; the append is 203 insertions and 0 deletions. The test fixture was writing in the wrong convention too, which is why it could not have caught this — a fixture unlike the real file proves nothing about rewriting it.
+
+- [X] T178 **[data]** Ship the submitted *Another One Bites the Dust* bassline as a Melodic companion to the percussive entry — `data/seed-patterns.json` (1 Pattern appended, `s_208`).
+
+  The first Pattern to arrive through the app's Submit button and land in the library. Issue #32, from `thinkfast37`, decoded and rendered with `pattern-intake show`.
+
+  **It is not a new rhythm — it is the missing half of one already shipped.** The onsets are identical, note for note, to `Another One Bites the Dust - Queen` (percussive, `s_68`). What the submission adds is *pitch*: the riff in relative E minor against a Key of G — E E E · E │ E E G E A · · E D — and 104 BPM, which is nearer the record than the shipped 80. Surfaced to the maintainer before anything was written, since a tool cannot tell a duplicate from a companion; `Djembe 1`/`Djembe 2` is the existing precedent for the pair.
+
+  **Renamed on the maintainer's call, to `Another One Bites the Dust — Bass`.** The submitted name carried `- melodic`, restating the Sound Mode the UI already shows, and `- Queen`, which the percussive twin already holds. `Fascination Street — Bass` and `The Lovecats - Bass` are the house convention for exactly this. Only the name changed: a Contributor's *music* is never edited here — if a rhythm is wrong they are asked to resubmit, because an edit made at intake ships music nobody played.
+
+  **The append is 203 insertions and 0 deletions.** Ids are positional (`s_${index + 1}`), so anything but an append renumbers every later Pattern and orphans the ratings and added Tags `rm.overlays.v1` keys by id.
+
+  **`pattern-intake close` cannot close #32, and that is correct behaviour, not a bug.** It matches an issue to the library by name, and this Pattern shipped under a different one — so it refuses rather than guessing. The closing comment was posted by hand, naming `s_208`, only after the deploy went green.
