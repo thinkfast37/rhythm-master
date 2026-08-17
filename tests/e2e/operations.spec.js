@@ -17,7 +17,7 @@ test('AC-7.4.1 — Make Copy creates a second, independent Pattern', async ({ pa
   await page.locator('.dialog-input').fill('The Copy');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
   // The copy is note-for-note identical, so the duplicate warning fires first.
-  await page.locator('.dialog-button', { hasText: 'Make Copy' }).click();
+  await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
 
   expect(await page.evaluate(() => window.__rm.getState().pattern.name)).toBe('The Copy');
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(2);
@@ -29,7 +29,7 @@ test('AC-7.4.2 — editing a copy leaves the original untouched', async ({ page 
   await page.locator('[data-action="make-copy"]').click();
   await page.locator('.dialog-input').fill('The Copy');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
-  await page.locator('.dialog-button', { hasText: 'Make Copy' }).click();
+  await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
 
   await page.locator('.slot[data-beat="0"][data-slot="1"]').click();
 
@@ -44,7 +44,7 @@ test('AC-7.4.2 — editing a copy leaves the original untouched', async ({ page 
   expect(both.find((p) => p.name === 'The Copy').on).toBe(true);
 });
 
-test('AC-11.1.1 — Make Copy warns when the result would be a note-for-note duplicate', async ({ page }) => {
+test('AC-11.1.3 — Duplicate warning fires only at Pattern-creation moments: Make Copy', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Original');
 
@@ -53,8 +53,8 @@ test('AC-11.1.1 — Make Copy warns when the result would be a note-for-note dup
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
 
   await expect(page.locator('.dialog-message')).toContainText('note-for-note identical');
-  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(1);
+  await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
+  expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(2);
 });
 
 test('AC-7.5.1 — Delete removes an owned Pattern permanently', async ({ page }) => {
@@ -165,13 +165,15 @@ test('AC-13.1.1 — Submit builds a GitHub issue URL and records the submission 
   expect(pattern).not.toHaveProperty('submittedAt');
 });
 
-test('AC-11.2.1 — a melodic variant of a Pattern surfaces as a Family, not a duplicate', async ({ page }) => {
+test('AC-11.2.1 — Family match criteria: a melodic variant surfaces as a Family, not a duplicate', async ({
+  page,
+}) => {
   await page.goto('/');
   await makeOwned(page, 'Rhythm');
   await page.locator('[data-action="make-copy"]').click();
   await page.locator('.dialog-input').fill('Melodic Version');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
-  await page.locator('.dialog-button', { hasText: 'Make Copy' }).click();
+  await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
   await page.locator('.sound-mode').selectOption('melodic');
 
   const result = await page.evaluate(() => ({

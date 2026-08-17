@@ -203,7 +203,7 @@ test('AC-7.5.4 — deleting one Family member leaves the other untouched', async
   await page.locator('[data-action="make-copy"]').click();
   await page.locator('.dialog-input').fill('My Custom Fill (Melodic)');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
-  await page.locator('.dialog-button', { hasText: 'Make Copy' }).click();
+  await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
   await page.locator('.sound-mode').selectOption('melodic');
 
   // Delete the melodic one; the rhythmic original must survive intact.
@@ -505,7 +505,7 @@ test('AC-7.4.5 — a Make Copy result is immediately a Family member of its sour
   await page.locator('[data-action="make-copy"]').click();
   await page.locator('.dialog-input').fill('Copied Rhythm');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
-  await page.locator('.dialog-button', { hasText: 'Make Copy' }).click();
+  await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
 
   // Identical at the instant of creation, so it is a duplicate; changing the
   // Sound Mode makes the Family relationship the one that applies.

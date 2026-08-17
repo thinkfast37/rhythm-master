@@ -14,8 +14,8 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 215 across 34 User Stories
-**Status**: MISNAMED: 83 · NEEDS CASES: 41 · NOT PROVABLE: 10 · WRONG TEST: 81
+**Criteria**: 220 across 34 User Stories
+**Status**: OK: 14 · MISNAMED: 83 · NEEDS CASES: 41 · NOT PROVABLE: 10 · WRONG TEST: 72
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -32,7 +32,7 @@ does, which cannot be proved by a test with no document to look at.
 | **MISNAMED** | The right test, named in its own words rather than the spec's. |
 | OK | Named for its criterion, in the criterion's own words, at the right level. |
 
-ᵃ marks a finding accepted as pre-existing debt (215 rows). It is reported but does
+ᵃ marks a finding accepted as pre-existing debt (206 rows). It is reported but does
 not fail the build, and it is outstanding work — never a settled decision.
 
 | Story | Criterion | What it requires | Plan | Implementation tasks | Test tasks | Proving test | Status |
@@ -200,16 +200,21 @@ not fail the build, and it is outstanding work — never a settled decision.
 | US-10.1 | `AC-10.1.4` 🖵 | Duplicate is disabled when doubling would exceed the cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **MISNAMED** ᵃ |
 | US-10.1 | `AC-10.1.5` | Duplicate into an owned Pattern auto-saves | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **MISNAMED** ᵃ |
 | US-10.1 | `AC-10.1.6` 🖵 | Duplicate into a shipped Pattern triggers the naming prompt | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **MISNAMED** ᵃ |
-| US-11.1 | `AC-11.1.1` | True duplicate match criteria | P-031 | T102, T103 (2/2 done) | T104 (1/1 done) | `similarity.test.js`, `similarity.test.js`, `operations.spec.js` | **WRONG TEST** ᵃ |
-| US-11.1 | `AC-11.1.2` | Differing Sound Mode, Pitch, or swing excludes a duplicate match | P-031 | T102, T103 (2/2 done) | T104 (1/1 done) | `similarity.test.js`, `similarity.test.js` | **NEEDS CASES** ᵃ |
-| US-11.1 | `AC-11.1.3` 🖵 | Duplicate warning fires only at Pattern-creation moments | P-031 | T102, T103 (2/2 done) | T104 (1/1 done) | `similarity.test.js`, `similarity.test.js` | **WRONG TEST** ᵃ |
-| US-11.1 | `AC-11.1.4` 🖵 | Possible-duplicates view catches duplicates from ongoing edits | P-031 | T102, T103 (2/2 done) | T104 (1/1 done) | `similarity.test.js` | **WRONG TEST** ᵃ |
-| US-11.1 | `AC-11.1.5` 🖵 | Removing a confirmed duplicate | P-031 | T102, T103 (2/2 done) | T104 (1/1 done) | `similarity.test.js` | **WRONG TEST** ᵃ |
-| US-11.2 | `AC-11.2.1` | Family match criteria | P-032 | T105 (1/1 done) | T106 (1/1 done) | `similarity.test.js`, `operations.spec.js` | **WRONG TEST** ᵃ |
-| US-11.2 | `AC-11.2.2` | Family detection recomputes on every edit, not just creation | P-032 | T105 (1/1 done) | T106 (1/1 done) | `similarity.test.js` | **WRONG TEST** ᵃ |
-| US-11.2 | `AC-11.2.3` | Family members remain fully independent | P-032 | T105 (1/1 done) | T106 (1/1 done) | `similarity.test.js` | **WRONG TEST** ᵃ |
-| US-11.2 | `AC-11.2.4` 🖵 | Family members are discoverable via normal Tag/name listing | P-032 | T105 (1/1 done) | T106 (1/1 done) | `similarity.test.js` | **WRONG TEST** ᵃ |
-| US-11.2 | `AC-11.2.5` 🖵 | Family members panel: viewport-dependent display | P-032 | T105 (1/1 done) | T106 (1/1 done) | `similarity.test.js` | **WRONG TEST** ᵃ |
+| US-11.1 | `AC-11.1.1` | True duplicate match criteria | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `similarity.test.js` | OK |
+| US-11.1 | `AC-11.1.2` | Differing Sound Mode, Pitch, or swing excludes a duplicate match | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `similarity.test.js`, `similarity.test.js`, `similarity.test.js` | **NEEDS CASES** ᵃ |
+| US-11.1 | `AC-11.1.3` 🖵 | Duplicate warning fires only at Pattern-creation moments | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js`, `duplicates.spec.js`, `operations.spec.js` | OK |
+| US-11.1 | `AC-11.1.4/1` 🖵 | The view lists a duplicate that no warning ever fired for | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.1 | `AC-11.1.4/2` 🖵 | The view covers the whole library, not only the loaded Pattern | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.1 | `AC-11.1.5/1` 🖵 | Confirming removal deletes that Pattern and leaves its twin | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.1 | `AC-11.1.5/2` 🖵 | A shipped Pattern offers no Remove control in this view | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.1 | `AC-11.1.6/1` 🖵 | Removing the open Pattern loads its surviving twin | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.1 | `AC-11.1.6/2` 🖵 | Removing a Pattern that is not open leaves the editor where it was | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.2 | `AC-11.2.1` | Family match criteria | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `similarity.test.js`, `operations.spec.js` | OK |
+| US-11.2 | `AC-11.2.2` | Family detection recomputes on every edit, not just creation | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.2 | `AC-11.2.3` | Family members remain fully independent | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `similarity.test.js` | OK |
+| US-11.2 | `AC-11.2.4` 🖵 | Family members are discoverable via normal Tag/name listing | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.2 | `AC-11.2.5/1` 🖵 | Below 768px no family information is shown | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | OK |
+| US-11.2 | `AC-11.2.5/2` 🖵 | At 768px and wider the editor lists family members as links | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | OK |
 | US-11.3 | `AC-11.3.1` | Trigger: app load after a library update | P-033 | T107 (1/1 done) | T108 (1/1 done) | `storage.test.js`, `operations.spec.js` | **WRONG TEST** ᵃ |
 | US-11.3 | `AC-11.3.2` 🖵 | One-time Remove/Keep prompt, with data-loss callout | P-033 | T107 (1/1 done) | T108 (1/1 done) | `storage.test.js` | **WRONG TEST** ᵃ |
 | US-11.3 | `AC-11.3.3` 🖵 | Remove deletes the custom copy | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | **MISNAMED** ᵃ |

@@ -77,6 +77,44 @@ export function findFamily(pattern, candidates) {
   return candidates.filter((c) => c.id !== pattern.id && isSameFamily(pattern, c));
 }
 
+/**
+ * Group a library into sets of true duplicates, two or more each. AC-11.1.4.
+ *
+ * Library-wide rather than relative to one Pattern: a duplicate that emerged through
+ * ongoing auto-saved edits may be between two Patterns neither of which is open, and
+ * this view is the only place such a pair ever surfaces.
+ *
+ * Grouping is by rhythm first because that is the cheap discriminator, then by full
+ * duplicate equality within each bucket — same rhythm is necessary for duplication but
+ * not sufficient, since Sound Mode, Pitch, swing and tempo all still have to agree.
+ */
+export function duplicateGroups(patterns) {
+  const byRhythm = new Map();
+  for (const p of patterns) {
+    const key = rhythmFingerprint(p);
+    if (!byRhythm.has(key)) byRhythm.set(key, []);
+    byRhythm.get(key).push(p);
+  }
+
+  const groups = [];
+  for (const bucket of byRhythm.values()) {
+    const unplaced = [...bucket];
+    while (unplaced.length > 0) {
+      const head = unplaced.shift();
+      const matches = [];
+      // Walk forwards and collect, so a group lists its members in library order. The
+      // view puts a Remove control on each row, and a list whose order does not follow
+      // the library is one where it is easy to delete the wrong Pattern.
+      for (let i = 0; i < unplaced.length; ) {
+        if (isDuplicate(head, unplaced[i])) matches.push(...unplaced.splice(i, 1));
+        else i++;
+      }
+      if (matches.length > 0) groups.push([head, ...matches]);
+    }
+  }
+  return groups;
+}
+
 /** Group a library into Families of two or more. */
 export function familyGroups(patterns) {
   const byRhythm = new Map();

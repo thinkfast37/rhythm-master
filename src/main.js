@@ -34,6 +34,7 @@ import {
   renderPlayControls,
   renderPlaybackSettings,
   renderEditControls,
+  renderFamilyMembers,
   renderActionControls,
   renderPitchStrip,
 } from './ui/controls.js';
@@ -48,7 +49,7 @@ import {
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildSubmission } from './export/submit.js';
-import { findDuplicates, findFamily, isDuplicate } from './core/similarity.js';
+import { findDuplicates, findFamily, isDuplicate, duplicateGroups } from './core/similarity.js';
 import * as localMetaStore from './storage/localMeta.js';
 import {
   ask,
@@ -57,6 +58,7 @@ import {
   confirmRecipeChange,
   askApplyToAllMeasures,
   askNewPatternName,
+  showDuplicates,
 } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
@@ -160,25 +162,59 @@ function nameTaken(name, exceptId = null) {
 const uniqueNameValidator = (exceptId = null) => (name) =>
   nameTaken(name, exceptId) ? `A Pattern called "${name}" already exists. Choose another name.` : null;
 
+/**
+ * The duplicate warning that fires at Pattern-creation moments. AC-11.1.3.
+ *
+ * Cancelling returns `false` so the caller can put the naming prompt back up rather than
+ * abandoning the whole operation — the AC offers "proceed anyway (keep both) or cancel
+ * and stay on the naming prompt", and dropping someone out of the flow entirely makes
+ * cancel the more expensive choice than accepting a duplicate.
+ */
+async function confirmIfDuplicate(candidate, { confirmLabel, exceptId = null }) {
+  const candidates = [...seedStore.loadAll(), ...patternStore.loadAll()].filter(
+    (p) => p.id !== exceptId
+  );
+  const clash = findDuplicates(candidate, candidates);
+  if (clash.length === 0) return true;
+  return confirm(`This is note-for-note identical to "${clash[0].name}". Keep both anyway?`, {
+    confirmLabel,
+    cancelLabel: 'Choose another name',
+  });
+}
+
 async function guardShipped() {
   if (state.isOwned) return true;
 
-  const name = await askNewPatternName(
-    `${state.pattern.name} (my version)`,
-    uniqueNameValidator()
-  );
-  if (name === null) return false;
+  // One of the two Pattern-creation moments the duplicate check guards (AC-11.1.3); the
+  // other is Make Copy. Loops so that declining the warning returns to the prompt with
+  // the typed name still there.
+  let suggestion = `${state.pattern.name} (my version)`;
+  for (;;) {
+    const name = await askNewPatternName(suggestion, uniqueNameValidator());
+    if (name === null) return false;
 
-  const owned = {
-    ...structuredClone(state.pattern),
-    id: patternStore.nextId(),
-    name,
-    rating: 0,
-  };
-  patternStore.upsert(owned);
-  state.pattern = owned;
-  state.isOwned = true;
-  return true;
+    const owned = {
+      ...structuredClone(state.pattern),
+      id: patternStore.nextId(),
+      name,
+      rating: 0,
+    };
+
+    // Excluding the shipped Pattern being copied. At this point the copy is identical to
+    // it by construction — the edit that triggered the flow has not been applied yet —
+    // so comparing the two is comparing a Pattern against itself, and warning every time
+    // anyone edits a shipped Pattern would make the whole flow unusable. A clash with any
+    // OTHER Pattern is still a real duplicate and still warns.
+    if (!(await confirmIfDuplicate(owned, { confirmLabel: 'Keep both', exceptId: state.pattern.id }))) {
+      suggestion = name;
+      continue;
+    }
+
+    patternStore.upsert(owned);
+    state.pattern = owned;
+    state.isOwned = true;
+    return true;
+  }
 }
 
 export function loadPattern(pattern, { owned }) {
@@ -546,23 +582,60 @@ const handlers = {
     // one goes through the forced-naming flow instead (AC-7.4.6).
     if (!state.isOwned) return null;
 
-    const name = await askNewPatternName(`${state.pattern.name} copy`, uniqueNameValidator());
-    if (name === null) return null;
+    let suggestion = `${state.pattern.name} copy`;
+    for (;;) {
+      const name = await askNewPatternName(suggestion, uniqueNameValidator());
+      if (name === null) return null;
 
-    const copy = { ...structuredClone(state.pattern), id: patternStore.nextId(), name, rating: 0 };
+      const copy = { ...structuredClone(state.pattern), id: patternStore.nextId(), name, rating: 0 };
 
-    const clash = findDuplicates(copy, [...seedStore.loadAll(), ...patternStore.loadAll()]);
-    if (clash.length > 0) {
-      const proceed = await confirm(
-        `This is note-for-note identical to "${clash[0].name}". Make the copy anyway?`,
-        { confirmLabel: 'Make Copy', cancelLabel: 'Cancel' }
-      );
-      if (!proceed) return null;
+      // Declining returns to the naming prompt rather than cancelling the copy
+      // outright (AC-11.1.3).
+      if (!(await confirmIfDuplicate(copy, { confirmLabel: 'Keep both' }))) {
+        suggestion = name;
+        continue;
+      }
+
+      patternStore.upsert(copy);
+      loadPattern(copy, { owned: true });
+      return copy;
     }
+  },
 
-    patternStore.upsert(copy);
-    loadPattern(copy, { owned: true });
-    return copy;
+  /**
+   * The standing possible-duplicates view. AC-11.1.4 … AC-11.1.6.
+   *
+   * `groups` is a function rather than a value so the view repaints from the store after
+   * each removal instead of from a snapshot taken when it opened.
+   */
+  async onShowDuplicates() {
+    const ownedIds = () => new Set(patternStore.loadAll().map((p) => p.id));
+    await showDuplicates({
+      groups: () => duplicateGroups([...seedStore.loadAll(), ...patternStore.loadAll()]),
+      isOwned: (id) => ownedIds().has(id),
+      onRemove: async (pattern, survivors) => {
+        const proceed = await confirm(
+          `Delete "${pattern.name}" permanently? "${survivors[0].name}" will remain.`,
+          { confirmLabel: 'Delete', cancelLabel: 'Cancel' }
+        );
+        if (!proceed) return false;
+
+        patternStore.remove(pattern.id);
+        localMetaStore.forget(pattern.id);
+
+        // Deleting the Pattern you have open lands you on its surviving twin — the same
+        // music you were comparing, and never an editor showing something that is gone
+        // (AC-11.1.6).
+        if (state.pattern.id === pattern.id) {
+          const twin = survivors[0];
+          const owned = patternStore.findById(twin.id);
+          loadPattern(owned ?? structuredClone(twin), { owned: Boolean(owned) });
+        } else {
+          render();
+        }
+        return true;
+      },
+    });
   },
 
   async onDelete() {
@@ -758,6 +831,9 @@ export function mount(root) {
     });
   }
 
+  const familyEl = document.createElement('section');
+  familyEl.dataset.section = 'family';
+
   const navEl = document.createElement('nav');
   navEl.className = 'pattern-nav';
   for (const direction of ['previous', 'next']) {
@@ -771,7 +847,7 @@ export function mount(root) {
   }
 
   main.append(
-    libraryToggle, headerEl, gridEl, pitchEl, playEl, settingsEl, editEl, actionsEl, navEl
+    libraryToggle, headerEl, gridEl, pitchEl, playEl, settingsEl, editEl, actionsEl, navEl, familyEl
   );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
@@ -841,6 +917,7 @@ export function mount(root) {
     renderEditControls(editBody, pattern, s, handlers);
     renderActionControls(actionsBody, pattern, s, handlers);
     renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
+    renderFamilyMembers(familyEl, familyMembers(), handlers);
 
     // Keep what is sounding on screen (AC-15.1.11).
     if (position) scrollMeasureIntoView(gridEl, position.measureIndex);
@@ -860,6 +937,7 @@ export function mount(root) {
     editEl,
     actionsEl,
     navEl,
+    familyEl,
   };
 }
 
@@ -887,6 +965,18 @@ export function unresolvedLibraryDuplicates() {
 /** Patterns sharing this one's rhythm but differing in Sound Mode or Pitch. */
 export function currentFamily() {
   return findFamily(state.pattern, [...seedStore.loadAll(), ...patternStore.loadAll()]);
+}
+
+/**
+ * The Family panel's rows: members carrying which store they came from, so opening one
+ * loads it the same way the library would (AC-11.2.5).
+ *
+ * Recomputed on every render, which is what makes AC-11.2.2 hold without a subscription:
+ * an auto-saved edit re-renders, so the panel is never stale.
+ */
+function familyMembers() {
+  const owned = new Set(patternStore.loadAll().map((p) => p.id));
+  return currentFamily().map((member) => ({ ...member, owned: owned.has(member.id) }));
 }
 
 /** Possible duplicates of the current Pattern — the standing view (AC-11.1.4). */
