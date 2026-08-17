@@ -548,7 +548,7 @@ that title names the behaviour under test — not the example inside it.
 
 **As** the Practicing Musician, **I want** to press Play and have the Pattern loop continuously with synced audio and a visual cursor, **so that** I can drill it hands-free without having to keep restarting it myself.
 
-**Independent Test**: Play a multi-meter Pattern and assert timing accuracy over sustained looping, visual/audio sync, and correct per-Measure iteration.
+**Independent Test**: Play a multi-meter Pattern and assert timing accuracy over sustained looping, visual/audio sync, correct per-Measure iteration, and the stop-and-reset behaviour when the device suspends audio.
 
 **Acceptance Scenarios**:
 
@@ -572,6 +572,18 @@ that title names the behaviour under test — not the example inside it.
   - **When** it plays
   - **Then** each loop plays Measure 1's 4 quarter-note Beats followed by Measure 2's 6 eighth-note Beats, each Beat sounding according to its own Recipe, before the loop counter (AC-4.1.3) increments and the sequence repeats from Measure 1
 
+- **AC-4.1.5** — Audio suspended by the device stops the transport and resets it
+  - **Given** a Pattern has been playing for 40 loops and the device suspends audio — the phone locks, a call arrives, or the browser tab is backgrounded by the OS
+  - **When** the suspension occurs
+  - **Then** the transport goes to stopped, the playback cursor returns to the first Slot of Measure 1, and the loop counter resets to 0
+  - **And** no audio is scheduled or sounds while suspended
+
+- **AC-4.1.6** — Returning after a suspension requires a deliberate Play
+  - **Given** playback was stopped and reset by a suspension (AC-4.1.5)
+  - **When** the musician returns to the app and it regains focus
+  - **Then** nothing plays, and the transport still reads stopped at the top of the Pattern
+  - **And** pressing Play starts a fresh run from Measure 1 with the loop counter at 0 — honouring FR-010, since regaining focus is not interaction with a transport control
+
 ---
 
 ### User Story 11 - Adjust tempo
@@ -593,6 +605,7 @@ that title names the behaviour under test — not the example inside it.
   - **Given** a Pattern is playing at 80 BPM, partway through Beat 2 of its 4/4 Measure
   - **When** the Practicing Musician changes tempo to 120 BPM
   - **Then** playback restarts from the top of the Pattern at 120 BPM immediately, rather than finishing the current loop at 80 BPM first
+  - **And** the loop counter (AC-4.1.3) resets to 0, since the restart begins a new run
 
 - **AC-4.2.3** — Tempo default: global last-used, overridden by a per-Pattern save
   - **Given** the Practicing Musician most recently played a Pattern at 100 BPM, and now opens a different, brand-new Pattern with no tempo of its own saved
@@ -1591,9 +1604,9 @@ it appears in the library and plays correctly, with no source file modified.
   discards existing Slot content rather than remapping it, because there is no unsurprising way to
   carry Slots across a Beat-count change. This is mitigated by making the reset a single undoable
   action (AC-1.1.7) rather than by attempting a remap.
-- **Recipe change shrinks a Beat.** Selecting a Recipe with fewer Slots than are currently active
-  requires confirmation naming the number of notes that will be cleared (AC-1.3.7); growing the
-  Slot count applies silently (AC-1.3.8).
+- **Recipe change discards a Beat's notes.** Any Recipe change clears the Beat, in either
+  direction, so confirmation naming the number of notes to be cleared is required whenever the
+  Beat has notes (AC-1.3.7, AC-1.3.8); an empty Beat changes Recipe silently (AC-1.3.10).
 - **A Pattern that cannot express the selected counting system.** A Pattern containing a mixed-feel
   Recipe has no Takadimi or 1-e-&-a vocabulary for half-Beat groups, so it renders in Numbered
   regardless of the global setting, without overwriting that setting (AC-5.6.2, AC-5.6.3).
@@ -1605,6 +1618,13 @@ it appears in the library and plays correctly, with no source file modified.
   Local Metadata (US-11.3).
 - **Bulk submission exceeds the URL length limit.** Falls back to a title/label-only prefilled issue
   plus clipboard copy with paste instructions, rather than emitting a broken link (AC-13.1.3).
+- **The device suspends audio mid-session.** A phone locking or a call arriving during a long
+  practice run stops the transport and resets it to the top of the Pattern with the loop counter
+  at 0, rather than silently continuing or auto-resuming; restarting is a deliberate Play
+  (AC-4.1.5, AC-4.1.6). This keeps FR-010 intact — regaining focus is not a transport interaction.
+- **Tempo changed during playback.** The change takes effect immediately by restarting playback
+  from the top of the Pattern at the new tempo and resetting the loop counter, rather than
+  retiming the loop in place (AC-4.2.2).
 - **Melodic playback before samples finish loading.** Play shows a loading state and waits;
   Percussive playback is unaffected and remains immediately available (AC-2.4.3).
 - **The densest supported Pattern on the smallest supported screen.** 6 Measures of 12/8 at Straight
