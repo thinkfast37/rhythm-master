@@ -40,9 +40,11 @@ const VOCABULARY = {
  * Per-Slot labels for one Beat.
  *
  * Numbered labels every Slot by its ordinal within the Beat, which is the only
- * system that survives a Recipe whose halves have different feels.
+ * system that survives a Recipe whose halves have different feels. 1-e-&-a's
+ * leading digit is the Beat's own ordinal within the Measure (AC-5.6.12), so
+ * `beatIndex` (0-based, restarting each Measure) is needed only for that system.
  */
-export function labelsFor(recipeId, beatNoteValue, system) {
+export function labelsFor(recipeId, beatNoteValue, system, beatIndex = 0) {
   if (!COUNTING_SYSTEMS.includes(system)) throw new Error(`Unknown counting system: ${system}`);
 
   const groups = subdivisionGroups(recipeId, beatNoteValue);
@@ -54,7 +56,9 @@ export function labelsFor(recipeId, beatNoteValue, system) {
 
   const vocab = VOCABULARY[system][total];
   if (!vocab) throw new Error(`No ${system} vocabulary for a ${total}-Slot Beat`);
-  return [...vocab];
+  const labels = [...vocab];
+  if (system === 'one-e-and-a') labels[0] = String(beatIndex + 1);
+  return labels;
 }
 
 /**

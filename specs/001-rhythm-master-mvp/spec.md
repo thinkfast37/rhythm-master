@@ -1054,6 +1054,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** labels are generated
   - **Then** its Slots read 1, 2, 3, 4, 5 straight through, since Numbered labels by position only and needs no rhythmic-feel vocabulary — which is exactly what makes it the safe fallback for these Patterns
 
+- **AC-5.6.12** — 1-e-&-a scheme, the leading digit is the Beat's own number
+  - **Given** a Measure set to 4/4 with every Beat on the Straight 8ths Recipe (2 Slots each), 1-e-&-a active
+  - **When** labels are generated
+  - **Then** the first Slot of each Beat carries that Beat's own ordinal rather than a fixed "1", giving 1-&, 2-&, 3-&, 4-& across the Measure — and this repeats fresh at 1 for every Measure, mirroring the restart rule Numbered already follows (AC-5.6.7)
+  - *(Added 2026-08-17: the original ACs specified the restart-per-Beat rule for Numbered (AC-5.6.7, AC-5.6.9) but never said what the leading digit of 1-e-&-a itself counts, even though that is the entire point of the system's name. A musician loading "WR 1-D" and switching to 1-e-&-a found every Beat reading "1-&, 1-&, 1-&, 1-&" instead of "1-&, 2-&, 3-&, 4-&" — the vocabulary table had no way to know which Beat it was labeling. This closes that gap rather than reversing anything: AC-5.6.5's per-Recipe syllables are unchanged, only the first Slot's digit now tracks the Beat.)*
+
+- **AC-5.6.13** — 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity
+  - **Given** a Measure set to 7/8 with every Beat on the Straight 16ths Recipe (2 Slots each), 1-e-&-a active
+  - **When** labels are generated
+  - **Then** the 7 Beats read 1-&, 2-&, 3-&, 4-&, 5-&, 6-&, 7-& in sequence — confirming the leading-digit rule (AC-5.6.12) counts Beats, not Slots, regardless of the Beat's own note-value, the same distinction AC-5.6.9 draws for Numbered
+
 ---
 
 ### User Story 19 - Rate a Pattern

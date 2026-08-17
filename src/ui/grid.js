@@ -103,7 +103,7 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
   el.dataset.beat = String(beatIndex);
   el.dataset.recipe = beat.recipe;
 
-  const labels = labelsFor(beat.recipe, noteValue, system);
+  const labels = labelsFor(beat.recipe, noteValue, system, beatIndex);
   const groups = subdivisionGroups(beat.recipe, noteValue);
 
   // A mixed Recipe's two halves are separate group elements, so the
