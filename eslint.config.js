@@ -5,7 +5,9 @@ export default [
     ignores: ['node_modules/**', 'dist/**', 'coverage/**', 'test-results/**', 'playwright-report/**'],
   },
   {
-    files: ['**/*.js'],
+    // `.mjs` too — the spec-trace skill is written in it, and a gate's own source going
+    // unlinted is the same shape of gap the skill exists to catch.
+    files: ['**/*.js', '**/*.mjs'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

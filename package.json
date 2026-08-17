@@ -12,10 +12,13 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "coverage:ac": "node tests/ac-coverage.js",
-    "check:trace": "node tools/check-traceability.js",
+    "check:trace": "node .claude/skills/spec-trace/spec-trace.mjs",
     "validate:seed": "node tools/validate-seed.js",
     "check:cvd": "node tools/check-cvd.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "trace:matrix": "node .claude/skills/spec-trace/spec-trace.mjs matrix",
+    "trace:changed": "node .claude/skills/spec-trace/spec-trace.mjs changed",
+    "trace:prune": "node .claude/skills/spec-trace/spec-trace.mjs prune-baseline"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

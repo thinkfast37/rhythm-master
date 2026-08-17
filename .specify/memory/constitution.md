@@ -1,6 +1,42 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.2.0 → 3.3.0
+
+3.3.0 — Principle IV gains two requirements: the traceability matrix must exist as a
+  reviewable artefact, and the tooling that enforces traceability must itself be tested.
+
+  v3.2.0 defined the chain and built a gate for it. Two gaps remained. First, the chain
+  was only ever visible as a pass/fail line: there was no artefact a person could read to
+  see which criteria are proven, by which tasks, at what level — so the maintainer could
+  be told "333 findings" but not shown what they were against. Second, the checker was
+  the one unchecked thing in a repository whose whole subject is that unchecked things
+  report as fine. A false PASS in it is invisible by construction: a gate that never
+  fires looks exactly like a gate with nothing to find.
+
+  Both are now requirements:
+
+    - a generated, committed traceability matrix, one row per criterion, carrying its
+      story, plan item, implementation tasks, test tasks and proving test — regenerated
+      by tooling, never hand-edited, and gated on being current (check T8);
+    - a change matrix, the same rows filtered to what a change touches, presented with
+      the change so a reviewer sees which criteria it could have affected;
+    - automated tests over the traceability tooling itself, exercising each defect class
+      it claims to catch AND asserting it does not fire on a clean project.
+
+  MINOR: no principle is removed or redefined. Both requirements are additions.
+
+  Enforcement: `npm run check:trace` (check T8) and the tool's own suite under
+  `.claude/skills/spec-trace/tests/`, run by `npm test`. The tooling moved from `tools/`
+  into a self-contained, dependency-free skill so it is portable to other spec-kit
+  projects (T154).
+
+  Two defects the new tests found in the checker on their first run, both of which had
+  been live: a stemmer that mapped "measures" to "measur" while "measure" stayed whole,
+  so the spec's word and the test's word for the same thing failed to match; and an AC
+  range spanning two stories that consumed its own endpoints and contributed nothing.
+
+Earlier:
 Version change: 3.1.0 → 3.2.0
 
 3.2.0 — Principle IV rewritten around the full traceability chain, and a new
@@ -204,6 +240,20 @@ project's connective tissue and MUST be preserved across all artifacts.
 - **A test naming an AC or Case ID the spec does not declare FAILS the build**, rather
   than warning. A renumbered AC leaves its old ID behind on a test that now proves
   nothing, and a warning is not read.
+- **The traceability chain MUST exist as a reviewable artefact, not only as a pass/fail
+  line.** A generated matrix, committed and kept current, carries one row per criterion
+  with its User Story, plan item, implementation tasks, test tasks, proving test, and
+  status. It is generated from the artefacts and never hand-edited, so it cannot flatter
+  them; and it is gated on being current, because a matrix that has drifted is worse than
+  none — it looks like assurance. Every change presents the same rows filtered to what it
+  touches, so a reviewer sees which criteria the change could have affected rather than
+  being asked to work it out from a diff.
+- **The tooling that enforces traceability MUST itself be tested**, against fixtures
+  covering each defect class it claims to catch, and asserting it stays silent on a clean
+  project. A checker is the one place where a false PASS is invisible by construction: a
+  gate that never fires is indistinguishable from a gate with nothing to find. Both halves
+  are required — a checker that flags everything gets switched off, which enforces exactly
+  as much as one that flags nothing.
 - **A failing test is evidence about the code, not an obstacle to it (NON-NEGOTIABLE).**
   When a test fails, the default conclusion is that the implementation is wrong and the
   implementation is what changes. A test MAY be changed only when the test itself is the
@@ -362,4 +412,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.2.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17
+**Version**: 3.3.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17
