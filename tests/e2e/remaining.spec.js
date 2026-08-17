@@ -229,7 +229,7 @@ test('AC-11.3.3 — resolving a library duplicate by removing deletes only the c
 
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(0);
   // The shipped Pattern is untouched.
-  expect(await page.evaluate(() => window.__rm.seedStore.loadAll().length)).toBe(112);
+  expect(await page.evaluate(() => window.__rm.seedStore.loadAll().length)).toBe(110);
 });
 
 test('AC-11.3.4 — an unresolved library duplicate is reported until answered', async ({ page }) => {

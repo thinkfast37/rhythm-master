@@ -845,13 +845,23 @@ exist).
   - *(Tags are ANDed rather than ORed because the point of selecting a second one is to drill in. ORing them could only ever widen the result, which no combination of Tags would ever narrow.)*
 
 - **AC-5.3.10** — A Pattern's Tags live on the Pattern, not repeated down the library list
-  - **Given** the library showing all 112 Patterns
+  - **Given** the library showing all 110 Patterns
   - **When** the Practicing Musician looks at the list
   - **Then** no Pattern row shows its Tags — the rows carry name and Rating only
   - **And** the currently open Pattern shows its full Tag set in its header, with the same three kinds and the same removal rules as AC-5.3.5
   - **And** a Tag can be added to, or removed from, the open Pattern from that header
   - **And**, given a 390px viewport with the drawer closed, both actions work without opening the drawer at all
-  - *(Tags were repeated on every one of 112 rows, which made the list far longer to scroll for information the filter chips above it already act on — and on a phone it meant opening the drawer and finding a row just to tag the Pattern already on screen. The filter chips remain: one instance, not one per row.)*
+  - *(Tags were repeated on every one of 110 rows, which made the list far longer to scroll for information the filter chips above it already act on — and on a phone it meant opening the drawer and finding a row just to tag the Pattern already on screen. The filter chips remain: one instance, not one per row.)*
+
+- **AC-5.3.7** — The Tag vocabulary means what it says
+  - **Given** the shipped library after the 2026-08-17 curation pass
+  - **When** the Practicing Musician filters by any Tag
+  - **Then** `Song` returns only transcriptions of actual songs — eight Patterns that were descriptions of their own rhythm ("Downbeat ska", "3 middle up downbeat", "Djembe 1"…) no longer carry it
+  - **And** `Odd Meter` returns only 5/4 and 7/4 Patterns — the five 3/4 waltzes carry `Waltz` instead, since 3/4 is a common simple meter rather than an odd one
+  - **And** `Latin` returns the canonical patterns — Tresillo, Habanera, Bossa Nova, the claves — and not merely the later variations of them
+  - **And** the `Song Signatures` and `Rhythm` Tags no longer exist: the first was redundant with `Song`, the second was a description every Pattern in the library satisfies
+  - **And** every shipped Pattern carries at least one Tag
+  - *(Two placeholder Patterns, "New Rhythm" and "My Rhythm", were removed in the same pass, taking the library from 112 to 110.)*
 
 - **AC-5.3.6** — User Tag de-duplication is case-insensitive
   - **Given** a Pattern already tagged "Warmup"
@@ -1541,7 +1551,7 @@ present, correctly structured, and immediately playable without any authoring st
 - **AC-16.1.1** — Shipped library present on first run
   - **Given** a browser profile with no stored data
   - **When** the Practicing Musician opens the app for the first time
-  - **Then** the library contains the full set of 112 shipped Patterns, each immediately selectable
+  - **Then** the library contains the full set of 110 shipped Patterns, each immediately selectable
     and playable
 
 - **AC-16.1.2** — Shipped Patterns are not marked as user-authored
@@ -1817,7 +1827,7 @@ specified in the Acceptance Scenarios above.
 - The following are carried over from the predecessor application and assumed still correct: the
   swing timing formula including its 0.95 cap; MIDI velocity mapping of 50/80/110 for
   weak/medium/strong; the 8,000-character threshold before bulk submission falls back to clipboard.
-- **The seeded library is fixed input, not a design surface.** Its 112 Patterns are converted
+- **The seeded library is curated, not frozen.** Its 110 Patterns are converted
   mechanically from the predecessor application; their musical content is assumed correct as
   authored and is not re-evaluated here.
 - **Out of scope for this version**: multi-section Arrangements; a guided tutorial system; layering

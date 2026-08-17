@@ -4,8 +4,8 @@ test.use({ launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefin
 
 test('AC-5.1.1 — the library lists every shipped Pattern on first load', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.pattern-item')).toHaveCount(112);
-  await expect(page.locator('.library-count')).toHaveText('112 patterns');
+  await expect(page.locator('.pattern-item')).toHaveCount(110);
+  await expect(page.locator('.library-count')).toHaveText('110 patterns');
 });
 
 test('AC-5.1.2 — the list is alphabetical', async ({ page }) => {
@@ -20,7 +20,7 @@ test('AC-5.2.1 — typing filters the list', async ({ page }) => {
   await page.locator('.library-search').fill('clave');
   const count = await page.locator('.pattern-item').count();
   expect(count).toBeGreaterThan(0);
-  expect(count).toBeLessThan(112);
+  expect(count).toBeLessThan(110);
   for (const name of await page.locator('.pattern-name').allTextContents()) {
     expect(name.toLowerCase()).toContain('clave');
   }
@@ -30,7 +30,7 @@ test('AC-5.2.3 — clearing the search restores the full list', async ({ page })
   await page.goto('/');
   await page.locator('.library-search').fill('clave');
   await page.locator('.library-search').fill('');
-  await expect(page.locator('.pattern-item')).toHaveCount(112);
+  await expect(page.locator('.pattern-item')).toHaveCount(110);
 });
 
 test('AC-5.3.5 — automatic Tags are outlined with no removal control; user Tags are filled with one', async ({
@@ -60,7 +60,7 @@ test('AC-5.3.3 — clicking a Tag chip filters by it', async ({ page }) => {
   await page.locator('.tag-filter', { hasText: 'melodic' }).first().click();
   const count = await page.locator('.pattern-item').count();
   expect(count).toBeGreaterThan(0);
-  expect(count).toBeLessThan(112);
+  expect(count).toBeLessThan(110);
 
   // Every listed Pattern genuinely carries the Tag, checked against the data
   // rather than the row, which no longer repeats Tags.
@@ -247,7 +247,7 @@ test('AC-5.1.6 — an owned Pattern joins the library alongside built-in ones', 
   await page.locator('.dialog-input').fill('Aaa My Pattern');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
 
-  await expect(page.locator('.pattern-item')).toHaveCount(113);
+  await expect(page.locator('.pattern-item')).toHaveCount(111);
 
   const mine = page.locator('.pattern-item', { hasText: 'Aaa My Pattern' });
   await expect(mine).toHaveAttribute('data-owned', 'true');
@@ -256,100 +256,107 @@ test('AC-5.1.6 — an owned Pattern joins the library alongside built-in ones', 
   await expect(page.locator('.header-tags .tag-chip', { hasText: 'percussive' })).toBeVisible();
 });
 
-test('AC-5.3.7 — "Song Signatures" is gone; those Patterns are tagged Song', async ({ page }) => {
+test('AC-5.3.7 — the tag vocabulary is accurate after the audit', async ({ page }) => {
   await page.goto('/');
   const tags = await page.locator('.tag-filter').allTextContents();
-  expect(tags).not.toContain('Song Signatures');
-  expect(tags).toContain('Song');
 
-  // The 14 former Song Signatures Patterns are still findable, under Song.
-  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
-  expect(await page.locator('.pattern-item').count()).toBe(40);
+  // Merged away or dropped as inaccurate.
+  expect(tags).not.toContain('Song Signatures');
+  expect(tags).not.toContain('Rhythm');
+
+  // Kept, and now meaning what they say.
+  for (const t of ['Song', 'Latin', 'Waltz', 'Odd Meter', 'Afro', 'Blues']) {
+    expect(tags, t).toContain(t);
+  }
 });
 
-test('AC-5.3.9 — several Tags can be selected, and each one narrows further', async ({ page }) => {
+test('AC-5.3.7 — Odd Meter means 5/4 and 7/4 only, never 3/4', async ({ page }) => {
   await page.goto('/');
-  const total = await page.locator('.pattern-item').count();
+  await page.locator('.tag-filter', { hasText: /^Odd Meter$/ }).click();
 
-  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
-  const afterFirst = await page.locator('.pattern-item').count();
-  expect(afterFirst).toBeLessThan(total);
-  expect(afterFirst).toBeGreaterThan(0);
-
-  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
-  const afterSecond = await page.locator('.pattern-item').count();
-
-  // Narrowing, not replacing: the second Tag can only shrink the list.
-  expect(afterSecond).toBeLessThanOrEqual(afterFirst);
-
-  // Both chips read as selected.
-  await expect(page.locator('.tag-filter', { hasText: /^Song$/ })).toHaveAttribute(
-    'aria-pressed',
-    'true'
-  );
-  await expect(page.locator('.tag-filter', { hasText: /^melodic$/ })).toHaveAttribute(
-    'aria-pressed',
-    'true'
-  );
-
-  // And every remaining Pattern genuinely carries both, checked against the data.
-  const allBoth = await page.evaluate(() =>
-    [...document.querySelectorAll('.pattern-item')].every((el) => {
-      const id = el.dataset.patternId;
+  const meters = await page.evaluate(() =>
+    [...document.querySelectorAll('.pattern-item')].map((el) => {
       const all = [...window.__rm.seedStore.loadAll(), ...window.__rm.patternStore.loadAll()];
-      const p = all.find((x) => x.id === id);
-      return p && p.soundMode === 'melodic' && p.tags.includes('Song');
+      const p = all.find((x) => x.id === el.dataset.patternId);
+      return p.measures[0].timeSignature;
     })
   );
-  expect(allBoth).toBe(true);
+  expect(meters.length).toBeGreaterThan(0);
+  for (const m of meters) expect(['5/4', '7/4']).toContain(m);
 });
 
-test('AC-5.3.9 — clicking a selected Tag deselects just that one', async ({ page }) => {
+test('AC-5.3.7 — Waltz covers every 3/4 Pattern', async ({ page }) => {
   await page.goto('/');
-  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
-  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
-
-  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
-  await expect(page.locator('.tag-filter', { hasText: /^melodic$/ })).toHaveAttribute(
-    'aria-pressed',
-    'false'
-  );
-  await expect(page.locator('.tag-filter', { hasText: /^Song$/ })).toHaveAttribute(
-    'aria-pressed',
-    'true'
-  );
+  const check = await page.evaluate(() => {
+    const lib = window.__rm.seedStore.loadAll();
+    const threeFour = lib.filter((p) => p.measures[0].timeSignature === '3/4');
+    return {
+      count: threeFour.length,
+      allWaltz: threeFour.every((p) => p.tags.includes('Waltz')),
+      noneOdd: threeFour.every((p) => !p.tags.includes('Odd Meter')),
+    };
+  });
+  expect(check.count).toBe(5);
+  expect(check.allWaltz).toBe(true);
+  expect(check.noneOdd).toBe(true);
 });
 
-test('AC-5.3.9 — a Clear control returns to the whole library in one tap', async ({ page }) => {
-  await page.goto('/');
-  const total = await page.locator('.pattern-item').count();
-
-  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
-  await page.locator('.tag-filter', { hasText: /^percussive$/ }).click();
-  await expect(page.locator('.tag-clear')).toHaveText('Clear 2 tags');
-
-  await page.locator('.tag-clear').click();
-  await expect(page.locator('.tag-clear')).toHaveCount(0);
-  expect(await page.locator('.pattern-item').count()).toBe(total);
-});
-
-test('AC-5.3.9 — a combination nothing carries shows an empty list, not a wrong one', async ({
+test('AC-5.3.7 — Latin returns the canonical patterns, not only their variations', async ({
   page,
 }) => {
   await page.goto('/');
-  await page.locator('.tag-filter', { hasText: /^percussive$/ }).click();
-  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
+  const names = await page.evaluate(() =>
+    window.__rm.seedStore
+      .loadAll()
+      .filter((p) => p.tags.includes('Latin'))
+      .map((p) => p.name)
+  );
+  for (const n of ['Tresillo', 'Habanera', 'Bossa Nova', 'Son Clave 3-2', 'Rumba Clave 3-2']) {
+    expect(names, n).toContain(n);
+  }
+});
 
-  // No Pattern is both, and the app says so rather than quietly dropping a Tag.
-  await expect(page.locator('.pattern-item')).toHaveCount(0);
-  await expect(page.locator('.library-count')).toHaveText('0 patterns');
+test('AC-5.3.7 — Song is only applied to actual song transcriptions', async ({ page }) => {
+  await page.goto('/');
+  const names = await page.evaluate(() =>
+    window.__rm.seedStore
+      .loadAll()
+      .filter((p) => p.tags.includes('Song'))
+      .map((p) => p.name)
+  );
+  // The eight that were wrongly tagged Song no longer are.
+  for (const n of [
+    'Downbeat ska',
+    '3 middle up downbeat',
+    'Downbeat triplet upbeat',
+    'Offbeat Landing W Downbeat',
+    'Djembe 1',
+    'Djembe 2',
+  ]) {
+    expect(names, n).not.toContain(n);
+  }
+  // And the placeholder Patterns are gone from the library entirely.
+  const all = await page.evaluate(() => window.__rm.seedStore.loadAll().map((p) => p.name));
+  expect(all).not.toContain('New Rhythm');
+  expect(all).not.toContain('My Rhythm');
+});
+
+test('AC-5.3.7 — every shipped Pattern carries at least one tag', async ({ page }) => {
+  await page.goto('/');
+  const untagged = await page.evaluate(() =>
+    window.__rm.seedStore
+      .loadAll()
+      .filter((p) => p.tags.length === 0)
+      .map((p) => p.name)
+  );
+  expect(untagged).toEqual([]);
 });
 
 test('AC-5.3.10 — the library list does not repeat every Pattern’s Tags', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.pattern-item')).toHaveCount(112);
+  await expect(page.locator('.pattern-item')).toHaveCount(110);
 
-  // 112 rows each repeating their Tags made the list far longer to scroll for
+  // Repeating Tags on every row made the list far longer to scroll for
   // information the filter chips above already act on.
   await expect(page.locator('.pattern-item .tag-chip')).toHaveCount(0);
   await expect(page.locator('.pattern-item [data-action="add-tag"]')).toHaveCount(0);

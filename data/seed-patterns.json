@@ -420,7 +420,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "2-Beat Straight"
+        "2-Beat Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -670,7 +671,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "1-Measure Straight"
+        "1-Measure Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -922,7 +924,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "1-Measure Straight"
+        "1-Measure Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -1006,7 +1009,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "1-Measure Straight"
+        "1-Measure Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -1090,7 +1094,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "2-Measure Straight"
+        "2-Measure Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -1247,7 +1252,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "2-Measure Straight"
+        "2-Measure Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -1404,7 +1410,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "2-Measure Straight"
+        "2-Measure Straight",
+        "Latin"
       ],
       "rating": 0,
       "measures": [
@@ -2219,7 +2226,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "1-Beat Triplet"
+        "1-Beat Triplet",
+        "Shuffle"
       ],
       "rating": 0,
       "measures": [
@@ -2369,7 +2377,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "2-Beat Triplet"
+        "2-Beat Triplet",
+        "Blues"
       ],
       "rating": 0,
       "measures": [
@@ -2413,7 +2422,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "1-Measure Triplet"
+        "1-Measure Triplet",
+        "Gospel"
       ],
       "rating": 0,
       "measures": [
@@ -2629,7 +2639,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "1-Measure Triplet"
+        "1-Measure Triplet",
+        "Blues"
       ],
       "rating": 0,
       "measures": [
@@ -3326,7 +3337,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Odd Meter"
+        "Waltz",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -3393,7 +3405,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Odd Meter"
+        "Waltz",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -3460,7 +3473,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Odd Meter"
+        "Waltz",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -3527,7 +3541,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Odd Meter"
+        "Waltz",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -7313,7 +7328,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Song"
+        "1-Measure Straight",
+        "Ska"
       ],
       "rating": 0,
       "measures": [
@@ -7402,7 +7418,7 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Song"
+        "1-Measure Triplet"
       ],
       "rating": 0,
       "measures": [
@@ -7483,7 +7499,7 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Song"
+        "1-Measure Triplet"
       ],
       "rating": 0,
       "measures": [
@@ -7560,7 +7576,7 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Rhythm"
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8005,7 +8021,7 @@
       "soundMode": "percussive",
       "tempo": 120,
       "tags": [
-        "Song"
+        "Mixed Feel"
       ],
       "rating": 0,
       "measures": [
@@ -8092,7 +8108,8 @@
       "soundMode": "percussive",
       "tempo": 54,
       "tags": [
-        "Waltz"
+        "Waltz",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8168,7 +8185,7 @@
       "soundMode": "percussive",
       "tempo": 104,
       "tags": [
-        "Rhythm"
+        "2-Beat Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8221,7 +8238,8 @@
       "soundMode": "percussive",
       "tempo": 67,
       "tags": [
-        "Latin"
+        "Latin",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8314,7 +8332,8 @@
       "soundMode": "percussive",
       "tempo": 72,
       "tags": [
-        "Latin"
+        "Latin",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8407,7 +8426,8 @@
       "soundMode": "percussive",
       "tempo": 90,
       "tags": [
-        "Afro"
+        "Afro",
+        "1-Measure Triplet"
       ],
       "rating": 0,
       "measures": [
@@ -8488,7 +8508,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Afro"
+        "Afro",
+        "1-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8580,7 +8601,8 @@
       "soundMode": "percussive",
       "tempo": 120,
       "tags": [
-        "Latin"
+        "Latin",
+        "2-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -8751,7 +8773,8 @@
       "soundMode": "percussive",
       "tempo": 104,
       "tags": [
-        "Afro"
+        "Afro",
+        "2-Measure Straight"
       ],
       "rating": 0,
       "measures": [
@@ -12806,7 +12829,8 @@
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "Song"
+        "1-Measure Straight",
+        "Afro"
       ],
       "rating": 0,
       "measures": [
@@ -12901,7 +12925,8 @@
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
-        "Song"
+        "1-Measure Straight",
+        "Afro"
       ],
       "rating": 0,
       "measures": [
@@ -13305,229 +13330,6 @@
       "key": "A"
     },
     {
-      "name": "New Rhythm",
-      "soundMode": "melodic",
-      "tempo": 112,
-      "tags": [
-        "Song"
-      ],
-      "rating": 0,
-      "measures": [
-        {
-          "timeSignature": "4/4",
-          "beats": [
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "1",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "4",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3,
-                  "pitch": {
-                    "degree": "1",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "4",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "1",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "4",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "timeSignature": "4/4",
-          "beats": [
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "2",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "5",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "2",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "5",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "2",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "5",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1,
-                  "pitch": {
-                    "degree": "4",
-                    "octaveOffset": 0
-                  }
-                },
-                {
-                  "on": false
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "key": "Bb"
-    },
-    {
       "name": "This Charming Man",
       "soundMode": "percussive",
       "tempo": 104,
@@ -13612,176 +13414,6 @@
                 {
                   "on": true,
                   "accent": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "My Rhythm",
-      "soundMode": "percussive",
-      "tempo": 131,
-      "tags": [
-        "Song"
-      ],
-      "rating": 0,
-      "measures": [
-        {
-          "timeSignature": "4/4",
-          "beats": [
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1
-                },
-                {
-                  "on": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "timeSignature": "4/4",
-          "beats": [
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 2
-                },
-                {
-                  "on": true,
-                  "accent": 1
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 1
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1
-                },
-                {
-                  "on": false
-                }
-              ]
-            },
-            {
-              "recipe": "straight-16ths",
-              "slots": [
-                {
-                  "on": true,
-                  "accent": 3
-                },
-                {
-                  "on": false
-                },
-                {
-                  "on": true,
-                  "accent": 1
-                },
-                {
-                  "on": false
                 }
               ]
             }

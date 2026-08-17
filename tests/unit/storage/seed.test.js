@@ -7,8 +7,8 @@ import { beatCount, isSupported } from '../../../src/core/meter.js';
 const library = seed.loadAll();
 
 describe('the shipped Pattern library', () => {
-  it('AC-16.1.1 — the app arrives stocked with 112 Patterns', () => {
-    expect(library).toHaveLength(112);
+  it('AC-16.1.1 — the app arrives stocked with 110 Patterns', () => {
+    expect(library).toHaveLength(110);
   });
 
   it('AC-16.1.2 — every shipped Pattern is valid against the data model', () => {
@@ -18,7 +18,9 @@ describe('the shipped Pattern library', () => {
   });
 
   it('AC-16.1.3 — the conversion preserved every note from the predecessor', () => {
-    expect(seed.noteOnCount()).toBe(1053);
+    // 1,053 at conversion, less the 26 notes in the two placeholder Patterns
+    // ("New Rhythm", "My Rhythm") removed during the 2026-08-17 tag audit.
+    expect(seed.noteOnCount()).toBe(1027);
   });
 
   it('AC-16.1.4 — ids are deterministic, unique, and derived from seed position', () => {
