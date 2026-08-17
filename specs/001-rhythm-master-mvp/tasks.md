@@ -790,3 +790,13 @@ record is complete rather than starting mid-stream.
   Five e2e tests, one per Case, plus unit tests of the column arithmetic for the edges a browser cannot easily reach — a Beat wider than the viewport, a Measure of one Beat. The unit tests deliberately do not stand for the criterion: AC-15.1.14 is UI-level (T6) and what it asserts is what a Measure looks like on a screen.
 
   AC-15.1.14/2 asserts each `.beats` container's own `scrollWidth` as well as the page's, because `overflow-x: hidden` on the body means an over-wide Measure is CLIPPED rather than scrolled — it would hide half a Measure while every page-level overflow check still passed.
+
+- [X] T169 **[bug]** T167's layout pass measured on every render, which timed out the densest Melodic e2e test on CI — `src/ui/beat-layout.js`.
+
+  The deploy's verify job failed twice on `AC-2.2.15/3` — 8 Measures of 12/8 Melodic, 192 Slots at 390px — timing out at 30s where it had taken 9.8s on the run before.
+
+  `balanceBeatLines` measured on every call, and playback re-renders the whole grid on every Slot (Principle II), so a forced layout landed in the middle of each render. A Measure's columns depend on its Slot shape, its meter label and the grid's width; while those hold, the answer holds. It is now cached on exactly that key, so the render path only writes `--beat-cols` and never reads, and the grid's own width is read once per pass and only when something is unknown.
+
+  Measured against a warm preview server, three runs each: 15.7s on the flexbox this replaced, 16.3s with the uncached version, 6.0s with the cache. The fixed-column grid turns out to be cheaper to lay out than a wrapping flexbox of 192 min-content items, once nothing forces a read mid-render.
+
+  No AC changed: AC-15.1.14 says what the layout must be, not how often it may be computed (§2a, fixed as a bug).
