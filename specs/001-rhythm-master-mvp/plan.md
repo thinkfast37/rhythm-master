@@ -191,7 +191,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-006** | US-1.2 — Time signature support without implied grouping | AC-1.2.1–AC-1.2.4 | T039 | T040 |
 | **P-007** | US-1.3 — Mixed subdivision within a Beat, via Recipes | AC-1.3.1–AC-1.3.10 | T041–T043 | T044 |
 | **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045 | T046 |
-| **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.16 | T047–T048, T050 | T049 |
+| **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.17 | T047–T048, T050, T166 | T049, T166 |
 | **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.7 | T051–T055, T165 | T056, T165 |
 | **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.3 | T057–T058 | T059 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |

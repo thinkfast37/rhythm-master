@@ -606,6 +606,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** each Slot's default accent is computed
   - **Then** Slot 1 = Medium (the Beat's own level), Slot 2 = Weak, Slot 3 = Medium (the "&"), Slot 4 = Weak
 
+- **AC-3.1.17** — A Slot that does not sound reads as silent at a glance
+  - **Given** a Measure in which some Slots sound and some do not
+  - **When** the Practicing Musician looks at the rhythm rather than at any one Slot
+  - **Then** the sounding Slots carry the visual weight, so the shape of what plays is legible without reading each cell in turn
+  - **Cases**:
+    - **AC-3.1.17/1** — A silent Slot's counting syllable is not bold, while a sounding one's is
+    - **AC-3.1.17/2** — A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's
+    - **AC-3.1.17/3** — A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum
+    - **AC-3.1.17/4** — The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail
+  - *(Added 2026-08-17. Every syllable was rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm — the maintainer reported being unable to see which subdivisions play. /3 is not a restatement of /2: at a browser-enforced minimum font size the two sizes collapse to the same value, and colour is the only one of the three channels no setting overrules.)*
+
 - **AC-3.1.16** — The within-Beat shape is identical in every Beat
   - **Given** a 4/4 Measure with every Beat on the Straight 16ths Recipe
   - **When** every Slot's default accent is computed

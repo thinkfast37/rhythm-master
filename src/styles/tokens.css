@@ -50,9 +50,11 @@
      count and the accent are what is read while working on rhythm, and the
      syllable sets at 15px (AC-2.2.14/3). */
   --slot-accent-h: 40px;
-  /* The Accent bar along a Slot's bottom edge (D-005, amended). Fixed height,
-     variable width — it must never grow into the syllable's band. */
-  --slot-bar-h: 5px;
+  /* The Accent bar along a Slot's bottom edge (D-005, amended). Its WIDTH
+     carries the level; its height scales with the cell so a wide Slot does not
+     reduce the Accent to a detail (AC-3.1.17/4). It must never grow into the
+     syllable's band, which the clamp's cap is there to guarantee. */
+  --slot-bar-h: clamp(5px, 9cqi, 9px);
   /* Between the two zones, so neither reads as part of the other
      (AC-2.2.14/2). */
   --slot-zone-gap: 4px;
@@ -399,6 +401,26 @@ body {
  */
 @media (pointer: fine) {
   .slot-note { min-height: var(--slot-note-h); }
+}
+
+/*
+ * A Slot that does not sound recedes. AC-3.1.17.
+ *
+ * Every syllable used to render identically whether or not its Slot sounded, so
+ * the largest, boldest thing in an empty cell was text carrying no information
+ * about the rhythm — which made the shape of what actually plays hard to read
+ * across a Measure.
+ *
+ * Three channels, not one. Weight and size are the obvious two and neither is
+ * sufficient alone: a browser with a minimum font size clamps the reduced size
+ * back up to the same value as the full one, and a substituted typeface can
+ * flatten the weight. Colour is the channel no reader setting overrules, so it
+ * carries the distinction when the other two are unavailable.
+ */
+.slot.accent-off .slot-label {
+  font-weight: 400;
+  font-size: clamp(11px, 25cqi, 19px);
+  color: var(--ink-dim);
 }
 
 /* --- the playback cursor (AC-4.1.7) -------------------------------------- */
