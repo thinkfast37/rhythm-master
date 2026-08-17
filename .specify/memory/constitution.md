@@ -1,27 +1,38 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: [unversioned template] → 1.0.0
-Modified principles: N/A (initial population — all placeholders replaced)
+Version change: 1.0.0 → 2.0.0
+Modified principles:
+  - Replaced the "Accessibility & Inclusive Design" section with "Visual & Audio Clarity".
+    The prior section was inherited from a sibling project and imported disability-accommodation
+    requirements (keyboard navigability, screen-reader naming, WCAG AA contrast ratios) that were
+    never asked for on this project. Removed those. Retained what the maintainer actually requires:
+    the non-color accent-encoding rule and 390px grid legibility. Added audio-clarity requirements
+    that had no home before — correct pitch and octave on Melodic Slots, audibly distinct Accent
+    Levels at practice tempo, and a metronome click separable from Pattern content.
+  - Principle II — the non-color Accent Level rule is now marked NON-NEGOTIABLE.
+  - Principle IV — P0 classification broadened from musical correctness alone to three categories:
+    musical correctness, data loss, and clarity. Data loss was added because auto-save is the only
+    save mechanism, so no user action can mitigate a persistence bug.
+  - Governance — the non-negotiable clause list is now enumerated explicitly rather than named
+    inline, and now has five entries.
 
-Added sections:
-  - Core Principles (I–V)
-  - Accessibility & Inclusive Design
-  - Client-Side Architecture Constraints
-  - Governance
+MAJOR bump rationale: a whole section was removed and replaced, and P0 scope was redefined.
 
-Removed sections: None (no prior content)
+Added sections: Visual & Audio Clarity
+Removed sections: Accessibility & Inclusive Design
 
 Templates reviewed:
-  - .specify/templates/plan-template.md   ✅ — Constitution Check section present; Principle IV's
-    per-AC test-coverage requirement and Principle V's no-backend constraint are both checkable
-    at plan time; no structural misalignment
-  - .specify/templates/spec-template.md   ✅ — User story / acceptance criteria structure aligns
-    with the US-x.y / AC-x.y.z traceability scheme mandated by Principle IV
-  - .specify/templates/tasks-template.md  ✅ — task categorization compatible with per-AC test
-    tasks and P0 correctness-bug handling
+  - .specify/templates/plan-template.md   ✅ — Constitution Check and Complexity Tracking remain
+    the enforcement points; the gate is binding on plans and PRs per Governance
+  - .specify/templates/spec-template.md   ✅ — unaffected
+  - .specify/templates/tasks-template.md  ✅ — unaffected
 
-Deferred TODOs: None — all placeholders resolved.
+Follow-up required:
+  - specs/001-rhythm-master-mvp/spec.md still carries FR-013 (keyboard operability and accessible
+    names), which this version no longer requires. Remove or rescope it during the spec pass.
+
+Deferred TODOs: None.
 ==================
 -->
 
@@ -70,7 +81,7 @@ instances.
   Time Signature prominence) MUST be a pure, deterministic function of the current
   Pattern state plus transport position. No hidden mutable UI variable may hold display
   state that can diverge from the canonical Pattern object.
-- **Accent Level MUST NOT be conveyed by color alone.** The three active levels
+- **Accent Level MUST NOT be conveyed by color alone (NON-NEGOTIABLE).** The three active levels
   (Weak / Medium / Strong) MUST each carry a distinct non-color indicator — height,
   fill density, border weight, glyph, or text — so they remain distinguishable in
   monochrome and under common color vision deficiencies. This is the single highest-risk
@@ -179,27 +190,30 @@ not deferred features.
 contradict the tool's purpose and its zero-maintenance hosting model. Keeping it lean
 ensures it loads fast, remains auditable, and can be served as static files indefinitely.
 
-## Accessibility & Inclusive Design
+## Visual & Audio Clarity
 
-The Pattern grid MUST meet the following baseline requirements, treated as first-class
-correctness criteria rather than polish:
+The Composer must be able to tell, at a glance and by ear, exactly what a Pattern is doing.
+Both are treated as correctness criteria, not polish.
 
-- **Color-independence**: Every piece of musical information — Slot on/off, Accent Level,
-  straight vs. triplet feel, active playback position — MUST have a non-color indicator
-  (shape, size, border, glyph, or text) so it is interpretable in monochrome and under
-  deuteranopia and protanopia.
-- **Keyboard navigability**: Users MUST be able to reach and activate any Slot, Recipe
-  picker, Time Signature control, and transport control without a pointing device.
-- **Screen reader support**: Slots and controls MUST expose meaningful accessible names
-  conveying musical position and state (e.g. "Measure 1, Beat 3, Slot 2 of 4, strong
-  accent, D4") rather than unlabeled click targets.
-- **Contrast**: All text and glyph indicators MUST meet WCAG AA contrast (4.5:1 for
-  normal text) against their background in every Slot state.
-- **Touch targets**: Interactive Slots MUST remain reliably tappable on a 390 px-wide
-  viewport, including in the app's densest supported Pattern.
+**Visual clarity**
 
-Accessibility defects that render the grid uninterpretable or unusable for a user with a
-disability are treated as P0 correctness bugs, not cosmetic issues.
+- **Accent Level MUST NOT be distinguishable by color alone (NON-NEGOTIABLE).** Each of the
+  three active levels MUST carry a second visual channel — height, fill, border weight, or a
+  glyph — so the difference survives a monochrome screen or a color vision deficiency.
+- Slot on/off state, and the boundary between straight-feel and triplet-feel groups inside a
+  mixed Recipe, MUST be readable without relying on color alone.
+- The grid MUST stay legible at the densest Pattern the app permits (6 Measures of 12/8 at
+  Straight 16ths — 144 Slots) on a 390 px viewport, and Slots MUST stay reliably tappable there.
+
+**Audio clarity**
+
+- A Melodic Slot MUST sound at the exact pitch and octave it was authored at, resolved through
+  the Pattern's Key. A wrong octave is a correctness failure, not a tuning preference.
+- The three Accent Levels MUST be audibly distinct from one another at practice tempos, in both
+  Percussive and Melodic modes — accent is musical content, and inaudible dynamics make a Pattern
+  read as flat.
+- The metronome click MUST remain audibly separable from the Pattern itself, so the reference
+  pulse is never mistaken for content.
 
 ## Client-Side Architecture Constraints
 
@@ -230,16 +244,20 @@ These constraints govern how state, data, and rendering are wired together:
 ## Governance
 
 This constitution supersedes all other project-level guidance on matters of correctness,
-scope, accessibility, traceability, and testing standards. Conflicting conventions in
+scope, clarity, traceability, and testing standards. Conflicting conventions in
 code reviews, tickets, or other documents must be resolved in favor of this constitution.
 
 **Amendment procedure**:
 1. Propose a change via a pull request or equivalent review artifact that includes:
    (a) the changed principle text, (b) rationale for the change, and (c) an assessment of
    impact on existing code, tests, and the spec's AC set.
-2. Any amendment that weakens a NON-NEGOTIABLE clause (Principle I, the per-AC test
-   requirement in Principle IV, the no-secrets clause in Principle V, or the Local
-   Metadata separation rule) requires explicit documented justification.
+2. Any amendment that weakens a NON-NEGOTIABLE clause requires explicit documented
+   justification. The non-negotiable clauses are:
+   - Principle I in its entirety (rhythmic and metric correctness)
+   - The non-color-encoding rule for Accent Level (Principle II and Visual & Audio Clarity)
+   - The per-AC automated test requirement in Principle IV
+   - The no-secrets-in-client-code clause in Principle V
+   - The Local Metadata separation rule in Client-Side Architecture Constraints
 3. Bump the constitution version per the rules below. Update the `Last Amended` date.
 
 **Versioning policy**:
@@ -257,4 +275,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-16
+**Version**: 2.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-16
