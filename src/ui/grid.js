@@ -232,11 +232,15 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
     position.slotIndex === slotIndex;
   if (active) el.classList.add('playing');
 
-  // Fill height is the second channel alongside colour: at 144 Slots a height
-  // difference scans faster than a hue difference for any user (D-005).
+  // Bar WIDTH along the bottom edge is the second channel alongside colour: at
+  // 192 Slots a size difference scans faster than a hue difference for any user
+  // (D-005). It was fill height until 2026-08-17, which put a moving horizontal
+  // boundary through the band the counting syllable occupies — measured, it
+  // landed within 3px of the letters at two of the three levels. A bar pinned to
+  // the bottom edge cannot reach them at any level.
   const fill = document.createElement('span');
   fill.className = 'slot-fill';
-  fill.style.height = `${[0, 34, 67, 100][accent]}%`;
+  fill.style.width = `${[0, 33, 67, 100][accent]}%`;
 
   const text = document.createElement('span');
   text.className = 'slot-label';

@@ -6,9 +6,9 @@
  * deuteranopia, protanopia and tritanopia. Do not change these values without
  * re-running that check.
  *
- * Colour is the requirement; fill height is used alongside it in the grid
- * because a height difference scans faster than a hue difference at mobile
- * density (research.md D-005).
+ * Colour is the requirement; a bar along the Slot's bottom edge, encoded by
+ * width, is used alongside it because a size difference scans faster than a hue
+ * difference at mobile density (research.md D-005, amended 2026-08-17).
  */
 :root {
   color-scheme: light dark;
@@ -41,6 +41,9 @@
      count and the accent are what is read while working on rhythm, and the
      syllable sets at 15px (AC-2.2.14/3). */
   --slot-accent-h: 40px;
+  /* The Accent bar along a Slot's bottom edge (D-005, amended). Fixed height,
+     variable width — it must never grow into the syllable's band. */
+  --slot-bar-h: 5px;
   /* Between the two zones, so neither reads as part of the other
      (AC-2.2.14/2). */
   --slot-zone-gap: 4px;
@@ -68,7 +71,7 @@
  *   zone    #7a84a8 → 4.61:1 (against --accent-off, the Slot's own ground)
  *
  * Changing any of these means re-running the contrast assertions in
- * tests/unit/ui/grid-boundaries.test.js, which compute the ratios rather than
+ * tests/e2e/grid-boundaries.spec.js, which compute the ratios rather than
  * trusting this comment.
  */
 :root {
@@ -78,13 +81,38 @@
   --grid-zone-line: #7a84a8;
 }
 
+/*
+ * Typefaces are named explicitly, and that is deliberate.
+ *
+ * `system-ui` and a bare `monospace` both resolve to whatever the reader has set
+ * as their system or fixed-width font. That is right for a document and wrong
+ * for this grid: 192 Slots at a 24px tap minimum is a layout whose spacing is
+ * computed from the type's metrics, and a substituted face with a different
+ * x-height or advance width silently breaks the arithmetic — the maintainer
+ * reads with a dyslexia-friendly system font, under which the counting syllable
+ * and the pitch stopped being distinguishable and the note band clipped.
+ *
+ * Naming real families bypasses the generic keywords, so the grid gets the
+ * metrics it was measured against. The Slot rules below ALSO size from content
+ * rather than fixed pixel heights, so a reader who forces a face through an
+ * extension or a minimum-size setting still gets a grid that grows to fit
+ * instead of one that clips. Belt and braces: the first keeps it looking right,
+ * the second keeps it readable when the first is overridden.
+ */
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+             Arial, "Noto Sans", sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+               "DejaVu Sans Mono", "Courier New", monospace;
+}
+
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   /* The page never scrolls sideways, at any Pattern size (AC-15.1.10). */
   overflow-x: hidden;
 }
@@ -116,7 +144,7 @@ body {
   color: var(--brand);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  font: 600 14px/1 ui-monospace, monospace;
+  font: 600 14px/1 var(--font-mono);
   cursor: pointer;
 }
 
@@ -175,7 +203,7 @@ body {
   position: relative;
   flex: 1 1 auto;
   min-width: var(--slot-min);
-  height: 52px;
+  min-height: 52px;
   padding: 0;
   background: var(--accent-off);
   border: 1px solid var(--grid-slot-line);
@@ -184,31 +212,54 @@ body {
   overflow: hidden;
 }
 
-/* Colour carries the requirement (Principle II); height is the design choice
-   that makes it scan at density (D-005). */
+/*
+ * Colour carries the requirement (Principle II); bar WIDTH is the design choice
+ * that makes it scan at density (D-005, amended 2026-08-17).
+ *
+ * It was fill height. A fill sweeping up the cell puts a moving horizontal
+ * boundary through the band the counting syllable sits in — measured, its edge
+ * landed 0.4px below the baseline at Weak and 2.8px above the caps at Medium,
+ * and at Medium the text also flipped to dark and sat on the seam. No fill
+ * percentage avoids that; the boundary crosses the text by construction.
+ *
+ * Pinned to the bottom edge at a fixed height, the bar cannot reach the letters
+ * at any level — so the cell's ground stays flat, the syllable keeps one colour
+ * throughout, and nothing about the text changes as the accent changes.
+ */
 .slot-fill {
   position: absolute;
   left: 0;
-  right: 0;
   bottom: 0;
+  height: var(--slot-bar-h);
   display: block;
-  background: var(--accent-off);
-  transition: height 80ms linear;
+  background: transparent;
+  border-radius: 0 2px 2px 0;
+  transition: width 80ms linear;
 }
 .slot.accent-weak   .slot-fill { background: var(--accent-weak); }
 .slot.accent-medium .slot-fill { background: var(--accent-medium); }
 .slot.accent-strong .slot-fill { background: var(--accent-strong); }
 
+/*
+ * The syllable clears the bar rather than being centred over it, and keeps
+ * --ink-dim at every Accent Level: the dark-text-on-light-fill flip retired with
+ * the fill. `min-height` rather than `height` throughout this file's Slot rules,
+ * because a pinned pixel height assumes the author knows the font's metrics —
+ * and a reader may have imposed their own face or a minimum size, in which case
+ * the text is larger than anything declared here and a fixed box clips it.
+ */
 .slot-label {
   position: relative;
-  display: block;
-  font: 500 10px/52px ui-monospace, monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(52px - var(--slot-bar-h));
+  padding-bottom: var(--slot-bar-h);
+  font: 500 10px/1.3 var(--font-mono);
   color: var(--ink-dim);
   text-align: center;
   pointer-events: none;
 }
-.slot.accent-medium .slot-label,
-.slot.accent-strong .slot-label { color: #0b0c15; }
 
 .slot.playing {
   outline: 2px solid var(--ink);
@@ -238,7 +289,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--slot-zone-gap);
-  height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
+  min-height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
+  height: auto;
   background: transparent;
   border: 0;
   overflow: visible;
@@ -246,7 +298,7 @@ body {
 
 .slot.has-note .slot-accent {
   position: relative;
-  flex: 0 0 var(--slot-accent-h);
+  flex: 0 0 auto;
   min-height: var(--slot-accent-h);
   padding: 0;
   background: var(--accent-off);
@@ -262,7 +314,7 @@ body {
  * different kinds of information rather than two instances of the same one.
  */
 .slot-note {
-  flex: 0 0 var(--slot-note-h);
+  flex: 0 0 auto;
   min-height: var(--slot-note-h);
   display: flex;
   align-items: center;
@@ -304,7 +356,9 @@ body {
 .slot.has-note .slot-label {
   font-size: 15px;
   font-weight: 700;
-  line-height: var(--slot-accent-h);
+  line-height: 1.3;
+  min-height: var(--slot-accent-h);
+  padding-bottom: var(--slot-bar-h);
 }
 
 /* --- responsive ---------------------------------------------------------- */
@@ -312,16 +366,16 @@ body {
 @media (max-width: 767px) {
   .grid { padding: 8px; gap: 8px; }
   .measure { flex-wrap: wrap; }
-  .slot { height: 44px; }
-  .slot-label { line-height: 44px; }
+  .slot { min-height: 44px; }
+  .slot-label { min-height: calc(44px - var(--slot-bar-h)); }
   /* A split Slot keeps its full height on mobile: both zones are tap targets
      with a floor of their own (AC-2.2.12), so this is the last place to
      compress them. The rule above would otherwise override the composed
      height and squeeze the note band to a sliver. */
   .slot.has-note {
-    height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
+    min-height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
   }
-  .slot.has-note .slot-label { line-height: var(--slot-accent-h); }
+  .slot.has-note .slot-label { min-height: var(--slot-accent-h); }
 }
 
 /* --- controls ------------------------------------------------------------ */
@@ -339,7 +393,7 @@ body {
 .control-label { font-size: 10px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .06em; }
 
 .controls button, .controls select, .controls input {
-  font: 500 13px/1 system-ui, sans-serif;
+  font: 500 13px/1 var(--font-ui);
   color: var(--ink);
   background: #1c1f2b;
   border: 1px solid var(--line);
@@ -369,16 +423,16 @@ body {
   border-radius: 8px;
   padding: 20px;
 }
-.dialog-message { margin: 0 0 16px; font: 400 14px/1.5 system-ui, sans-serif; color: var(--ink); }
+.dialog-message { margin: 0 0 16px; font: 400 14px/1.5 var(--font-ui); color: var(--ink); }
 .dialog-input {
   width: 100%; margin-bottom: 16px; padding: 10px;
-  font: 400 14px/1 system-ui, sans-serif;
+  font: 400 14px/1 var(--font-ui);
   color: var(--ink); background: #1c1f2b;
   border: 1px solid var(--line); border-radius: var(--radius);
 }
 .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .dialog-button {
-  font: 500 13px/1 system-ui, sans-serif; color: var(--ink);
+  font: 500 13px/1 var(--font-ui); color: var(--ink);
   background: #1c1f2b; border: 1px solid var(--line);
   border-radius: var(--radius); padding: 9px 14px; cursor: pointer;
 }
@@ -424,19 +478,17 @@ body {
  * (AC-2.2.14/5).
  */
 .slot-degree {
-  font: 400 10px/1.25 ui-monospace, monospace;
-  color: inherit;
+  font: 400 10px/1.4 var(--font-mono);
+  color: var(--ink);
 }
 .slot-note-name {
-  font: 400 10px/1.25 ui-monospace, monospace;
+  font: 400 10px/1.4 var(--font-mono);
   letter-spacing: -0.03em;
   color: var(--ink-dim);
 }
-/* The dim on the name is against the Slot's dark ground. Where the accent fill
-   reaches the badge — the unsplit, read-only Melodic Slot — that inverts. */
-.slot.accent-medium .slot-note-name,
-.slot.accent-strong .slot-note-name { color: #2b2f3c; }
-.slot.has-note .slot-note-name { color: var(--ink-dim); }
+/* One colour at every Accent Level. The badge never sits on a coloured ground
+   now that the bar is confined to the bottom edge. */
+.slot-note-name { color: var(--ink-dim); }
 /* --- the pitch strip (US-2.2) --------------------------------------------- */
 
 /*
@@ -456,7 +508,7 @@ body {
 .pitch-strip[hidden] { display: none; }
 
 .pitch-strip-label {
-  font: 600 11px/1 system-ui, sans-serif;
+  font: 600 11px/1 var(--font-ui);
   color: var(--ink-dim);
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -475,7 +527,7 @@ body {
   min-width: 32px;
   min-height: 32px;
   padding: 0 8px;
-  font: 600 13px/1 ui-monospace, monospace;
+  font: 600 13px/1 var(--font-mono);
   color: var(--ink);
   background: #1c1f2b;
   border: 1px solid var(--line);
@@ -501,8 +553,8 @@ body {
   min-width: 40px;
   padding: 4px 6px;
 }
-.degree-number { font: 600 13px/1 ui-monospace, monospace; }
-.degree-name { font: 500 10px/1 ui-monospace, monospace; color: var(--ink-dim); }
+.degree-number { font: 600 13px/1 var(--font-mono); }
+.degree-name { font: 500 10px/1 var(--font-mono); color: var(--ink-dim); }
 /* On the armed button the ground is --brand, so the dim grey the name uses
    elsewhere would drop below readable against it. */
 .pitch-strip .degree[aria-pressed='true'] .degree-name { color: #3d2c05; }
@@ -518,7 +570,7 @@ body {
 .octave-stepper { align-items: center; }
 .octave-readout {
   min-width: 52px;
-  font: 600 12px/1 ui-monospace, monospace;
+  font: 600 12px/1 var(--font-mono);
   color: var(--ink);
   text-align: center;
 }
@@ -527,7 +579,7 @@ body {
 
 .pattern-nav { display: flex; gap: 8px; padding: 0 12px; }
 .nav-button {
-  font: 500 13px/1 system-ui, sans-serif; color: var(--ink);
+  font: 500 13px/1 var(--font-ui); color: var(--ink);
   background: #1c1f2b; border: 1px solid var(--line);
   border-radius: var(--radius); padding: 8px 12px; cursor: pointer;
 }
@@ -535,7 +587,7 @@ body {
 .library { padding: 12px; }
 .library-search {
   width: 100%; padding: 10px;
-  font: 400 14px/1 system-ui, sans-serif;
+  font: 400 14px/1 var(--font-ui);
   color: var(--ink); background: #1c1f2b;
   border: 1px solid var(--line); border-radius: var(--radius);
 }
@@ -548,7 +600,7 @@ body {
 .tag-chip, .tag-filter {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 999px;
-  font: 500 11px/1.4 system-ui, sans-serif;
+  font: 500 11px/1.4 var(--font-ui);
   background: transparent; color: var(--ink-dim);
   border: 1px solid var(--ink-dim); cursor: pointer;
 }
@@ -569,7 +621,7 @@ body {
 .pattern-item.current .pattern-name { color: var(--brand); }
 .pattern-name {
   flex: 1 1 160px; text-align: left;
-  font: 500 14px/1.3 system-ui, sans-serif;
+  font: 500 14px/1.3 var(--font-ui);
   color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
 }
 .rating { display: flex; gap: 1px; }
@@ -630,7 +682,7 @@ body {
   display: block;
   margin: 12px;
   padding: 10px 14px;
-  font: 600 13px/1 system-ui, sans-serif;
+  font: 600 13px/1 var(--font-ui);
   color: var(--ink); background: #1c1f2b;
   border: 1px solid var(--line); border-radius: var(--radius);
   cursor: pointer;
@@ -681,7 +733,7 @@ body {
 /* --- main panel sections ------------------------------------------------- */
 
 .pattern-header { padding: 12px 12px 0; }
-.pattern-title { margin: 0; font: 700 20px/1.2 system-ui, sans-serif; color: var(--ink); }
+.pattern-title { margin: 0; font: 700 20px/1.2 var(--font-ui); color: var(--ink); }
 .pattern-meta { margin: 4px 0 0; font-size: 11px; color: var(--ink-dim); }
 
 .main-panel > details {
@@ -689,7 +741,7 @@ body {
 }
 .main-panel > details > summary {
   padding: 12px;
-  font: 600 12px/1 system-ui, sans-serif;
+  font: 600 12px/1 var(--font-ui);
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--ink-dim);
@@ -712,7 +764,7 @@ body {
 .pattern-title {
   width: 100%;
   padding: 4px 0;
-  font: 700 20px/1.2 system-ui, sans-serif;
+  font: 700 20px/1.2 var(--font-ui);
   color: var(--ink);
   background: transparent;
   border: 0;
@@ -721,20 +773,20 @@ body {
 .pattern-title:focus { outline: none; border-bottom-color: var(--brand); }
 .pattern-header .undo {
   margin-top: 6px; padding: 6px 10px;
-  font: 500 12px/1 system-ui, sans-serif;
+  font: 500 12px/1 var(--font-ui);
   color: var(--ink); background: #1c1f2b;
   border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
 }
 .pattern-header .undo:disabled { opacity: .4; cursor: not-allowed; }
 .new-pattern {
   width: 100%; margin-bottom: 10px; padding: 10px;
-  font: 600 13px/1 system-ui, sans-serif;
+  font: 600 13px/1 var(--font-ui);
   color: #0b0c15; background: var(--brand);
   border: 0; border-radius: var(--radius); cursor: pointer;
 }
 .rating-filter { display: flex; gap: 4px; margin-bottom: 8px; }
 .rating-option {
-  padding: 5px 8px; font: 500 11px/1 system-ui, sans-serif;
+  padding: 5px 8px; font: 500 11px/1 var(--font-ui);
   color: var(--ink-dim); background: transparent;
   border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
 }
@@ -746,19 +798,19 @@ body {
 .measure-meter.prominent { color: var(--brand); border-color: var(--brand); opacity: 1; }
 .measure-meter.dimmed { color: var(--ink-dim); border-color: var(--line); opacity: .55; }
 .grid.read-only .slot, .grid.read-only .measure-meter { cursor: default; }
-.dialog-error { margin: 0 0 12px; font: 500 12px/1.4 system-ui, sans-serif; color: #ff8f6b; }
+.dialog-error { margin: 0 0 12px; font: 500 12px/1.4 var(--font-ui); color: #ff8f6b; }
 /* A long picker scrolls inside the dialog rather than truncating its options. */
 .dialog-actions { max-height: 60vh; overflow-y: auto; }
 
 .tag-add {
   padding: 3px 8px; border-radius: 999px;
-  font: 500 11px/1.4 system-ui, sans-serif;
+  font: 500 11px/1.4 var(--font-ui);
   color: var(--brand); background: transparent;
   border: 1px dashed var(--brand); cursor: pointer;
 }
 .tag-clear {
   padding: 3px 8px; border-radius: 999px;
-  font: 500 11px/1.4 system-ui, sans-serif;
+  font: 500 11px/1.4 var(--font-ui);
   color: var(--ink); background: transparent;
   border: 1px solid var(--ink-dim); cursor: pointer;
 }

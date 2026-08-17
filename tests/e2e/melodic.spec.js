@@ -318,21 +318,69 @@ test("AC-2.2.14/3 — The note band's text is rendered at least a third smaller 
   const sizes = await page.evaluate(() => {
     const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
     const px = (el) => parseFloat(getComputedStyle(el).fontSize);
+
+    // Measured from the glyphs the browser actually drew, not from the size the
+    // CSS asked for. Reading `font-size` back proves only that the stylesheet
+    // says what the stylesheet says: under a substituted face the declared
+    // sizes are unchanged while the rendered ink is not, which is exactly how a
+    // "1.5x smaller" note band shipped looking the same size as the syllable.
+    const ink = (el) => {
+      const cs = getComputedStyle(el);
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m = c.measureText('bEg4');
+      return m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+    };
+
+    const label = slot.querySelector('.slot-label');
+    const degree = slot.querySelector('.slot-degree');
+    const name = slot.querySelector('.slot-note-name');
     return {
-      syllable: px(slot.querySelector('.slot-label')),
-      degree: px(slot.querySelector('.slot-degree')),
-      name: px(slot.querySelector('.slot-note-name')),
+      declared: { syllable: px(label), degree: px(degree), name: px(name) },
+      ink: { syllable: ink(label), degree: ink(degree), name: ink(name) },
     };
   });
 
   // A margin, not merely `<`. The first implementation put 10px under 13px,
   // which passes any "is it smaller" check and looks identical on screen.
-  for (const [what, size] of [['degree', sizes.degree], ['name', sizes.name]]) {
-    expect(sizes.syllable / size, `${what} vs syllable`).toBeGreaterThanOrEqual(4 / 3);
+  for (const key of ['degree', 'name']) {
+    expect(sizes.declared.syllable / sizes.declared[key], `${key} declared`).toBeGreaterThanOrEqual(4 / 3);
+    expect(sizes.ink.syllable / sizes.ink[key], `${key} as drawn`).toBeGreaterThanOrEqual(4 / 3);
   }
   // And the pitch stays readable: shrinking it is not an allowed way to pass.
-  expect(sizes.degree).toBeGreaterThanOrEqual(10);
-  expect(sizes.name).toBeGreaterThanOrEqual(10);
+  expect(sizes.declared.degree).toBeGreaterThanOrEqual(10);
+  expect(sizes.declared.name).toBeGreaterThanOrEqual(10);
+});
+
+test('AC-2.2.14/5 — Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved: under a substituted typeface and an enforced minimum size', async ({ page }) => {
+  await melodicBlank(page);
+  await page.locator('.key-picker').selectOption('Gb');
+  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
+  await page.locator('.degree[data-degree="2"]').click();
+  for (let s = 0; s < 4; s++) await accentZone(page, 0, s).click();
+
+  // The grid names its faces explicitly so a system-font setting cannot reach
+  // it — but an extension or a minimum-size setting still can, and then the
+  // text is larger than anything the stylesheet declared. Every Slot box sizes
+  // from its content for exactly this case, so nothing may clip.
+  const clipped = await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent =
+      '.slot-label,.slot-degree,.slot-note-name{font-family:Verdana,Geneva,sans-serif !important}' +
+      '.slot-degree,.slot-note-name{font-size:14px !important}' +
+      '.slot-label{font-size:20px !important}';
+    document.head.appendChild(style);
+    void document.body.offsetHeight;
+
+    const over = (el) => el.scrollHeight > el.clientHeight + 0.5;
+    const bands = [...document.querySelectorAll('.slot-note:not([disabled])')].filter(over).length;
+    const zones = [...document.querySelectorAll('.slot-accent')].filter(over).length;
+    style.remove();
+    return { bands, zones };
+  });
+
+  expect(clipped.bands).toBe(0);
+  expect(clipped.zones).toBe(0);
 });
 
 test(`AC-2.2.14/4 — The counting syllable is rendered bold and the note band's text is not, at a weight separation of at least 300 — a Medium face reads as bold at these sizes, so "bolder" is not enough`, async ({ page }) => {

@@ -118,13 +118,34 @@ such. The real requirement is that a musician with common CVD can tell the three
 which a deuteranopia- and protanopia-safe palette satisfies on its own. Constitution v3.0.0 was
 amended accordingly, and FR-012 rescoped in the same change.
 
-Fill height is retained in the design regardless, because at 192 Slots on a phone a height
-difference is faster to scan than a hue difference for *any* user. It is now a revisable design
-decision rather than a constraint.
+A second, non-colour channel is retained regardless, because at 192 Slots on a phone a size
+difference is faster to scan than a hue difference for *any* user. Which channel carries it is a
+revisable design decision rather than a constraint.
+
+**Amended 2026-08-17: the second channel is bar width along the Slot's bottom edge, not fill
+height.** Fill height put a moving horizontal boundary inside the cell, and the counting syllable
+lives in that cell too. Measured, the fill's top edge landed 0.4px below the text baseline at Weak
+and 2.8px above the cap height at Medium — so at two of the three levels the colour changed within
+3px of the letters, and at Medium the syllable also flipped to dark and sat on the seam. There is no
+value of the fill percentage that avoids this: the boundary sweeps vertically through the exact band
+the text occupies, by construction.
+
+The level is now a fixed-height bar along the bottom edge, encoded by width (33 / 67 / 100%) and
+colour. This keeps the redundant size channel and the rationale above intact, while the cell's
+background stays flat at every level — so the syllable sits on one ground, keeps one colour, and
+nothing about the text changes as the accent changes. The dark-text-on-light-fill flip is retired
+with it.
+
+*(Raised by the maintainer, who reads the grid with a dyslexia-friendly font override. A face with a
+large x-height and heavy weighted bottoms pushes the glyphs further into the fill's sweep, so the
+collision this fixes is worse in the rendering that actually matters than in the one the design was
+checked in.)*
 
 **Alternatives considered**: dot count (too small to count at mobile density); border weight
 (compact and leaves the cell interior free for pitch labels, but weakest at fast discrimination);
-variable cell height (most notation-like, but breaks uniform row alignment).
+variable cell height (most notation-like, but breaks uniform row alignment); flat colour with no
+second channel at all (the maintainer's own first suggestion — simplest, and CVD-safe on the palette
+alone, but gives up the fast-scan channel and still needs the dark-text flip).
 
 **Verification**: an automated check renders the accent palette under simulated deuteranopia,
 protanopia, and tritanopia and asserts a minimum perceptual distance between all four states

@@ -198,7 +198,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.5 | T063 | T064 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.5 | T065 | T066 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
-| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.16 | T069, T160, T162 | T070, T161, T162 |
+| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.16 | T069, T160, T162, T163 | T070, T161, T162, T163 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.13 | T074–T075, T162 | T076, T163 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
