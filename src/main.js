@@ -43,7 +43,7 @@ import {
   isMobile,
   scrollMeasureIntoView,
 } from './ui/responsive.js';
-import { renderLibrary, buildEntries, neighbours } from './ui/library.js';
+import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildSubmission } from './export/submit.js';
 import { findDuplicates, findFamily, isDuplicate } from './core/similarity.js';
@@ -70,7 +70,7 @@ const state = {
   selectedSlot: null,
   soundStatus: melodic.getStatus(),
   /** Library view state: search text, Tag and rating filters, and what is open. */
-  view: { query: '', tag: null, minRating: 0, currentId: null },
+  view: { query: '', tags: [], minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
 };
 
@@ -394,8 +394,14 @@ const handlers = {
     render();
   },
 
+  /** Tags accumulate: each one narrows the list further (AC-5.3.9). */
   onTagFilter(tag) {
-    state.view = { ...state.view, tag };
+    state.view = { ...state.view, tags: toggleTag(state.view, tag) };
+    render();
+  },
+
+  onClearTags() {
+    state.view = { ...state.view, tags: [] };
     render();
   },
 

@@ -437,3 +437,9 @@ body {
   color: var(--brand); background: transparent;
   border: 1px dashed var(--brand); cursor: pointer;
 }
+.tag-clear {
+  padding: 3px 8px; border-radius: 999px;
+  font: 500 11px/1.4 system-ui, sans-serif;
+  color: var(--ink); background: transparent;
+  border: 1px solid var(--ink-dim); cursor: pointer;
+}

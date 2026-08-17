@@ -257,3 +257,76 @@ test('AC-5.3.7 — "Song Signatures" is gone; those Patterns are tagged Song', a
   await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
   expect(await page.locator('.pattern-item').count()).toBe(40);
 });
+
+test('AC-5.3.9 — several Tags can be selected, and each one narrows further', async ({ page }) => {
+  await page.goto('/');
+  const total = await page.locator('.pattern-item').count();
+
+  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
+  const afterFirst = await page.locator('.pattern-item').count();
+  expect(afterFirst).toBeLessThan(total);
+  expect(afterFirst).toBeGreaterThan(0);
+
+  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
+  const afterSecond = await page.locator('.pattern-item').count();
+
+  // Narrowing, not replacing: the second Tag can only shrink the list.
+  expect(afterSecond).toBeLessThanOrEqual(afterFirst);
+
+  // Both chips read as selected.
+  await expect(page.locator('.tag-filter', { hasText: /^Song$/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect(page.locator('.tag-filter', { hasText: /^melodic$/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+
+  // And every remaining Pattern genuinely carries both.
+  for (const item of await page.locator('.pattern-item').all()) {
+    await expect(item.locator('.tag-chip', { hasText: /^Song$/ })).toHaveCount(1);
+    await expect(item.locator('.tag-chip', { hasText: /^melodic$/ })).toHaveCount(1);
+  }
+});
+
+test('AC-5.3.9 — clicking a selected Tag deselects just that one', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
+  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
+
+  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
+  await expect(page.locator('.tag-filter', { hasText: /^melodic$/ })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  );
+  await expect(page.locator('.tag-filter', { hasText: /^Song$/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+});
+
+test('AC-5.3.9 — a Clear control returns to the whole library in one tap', async ({ page }) => {
+  await page.goto('/');
+  const total = await page.locator('.pattern-item').count();
+
+  await page.locator('.tag-filter', { hasText: /^Song$/ }).click();
+  await page.locator('.tag-filter', { hasText: /^percussive$/ }).click();
+  await expect(page.locator('.tag-clear')).toHaveText('Clear 2 tags');
+
+  await page.locator('.tag-clear').click();
+  await expect(page.locator('.tag-clear')).toHaveCount(0);
+  expect(await page.locator('.pattern-item').count()).toBe(total);
+});
+
+test('AC-5.3.9 — a combination nothing carries shows an empty list, not a wrong one', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.tag-filter', { hasText: /^percussive$/ }).click();
+  await page.locator('.tag-filter', { hasText: /^melodic$/ }).click();
+
+  // No Pattern is both, and the app says so rather than quietly dropping a Tag.
+  await expect(page.locator('.pattern-item')).toHaveCount(0);
+  await expect(page.locator('.library-count')).toHaveText('0 patterns');
+});

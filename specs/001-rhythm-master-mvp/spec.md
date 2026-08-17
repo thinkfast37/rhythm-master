@@ -834,6 +834,16 @@ exist).
   - **And** a built-in Pattern's own Tags (such as "Latin") render the same locked way: they describe what the Pattern is and are not the musician's to delete, though Tags they add to that same Pattern are theirs to remove
   - **And** provenance is itself an automatic Tag — `built-in` or `custom` — rather than prose about the software, so where a Pattern came from filters and reads like any other Tag
 
+- **AC-5.3.9** — Several Tags can be selected, and each one narrows further
+  - **Given** the library contains "Bossa Groove" (tagged Latin and Song), "Samba Break" (tagged Latin), and "Ballad Feel" (tagged Song)
+  - **When** the Practicing Musician selects the Latin Tag, and then also selects Song
+  - **Then** the list shows only "Bossa Groove" — a Pattern must carry **every** selected Tag, so each additional Tag can only shrink the list, never grow it
+  - **And** both Tag chips read as selected, and clicking either one again deselects only that Tag, leaving the other active
+  - **And** a Clear control appears while any Tag is selected, returning to the whole library in one action rather than requiring each chip be switched off
+  - **And**, given a combination no Pattern carries — "percussive" together with "melodic" — the list is empty and says so, rather than silently ignoring one of them
+  - **And** Tag selection narrows alongside the text search and the Rating filter rather than replacing either (AC-6.1.6)
+  - *(Tags are ANDed rather than ORed because the point of selecting a second one is to drill in. ORing them could only ever widen the result, which no combination of Tags would ever narrow.)*
+
 - **AC-5.3.6** — User Tag de-duplication is case-insensitive
   - **Given** a Pattern already tagged "Warmup"
   - **When** the user types "warmup" (lowercase) and adds it as a Tag

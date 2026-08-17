@@ -50,21 +50,48 @@ export function sortEntries(entries) {
   });
 }
 
-/** Case-insensitive substring match over name and both Tag kinds. */
-export function filterEntries(entries, { query = '', tag = null, minRating = 0 } = {}) {
+/**
+ * Filter by text, Tags, and Rating. Every filter NARROWS what the others left
+ * (AC-6.1.6).
+ *
+ * Multiple Tags are ANDed: each one you add takes the list further down, which
+ * is what makes them useful together — "Latin" plus "melodic" means the Latin
+ * ones that are also melodic. ORing them could only ever grow the list, so you
+ * could never drill in.
+ *
+ * `tags` takes an array; a bare `tag` string is still honoured so a single-Tag
+ * caller keeps working.
+ */
+export function filterEntries(entries, { query = '', tag = null, tags = null, minRating = 0 } = {}) {
   const q = query.trim().toLowerCase();
+  const wanted = (tags ?? (tag ? [tag] : [])).map((t) => String(t).toLowerCase());
+
   return entries.filter((e) => {
-    const allTagsOn = [...e.autoTags, ...e.lockedTags, ...e.userTags];
-    if (tag && !allTagsOn.some((t) => String(t).toLowerCase() === tag.toLowerCase())) {
-      return false;
-    }
-    // Rating narrows whatever the Tag and query filters already produced,
-    // rather than replacing them (AC-6.1.6).
+    const allTagsOn = [...e.autoTags, ...e.lockedTags, ...e.userTags].map((t) =>
+      String(t).toLowerCase()
+    );
+
+    if (!wanted.every((w) => allTagsOn.includes(w))) return false;
     if (minRating > 0 && (e.pattern.rating ?? 0) < minRating) return false;
     if (!q) return true;
+
     const haystack = [e.pattern.name, ...allTagsOn].join(' ').toLowerCase();
     return haystack.includes(q);
   });
+}
+
+/** The Tags currently selected, normalised to an array. */
+export function selectedTags(viewState) {
+  return viewState.tags ?? (viewState.tag ? [viewState.tag] : []);
+}
+
+/** Toggling a Tag adds or removes it from the selection rather than replacing it. */
+export function toggleTag(viewState, name) {
+  const current = selectedTags(viewState);
+  const has = current.some((t) => String(t).toLowerCase() === String(name).toLowerCase());
+  return has
+    ? current.filter((t) => String(t).toLowerCase() !== String(name).toLowerCase())
+    : [...current, name];
 }
 
 /** Every Tag in use, automatic ones first, then user Tags alphabetically. */
@@ -120,11 +147,14 @@ export function renderLibrary(root, entries, viewState, handlers) {
   }
   root.appendChild(ratingFilter);
 
+  const active = selectedTags(viewState).map((t) => String(t).toLowerCase());
+
   const tagRow = el('div', 'tag-row');
   for (const t of allTags(entries)) {
     // Deliberately NOT `.tag-chip`: a filter chip and a Pattern's own Tag chip
     // look similar but do different things, and sharing a class made them
     // indistinguishable to anything selecting by it.
+    const on = active.includes(t.name.toLowerCase());
     const chip = el('button', `tag-filter ${t.automatic ? 'automatic' : 'user'}`, {
       type: 'button',
       textContent: t.name,
@@ -132,12 +162,24 @@ export function renderLibrary(root, entries, viewState, handlers) {
     chip.dataset.action = 'filter-tag';
     chip.dataset.tag = t.name;
     chip.dataset.automatic = String(t.automatic);
-    if (viewState.tag === t.name) chip.classList.add('on');
-    chip.addEventListener('click', () =>
-      handlers.onTagFilter(viewState.tag === t.name ? null : t.name)
-    );
+    chip.setAttribute('aria-pressed', String(on));
+    if (on) chip.classList.add('on');
+    chip.addEventListener('click', () => handlers.onTagFilter(t.name));
     tagRow.appendChild(chip);
   }
+
+  // One control to get back to everything, rather than hunting down each
+  // selected chip to switch it off again.
+  if (active.length > 0) {
+    const clear = el('button', 'tag-clear', {
+      type: 'button',
+      textContent: `Clear ${active.length} tag${active.length === 1 ? '' : 's'}`,
+    });
+    clear.dataset.action = 'clear-tags';
+    clear.addEventListener('click', () => handlers.onClearTags());
+    tagRow.appendChild(clear);
+  }
+
   root.appendChild(tagRow);
 
   const visible = sortEntries(filterEntries(entries, viewState));

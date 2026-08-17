@@ -5,6 +5,8 @@ import {
   filterEntries,
   allTags,
   neighbours,
+  toggleTag,
+  selectedTags,
 } from '../../../src/ui/library.js';
 import { create } from '../../../src/core/pattern.js';
 
@@ -143,5 +145,111 @@ describe('ui/library', () => {
 
     const filtered = { currentId: 'alpha', query: 'ra' }; // Bravo only
     expect(neighbours(entries, filtered).next.pattern.name).toBe('Bravo');
+  });
+});
+
+describe('ui/library — filtering by several Tags', () => {
+  const withTags = (name, tags) => ({ ...p(name), tags });
+
+  it('AC-5.3.9 — two Tags narrow to Patterns carrying both', () => {
+    const entries = buildEntries(
+      [
+        withTags('Bossa', ['Latin', 'Song']),
+        withTags('Samba', ['Latin']),
+        withTags('Ballad', ['Song']),
+      ],
+      []
+    );
+
+    expect(filterEntries(entries, { tags: ['Latin'] }).map((e) => e.pattern.name)).toEqual([
+      'Bossa',
+      'Samba',
+    ]);
+    expect(filterEntries(entries, { tags: ['Latin', 'Song'] }).map((e) => e.pattern.name)).toEqual([
+      'Bossa',
+    ]);
+  });
+
+  it('AC-5.3.9 — adding a Tag can only ever shrink the list, never grow it', () => {
+    const entries = buildEntries(
+      [withTags('A', ['Latin']), withTags('B', ['Afro']), withTags('C', ['Latin', 'Afro'])],
+      []
+    );
+    const one = filterEntries(entries, { tags: ['Latin'] });
+    const two = filterEntries(entries, { tags: ['Latin', 'Afro'] });
+
+    expect(two.length).toBeLessThanOrEqual(one.length);
+    expect(two.map((e) => e.pattern.name)).toEqual(['C']);
+  });
+
+  it('AC-5.3.9 — automatic and user Tags combine in the same selection', () => {
+    const entries = buildEntries(
+      [withTags('Perc', ['Latin']), { ...withTags('Mel', ['Latin']), soundMode: 'melodic', key: 'C' }],
+      []
+    );
+    expect(
+      filterEntries(entries, { tags: ['Latin', 'melodic'] }).map((e) => e.pattern.name)
+    ).toEqual(['Mel']);
+  });
+
+  it('AC-5.3.9 — a combination nothing carries returns nothing, rather than ignoring a Tag', () => {
+    const entries = buildEntries([withTags('A', ['Latin'])], []);
+    expect(filterEntries(entries, { tags: ['Latin', 'Waltz'] })).toEqual([]);
+  });
+
+  it('AC-5.3.9 — Tag matching stays case-insensitive with several selected', () => {
+    const entries = buildEntries([withTags('A', ['Latin', 'Song'])], []);
+    expect(filterEntries(entries, { tags: ['latin', 'SONG'] })).toHaveLength(1);
+  });
+
+  it('AC-5.3.9 — toggling adds a Tag, then removes it', () => {
+    let view = { tags: [] };
+    view = { tags: toggleTag(view, 'Latin') };
+    expect(selectedTags(view)).toEqual(['Latin']);
+
+    view = { tags: toggleTag(view, 'Song') };
+    expect(selectedTags(view)).toEqual(['Latin', 'Song']);
+
+    // Case-insensitive, so the chip you clicked is the one that comes off.
+    view = { tags: toggleTag(view, 'latin') };
+    expect(selectedTags(view)).toEqual(['Song']);
+  });
+
+  it('AC-5.3.9 — Tags narrow alongside search and Rating rather than replacing them', () => {
+    const entries = buildEntries(
+      [
+        { ...withTags('Bossa Groove', ['Latin', 'Song']), rating: 5 },
+        { ...withTags('Bossa Fill', ['Latin', 'Song']), rating: 1 },
+        { ...withTags('Samba Groove', ['Latin', 'Song']), rating: 5 },
+      ],
+      []
+    );
+
+    const result = filterEntries(entries, {
+      tags: ['Latin', 'Song'],
+      query: 'bossa',
+      minRating: 4,
+    });
+    expect(result.map((e) => e.pattern.name)).toEqual(['Bossa Groove']);
+  });
+
+  it('AC-5.3.9 — a single Tag string is still honoured', () => {
+    const entries = buildEntries([withTags('A', ['Latin']), withTags('B', ['Afro'])], []);
+    expect(filterEntries(entries, { tag: 'Latin' }).map((e) => e.pattern.name)).toEqual(['A']);
+  });
+
+  it('AC-5.5.2 — Prev/Next traverse the multi-Tag filtered list', () => {
+    const entries = buildEntries(
+      [
+        withTags('Alpha', ['Latin', 'Song']),
+        withTags('Bravo', ['Latin']),
+        withTags('Charlie', ['Latin', 'Song']),
+      ],
+      []
+    );
+    const view = { tags: ['Latin', 'Song'], currentId: 'alpha' };
+    // Bravo is filtered out, so Next skips straight past it.
+    expect(neighbours(entries, view).next.pattern.name).toBe('Charlie');
+    expect(neighbours(entries, view).previous.pattern.name).toBe('Charlie');
   });
 });
