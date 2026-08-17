@@ -38,7 +38,7 @@ in the evening — but separating them keeps each story honest about whose probl
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
 | **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-3.1, US-4.4, US-7.1–7.5, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
-| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-16.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-15.2, US-16.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
@@ -417,11 +417,12 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-2.2.10** — A Melodic Slot has two tap zones, and they do different jobs
   - **Given** a Melodic Pattern's grid
   - **When** the Composer looks at any Slot
-  - **Then** it carries a note band along its top edge and an accent zone filling the rest, as two separate controls
+  - **Then** it carries an accent zone along its top and a note band beneath it, as two separate controls
   - **And** tapping the accent zone cycles Accent Level exactly as it does in Percussive mode (US-3.1), never altering Pitch except by clearing it at off (AC-2.2.7)
   - **And** tapping the note band stamps the armed pitch, never altering Accent Level (AC-2.2.6)
   - **And** in Percussive mode there is no note band — the whole Slot is the accent zone, since there is no Pitch to hold
   - *(Added 2026-08-17. Pitch and Accent were previously the same tap: selecting a Slot to pitch it cost a trip round the four-step Accent cycle to put the Accent back.)*
+  - *(Revised 2026-08-17. The note band was specified along the Slot's **top** edge and is now beneath the accent zone. With the band on top, the pitch sat between the eye and the accent fill it belongs to, and the maintainer reported reading both at once and resolving neither — the count and the accent are what a musician tracks while working on rhythm, so the melody goes underneath them. AC-2.2.14 carries the separation and relative weight this depends on.)*
 
 - **AC-2.2.11** — Turning a Slot on takes the armed pitch
   - **Given** an off Slot in a Melodic Pattern and a currently armed pitch on the strip
@@ -440,6 +441,37 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the Composer views the grid
   - **Then** the pitch strip is visible alongside it without opening a collapsed section, since it is the palette the grid is stamped from
   - **And**, given a Percussive Pattern, no pitch strip is shown at all — not shown-but-disabled (consistent with AC-2.1.2's treatment of Key)
+
+- **AC-2.2.14** — The note band is subordinate to the counting syllable, and separated from it
+  - **Given** a Melodic Slot that sounds
+  - **When** the Composer looks at it while working on rhythm rather than melody
+  - **Then** the note band sits below the accent zone, set apart from it and in lighter type, so that the eye can settle on the count and the accent without the pitch competing for it
+  - **Cases**:
+    - **AC-2.2.14/1** — The note band is rendered below the accent zone, not above it
+    - **AC-2.2.14/2** — A visible gap separates the two zones, so neither reads as part of the other
+    - **AC-2.2.14/3** — The note band's text is rendered at a smaller font size than the counting syllable's
+    - **AC-2.2.14/4** — The counting syllable is rendered bolder than the note band's text
+  - *(Added 2026-08-17. The band was previously flush against the accent zone and carried heavier text than it needed, which is what made the two compete. Note that /3 was met by *raising* the syllable rather than shrinking the pitch: the maintainer could not read the pitch at the size that would otherwise have been needed, so the separation comes from the syllable growing.)*
+
+- **AC-2.2.15** — A Slot's note band names the note as well as the degree
+  - **Given** a sounding Slot in a Melodic Pattern with a Key
+  - **When** the Composer reads its note band
+  - **Then** it carries both the degree and the note that degree names in this Key, so that reading the melody never requires converting a degree into a note in the head
+  - **Cases**:
+    - **AC-2.2.15/1** — The band shows the Slot's scale degree, including any accidental
+    - **AC-2.2.15/2** — The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number
+    - **AC-2.2.15/3** — The two are shown on separate lines within the band, so neither is truncated at the smallest supported Slot width (AC-2.2.12)
+    - **AC-2.2.15/4** — Changing the Pattern's Key updates every note name shown, while no stored degree or octave value changes (AC-2.3.2)
+    - **AC-2.2.15/5** — The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave
+  - *(Added 2026-08-17. The grid previously showed the degree alone. A degree is what the Composer authors, but a note name is what they play on an instrument, and holding the conversion in the head is work the app can do.)*
+
+- **AC-2.2.16** — The pitch strip names the note each degree will stamp
+  - **Given** the pitch strip in a Melodic Pattern with a Key
+  - **When** the Composer looks at the degree buttons
+  - **Then** each shows both the scale degree and the note name it would stamp — the same pairing AC-2.2.15 puts in the grid, so the palette and the thing it stamps read alike
+  - **Cases**:
+    - **AC-2.2.16/1** — Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree
+    - **AC-2.2.16/2** — Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called
 
 ---
 
@@ -1599,9 +1631,10 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom: Pattern header → grid → pitch strip (US-2.2, Melodic only) → play controls → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
+  - **Then** the order is fixed top to bottom: Pattern header → grid → play controls → pitch strip (US-2.2, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the pitch strip is absent rather than an empty row, so the order there is the same list with that entry removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
+  - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
   - *(Revised again 2026-08-17 for the family members area. As written, this AC said the order is identical at every width, which AC-11.2.5 directly contradicts: it requires that area at 768px and wider and nothing below it. Both cannot be true, so the conflict is resolved here rather than left for whoever hit it next. The entry is conditional in the same way the pitch strip already is — an absent entry rather than a reordered list — so what this AC guarantees is unchanged: the sections that are present are always in this order, and none ever swaps places with another. Family members go last because they are a way out of the current Pattern, not a control on it; putting them above quick navigation would separate the transport from the controls it drives.)*
 
 - **AC-15.1.9** — Wide controls never force horizontal page scrolling
@@ -1778,6 +1811,66 @@ it appears in the library and plays correctly, with no source file modified.
   - **When** it is read
   - **Then** it carries a schema version, so a future format change can be detected and migrated
     rather than misread (FR-005)
+
+---
+
+### User Story 35 - Read the grid's structure without straining
+
+*Traceability: `US-15.2` — Structural boundaries in the grid are visible*
+
+**As** the Practicing Musician, **I want** the divisions of the grid — where one Measure ends, where
+one Beat ends, and where a Slot's accent stops and its melody begins — to be plainly visible against
+the dark background, **so that** I can read a Pattern at a glance during practice instead of
+squinting to work out which notes belong to which Beat.
+
+*(Added 2026-08-17. The grid drew every boundary in one token, `--line`, at roughly 1.2:1 against the
+panel behind it — below any usable threshold — and a Beat had no drawn boundary at all, only
+whitespace. This story is about the lines that carry structure. It deliberately does not touch the
+Accent palette, which is governed by Principle II and its own CVD gate.)*
+
+**Independent Test**: Read the computed border colours of a Measure, a Beat, a Slot and a Melodic
+Slot's zone divider from a rendered grid, and assert each clears 3:1 against the surface behind it.
+
+**Acceptance Scenarios**:
+
+- **AC-15.2.1** — Every structural boundary in the grid clears a legibility threshold
+  - **Given** a rendered grid at any viewport width
+  - **When** each boundary's drawn colour is compared with the surface immediately behind it
+  - **Then** each reaches a contrast ratio of at least 3:1 — the threshold WCAG 2.1 sets for a
+    non-text graphical object that carries meaning, which these do: they are what says a Slot
+    belongs to this Beat and not the next
+  - **Cases**:
+    - **AC-15.2.1/1** — A Measure block's border, against the page background behind it
+    - **AC-15.2.1/2** — A Beat's border, against the Measure panel behind it
+    - **AC-15.2.1/3** — A Slot's border, against the Measure panel behind it
+    - **AC-15.2.1/4** — A Melodic Slot's accent-to-note divider, against the Slot's unfilled background
+
+- **AC-15.2.2** — A Beat is bounded by a drawn border, not by spacing alone
+  - **Given** a Measure containing more than one Beat
+  - **When** the Practicing Musician looks for where one Beat ends and the next begins
+  - **Then** each Beat carries its own drawn border, so the grouping survives at the density where
+    the gaps between Slots and the gaps between Beats are only a few pixels apart (AC-15.1.10)
+
+- **AC-15.2.3** — The boundaries form a hierarchy, so nesting is readable
+  - **Given** a Measure containing Beats containing Slots
+  - **When** their borders are compared
+  - **Then** the Measure's boundary is the most prominent, the Beat's next, and the Slot's least —
+    so the eye resolves the larger grouping first rather than meeting three identical lines
+
+- **AC-15.2.4** — The grid's boundary colours belong to the grid alone
+  - **Given** the grid's boundary colours
+  - **When** they are changed
+  - **Then** no dialog, control bar, library row, accordion divider or sidebar edge changes with
+    them — the grid carries its own tokens, so it can be tuned for reading a Pattern without
+    restyling the whole application
+
+- **AC-15.2.5** — Raising boundary contrast leaves the Accent and feel encodings intact
+  - **Given** the grid with its boundaries at full contrast
+  - **When** Accent Levels and a mixed Recipe's straight/triplet boundary are inspected
+  - **Then** the four Accent states remain separable under simulated colour vision deficiency
+    (Principle II, `npm run check:cvd`), and the triplet group's boundary remains distinguishable
+    from an ordinary Slot border — a brighter grid must not drown the two encodings that carry
+    musical meaning
 
 ---
 
