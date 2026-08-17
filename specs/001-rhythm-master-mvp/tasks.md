@@ -618,6 +618,16 @@ record is complete rather than starting mid-stream.
 
   *Superseded description: build the view and panel — AC-11.1.4, AC-11.1.5, AC-11.2.4, AC-11.2.5, and the naming-time warning in AC-11.1.3.* `src/core/similarity.js` computes all of it correctly and `src/main.js` exposes `currentDuplicates`, `currentFamily` and `unresolvedLibraryDuplicates` — but only on the `window.__rm` test seam. There is no view, no panel, no CSS, and no way for the musician to reach any of it. AC-11.1.4 calls the view "the sole safety net" for duplicates that emerge through ongoing edits, so at present there is none. AC-11.2.5 specifies the panel below the editor at ≥768px and nothing below that. Thirteen tests of fingerprint arithmetic in `tests/unit/core/similarity.test.js` carry these Stories' AC IDs, which is why this read as complete. **This is unbuilt work, not a naming defect — it is why the audit happened.**
 
+- [X] T162 **[bug]** Make the note band's text actually read as subordinate, and stop it being clipped — `src/styles/tokens.css`, `specs/001-rhythm-master-mvp/spec.md`, `tests/e2e/melodic.spec.js`. AC-2.2.14/3 and /4 tightened; AC-2.2.14/5 added. Extends P-016.
+
+  T160 shipped three defects that its own tests passed, which is the part worth recording:
+
+  - **The pitch was bold.** Weight 500 against the syllable's 700 satisfies "bolder than", and in `ui-monospace` — SF Mono on macOS — a Medium face at 10px is indistinguishable from Bold. Now 400, a 300-point separation.
+  - **The sizes looked identical.** 10px under 13px satisfies "a smaller font size" and reads as the same text twice. The syllable is now 15px, a ratio of 1.5.
+  - **The text was clipped vertically.** Two 10px lines at line-height 1.05 gave each glyph a 10.5px line box with no room for ascenders or descenders, inside a 24px band with 22px of content. Line-height is now 1.25 and `--slot-note-h` is 28px — AC-2.2.12 sets 24px as a floor, not a value.
+
+  **All three passed a green gate**, and that is the finding. AC-2.2.14/3 and /4 asserted `<` and `>`, which any difference satisfies however invisible; both now carry a margin. The truncation check in AC-2.2.15/3 ran on the horizontal axis only, so vertical overflow was never looked at; it now checks both, and AC-2.2.15/5 exists to check leading directly. A criterion that cannot fail is not a criterion.
+
 - [X] T160 **[new capability]** Make Melodic mode readable: brighter grid boundaries, the note band moved below the accent zone, and note names beside scale degrees — `src/core/pitch.js`, `src/ui/grid.js`, `src/ui/controls.js`, `src/main.js`, `src/styles/tokens.css`, `specs/001-rhythm-master-mvp/spec.md`, `specs/001-rhythm-master-mvp/plan.md`. Implements P-016, P-036 and P-038. AC-2.2.10 and AC-15.1.8 revised; AC-2.2.14, AC-2.2.15, AC-2.2.16 added; US-15.2 added with AC-15.2.1–AC-15.2.5. Tests are T161.
 
   Four maintainer reports, and three of them contradicted a criterion that had been written deliberately, so each is a spec revision made before the code rather than after:

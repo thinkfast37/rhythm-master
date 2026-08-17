@@ -29,13 +29,17 @@
   --brand: #f0a020;
 
   --slot-min: 24px; /* AC-15.1.10 — never smaller than this, on any viewport */
-  /* The note band's height, and the floor under both of a split Slot's zones
-     (AC-2.2.12). It is the same 24px as --slot-min because it is the same
-     requirement seen along the other axis. */
-  --slot-note-h: 24px;
-  /* The accent zone in a split Slot. Taller than the 24px floor because the
+  /*
+   * The note band. AC-2.2.12 sets 24px as the FLOOR, not the value: this is
+   * 28px because two 10px lines need 25px of content box once they have enough
+   * leading not to be clipped (AC-2.2.14/5), and 24px leaves only 22px inside
+   * its borders. The first implementation used 24px and shaved the tops and
+   * bottoms of the glyphs.
+   */
+  --slot-note-h: 28px;
+  /* The accent zone in a split Slot. Well above the 24px floor because the
      count and the accent are what is read while working on rhythm, and the
-     syllable now sets at 13px (AC-2.2.14). */
+     syllable sets at 15px (AC-2.2.14/3). */
   --slot-accent-h: 40px;
   /* Between the two zones, so neither reads as part of the other
      (AC-2.2.14/2). */
@@ -287,12 +291,18 @@ body {
 .slot.has-note.accent-medium .slot-pitch,
 .slot.has-note.accent-strong .slot-pitch { color: var(--ink); }
 
-/* The label centres in the accent zone, not in the whole Slot. Bold and at
-   13px against the note band's 10px: the syllable was RAISED to separate the
-   two rather than the pitch being shrunk, because the pitch has to stay
-   readable (AC-2.2.14/3, AC-2.2.14/4). */
+/*
+ * The label centres in the accent zone, not in the whole Slot. 15px bold
+ * against the note band's 10px regular — a third larger and 300 weight points
+ * apart, which is what AC-2.2.14/3 and /4 now require. It was 13px, which is
+ * smaller than 10px only arithmetically: on screen the two read as the same
+ * text twice.
+ *
+ * The separation is achieved by raising the syllable rather than shrinking the
+ * pitch, because the pitch has to stay readable — 8px was tried and rejected.
+ */
 .slot.has-note .slot-label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   line-height: var(--slot-accent-h);
 }
@@ -403,12 +413,22 @@ body {
 .slot.accent-medium .slot-pitch,
 .slot.accent-strong .slot-pitch { color: #0b0c15; }
 
+/*
+ * Weight 400, not 500. At 10px in `ui-monospace` — SF Mono on macOS — a Medium
+ * face is indistinguishable from Bold, so the first implementation looked bold
+ * while technically satisfying "bolder than" (AC-2.2.14/4). Regular against the
+ * syllable's 700 is a 300-point separation, which reads as one.
+ *
+ * Line-height 1.25, not 1.05. At 1.05 a 10px line box is 10.5px and the glyphs
+ * have nowhere to put their ascenders and descenders, so the band clipped them
+ * (AC-2.2.14/5).
+ */
 .slot-degree {
-  font: 500 10px/1.05 ui-monospace, monospace;
+  font: 400 10px/1.25 ui-monospace, monospace;
   color: inherit;
 }
 .slot-note-name {
-  font: 500 10px/1.05 ui-monospace, monospace;
+  font: 400 10px/1.25 ui-monospace, monospace;
   letter-spacing: -0.03em;
   color: var(--ink-dim);
 }
