@@ -55,12 +55,26 @@ export function renderControls(root, pattern, state, handlers) {
 }
 
 /** The Pattern header: name, provenance, and Measure count. */
-export function renderHeader(root, pattern, state) {
+export function renderHeader(root, pattern, state, handlers = {}) {
   root.innerHTML = '';
   root.className = 'pattern-header';
   root.dataset.owned = String(state.isOwned);
 
-  root.appendChild(el('h1', 'pattern-title', { textContent: pattern.name }));
+  // The name is editable in place rather than behind a rename dialog: it is the
+  // first thing a Composer wants to change about a new Pattern (AC-7.1.1).
+  const name = el('input', 'pattern-title', { type: 'text', value: pattern.name });
+  name.dataset.action = 'rename';
+  name.addEventListener('change', (e) => handlers.onRename?.(e.target.value));
+  name.addEventListener('blur', (e) => handlers.onRename?.(e.target.value));
+  root.appendChild(name);
+
+  if (handlers.onUndo) {
+    const undoButton = el('button', 'undo', { type: 'button', textContent: 'Undo' });
+    undoButton.dataset.action = 'undo';
+    undoButton.disabled = !state.canUndo;
+    undoButton.addEventListener('click', () => handlers.onUndo());
+    root.appendChild(undoButton);
+  }
   root.appendChild(
     el('p', 'pattern-meta', {
       textContent:
@@ -120,11 +134,13 @@ function renderActions(pattern, state, handlers) {
     return b;
   };
 
-  button('make-copy', 'Make Copy', () => handlers.onMakeCopy());
-
-  // Only an owned Pattern can be deleted; a shipped one has no delete control
-  // at all rather than a disabled one (US-7.5, FR-007).
-  if (state.isOwned) button('delete-pattern', 'Delete', () => handlers.onDelete());
+  // Make Copy and Delete apply only to a Pattern you own. A shipped Pattern has
+  // neither control rather than disabled ones: editing it goes through the
+  // forced-naming flow, which is a different action (AC-7.4.6, US-7.5).
+  if (state.isOwned) {
+    button('make-copy', 'Make Copy', () => handlers.onMakeCopy());
+    button('delete-pattern', 'Delete', () => handlers.onDelete());
+  }
 
   button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), {
     disabled: pattern.measures.length >= MAX_MEASURES,

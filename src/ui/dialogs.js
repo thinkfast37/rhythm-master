@@ -98,8 +98,15 @@ export function askApplyToAllMeasures(timeSignature) {
   });
 }
 
-/** Naming an edit to a shipped Pattern, before the edit applies. US-7.3 */
-export function askNewPatternName(suggestion) {
+/**
+ * Naming an edit to a shipped Pattern, before the edit applies. US-7.3, US-7.4.
+ *
+ * @param {string} suggestion
+ * @param {(name: string) => string|null} [validate] returns an error message, or
+ *   null when the name is acceptable. Used to enforce unique names
+ *   (AC-7.3.5, AC-7.4.4) without this module knowing what the library holds.
+ */
+export function askNewPatternName(suggestion, validate = null) {
   const root = ensureHost();
   return new Promise((resolve) => {
     root.innerHTML = '';
@@ -128,9 +135,30 @@ export function askNewPatternName(suggestion) {
     save.type = 'button';
     save.className = 'dialog-button primary';
     save.textContent = 'Create';
+    // Appended, not inserted before `row`: `row` is not a child of `box` yet at
+    // this point, and insertBefore against a non-child throws.
+    const error = document.createElement('p');
+    error.className = 'dialog-error';
+    error.hidden = true;
+    box.appendChild(error);
+
     save.addEventListener('click', () => {
       const name = input.value.trim();
-      if (!name) return;
+      if (!name) {
+        error.textContent = 'A Pattern needs a name.';
+        error.hidden = false;
+        input.focus();
+        return;
+      }
+      const problem = validate?.(name) ?? null;
+      if (problem) {
+        // Re-prompt rather than closing: the Composer keeps what they typed and
+        // can adjust it, instead of losing it to a dismissed dialog.
+        error.textContent = problem;
+        error.hidden = false;
+        input.select();
+        return;
+      }
       root.innerHTML = '';
       resolve(name);
     });

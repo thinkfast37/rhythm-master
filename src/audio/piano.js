@@ -12,7 +12,7 @@
 import { midiToFrequency } from '../core/pitch.js';
 
 /** Amplitude per Accent Level. Melodic accents differ in gain and decay, never in pitch (AC-3.1.15). */
-const DYNAMICS = {
+export const DYNAMICS = {
   1: { gain: 0.3, decay: 0.9 },
   2: { gain: 0.55, decay: 1.1 },
   3: { gain: 0.85, decay: 1.4 },

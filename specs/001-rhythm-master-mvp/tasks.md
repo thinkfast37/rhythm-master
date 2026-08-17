@@ -167,7 +167,7 @@ Nothing in this phase renders anything.
 
 - [X] T047 [US3.1] Implement slot tap and accent cycling in `src/ui/grid.js`, calling `core/accents.effectiveAccent` and never recomputing locally
 - [X] T048 [US3.1] Define the CVD-verified accent palette and fill-height treatment in `src/styles/tokens.css` and `src/ui/grid.js` (D-005)
-- [ ] T049 [US3.1] Tests in `tests/e2e/us-3-1.spec.js` covering AC-3.1.1–AC-3.1.15, including recomputation after a Recipe reset (AC-3.1.10)
+- [X] T049 [US3.1] Tests in `tests/e2e/us-3-1.spec.js` covering AC-3.1.1–AC-3.1.15, including recomputation after a Recipe reset (AC-3.1.10)
 - [X] T050 [US3.1] Wire `npm run check:cvd` into the accent palette so a palette change cannot land without passing it
 
 ---
@@ -478,19 +478,19 @@ Nothing in this phase renders anything.
 - [X] T114 [US15.1] Implement breakpoints and the desktop/tablet layouts in `src/ui/responsive.js` and `src/styles/`
 - [X] T115 [US15.1] Implement per-Measure vertical row paging with a 24 px minimum Slot width in `src/ui/grid.js` and `src/ui/responsive.js` (AC-15.1.10, D-006)
 - [X] T116 [US15.1] Implement playback autoscroll in `src/ui/responsive.js` and `src/ui/grid.js`, keeping the sounding Measure in view including on loop wrap (AC-15.1.11)
-- [ ] T117 [US15.1] Tests in `tests/e2e/us-15-1.spec.js` covering AC-15.1.1–AC-15.1.11 across the three viewport classes
+- [X] T117 [US15.1] Tests in `tests/e2e/us-15-1.spec.js` covering AC-15.1.1–AC-15.1.11 across the three viewport classes
 
 ---
 
 ## Phase 37: Polish & Cross-Cutting Concerns
 
-- [ ] T118 Run `npm run coverage:ac` and close every remaining gap until it reports zero uncovered ACs (FR-014)
-- [ ] T119 [P] Run the quickstart's V1–V8 validation scenarios manually and record the results in `specs/001-rhythm-master-mvp/quickstart.md`
-- [ ] T120 [P] Verify the 30-minute continuous-playback run in `tests/e2e/endurance.spec.js` holds time with no drift, stall, or degradation (SC-002)
-- [ ] T121 [P] Verify `npm run check:cvd` passes against the final accent palette
-- [ ] T122 [P] Verify `npm run validate:seed` passes and all 112 Patterns load and play
-- [ ] T123 Confirm the deploy workflow blocks on a failing test, then publish to GitHub Pages
-- [ ] T124 [P] Update `README.md` with run, test, and contribution instructions
+- [X] T118 Run `npm run coverage:ac` and close every remaining gap until it reports zero uncovered ACs (FR-014)
+- [X] T119 [P] Run the quickstart's V1–V8 validation scenarios manually and record the results in `specs/001-rhythm-master-mvp/quickstart.md`
+- [X] T120 [P] Verify the 30-minute continuous-playback run in `tests/e2e/endurance.spec.js` holds time with no drift, stall, or degradation (SC-002)
+- [X] T121 [P] Verify `npm run check:cvd` passes against the final accent palette
+- [X] T122 [P] Verify `npm run validate:seed` passes and all 112 Patterns load and play
+- [X] T123 Confirm the deploy workflow blocks on a failing test, then publish to GitHub Pages
+- [X] T124 [P] Update `README.md` with run, test, and contribution instructions
 
 ---
 

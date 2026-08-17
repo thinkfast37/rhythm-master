@@ -29,31 +29,55 @@ const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
  */
 export function renderGrid(root, pattern, transportPosition = null, options = {}) {
   const system = effectiveSystem(pattern, options.countingSystem ?? 'takadimi');
+  const readOnly = options.readOnly === true;
 
   root.innerHTML = '';
-  root.className = 'grid';
+  root.className = readOnly ? 'grid read-only' : 'grid';
 
   pattern.measures.forEach((measure, measureIndex) => {
-    root.appendChild(renderMeasure(measure, measureIndex, pattern, transportPosition, system));
+    root.appendChild(
+      renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly)
+    );
   });
 
   return root;
 }
 
-function renderMeasure(measure, measureIndex, pattern, position, system) {
+/**
+ * A Measure's meter label is prominent when it differs from the Measure before
+ * it, dimmed when it repeats — so a mixed-meter Pattern's changes stand out and
+ * a uniform one does not shout its meter six times (AC-1.4.4, AC-1.4.5).
+ * Measure 1 is always prominent: it is the Pattern's opening meter.
+ */
+export function meterProminence(measures, index) {
+  if (index === 0) return 'prominent';
+  return measures[index].timeSignature === measures[index - 1].timeSignature
+    ? 'dimmed'
+    : 'prominent';
+}
+
+function renderMeasure(measure, measureIndex, pattern, position, system, readOnly) {
   const row = document.createElement('section');
   row.className = 'measure';
   row.dataset.measure = String(measureIndex);
   row.dataset.timeSignature = measure.timeSignature;
 
   // Per-Measure Time Signature, shown in the grid rather than in a global
-  // control, because in this app it is per-Measure (US-1.4).
-  const meter = document.createElement('button');
-  meter.type = 'button';
-  meter.className = 'measure-meter';
+  // control, because in this app it is per-Measure (US-1.4). Every Measure
+  // shows its label; prominence says whether it changed.
+  const prominence = meterProminence(pattern.measures, measureIndex);
+
+  // A read-only context shows the same labels with the same treatment but
+  // opens no picker, so it is a span rather than a disabled button (AC-1.4.8).
+  const meter = document.createElement(readOnly ? 'span' : 'button');
+  if (!readOnly) {
+    meter.type = 'button';
+    meter.dataset.action = 'change-time-signature';
+  }
+  meter.className = `measure-meter ${prominence}`;
   meter.textContent = measure.timeSignature;
-  meter.dataset.action = 'change-time-signature';
   meter.dataset.measure = String(measureIndex);
+  meter.dataset.prominence = prominence;
   meter.setAttribute('title', `Measure ${measureIndex + 1} — ${measure.timeSignature}`);
   row.appendChild(meter);
 
@@ -63,7 +87,7 @@ function renderMeasure(measure, measureIndex, pattern, position, system) {
 
   measure.beats.forEach((beat, beatIndex) => {
     beats.appendChild(
-      renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system)
+      renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly)
     );
   });
 
@@ -71,7 +95,7 @@ function renderMeasure(measure, measureIndex, pattern, position, system) {
   return row;
 }
 
-function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system) {
+function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly) {
   const melodic = pattern.soundMode === 'melodic';
   const el = document.createElement('div');
   el.className = 'beat';
@@ -97,7 +121,7 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
     group.slotIndices.forEach((slotIndex) => {
       groupEl.appendChild(
         renderSlot(
-          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic
+          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic, readOnly
         )
       );
     });
@@ -114,14 +138,14 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
   return el;
 }
 
-function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic) {
+function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic, readOnly) {
   const accent = effectiveAccent(measure, beatIndex, slotIndex);
   const slot = measure.beats[beatIndex].slots[slotIndex];
 
   const el = document.createElement('button');
   el.type = 'button';
   el.className = `slot accent-${ACCENT_CLASS[accent]}`;
-  el.dataset.action = 'cycle-accent';
+  if (!readOnly) el.dataset.action = 'cycle-accent';
   el.dataset.measure = String(measureIndex);
   el.dataset.beat = String(beatIndex);
   el.dataset.slot = String(slotIndex);

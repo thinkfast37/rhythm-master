@@ -36,12 +36,15 @@ export function sortEntries(entries) {
 }
 
 /** Case-insensitive substring match over name and both Tag kinds. */
-export function filterEntries(entries, { query = '', tag = null } = {}) {
+export function filterEntries(entries, { query = '', tag = null, minRating = 0 } = {}) {
   const q = query.trim().toLowerCase();
   return entries.filter((e) => {
     if (tag && ![...e.autoTags, ...e.userTags].some((t) => String(t).toLowerCase() === tag.toLowerCase())) {
       return false;
     }
+    // Rating narrows whatever the Tag and query filters already produced,
+    // rather than replacing them (AC-6.1.6).
+    if (minRating > 0 && (e.pattern.rating ?? 0) < minRating) return false;
     if (!q) return true;
     const haystack = [e.pattern.name, ...e.autoTags, ...e.userTags].join(' ').toLowerCase();
     return haystack.includes(q);
@@ -81,6 +84,24 @@ export function renderLibrary(root, entries, viewState, handlers) {
   search.dataset.action = 'search';
   search.addEventListener('input', (e) => handlers.onSearch(e.target.value));
   root.appendChild(search);
+
+  const newButton = el('button', 'new-pattern', { type: 'button', textContent: '+ New Pattern' });
+  newButton.dataset.action = 'new-pattern';
+  newButton.addEventListener('click', () => handlers.onNewPattern());
+  root.appendChild(newButton);
+
+  const ratingFilter = el('div', 'rating-filter');
+  for (const min of [0, 3, 4, 5]) {
+    const b = el('button', `rating-option${(viewState.minRating ?? 0) === min ? ' on' : ''}`, {
+      type: 'button',
+      textContent: min === 0 ? 'All' : `${min}★+`,
+    });
+    b.dataset.action = 'filter-rating';
+    b.dataset.min = String(min);
+    b.addEventListener('click', () => handlers.onRatingFilter(min));
+    ratingFilter.appendChild(b);
+  }
+  root.appendChild(ratingFilter);
 
   const tagRow = el('div', 'tag-row');
   for (const t of allTags(entries)) {

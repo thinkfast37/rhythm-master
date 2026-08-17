@@ -20,7 +20,9 @@ import {
   duplicate,
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
-import { buildTimeline } from './core/timeline.js';
+import { MAX_MEASURES } from './core/pattern.js';
+import { buildTimeline, buildBeatGrid } from './core/timeline.js';
+import { playClick, accentVoice } from './audio/voices.js';
 import * as patternStore from './storage/patterns.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
@@ -67,12 +69,41 @@ const state = {
   /** Which Slot the pitch controls act on, in Melodic mode (US-2.2). */
   selectedSlot: null,
   pianoStatus: piano.getStatus(),
-  /** Library view state: search text, active Tag filter, and what is open. */
-  view: { query: '', tag: null, currentId: null },
+  /** Library view state: search text, Tag and rating filters, and what is open. */
+  view: { query: '', tag: null, minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
 };
 
 const listeners = new Set();
+
+/**
+ * Undo history. A bounded stack of previous Pattern states.
+ *
+ * A meter change clears a whole Measure and a Recipe change clears a Beat, so
+ * these are the destructive edits undo exists for (AC-1.1.7). Each entry is one
+ * complete Pattern, which makes an undo a single atomic revert rather than a
+ * replay of inverse operations.
+ */
+const HISTORY_LIMIT = 50;
+const history = [];
+
+function pushHistory(pattern) {
+  history.push(structuredClone(pattern));
+  if (history.length > HISTORY_LIMIT) history.shift();
+}
+
+export function canUndo() {
+  return history.length > 0;
+}
+
+export function undo() {
+  const previous = history.pop();
+  if (!previous) return false;
+  state.pattern = previous;
+  if (state.isOwned) patternStore.upsert(state.pattern);
+  render();
+  return true;
+}
 
 export const getState = () => state;
 
@@ -92,6 +123,7 @@ function render() {
  * forget (US-7.2). Shipped Patterns never reach here; `guardShipped` intercepts.
  */
 export function apply(mutator, ...args) {
+  pushHistory(state.pattern);
   state.pattern = mutator(state.pattern, ...args);
   if (state.isOwned) patternStore.upsert(state.pattern);
   render();
@@ -105,10 +137,28 @@ export function apply(mutator, ...args) {
  *
  * @returns {Promise<boolean>} whether the caller may proceed
  */
+/**
+ * Names must be unique case-insensitively across the whole library. Two
+ * Patterns called the same thing are indistinguishable in a list, which defeats
+ * the point of naming one (AC-7.3.5, AC-7.4.4).
+ */
+function nameTaken(name, exceptId = null) {
+  const target = name.trim().toLowerCase();
+  return [...seedStore.loadAll(), ...patternStore.loadAll()].some(
+    (p) => p.id !== exceptId && p.name.trim().toLowerCase() === target
+  );
+}
+
+const uniqueNameValidator = (exceptId = null) => (name) =>
+  nameTaken(name, exceptId) ? `A Pattern called "${name}" already exists. Choose another name.` : null;
+
 async function guardShipped() {
   if (state.isOwned) return true;
 
-  const name = await askNewPatternName(`${state.pattern.name} (my version)`);
+  const name = await askNewPatternName(
+    `${state.pattern.name} (my version)`,
+    uniqueNameValidator()
+  );
   if (name === null) return false;
 
   const owned = {
@@ -124,6 +174,9 @@ async function guardShipped() {
 }
 
 export function loadPattern(pattern, { owned }) {
+  // History belongs to the Pattern being edited; carrying it across a load
+  // would let undo resurrect a different Pattern's content.
+  history.length = 0;
   state.pattern = pattern;
   state.isOwned = owned;
   state.transportPosition = null;
@@ -304,6 +357,44 @@ const handlers = {
 
   // --- library ---
 
+  /**
+   * A new Pattern is in the library the moment it exists — there is no save or
+   * publish step (AC-7.1.2). It is named "New Pattern" by default so it can be
+   * renamed immediately rather than demanding a name up front (AC-7.1.1).
+   */
+  onNewPattern() {
+    const pattern = { ...create('New Pattern'), id: patternStore.nextId() };
+    patternStore.upsert(pattern);
+    loadPattern(pattern, { owned: true });
+    return pattern;
+  },
+
+  /**
+   * Renaming. An empty name reverts to the last valid one rather than being
+   * stored — a nameless Pattern is unfindable (AC-7.1.1).
+   */
+  onRename(name) {
+    const trimmed = String(name).trim();
+    if (!trimmed) {
+      render();
+      return state.pattern.name;
+    }
+    state.pattern = { ...state.pattern, name: trimmed };
+    if (state.isOwned) patternStore.upsert(state.pattern);
+    render();
+    return trimmed;
+  },
+
+  onUndo() {
+    undo();
+  },
+
+  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6). */
+  onRatingFilter(minRating) {
+    state.view = { ...state.view, minRating: Number(minRating) || 0 };
+    render();
+  },
+
   onSearch(query) {
     state.view = { ...state.view, query };
     render();
@@ -368,7 +459,14 @@ const handlers = {
    * the standing view, because auto-save has no discrete moment to interrupt.
    */
   async onMakeCopy() {
-    const name = await askNewPatternName(`${state.pattern.name} copy`);
+    // Make Copy applies only to a Pattern you already own. Editing a shipped
+    // one goes through the forced-naming flow instead (AC-7.4.6).
+    if (!state.isOwned) return null;
+
+    const name = await askNewPatternName(
+      `${state.pattern.name} copy`,
+      uniqueNameValidator()
+    );
     if (name === null) return;
 
     const copy = { ...structuredClone(state.pattern), id: patternStore.nextId(), name, rating: 0 };
@@ -402,10 +500,23 @@ const handlers = {
   },
 
   async onAppendPrompt() {
-    const entries = libraryEntries();
-    const options = entries
-      .slice(0, 40)
-      .map((e) => ({ label: e.pattern.name, value: e.pattern.id }));
+    // Only offer Patterns that actually fit: appending one that would push past
+    // the cap can only ever fail, so it does not belong in the picker
+    // (AC-8.1.2, AC-8.1.6). The room left shrinks as the Pattern grows.
+    const room = MAX_MEASURES - state.pattern.measures.length;
+    const entries = libraryEntries().filter((e) => e.pattern.measures.length <= room);
+
+    if (entries.length === 0) {
+      await confirm('No Pattern is short enough to append without exceeding six Measures.', {
+        confirmLabel: 'OK',
+        cancelLabel: 'Dismiss',
+      });
+      return;
+    }
+
+    // Every fitting Pattern is offered; the dialog scrolls rather than
+    // truncating, so a Pattern that fits is never silently missing.
+    const options = entries.map((e) => ({ label: e.pattern.name, value: e.pattern.id }));
     options.push({ label: 'Cancel', value: null });
 
     const id = await ask({ message: 'Append which Pattern?', options });
@@ -604,7 +715,7 @@ export function mount(root) {
   });
 
   subscribe((pattern, position, s) => {
-    renderHeader(headerEl, pattern, s);
+    renderHeader(headerEl, pattern, { ...s, canUndo: canUndo() }, handlers);
     renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
     renderPlayControls(playEl, pattern, s, handlers);
     renderPlaybackSettings(settingsBody, pattern, s, handlers);
@@ -701,6 +812,9 @@ if (typeof window !== 'undefined') {
     overlayStore,
     localMetaStore,
     transport,
+    undo,
+    canUndo,
+    nameTaken,
     currentDuplicates,
     currentFamily,
     unresolvedLibraryDuplicates,
@@ -715,8 +829,13 @@ if (typeof window !== 'undefined') {
   };
 }
 
-/** Test seam: the MIDI note the first sounding Slot resolves to. */
+/** Test seams. */
 if (typeof window !== 'undefined') {
+  window.__rmRenderGrid = renderGrid;
+  window.__rmAudio = { playClick, accentVoice };
+  window.__rmPianoDynamics = () => piano.DYNAMICS;
+  window.__rmTimeline = { buildTimeline, buildBeatGrid };
+
   window.__rmMidi = () => {
     const events = buildTimeline(state.pattern);
     return events[0]?.pitch?.midiNote ?? null;

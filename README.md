@@ -9,7 +9,42 @@ entirely in the browser with no backend.
 
 ## Status
 
-Pre-implementation. The specification is complete; no application code exists yet.
+Implemented. All 34 User Stories are built, and all 206 Acceptance Criteria carry at
+least one automated test — `npm run coverage:ac` reports 206/206.
+
+## Running it
+
+```bash
+npm install
+npm run dev          # dev server
+npm run build        # static build into dist/
+```
+
+| Command | What it checks |
+|---|---|
+| `npm test` | Vitest over the pure core and storage |
+| `npm run test:e2e` | Playwright over the grid, transport, library and responsive behaviour |
+| `npm run coverage:ac` | Every AC in spec.md has a test naming it — fails on any gap |
+| `npm run validate:seed` | The shipped Pattern library against data-model §7 |
+| `npm run check:cvd` | The accent palette under simulated colour vision deficiencies |
+| `npm run lint` | Includes the `core/` purity boundary (Constitution Principle I) |
+
+Playwright uses the container's Chromium via `CHROMIUM_PATH`:
+
+```bash
+CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
+```
+
+## Before release
+
+- **The piano soundfont is fetched from a third-party CDN.** research.md D-003 left
+  CDN-versus-committed-asset open. A runtime dependency on someone else's host means
+  Melodic mode breaks when that host does. Self-host the files and point
+  `setSoundfontBaseUrl` at them. A failed load currently falls back to a synthesised
+  voice at the correct pitch rather than going silent.
+- **Run the 30-minute continuous playback check by hand** (quickstart.md V7). The
+  automated suite asserts the property that makes it hold — absolute-origin
+  scheduling — over 30 seconds and 500 loops, not the full half hour.
 
 ## Key capabilities (planned)
 
