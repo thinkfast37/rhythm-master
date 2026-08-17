@@ -75,8 +75,11 @@ for (const p of raw.patterns) {
     }
   }
 
-  if (!Array.isArray(p.measures) || p.measures.length < 1 || p.measures.length > 6) {
-    fail(name, `${p.measures?.length} Measures, expected 1–6 (AC-1.1.3)`);
+  // Mirrors MAX_MEASURES in core/pattern.js. Duplicated for the standalone-ness
+  // this file's header explains — which means it must be changed in step. T157
+  // raised the cap 6 → 8 and missed this copy; the seed library caught it.
+  if (!Array.isArray(p.measures) || p.measures.length < 1 || p.measures.length > 8) {
+    fail(name, `${p.measures?.length} Measures, expected 1–8 (AC-1.1.3)`);
     continue;
   }
 
