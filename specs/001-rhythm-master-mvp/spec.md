@@ -1481,9 +1481,11 @@ exist).
 - **AC-15.1.10** — Grid remains usable for the largest supported Pattern on mobile
   - **Given** a 390px-wide (mobile) viewport and a Pattern at the maximum size: 6 Measures of 12/8, every Beat on the Straight 16ths Recipe (144 Slots total)
   - **When** the Practicing Musician views it
-  - **Then** each Measure occupies its own row, the six rows stack vertically, and the musician reads down the page
+  - **Then** each Measure occupies its own bounded block, the six blocks stack vertically, and the musician reads down the page
   - **And** no Slot is narrower than 24 CSS pixels, so every Slot stays tappable
+  - **And** where a Measure's Beats cannot fit one line at that Slot width, they wrap onto further lines *within* that Measure's block, and a single Beat is never split across a line break — so the subdivision of a Beat always reads as one unit
   - **And** neither the page body nor the grid scrolls horizontally at any point
+  - *(A Measure cannot always be literally one line: 12/8 at Straight 16ths is 24 Slots, which needs 576 px at the 24 px tap minimum — wider than a 390 px phone. The Measure stays the unit of layout; its Beats wrap inside it.)*
 
 - **AC-15.1.11** — Playback keeps the sounding Measure in view on mobile
   - **Given** the Pattern from AC-15.1.10 playing on a 390px viewport, with Measure 1 visible and Measure 5 below the fold
@@ -1656,8 +1658,10 @@ it appears in the library and plays correctly, with no source file modified.
   Percussive playback is unaffected and remains immediately available (AC-2.4.3).
 - **The densest supported Pattern on the smallest supported screen.** 6 Measures of 12/8 at Straight
   16ths is 144 Slots on a 390 px viewport. Rather than shrinking Slots below a tappable size or
-  scrolling sideways, each Measure takes its own row and the Pattern is read down the page, with
-  playback auto-scrolling the sounding Measure into view (AC-15.1.10, AC-15.1.11).
+  scrolling sideways, each Measure takes its own block and the Pattern is read down the page, with
+  playback auto-scrolling the sounding Measure into view (AC-15.1.10, AC-15.1.11). A Measure whose
+  Beats exceed one line wraps them inside its own block rather than overflowing — 24 Slots at the
+  24 px tap minimum needs 576 px, so at 12/8 a single line is arithmetically impossible on a phone.
 - **A legacy Pattern shorter than one Measure.** The predecessor allowed one- and two-beat drill
   cells that looped sub-measure while nominally carrying a 4/4 meter. These convert to 1/4 and 2/4
   Measures respectively (AC-16.1.6), preserving the original loop length exactly. This is why 1/4

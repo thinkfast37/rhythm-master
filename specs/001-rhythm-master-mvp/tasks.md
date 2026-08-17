@@ -118,9 +118,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Build a Pattern whose Measures are 4/4, 6/8 and 3/4; assert each holds the right Beat count and that the 6-Measure cap holds.
 
-- [ ] T036 [US1.1] Wire Measure add/remove and the 6-Measure cap into `src/ui/controls.js` and `src/main.js`
-- [ ] T037 [US1.1] Implement the apply-to-all-Measures prompt on first-Measure meter change in `src/ui/dialogs.js` (AC-1.1.5)
-- [ ] T038 [US1.1] Tests in `tests/unit/core/pattern.test.js` and `tests/e2e/us-1-1.spec.js` covering AC-1.1.1–AC-1.1.9, including inheritance of the previous Measure's meter and the undoable reset
+- [X] T036 [US1.1] Wire Measure add/remove and the 6-Measure cap into `src/ui/controls.js` and `src/main.js`
+- [X] T037 [US1.1] Implement the apply-to-all-Measures prompt on first-Measure meter change in `src/ui/dialogs.js` (AC-1.1.5)
+- [X] T038 [US1.1] Tests in `tests/unit/core/pattern.test.js` and `tests/e2e/us-1-1.spec.js` covering AC-1.1.1–AC-1.1.9, including inheritance of the previous Measure's meter and the undoable reset
 
 ---
 
@@ -130,8 +130,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: For each supported meter, assert Beat count and that no view groups 7/8 as 2+2+3 or 6/8 as two dotted quarters.
 
-- [ ] T039 [US1.2] Implement the Time Signature picker in `src/ui/controls.js` over the closed supported set
-- [ ] T040 [US1.2] Tests in `tests/e2e/us-1-2.spec.js` covering AC-1.2.1–AC-1.2.4, asserting rendered Beat counts per meter
+- [X] T039 [US1.2] Implement the Time Signature picker in `src/ui/controls.js` over the closed supported set
+- [X] T040 [US1.2] Tests in `tests/e2e/us-1-2.spec.js` covering AC-1.2.1–AC-1.2.4, asserting rendered Beat counts per meter
 
 ---
 
@@ -141,10 +141,10 @@ Nothing in this phase renders anything.
 
 **Independent test**: Apply each Recipe and assert Slot count and Subdivision Group structure; assert the confirmation prompt fires in both directions when a Beat has notes.
 
-- [ ] T041 [US1.3] Implement the Recipe picker in `src/ui/controls.js`, offering exactly the menu for the Beat's note value
-- [ ] T042 [US1.3] Implement the clear-confirmation dialog in `src/ui/dialogs.js` — required in both directions whenever the Beat has notes, skipped when empty (AC-1.3.7, AC-1.3.8, AC-1.3.10)
-- [ ] T043 [US1.3] Render the straight/triplet group boundary in `src/ui/grid.js` for mixed-feel Recipes
-- [ ] T044 [US1.3] Tests in `tests/e2e/us-1-3.spec.js` covering AC-1.3.1–AC-1.3.10
+- [X] T041 [US1.3] Implement the Recipe picker in `src/ui/controls.js`, offering exactly the menu for the Beat's note value
+- [X] T042 [US1.3] Implement the clear-confirmation dialog in `src/ui/dialogs.js` — required in both directions whenever the Beat has notes, skipped when empty (AC-1.3.7, AC-1.3.8, AC-1.3.10)
+- [X] T043 [US1.3] Render the straight/triplet group boundary in `src/ui/grid.js` for mixed-feel Recipes
+- [X] T044 [US1.3] Tests in `tests/e2e/us-1-3.spec.js` covering AC-1.3.1–AC-1.3.10
 
 ---
 
@@ -154,8 +154,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Change one Measure's meter from the grid; assert only that Measure resets.
 
-- [ ] T045 [US1.4] Render the per-Measure Time Signature affordance in `src/ui/grid.js`
-- [ ] T046 [US1.4] Tests in `tests/e2e/us-1-4.spec.js` covering AC-1.4.1–AC-1.4.8
+- [X] T045 [US1.4] Render the per-Measure Time Signature affordance in `src/ui/grid.js`
+- [X] T046 [US1.4] Tests in `tests/e2e/us-1-4.spec.js` covering AC-1.4.1–AC-1.4.8
 
 ---
 
@@ -165,10 +165,10 @@ Nothing in this phase renders anything.
 
 **Independent test**: Turn on Slots across every Beat position and Recipe; assert each lands on its computed default, then assert the override cycle from each starting default.
 
-- [ ] T047 [US3.1] Implement slot tap and accent cycling in `src/ui/grid.js`, calling `core/accents.effectiveAccent` and never recomputing locally
-- [ ] T048 [US3.1] Define the CVD-verified accent palette and fill-height treatment in `src/styles/tokens.css` and `src/ui/grid.js` (D-005)
+- [X] T047 [US3.1] Implement slot tap and accent cycling in `src/ui/grid.js`, calling `core/accents.effectiveAccent` and never recomputing locally
+- [X] T048 [US3.1] Define the CVD-verified accent palette and fill-height treatment in `src/styles/tokens.css` and `src/ui/grid.js` (D-005)
 - [ ] T049 [US3.1] Tests in `tests/e2e/us-3-1.spec.js` covering AC-3.1.1–AC-3.1.15, including recomputation after a Recipe reset (AC-3.1.10)
-- [ ] T050 [US3.1] Wire `npm run check:cvd` into the accent palette so a palette change cannot land without passing it
+- [X] T050 [US3.1] Wire `npm run check:cvd` into the accent palette so a palette change cannot land without passing it
 
 ---
 
@@ -273,9 +273,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Switch systems and assert labels per Recipe; open a mixed-feel Pattern and assert Numbered rendering without the stored preference changing.
 
-- [ ] T074 [US5.6] Implement `src/core/counting.js` — `labelsFor` and `effectiveSystem` per contracts/core-api.md
-- [ ] T075 [US5.6] Render labels and the legend in `src/ui/grid.js`, and the toggle in `src/ui/controls.js`
-- [ ] T076 [US5.6] Tests in `tests/unit/core/counting.test.js` and `tests/e2e/us-5-6.spec.js` covering AC-5.6.1–AC-5.6.11
+- [X] T074 [US5.6] Implement `src/core/counting.js` — `labelsFor` and `effectiveSystem` per contracts/core-api.md
+- [X] T075 [US5.6] Render labels and the legend in `src/ui/grid.js`, and the toggle in `src/ui/controls.js`
+- [X] T076 [US5.6] Tests in `tests/unit/core/counting.test.js` and `tests/e2e/us-5-6.spec.js` covering AC-5.6.1–AC-5.6.11
 
 ---
 
@@ -307,8 +307,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Edit a shipped Pattern; assert the naming prompt precedes the edit and that cancelling leaves the original untouched.
 
-- [ ] T081 [US7.3] Implement the forced-naming prompt in `src/ui/dialogs.js`, applying the pending edit only on confirm (FR-007)
-- [ ] T082 [US7.3] Tests in `tests/e2e/us-7-3.spec.js` covering AC-7.3.1–AC-7.3.5
+- [X] T081 [US7.3] Implement the forced-naming prompt in `src/ui/dialogs.js`, applying the pending edit only on confirm (FR-007)
+- [X] T082 [US7.3] Tests in `tests/e2e/us-7-3.spec.js` covering AC-7.3.1–AC-7.3.5
 
 ---
 
@@ -475,8 +475,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Build the densest Pattern (144 Slots) at 390 px; assert per-Measure vertical rows, 24 px minimum Slot width, no horizontal scroll, and playback autoscroll.
 
-- [ ] T114 [US15.1] Implement breakpoints and the desktop/tablet layouts in `src/ui/responsive.js` and `src/styles/`
-- [ ] T115 [US15.1] Implement per-Measure vertical row paging with a 24 px minimum Slot width in `src/ui/grid.js` and `src/ui/responsive.js` (AC-15.1.10, D-006)
+- [X] T114 [US15.1] Implement breakpoints and the desktop/tablet layouts in `src/ui/responsive.js` and `src/styles/`
+- [X] T115 [US15.1] Implement per-Measure vertical row paging with a 24 px minimum Slot width in `src/ui/grid.js` and `src/ui/responsive.js` (AC-15.1.10, D-006)
 - [ ] T116 [US15.1] Implement playback autoscroll in `src/ui/responsive.js` and `src/ui/grid.js`, keeping the sounding Measure in view including on loop wrap (AC-15.1.11)
 - [ ] T117 [US15.1] Tests in `tests/e2e/us-15-1.spec.js` covering AC-15.1.1–AC-15.1.11 across the three viewport classes
 

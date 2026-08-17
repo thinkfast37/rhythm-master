@@ -19,3 +19,212 @@
   --accent-medium: #9fd0e8;
   --accent-strong: #f0a020;
 }
+
+:root {
+  --bg: #0b0c15;
+  --panel: #14161f;
+  --ink: #e8eaf2;
+  --ink-dim: #8b90a3;
+  --line: #262a38;
+  --brand: #f0a020;
+
+  --slot-min: 24px; /* AC-15.1.10 — never smaller than this, on any viewport */
+  --radius: 4px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* The page never scrolls sideways, at any Pattern size (AC-15.1.10). */
+  overflow-x: hidden;
+}
+
+/* --- grid ---------------------------------------------------------------- */
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+/* One Measure per row, read down the page (D-006). */
+.measure {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+
+.measure-meter {
+  flex: 0 0 auto;
+  min-width: 44px;
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: 600 14px/1 ui-monospace, monospace;
+  cursor: pointer;
+}
+
+/*
+ * Beats wrap within their Measure.
+ *
+ * "One Measure per row" cannot be taken literally at the densest supported
+ * Pattern: 12/8 at Straight 16ths is 24 Slots, and 24 Slots at the 24px tap
+ * minimum needs 576px — wider than a 390px phone. So a Measure is its own
+ * BLOCK, and its Beats wrap onto as many lines as they need inside it. Beats
+ * never split across lines, so the subdivision of a Beat always reads as one
+ * unit (AC-15.1.10).
+ */
+.beats {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.beat {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 3px;
+  min-width: min-content;
+}
+
+/* A mixed Recipe's halves are separate boxes, so the straight/triplet boundary
+   is visible without relying on colour. */
+.group {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: min-content;
+}
+.group.feel-triplet {
+  border-bottom: 2px dotted var(--ink-dim);
+  padding-bottom: 2px;
+}
+.group.feel-straight {
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+}
+
+.slot {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: var(--slot-min);
+  height: 52px;
+  padding: 0;
+  background: var(--accent-off);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Colour carries the requirement (Principle II); height is the design choice
+   that makes it scan at density (D-005). */
+.slot-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: block;
+  background: var(--accent-off);
+  transition: height 80ms linear;
+}
+.slot.accent-weak   .slot-fill { background: var(--accent-weak); }
+.slot.accent-medium .slot-fill { background: var(--accent-medium); }
+.slot.accent-strong .slot-fill { background: var(--accent-strong); }
+
+.slot-label {
+  position: relative;
+  display: block;
+  font: 500 10px/52px ui-monospace, monospace;
+  color: var(--ink-dim);
+  text-align: center;
+  pointer-events: none;
+}
+.slot.accent-medium .slot-label,
+.slot.accent-strong .slot-label { color: #0b0c15; }
+
+.slot.playing {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+/* --- responsive ---------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .grid { padding: 8px; gap: 8px; }
+  .measure { flex-wrap: wrap; }
+  .slot { height: 44px; }
+  .slot-label { line-height: 44px; }
+}
+
+/* --- controls ------------------------------------------------------------ */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.control-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.control { display: flex; flex-direction: column; gap: 2px; }
+.control-label { font-size: 10px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .06em; }
+
+.controls button, .controls select, .controls input {
+  font: 500 13px/1 system-ui, sans-serif;
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.controls button.primary { background: var(--brand); color: #0b0c15; border-color: var(--brand); font-weight: 700; }
+.controls button.on { border-color: var(--brand); color: var(--brand); }
+.controls button:disabled { opacity: .4; cursor: not-allowed; }
+.presets { display: flex; gap: 4px; flex-wrap: wrap; }
+.preset { padding: 6px 8px !important; font-size: 11px !important; }
+.counting-note { flex-basis: 100%; margin: 0; font-size: 11px; color: var(--ink-dim); }
+
+/* --- dialogs ------------------------------------------------------------- */
+
+.dialog-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 5, 10, .72);
+  padding: 16px;
+}
+.dialog {
+  max-width: 420px; width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+}
+.dialog-message { margin: 0 0 16px; font: 400 14px/1.5 system-ui, sans-serif; color: var(--ink); }
+.dialog-input {
+  width: 100%; margin-bottom: 16px; padding: 10px;
+  font: 400 14px/1 system-ui, sans-serif;
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.dialog-button {
+  font: 500 13px/1 system-ui, sans-serif; color: var(--ink);
+  background: #1c1f2b; border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 9px 14px; cursor: pointer;
+}
+.dialog-button.primary { background: var(--brand); color: #0b0c15; border-color: var(--brand); font-weight: 700; }
