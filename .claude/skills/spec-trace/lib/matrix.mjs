@@ -36,6 +36,29 @@ export const SEVERITY_OF = {
 
 export const SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
+/**
+ * Colour for each state, green through red.
+ *
+ * Markdown has no colour of its own, so the mark has to be a glyph. It is always rendered
+ * *beside* the words it repeats — never instead of them — because red and green are the one
+ * pair a colour-blind reader cannot separate, and because a matrix has to survive being
+ * read in a plain-text diff. The gradient exists because the severities are not
+ * interchangeable: a test proving the wrong thing and a test with an untidy name are
+ * different problems, and flattening both to "red" throws away the ranking.
+ */
+export const MARK_OF = {
+  OK: '🟢',
+  WAIVED: '🔵',
+  CRITICAL: '🔴',
+  HIGH: '🔴',
+  MEDIUM: '🟠',
+  LOW: '🟡',
+};
+
+/** The colour for one row's status: proven, argued away, or a gap of some severity. */
+export const markFor = (status) =>
+  status.mark === 'OK' ? MARK_OF.OK : status.waived ? MARK_OF.WAIVED : MARK_OF[status.severity];
+
 /** Severities a waiver may cover. CRITICAL and HIGH are the states that hide unbuilt work. */
 export const WAIVABLE = new Set(['LOW', 'MEDIUM']);
 
@@ -150,6 +173,14 @@ function tally(rows) {
 
 const pct = (n, total) => (total === 0 ? '100.0' : ((n / total) * 100).toFixed(1));
 
+/** One line of counts, each behind its own colour. */
+const summaryLine = (t) =>
+  `${MARK_OF.OK} Proven: ${t.OK}` +
+  (t.WAIVED ? ` · ${MARK_OF.WAIVED} Waived: ${t.WAIVED}` : '') +
+  SEVERITY_ORDER.filter((s) => t[s])
+    .map((s) => ` · ${MARK_OF[s]} ${s}: ${t[s]}`)
+    .join('');
+
 /** Coverage and gap severity, headline figures. */
 function renderCoverage(rows) {
   const t = tally(rows);
@@ -162,11 +193,15 @@ function renderCoverage(rows) {
     '',
     '| | Criteria | Share |',
     '|---|---|---|',
-    `| Proven | ${t.OK} | ${pct(t.OK, rows.length)}% |`,
+    `| ${MARK_OF.OK} Proven | ${t.OK} | ${pct(t.OK, rows.length)}% |`,
   ];
-  if (t.WAIVED) lines.push(`| Waived, with a reason | ${t.WAIVED} | ${pct(t.WAIVED, rows.length)}% |`);
+  if (t.WAIVED)
+    lines.push(
+      `| ${MARK_OF.WAIVED} Waived, with a reason | ${t.WAIVED} | ${pct(t.WAIVED, rows.length)}% |`
+    );
   for (const sev of SEVERITY_ORDER) {
-    if (t[sev]) lines.push(`| Gap — ${sev} | ${t[sev]} | ${pct(t[sev], rows.length)}% |`);
+    if (t[sev])
+      lines.push(`| ${MARK_OF[sev]} Gap — ${sev} | ${t[sev]} | ${pct(t[sev], rows.length)}% |`);
   }
   return lines.join('\n');
 }
@@ -180,17 +215,23 @@ function renderByStory(rows) {
   }
 
   const out = [
-    '| User Story | Criteria | Proven | Waived | CRITICAL | HIGH | MEDIUM | LOW |',
+    `| User Story | Criteria | ${MARK_OF.OK} Proven | ${MARK_OF.WAIVED} Waived | ` +
+      `${MARK_OF.CRITICAL} CRITICAL | ${MARK_OF.HIGH} HIGH | ${MARK_OF.MEDIUM} MEDIUM | ` +
+      `${MARK_OF.LOW} LOW |`,
     '|---|---|---|---|---|---|---|---|',
   ];
   for (const [story, group] of stories) {
     const t = tally(group);
     const cell = (n) => (n === 0 ? '·' : String(n));
+    // A Story's colour is its worst criterion, not its average: one unproven claim is the
+    // thing worth seeing, and averaging would let a single CRITICAL hide behind nine OKs.
+    const worst = SEVERITY_ORDER.find((s) => t[s]);
+    const mark = worst ? MARK_OF[worst] : t.WAIVED ? MARK_OF.WAIVED : MARK_OF.OK;
     // A Story with no unproven criteria is worth seeing at a glance, not just counted.
     const proven = t.OK === group.length ? `**${t.OK}**` : String(t.OK);
     out.push(
-      `| ${story} | ${group.length} | ${proven} | ${cell(t.WAIVED)} | ${cell(t.CRITICAL)} | ` +
-        `${cell(t.HIGH)} | ${cell(t.MEDIUM)} | ${cell(t.LOW)} |`
+      `| ${mark} ${story} | ${group.length} | ${proven} | ${cell(t.WAIVED)} | ` +
+        `${cell(t.CRITICAL)} | ${cell(t.HIGH)} | ${cell(t.MEDIUM)} | ${cell(t.LOW)} |`
     );
   }
   return out.join('\n');
@@ -209,10 +250,13 @@ function renderTable(rows) {
         ? '**none**'
         : [...new Set(r.tests.map((t) => `\`${t.file.split('/').pop()}\``))].join(', ');
 
+    // The colour repeats the words; it never replaces them. See MARK_OF.
+    const dot = markFor(r.status);
     let mark;
-    if (r.status.mark === 'OK') mark = 'OK';
-    else if (r.status.waived) mark = `WAIVED (${r.status.mark}) — ${escapeCell(r.status.reason)}`;
-    else mark = `**${r.status.severity}** · ${r.status.mark}${r.status.accepted ? ' ᵃ' : ''}`;
+    if (r.status.mark === 'OK') mark = `${dot} OK`;
+    else if (r.status.waived)
+      mark = `${dot} WAIVED (${r.status.mark}) — ${escapeCell(r.status.reason)}`;
+    else mark = `${dot} **${r.status.severity}** · ${r.status.mark}${r.status.accepted ? ' ᵃ' : ''}`;
 
     out.push(
       `| ${r.story} | \`${r.id}\`${r.ui ? ' 🖵' : ''} | ${escapeCell(r.title)} | ` +
@@ -251,6 +295,11 @@ A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
 does, which cannot be proved by a test with no document to look at.
 
+${MARK_OF.OK} proven · ${MARK_OF.WAIVED} waived · and ${MARK_OF.LOW} → ${MARK_OF.MEDIUM} → ${MARK_OF.HIGH}
+as a gap gets more serious. The colour only repeats what the row already says in words, so
+nothing is lost reading this in greyscale, in a plain diff, or by someone who cannot tell
+the red from the green.
+
 ## How a gap is ranked
 
 Severity comes from the kind of gap, not from a judgement recorded per criterion, so it
@@ -258,13 +307,13 @@ cannot be talked down when a deadline is close.
 
 | Severity | Gap | Why it ranks there |
 |---|---|---|
-| **CRITICAL** | NO TEST — nothing names this criterion | Nobody has looked. This is the state an unbuilt requirement sits in. |
-| **HIGH** | WRONG TEST — a test names it but proves something else | The claim is unproven while reporting as covered. This is what hid US-2.2 and US-11.1/11.2. |
-| **HIGH** | NOT PROVABLE — UI-level, but only a pure unit test | Same failure, arrived at differently: \`core/\` cannot see a screen, whatever the test is named. |
-| **MEDIUM** | NEEDS CASES — a compound AC not decomposed | Partly proven. One test stands in for several claims, so some of them are unchecked. |
-| **LOW** | MISNAMED — right test, named in its own words | Proven. Clerical: the name has drifted from the spec's wording. |
+| ${MARK_OF.CRITICAL} **CRITICAL** | NO TEST — nothing names this criterion | Nobody has looked. This is the state an unbuilt requirement sits in. |
+| ${MARK_OF.HIGH} **HIGH** | WRONG TEST — a test names it but proves something else | The claim is unproven while reporting as covered. This is what hid US-2.2 and US-11.1/11.2. |
+| ${MARK_OF.HIGH} **HIGH** | NOT PROVABLE — UI-level, but only a pure unit test | Same failure, arrived at differently: \`core/\` cannot see a screen, whatever the test is named. |
+| ${MARK_OF.MEDIUM} **MEDIUM** | NEEDS CASES — a compound AC not decomposed | Partly proven. One test stands in for several claims, so some of them are unchecked. |
+| ${MARK_OF.LOW} **LOW** | MISNAMED — right test, named in its own words | Proven. Clerical: the name has drifted from the spec's wording. |
 
-**WAIVED** marks a gap deliberately left open, with its reason shown in the row. Only LOW
+${MARK_OF.WAIVED} **WAIVED** marks a gap deliberately left open, with its reason shown in the row. Only LOW
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
@@ -309,8 +358,7 @@ export function renderChange(rows, { touchedFiles, reason, reach = new Map() }) 
       `**${direct.length} criteri${direct.length === 1 ? 'on' : 'a'} directly affected** — ` +
         `a test naming the criterion changed in this diff.`,
       '',
-      `Proven: ${t.OK}${t.WAIVED ? ` · Waived: ${t.WAIVED}` : ''}` +
-        SEVERITY_ORDER.filter((s) => t[s]).map((s) => ` · ${s}: ${t[s]}`).join(''),
+      summaryLine(t),
       '',
       renderTable(direct),
       ''
@@ -328,8 +376,7 @@ export function renderChange(rows, { touchedFiles, reason, reach = new Map() }) 
         `across ${stories.length} User Stories — reached only because this change touches a ` +
         'file some task names, so treat as a blast radius rather than a finding.</summary>',
       '',
-      `Proven: ${t.OK}${t.WAIVED ? ` · Waived: ${t.WAIVED}` : ''}` +
-        SEVERITY_ORDER.filter((s) => t[s]).map((s) => ` · ${s}: ${t[s]}`).join(''),
+      summaryLine(t),
       '',
       `Stories: ${stories.join(', ')}`,
       '',
