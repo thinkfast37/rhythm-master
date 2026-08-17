@@ -124,9 +124,11 @@ test('AC-13.1.2 — Bulk submission batches multiple Patterns into one issue', a
   }
 });
 
-test('AC-13.1.3/1 — An oversized submission links to a title-and-label-only issue and shows the paste-it-yourself note', async ({ page }) => {
+test('AC-13.1.3/1 — A submission too large to prefill readably prefills the same content compressed', async ({
+  page,
+}) => {
   await page.goto('/');
-  // Enough Patterns that the prefilled body cannot fit in a URL.
+  // Enough Patterns that the readable body cannot fit in a URL.
   await page.evaluate(() => {
     window.__rm.patternStore.saveAll(
       Array.from({ length: 40 }, (_, i) => ({
@@ -140,11 +142,27 @@ test('AC-13.1.3/1 — An oversized submission links to a title-and-label-only is
 
   const href = await submissionLink(page).getAttribute('href');
   expect(href).toContain('labels=new-pattern');
-  expect(href).not.toContain('body=');
+  // Still prefilled: nobody is asked to paste anything.
+  expect(href).toContain('body=');
   expect(href.length).toBeLessThanOrEqual(8000);
 
-  await expect(page.locator('.submission-fallback')).toContainText('Copy all to clipboard');
-  await expect(page.locator('[data-action="copy-submission"]')).toBeVisible();
+  const sent = new URL(href).searchParams.get('body');
+  expect(sent).toContain('```rhythm-master');
+  expect(sent).toContain('v1 gzip base64url');
+
+  // The block decodes, in the page, to all 40 Patterns.
+  const decoded = await page.evaluate(
+    (body) => window.__rm.readSubmittedPatterns(body).then((ps) => ps.map((p) => p.name)),
+    sent
+  );
+  expect(decoded).toHaveLength(40);
+  expect(decoded).toContain('Pattern 1');
+  expect(decoded).toContain('Pattern 40');
+
+  // Explained, not silently different — and no paste-it-yourself note, since there
+  // is nothing to paste.
+  await expect(page.locator('.submission-compressed')).toContainText('compressed block');
+  await expect(page.locator('.submission-fallback')).toHaveCount(0);
 });
 
 test('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full', async ({ page }) => {
@@ -242,4 +260,45 @@ test('AC-13.1.4/3 — A Pattern never submitted is included', async ({ page }) =
 
   const body = new URL(await submissionLink(page).getAttribute('href')).searchParams.get('body');
   expect(body).toContain('### Pattern: Never Sent');
+});
+
+test('AC-13.1.3/3 — A submission too large even compressed falls back to title and label with the paste-it-yourself note', async ({
+  page,
+}) => {
+  await page.goto('/');
+  // Real entropy in the music is the one thing gzip cannot fold away, so this is
+  // what it takes to defeat the compressed tier rather than merely the readable one.
+  await page.evaluate(() => {
+    let seed = 1;
+    const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const base = window.__rm.getState().pattern;
+    // 160 eight-Measure Patterns of noise, sized from the measured breakpoint in this
+    // very page: 80 of them still compress to 4,618 and would prove the wrong tier.
+    window.__rm.patternStore.saveAll(
+      Array.from({ length: 160 }, (_, i) => {
+        const p = structuredClone(base);
+        p.id = `p_${i + 1}`;
+        p.name = `Take ${i + 1}`;
+        while (p.measures.length < 8) p.measures.push(structuredClone(p.measures[0]));
+        for (const m of p.measures) {
+          for (const b of m.beats) {
+            b.slots = b.slots.map(() =>
+              rand() > 0.5 ? { on: true, accent: 1 + Math.floor(rand() * 3) } : { on: false }
+            );
+          }
+        }
+        return p;
+      })
+    );
+  });
+  await page.locator('[data-action="submit-all"]').click();
+
+  const href = await submissionLink(page).getAttribute('href');
+  expect(href).toContain('labels=new-pattern');
+  expect(href).not.toContain('body=');
+  expect(href.length).toBeLessThanOrEqual(8000);
+
+  await expect(page.locator('.submission-fallback')).toContainText('Copy all to clipboard');
+  await expect(page.locator('[data-action="copy-submission"]')).toBeVisible();
+  await expect(page.locator('.submission-compressed')).toHaveCount(0);
 });

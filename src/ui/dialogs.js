@@ -334,6 +334,17 @@ export function showSubmission({ submission, summary, onOpened }) {
             'This batch is too long to pre-fill. Click "Copy all to clipboard", then paste into the issue body once the page opens.',
         })
       );
+    } else if (submission.compressed) {
+      // Said plainly, because the issue will look like a wall of characters rather
+      // than the Pattern, and someone seeing that unexplained would reasonably
+      // assume it had gone wrong (AC-13.1.3/1).
+      box.appendChild(
+        Object.assign(document.createElement('p'), {
+          className: 'dialog-note submission-compressed',
+          textContent:
+            'Too big to send as readable JSON, so it is packed into a compressed block instead — nothing is missing, and the maintainer’s tools unpack it.',
+        })
+      );
     }
 
     const status = Object.assign(document.createElement('p'), {
