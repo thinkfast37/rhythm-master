@@ -147,6 +147,11 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       pendingVisuals.length = 0;
       running = true;
 
+      // Every start (fresh Play or a restart) begins a new run at loop 0
+      // (AC-4.2.2), reported directly rather than left to whenever the first
+      // loop happens to complete.
+      onLoop?.(0);
+
       // The device taking audio away stops and resets; it never auto-resumes
       // on return (AC-4.1.5, AC-4.1.6).
       this._unwatch = onSuspended(() => this.stop());
@@ -155,23 +160,28 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       timer = setInterval(tick, POLL_MS);
     },
 
-    stop() {
+    stop(silent = false) {
       if (!running) return;
       running = false;
       clearInterval(timer);
       timer = null;
       pendingVisuals.length = 0;
       this._unwatch?.();
-      onStop?.();
+      if (!silent) onStop?.();
     },
 
     /**
      * Tempo change restarts from the top at the new tempo and resets the loop
      * counter, rather than retiming in place (AC-4.2.2).
+     *
+     * The stop() half of this is an internal implementation detail, not the
+     * musician stopping playback, so it must not fire the `onStop` notification
+     * — that notification means "reset to the top and require a deliberate Play"
+     * (AC-4.1.5, AC-4.1.6), which is exactly the opposite of what a restart does.
      */
     async restart(nextPattern, nextSettings) {
       const wasRunning = running;
-      this.stop();
+      this.stop(/* silent */ true);
       if (wasRunning) await this.start(nextPattern, nextSettings);
     },
 
