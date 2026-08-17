@@ -91,20 +91,37 @@ test('AC-3.1.11 — tapping cycles the accent and eventually switches the Slot o
   expect(seen).toEqual(['3', '1', '2', '0']);
 });
 
-test('FR-012 — accent carries a height channel as well as a colour', async ({ page }) => {
+test('FR-012 — accent carries a size channel as well as a colour', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
   const slot = page.locator('.slot[data-measure="0"][data-beat="0"][data-slot="0"]');
-  const heightAt = async () => slot.locator('.slot-fill').evaluate((el) => el.style.height);
+  const widthAt = async () => slot.locator('.slot-fill').evaluate((el) => el.style.width);
 
-  expect(await heightAt()).toBe('0%');
+  // Bar width, not fill height (D-005, amended 2026-08-17). A fill growing up
+  // the cell crossed the counting syllable's band; a bar pinned to the bottom
+  // edge cannot reach it.
+  expect(await widthAt()).toBe('0%');
   await slot.click(); // Strong
-  expect(await heightAt()).toBe('100%');
+  expect(await widthAt()).toBe('100%');
   await slot.click(); // Weak
-  expect(await heightAt()).toBe('34%');
+  expect(await widthAt()).toBe('33%');
   await slot.click(); // Medium
-  expect(await heightAt()).toBe('67%');
+  expect(await widthAt()).toBe('67%');
+
+  // And the bar stays clear of the text at every level, which is the whole
+  // point of moving it: no Accent Level may put a colour boundary through the
+  // syllable's ink.
+  const clearance = await slot.evaluate((el) => {
+    const bar = el.querySelector('.slot-fill').getBoundingClientRect();
+    const label = el.querySelector('.slot-label');
+    const cs = getComputedStyle(label);
+    const box = label.getBoundingClientRect();
+    const fs = parseFloat(cs.fontSize);
+    const centre = box.top + box.height / 2;
+    return bar.top - (centre + fs * 0.62); // bar top minus the deepest descender
+  });
+  expect(clearance).toBeGreaterThan(0);
 });
 
 test('AC-5.6.4 — the grid labels Slots in the selected counting system', async ({ page }) => {
