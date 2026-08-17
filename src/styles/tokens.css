@@ -572,6 +572,20 @@ body {
 .dialog-button.primary { background: var(--brand); color: #0b0c15; border-color: var(--brand); font-weight: 700; }
 
 /*
+ * The submission link (AC-13.1.1). Deliberately a link and not a button: it goes
+ * somewhere, off this app entirely, and it should read and behave like it — right
+ * click, open in a new tab, copy the address.
+ */
+.dialog-link {
+  display: block;
+  margin-bottom: 16px;
+  font: 500 14px/1.4 var(--font-ui);
+  color: var(--brand);
+  word-break: break-word;
+}
+.dialog-note { margin: 0 0 12px; font: 400 14px/1.5 var(--font-ui); color: var(--ink-dim); }
+
+/*
  * The Pitch badge: scale degree, and under it the note that degree names in
  * this Key (AC-2.2.15).
  *

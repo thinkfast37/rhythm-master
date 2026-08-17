@@ -10,8 +10,11 @@
 
 export const REPO = 'thinkfast37/rhythm-master';
 
-/** Conservative: browsers and servers both cap URLs well above this. */
-export const MAX_URL_LENGTH = 6000;
+/**
+ * A safe margin under GitHub's ~8,192-character request-URI limit (AC-13.1.3).
+ * Beyond it the prefilled body is dropped rather than truncated.
+ */
+export const MAX_URL_LENGTH = 8000;
 
 /**
  * A Pattern in seed-file shape — exactly what a maintainer pastes into
@@ -47,7 +50,46 @@ export function buildIssueBody(patterns) {
 export function buildIssueTitle(patterns) {
   return patterns.length === 1
     ? `New Pattern: ${patterns[0].name}`
-    : `New Patterns: ${patterns.length} submissions`;
+    : `Bulk Pattern Submission (${patterns.length} patterns)`;
+}
+
+/**
+ * A stable fingerprint of exactly what would be submitted for a Pattern.
+ *
+ * This is how "edited since it was submitted" is answered (AC-13.1.4). A Pattern
+ * carries no modified timestamp, and adding one would change the stored Pattern
+ * shape to answer a bookkeeping question — so the payload is compared against the
+ * payload that was last sent, which is also strictly more truthful: an edit that
+ * is undone before the next bulk run is correctly not an edit.
+ *
+ * FNV-1a, because this only has to detect change, never resist forgery.
+ */
+export function submissionDigest(pattern) {
+  const text = JSON.stringify(toSubmissionShape(pattern));
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
+
+/**
+ * The Patterns a bulk submission should carry: the Contributor's own, minus any
+ * already submitted and untouched since (AC-13.1.4).
+ *
+ * Pure, and given the Local Metadata rather than reading it, so `export/` stays
+ * unaware of storage.
+ *
+ * @param {Array<object>} patterns  the Contributor's own Patterns
+ * @param {(id: string) => {submittedAt?: string, submittedDigest?: string}} metaFor
+ */
+export function selectForBulk(patterns, metaFor) {
+  return patterns.filter((p) => {
+    const meta = metaFor(p.id) ?? {};
+    if (!meta.submittedAt) return true;
+    return meta.submittedDigest !== submissionDigest(p);
+  });
 }
 
 /**

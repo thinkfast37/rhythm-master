@@ -70,7 +70,7 @@ describe('storage/localMeta — FR-006 separation', () => {
     expect(localMeta.forPattern('p_1')).toEqual({});
   });
 
-  it('AC-13.1.5 — no Local Metadata field name appears in a serialized Pattern', () => {
+  it('AC-13.1.5 — Submission-tracking is Local Metadata, never part of the export payload: no Local Metadata field name appears in a serialized Pattern', () => {
     const p = { ...create('Groove'), id: 'p_1' };
     patterns.upsert(p);
     localMeta.update('p_1', { submittedAt: 'x', duplicateResolved: true });
