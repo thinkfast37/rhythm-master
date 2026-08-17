@@ -137,7 +137,41 @@ Tags a user adds to a built-in Pattern live in `rm.overlays.v1` under
 
 ---
 
-## 8. Working style
+## 8. Check the record before asking
+
+**Long sessions get compacted: earlier turns are summarised and specifics are
+dropped.** Anything decided a while ago may be missing from working context even
+though it is already done and committed. Treat your own memory of this project
+as the least reliable source available.
+
+So, before asking the maintainer *anything* — and before reporting work as
+outstanding:
+
+```bash
+git log --oneline -20                  # what has actually been done
+git log --oneline -- <the file>        # and to this file specifically
+git log --all --grep='<topic>'         # was this decided already?
+```
+
+Then check the durable records: the Post-MVP log in `tasks.md`, the AC text in
+`spec.md`, the D-00x entries in `research.md`, and the data file itself.
+
+**The repository is the source of truth. Your context is not.** If the two
+disagree, the repository is right.
+
+Three habits that follow from this:
+
+- **Write the outcome down when the work lands, not when you plan it.** A task
+  logged as "in progress" after it was finished and pushed is worse than no
+  log — it actively misleads the next session.
+- **Verify state from the files, not from a commit message.** Messages describe
+  intent; the files carry what actually happened.
+- **If you find yourself about to ask something that feels familiar, it probably
+  is.** Search first.
+
+---
+
+## 9. Working style
 
 - Surface decisions rather than making them quietly. When a choice would change
   what the musician gets, ask — with the trade-offs named, not just the options.
