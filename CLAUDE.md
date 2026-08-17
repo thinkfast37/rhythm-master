@@ -87,7 +87,56 @@ change, not a passing one. Commit messages cite the US/AC IDs they touch.
 
 ---
 
-## 5. Architecture rules that are enforced, not suggested
+## 5. Landing the work: every change becomes a PR
+
+Work is not delivered when it is committed, and it is not delivered when it is
+pushed. **`main` is the live site.** `.github/workflows/deploy.yml` fires on push
+to `main`, re-runs all six gates, and publishes to Pages. Nothing on a branch is
+visible to the musician, however green it is — so a branch left unmerged is a
+change that, from where they are sitting, did not happen.
+
+Every change lands the same way:
+
+1. **Ask what §1 requires** and get the spill approved, if there is one.
+2. **Ask how this one should land.** Once the plan is settled and you are about
+   to write code, put one `AskUserQuestion` with two options:
+   - **Auto** — you open the PR and merge it yourself once the gates pass.
+     **This is always the default, and always listed first.**
+   - **Review** — you open the PR, report the gate results, and stop. The
+     maintainer merges.
+
+   Ask it **once per change**, at that point. Not again later in the same change.
+3. **Implement**, then run all six gates in §4.
+4. **Open the PR either way.** The PR is the *record*, not the approval step: it
+   carries the spec revisions, the AC IDs and the gate results in one place, so
+   the reasoning outlives a compaction and lives somewhere a commit message
+   cannot. Open it even in Auto mode, even for a one-line data fix.
+5. **Auto: merge it.** Review: hand over the link and stop.
+
+**A failing or skipped gate stops the merge in either mode.** Auto is permission
+to merge *passing* work without waiting; it is never permission to merge red work
+or to decide a gate did not apply.
+
+**If the blast radius changes mid-implementation, the mode is void.** An AC that
+turns out to need revising, a migration that turns out to be needed — that is a
+new spill under §1. Stop, say so, and ask again. The mode chosen at step 2 was
+chosen against a different change from the one you now have.
+
+Two things worth naming in the step-2 question when they apply, because no gate
+can catch either and a merge deploys them straight to the musician:
+
+- **It cannot be undone by a follow-up commit.** A storage migration rewrites
+  real saved Patterns on load; deleting a shipped Pattern orphans the ratings and
+  Tags in `rm.overlays.v1` that key off its id.
+- **Taste is the deliverable.** Layout, spacing, colour, control placement. The
+  gates prove it works, not that it is right, and the maintainer is the one
+  practising with it daily.
+
+Say so in the option text and let them choose. Do not change the default.
+
+---
+
+## 6. Architecture rules that are enforced, not suggested
 
 - **`src/core/` is pure.** No DOM, no Web Audio, no `localStorage`, no
   `Date.now`, no `Math.random`, no imports from `ui/`, `audio/`, `storage/` or
@@ -108,7 +157,7 @@ change, not a passing one. Commit messages cite the US/AC IDs they touch.
 
 ---
 
-## 6. Curating the shipped library
+## 7. Curating the shipped library
 
 Built-in Patterns' own Tags are locked in the UI on purpose — they describe what
 a Pattern *is*, and a user should not be able to lose "Latin" from Bossa Nova.
@@ -122,7 +171,7 @@ Tags a user adds to a built-in Pattern live in `rm.overlays.v1` under
 
 ---
 
-## 7. Where things live
+## 8. Where things live
 
 | Path | What |
 |---|---|
@@ -137,7 +186,7 @@ Tags a user adds to a built-in Pattern live in `rm.overlays.v1` under
 
 ---
 
-## 8. Check the record before asking
+## 9. Check the record before asking
 
 **Long sessions get compacted: earlier turns are summarised and specifics are
 dropped.** Anything decided a while ago may be missing from working context even
@@ -171,7 +220,7 @@ Three habits that follow from this:
 
 ---
 
-## 9. Working style
+## 10. Working style
 
 - Surface decisions rather than making them quietly. When a choice would change
   what the musician gets, ask — with the trade-offs named, not just the options.
