@@ -13,6 +13,20 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
+/**
+ * Write the seed file the way it is already written: non-ASCII escaped.
+ *
+ * `JSON.stringify` emits literal non-ASCII, and the shipped file uses `\uXXXX`
+ * escapes — so a plain write rewrites every existing name containing an em dash
+ * as well as appending. The values are identical, but the diff stops being an
+ * append, and "appended, never inserted" is a rule a reviewer has to be able to
+ * SEE holding. A real mistake hides easily in fourteen lines of noise.
+ */
+const serialise = (seed) =>
+  JSON.stringify(seed, null, 2).replace(/[\u0080-\uffff]/g, (c) =>
+    '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')
+  ) + '\n';
+
 /** The seed file, parsed, with its Patterns' positional ids attached. */
 export function readSeed(path) {
   const raw = JSON.parse(readFileSync(path, 'utf8'));
@@ -73,7 +87,7 @@ export function appendPatterns(path, patterns, { force = false } = {}) {
 
   // Two-space indent with a trailing newline: what the file already uses, so the
   // diff is the Patterns added and nothing else.
-  writeFileSync(path, JSON.stringify(seed, null, 2) + '\n');
+  writeFileSync(path, serialise(seed));
 
   return { added, before, after: seed.patterns.length };
 }

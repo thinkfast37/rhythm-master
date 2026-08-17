@@ -25,9 +25,11 @@ node .claude/skills/pattern-intake/pattern-intake.mjs list
 node .claude/skills/pattern-intake/pattern-intake.mjs show 42
 node .claude/skills/pattern-intake/pattern-intake.mjs accept 42 --dry-run
 node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
+node .claude/skills/pattern-intake/pattern-intake.mjs close 42
 ```
 
-`list` and `show` change nothing. `accept` writes `data/seed-patterns.json` and stops.
+`list` and `show` change nothing. `accept` writes `data/seed-patterns.json` and stops. `close`
+is the only command that reaches the Contributor, and it runs **after** the deploy is green.
 
 ## The workflow
 
@@ -57,6 +59,14 @@ node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
 5. **Run the gates, then land it as a normal change** (CLAUDE.md §4, §5): `npm run validate:seed`
    first, then the rest, then a PR with a task logged in `tasks.md`. This is a **data** change
    under §2 — no spec pass.
+6. **`close <issue>`** — once the deploy is green. Comments with the id each Pattern shipped as
+   and closes the issue. It reads the library from the **default branch**, not your working
+   tree, and refuses if any Pattern the issue carries is not there:
+
+   ```text
+   Refusing to close #42 — not in the shipped library on origin/main:
+     Samba Break
+   ```
 
 ## Rules this enforces, and why
 
@@ -81,6 +91,18 @@ node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
   `gh issue list --label` is served by GitHub's search index, which lags: strip a label and
   that query keeps returning the issue for a while. Believing it would report a bare issue as
   labelled and hide the misconfiguration the fallback exists to surface.
+- **Closing an issue makes a claim, so the claim is checked first.** "Accepted" is not
+  "shipped": `accept` leaves an uncommitted file, and between that and the deploy going green
+  sit a PR and eight gates, any of which can send the change back. So `close` verifies against
+  `data/seed-patterns.json` on the **default branch** — the live site — and reports the id read
+  out of that file rather than the one it predicted. An issue closed against a change that
+  never landed tells a Contributor their Pattern is in the library when it is not, and nothing
+  would ever correct it.
+- **An append must LOOK like an append.** `lib/seed.mjs` writes non-ASCII escaped, the way the
+  shipped file is already written. A plain `JSON.stringify` emits literal non-ASCII and so
+  rewrites every existing em-dashed name as well as appending — identical values, but the diff
+  stops being an append, and "appended, never inserted" is a rule a reviewer has to be able to
+  see holding.
 - **Nothing here re-derives musical arithmetic.** The renderer reads Accent Levels through
   `src/core/accents.js`, so what you see is what will sound (Constitution Principle I).
 - **The decoder is the app's own.** `lib/decode.mjs` imports `src/export/submit.js` rather than
@@ -90,6 +112,10 @@ node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
 
 ## What it will not do
 
+- It will not close an issue for a Pattern that has not shipped — see above. `close` is the
+  only command that writes to GitHub, and it never deletes an issue: the issue is the record
+  of what a Contributor sent and what was decided, including when the write turns out to be
+  wrong and `npm run validate:seed` sends it back.
 - It will not commit, push, or open a PR by itself. Landing a change is CLAUDE.md §5's
   business, and it includes a task entry and the full gate run.
 - It will not edit a Pattern's music. If a submission is nearly right, say so on the issue and
@@ -111,8 +137,8 @@ gh label create new-pattern --description "A Pattern submitted for the shared li
 ## Tests
 
 `.claude/skills/pattern-intake/tests/`, run by `npm test`. They cover both submission forms
-round-tripping, the append-never-insert rule, name-clash refusal, issue selection, and the
-rendering — because a decoder that silently drops a Measure would otherwise be invisible until
+round-tripping, the append-never-insert rule (including that the diff shows it), name-clash
+refusal, issue selection, refusing to close what has not shipped, and the rendering — because a decoder that silently drops a Measure would otherwise be invisible until
 a wrong Pattern shipped.
 
 The selection tests assert the title matchers against `buildIssueTitle`'s real output rather

@@ -16,6 +16,7 @@ import { patternsFromIssue } from '../lib/decode.mjs';
 import { renderPattern, renderMeasure, countNotes } from '../lib/render.mjs';
 import { appendPatterns, findNameClash, seedId } from '../lib/seed.mjs';
 import { SUBMISSION_LABEL, looksLikeSubmission, isLabelled, mergeSubmissions } from '../lib/select.mjs';
+import { locateInLibrary, closingComment } from '../lib/landed.mjs';
 
 const issueFrom = (body, number = 42) => ({
   number,
@@ -39,10 +40,19 @@ function dense() {
   return p;
 }
 
+/**
+ * A seed file written the way the SHIPPED one is written — non-ASCII escaped.
+ * A fixture in a different convention from the real file cannot prove anything
+ * about rewriting it.
+ */
 const seedFile = (patterns) => {
   const dir = mkdtempSync(join(tmpdir(), 'intake-'));
   const path = join(dir, 'seed-patterns.json');
-  writeFileSync(path, JSON.stringify({ schemaVersion: 1, patterns }, null, 2) + '\n');
+  const json = JSON.stringify({ schemaVersion: 1, patterns }, null, 2).replace(
+    /[\u0080-\uffff]/g,
+    (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')
+  );
+  writeFileSync(path, json + '\n');
   return path;
 };
 
@@ -162,6 +172,24 @@ describe('pattern-intake/seed', () => {
     expect(seedId(206)).toBe('s_207');
   });
 
+  it('appends without rewriting a single existing line', () => {
+    // A plain JSON.stringify emits literal non-ASCII where the shipped file uses
+    // \uXXXX escapes, so an append also rewrote 13 existing em-dashed names. The
+    // values were identical and the diff was still wrong: "appended, never
+    // inserted" is a rule a reviewer has to be able to see holding.
+    const path = seedFile([{ name: 'Five Four \u2014 Five Quarters', soundMode: 'percussive', tempo: 80, tags: [], rating: 0, measures: [] }]);
+    const untouched = readFileSync(path, 'utf8').split('\n');
+
+    appendPatterns(path, [{ name: 'New One', soundMode: 'percussive', tempo: 90, tags: [], rating: 0, measures: [] }]);
+    const after = readFileSync(path, 'utf8').split('\n');
+
+    // Everything above the file's closing brackets must be byte-identical: the
+    // only line an append may alter is the `}` that gains a comma.
+    expect(after.slice(0, untouched.length - 4)).toEqual(untouched.slice(0, -4));
+    expect(readFileSync(path, 'utf8')).toContain('Five Four \\u2014 Five Quarters');
+    expect(JSON.parse(readFileSync(path, 'utf8')).patterns[0].name).toBe('Five Four \u2014 Five Quarters');
+  });
+
   it('finds a clash by name, ignoring surrounding space', () => {
     expect(findNameClash({ patterns: existing }, '  already here  ')?.name).toBe('Already Here');
     expect(findNameClash({ patterns: existing }, 'Something Else')).toBeNull();
@@ -225,5 +253,56 @@ describe('pattern-intake/select', () => {
   it('keeps a labelled issue labelled even if it has other labels too', () => {
     const issue = { number: 5, title: 'anything', labels: [{ name: 'bug' }, { name: SUBMISSION_LABEL }] };
     expect(mergeSubmissions([issue], [])[0].unlabelled).toBe(false);
+  });
+});
+
+describe('pattern-intake/landed', () => {
+  const shipped = [{ name: 'Bossa Nova' }, { name: 'Samba Break' }, { name: 'Clave' }];
+
+  it('reports the id a shipped Pattern actually has, read from position', () => {
+    const { found, missing } = locateInLibrary([{ name: 'Samba Break' }], shipped);
+    expect(missing).toEqual([]);
+    expect(found).toEqual([{ name: 'Samba Break', id: 's_2' }]);
+  });
+
+  it('will not claim a Pattern shipped when the library does not have it', () => {
+    // The check that stops a Contributor being told their Pattern is in the
+    // library when the change was sent back by a gate.
+    const { found, missing } = locateInLibrary([{ name: 'My Fill' }], shipped);
+    expect(found).toEqual([]);
+    expect(missing).toEqual(['My Fill']);
+  });
+
+  it('refuses the whole issue when only some of its Patterns shipped', () => {
+    const { found, missing } = locateInLibrary([{ name: 'Clave' }, { name: 'My Fill' }], shipped);
+    expect(found).toHaveLength(1);
+    expect(missing).toEqual(['My Fill']);
+  });
+
+  it('still finds a Pattern whose name was tidied in case or spacing at accept time', () => {
+    const { found } = locateInLibrary([{ name: '  samba break ' }], shipped);
+    expect(found[0].id).toBe('s_2');
+  });
+
+  it('matches the ids storage derives from position, for every entry', () => {
+    const { found } = locateInLibrary(shipped, shipped);
+    expect(found.map((f) => f.id)).toEqual(['s_1', 's_2', 's_3']);
+    expect(found.map((f) => f.id)).toEqual(shipped.map((_, i) => seedId(i)));
+  });
+
+  it('names the id in the comment, since that is the handle that cannot change', () => {
+    const comment = closingComment([{ name: 'Samba Break', id: 's_2' }]);
+    expect(comment).toContain('s_2');
+    expect(comment).toContain('Samba Break');
+  });
+
+  it('lists every Pattern when a bulk submission is closed', () => {
+    const comment = closingComment([
+      { name: 'Samba Break', id: 's_2' },
+      { name: 'Clave', id: 's_3' },
+    ]);
+    expect(comment).toContain('2 Patterns');
+    expect(comment).toContain('s_2');
+    expect(comment).toContain('s_3');
   });
 });
