@@ -508,12 +508,12 @@ test("AC-2.2.15/2 — The band shows the note name that degree resolves to in th
   await expect(slotAt(page, 0, 0).locator('.slot-note-name')).toHaveText('Fb4');
 });
 
-test('AC-2.2.15/3 — The two are shown on separate lines within the band, so neither is truncated at the smallest supported Slot width (AC-2.2.12)', async ({ page }) => {
+test('AC-2.2.15/3 — The two are shown on one line within the band, so the band stays a thin strip under the accent zone rather than a second block of text competing with it', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
 
-  // The AC-15.1.10 worst case, in the Key that produces the widest note name a
-  // Key can produce: b2 in Gb is Abb, a double accidental at four characters.
+  // The AC-15.1.10 worst case, in the Key producing the widest name any Key
+  // can spell: b2 in Gb is Abb, a double accidental at four characters.
   await page.evaluate(async () => {
     const { handlers: h } = window.__rm;
     window.__rm.loadBlank('12/8');
@@ -533,34 +533,33 @@ test('AC-2.2.15/3 — The two are shown on separate lines within the band, so ne
   await expect(page.locator('.slot-note-name').first()).toHaveText('Abb4');
 
   const report = await page.evaluate(() => {
-    const stacked = [];
-    const clipped = [];
+    const sameLine = [];
     for (const badge of document.querySelectorAll('.slot-pitch')) {
       const degree = badge.querySelector('.slot-degree');
       const name = badge.querySelector('.slot-note-name');
       if (!degree || !name) continue;
-      // Separate lines: the name's box starts at or below the degree's bottom.
+      // One line: the two share a baseline rather than the name sitting under
+      // the degree.
       const d = degree.getBoundingClientRect();
       const n = name.getBoundingClientRect();
-      stacked.push(n.top >= d.bottom - 0.5);
-      const band = badge.closest('.slot-note') ?? badge.closest('.slot');
-      for (const line of [degree, name]) {
-        if (line.scrollWidth > band.clientWidth + 0.5) {
-          clipped.push({ axis: 'x', text: line.textContent, need: line.scrollWidth, have: band.clientWidth });
-        }
-      }
-      // Both axes. Checking width alone is what let vertically clipped text
-      // ship past this test once already.
-      if (badge.scrollHeight > band.clientHeight) {
-        clipped.push({ axis: 'y', text: badge.textContent, need: badge.scrollHeight, have: band.clientHeight });
-      }
+      sameLine.push(Math.abs(n.top - d.top) < 2 && n.left >= d.right - 0.5);
     }
-    return { count: stacked.length, allStacked: stacked.every(Boolean), clipped: clipped.slice(0, 5) };
+
+    const strip = document.querySelector('.slot-pitch');
+    const zone = document.querySelector('.slot.has-note .slot-accent');
+    return {
+      count: sameLine.length,
+      allOnOneLine: sameLine.every(Boolean),
+      // Thin: the strip is a fraction of the counting cell it sits under, which
+      // is what stops it reading as a second block of text (AC-2.2.14).
+      stripH: strip.getBoundingClientRect().height,
+      zoneH: zone.getBoundingClientRect().height,
+    };
   });
 
   expect(report.count).toBeGreaterThan(100);
-  expect(report.allStacked).toBe(true);
-  expect(report.clipped).toEqual([]);
+  expect(report.allOnOneLine).toBe(true);
+  expect(report.stripH).toBeLessThan(report.zoneH * 0.6);
 });
 
 test("AC-2.2.15/4 — Changing the Pattern's Key updates every note name shown, while no stored degree or octave value changes (AC-2.3.2)", async ({ page }) => {
@@ -649,6 +648,13 @@ test('AC-2.2.11 — turning a Slot on gives it the armed pitch', async ({ page }
   expect(slot.accent).toBeUndefined(); // left computed, not frozen
 });
 
+test.describe('touchscreen', () => {
+  // AC-2.2.12's floor is about fingers, so this context reports a coarse
+  // pointer. Without it Playwright's desktop Chromium reports `pointer: fine`
+  // and AC-2.2.17 hands back the smaller target — which would be correct
+  // behaviour and a false failure here.
+  test.use({ hasTouch: true, isMobile: true });
+
 test('AC-2.2.12 — both zones stay tappable on the largest Pattern at 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -687,6 +693,8 @@ test('AC-2.2.12 — both zones stay tappable on the largest Pattern at 390px', a
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
   );
   expect(overflows).toBe(false);
+});
+
 });
 
 test('AC-2.2.13 — the pitch strip is visible without opening anything, and absent in Percussive', async ({ page }) => {
@@ -912,3 +920,72 @@ test('AC-2.4.5 — a Percussive note is one sine bending down, dry', async ({ pa
   expect(shape.filters).toBe(0);
   expect(shape.convolvers).toBe(0);
 });
+
+test("AC-2.2.17/1 — On a precise pointer the note band's hit area shrinks to the strip it draws, so the Slot is shorter and the strip reads as the thin thing it is", async ({ browser }) => {
+  const pointer = await bandOn(browser, { hasTouch: false });
+  expect(pointer.band).toBeLessThan(24);
+  expect(pointer.band).toBeCloseTo(pointer.strip, 0);
+
+  const touch = await bandOn(browser, { hasTouch: true, isMobile: true });
+  expect(pointer.slot).toBeLessThan(touch.slot);
+});
+
+test("AC-2.2.17/2 — On a touchscreen, at any viewport width, it keeps the 24 CSS pixel target AC-2.2.12 requires — a tablet held in the hand is a touchscreen whatever its width", async ({ browser }) => {
+  // 1280px wide and still a touchscreen: the case a viewport-keyed rule gets
+  // wrong, which is why this keys on the pointing device.
+  const wide = await bandOn(browser, { hasTouch: true, isMobile: true }, { width: 1280, height: 800 });
+  expect(wide.band).toBeGreaterThanOrEqual(24);
+
+  const narrow = await bandOn(browser, { hasTouch: true, isMobile: true }, { width: 390, height: 844 });
+  expect(narrow.band).toBeGreaterThanOrEqual(24);
+});
+
+test("AC-2.2.17/3 — The finger-sized target is the default, so a browser that cannot report the pointing device keeps it rather than losing it", async ({ page }) => {
+  // The 24px target is declared unconditionally and only relaxed inside
+  // `@media (pointer: fine)`. A browser that does not understand the query
+  // never applies the relaxation, so it keeps the safe value — assert the
+  // stylesheet is written that way round, since a UA that ignores the query
+  // cannot be emulated here.
+  await page.goto('/');
+  const rules = await page.evaluate(() => {
+    const found = { base: null, relaxed: null };
+    for (const sheet of document.styleSheets) {
+      let list;
+      try { list = sheet.cssRules; } catch { continue; }
+      for (const rule of list) {
+        if (rule.selectorText === '.slot-note' && rule.style.minHeight) {
+          found.base = rule.style.minHeight;
+        }
+        if (rule.media && rule.conditionText && rule.conditionText.includes('pointer: fine')) {
+          for (const inner of rule.cssRules) {
+            if (inner.selectorText === '.slot-note' && inner.style.minHeight) {
+              found.relaxed = inner.style.minHeight;
+            }
+          }
+        }
+      }
+    }
+    return found;
+  });
+
+  expect(rules.base).toBe('24px');
+  expect(rules.relaxed).not.toBeNull();
+  expect(rules.relaxed).not.toBe('24px');
+});
+
+/** The note band, strip and Slot heights under a given device profile. */
+async function bandOn(browser, deviceOptions, viewport = { width: 1280, height: 800 }) {
+  const context = await browser.newContext({ viewport, ...deviceOptions });
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('4/4');
+    await window.__rm.handlers.onSoundMode('melodic');
+    await window.__rm.handlers.onSlotTap(0, 0, 0);
+  });
+  const band = await page.locator('.slot-note:not([disabled])').first().boundingBox();
+  const strip = await page.locator('.slot-pitch').first().boundingBox();
+  const slot = await page.locator('.slot.has-note').first().boundingBox();
+  await context.close();
+  return { band: band.height, strip: strip.height, slot: slot.height };
+}

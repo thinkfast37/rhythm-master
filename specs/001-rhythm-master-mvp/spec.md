@@ -436,6 +436,16 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** the note band and the accent zone are each at least 24 CSS pixels in both dimensions, which the Slot's height accommodates rather than the note band being squeezed to a sliver
   - **And** the Slot stays at least 24 CSS pixels wide, so AC-15.1.10 continues to hold and the grid still never scrolls sideways
 
+- **AC-2.2.17** — The note band's tap target follows the pointing device, not the screen size
+  - **Given** a Melodic Pattern
+  - **When** the Composer views it on a device with a precise pointer — a mouse or a trackpad — rather than a touchscreen
+  - **Then** the hit area follows the pointing device rather than the viewport
+  - **Cases**:
+    - **AC-2.2.17/1** — On a precise pointer the note band's hit area shrinks to the strip it draws, so the Slot is shorter and the strip reads as the thin thing it is
+    - **AC-2.2.17/2** — On a touchscreen, at any viewport width, it keeps the 24 CSS pixel target AC-2.2.12 requires — a tablet held in the hand is a touchscreen whatever its width
+    - **AC-2.2.17/3** — The finger-sized target is the default, so a browser that cannot report the pointing device keeps it rather than losing it
+  - *(Added 2026-08-17. AC-2.2.12's 24px floor was only ever about fingers, but it was being applied everywhere, which made the note band taller than it needs to be on the desktop where the maintainer actually composes. Keying this on the pointing device rather than the viewport is what keeps AC-2.2.12 intact where it matters: a 1024px tablet is wide, and still a touchscreen.)*
+
 - **AC-2.2.13** — The pitch strip is present wherever pitches are edited
   - **Given** a Melodic Pattern at any viewport width
   - **When** the Composer views the grid
@@ -454,6 +464,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-2.2.14/5** — Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved
     - **AC-2.2.14/6** — The counting syllable is the brightest text in the Slot, the scale degree dimmer, and the note name dimmer still — so the ordering survives a reader whose browser settings flatten every size and weight difference
   - *(Added 2026-08-17. The band was previously flush against the accent zone and carried heavier text than it needed, which is what made the two compete. Note that /3 was met by *raising* the syllable rather than shrinking the pitch: the maintainer could not read the pitch at the size that would otherwise have been needed, so the separation comes from the syllable growing.)*
+  - *(/3 reversed on 2026-08-17, from two lines to one. It was stacked because side by side did not fit at the 24px minimum Slot width — but that arithmetic assumed a font this app does not control, and under the maintainer's 14px minimum it was wrong anyway. Stacking also made the band a second block of text, which is the opposite of the thin strip AC-2.2.14 asks for. On one line the band is half the height, and where the text needs more room the Slot widens and its Beat wraps within the Measure, which is what AC-15.1.10 already provides for.)*
   - *(/6 added last on 2026-08-17, and it is the one that actually holds. /3 and /4 both specify things a reader's browser can overrule: a minimum-font-size setting raises the syllable and the pitch to the same value, so no declared ratio survives it, and a substituted typeface with heavy weighted bottoms makes every weight look bold. Both are true on the maintainer's machine, which is why three passes at "make it smaller" changed nothing they could see. Colour is the one channel neither setting touches, so it is the one the ordering rests on; /3 and /4 remain as reinforcement where they are honoured.)*
   - *(/3 and /4 tightened, and /5 added, later on 2026-08-17. As first written, /3 said only "a smaller font size" and /4 only "bolder" — which 13px against 10px, and weight 700 against 500, both satisfied while looking identical on screen. A criterion that any difference passes is not a criterion; both now carry the margin that makes the difference visible. /5 exists because the first implementation shipped clipped text past a green gate: the truncation check ran on the horizontal axis only, and the two lines were overflowing the band vertically.)*
 
@@ -464,7 +475,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Cases**:
     - **AC-2.2.15/1** — The band shows the Slot's scale degree, including any accidental
     - **AC-2.2.15/2** — The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number
-    - **AC-2.2.15/3** — The two are shown on separate lines within the band, so neither is truncated at the smallest supported Slot width (AC-2.2.12)
+    - **AC-2.2.15/3** — The two are shown on one line within the band, so the band stays a thin strip under the accent zone rather than a second block of text competing with it
     - **AC-2.2.15/4** — Changing the Pattern's Key updates every note name shown, while no stored degree or octave value changes (AC-2.3.2)
     - **AC-2.2.15/5** — The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave
   - *(Added 2026-08-17. The grid previously showed the degree alone. A degree is what the Composer authors, but a note name is what they play on an instrument, and holding the conversion in the head is work the app can do.)*
@@ -595,6 +606,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** each Slot's default accent is computed
   - **Then** Slot 1 = Medium (the Beat's own level), Slot 2 = Weak, Slot 3 = Medium (the "&"), Slot 4 = Weak
 
+- **AC-3.1.17** — A Slot that does not sound reads as silent at a glance
+  - **Given** a Measure in which some Slots sound and some do not
+  - **When** the Practicing Musician looks at the rhythm rather than at any one Slot
+  - **Then** the sounding Slots carry the visual weight, so the shape of what plays is legible without reading each cell in turn
+  - **Cases**:
+    - **AC-3.1.17/1** — A silent Slot's counting syllable is not bold, while a sounding one's is
+    - **AC-3.1.17/2** — A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's
+    - **AC-3.1.17/3** — A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum
+    - **AC-3.1.17/4** — The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail
+  - *(Added 2026-08-17. Every syllable was rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm — the maintainer reported being unable to see which subdivisions play. /3 is not a restatement of /2: at a browser-enforced minimum font size the two sizes collapse to the same value, and colour is the only one of the three channels no setting overrules.)*
+
 - **AC-3.1.16** — The within-Beat shape is identical in every Beat
   - **Given** a 4/4 Measure with every Beat on the Straight 16ths Recipe
   - **When** every Slot's default accent is computed
@@ -673,6 +695,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Given** a Pattern is playing
   - **When** a given Slot's audio event fires
   - **Then** that Slot's visual highlight appears within 20 milliseconds of the audio event, because the visual update is driven from the same scheduled event queue as the audio, not a separately-timed animation loop *(Assumption: the 20ms tolerance is a reasonable starting bound, not a number you've confirmed.)*
+
+- **AC-4.1.7** — The playback highlight marks the counting cell, and fills it
+  - **Given** a Pattern is playing
+  - **When** the Practicing Musician follows along
+  - **Then** the sounding Slot is marked in a way the eye lands on without being hunted for, on the part of the Slot carrying the count
+  - **Cases**:
+    - **AC-4.1.7/1** — It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it
+    - **AC-4.1.7/2** — That cell fills completely with its own Accent colour, rather than being outlined
+    - **AC-4.1.7/3** — The counting syllable stays legible against the fill, at every Accent Level
+    - **AC-4.1.7/4** — A Slot that does not sound still shows the cursor as it passes, so the pulse can be followed through rests
+  - *(Added 2026-08-17. AC-4.1.2 fixed the highlight's timing and said nothing about its appearance, so what shipped was a 2px outline — and in Melodic mode it was drawn around the whole Slot, which reads as a box around the note name rather than around the count. The maintainer, following playback while practising, described hunting for it as stressful. A filled cell is found without effort; an outline has to be looked for.)*
 
 - **AC-4.1.3** — Loop counter increments once per full pass
   - **Given** a Pattern is playing on loop

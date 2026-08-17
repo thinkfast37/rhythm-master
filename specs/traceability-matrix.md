@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 248 across 35 User Stories
+**Criteria**: 259 across 35 User Stories
 
-**Coverage**: 45 of 248 criteria proven (18.1%)
+**Coverage**: 56 of 259 criteria proven (21.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 45 | 18.1% |
-| 🔴 Gap — HIGH | 79 | 31.9% |
-| 🟠 Gap — MEDIUM | 43 | 17.3% |
-| 🟡 Gap — LOW | 81 | 32.7% |
+| 🟢 Proven | 56 | 21.6% |
+| 🔴 Gap — HIGH | 79 | 30.5% |
+| 🟠 Gap — MEDIUM | 43 | 16.6% |
+| 🟡 Gap — LOW | 81 | 31.3% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -63,11 +63,11 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-1.3 | 10 | 0 | · | · | 1 | 3 | 6 |
 | 🔴 US-1.4 | 8 | 0 | · | · | 2 | 4 | 2 |
 | 🔴 US-2.1 | 5 | 0 | · | · | 2 | · | 3 |
-| 🔴 US-2.2 | 26 | 13 | · | · | 1 | 7 | 5 |
+| 🔴 US-2.2 | 29 | 16 | · | · | 1 | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
-| 🔴 US-3.1 | 16 | 0 | · | · | 3 | 1 | 12 |
-| 🔴 US-4.1 | 6 | 0 | · | · | 3 | 1 | 2 |
+| 🔴 US-3.1 | 20 | 4 | · | · | 3 | 1 | 12 |
+| 🔴 US-4.1 | 10 | 4 | · | · | 3 | 1 | 2 |
 | 🔴 US-4.2 | 3 | 0 | · | · | 1 | 2 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
 | 🔴 US-4.4 | 5 | 0 | · | · | 5 | · | · |
@@ -134,32 +134,35 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.1 | `AC-2.1.3` | Switching to Melodic requires a Key, defaulting to C | P-014 | T065 (1/1 done) | T066 (1/1 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.1 | `AC-2.1.4` 🖵 | Pitch data survives a Sound Mode round-trip | P-014 | T065 (1/1 done) | T066 (1/1 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-2.1 | `AC-2.1.5` | Sound Mode changes never alter Accent Levels | P-014 | T065 (1/1 done) | T066 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.1` | One Pitch per Slot, no chords | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.2` 🖵 | Armed pitch defaults to degree 1, octave 4, and stays armed | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.4` 🖵 | Degree strip default span | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.5` 🖵 | A Slot that is not sounding cannot be stamped | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-2.2 | `AC-2.2.6` 🖵 | Stamping a sounding Slot changes only its Pitch | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.7` 🖵 | Cycling Accent to off clears Pitch too | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.8` | Accent/Pitch null-state invariant | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.9` 🖵 | Changing the armed pitch doesn't retroactively affect stamped Slots | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.10` 🖵 | A Melodic Slot has two tap zones, and they do different jobs | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.11` 🖵 | Turning a Slot on takes the armed pitch | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.12` 🖵 | Both zones stay tappable at the smallest supported Slot | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.13` 🖵 | The pitch strip is present wherever pitches are edited | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.14/1` 🖵 | The note band is rendered below the accent zone, not above it | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.14/2` 🖵 | A visible gap separates the two zones, so neither reads as part of the other | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.14/3` 🖵 | The note band's text is rendered at least a third smaller than the counting syllable, so the difference is legible as a difference rather than merely present | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.14/4` 🖵 | The counting syllable is rendered bold and the note band's text is not, at a weight separation of at least 300 — a Medium face reads as bold at these sizes, so "bolder" is not enough | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.14/5` 🖵 | Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.14/6` 🖵 | The counting syllable is the brightest text in the Slot, the scale degree dimmer, and the note name dimmer still — so the ordering survives a reader whose browser settings flatten every size and weight difference | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.15/1` 🖵 | The band shows the Slot's scale degree, including any accidental | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.15/2` 🖵 | The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.15/3` 🖵 | The two are shown on separate lines within the band, so neither is truncated at the smallest supported Slot width (AC-2.2.12) | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.15/4` 🖵 | Changing the Pattern's Key updates every note name shown, while no stored degree or octave value changes (AC-2.3.2) | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.15/5` | The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `pitch.test.js`, `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.16/1` 🖵 | Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.16/2` 🖵 | Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called | P-016 | T069, T160, T162, T163, T164 (5/5 done) | T070, T161, T162, T163, T164 (5/5 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.1` | One Pitch per Slot, no chords | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.2` 🖵 | Armed pitch defaults to degree 1, octave 4, and stays armed | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.4` 🖵 | Degree strip default span | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.5` 🖵 | A Slot that is not sounding cannot be stamped | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.2 | `AC-2.2.6` 🖵 | Stamping a sounding Slot changes only its Pitch | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.7` 🖵 | Cycling Accent to off clears Pitch too | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.8` | Accent/Pitch null-state invariant | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.9` 🖵 | Changing the armed pitch doesn't retroactively affect stamped Slots | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.10` 🖵 | A Melodic Slot has two tap zones, and they do different jobs | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.11` 🖵 | Turning a Slot on takes the armed pitch | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.12` 🖵 | Both zones stay tappable at the smallest supported Slot | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.17/1` 🖵 | On a precise pointer the note band's hit area shrinks to the strip it draws, so the Slot is shorter and the strip reads as the thin thing it is | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.17/2` 🖵 | On a touchscreen, at any viewport width, it keeps the 24 CSS pixel target AC-2.2.12 requires — a tablet held in the hand is a touchscreen whatever its width | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.17/3` 🖵 | The finger-sized target is the default, so a browser that cannot report the pointing device keeps it rather than losing it | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.13` 🖵 | The pitch strip is present wherever pitches are edited | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.14/1` 🖵 | The note band is rendered below the accent zone, not above it | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/2` 🖵 | A visible gap separates the two zones, so neither reads as part of the other | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/3` 🖵 | The note band's text is rendered at least a third smaller than the counting syllable, so the difference is legible as a difference rather than merely present | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/4` 🖵 | The counting syllable is rendered bold and the note band's text is not, at a weight separation of at least 300 — a Medium face reads as bold at these sizes, so "bolder" is not enough | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/5` 🖵 | Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/6` 🖵 | The counting syllable is the brightest text in the Slot, the scale degree dimmer, and the note name dimmer still — so the ordering survives a reader whose browser settings flatten every size and weight difference | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/1` 🖵 | The band shows the Slot's scale degree, including any accidental | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/2` 🖵 | The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/3` 🖵 | The two are shown on one line within the band, so the band stays a thin strip under the accent zone rather than a second block of text competing with it | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/4` 🖵 | Changing the Pattern's Key updates every note name shown, while no stored degree or octave value changes (AC-2.3.2) | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/5` | The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.16/1` 🖵 | Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.16/2` 🖵 | Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.3 | `AC-2.3.1` | Default Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.2` | Changing Key re-transposes without altering stored data | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.3` 🖵 | Percussive Patterns have no Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -168,28 +171,36 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-2.4 | `AC-2.4.4` | Melodic notes share one reverb and one compressor | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055 (5/5 done) | T056 (1/1 done) | `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055 (5/5 done) | T056 (1/1 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.1 | `AC-4.1.3` | Loop counter increments once per full pass | P-010 | T051, T052, T053, T054, T055 (5/5 done) | T056 (1/1 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.4` | Mixed-meter Pattern plays each Measure by its own Time Signature | P-010 | T051, T052, T053, T054, T055 (5/5 done) | T056 (1/1 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.5` | Audio suspended by the device stops the transport and resets it | P-010 | T051, T052, T053, T054, T055 (5/5 done) | T056 (1/1 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-4.1 | `AC-4.1.6` 🖵 | Returning after a suspension requires a deliberate Play | P-010 | T051, T052, T053, T054, T055 (5/5 done) | T056 (1/1 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.17/1` 🖵 | A silent Slot's counting syllable is not bold, while a sounding one's is | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/2` 🖵 | A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/3` 🖵 | A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/4` 🖵 | The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.1 | `AC-4.1.7/1` 🖵 | It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.7/2` 🖵 | That cell fills completely with its own Accent colour, rather than being outlined | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.7/3` 🖵 | The counting syllable stays legible against the fill, at every Accent Level | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.7/4` 🖵 | A Slot that does not sound still shows the cursor as it passes, so the pulse can be followed through rests | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.3` | Loop counter increments once per full pass | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-4.1 | `AC-4.1.4` | Mixed-meter Pattern plays each Measure by its own Time Signature | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-4.1 | `AC-4.1.5` | Audio suspended by the device stops the transport and resets it | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-4.1 | `AC-4.1.6` 🖵 | Returning after a suspension requires a deliberate Play | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-4.2 | `AC-4.2.1` | Default tempo and range | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-4.2 | `AC-4.2.2` | Tempo change restarts playback immediately | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.2 | `AC-4.2.3` | Tempo default: global last-used, overridden by a per-Pattern save | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `storage.test.js`, `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |

@@ -618,6 +618,23 @@ record is complete rather than starting mid-stream.
 
   *Superseded description: build the view and panel — AC-11.1.4, AC-11.1.5, AC-11.2.4, AC-11.2.5, and the naming-time warning in AC-11.1.3.* `src/core/similarity.js` computes all of it correctly and `src/main.js` exposes `currentDuplicates`, `currentFamily` and `unresolvedLibraryDuplicates` — but only on the `window.__rm` test seam. There is no view, no panel, no CSS, and no way for the musician to reach any of it. AC-11.1.4 calls the view "the sole safety net" for duplicates that emerge through ongoing edits, so at present there is none. AC-11.2.5 specifies the panel below the editor at ≥768px and nothing below that. Thirteen tests of fingerprint arithmetic in `tests/unit/core/similarity.test.js` carry these Stories' AC IDs, which is why this read as complete. **This is unbuilt work, not a naming defect — it is why the audit happened.**
 
+- [X] T166 **[new capability]** Make a silent Slot recede, so the shape of what plays is legible — `specs/001-rhythm-master-mvp/spec.md`, `src/styles/tokens.css`, `tests/e2e/grid.spec.js`. AC-3.1.17 added with Cases. Extends P-009.
+
+  Every counting syllable rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm. The maintainer could not see which subdivisions play without reading each cell in turn — which is the opposite of what a grid is for.
+
+  A silent Slot's syllable is now regular rather than bold, about three quarters the size, and dimmer. **Three channels deliberately.** The maintainer asked for the first two; on their machine neither works alone, because a browser-enforced minimum font size clamps the reduced size back up to the full one and a substituted typeface flattens the weight. Colour is the only one of the three no reader setting overrules, so AC-3.1.17/3 states it separately and its test re-asserts the distinction with size and weight forced equal.
+
+  The Accent bar also scales with the cell now (AC-3.1.17/4): its height was a flat 5px, which is proportionate in a 16th-note cell and a hairline in an undivided one.
+
+- [X] T165 **[new capability]** Make the sounding Slot findable without hunting, and stop the note band competing with the count — `specs/001-rhythm-master-mvp/spec.md`, `src/styles/tokens.css`, `tests/e2e/playback.spec.js`, `tests/e2e/melodic.spec.js`, `tests/e2e/grid-boundaries.spec.js`. AC-4.1.7 added with Cases; AC-2.2.17 added with Cases; AC-2.2.15/3 reversed. Extends P-010 and P-016.
+
+  Four reports from practising against it, and they share a root: the grid's visual weight was distributed by rules that never asked what the cell was for.
+
+  - **The playback cursor was a 2px outline on the whole Slot**, which in Melodic mode boxed the note band in with the accent zone — so it read as marking the note name rather than the beat. It now fills the accent zone with that Slot's own Accent colour, so a Strong beat flashes amber and a Weak one blue, and the syllable flips to whichever of dark or light clears it. A silent Slot lights neutral grey, so the pulse can still be followed through rests. AC-4.1.2 had fixed the highlight's *timing* and said nothing about its appearance, which is how an outline shipped as the answer to "where am I".
+  - **Percussive counts were 10px** — the note band's size — so the count read as the least important text in a mode whose cell contains nothing else. Now the same treatment as Melodic.
+  - **The count did not fill a wide cell.** A Slot's width is whatever its Recipe leaves it, so 15px that fills a 16th-note cell sits as a small mark in an 8th-note cell twice as wide. The syllable now sizes in `cqi` against the Slot's own width, floored at 15px and capped at 26px, so it holds its proportion at every subdivision.
+  - **The note band was two lines and too tall.** One line now, and the visible strip is 18px. The 24px of AC-2.2.12 is a *tap target*, not a look, so the button keeps 24px while the strip inside it is thinner — and AC-2.2.17 keys that target on the pointing device rather than the viewport, so a trackpad gets the strip's own height back and a tablet held in the hand keeps the finger-sized one at any width.
+
 - [X] T164 **[bug]** Carry the Slot's text hierarchy on colour, and fix the two text colours that were inverted — `specs/001-rhythm-master-mvp/spec.md` (AC-2.2.14/6 added), `src/styles/tokens.css`, `tests/e2e/melodic.spec.js`. Extends P-016.
 
   The counting syllable was `--ink-dim` while the scale degree was `--ink`, so the note the maintainer wanted to recede was literally the brightest text in the Slot. That is a plain inversion and it had been there since T160.

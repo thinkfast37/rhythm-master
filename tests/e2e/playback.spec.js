@@ -301,3 +301,146 @@ test('AC-4.1.1 — event times are computed from an absolute origin, never accum
   });
   expect(drift).toBeLessThan(0.0001);
 });
+
+/* --- the playback cursor's appearance (AC-4.1.7) -------------------------- */
+
+/**
+ * Drives the cursor from the DOM rather than from the transport: what the class
+ * means is settled by AC-4.1.2's tests, and these are about how it LOOKS. Doing
+ * it this way lets each Accent Level be examined deterministically instead of
+ * waiting for playback to happen to land on one.
+ */
+async function melodicWithCursor(page, { accent, silent = false } = {}) {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('4/4');
+    await window.__rm.handlers.onSoundMode('melodic');
+  });
+  // A second sounding Slot, so a resting enabled note band exists to compare with.
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 2, 0); });
+  if (!silent) {
+    await page.evaluate(async ([a]) => {
+      const { handlers: h } = window.__rm;
+      await h.onSlotTap(0, 0, 0);
+      // Cycle to the level under test: Strong -> Weak -> Medium.
+      const want = { strong: 3, weak: 1, medium: 2 }[a];
+      for (let i = 0; i < 4; i++) {
+        const s = window.__rm.getState().pattern.measures[0].beats[0].slots[0];
+        const { effectiveAccent } = { effectiveAccent: null };
+        void effectiveAccent; void s;
+        const el = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+        if (Number(el.dataset.accent) === want) break;
+        await h.onSlotTap(0, 0, 0);
+      }
+    }, [accent]);
+  }
+  await page.evaluate(() =>
+    document.querySelector('.slot[data-beat="0"][data-slot="0"]').classList.add('playing')
+  );
+  return page.locator('.slot[data-beat="0"][data-slot="0"]');
+}
+
+const CONTRAST = `
+  const parse = (s) => s.match(/[\\d.]+/g).map(Number).slice(0, 3);
+  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const lum = (a) => 0.2126 * lin(a[0]) + 0.7152 * lin(a[1]) + 0.0722 * lin(a[2]);
+  const ratio = (a, b) => { const s = [lum(parse(a)), lum(parse(b))].sort((p, q) => q - p);
+                            return (s[0] + 0.05) / (s[1] + 0.05); };
+`;
+
+test('AC-4.1.7/1 — It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it', async ({ page }) => {
+  await melodicWithCursor(page, { accent: 'strong' });
+
+  const painted = await page.evaluate(() => {
+    const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+    const zone = slot.querySelector('.slot-accent');
+    const band = slot.querySelector('.slot-note');
+    // A resting band that is ENABLED: a silent Slot's band is transparent by
+    // AC-2.2.5, so comparing against one would compare unlike things.
+    const resting = document.querySelector('.slot:not(.playing) .slot-note:not([disabled])');
+    const bandResting = getComputedStyle(resting || band).backgroundColor;
+    return {
+      zone: getComputedStyle(zone).backgroundColor,
+      zoneOutline: getComputedStyle(zone).outlineStyle,
+      band: getComputedStyle(band).backgroundColor,
+      bandResting,
+      // outlineWidth reports `medium` (3px) even when the style is none, so the
+      // style is the honest read.
+      bandOutline: getComputedStyle(band).outlineStyle,
+    };
+  });
+
+  expect(painted.zoneOutline).not.toBe('none');
+  // The band is untouched by the cursor: same ground as any resting band, and
+  // no ring of its own. An outline on the whole Slot used to box them together,
+  // which reads as marking the note name rather than the beat.
+  expect(painted.band).toBe(painted.bandResting);
+  expect(painted.bandOutline).toBe('none');
+});
+
+test('AC-4.1.7/2 — That cell fills completely with its own Accent colour, rather than being outlined', async ({ page }) => {
+  for (const accent of ['strong', 'weak', 'medium']) {
+    await melodicWithCursor(page, { accent });
+    const seen = await page.evaluate(() => {
+      const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+      const zone = slot.querySelector('.slot-accent');
+      const root = getComputedStyle(document.documentElement);
+      const hex = (n) => root.getPropertyValue(n).trim();
+      const toRgb = (h) => { const v = parseInt(h.replace('#', ''), 16);
+        return `rgb(${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255})`; };
+      return {
+        level: slot.dataset.accent,
+        fill: getComputedStyle(zone).backgroundColor,
+        expected: {
+          1: toRgb(hex('--accent-weak')),
+          2: toRgb(hex('--accent-medium')),
+          3: toRgb(hex('--accent-strong')),
+        }[slot.dataset.accent],
+        // Filled, not merely tinted behind a partial bar.
+        barVisible: parseFloat(getComputedStyle(zone.querySelector('.slot-fill')).opacity) > 0,
+      };
+    });
+    expect(seen.fill, `${accent} fill`).toBe(seen.expected);
+    expect(seen.barVisible, `${accent} bar hidden while filled`).toBe(false);
+  }
+});
+
+test('AC-4.1.7/3 — The counting syllable stays legible against the fill, at every Accent Level', async ({ page }) => {
+  for (const accent of ['strong', 'weak', 'medium']) {
+    await melodicWithCursor(page, { accent });
+    const contrast = await page.evaluate(`(() => {${CONTRAST}
+      const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+      const zone = slot.querySelector('.slot-accent');
+      return ratio(getComputedStyle(slot.querySelector('.slot-label')).color,
+                   getComputedStyle(zone).backgroundColor);
+    })()`);
+    // 4.5:1 — the syllable is small text read at a glance while playing.
+    expect(contrast, `${accent} syllable on fill`).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test('AC-4.1.7/4 — A Slot that does not sound still shows the cursor as it passes, so the pulse can be followed through rests', async ({ page }) => {
+  const slot = await melodicWithCursor(page, { silent: true });
+  await expect(slot).toHaveAttribute('data-accent', '0');
+
+  const seen = await page.evaluate(`(() => {${CONTRAST}
+    const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+    const zone = slot.querySelector('.slot-accent');
+    const resting = document.querySelector('.slot:not(.playing) .slot-accent');
+    return {
+      fill: getComputedStyle(zone).backgroundColor,
+      restingFill: getComputedStyle(resting).backgroundColor,
+      againstResting: ratio(getComputedStyle(zone).backgroundColor,
+                            getComputedStyle(resting).backgroundColor),
+      syllable: ratio(getComputedStyle(slot.querySelector('.slot-label')).color,
+                      getComputedStyle(zone).backgroundColor),
+    };
+  })()`);
+
+  // Visibly different from a silent Slot the cursor is not on — otherwise the
+  // pulse disappears wherever the Pattern rests, which is where counting is
+  // hardest.
+  expect(seen.fill).not.toBe(seen.restingFill);
+  expect(seen.againstResting).toBeGreaterThanOrEqual(1.6);
+  expect(seen.syllable).toBeGreaterThanOrEqual(4.5);
+});
