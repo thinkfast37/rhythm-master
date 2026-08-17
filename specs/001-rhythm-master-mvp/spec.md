@@ -1506,6 +1506,102 @@ that title names the behaviour under test — not the example inside it.
   - *(Flagged: this is the hardest responsive case in the app — 144 Slots on a phone. It's specified here as a constraint, but the actual layout strategy for it — horizontal scroll, per-Measure paging, zoom-out, or something else — is a UI design decision not settled in this document.)*
 
 ---
+### User Story 33 - Ship with a seeded Pattern library (Priority: P1)
+
+*Traceability: `US-16.1` — Seed the library by converting the predecessor application's Patterns*
+
+**As** the Practicing Musician, **I want** the app to arrive already stocked with a substantial
+library of Patterns, **so that** I have material to practise on the first time I open it rather
+than facing an empty list and having to author everything myself before the tool is useful.
+
+**Why this priority**: An empty library makes the app unusable on first run and makes most other
+stories untestable in any realistic way — browsing, search, tags, rating, sort order, duplicate
+detection, and Pattern Families all need a populated library to exercise. The seed data is also a
+fixed input, not a design problem, so it can land early.
+
+**Independent Test**: Load the app with a cleared browser profile and assert the shipped library is
+present, correctly structured, and immediately playable without any authoring step.
+
+**Acceptance Scenarios**:
+
+- **AC-16.1.1** — Shipped library present on first run
+  - **Given** a browser profile with no stored data
+  - **When** the Practicing Musician opens the app for the first time
+  - **Then** the library contains the full set of 112 shipped Patterns, each immediately selectable
+    and playable
+
+- **AC-16.1.2** — Shipped Patterns are not marked as user-authored
+  - **Given** any shipped Pattern in the seeded library
+  - **When** its Tags are inspected
+  - **Then** it does not carry the `custom` Tag, and it is therefore neither deletable (AC-7.5.3)
+    nor directly editable without the naming prompt (US-7.3)
+
+- **AC-16.1.3** — Legacy category becomes a Tag
+  - **Given** a legacy Pattern whose category was "Song Signatures"
+  - **When** it is converted
+  - **Then** the resulting Pattern carries "Song Signatures" as a user-style Tag, alongside whatever
+    automatic Tags its configuration produces (AC-5.3.1)
+
+- **AC-16.1.4** — Straight and triplet beats map to Recipes
+  - **Given** a legacy beat of 4 straight slots and a legacy beat of 3 triplet slots
+  - **When** they are converted
+  - **Then** they become Beats on the Straight 16ths and Triplet 8ths Recipes respectively, with
+    each non-empty legacy slot becoming an active Slot and each empty one becoming an off Slot
+
+- **AC-16.1.5** — One Pattern-wide meter becomes a per-Measure Time Signature
+  - **Given** a legacy Pattern in 4/4 with 8 beats
+  - **When** it is converted
+  - **Then** it becomes 2 Measures, each carrying Time Signature 4/4 and holding 4 Beats, satisfying
+    AC-1.2.2's Beat-count rule
+
+- **AC-16.1.6** — Sub-measure drill cells repeat to fill a Measure
+  - **Given** a legacy one-beat drill cell in 4/4, which looped every beat in the predecessor
+  - **When** it is converted
+  - **Then** the cell repeats 4 times to fill a single 4/4 Measure, producing the same audible
+    sequence as the old per-beat loop
+  - **And** a two-beat cell likewise repeats twice
+  - **And** the repeated copies do not carry identical accents — each Beat takes its own metric
+    default (AC-3.1.2), so beat 1 is Strong and beat 3 Medium, rather than every beat being equally
+    strong as in the predecessor
+
+- **AC-16.1.7** — Deliberate accents are preserved; everything else uses computed defaults
+  - **Given** a legacy Pattern that stored an explicit accent array on its beats
+  - **When** it is converted
+  - **Then** those accent values are carried across as explicit per-Slot overrides
+  - **And**, given a legacy Pattern with no stored accents, its Slots carry no accent override at
+    all, so the new metric defaults (AC-3.1.2, AC-3.1.3) compute them — honouring FR-003's rule that
+    defaults are computed rather than stored
+
+- **AC-16.1.8** — Melodic Patterns have their pitches resolved at conversion time
+  - **Given** a legacy melodic Pattern whose pitches were produced at playback time by cycling a
+    scale-degree scheme
+  - **When** it is converted
+  - **Then** each active Slot carries the explicit scale degree and octave that the predecessor
+    would have sounded at that position, so playback needs no runtime pitch cycling (US-2.2)
+  - **And** the Pattern carries the Key it was authored in
+
+- **AC-16.1.9** — Trailing silent Measures are dropped
+  - **Given** a legacy Pattern whose final Measure contains no active Slots
+  - **When** it is converted
+  - **Then** that trailing Measure is removed, so the Pattern's length reflects its actual musical
+    content rather than legacy padding
+
+- **AC-16.1.10** — Seeded data satisfies every structural rule in this specification
+  - **Given** the complete seeded library
+  - **When** it is validated against this specification
+  - **Then** every Measure holds exactly its Time Signature's numerator in Beats (AC-1.2.2), every
+    Pattern is within the 6-Measure cap (AC-1.1.3), every Time Signature is one of the ten supported
+    values (AC-1.2.1), and every Melodic Slot that is on carries a Pitch while every off Slot
+    carries none (AC-2.2.8)
+
+- **AC-16.1.11** — Conversion is reproducible, not hand-edited
+  - **Given** the legacy Pattern source and the conversion tool
+  - **When** the conversion is re-run
+  - **Then** it reproduces the shipped seed data exactly, and reports any Pattern it could not
+    convert cleanly rather than silently dropping or corrupting it
+
+---
+
 ### Edge Cases
 
 - **Meter change destroys Slot content.** Changing a Measure's Time Signature resets its Beats and
@@ -1531,6 +1627,9 @@ that title names the behaviour under test — not the example inside it.
 - **The densest supported Pattern on the smallest supported screen.** 6 Measures of 12/8 at Straight
   16ths is 144 Slots on a 390 px viewport — overflow is contained to the grid's own scroll region so
   the page body never scrolls horizontally (AC-15.1.10).
+- **A legacy Pattern shorter than one Measure.** The predecessor allowed one- and two-beat drill
+  cells that looped sub-measure. These repeat to fill a Measure on conversion (AC-16.1.6) rather
+  than being padded with rests, preserving the audible loop while adopting proper metric accents.
 - **Editing a Pattern the user does not own.** Any edit to a shipped Pattern triggers a naming prompt
   before the edit applies; cancelling discards the edit and leaves the shipped Pattern untouched
   (US-7.3). Shipped Patterns are never mutated and never deletable.
@@ -1653,5 +1752,8 @@ specified in the Acceptance Scenarios above.
 - The following are carried over from the predecessor application and assumed still correct: the
   swing timing formula including its 0.95 cap; MIDI velocity mapping of 50/80/110 for
   weak/medium/strong; the 8,000-character threshold before bulk submission falls back to clipboard.
+- **The seeded library is fixed input, not a design surface.** Its 112 Patterns are converted
+  mechanically from the predecessor application; their musical content is assumed correct as
+  authored and is not re-evaluated here.
 - **Out of scope for this version**: multi-section Arrangements; a guided tutorial system; layering
   two Patterns by merging their accents; and any form of export/import or cloud sync.

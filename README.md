@@ -32,7 +32,9 @@ Pre-implementation. The specification is complete; no application code exists ye
 | Document | Purpose |
 |---|---|
 | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project principles — correctness, accessibility, traceability, and scope constraints that all work is held to |
-| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 32 user stories, 187 acceptance criteria in Given/When/Then form |
+| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 33 user stories, 198 acceptance criteria in Given/When/Then form |
+| [`data/seed-patterns.json`](data/seed-patterns.json) | The 112 Patterns the app ships with, converted from the predecessor application |
+| [`tools/convert-legacy-patterns.js`](tools/convert-legacy-patterns.js) | One-time migration that produced the seed data; kept so the conversion is reproducible rather than hand-edited |
 
 ## Traceability
 
