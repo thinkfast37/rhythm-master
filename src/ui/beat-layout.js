@@ -54,15 +54,19 @@ export function balancedColumns(beatCount, available, minBeatWidth, gap) {
 }
 
 /**
- * The measured minimum, cached by the shape of the Measure.
+ * The answers already worked out, so a re-render costs no measurement at all.
  *
- * Playback re-renders the grid on every Slot, and measuring forces a layout, so
- * an uncached probe would run tens of times a second for an answer that only
- * changes when the Pattern or the font does. The key is the Measure's Slot
- * structure; the cache is cleared on resize, since a resize is also when a
- * reflowed font would change the answer.
+ * This cache is a requirement, not a tuning: playback re-renders the whole grid
+ * on every Slot, and a measuring pass forces a layout — on a 192-Slot Melodic
+ * grid that trebled the cost of a render and pushed a Playwright test from 9.8
+ * to over 30 seconds on CI. What a Measure's columns depend on is its Slot
+ * shape, its meter label, and the grid's width; while those hold, the answer
+ * holds, so the render path only writes `--beat-cols` and never reads.
+ *
+ * Cleared whenever the grid's width changes, which is also when a reflowed font
+ * would change the measurement.
  */
-const minWidths = new Map();
+const columns = new Map();
 
 /** Slot counts per Beat — what a Measure's minimum width actually depends on. */
 function shapeOf(measureEl) {
@@ -72,11 +76,22 @@ function shapeOf(measureEl) {
 }
 
 /**
+ * What makes two Measures lay out identically: the same Slot shape inside the
+ * same meter label at the same grid width. The label is in the key because it
+ * sits beside the Beats and takes width from them, and `12/8` is wider than
+ * `4/4`.
+ */
+function keyOf(measureEl, gridWidth) {
+  return `${gridWidth}|${measureEl.dataset.timeSignature ?? ''}|${shapeOf(measureEl)}`;
+}
+
+/**
  * Balance every Measure in a grid to the width it currently has.
  *
- * Reads first and writes second, in two passes over all Measures rather than a
- * read-write pair per Measure, so eight Measures cost one forced layout and not
- * eight.
+ * Every Measure whose key is already known is written straight out. Only the
+ * unknown ones are measured, and they are measured together — all the probe
+ * classes on, all the widths read, all the classes off — so a Pattern of eight
+ * new Measures costs one forced layout rather than eight.
  *
  * @param {HTMLElement} gridEl
  * @returns {number[]} The column count applied to each Measure, in order.
@@ -86,50 +101,75 @@ export function balanceBeatLines(gridEl) {
   const measures = [...gridEl.querySelectorAll('.measure')];
   if (measures.length === 0) return [];
 
-  // Pass 1 — what each Measure has to work with, and what it needs.
-  const jobs = measures.map((measureEl) => {
-    const beatsEl = measureEl.querySelector('.beats');
-    if (!beatsEl) return null;
-    const style = getComputedStyle(beatsEl);
-    return {
-      beatsEl,
-      shape: shapeOf(measureEl),
-      beatCount: measureEl.querySelectorAll('.beat').length,
-      available: beatsEl.clientWidth,
-      gap: parseFloat(style.columnGap) || 0,
-    };
-  });
+  const jobs = measures
+    .map((measureEl) => {
+      const beatsEl = measureEl.querySelector('.beats');
+      return beatsEl ? { measureEl, beatsEl } : null;
+    })
+    .filter(Boolean);
 
-  // Pass 2 — probe only the shapes not seen before. `measuring` collapses the
-  // grid to a single min-content column, so every Beat reports the width of the
-  // hungriest Beat in its Measure: the one number the column count turns on.
-  const unmeasured = jobs.filter((job) => job && !minWidths.has(job.shape));
-  if (unmeasured.length > 0) {
-    for (const job of unmeasured) job.beatsEl.classList.add('measuring');
-    for (const job of unmeasured) {
-      const beat = job.beatsEl.querySelector('.beat');
-      minWidths.set(job.shape, beat ? beat.getBoundingClientRect().width : 0);
-    }
-    for (const job of unmeasured) job.beatsEl.classList.remove('measuring');
+  const unknown = [];
+  for (const job of jobs) {
+    // Reading the grid's width once, and only when something is unknown, keeps
+    // the steady state — the same Pattern re-rendering at the same width —
+    // free of layout reads entirely.
+    job.key = keyOf(job.measureEl, gridWidth(gridEl));
+    if (!columns.has(job.key)) unknown.push(job);
   }
 
-  // Pass 3 — write.
+  if (unknown.length > 0) measure(unknown);
+
   return jobs.map((job) => {
-    if (!job) return 0;
-    const cols = balancedColumns(
-      job.beatCount,
-      job.available,
-      minWidths.get(job.shape) ?? 0,
-      job.gap
-    );
+    const cols = columns.get(job.key) ?? 1;
     job.beatsEl.style.setProperty('--beat-cols', String(cols));
     return cols;
   });
 }
 
-/** Forget the measured minimums — a resize may have changed the font too. */
+/**
+ * The grid's width, read at most once per balancing pass and remembered until
+ * something says it changed.
+ */
+let width = null;
+function gridWidth(gridEl) {
+  if (width === null) width = gridEl.clientWidth;
+  return width;
+}
+
+/**
+ * Measure the Measures whose layout is not yet known, and work out their
+ * columns.
+ *
+ * `measuring` collapses a Measure's grid to a single min-content column, so
+ * every Beat lays out at the width of the hungriest Beat in that Measure and one
+ * `getBoundingClientRect` answers for the whole Measure. Held between two writes
+ * with no yield in between, so it is never painted.
+ */
+function measure(jobs) {
+  for (const job of jobs) job.beatsEl.classList.add('measuring');
+  for (const job of jobs) {
+    const beat = job.beatsEl.querySelector('.beat');
+    const style = getComputedStyle(job.beatsEl);
+    job.min = beat ? beat.getBoundingClientRect().width : 0;
+    job.available = job.beatsEl.clientWidth;
+    job.gap = parseFloat(style.columnGap) || 0;
+    job.beatCount = job.measureEl.querySelectorAll('.beat').length;
+  }
+  for (const job of jobs) job.beatsEl.classList.remove('measuring');
+
+  // The container is a flex item with `min-width: 0`, so collapsing its columns
+  // does not change how wide it is — but read it back rather than trusting that,
+  // since a wrong width here silently mislays every Measure of this shape.
+  for (const job of jobs) {
+    const available = job.beatsEl.clientWidth || job.available;
+    columns.set(job.key, balancedColumns(job.beatCount, available, job.min, job.gap));
+  }
+}
+
+/** Forget the worked-out layouts — the width, and so the answers, have moved. */
 export function forgetBeatWidths() {
-  minWidths.clear();
+  columns.clear();
+  width = null;
 }
 
 /**

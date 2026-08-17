@@ -810,3 +810,13 @@ record is complete rather than starting mid-stream.
   AC-13.1.1 and AC-13.1.3 are UI-level (T6), so the new e2e file proves them at the DOM: Submit opens a dialog carrying a real `<a>` whose `href` holds the title, label and body; clicking it opens a second tab on github.com; and only then does `submittedAt` appear. github.com is stubbed at the context — the app is offline by design and a test that depends on a third party fails for reasons of its own. That stub is also how AC-13.1.1/3 is proved: every request the app makes is visible, and none is to `api.github.com`.
 
   The pure tests were renamed to their criteria verbatim. Three had drifted: two named AC-13.1.2 while proving payload shape, and one named AC-13.1.4 while proving that a small payload fits in a URL — the criterion AC-13.1.4 actually states, exclusion of already-submitted Patterns, had no test at all. That is the T5 `mismatched` finding the baseline had been carrying since the gate landed.
+
+- [X] T171 **[bug]** T167's layout pass measured on every render, which timed out the densest Melodic e2e test on CI — `src/ui/beat-layout.js`.
+
+  The deploy's verify job failed twice on `AC-2.2.15/3` — 8 Measures of 12/8 Melodic, 192 Slots at 390px — timing out at 30s where it had taken 9.8s on the run before.
+
+  `balanceBeatLines` measured on every call, and playback re-renders the whole grid on every Slot (Principle II), so a forced layout landed in the middle of each render. A Measure's columns depend on its Slot shape, its meter label and the grid's width; while those hold, the answer holds. It is now cached on exactly that key, so the render path only writes `--beat-cols` and never reads, and the grid's own width is read once per pass and only when something is unknown.
+
+  Measured against a warm preview server, three runs each: 15.7s on the flexbox this replaced, 16.3s with the uncached version, 6.0s with the cache. The fixed-column grid turns out to be cheaper to lay out than a wrapping flexbox of 192 min-content items, once nothing forces a read mid-render.
+
+  No AC changed: AC-15.1.14 says what the layout must be, not how often it may be computed (§2a, fixed as a bug).
