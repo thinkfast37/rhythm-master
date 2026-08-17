@@ -22,8 +22,10 @@ import { buildTimeline } from './core/timeline.js';
 import * as patternStore from './storage/patterns.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
+import * as overlayStore from './storage/overlays.js';
 import { renderGrid } from './ui/grid.js';
 import { renderControls } from './ui/controls.js';
+import { renderLibrary, buildEntries, neighbours } from './ui/library.js';
 import { ask, confirmRecipeChange, askApplyToAllMeasures, askNewPatternName } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
 import * as piano from './audio/piano.js';
@@ -39,6 +41,8 @@ const state = {
   /** Which Slot the pitch controls act on, in Melodic mode (US-2.2). */
   selectedSlot: null,
   pianoStatus: piano.getStatus(),
+  /** Library view state: search text, active Tag filter, and what is open. */
+  view: { query: '', tag: null, currentId: null },
   settings: settingsStore.DEFAULTS,
 };
 
@@ -97,7 +101,17 @@ export function loadPattern(pattern, { owned }) {
   state.pattern = pattern;
   state.isOwned = owned;
   state.transportPosition = null;
+  state.selectedSlot = null;
+  state.view = { ...state.view, currentId: pattern.id ?? null };
   render();
+}
+
+/**
+ * The library as the UI sees it: shipped Patterns with their user overlays
+ * applied, plus owned Patterns as they are.
+ */
+function libraryEntries() {
+  return buildEntries(seedStore.loadAll().map(overlayStore.applyTo), patternStore.loadAll());
 }
 
 export function setTransportPosition(position) {
@@ -261,6 +275,70 @@ const handlers = {
   onStop() {
     transport.stop();
   },
+
+  // --- library ---
+
+  onSearch(query) {
+    state.view = { ...state.view, query };
+    render();
+  },
+
+  onTagFilter(tag) {
+    state.view = { ...state.view, tag };
+    render();
+  },
+
+  onOpen(id, owned) {
+    const pattern = owned
+      ? patternStore.findById(id)
+      : overlayStore.applyTo(seedStore.findById(id));
+    if (pattern) loadPattern(owned ? pattern : structuredClone(pattern), { owned });
+  },
+
+  /**
+   * Rating works on shipped and owned Patterns alike. A shipped Pattern is
+   * frozen, so its rating goes to the overlay store rather than onto the
+   * Pattern (FR-007).
+   */
+  onRate(id, rating) {
+    const owned = patternStore.findById(id);
+    if (owned) patternStore.upsert({ ...owned, rating });
+    else overlayStore.update(id, { rating });
+
+    if (state.pattern.id === id) state.pattern = { ...state.pattern, rating };
+    render();
+  },
+
+  onAddTag(id, tag) {
+    const name = String(tag).trim();
+    if (!name) return;
+    const owned = patternStore.findById(id);
+    const existing = owned ? (owned.tags ?? []) : (overlayStore.applyTo(seedStore.findById(id)).tags ?? []);
+    // De-duplicate case-insensitively, keeping the spelling already stored.
+    if (existing.some((t) => String(t).toLowerCase() === name.toLowerCase())) return;
+    const tags = [...existing, name];
+    if (owned) patternStore.upsert({ ...owned, tags });
+    else overlayStore.update(id, { tags });
+    if (state.pattern.id === id) state.pattern = { ...state.pattern, tags };
+    render();
+  },
+
+  onRemoveTag(id, tag) {
+    const owned = patternStore.findById(id);
+    const source = owned ?? overlayStore.applyTo(seedStore.findById(id));
+    const tags = (source.tags ?? []).filter((t) => String(t).toLowerCase() !== String(tag).toLowerCase());
+    if (owned) patternStore.upsert({ ...owned, tags });
+    else overlayStore.update(id, { tags });
+    if (state.pattern.id === id) state.pattern = { ...state.pattern, tags };
+    render();
+  },
+
+  /** Prev/Next follow the filtered, sorted order on screen (US-5.5). */
+  onNavigate(direction) {
+    const { previous, next } = neighbours(libraryEntries(), state.view);
+    const target = direction === 'previous' ? previous : next;
+    if (target) handlers.onOpen(target.pattern.id, target.owned);
+  },
 };
 
 /**
@@ -296,7 +374,20 @@ export { handlers };
 export function mount(root) {
   const controlsEl = document.createElement('div');
   const gridEl = document.createElement('div');
-  root.append(controlsEl, gridEl);
+  const navEl = document.createElement('div');
+  navEl.className = 'pattern-nav';
+  const libraryEl = document.createElement('div');
+  root.append(controlsEl, gridEl, navEl, libraryEl);
+
+  for (const direction of ['previous', 'next']) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'nav-button';
+    b.dataset.action = direction === 'previous' ? 'prev-pattern' : 'next-pattern';
+    b.textContent = direction === 'previous' ? '‹ Prev' : 'Next ›';
+    b.addEventListener('click', () => handlers.onNavigate(direction));
+    navEl.appendChild(b);
+  }
 
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
@@ -314,9 +405,10 @@ export function mount(root) {
   subscribe((pattern, position, s) => {
     renderControls(controlsEl, pattern, s, handlers);
     renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
+    renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
   });
 
-  return { controlsEl, gridEl };
+  return { controlsEl, gridEl, libraryEl, navEl };
 }
 
 export function init(root = document.getElementById('app')) {
@@ -340,6 +432,7 @@ if (typeof window !== 'undefined') {
     handlers,
     seedStore,
     patternStore,
+    overlayStore,
     transport,
     piano,
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */

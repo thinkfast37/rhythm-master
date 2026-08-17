@@ -223,6 +223,27 @@ App-local bookkeeping *about* Patterns, keyed by Pattern id:
 No code path may merge this into a Pattern. A serialization test asserts that no key from this
 store appears in any MIDI export, submission payload, or Pattern JSON.
 
+### `rm.overlays.v1` — user content on shipped Patterns
+
+Shipped Patterns are frozen, but the musician can still rate and tag them. Those values
+cannot live on the Pattern, so they live here, keyed by Pattern id:
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "byPatternId": {
+    "s_12": { "rating": 4, "tags": ["warmup"] }
+  }
+}
+```
+
+This is deliberately **not** Local Metadata. Local Metadata is app-local bookkeeping *about*
+a Pattern and is barred from every export (FR-006). A rating is the musician's own content —
+it is what they came back for, and it should travel with the Pattern if they make it their
+own. Two stores keep the distinction enforceable rather than remembered.
+
+Owned Patterns need no overlay: their rating and tags live on the Pattern itself.
+
 ### `rm.settings.v1` — app preferences
 
 ```jsonc

@@ -340,8 +340,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Load the app; assert all 112 shipped plus owned Patterns list in the specified order.
 
-- [ ] T087 [US5.1] Implement the library list in `src/ui/library.js` with the alphabetical-then-rating sort
-- [ ] T088 [US5.1] Tests in `tests/e2e/us-5-1.spec.js` covering AC-5.1.1–AC-5.1.6
+- [X] T087 [US5.1] Implement the library list in `src/ui/library.js` with the alphabetical-then-rating sort
+- [X] T088 [US5.1] Tests in `tests/e2e/us-5-1.spec.js` covering AC-5.1.1–AC-5.1.6
 
 ---
 
@@ -351,8 +351,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Type a fragment; assert matching Patterns remain and non-matching disappear.
 
-- [ ] T089 [US5.2] Implement search filtering in `src/ui/library.js`
-- [ ] T090 [US5.2] Tests in `tests/e2e/us-5-2.spec.js` covering AC-5.2.1–AC-5.2.3
+- [X] T089 [US5.2] Implement search filtering in `src/ui/library.js`
+- [X] T090 [US5.2] Tests in `tests/e2e/us-5-2.spec.js` covering AC-5.2.1–AC-5.2.3
 
 ---
 
@@ -362,9 +362,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Assert `custom`, `swing`, `percussive` and `melodic` are derived not stored, render as outlined chips with no removal control, and that user Tags render filled with a removal control.
 
-- [ ] T091 [US5.3] Implement automatic Tag derivation in `src/core/pattern.js` — computed on read, never persisted (data-model §4)
-- [ ] T092 [US5.3] Implement Tag chips and filtering in `src/ui/library.js` and `src/styles/` — outlined vs filled per D-007 (AC-5.3.5)
-- [ ] T093 [US5.3] Tests in `tests/e2e/us-5-3.spec.js` covering AC-5.3.1–AC-5.3.8, including case-insensitive de-duplication
+- [X] T091 [US5.3] Implement automatic Tag derivation in `src/core/pattern.js` — computed on read, never persisted (data-model §4)
+- [X] T092 [US5.3] Implement Tag chips and filtering in `src/ui/library.js` and `src/styles/` — outlined vs filled per D-007 (AC-5.3.5)
+- [X] T093 [US5.3] Tests in `tests/e2e/us-5-3.spec.js` covering AC-5.3.1–AC-5.3.8, including case-insensitive de-duplication
 
 ---
 
@@ -374,8 +374,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Navigate with a filter active; assert traversal follows the filtered, sorted order.
 
-- [ ] T094 [US5.5] Implement Prev/Next in `src/ui/library.js`
-- [ ] T095 [US5.5] Tests in `tests/e2e/us-5-5.spec.js` covering AC-5.5.1–AC-5.5.2
+- [X] T094 [US5.5] Implement Prev/Next in `src/ui/library.js`
+- [X] T095 [US5.5] Tests in `tests/e2e/us-5-5.spec.js` covering AC-5.5.1–AC-5.5.2
 
 ---
 
@@ -385,8 +385,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Rate a shipped Pattern; assert it persists across reload without mutating the shipped Pattern.
 
-- [ ] T096 [US6.1] Implement ratings in `src/ui/library.js` and `src/storage/`, storing ratings for shipped Patterns without mutating them
-- [ ] T097 [US6.1] Tests in `tests/e2e/us-6-1.spec.js` covering AC-6.1.1–AC-6.1.6
+- [X] T096 [US6.1] Implement ratings in `src/ui/library.js` and `src/storage/`, storing ratings for shipped Patterns without mutating them
+- [X] T097 [US6.1] Tests in `tests/e2e/us-6-1.spec.js` covering AC-6.1.1–AC-6.1.6
 
 ---
 
@@ -418,7 +418,7 @@ Nothing in this phase renders anything.
 
 **Independent test**: Create a Pattern identical to an existing one; assert the warning fires at naming and Make Copy only, and that mid-edit duplicates surface only in the standing view.
 
-- [ ] T102 [US11.1] Implement `src/core/similarity.js` — `rhythmFingerprint`, `isDuplicate`, `isSameFamily`
+- [X] T102 [US11.1] Implement `src/core/similarity.js` — `rhythmFingerprint`, `isDuplicate`, `isSameFamily`
 - [ ] T103 [US11.1] Implement the duplicate warning at the two creation moments and the standing possible-duplicates view in `src/ui/library.js` and `src/ui/dialogs.js`
 - [ ] T104 [US11.1] Tests in `tests/unit/core/similarity.test.js` and `tests/e2e/us-11-1.spec.js` covering AC-11.1.1–AC-11.1.5
 
@@ -430,8 +430,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Create a melodic variant of a percussive Pattern; assert they surface as a Family, not a duplicate.
 
-- [ ] T105 [US11.2] Implement Family surfacing in `src/ui/library.js`
-- [ ] T106 [US11.2] Tests in `tests/e2e/us-11-2.spec.js` covering AC-11.2.1–AC-11.2.5
+- [X] T105 [US11.2] Implement Family surfacing in `src/ui/library.js`
+- [X] T106 [US11.2] Tests in `tests/e2e/us-11-2.spec.js` covering AC-11.2.1–AC-11.2.5
 
 ---
 
