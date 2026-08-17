@@ -7,6 +7,8 @@
  *
  * Deliberate conversions:
  *  - ts applies to every Measure (legacy had one Pattern-wide meter)
+ *  - sub-measure drill cells adopt a matching short meter (1/4 or 2/4) rather than
+ *    being repeated or padded, preserving their original loop length
  *  - beats chunked into Measures by the ts numerator
  *  - S(4 slots) -> "straight-16ths" Recipe;  T(3 slots) -> "triplet-8ths" Recipe
  *  - explicit legacy accents are preserved as overrides; patterns without them emit
@@ -14,6 +16,11 @@
  *  - melodic patterns have their arpeggio resolved to explicit per-Slot Pitch, since
  *    the new model has no runtime pitch cycling
  *  - `cat` becomes a Tag;  `disp` is dropped (it was search-only metadata)
+ *
+ * NOTE: the emitted field names and nesting follow the spec's Key Entities section but
+ * are PROVISIONAL until /speckit-plan produces data-model.md. The conversion *logic*
+ * here is independent of serialisation; if the ratified model differs, reshape the
+ * output rather than redoing the mapping.
  */
 const fs = require('fs'), vm = require('vm');
 
@@ -35,8 +42,11 @@ const MELODIC_SCHEMES = {
 const RECIPE = { S: 'straight-16ths', T: 'triplet-8ths' };
 const SLOTS  = { S: 4, T: 3 };
 
+const numOf = t => parseInt(t.split('/')[0], 10);
+const SUPPORTED_TS = ['1/4','2/4','3/4','4/4','5/4','6/4','7/4','6/8','7/8','9/8','12/8'];
+
 const warnings = [];
-const cellRepeats = [];
+const shortMeters = [];
 const trimmed = [];
 
 /* Legacy degree token -> { degree, octaveOffset }.
@@ -63,7 +73,6 @@ function normalizeCustom(data, patternName) {
 }
 
 function convert(p) {
-  const num = parseInt(p.ts.split('/')[0], 10);
   const isMelodic = !!(p.soundScheme && p.soundScheme !== 'percussive');
 
   // Resolve the pitch sequence the legacy engine would have produced.
@@ -78,23 +87,22 @@ function convert(p) {
     }
   }
 
-  // Legacy Patterns shorter than one Measure were drill cells that looped every
-  // beat or two. A Measure must hold exactly `num` Beats, so repeat the cell to
-  // fill one Measure — audibly equivalent to the old looping, but now carrying
-  // the new metric accents rather than a uniformly strong downbeat per beat.
-  let sourceBeats = p.beats;
+  // Legacy Patterns shorter than one Measure were drill cells that looped every beat
+  // or two, carrying a 4/4 meter only because the predecessor had no shorter one.
+  // Give them a meter that matches their real length (AC-16.1.6) so the loop length
+  // is preserved exactly — repeating would make successive copies sound different
+  // under metric accenting, and padding would insert silence that was never there.
+  let ts = p.ts, num = numOf(p.ts);
   if (p.beats.length < num) {
-    if (num % p.beats.length !== 0) {
-      warnings.push(`${p.name}: ${p.beats.length}-beat cell does not divide evenly into ${p.ts} — padded with rests instead of repeated`);
-      sourceBeats = p.beats.concat(
-        Array.from({ length: num - p.beats.length }, () => ({ type: 'S', slots: [null, null, null, null] }))
-      );
+    const fitted = `${p.beats.length}/4`;
+    if (SUPPORTED_TS.includes(fitted)) {
+      shortMeters.push(`${p.name}: ${p.beats.length}-beat cell ${p.ts} → ${fitted}`);
+      ts = fitted; num = p.beats.length;
     } else {
-      const reps = num / p.beats.length;
-      sourceBeats = Array.from({ length: reps }, () => p.beats).flat();
-      cellRepeats.push(`${p.name}: ${p.beats.length}-beat cell repeated ${reps}× to fill ${p.ts}`);
+      warnings.push(`${p.name}: ${p.beats.length}-beat cell has no matching short meter — left in ${p.ts}`);
     }
   }
+  const sourceBeats = p.beats;
 
   let arpPos = 0;
   const measures = [];
@@ -118,7 +126,7 @@ function convert(p) {
       });
       return { recipe: RECIPE[b.type], slots };
     });
-    measures.push({ timeSignature: p.ts, beats });
+    measures.push({ timeSignature: ts, beats });
   }
 
   // Legacy Patterns sometimes carried trailing all-rest Measures (padding, not
@@ -145,20 +153,23 @@ function convert(p) {
 const converted = LEGACY.map(convert);
 
 // --- validation -------------------------------------------------------------
-const SUPPORTED_TS = ['2/4','3/4','4/4','5/4','6/4','7/4','6/8','7/8','9/8','12/8'];
 const errors = [];
 converted.forEach(p => {
   if (p.measures.length > 6) {
     errors.push(`${p.name}: ${p.measures.length} Measures exceeds the 6-Measure cap (AC-1.1.3)`);
   }
-  p.measures.forEach(m => {
+  p.measures.forEach((m, i) => {
     if (!SUPPORTED_TS.includes(m.timeSignature)) {
       errors.push(`${p.name}: unsupported time signature ${m.timeSignature}`);
+    }
+    if (m.beats.length !== numOf(m.timeSignature)) {
+      errors.push(`${p.name} measure ${i + 1}: ${m.beats.length} Beats in ${m.timeSignature} — must be ${numOf(m.timeSignature)} (AC-1.2.2)`);
     }
   });
 });
 
-fs.writeFileSync(__dirname + '/../data/seed-patterns.json', JSON.stringify(converted, null, 2));
+fs.writeFileSync(__dirname + '/../data/seed-patterns.json',
+  JSON.stringify({ schemaVersion: 1, patterns: converted }, null, 2));
 
 const noteOns = converted.reduce((a,p) => a + p.measures.reduce((b,m) =>
   b + m.beats.reduce((c,bt) => c + bt.slots.filter(s => s.on).length, 0), 0), 0);
@@ -168,8 +179,8 @@ console.log(`total note-ons:   ${noteOns}`);
 console.log(`percussive:       ${converted.filter(p=>p.soundMode==='percussive').length}`);
 console.log(`melodic:          ${converted.filter(p=>p.soundMode==='melodic').length}`);
 console.log(`explicit accents: ${converted.filter(p=>p.measures.some(m=>m.beats.some(b=>b.slots.some(s=>s.accent!==undefined)))).length}`);
-console.log(`\ncells repeated to fill a Measure (${cellRepeats.length}):`);
-cellRepeats.forEach(c => console.log('  -', c));
+console.log(`\nsub-measure cells given a matching short meter (${shortMeters.length}):`);
+shortMeters.forEach(c => console.log('  -', c));
 console.log(`\ntrailing silent Measures trimmed (${[...new Set(trimmed)].length}):`);
 [...new Set(trimmed)].forEach(t => console.log('  -', t));
 console.log(`\nwarnings (${warnings.length}):`);

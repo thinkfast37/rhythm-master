@@ -122,6 +122,7 @@ that title names the behaviour under test — not the example inside it.
 
   | `<signature>` | `<beat count>` | `<note value>` |
   |---|---|---|
+  | 1/4 | 1 | quarter note |
   | 2/4 | 2 | quarter note |
   | 3/4 | 3 | quarter note |
   | 4/4 | 4 | quarter note |
@@ -241,7 +242,9 @@ that title names the behaviour under test — not the example inside it.
 - **AC-1.4.2** — Picker offers exactly the 10 supported values
   - **Given** the Composer taps a Measure's Time Signature label
   - **When** the picker opens
-  - **Then** exactly these ten values are offered: 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8, 12/8
+  - **Then** exactly these eleven values are offered: 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8, 12/8
+  - **And** 1/4 is offered specifically so a single-beat drill cell can be a valid Pattern in its own
+    right, looping every beat, rather than being padded or repeated to fill a longer Measure
   - **And** no free-text entry is possible
 
 - **AC-1.4.3** — Each Measure's label reflects only its own Time Signature
@@ -472,6 +475,7 @@ that title names the behaviour under test — not the example inside it.
 
   | `<signature>` | Beat accents, position 1 → last |
   |---|---|
+  | 1/4 | Strong |
   | 2/4 | Strong, Weak |
   | 3/4 | Strong, Weak, Weak |
   | 4/4 | Strong, Weak, Medium, Weak |
@@ -1554,15 +1558,16 @@ present, correctly structured, and immediately playable without any authoring st
   - **Then** it becomes 2 Measures, each carrying Time Signature 4/4 and holding 4 Beats, satisfying
     AC-1.2.2's Beat-count rule
 
-- **AC-16.1.6** — Sub-measure drill cells repeat to fill a Measure
-  - **Given** a legacy one-beat drill cell in 4/4, which looped every beat in the predecessor
+- **AC-16.1.6** — Sub-measure drill cells become their own short Measure
+  - **Given** a legacy one-beat drill cell that looped every beat in the predecessor, carrying the
+    legacy meter 4/4 only because that was the only meter it could carry
   - **When** it is converted
-  - **Then** the cell repeats 4 times to fill a single 4/4 Measure, producing the same audible
-    sequence as the old per-beat loop
-  - **And** a two-beat cell likewise repeats twice
-  - **And** the repeated copies do not carry identical accents — each Beat takes its own metric
-    default (AC-3.1.2), so beat 1 is Strong and beat 3 Medium, rather than every beat being equally
-    strong as in the predecessor
+  - **Then** it becomes a Pattern of one 1/4 Measure holding that single Beat, so it still loops
+    every beat exactly as it did before
+  - **And**, given a legacy two-beat cell, it becomes one 2/4 Measure holding two Beats
+  - **And** the cell is neither repeated to fill a longer Measure nor padded with rests — both would
+    change the drill: repetition makes successive copies sound different under metric accenting
+    (AC-3.1.2), and padding inserts silence that was never in the original
 
 - **AC-16.1.7** — Deliberate accents are preserved; everything else uses computed defaults
   - **Given** a legacy Pattern that stored an explicit accent array on its beats
@@ -1590,7 +1595,7 @@ present, correctly structured, and immediately playable without any authoring st
   - **Given** the complete seeded library
   - **When** it is validated against this specification
   - **Then** every Measure holds exactly its Time Signature's numerator in Beats (AC-1.2.2), every
-    Pattern is within the 6-Measure cap (AC-1.1.3), every Time Signature is one of the ten supported
+    Pattern is within the 6-Measure cap (AC-1.1.3), every Time Signature is one of the eleven supported
     values (AC-1.2.1), and every Melodic Slot that is on carries a Pitch while every off Slot
     carries none (AC-2.2.8)
 
@@ -1599,6 +1604,52 @@ present, correctly structured, and immediately playable without any authoring st
   - **When** the conversion is re-run
   - **Then** it reproduces the shipped seed data exactly, and reports any Pattern it could not
     convert cleanly rather than silently dropping or corrupting it
+
+---
+
+### User Story 34 - Add Patterns by editing a data file (Priority: P1)
+
+*Traceability: `US-16.2` — The shipped Pattern library is data, not code*
+
+**As** the maintainer, **I want** the shipped Pattern library to live in a plain data file that I can
+edit directly, **so that** I can add, correct, or remove Patterns without touching application code,
+running a build, or going through a specification workflow.
+
+**Why this priority**: The library grows continuously and independently of feature work — new
+Patterns arrive from submissions (US-13.1) and from the maintainer's own transcription. If adding a
+Pattern requires editing source, every content change becomes a code change, which is both slower
+and riskier than it needs to be.
+
+**Independent Test**: Add a well-formed Pattern to the data file by hand, reload the app, and confirm
+it appears in the library and plays correctly, with no source file modified.
+
+**Acceptance Scenarios**:
+
+- **AC-16.2.1** — Patterns are data, not source
+  - **Given** the shipped Pattern library
+  - **When** its storage location is inspected
+  - **Then** it is a standalone, human-readable data file, not a collection of literals embedded in
+    application source code
+
+- **AC-16.2.2** — Adding a Pattern requires no code change
+  - **Given** the maintainer wants to add a new Pattern to the shipped library
+  - **When** they append a well-formed Pattern entry to the data file and reload the app
+  - **Then** the Pattern appears in the library and is fully playable, with no application source
+    file having been edited and no build step required beyond whatever normally serves the app
+
+- **AC-16.2.3** — Malformed entries fail loudly, not silently
+  - **Given** a Pattern entry in the data file that violates a structural rule — a Measure whose Beat
+    count does not match its Time Signature, an unsupported Time Signature, or a Melodic Slot that is
+    on but carries no Pitch
+  - **When** the app loads it
+  - **Then** the problem is surfaced clearly, identifying the offending Pattern by name and the rule
+    it breaks, rather than the Pattern silently failing to appear or rendering incorrectly
+
+- **AC-16.2.4** — The data file is versioned
+  - **Given** the shipped Pattern data file
+  - **When** it is read
+  - **Then** it carries a schema version, so a future format change can be detected and migrated
+    rather than misread (FR-005)
 
 ---
 
@@ -1628,8 +1679,9 @@ present, correctly structured, and immediately playable without any authoring st
   16ths is 144 Slots on a 390 px viewport — overflow is contained to the grid's own scroll region so
   the page body never scrolls horizontally (AC-15.1.10).
 - **A legacy Pattern shorter than one Measure.** The predecessor allowed one- and two-beat drill
-  cells that looped sub-measure. These repeat to fill a Measure on conversion (AC-16.1.6) rather
-  than being padded with rests, preserving the audible loop while adopting proper metric accents.
+  cells that looped sub-measure while nominally carrying a 4/4 meter. These convert to 1/4 and 2/4
+  Measures respectively (AC-16.1.6), preserving the original loop length exactly. This is why 1/4
+  is a supported Time Signature (AC-1.2.1).
 - **Editing a Pattern the user does not own.** Any edit to a shipped Pattern triggers a naming prompt
   before the edit applies; cancelling discards the edit and leaves the shipped Pattern untouched
   (US-7.3). Shipped Patterns are never mutated and never deletable.
@@ -1645,7 +1697,7 @@ specified in the Acceptance Scenarios above.
   single canonical module implemented as pure, deterministic functions — never duplicated or
   hardcoded per view or per component.
 - **FR-002**: Beat count MUST always equal the Time Signature's numerator, for every supported
-  meter, with no assumed sub-grouping applied anywhere in authoring, playback, display, or export.
+  meter (including 1/4, whose Measure holds a single Beat), with no assumed sub-grouping applied anywhere in authoring, playback, display, or export.
 - **FR-003**: A Slot's default Accent Level MUST be computed from its metric position on demand and
   MUST NOT be stored; only user overrides are persisted.
 - **FR-004**: The system MUST persist all user-created data in browser-local storage only, with no
@@ -1684,8 +1736,8 @@ specified in the Acceptance Scenarios above.
   optional Key, Tags, and a Rating.
 - **Measure**: One instance of a Time Signature at a position in a Pattern. A Pattern is an ordered
   sequence of Measures, each carrying its own Time Signature, capped at 6 per Pattern.
-- **Time Signature**: One of ten supported values — 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8,
-  12/8. A per-Measure property. Determines Beat count (the numerator) and each Beat's note-value
+- **Time Signature**: One of eleven supported values — 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8,
+  9/8, 12/8. A per-Measure property. Determines Beat count (the numerator) and each Beat's note-value
   (the denominator).
 - **Beat**: One pulse within a Measure, one note-value long.
 - **Recipe**: A named subdivision template applied to a Beat, defining its Slot count and the feel
