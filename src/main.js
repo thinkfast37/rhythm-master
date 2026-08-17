@@ -35,6 +35,7 @@ import {
   renderPlaybackSettings,
   renderEditControls,
   renderActionControls,
+  renderPitchStrip,
 } from './ui/controls.js';
 import {
   applyViewport,
@@ -67,8 +68,14 @@ const state = {
   isOwned: false,
   isPlaying: false,
   loop: 0,
-  /** Which Slot the pitch controls act on, in Melodic mode (US-2.2). */
-  selectedSlot: null,
+  /**
+   * The pitch strip's armed value, stamped onto a Slot by tapping its note band
+   * (US-2.2). Strip state, not Pattern data: it outlives a stamp and a Pattern
+   * switch, and a reload starts it back at the root (AC-2.2.2).
+   */
+  armedPitch: { degree: '1', octaveOffset: 0 },
+  /** Whether the strip is showing degrees 9-15 as well as 1-8 (AC-2.2.4). */
+  degreesExtended: false,
   soundStatus: melodic.getStatus(),
   /** Library view state: search text, Tag and rating filters, and what is open. */
   view: { query: '', tags: [], minRating: 0, currentId: null },
@@ -181,7 +188,6 @@ export function loadPattern(pattern, { owned }) {
   state.pattern = pattern;
   state.isOwned = owned;
   state.transportPosition = null;
-  state.selectedSlot = null;
   state.view = { ...state.view, currentId: pattern.id ?? null };
   render();
 }
@@ -249,17 +255,36 @@ const handlers = {
     apply(setRecipe, measureIndex, beatIndex, recipeId);
   },
 
+  /**
+   * The accent zone: cycle Accent Level, exactly as in Percussive mode (US-3.1).
+   *
+   * A Slot switched on in Melodic mode needs a pitch, or it has no musical
+   * content at all — and it takes the armed one, so arming a degree and building
+   * a line is one tap per Slot rather than sound-then-pitch (AC-2.2.11).
+   */
   async onSlotTap(measureIndex, beatIndex, slotIndex) {
     if (!(await guardShipped())) return;
-    state.selectedSlot = { measureIndex, beatIndex, slotIndex };
     apply(cycleAccent, measureIndex, beatIndex, slotIndex);
 
-    // A Slot switched on in Melodic mode needs a pitch, or it has no musical
-    // content at all. Default to the tonic rather than leaving it undefined.
     const slot = state.pattern.measures[measureIndex].beats[beatIndex].slots[slotIndex];
     if (state.pattern.soundMode === 'melodic' && slot.on && !slot.pitch) {
-      apply(setPitch, measureIndex, beatIndex, slotIndex, { degree: '1', octaveOffset: 0 });
+      apply(setPitch, measureIndex, beatIndex, slotIndex, state.armedPitch);
     }
+  },
+
+  /**
+   * The note band: stamp the armed pitch, leaving Accent Level alone (AC-2.2.6).
+   *
+   * A Slot that does not sound is not stamped (AC-2.2.5). The band is rendered
+   * `disabled` on such a Slot, so this guard is the second line rather than the
+   * first — but `setPitch` throws on an inactive Slot, and a guard here is
+   * cheaper than an exception reaching the console.
+   */
+  async onStampPitch(measureIndex, beatIndex, slotIndex) {
+    const slot = state.pattern.measures[measureIndex].beats[beatIndex].slots[slotIndex];
+    if (!slot.on) return;
+    if (!(await guardShipped())) return;
+    apply(setPitch, measureIndex, beatIndex, slotIndex, state.armedPitch);
   },
 
   async onSwing(groupIndex, amount, measureIndex = 0, beatIndex = 0) {
@@ -268,11 +293,25 @@ const handlers = {
     if (state.isPlaying) transport.restart(state.pattern, state.settings);
   },
 
-  async onPitch(pitch) {
-    if (!state.selectedSlot) return;
-    if (!(await guardShipped())) return;
-    const { measureIndex, beatIndex, slotIndex } = state.selectedSlot;
-    apply(setPitch, measureIndex, beatIndex, slotIndex, pitch);
+  /*
+   * Arming touches no Pattern, so none of these three guard the shipped copy or
+   * push history — changing what the strip holds must not fork a built-in
+   * Pattern into "my version" before a single note has been stamped, and must
+   * not leave an undo step behind (AC-2.2.9).
+   */
+  onArmDegree(degree) {
+    state.armedPitch = { ...state.armedPitch, degree };
+    render();
+  },
+
+  onArmOctave(octaveOffset) {
+    state.armedPitch = { ...state.armedPitch, octaveOffset };
+    render();
+  },
+
+  onExtendDegrees() {
+    state.degreesExtended = !state.degreesExtended;
+    render();
   },
 
   onTempo(bpm) {
@@ -683,6 +722,11 @@ export function mount(root) {
 
   const headerEl = document.createElement('header');
   const gridEl = document.createElement('div');
+  // Directly under the grid, and never inside an accordion: it is the palette
+  // the grid is stamped from, so it has to be aimable while you stamp
+  // (AC-2.2.13). Percussive Patterns render it empty and hidden.
+  const pitchEl = document.createElement('section');
+  pitchEl.dataset.section = 'pitch';
   const playEl = document.createElement('section');
   playEl.dataset.primary = 'true';
   playEl.dataset.section = 'play';
@@ -726,7 +770,9 @@ export function mount(root) {
     navEl.appendChild(b);
   }
 
-  main.append(libraryToggle, headerEl, gridEl, playEl, settingsEl, editEl, actionsEl, navEl);
+  main.append(
+    libraryToggle, headerEl, gridEl, pitchEl, playEl, settingsEl, editEl, actionsEl, navEl
+  );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
 
@@ -736,8 +782,12 @@ export function mount(root) {
     const target = event.target.closest('[data-action]');
     if (!target) return;
     const m = Number(target.dataset.measure);
+    const b = Number(target.dataset.beat);
+    const s = Number(target.dataset.slot);
     if (target.dataset.action === 'cycle-accent') {
-      handlers.onSlotTap(m, Number(target.dataset.beat), Number(target.dataset.slot));
+      handlers.onSlotTap(m, b, s);
+    } else if (target.dataset.action === 'stamp-pitch') {
+      handlers.onStampPitch(m, b, s);
     } else if (target.dataset.action === 'change-time-signature') {
       handlers.onTimeSignature(m);
     }
@@ -785,6 +835,7 @@ export function mount(root) {
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
     renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
+    renderPitchStrip(pitchEl, pattern, s, handlers);
     renderPlayControls(playEl, pattern, s, handlers);
     renderPlaybackSettings(settingsBody, pattern, s, handlers);
     renderEditControls(editBody, pattern, s, handlers);
@@ -803,6 +854,7 @@ export function mount(root) {
     main,
     headerEl,
     gridEl,
+    pitchEl,
     playEl,
     settingsEl,
     editEl,

@@ -7,7 +7,16 @@
  */
 import { TIME_SIGNATURES, beatNoteValue } from '../core/meter.js';
 import { recipesFor } from '../core/recipes.js';
-import { KEYS } from '../core/pitch.js';
+import {
+  KEYS,
+  DEFAULT_DEGREES,
+  EXTENDED_DEGREES,
+  splitDegree,
+  degreeToken,
+  octaveNumber,
+  octaveOffsetFor,
+  clampOctave,
+} from '../core/pitch.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -48,7 +57,6 @@ export function renderControls(root, pattern, state, handlers) {
   root.appendChild(renderSound(pattern, handlers));
   root.appendChild(renderSwing(pattern, handlers));
   root.appendChild(renderCounting(pattern, state, handlers));
-  if (pattern.soundMode === 'melodic') root.appendChild(renderPitch(pattern, state, handlers));
   root.appendChild(renderActions(pattern, state, handlers));
 
   return root;
@@ -153,13 +161,18 @@ export function renderPlaybackSettings(root, pattern, state, handlers) {
   return root;
 }
 
-/** Edit controls: structure, subdivision, sound mode, pitch. */
+/**
+ * Edit controls: structure, subdivision, sound mode.
+ *
+ * Pitch is deliberately not here. It moved to the pitch strip beside the grid,
+ * because a palette you have to expand a collapsed section to reach cannot be
+ * aimed at while stamping (AC-2.2.13).
+ */
 export function renderEditControls(root, pattern, state, handlers) {
   root.innerHTML = '';
   root.className = 'controls edit-controls';
   root.appendChild(renderStructure(pattern, handlers));
   root.appendChild(renderSound(pattern, handlers));
-  if (pattern.soundMode === 'melodic') root.appendChild(renderPitch(pattern, state, handlers));
   return root;
 }
 
@@ -238,43 +251,105 @@ function renderSwing(pattern, handlers) {
 }
 
 /**
- * Per-Slot pitch entry. Applies to whichever Slot is selected in the grid;
- * degree and octave are separate controls because they are separate musical
- * decisions (US-2.2).
+ * The pitch strip: the palette a Melodic grid is stamped from (US-2.2).
+ *
+ * It holds one armed pitch — a degree, an accidental and an octave — and does
+ * not itself touch the Pattern. Tapping a Slot's note band stamps whatever is
+ * armed here onto that Slot (AC-2.2.6); changing what is armed alters nothing
+ * already stamped (AC-2.2.9).
+ *
+ * It renders in its own section beside the grid rather than inside the Edit
+ * accordion, because you cannot aim at a palette you have to open first
+ * (AC-2.2.13). In Percussive mode it renders nothing at all.
  */
-function renderPitch(pattern, state, handlers) {
-  const group = el('div', 'control-group pitch-group');
-  const target = state.selectedSlot;
+export function renderPitchStrip(root, pattern, state, handlers) {
+  root.innerHTML = '';
+  root.className = 'pitch-strip';
+  root.hidden = pattern.soundMode !== 'melodic';
+  if (root.hidden) return root;
 
-  if (!target) {
-    group.appendChild(el('p', 'pitch-hint', { textContent: 'Select a note to set its pitch.' }));
-    return group;
-  }
+  const armed = state.armedPitch ?? { degree: '1', octaveOffset: 0 };
+  const [accidental, number] = splitDegree(armed.degree);
 
-  const slot = pattern.measures[target.measureIndex].beats[target.beatIndex].slots[target.slotIndex];
-  const pitch = slot.pitch ?? { degree: '1', octaveOffset: 0 };
-
-  const degree = el('select', 'degree-picker');
-  degree.dataset.action = 'set-degree';
-  for (const d of ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7', '9', '11', '13']) {
-    degree.appendChild(el('option', null, { value: d, textContent: d }));
-  }
-  degree.value = pitch.degree;
-  degree.addEventListener('change', (e) =>
-    handlers.onPitch({ ...pitch, degree: e.target.value })
+  root.appendChild(
+    el('span', 'pitch-strip-label', {
+      textContent: 'Note',
+      title: 'Tap a note’s upper band in the grid to give it this pitch',
+    })
   );
-  group.appendChild(labelled('Degree', degree));
 
-  const octave = el('select', 'octave-picker');
-  octave.dataset.action = 'set-octave';
-  for (const o of [-2, -1, 0, 1, 2]) {
-    octave.appendChild(el('option', null, { value: String(o), textContent: o > 0 ? `+${o}` : String(o) }));
+  // Accidental first, because it modifies the degree chosen next to it. Without
+  // it the strip could not reach b3, #4 or b7, which the Degree dropdown it
+  // replaces could — the strip's vocabulary must not be narrower (AC-2.2.4).
+  const accidentals = el('div', 'accidental-group', { role: 'group' });
+  accidentals.setAttribute('aria-label', 'Accidental');
+  for (const [value, glyph, name] of [['b', '♭', 'Flat'], ['', '♮', 'Natural'], ['#', '♯', 'Sharp']]) {
+    const b = el('button', 'accidental', { type: 'button', textContent: glyph });
+    b.dataset.action = 'set-accidental';
+    b.dataset.accidental = value;
+    b.setAttribute('aria-label', name);
+    b.setAttribute('aria-pressed', String(value === accidental));
+    b.addEventListener('click', () => handlers.onArmDegree(degreeToken(number, value)));
+    accidentals.appendChild(b);
   }
-  octave.value = String(pitch.octaveOffset ?? 0);
-  octave.addEventListener('change', (e) =>
-    handlers.onPitch({ ...pitch, octaveOffset: Number(e.target.value) })
-  );
-  group.appendChild(labelled('Octave', octave));
+  root.appendChild(accidentals);
+
+  // Degrees 1-8 always; 9-15 behind the extend control, so the common octave is
+  // not buried in a fifteen-wide row on a phone (AC-2.2.4).
+  const degrees = el('div', 'degree-group', { role: 'group' });
+  degrees.setAttribute('aria-label', 'Scale degree');
+  const shown = state.degreesExtended
+    ? [...DEFAULT_DEGREES, ...EXTENDED_DEGREES]
+    : DEFAULT_DEGREES;
+  for (const d of shown) {
+    const b = el('button', 'degree', { type: 'button', textContent: d });
+    b.dataset.action = 'set-degree';
+    b.dataset.degree = d;
+    b.setAttribute('aria-pressed', String(d === number));
+    b.addEventListener('click', () => handlers.onArmDegree(degreeToken(d, accidental)));
+    degrees.appendChild(b);
+  }
+  root.appendChild(degrees);
+
+  const extend = el('button', 'degree-extend', {
+    type: 'button',
+    textContent: state.degreesExtended ? '– 9–15' : '+ 9–15',
+  });
+  extend.dataset.action = 'toggle-extended-degrees';
+  extend.setAttribute('aria-expanded', String(Boolean(state.degreesExtended)));
+  extend.setAttribute('title', 'Show degrees 9 to 15');
+  extend.addEventListener('click', () => handlers.onExtendDegrees());
+  root.appendChild(extend);
+
+  root.appendChild(renderOctaveStepper(armed, handlers));
+  return root;
+}
+
+/**
+ * Absolute octave, stepped one at a time and clamped at 1 and 7 (AC-2.2.3).
+ * The Pattern stores an offset from the base octave; only this readout converts.
+ */
+function renderOctaveStepper(armed, handlers) {
+  const group = el('div', 'octave-stepper', { role: 'group' });
+  group.setAttribute('aria-label', 'Octave');
+
+  const current = octaveNumber(armed.octaveOffset ?? 0);
+  const step = (delta, label, name) => {
+    const b = el('button', 'octave-step', { type: 'button', textContent: label });
+    b.dataset.action = name;
+    b.disabled = clampOctave(current + delta) === current;
+    b.setAttribute('aria-label', `${name === 'octave-up' ? 'Raise' : 'Lower'} octave`);
+    b.addEventListener('click', () =>
+      handlers.onArmOctave(octaveOffsetFor(clampOctave(current + delta)))
+    );
+    return b;
+  };
+
+  group.appendChild(step(-1, '−', 'octave-down'));
+  const readout = el('output', 'octave-readout', { textContent: `Oct ${current}` });
+  readout.dataset.octave = String(current);
+  group.appendChild(readout);
+  group.appendChild(step(1, '+', 'octave-up'));
 
   return group;
 }

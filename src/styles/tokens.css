@@ -29,6 +29,10 @@
   --brand: #f0a020;
 
   --slot-min: 24px; /* AC-15.1.10 — never smaller than this, on any viewport */
+  /* The note band's height, and the floor under both of a split Slot's zones
+     (AC-2.2.12). It is the same 24px as --slot-min because it is the same
+     requirement seen along the other axis. */
+  --slot-note-h: 24px;
   --radius: 4px;
 }
 
@@ -160,6 +164,69 @@ body {
   outline-offset: -2px;
 }
 
+/* --- the split Slot, in editable Melodic mode (AC-2.2.10) ----------------- */
+
+/*
+ * Two stacked controls inside the Slot's box: a fixed note band on top, and an
+ * accent zone taking the rest. The Slot itself stops being a button here and
+ * becomes their container, so it keeps its border, dataset and `playing`
+ * outline while each zone owns its own hit area.
+ *
+ * The height is the two minimums added, not a look: 24px of band over 24px of
+ * accent zone is the floor AC-2.2.12 sets, and 32px for the accent zone leaves
+ * the counting syllable legible at the density AC-15.1.10 allows. It is the
+ * same at every width — a phone is where the tap targets matter most, so it is
+ * the last place to shave them.
+ */
+.slot.has-note {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--slot-note-h) + 32px);
+}
+
+.slot-note {
+  flex: 0 0 var(--slot-note-h);
+  min-height: var(--slot-note-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #20242f;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.slot-note:hover:not(:disabled) { background: #2b303f; }
+
+/* A Slot that does not sound has no note to pitch. The band reads as unusable
+   rather than merely doing nothing when tapped (AC-2.2.5). */
+.slot-note:disabled {
+  background: transparent;
+  border-bottom-color: transparent;
+  cursor: default;
+}
+
+.slot-accent {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: var(--slot-note-h);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* In a split Slot the badge sits in its own band, so it is laid out by the
+   band's flex centring rather than pinned over the accent fill — and it keeps
+   --ink at every Accent Level, because the fill no longer reaches it. */
+.slot.has-note .slot-pitch { position: static; }
+.slot.has-note.accent-medium .slot-pitch,
+.slot.has-note.accent-strong .slot-pitch { color: var(--ink); }
+
+/* The label centres in the accent zone, not in the whole Slot. */
+.slot.has-note .slot-label { line-height: 32px; }
+
 /* --- responsive ---------------------------------------------------------- */
 
 @media (max-width: 767px) {
@@ -239,7 +306,69 @@ body {
 }
 .slot.accent-medium .slot-pitch,
 .slot.accent-strong .slot-pitch { color: #0b0c15; }
-.pitch-hint { margin: 0; font-size: 11px; color: var(--ink-dim); }
+/* --- the pitch strip (US-2.2) --------------------------------------------- */
+
+/*
+ * The palette a Melodic grid is stamped from. It sits directly under the grid
+ * and outside every accordion (AC-2.2.13), and wraps rather than scrolls
+ * sideways, so it obeys the same no-horizontal-scroll rule as the grid above it
+ * (AC-15.1.9).
+ */
+.pitch-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.pitch-strip[hidden] { display: none; }
+
+.pitch-strip-label {
+  font: 600 11px/1 system-ui, sans-serif;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.accidental-group,
+.degree-group,
+.octave-stepper { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/*
+ * Every control on the strip is at least 32px square: these are aimed at
+ * repeatedly while composing, and unlike a Slot they are not competing with 144
+ * siblings for the width of a phone.
+ */
+.pitch-strip button {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  font: 600 13px/1 ui-monospace, monospace;
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.pitch-strip button:hover:not(:disabled) { background: #262b3a; }
+.pitch-strip button:disabled { color: var(--ink-dim); cursor: default; }
+
+/* What is armed is marked by more than colour — a filled chip with a border
+   change — so the strip does not rely on hue alone (Principle II). */
+.pitch-strip button[aria-pressed='true'] {
+  color: #0b0c15;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.octave-stepper { align-items: center; }
+.octave-readout {
+  min-width: 52px;
+  font: 600 12px/1 ui-monospace, monospace;
+  color: var(--ink);
+  text-align: center;
+}
 
 /* --- library ------------------------------------------------------------- */
 

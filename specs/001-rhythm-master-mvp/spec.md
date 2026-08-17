@@ -344,43 +344,59 @@ exist).
 
 **As** the Composer, once a Pattern is Melodic with a Key chosen, **I want** to assign each active Slot a specific scale degree and octave, **so that** I'm authoring a real, deliberate melody rather than relying on some automatic pitch-cycling behavior I can't fully control.
 
-**Independent Test**: In a Melodic Pattern, paint pitches onto Slots via the pitch strip and assert the Pitch/Accent invariant holds on every path.
+**Independent Test**: In a Melodic Pattern, arm a pitch on the strip, stamp it onto sounding Slots via their note bands, and assert the Pitch/Accent invariant holds on every path.
 
 **Acceptance Scenarios**:
+
+*(This story was substantially revised on 2026-08-17. It had described a pitch strip
+with an armed pitch painted onto Slots; what was built instead was a Degree and an
+Octave dropdown in the Edit accordion, acting on whichever Slot was last tapped —
+with no visible marker for which Slot that was, and no way to select a Slot without
+also cycling its Accent. The strip is now built as specified, with two changes to
+the original: a Slot's tap area is split so pitch and Accent are separate gestures
+(AC-2.2.10), and stamping is confined to Slots that already sound (AC-2.2.5).)*
 
 - **AC-2.2.1** — One Pitch per Slot, no chords
   - **Given** a Slot that already has a Pitch assigned
   - **When** the Composer assigns it a different Pitch
   - **Then** the new Pitch fully replaces the old one — a Slot never holds more than one Pitch (no chords)
 
-- **AC-2.2.2** — Armed pitch defaults to root, octave 4
-  - **Given** a Pattern entering Melodic mode for the first time, with no prior Pitch data
+- **AC-2.2.2** — Armed pitch defaults to degree 1, octave 4, and stays armed
+  - **Given** a Melodic Pattern
   - **When** the pitch strip is shown
-  - **Then** its armed pitch defaults to degree 1 (root), octave 4
+  - **Then** its armed pitch is degree 1 (the root) at octave 4 — the base octave, stored as `octaveOffset: 0`
+  - **And** whatever is armed stays armed until the Composer changes it: stamping a Slot does not disarm it, and switching Pattern does not reset it, so a run of Slots can be given the same Pitch by tapping each in turn
+  - **And** it is session state, not a stored preference — a reload starts at degree 1, octave 4 again, the same as a first visit
+  - *(Revised 2026-08-17. This previously read "a Pattern entering Melodic mode for the first time, with no prior Pitch data". The armed pitch is state on the strip, not data on the Pattern, so it has no first time — it is the same on every showing. The persistence clauses are new: staying armed across stamps is what makes a run of Slots one tap each rather than a re-arm each, and keeping it out of `rm.settings.v1` keeps a transient tool position from becoming a stored schema.)*
 
 - **AC-2.2.3** — Octave stepper clamps at its bounds
   - **Given** the octave stepper on the pitch strip
   - **When** the Composer steps beyond octave 1 or octave 7
   - **Then** the value clamps at that bound rather than wrapping
+  - **And** the stepper reads as an absolute octave number, 1 to 7, while the Pattern stores `octaveOffset` −3 to +3 against the base octave of 4 — the stored representation is unchanged by this control (data-model §4)
 
 - **AC-2.2.4** — Degree strip default span
   - **Given** a Melodic Pattern with an active Key
   - **When** the Composer views the degree strip
-  - **Then** degrees 1–8 (one octave of the Key's scale) are shown by default, scrollable/extendable to reach degrees 9–15 without touching the octave stepper
+  - **Then** degrees 1–8 (one octave of the Key's scale) are shown by default, extendable to reach degrees 9–15 without touching the octave stepper
+  - **And** a flat/natural/sharp control alters the armed degree, so `b3`, `#4` and `b7` are reachable at any degree — the strip's vocabulary is the full token set of data-model §4, not the diatonic degrees alone
 
-- **AC-2.2.5** — Painting an off Slot sets Pitch and computed Accent together
+- **AC-2.2.5** — A Slot that is not sounding cannot be stamped
   - **Given** an off Slot and a currently armed pitch on the strip
-  - **When** the Composer taps or drag-stamps that Slot
-  - **Then** the Slot's Pitch is set to the armed value and its Accent Level is set to that Slot's computed metric default (Epic 3, US-3.1) — both in the same gesture
+  - **When** the Composer taps that Slot's note band
+  - **Then** nothing changes: the Slot stays off, and no Pitch is assigned — a Pitch belongs to a note, and a Slot that does not sound has no note to hold one
+  - **And** the note band is inert on such a Slot rather than looking tappable and refusing
+  - *(Revised 2026-08-17. This previously read "Painting an off Slot sets Pitch and computed Accent together", so one gesture both sounded a Slot and pitched it. With the tap area split by AC-2.2.10 that conflates the two zones' jobs: the accent zone decides whether a Slot sounds, the note band decides what it sounds. Turning a Slot on is AC-2.2.11, and it does pick up the armed pitch — so the two-gesture path reaches the same place as the old one-gesture path.)*
 
-- **AC-2.2.6** — Repainting an active Slot changes only its Pitch
-  - **Given** an already-active Slot and a currently armed pitch on the strip
-  - **When** the Composer paints that Slot again
-  - **Then** only its Pitch is replaced; its existing Accent Level is left unchanged
+- **AC-2.2.6** — Stamping a sounding Slot changes only its Pitch
+  - **Given** a sounding Slot — whatever its Accent Level, and whether or not it already holds a Pitch — and a currently armed pitch on the strip
+  - **When** the Composer taps that Slot's note band
+  - **Then** its Pitch is replaced by the armed value and its Accent Level is left exactly as it was
+  - **And** doing the same to further sounding Slots gives each of them that same armed pitch, one tap apiece
 
 - **AC-2.2.7** — Cycling Accent to off clears Pitch too
   - **Given** an active Melodic Slot
-  - **When** the Composer taps it to cycle Accent Level down to off (per Epic 3's override rule)
+  - **When** the Composer taps its accent zone to cycle Accent Level down to off (per Epic 3's override rule)
   - **Then** both its Accent Level and its Pitch clear together — a Slot cannot hold Accent 0 with a non-null Pitch, or Accent > 0 with a null Pitch
 
 - **AC-2.2.8** — Accent/Pitch null-state invariant
@@ -388,10 +404,37 @@ exist).
   - **When** its state is inspected
   - **Then** it always holds either (Accent 0, null Pitch) or (Accent > 0, non-null Pitch) — no UI path can produce any other combination
 
-- **AC-2.2.9** — Changing the armed pitch doesn't retroactively affect painted Slots
-  - **Given** Slots that have already been painted with a pitch
-  - **When** the Composer changes the armed pitch on the strip
-  - **Then** none of those already-painted Slots change — the new armed pitch only affects the next paint/stamp gesture
+- **AC-2.2.9** — Changing the armed pitch doesn't retroactively affect stamped Slots
+  - **Given** Slots that have already been stamped with a pitch
+  - **When** the Composer changes the armed degree, accidental or octave on the strip
+  - **Then** none of those already-stamped Slots change — the new armed pitch only affects the next stamp
+
+- **AC-2.2.10** — A Melodic Slot has two tap zones, and they do different jobs
+  - **Given** a Melodic Pattern's grid
+  - **When** the Composer looks at any Slot
+  - **Then** it carries a note band along its top edge and an accent zone filling the rest, as two separate controls
+  - **And** tapping the accent zone cycles Accent Level exactly as it does in Percussive mode (US-3.1), never altering Pitch except by clearing it at off (AC-2.2.7)
+  - **And** tapping the note band stamps the armed pitch, never altering Accent Level (AC-2.2.6)
+  - **And** in Percussive mode there is no note band — the whole Slot is the accent zone, since there is no Pitch to hold
+  - *(Added 2026-08-17. Pitch and Accent were previously the same tap: selecting a Slot to pitch it cost a trip round the four-step Accent cycle to put the Accent back.)*
+
+- **AC-2.2.11** — Turning a Slot on takes the armed pitch
+  - **Given** an off Slot in a Melodic Pattern and a currently armed pitch on the strip
+  - **When** the Composer taps its accent zone to turn it on
+  - **Then** its Accent Level is set to that Slot's computed metric default (Epic 3, US-3.1) and its Pitch is set to the armed value, in that one gesture
+  - *(Added 2026-08-17, replacing the behaviour AC-2.2.5 used to carry. A Slot turned on in Melodic mode previously always took degree 1 at the base octave, ignoring the strip — so arming a pitch and building a line meant re-pitching every Slot after sounding it.)*
+
+- **AC-2.2.12** — Both zones stay tappable at the smallest supported Slot
+  - **Given** a 390px-wide (mobile) viewport and the largest supported Pattern — 6 Measures of 12/8 at Straight 16ths, per AC-15.1.10 — in Melodic mode
+  - **When** the Composer aims at either zone of any Slot
+  - **Then** the note band and the accent zone are each at least 24 CSS pixels in both dimensions, which the Slot's height accommodates rather than the note band being squeezed to a sliver
+  - **And** the Slot stays at least 24 CSS pixels wide, so AC-15.1.10 continues to hold and the grid still never scrolls sideways
+
+- **AC-2.2.13** — The pitch strip is present wherever pitches are edited
+  - **Given** a Melodic Pattern at any viewport width
+  - **When** the Composer views the grid
+  - **Then** the pitch strip is visible alongside it without opening a collapsed section, since it is the palette the grid is stamped from
+  - **And**, given a Percussive Pattern, no pitch strip is shown at all — not shown-but-disabled (consistent with AC-2.1.2's treatment of Key)
 
 ---
 
@@ -475,6 +518,7 @@ exist).
   - **Given** Beat 2 of a 4/4 Measure, currently off
   - **When** the Composer turns on its first Slot
   - **Then** that Slot's Accent Level is set to Weak (1) — its computed metric default, per AC-3.1.2 — not a fixed value shared by every Slot regardless of position
+  - *(Note added 2026-08-17. "Tapping a Slot" throughout this story means tapping its accent zone. In Melodic mode a Slot's tap area is split, and the note band along its top edge stamps Pitch instead — see AC-2.2.10. Nothing about the Accent values or the override cycle below changes; only the part of the Slot that triggers them. In Melodic mode this same tap also assigns the armed pitch, per AC-2.2.11.)*
 
 - **AC-3.1.2** — Beat Accent table
   - **Given** a Measure set to time signature `<signature>`
@@ -1516,7 +1560,9 @@ exist).
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom: Pattern header → grid → play controls → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation
+  - **Then** the order is fixed top to bottom: Pattern header → grid → pitch strip (US-2.2, Melodic only) → play controls → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation
+  - **And** in Percussive mode the pitch strip is absent rather than an empty row, so the order there is the same list with that entry removed
+  - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
 
 - **AC-15.1.9** — Wide controls never force horizontal page scrolling
   - **Given** a 390px-wide (mobile) viewport
