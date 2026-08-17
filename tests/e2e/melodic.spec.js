@@ -311,13 +311,13 @@ test('AC-2.2.11 — turning a Slot on gives it the armed pitch', async ({ page }
 test('AC-2.2.12 — both zones stay tappable on the largest Pattern at 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  // The AC-15.1.10 worst case: 6 Measures of 12/8 at Straight 16ths, Melodic.
+  // The AC-15.1.10 worst case: 8 Measures of 12/8 at Straight 16ths, Melodic.
   // A new Measure inherits the previous one's meter, and a blank Beat changes
   // Recipe without prompting, so this needs no dialog handling.
   await page.evaluate(async () => {
     window.__rm.loadBlank('12/8');
     await window.__rm.handlers.onSoundMode('melodic');
-    for (let i = 0; i < 5; i++) await window.__rm.handlers.onAddMeasure();
+    for (let i = 0; i < 7; i++) await window.__rm.handlers.onAddMeasure();
     const p = window.__rm.getState().pattern;
     for (let m = 0; m < p.measures.length; m++) {
       for (let b = 0; b < p.measures[m].beats.length; b++) {
@@ -325,7 +325,7 @@ test('AC-2.2.12 — both zones stay tappable on the largest Pattern at 390px', a
       }
     }
   });
-  await expect(page.locator('.measure')).toHaveCount(6);
+  await expect(page.locator('.measure')).toHaveCount(8);
 
   const boxes = await page.evaluate(() =>
     [...document.querySelectorAll('.slot')].map((s) => ({

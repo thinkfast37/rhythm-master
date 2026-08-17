@@ -16,11 +16,11 @@ taking on a framework. Vite supplies a dev server, a bundled static build for Gi
 critically — an npm-based test runner, which FR-014's per-AC requirement makes non-optional.
 
 **Alternatives considered**:
-- *Svelte* — would make the pure-state-to-render contract nearly free and handle the 144-Slot grid
+- *Svelte* — would make the pure-state-to-render contract nearly free and handle the 192-Slot grid
   re-render automatically. Rejected as a maintenance and learning cost not justified for a
   single-maintainer project whose rendering needs are one grid and a list.
 - *React* — largest ecosystem, most contributor-familiar. Rejected on runtime weight and because
-  the playback cursor would need deliberate memoisation to avoid re-rendering 144 Slots per tick.
+  the playback cursor would need deliberate memoisation to avoid re-rendering 192 Slots per tick.
 - *No build step at all* — matches the predecessor's edit-and-push workflow exactly. Rejected
   because it forecloses an npm test runner, and the per-AC suite is a constitutional hard gate.
 
@@ -118,7 +118,7 @@ such. The real requirement is that a musician with common CVD can tell the three
 which a deuteranopia- and protanopia-safe palette satisfies on its own. Constitution v3.0.0 was
 amended accordingly, and FR-012 rescoped in the same change.
 
-Fill height is retained in the design regardless, because at 144 Slots on a phone a height
+Fill height is retained in the design regardless, because at 192 Slots on a phone a height
 difference is faster to scan than a hue difference for *any* user. It is now a revisable design
 decision rather than a constraint.
 
@@ -137,11 +137,17 @@ protanopia, and tritanopia and asserts a minimum perceptual distance between all
 **Decision**: One Measure per row, stacked vertically, read down the page. Minimum Slot width
 24 CSS px. Playback auto-scrolls the sounding Measure into view.
 
-**Rationale**: The worst case is 144 Slots on a 390 px viewport. Fitting that on one line means
+**Rationale**: The worst case is 192 Slots on a 390 px viewport. Fitting that on one line means
 Slots under 3 mm — below a reliable tap target and too small for any accent indicator to read.
 Per-Measure rows keep Slots finger-sized, eliminate horizontal scrolling entirely, and make the
 Measure boundary structurally obvious rather than a drawn line. Reading down the page also matches
 how the app is actually used: a phone propped on a music stand (SC-007).
+
+*(Figures updated 2026-08-17: the worst case was 144 Slots when the Measure cap was 6. Raising the
+cap to 8 (AC-1.1.3) made it 192. The decision is unchanged and the reasoning is strengthened, not
+contradicted — a denser worst case makes per-Measure rows more necessary, not less, since the
+per-row Slot count is fixed by the Time Signature and does not move with the cap. What does move is
+the page's total length, which is why AC-15.1.11's auto-scroll carries more weight now than it did.)*
 
 **Alternatives considered**:
 - *Horizontal scroll inside the grid region* — what AC-15.1.10 originally specified. Preserves the

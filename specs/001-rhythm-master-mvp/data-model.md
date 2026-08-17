@@ -32,7 +32,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `key` | Present iff `soundMode === "melodic"`. One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
 | `tempo` | Clamped 18–220 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
-| `measures` | 1–6 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
+| `measures` | 1–8 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
 **Not on the Pattern**, deliberately:
 
@@ -305,7 +305,7 @@ downgraded and corrupted.
 
 Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 
-1. `measures.length` between 1 and 6.
+1. `measures.length` between 1 and 8.
 2. Each Measure's `beats.length` equals its Time Signature numerator.
 3. Each Beat's `recipe` is in the catalogue for its Beat note value.
 4. Each Beat's `slots.length` equals its resolved Slot count.

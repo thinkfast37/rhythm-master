@@ -525,27 +525,25 @@ test('AC-7.4.6 — Make Copy is unavailable on a shipped Pattern', async ({ page
 
 // --- US-8.1 / US-10.1: append and duplicate --------------------------------
 
-test('AC-8.1.3 — appending to exactly six Measures succeeds', async ({ page }) => {
+test('AC-8.1.3 — Combining to exactly 8 Measures succeeds', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Three Bars');
   for (let i = 0; i < 2; i++) await page.locator('[data-action="add-measure"]').click();
   await expect(page.locator('.measure')).toHaveCount(3);
 
-  // Build a 3-Measure Pattern to append.
+  // Build a 5-Measure Pattern to append — 3 + 5 lands exactly on the cap.
   await page.evaluate(() => {
     const base = window.__rm.getState().pattern;
-    window.__rm.patternStore.upsert({
-      ...structuredClone(base),
-      id: 'p_three',
-      name: 'Another Three',
-    });
+    const five = structuredClone(base);
+    five.measures = [...five.measures, ...structuredClone(base.measures.slice(0, 2))];
+    window.__rm.patternStore.upsert({ ...five, id: 'p_five', name: 'Another Five' });
   });
 
   await page.locator('[data-action="append-pattern"]').click();
-  await page.locator('.dialog-button', { hasText: 'Another Three' }).click();
+  await page.locator('.dialog-button', { hasText: 'Another Five' }).click();
 
-  // The cap is "cannot exceed 6", not "must stay under 6".
-  await expect(page.locator('.measure')).toHaveCount(6);
+  // The cap is "cannot exceed 8", not "must stay under 8".
+  await expect(page.locator('.measure')).toHaveCount(8);
 });
 
 test('AC-8.1.4 — appending into an owned Pattern auto-saves with no save step', async ({ page }) => {
@@ -575,9 +573,9 @@ test('AC-8.1.5 — appending into a shipped Pattern triggers the naming prompt f
 test('AC-8.1.6 — the append picker re-filters to what still fits', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Growing');
-  // Grow to 5 Measures: only 1-Measure Patterns can still be appended.
-  for (let i = 0; i < 4; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(5);
+  // Grow to 7 Measures: only 1-Measure Patterns can still be appended.
+  for (let i = 0; i < 6; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(7);
 
   await page.locator('[data-action="append-pattern"]').click();
   const offered = await page.locator('.dialog-actions .dialog-button').allTextContents();
@@ -596,23 +594,21 @@ test('AC-8.1.6 — the append picker re-filters to what still fits', async ({ pa
   for (const size of sizes) expect(size).toBe(1);
 });
 
-test('AC-10.1.3 — Duplicate is enabled at three Measures, since doubling reaches exactly six', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await makeOwned(page, 'Three');
-  for (let i = 0; i < 2; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(3);
-  await expect(page.locator('[data-action="duplicate-pattern"]')).toBeEnabled();
-});
-
-test('AC-10.1.4 — Duplicate is disabled at four Measures, since doubling would exceed the cap', async ({
-  page,
-}) => {
+test('AC-10.1.3 — Duplicate is enabled within the 8-Measure cap', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Four');
   for (let i = 0; i < 3; i++) await page.locator('[data-action="add-measure"]').click();
   await expect(page.locator('.measure')).toHaveCount(4);
+  // Doubling reaches exactly 8 — the boundary the cap admits.
+  await expect(page.locator('[data-action="duplicate-pattern"]')).toBeEnabled();
+});
+
+test('AC-10.1.4 — Duplicate is disabled when doubling would exceed the cap', async ({ page }) => {
+  await page.goto('/');
+  await makeOwned(page, 'Five');
+  for (let i = 0; i < 4; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(5);
+  // Doubling would reach 10 — five is the smallest size still refused.
   await expect(page.locator('[data-action="duplicate-pattern"]')).toBeDisabled();
 });
 
