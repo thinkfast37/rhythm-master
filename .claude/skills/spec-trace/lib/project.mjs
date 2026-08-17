@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 import { readSpec, readPlan, readTasks, readSuite } from './parse.mjs';
 import { analyse, findingKey } from './analyse.mjs';
-import { buildRows, renderMaster } from './matrix.mjs';
+import { buildRows, renderMaster, statusOf, WAIVABLE } from './matrix.mjs';
 
 /** Read every artefact and run every check. */
 export function run(config) {
@@ -40,9 +40,50 @@ export function writeBaseline(config, accepted, generated) {
 }
 
 /** The master matrix text, and the rows it was built from. */
-export function masterMatrix(state, config, baseline) {
-  const rows = buildRows({ ...state, baseline, keyOf: findingKey });
+export function masterMatrix(state, config, baseline, waivers = new Map()) {
+  const rows = buildRows({ ...state, baseline, keyOf: findingKey, waivers });
   return { rows, text: renderMaster(rows, { generatedFor: config.spec }) };
+}
+
+/** A reason has to actually say something; a word or two is a rubber stamp. */
+const MIN_REASON = 20;
+
+/**
+ * T9 — every waiver is valid, reasoned, and still needed.
+ *
+ * The waiver file is the one place where a gap can be signed off rather than fixed, so it
+ * is the place most worth policing. Four ways it goes wrong, all build-failing:
+ *
+ *   - it names a criterion the spec does not declare (a rename left it behind);
+ *   - it carries no real reason, which makes it a rubber stamp;
+ *   - the gap it covers is gone, so the waiver now silently excuses nothing — or worse,
+ *     would excuse some future gap on the same criterion;
+ *   - it covers a CRITICAL or HIGH gap, which no reason clears. Those are the states that
+ *     let US-2.2 and US-11.1/11.2 report as complete while unbuilt (Principle IV).
+ */
+export function checkWaivers(state, waivers, baseline) {
+  const byId = new Map(state.criteria.map((c) => [c.id, c]));
+  for (const [id, waiver] of waivers) {
+    if (!byId.has(id)) {
+      state.findings.T9.push({ id, why: 'waives a criterion the spec does not declare' });
+      continue;
+    }
+    if (!waiver.reason || waiver.reason.trim().length < MIN_REASON) {
+      state.findings.T9.push({ id, why: 'waives a gap without saying why' });
+      continue;
+    }
+    const status = statusOf(id, state.findings, baseline, findingKey, new Map());
+    if (status.mark === 'OK') {
+      state.findings.T9.push({ id, why: 'waives a gap that no longer exists — remove it' });
+      continue;
+    }
+    if (!WAIVABLE.has(status.severity)) {
+      state.findings.T9.push({
+        id,
+        why: `waives a ${status.severity} gap (${status.mark}), which no reason clears`,
+      });
+    }
+  }
 }
 
 /**
@@ -75,15 +116,11 @@ export function checkMatrixFreshness(state, config, matrixText) {
  */
 export function criteriaTouchedBy(changedFiles, state) {
   const { criteria, tasks, plan, testsFor, acToPlan } = state;
-  const touched = new Set();
+  /** @type {Map<string, 'direct'|'indirect'>} */
+  const touched = new Map();
   const changed = new Set(changedFiles);
 
-  for (const c of criteria) {
-    for (const t of testsFor.get(c.id) ?? []) {
-      if (changed.has(t.file)) touched.add(c.id);
-    }
-  }
-
+  // Indirect first, so a criterion reached both ways ends up marked direct.
   const touchedTasks = new Set();
   for (const [tid, task] of tasks) {
     if (task.files.some((f) => changed.has(f))) touchedTasks.add(tid);
@@ -93,10 +130,36 @@ export function criteriaTouchedBy(changedFiles, state) {
     if ([...item.impl, ...item.test].some((t) => touchedTasks.has(t))) touchedPlanItems.add(pid);
   }
   for (const c of criteria) {
-    if ((acToPlan.get(c.parent) ?? []).some((p) => touchedPlanItems.has(p))) touched.add(c.id);
+    if ((acToPlan.get(c.parent) ?? []).some((p) => touchedPlanItems.has(p))) {
+      touched.set(c.id, 'indirect');
+    }
+  }
+
+  // Direct: a test naming this criterion is in the diff. Much the stronger signal — the
+  // proof of this specific criterion changed, rather than some file a task happens to
+  // mention. In a codebase with a composition root the indirect set is most of the app,
+  // so collapsing the two into one list buries the rows a reviewer actually needs.
+  for (const c of criteria) {
+    for (const t of testsFor.get(c.id) ?? []) {
+      if (changed.has(t.file)) touched.set(c.id, 'direct');
+    }
   }
 
   return touched;
+}
+
+/**
+ * Gaps deliberately left open, keyed by criterion.
+ *
+ * A waiver is not the baseline. The baseline is debt still owed and expected to shrink;
+ * a waiver is a decision that a gap will not be closed, and it has to carry the reason
+ * so the decision is reviewable rather than merely recorded.
+ */
+export function readWaivers(config) {
+  const file = join(config.root, config.waivers);
+  if (!existsSync(file)) return new Map();
+  const parsed = JSON.parse(readFileSync(file, 'utf8'));
+  return new Map((parsed.waived ?? []).map((w) => [w.criterion, w]));
 }
 
 /** Every finding's baseline key, for comparing against the accepted list. */

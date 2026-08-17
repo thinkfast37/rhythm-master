@@ -20,6 +20,14 @@ export const DEFAULTS = {
   matrix: 'specs/traceability-matrix.md',
   /** Findings accepted as pre-existing debt. May only shrink. */
   baseline: 'specs/traceability-baseline.json',
+  /**
+   * Gaps deliberately not being closed, each with a written reason.
+   *
+   * Different in kind from the baseline: the baseline is debt still owed, a waiver is a
+   * decision not to pay it. Kept in its own file so the two are never confused, and so a
+   * waiver has to be written by hand and argued for in review.
+   */
+  waivers: 'specs/traceability-waivers.json',
 
   /** Directories scanned for tests. */
   testDirs: ['tests/unit', 'tests/e2e'],

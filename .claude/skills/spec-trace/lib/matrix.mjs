@@ -1,47 +1,90 @@
 /**
  * Rendering the traceability matrix.
  *
- * Two shapes, one function underneath:
+ * Two shapes, one row-builder underneath:
  *
  *   - the MASTER matrix, one row per criterion across the whole application, written to
  *     a committed file so it diffs in review like anything else;
- *   - a CHANGE matrix, the same rows filtered to what a given change actually touches,
- *     for the pull request body.
+ *   - a CHANGE matrix, the same rows filtered to what a given change touches, for the
+ *     pull request body.
  *
  * The matrix is generated, never hand-edited. The authored decisions live in the plan's
  * own Traceability Matrix (which AC belongs to which plan item, and which tasks build and
  * prove it); this file is that expanded, cross-referenced against the suite, and marked
  * with what is actually true right now.
+ *
+ * It reports COVERAGE as well as gaps. A list of only what is wrong cannot answer "is
+ * this good enough to ship" — that needs the proportion proven, and it needs the gaps
+ * ranked, because a test that proves the wrong thing and a test with an untidy name are
+ * not the same problem and should never be summed into one number.
  */
 
+/**
+ * How serious a gap is, derived from its kind rather than assigned per criterion.
+ *
+ * The ladder is the one the audit produced. MISNAMED never hid anything: the test runs
+ * and proves the criterion, it is just labelled in its own words. WRONG TEST hid two
+ * entire User Stories. NO TEST is the state a criterion is in when nobody has looked.
+ */
+export const SEVERITY_OF = {
+  'NO TEST': 'CRITICAL',
+  'WRONG TEST': 'HIGH',
+  'NOT PROVABLE': 'HIGH',
+  'NEEDS CASES': 'MEDIUM',
+  'MISNAMED': 'LOW',
+};
+
+export const SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+
+/** Severities a waiver may cover. CRITICAL and HIGH are the states that hide unbuilt work. */
+export const WAIVABLE = new Set(['LOW', 'MEDIUM']);
+
 /** Status of one criterion, worst-first so a row's mark is its most serious problem. */
-export function statusOf(id, findings, baseline, keyOf) {
+export function statusOf(id, findings, baseline, keyOf, waivers = new Map()) {
   const hit = (check) => findings[check].find((f) => f.id === id);
 
+  let mark = null;
+  let note = '';
+  let key = null;
+
   const t5 = hit('T5');
-  if (t5) {
-    const accepted = baseline.has(keyOf('T5', t5));
-    if (t5.kind === 'untested') return { mark: 'NO TEST', accepted, note: 'no test names this criterion' };
-    if (t5.kind === 'mismatched') {
-      return { mark: 'WRONG TEST', accepted, note: 'the test named for it proves something else' };
-    }
-  }
   const t6 = hit('T6');
-  if (t6) {
-    return {
-      mark: 'NOT PROVABLE',
-      accepted: baseline.has(keyOf('T6', t6)),
-      note: 'UI-level, but only a pure unit test',
-    };
-  }
   const t4 = hit('T4');
-  if (t4) {
-    return { mark: 'NEEDS CASES', accepted: baseline.has(keyOf('T4', t4)), note: t4.why };
+
+  if (t5 && t5.kind === 'untested') {
+    mark = 'NO TEST';
+    note = 'no test names this criterion';
+    key = keyOf('T5', t5);
+  } else if (t5 && t5.kind === 'mismatched') {
+    mark = 'WRONG TEST';
+    note = 'the test named for it proves something else';
+    key = keyOf('T5', t5);
+  } else if (t6) {
+    mark = 'NOT PROVABLE';
+    note = 'UI-level, but only a pure unit test';
+    key = keyOf('T6', t6);
+  } else if (t4) {
+    mark = 'NEEDS CASES';
+    note = t4.why;
+    key = keyOf('T4', t4);
+  } else if (t5) {
+    mark = 'MISNAMED';
+    note = 'test name is a paraphrase, not the criterion';
+    key = keyOf('T5', t5);
   }
-  if (t5) {
-    return { mark: 'MISNAMED', accepted: baseline.has(keyOf('T5', t5)), note: 'test name is a paraphrase' };
-  }
-  return { mark: 'OK', accepted: false, note: '' };
+
+  if (mark === null) return { mark: 'OK', severity: null, accepted: false, waived: false, note: '' };
+
+  const severity = SEVERITY_OF[mark];
+  const waiver = waivers.get(id);
+  return {
+    mark,
+    severity,
+    accepted: baseline.has(key),
+    waived: Boolean(waiver) && WAIVABLE.has(severity),
+    reason: waiver?.reason ?? '',
+    note,
+  };
 }
 
 const escapeCell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
@@ -50,7 +93,18 @@ const escapeCell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, '
  * Build every row of the matrix.
  * @returns {Array<object>} one row per criterion, in spec order.
  */
-export function buildRows({ criteria, acs, plan, tasks, testsFor, acToPlan, findings, baseline, keyOf }) {
+export function buildRows({
+  criteria,
+  acs,
+  plan,
+  tasks,
+  testsFor,
+  acToPlan,
+  findings,
+  baseline,
+  keyOf,
+  waivers = new Map(),
+}) {
   return criteria.map((c) => {
     const planIds = acToPlan.get(c.parent) ?? [];
     const impl = [];
@@ -62,7 +116,7 @@ export function buildRows({ criteria, acs, plan, tasks, testsFor, acToPlan, find
       test.push(...item.test);
     }
     const tests = testsFor.get(c.id) ?? [];
-    const status = statusOf(c.id, findings, baseline, keyOf);
+    const status = statusOf(c.id, findings, baseline, keyOf, waivers);
     return {
       story: c.story,
       id: c.id,
@@ -70,7 +124,6 @@ export function buildRows({ criteria, acs, plan, tasks, testsFor, acToPlan, find
       isCase: c.id.includes('/'),
       ui: c.ui,
       plan: planIds,
-      planTitles: planIds.map((p) => plan.get(p)?.title ?? ''),
       impl: [...new Set(impl)],
       test: [...new Set(test)],
       implDone: [...new Set(impl)].filter((t) => tasks.get(t)?.done).length,
@@ -80,6 +133,67 @@ export function buildRows({ criteria, acs, plan, tasks, testsFor, acToPlan, find
       acTitle: acs.get(c.parent)?.title ?? '',
     };
   });
+}
+
+/** A criterion counts as covered when it is proven, or when a gap has been argued away. */
+const isCovered = (r) => r.status.mark === 'OK' || r.status.waived;
+
+function tally(rows) {
+  const counts = { OK: 0, WAIVED: 0, CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+  for (const r of rows) {
+    if (r.status.mark === 'OK') counts.OK++;
+    else if (r.status.waived) counts.WAIVED++;
+    else counts[r.status.severity]++;
+  }
+  return counts;
+}
+
+const pct = (n, total) => (total === 0 ? '100.0' : ((n / total) * 100).toFixed(1));
+
+/** Coverage and gap severity, headline figures. */
+function renderCoverage(rows) {
+  const t = tally(rows);
+  const covered = rows.filter(isCovered).length;
+  const proven = t.OK;
+
+  const lines = [
+    `**Coverage**: ${proven} of ${rows.length} criteria proven (${pct(proven, rows.length)}%)` +
+      (t.WAIVED ? `, plus ${t.WAIVED} waived — ${pct(covered, rows.length)}% accounted for` : ''),
+    '',
+    '| | Criteria | Share |',
+    '|---|---|---|',
+    `| Proven | ${t.OK} | ${pct(t.OK, rows.length)}% |`,
+  ];
+  if (t.WAIVED) lines.push(`| Waived, with a reason | ${t.WAIVED} | ${pct(t.WAIVED, rows.length)}% |`);
+  for (const sev of SEVERITY_ORDER) {
+    if (t[sev]) lines.push(`| Gap — ${sev} | ${t[sev]} | ${pct(t[sev], rows.length)}% |`);
+  }
+  return lines.join('\n');
+}
+
+/** Coverage per User Story, so a weak area is visible without reading 220 rows. */
+function renderByStory(rows) {
+  const stories = new Map();
+  for (const r of rows) {
+    if (!stories.has(r.story)) stories.set(r.story, []);
+    stories.get(r.story).push(r);
+  }
+
+  const out = [
+    '| User Story | Criteria | Proven | Waived | CRITICAL | HIGH | MEDIUM | LOW |',
+    '|---|---|---|---|---|---|---|---|',
+  ];
+  for (const [story, group] of stories) {
+    const t = tally(group);
+    const cell = (n) => (n === 0 ? '·' : String(n));
+    // A Story with no unproven criteria is worth seeing at a glance, not just counted.
+    const proven = t.OK === group.length ? `**${t.OK}**` : String(t.OK);
+    out.push(
+      `| ${story} | ${group.length} | ${proven} | ${cell(t.WAIVED)} | ${cell(t.CRITICAL)} | ` +
+        `${cell(t.HIGH)} | ${cell(t.MEDIUM)} | ${cell(t.LOW)} |`
+    );
+  }
+  return out.join('\n');
 }
 
 function renderTable(rows) {
@@ -93,8 +207,13 @@ function renderTable(rows) {
     const testCell =
       r.tests.length === 0
         ? '**none**'
-        : r.tests.map((t) => `\`${t.file.split('/').pop()}\``).join(', ');
-    const mark = r.status.mark === 'OK' ? 'OK' : `**${r.status.mark}**${r.status.accepted ? ' ᵃ' : ''}`;
+        : [...new Set(r.tests.map((t) => `\`${t.file.split('/').pop()}\``))].join(', ');
+
+    let mark;
+    if (r.status.mark === 'OK') mark = 'OK';
+    else if (r.status.waived) mark = `WAIVED (${r.status.mark}) — ${escapeCell(r.status.reason)}`;
+    else mark = `**${r.status.severity}** · ${r.status.mark}${r.status.accepted ? ' ᵃ' : ''}`;
+
     out.push(
       `| ${r.story} | \`${r.id}\`${r.ui ? ' 🖵' : ''} | ${escapeCell(r.title)} | ` +
         `${r.plan.join(', ') || '**none**'} | ${taskCell(r.impl, r.implDone)} | ` +
@@ -104,17 +223,10 @@ function renderTable(rows) {
   return out.join('\n');
 }
 
-function summarise(rows) {
-  const counts = {};
-  for (const r of rows) counts[r.status.mark] = (counts[r.status.mark] ?? 0) + 1;
-  const order = ['OK', 'MISNAMED', 'NEEDS CASES', 'NOT PROVABLE', 'WRONG TEST', 'NO TEST'];
-  return order.filter((k) => counts[k]).map((k) => `${k}: ${counts[k]}`);
-}
-
 /** The master matrix — the whole application, written to a committed file. */
 export function renderMaster(rows, { generatedFor }) {
-  const stories = [...new Set(rows.map((r) => r.story))];
-  const accepted = rows.filter((r) => r.status.accepted).length;
+  const t = tally(rows);
+  const accepted = rows.filter((r) => r.status.accepted && !r.status.waived).length;
 
   return `# Traceability Matrix
 
@@ -132,50 +244,101 @@ export function renderMaster(rows, { generatedFor }) {
 -->
 
 **Feature**: ${generatedFor}
-**Criteria**: ${rows.length} across ${stories.length} User Stories
-**Status**: ${summarise(rows).join(' · ')}
+**Criteria**: ${rows.length} across ${new Set(rows.map((r) => r.story)).size} User Stories
+
+${renderCoverage(rows)}
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
 does, which cannot be proved by a test with no document to look at.
 
-**Status marks**, worst first:
+## How a gap is ranked
 
-| Mark | Meaning |
-|---|---|
-| **NO TEST** | Nothing in the suite names this criterion. |
-| **WRONG TEST** | A test names it, but proves something else. Treat as unbuilt. |
-| **NOT PROVABLE** | UI-level, but every test for it is a pure unit test. |
-| **NEEDS CASES** | The AC asserts several things and has not been decomposed. |
-| **MISNAMED** | The right test, named in its own words rather than the spec's. |
-| OK | Named for its criterion, in the criterion's own words, at the right level. |
+Severity comes from the kind of gap, not from a judgement recorded per criterion, so it
+cannot be talked down when a deadline is close.
 
-ᵃ marks a finding accepted as pre-existing debt (${accepted} rows). It is reported but does
-not fail the build, and it is outstanding work — never a settled decision.
+| Severity | Gap | Why it ranks there |
+|---|---|---|
+| **CRITICAL** | NO TEST — nothing names this criterion | Nobody has looked. This is the state an unbuilt requirement sits in. |
+| **HIGH** | WRONG TEST — a test names it but proves something else | The claim is unproven while reporting as covered. This is what hid US-2.2 and US-11.1/11.2. |
+| **HIGH** | NOT PROVABLE — UI-level, but only a pure unit test | Same failure, arrived at differently: \`core/\` cannot see a screen, whatever the test is named. |
+| **MEDIUM** | NEEDS CASES — a compound AC not decomposed | Partly proven. One test stands in for several claims, so some of them are unchecked. |
+| **LOW** | MISNAMED — right test, named in its own words | Proven. Clerical: the name has drifted from the spec's wording. |
+
+**WAIVED** marks a gap deliberately left open, with its reason shown in the row. Only LOW
+and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
+report as complete, so no reason clears them (Constitution Principle IV).
+
+ᵃ marks a gap accepted as pre-existing debt (${accepted} rows). It is reported but does not
+fail the build, and it is outstanding work — never a settled decision.
+
+## Coverage by User Story
+
+${renderByStory(rows)}
+
+## Every criterion
 
 ${renderTable(rows)}
 `;
 }
 
-/** The change matrix — the same rows, filtered to what one change touches. */
-export function renderChange(rows, { touchedFiles, reason }) {
+/**
+ * The change matrix — the same rows, filtered to what one change touches.
+ *
+ * Split by how the criterion was reached, because those are different claims. A changed
+ * test that names a criterion is near-certain to affect it. A criterion reached only
+ * because the change touched a file some task mentions is a maybe — and in a codebase
+ * with a composition root, that is most of the application. Listing both in one table
+ * produced 167 rows for a change that really touched fourteen, which is not a review aid.
+ */
+export function renderChange(rows, { touchedFiles, reason, reach = new Map() }) {
   if (rows.length === 0) {
     return (
       '### Traceability\n\nNo Acceptance Criteria are touched by this change.\n\n' +
       `_Files considered: ${touchedFiles.length}. ${reason}_\n`
     );
   }
-  return `### Traceability
 
-This change touches **${rows.length}** criteri${rows.length === 1 ? 'on' : 'a'} across ` +
-    `**${[...new Set(rows.map((r) => r.story))].length}** User Stor${
-      new Set(rows.map((r) => r.story)).size === 1 ? 'y' : 'ies'
-    }. Rows are the affected slice of the master matrix.
+  const direct = rows.filter((r) => reach.get(r.id) === 'direct');
+  const indirect = rows.filter((r) => reach.get(r.id) !== 'direct');
 
-**Status**: ${summarise(rows).join(' · ')}
+  const out = ['### Traceability', ''];
 
-${renderTable(rows)}
+  if (direct.length > 0) {
+    const t = tally(direct);
+    out.push(
+      `**${direct.length} criteri${direct.length === 1 ? 'on' : 'a'} directly affected** — ` +
+        `a test naming the criterion changed in this diff.`,
+      '',
+      `Proven: ${t.OK}${t.WAIVED ? ` · Waived: ${t.WAIVED}` : ''}` +
+        SEVERITY_ORDER.filter((s) => t[s]).map((s) => ` · ${s}: ${t[s]}`).join(''),
+      '',
+      renderTable(direct),
+      ''
+    );
+  } else {
+    out.push('No criterion had a test of its own changed in this diff.', '');
+  }
 
-_Derived from ${touchedFiles.length} changed file(s). ${reason}_
-`;
+  if (indirect.length > 0) {
+    const t = tally(indirect);
+    const stories = [...new Set(indirect.map((r) => r.story))];
+    out.push(
+      '<details>',
+      `<summary><strong>${indirect.length} further criteria could be affected</strong> ` +
+        `across ${stories.length} User Stories — reached only because this change touches a ` +
+        'file some task names, so treat as a blast radius rather than a finding.</summary>',
+      '',
+      `Proven: ${t.OK}${t.WAIVED ? ` · Waived: ${t.WAIVED}` : ''}` +
+        SEVERITY_ORDER.filter((s) => t[s]).map((s) => ` · ${s}: ${t[s]}`).join(''),
+      '',
+      `Stories: ${stories.join(', ')}`,
+      '',
+      '</details>',
+      ''
+    );
+  }
+
+  out.push(`_Derived from ${touchedFiles.length} changed file(s). ${reason}_`);
+  return out.join('\n');
 }
