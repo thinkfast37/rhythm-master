@@ -9,8 +9,19 @@ entirely in the browser with no backend.
 
 ## Status
 
-Implemented. All 34 User Stories are built, and all 211 Acceptance Criteria carry at
-least one automated test — `npm run coverage:ac` reports 211/211.
+Substantially implemented, with known gaps.
+
+Every Acceptance Criterion carries at least one automated test naming it
+(`npm run coverage:ac`). That is a weaker statement than it sounds, and this README
+claimed more than it should have until 2026-08-17: a test naming an AC is not
+necessarily a test *of* it. `npm run check:trace` checks the difference and currently
+reports 333 standing findings, including two User Stories that were specified and never
+built — US-11.1's possible-duplicates view and US-11.2's Family panel. See the Post-MVP
+log in `specs/001-rhythm-master-mvp/tasks.md` (T147–T153) for the audit and the
+burn-down.
+
+Counts are not restated here on purpose; `npm run coverage:ac` and
+`npm run check:trace` are the honest sources.
 
 ## Running it
 
@@ -25,6 +36,7 @@ npm run build        # static build into dist/
 | `npm test` | Vitest over the pure core and storage |
 | `npm run test:e2e` | Playwright over the grid, transport, library and responsive behaviour |
 | `npm run coverage:ac` | Every AC in spec.md has a test naming it — fails on any gap |
+| `npm run check:trace` | The AC → plan item → task → test chain, and that each test is named for what it proves |
 | `npm run validate:seed` | The shipped Pattern library against data-model §7 |
 | `npm run check:cvd` | The accent palette under simulated colour vision deficiencies |
 | `npm run lint` | Includes the `core/` purity boundary (Constitution Principle I) |

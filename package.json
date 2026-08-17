@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "coverage:ac": "node tests/ac-coverage.js",
+    "check:trace": "node tools/check-traceability.js",
     "validate:seed": "node tools/validate-seed.js",
     "check:cvd": "node tools/check-cvd.js",
     "lint": "eslint ."
