@@ -168,13 +168,39 @@ body {
  * BLOCK, and its Beats wrap onto as many lines as they need inside it. Beats
  * never split across lines, so the subdivision of a Beat always reads as one
  * unit (AC-15.1.10).
+ *
+ * A grid of equal columns, not a wrapping flexbox (AC-15.1.14). A flexbox grows
+ * whatever landed on a line to fill that line, which at 390px gave a 4/4 Measure
+ * three Beats of 110px and then one of 341 — four equal durations at four very
+ * unequal sizes. Equal tracks make a Beat's width its duration's width, and the
+ * differing Slot counts sit inside them instead.
+ *
+ * `minmax(min-content, 1fr)` is what keeps that safe: the tracks share the width
+ * evenly, but no track can be driven below what its Slots need at the 24px
+ * minimum, so an over-ambitious column count cannot scroll the grid sideways
+ * (AC-15.1.10, AC-15.1.14/2).
+ *
+ * `--beat-cols` is set by `ui/beat-layout.js` — the one part of this CSS cannot
+ * express, since it depends on the measured minimum and so on the reader's font.
+ * The fallback is `--beat-count`: every Beat on one line, written by `renderGrid`
+ * from the Pattern alone, and the right answer at every width a Measure fits.
  */
 .beats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(var(--beat-cols, var(--beat-count, 1)), minmax(min-content, 1fr));
   flex: 1 1 auto;
-  flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
+}
+
+/*
+ * The probe state `beat-layout.js` reads the minimum through: one min-content
+ * column, so every Beat lays out at the widest minimum in its Measure and a
+ * single `getBoundingClientRect` answers for the whole Measure. Held for one
+ * synchronous read between two writes, so it is never painted.
+ */
+.beats.measuring {
+  grid-template-columns: min-content;
 }
 
 /*

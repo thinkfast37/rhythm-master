@@ -84,6 +84,11 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
 
   const beats = document.createElement('div');
   beats.className = 'beats';
+  // Every Beat on one line is the layout until something measures otherwise —
+  // the right answer at any width the Measure fits, and derived from the Pattern
+  // alone, so render stays pure. `ui/beat-layout.js` narrows it to a balanced
+  // column count where they do not fit (AC-15.1.14).
+  beats.style.setProperty('--beat-count', String(measure.beats.length));
   const noteValue = beatNoteValue(measure.timeSignature);
 
   measure.beats.forEach((beat, beatIndex) => {

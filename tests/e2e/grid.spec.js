@@ -351,6 +351,223 @@ test('AC-15.1.1 — the layout adapts across desktop, tablet, and phone', async 
   }
 });
 
+/* --- AC-15.1.14: the widths a wrapped Measure comes out at ----------------- */
+
+/**
+ * A 4/4 Measure of Straight 16ths — the reported case. Sixteen Slots is more
+ * than a 390px phone fits on one line, so this is the Pattern that wraps.
+ */
+const FOUR_FOUR = {
+  id: 'p_wrap',
+  name: 'Wrapping',
+  soundMode: 'percussive',
+  tempo: 80,
+  tags: [],
+  rating: 0,
+  measures: [
+    {
+      timeSignature: '4/4',
+      beats: Array.from({ length: 4 }, () => ({
+        recipe: 'straight-16ths',
+        slots: [{ on: true }, { on: false }, { on: false }, { on: false }],
+      })),
+    },
+  ],
+};
+
+/** The AC-15.1.10 worst case: 8 Measures of 12/8 at Straight 16ths, 192 Slots. */
+const DENSEST = {
+  id: 'p_densest',
+  name: 'Densest',
+  soundMode: 'percussive',
+  tempo: 80,
+  tags: [],
+  rating: 0,
+  measures: Array.from({ length: 8 }, () => ({
+    timeSignature: '12/8',
+    beats: Array.from({ length: 12 }, () => ({
+      recipe: 'straight-16ths',
+      slots: [{ on: true }, { on: false }],
+    })),
+  })),
+};
+
+/**
+ * How far apart the widest and narrowest Beat are.
+ *
+ * Not exact equality: `1fr` tracks divide a fractional container width, so 12
+ * Beats across 802px come out 61.328px and 61.344px. A sixtieth of a pixel is
+ * the same width; anything a musician could see is a whole one.
+ */
+const spread = (widths) => Math.max(...widths) - Math.min(...widths);
+
+/** Beat geometry for one Measure: widths, and the lines they fall on. */
+async function beatLayout(page, measureIndex = 0) {
+  return page.evaluate((index) => {
+    const measure = document.querySelectorAll('.measure')[index];
+    const beats = [...measure.querySelectorAll('.beat')].map((b) => {
+      const r = b.getBoundingClientRect();
+      return { width: Math.round(r.width * 100) / 100, top: Math.round(r.top) };
+    });
+    const beatsEl = measure.querySelector('.beats');
+    const lines = new Map();
+    for (const b of beats) lines.set(b.top, (lines.get(b.top) ?? 0) + 1);
+    return {
+      widths: beats.map((b) => b.width),
+      perLine: [...lines.entries()].sort((a, b) => a[0] - b[0]).map(([, n]) => n),
+      // The container's own overflow, which `overflow-x: hidden` further up
+      // would otherwise CLIP rather than scroll — a silent way to lose Beats.
+      beatsOverflow: beatsEl.scrollWidth - beatsEl.clientWidth,
+    };
+  }, measureIndex);
+}
+
+test('AC-15.1.14/1 — Every Beat in a Measure is the same width as every other Beat in it, on its own line and across lines', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
+
+  const wrapped = await beatLayout(page);
+  expect(wrapped.perLine.length).toBeGreaterThan(1); // it does wrap at 390px
+  expect(spread(wrapped.widths)).toBeLessThan(1);
+
+  // And the shared width holds when the Beats are subdivided differently: a
+  // 2-Slot Beat and a 4-Slot Beat sound the same duration, so they are the same
+  // width and it is their Slots that differ.
+  await page.evaluate(() => {
+    const four = { recipe: 'straight-16ths', slots: [{ on: true }, {}, {}, {}] };
+    const two = { recipe: 'straight-8ths', slots: [{ on: true }, {}] };
+    window.__rm.loadPattern(
+      {
+        id: 'p_mixed',
+        name: 'Mixed',
+        soundMode: 'percussive',
+        tempo: 80,
+        tags: [],
+        rating: 0,
+        measures: [
+          {
+            timeSignature: '4/4',
+            beats: [
+              structuredClone(four),
+              structuredClone(two),
+              structuredClone(four),
+              structuredClone(two),
+            ],
+          },
+        ],
+      },
+      { owned: true }
+    );
+  });
+
+  const mixed = await beatLayout(page);
+  expect(spread(mixed.widths)).toBeLessThan(1);
+
+  // The Slots are what absorb the difference: a 2-Slot Beat's Slots are wider.
+  const slotWidths = await page.evaluate(() =>
+    [...document.querySelectorAll('.measure .beat')].map((beat) =>
+      Math.round(beat.querySelector('.slot').getBoundingClientRect().width)
+    )
+  );
+  expect(slotWidths[1]).toBeGreaterThan(slotWidths[0]);
+});
+
+test('AC-15.1.14/2 — No Beat is narrower than its own Slots need at the 24px minimum, so the grid still never scrolls sideways', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
+  await expect(page.locator('.slot')).toHaveCount(192);
+
+  const widths = await page
+    .locator('.slot')
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+  expect(Math.min(...widths)).toBeGreaterThanOrEqual(24);
+
+  const overflow = await page.evaluate(() => ({
+    body: document.body.scrollWidth - document.body.clientWidth,
+    grid: (() => {
+      const g = document.querySelector('.grid');
+      return g.scrollWidth - g.clientWidth;
+    })(),
+    // Every Measure's Beat container, since a clipped one reports no page
+    // overflow at all while hiding half the Measure.
+    beats: Math.max(
+      ...[...document.querySelectorAll('.beats')].map((b) => b.scrollWidth - b.clientWidth)
+    ),
+  }));
+  expect(overflow.body).toBeLessThanOrEqual(0);
+  expect(overflow.grid).toBeLessThanOrEqual(0);
+  expect(overflow.beats).toBeLessThanOrEqual(0);
+});
+
+test('AC-15.1.14/3 — Beats divide evenly between lines: four Beats where three fit lay out two and two, never three and one', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
+
+  const { perLine, widths, beatsOverflow } = await beatLayout(page);
+  expect(perLine).toEqual([2, 2]);
+  expect(spread(widths)).toBeLessThan(1);
+  expect(beatsOverflow).toBeLessThanOrEqual(0);
+
+  // Twelve Beats at the same width divide three ways, not five-five-two.
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
+  const dense = await beatLayout(page);
+  expect(new Set(dense.perLine).size).toBe(1); // every line equally full
+  expect(dense.perLine.length).toBeGreaterThan(1);
+  expect(dense.perLine.reduce((a, b) => a + b, 0)).toBe(12);
+});
+
+test('AC-15.1.14/4 — Where every Beat fits one line, they occupy that one line and still share the width', async ({
+  page,
+}) => {
+  for (const width of [1400, 900]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
+
+    const { perLine, widths } = await beatLayout(page);
+    expect(perLine, `${width}px`).toEqual([4]);
+    expect(spread(widths), `${width}px`).toBeLessThan(1);
+  }
+});
+
+test('AC-15.1.14/5 — The layout re-balances when the width available to the grid changes', async ({
+  page,
+}) => {
+  // Laid out for a desktop, then carried to a phone.
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
+  expect((await beatLayout(page)).perLine).toEqual([4]);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(async () => (await beatLayout(page)).perLine.join(',')).toBe('2,2');
+  expect((await beatLayout(page)).beatsOverflow).toBeLessThanOrEqual(0);
+
+  // And back, so the balance is not a one-way trip.
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await expect.poll(async () => (await beatLayout(page)).perLine.join(',')).toBe('4');
+
+  // The library taking or giving back its column changes the grid's width
+  // without resizing the window at all.
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
+  const collapsed = await beatLayout(page);
+  await page.locator('.library-toggle').click();
+  await expect.poll(async () => (await beatLayout(page)).beatsOverflow).toBeLessThanOrEqual(0);
+
+  const reopened = await beatLayout(page);
+  expect(reopened.widths[0]).not.toBe(collapsed.widths[0]);
+  expect(spread(reopened.widths)).toBeLessThan(1);
+});
+
 /* --- a silent Slot recedes (AC-3.1.17) ------------------------------------ */
 
 /** A 4/4 Measure on Straight 16ths with Slot 1 of Beat 1 sounding and the rest off. */
