@@ -829,3 +829,17 @@ record is complete rather than starting mid-stream.
   Measured against a warm preview server, three runs each: 15.7s on the flexbox this replaced, 16.3s with the uncached version, 6.0s with the cache. The fixed-column grid turns out to be cheaper to lay out than a wrapping flexbox of 192 min-content items, once nothing forces a read mid-render.
 
   No AC changed: AC-15.1.14 says what the layout must be, not how often it may be computed (§2a, fixed as a bug).
+
+- [X] T172 **[bug]** A four-Measure Pattern fell into the oversized-bulk fallback, because the submitted JSON was pretty-printed — `src/export/submit.js`, `tests/unit/export/export.test.js`, `tests/e2e/submission.spec.js`. Implements P-035, AC-13.1.1, AC-13.1.3.
+
+  Reported: "i tried it with a four bar measure i have and it says it's too large to pre-fill? why? is this some limit you imposed or some technical constraint?"
+
+  Both, and the limit was not the problem. `MAX_URL_LENGTH` is 8,000 against GitHub's ~8,192-character request-URI cap (AC-13.1.3) — a real constraint, not an invented one. But T169 serialized the payload with `JSON.stringify(shape, null, 2)`, and indentation that is nearly free in a file is ruinous in a URL: every newline and space costs three characters once percent-encoded, and each Slot is its own object. The reported Pattern is **1,657 characters of music, 5,353 pretty-printed, and 14,281 encoded** — so the formatting, not the Pattern, spent the budget.
+
+  Compact now. The same Pattern is 3,193 characters of URL, and every 4/4 Pattern fits at the full 8-Measure cap.
+
+  **This was a bug against AC-13.1.1, not a case for AC-13.1.3.** AC-13.1.1 puts no size caveat on submitting a single Pattern; the caveat is AC-13.1.3's and its Given is explicitly *a bulk submission*. An ordinary single Pattern reaching the fallback is the code failing AC-13.1.1, so it was fixed in the code with no spec change (§2, §2a).
+
+  **The fallback still fires at the extreme end, and that is genuine.** 8 Measures of 12/8 at Straight 16ths is 192 Slots — 6,515 characters compact, 11,867 encoded — and the same Pattern in Melodic mode with every Slot pitched is 16,507 compact, 29,167 encoded. No formatting choice fits 29KB into an 8KB URL; that is what AC-13.1.3's clipboard path exists for. Measured breakpoints, single Pattern: **4/4 at any Recipe, all 8 Measures**; 12/8 Straight 16ths, **5 Measures**; Melodic 4/4 Straight 16ths with every Slot sounding, **4 Measures**.
+
+  A claim made to the maintainer mid-report — that no Pattern the app can represent would exceed the limit once compacted — was wrong, and is corrected above. It came from measuring 8 Measures of 4/4 (128 Slots) rather than the densest Pattern the app supports (192).
