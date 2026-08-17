@@ -126,16 +126,25 @@ test('FR-012 — accent carries a size channel as well as a colour', async ({ pa
 
 test('AC-5.6.4 — the grid labels Slots in the selected counting system', async ({ page }) => {
   await page.goto('/');
+  // Read the generated syllable, which every Slot carries whether or not it
+  // sounds. A silent Slot displays a dot in its place (AC-3.1.17/1), and what
+  // this AC is about is which vocabulary the labels come from.
   const first = page.locator('.beat[data-recipe="straight-16ths"] .slot-label');
   if ((await first.count()) >= 4) {
-    await expect(first.nth(0)).toHaveText('ta');
-    await expect(first.nth(1)).toHaveText('ka');
+    await expect(first.nth(0)).toHaveAttribute('data-syllable', 'ta');
+    await expect(first.nth(1)).toHaveAttribute('data-syllable', 'ka');
   }
 
   await page.locator('.counting-picker').selectOption('one-e-and-a');
   const relabelled = page.locator('.beat[data-recipe="straight-16ths"] .slot-label');
-  await expect(relabelled.nth(0)).toHaveText('1');
-  await expect(relabelled.nth(1)).toHaveText('e');
+  await expect(relabelled.nth(0)).toHaveAttribute('data-syllable', '1');
+  await expect(relabelled.nth(1)).toHaveAttribute('data-syllable', 'e');
+
+  // And a Slot that sounds shows that syllable rather than the dot.
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 0, 0); });
+  const sounding = page.locator('.slot[data-beat="0"][data-slot="0"] .slot-label');
+  await expect(sounding).toHaveText('1');
 });
 
 test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number", async ({ page }) => {
@@ -145,7 +154,7 @@ test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number",
 
   for (let beat = 0; beat < 4; beat++) {
     const firstLabel = page.locator(`.beat[data-beat="${beat}"] .slot-label`).first();
-    await expect(firstLabel).toHaveText(String(beat + 1));
+    await expect(firstLabel).toHaveAttribute('data-syllable', String(beat + 1));
   }
 });
 
@@ -172,8 +181,8 @@ test('AC-5.6.2 — a mixed-feel Pattern counts by number whatever the preference
   await page.locator('.recipe-picker').selectOption('triplet-straight-split');
 
   const labels = page.locator('.beat[data-recipe="triplet-straight-split"] .slot-label');
-  await expect(labels.nth(0)).toHaveText('1');
-  await expect(labels.nth(4)).toHaveText('5');
+  await expect(labels.nth(0)).toHaveAttribute('data-syllable', '1');
+  await expect(labels.nth(4)).toHaveAttribute('data-syllable', '5');
   await expect(page.locator('[data-forced-numbered]')).toBeVisible();
   // The stored preference is untouched (AC-5.6.3).
   await expect(page.locator('.counting-picker')).toHaveValue('takadimi');
@@ -596,34 +605,32 @@ const labelStyle = (page, selector) =>
     };
   }, selector);
 
-test("AC-3.1.17/1 — A silent Slot's counting syllable is not bold, while a sounding one's is", async ({ page }) => {
+test("AC-3.1.17/1 — A silent Slot shows a dot in place of its counting syllable, so a cell either carries a syllable or does not, rather than carrying the same syllable at two weights", async ({ page }) => {
   await mixedMeasure(page);
-  const sounding = await labelStyle(page, '.slot:not(.accent-off) .slot-label');
-  const silent = await labelStyle(page, '.slot.accent-off .slot-label');
 
-  expect(sounding.weight).toBeGreaterThanOrEqual(700);
-  expect(silent.weight).toBeLessThanOrEqual(400);
+  const sounding = page.locator('.slot:not(.accent-off) .slot-label').first();
+  const silent = page.locator('.slot.accent-off .slot-label').first();
+
+  // The sounding Slot shows its syllable; the silent one shows a dot instead.
+  await expect(sounding).toHaveText(await sounding.getAttribute('data-syllable'));
+  await expect(silent).toHaveText('\u00b7');
+  expect(await silent.getAttribute('data-syllable')).not.toBe('\u00b7');
+
+  // Turning it on puts the syllable back — the dot is a rendering of state, not
+  // a property of the Slot.
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 0, 1); });
+  const wasSilent = page.locator('.slot[data-beat="0"][data-slot="1"] .slot-label');
+  await expect(wasSilent).toHaveText(await wasSilent.getAttribute('data-syllable'));
 });
 
-test("AC-3.1.17/2 — A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's", async ({ page }) => {
-  await mixedMeasure(page);
-  const sounding = await labelStyle(page, '.slot:not(.accent-off) .slot-label');
-  const silent = await labelStyle(page, '.slot.accent-off .slot-label');
-
-  const ratio = silent.size / sounding.size;
-  expect(ratio).toBeGreaterThan(0.65);
-  expect(ratio).toBeLessThan(0.85);
-});
-
-test("AC-3.1.17/3 — A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum", async ({ page }) => {
+test("AC-3.1.17/2 — That dot is dimmer than a sounding Slot's syllable, so the distinction survives a reader whose browser clamps small sizes to a minimum", async ({ page }) => {
   await mixedMeasure(page);
   const sounding = await labelStyle(page, '.slot:not(.accent-off) .slot-label');
   const silent = await labelStyle(page, '.slot.accent-off .slot-label');
   expect(sounding.luminance).toBeGreaterThan(silent.luminance * 1.5);
 
-  // The distinction has to hold once size and weight are gone, which is the
-  // state a minimum-font-size setting and a substituted typeface produce
-  // together. Colour is the only channel neither of them touches.
+  // It must hold with size and weight forced equal, which is the state a
+  // minimum-font-size setting and a substituted typeface produce together.
   const flattened = await page.evaluate(() => {
     const style = document.createElement('style');
     style.textContent = '.slot-label{font-size:16px !important;font-weight:400 !important}';
@@ -638,6 +645,31 @@ test("AC-3.1.17/3 — A silent Slot's counting syllable is dimmer than a soundin
     return out;
   });
   expect(flattened.sounding).not.toBe(flattened.silent);
+});
+
+test("AC-3.1.17/3 — The syllable the dot stands for stays available to assistive technology, so nothing is lost that a sighted reader still gets from position", async ({ page }) => {
+  await mixedMeasure(page);
+
+  const rests = await page.locator('.slot.accent-off .slot-label').evaluateAll((els) =>
+    els.map((e) => ({
+      shown: e.textContent,
+      syllable: e.dataset.syllable,
+      accessibleName: e.getAttribute('aria-label'),
+      markedAsRest: e.dataset.rest,
+    }))
+  );
+
+  expect(rests.length).toBeGreaterThan(0);
+  for (const rest of rests) {
+    expect(rest.shown).toBe('\u00b7');
+    // The counting syllable survives on the element and as its accessible name,
+    // so a screen reader still hears "e" where a sighted reader sees a dot in
+    // the second position of the Beat.
+    expect(rest.syllable).toBeTruthy();
+    expect(rest.syllable).not.toBe('\u00b7');
+    expect(rest.accessibleName).toBe(rest.syllable);
+    expect(rest.markedAsRest).toBe('true');
+  }
 });
 
 test('AC-3.1.17/4 — The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail', async ({ page }) => {

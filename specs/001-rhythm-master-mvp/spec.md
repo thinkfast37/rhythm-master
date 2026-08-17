@@ -611,11 +611,12 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the Practicing Musician looks at the rhythm rather than at any one Slot
   - **Then** the sounding Slots carry the visual weight, so the shape of what plays is legible without reading each cell in turn
   - **Cases**:
-    - **AC-3.1.17/1** — A silent Slot's counting syllable is not bold, while a sounding one's is
-    - **AC-3.1.17/2** — A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's
-    - **AC-3.1.17/3** — A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum
+    - **AC-3.1.17/1** — A silent Slot shows a dot in place of its counting syllable, so a cell either carries a syllable or does not, rather than carrying the same syllable at two weights
+    - **AC-3.1.17/2** — That dot is dimmer than a sounding Slot's syllable, so the distinction survives a reader whose browser clamps small sizes to a minimum
+    - **AC-3.1.17/3** — The syllable the dot stands for stays available to assistive technology, so nothing is lost that a sighted reader still gets from position
     - **AC-3.1.17/4** — The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail
-  - *(Added 2026-08-17. Every syllable was rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm — the maintainer reported being unable to see which subdivisions play. /3 is not a restatement of /2: at a browser-enforced minimum font size the two sizes collapse to the same value, and colour is the only one of the three channels no setting overrules.)*
+  - *(Added 2026-08-17. Every syllable was rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm.)*
+  - *(Revised the same day. The first attempt kept the syllable on a silent Slot and made it lighter, smaller and dimmer — three channels, and still too subtle to scan across a Measure in which most Slots sound. Replacing it outright is what the maintainer's predecessor app did and what they asked for: a cell either has a syllable in it or it has a dot, which is a difference in kind rather than in degree. /2 survives from that attempt because the reason for it does — at a browser-enforced minimum font size a smaller dot is clamped back up, and colour is the channel no reader setting overrules.)*
 
 - **AC-3.1.16** — The within-Beat shape is identical in every Beat
   - **Given** a 4/4 Measure with every Beat on the Straight 16ths Recipe
@@ -1925,11 +1926,16 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
     - **AC-15.2.1/3** — A Slot's border, against the Measure panel behind it
     - **AC-15.2.1/4** — A Melodic Slot's accent-to-note divider, against the Slot's unfilled background
 
-- **AC-15.2.2** — A Beat is bounded by a drawn border, not by spacing alone
+- **AC-15.2.2** — A Beat boundary is drawn, not left to spacing alone
   - **Given** a Measure containing more than one Beat
   - **When** the Practicing Musician looks for where one Beat ends and the next begins
-  - **Then** each Beat carries its own drawn border, so the grouping survives at the density where
+  - **Then** a drawn rule separates it from the next, so the grouping survives at the density where
     the gaps between Slots and the gaps between Beats are only a few pixels apart (AC-15.1.10)
+  - *(Revised 2026-08-17. This required each Beat to carry "its own drawn border", which produced a
+    box inside a box inside a box — Measure, then Beat, then Slot — and the maintainer reported the
+    nesting as the thing making the grid hard to read, not the thing making it legible. A single
+    rule between Beats draws the same boundary with one line instead of four. What the criterion
+    protects is unchanged: the boundary is drawn rather than implied by a few pixels of extra gap.)*
 
 - **AC-15.2.3** — The boundaries form a hierarchy, so nesting is readable
   - **Given** a Measure containing Beats containing Slots

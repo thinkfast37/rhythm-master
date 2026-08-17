@@ -52,10 +52,13 @@ test('AC-15.2.1/1 — A Measure block’s border, against the page background be
 
 test('AC-15.2.1/2 — A Beat’s border, against the Measure panel behind it', async ({ page }) => {
   await melodicGrid(page);
+  // The Beat boundary is a rule drawn in the gap by a pseudo-element, not a box
+  // around each Beat (AC-15.2.2) — a border would make every Beat but the first
+  // a different width, which AC-15.1.14/1 forbids.
   const contrast = await page.evaluate(`(() => {${CONTRAST_HELPERS}
-    const beat = document.querySelector('.beat');
+    const beat = document.querySelectorAll('.beat')[1];
     const measure = document.querySelector('.measure');
-    return ratio(cs(beat).borderTopColor, cs(measure).backgroundColor);
+    return ratio(getComputedStyle(beat, '::before').backgroundColor, cs(measure).backgroundColor);
   })()`);
   expect(contrast).toBeGreaterThanOrEqual(3);
 });
@@ -83,23 +86,32 @@ test('AC-15.2.1/4 — A Melodic Slot’s accent-to-note divider, against the Slo
   expect(contrast).toBeGreaterThanOrEqual(3);
 });
 
-test('AC-15.2.2 — A Beat is bounded by a drawn border, not by spacing alone', async ({ page }) => {
+test('AC-15.2.2 — A Beat boundary is drawn, not left to spacing alone', async ({ page }) => {
   await melodicGrid(page);
   const drawn = await page.evaluate(() => {
-    const beat = document.querySelector('.beat');
-    const s = getComputedStyle(beat);
+    const beats = [...document.querySelectorAll('.beat')];
+    // Measured from what is painted rather than from `content`, which Chrome
+    // reports inconsistently for an empty string.
+    const painted = (el) => {
+      const r = getComputedStyle(el, '::before');
+      return { width: parseFloat(r.width) || 0, colour: r.backgroundColor };
+    };
     return {
-      style: s.borderTopStyle,
-      width: parseFloat(s.borderTopWidth),
-      // Not transparent, and not simply the panel colour repainted.
-      colour: s.borderTopColor,
+      rule: painted(beats[1]),
+      // A rule BETWEEN Beats, not around each: the first draws none.
+      first: painted(beats[0]),
       panel: getComputedStyle(document.querySelector('.measure')).backgroundColor,
+      // And the Beats themselves carry no box, which is what made the grid read
+      // as borders inside borders inside borders.
+      beatBorder: getComputedStyle(beats[1]).borderTopStyle,
     };
   });
-  expect(drawn.style).not.toBe('none');
-  expect(drawn.width).toBeGreaterThan(0);
-  expect(drawn.colour).not.toBe('rgba(0, 0, 0, 0)');
-  expect(drawn.colour).not.toBe(drawn.panel);
+
+  expect(drawn.rule.width).toBeGreaterThan(0);
+  expect(drawn.rule.colour).not.toBe('rgba(0, 0, 0, 0)');
+  expect(drawn.rule.colour).not.toBe(drawn.panel);
+  expect(drawn.first.colour).toBe('rgba(0, 0, 0, 0)');
+  expect(drawn.beatBorder).toBe('none');
 });
 
 test('AC-15.2.3 — The boundaries form a hierarchy, so nesting is readable', async ({ page }) => {
@@ -108,7 +120,8 @@ test('AC-15.2.3 — The boundaries form a hierarchy, so nesting is readable', as
     const L = (sel) => lum(parse(cs(document.querySelector(sel)).borderTopColor));
     return {
       measure: L('.measure'),
-      beat: L('.beat'),
+      // The Beat's boundary is its separator rule, drawn as a pseudo-element.
+      beat: lum(parse(getComputedStyle(document.querySelectorAll('.beat')[1], '::before').backgroundColor)),
       slot: L('.slot.has-note .slot-accent'),
     };
   })()`);
