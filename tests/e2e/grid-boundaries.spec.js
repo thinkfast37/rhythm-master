@@ -73,9 +73,12 @@ test('AC-15.2.1/3 — A Slot’s border, against the Measure panel behind it', a
 test('AC-15.2.1/4 — A Melodic Slot’s accent-to-note divider, against the Slot’s unfilled background', async ({ page }) => {
   await melodicGrid(page);
   const contrast = await page.evaluate(`(() => {${CONTRAST_HELPERS}
-    const band = document.querySelector('.slot-note:not([disabled])');
+    // The divider is drawn by the strip inside the note button, not by the
+    // button: the button is the 24px tap target (AC-2.2.12) and the strip is
+    // the thinner thing you see (AC-2.2.15/3).
+    const strip = document.querySelector('.slot-note:not([disabled]) .slot-pitch');
     const zone = document.querySelector('.slot.has-note .slot-accent');
-    return ratio(cs(band).borderTopColor, cs(zone).backgroundColor);
+    return ratio(cs(strip).borderTopColor, cs(zone).backgroundColor);
   })()`);
   expect(contrast).toBeGreaterThanOrEqual(3);
 });

@@ -33,20 +33,28 @@
 
   --slot-min: 24px; /* AC-15.1.10 — never smaller than this, on any viewport */
   /*
-   * The note band. AC-2.2.12 sets 24px as the FLOOR, not the value: this is
-   * 28px because two 10px lines need 25px of content box once they have enough
-   * leading not to be clipped (AC-2.2.14/5), and 24px leaves only 22px inside
-   * its borders. The first implementation used 24px and shaved the tops and
-   * bottoms of the glyphs.
+   * The note band, as a thin strip under the accent zone (AC-2.2.14).
+   *
+   * One line of text, so this is a floor rather than a fitted height — the band
+   * grows if a reader's font needs more, and never clips (AC-2.2.14/5). It was
+   * 28px while degree and note name were stacked on two lines; on one line the
+   * strip is half the height and stops reading as a second block of text
+   * competing with the count above it (AC-2.2.15/3).
+   *
+   * Note this is BELOW the 24px of AC-2.2.12, which governs the note band as a
+   * TAP TARGET. The tappable band keeps its 24px via .slot-note's own min-height
+   * — the strip is the visual element, the button around it is the target.
    */
-  --slot-note-h: 28px;
+  --slot-note-h: 18px;
   /* The accent zone in a split Slot. Well above the 24px floor because the
      count and the accent are what is read while working on rhythm, and the
      syllable sets at 15px (AC-2.2.14/3). */
   --slot-accent-h: 40px;
-  /* The Accent bar along a Slot's bottom edge (D-005, amended). Fixed height,
-     variable width — it must never grow into the syllable's band. */
-  --slot-bar-h: 5px;
+  /* The Accent bar along a Slot's bottom edge (D-005, amended). Its WIDTH
+     carries the level; its height scales with the cell so a wide Slot does not
+     reduce the Accent to a detail (AC-3.1.17/4). It must never grow into the
+     syllable's band, which the clamp's cap is there to guarantee. */
+  --slot-bar-h: clamp(5px, 9cqi, 9px);
   /* Between the two zones, so neither reads as part of the other
      (AC-2.2.14/2). */
   --slot-zone-gap: 4px;
@@ -160,13 +168,39 @@ body {
  * BLOCK, and its Beats wrap onto as many lines as they need inside it. Beats
  * never split across lines, so the subdivision of a Beat always reads as one
  * unit (AC-15.1.10).
+ *
+ * A grid of equal columns, not a wrapping flexbox (AC-15.1.14). A flexbox grows
+ * whatever landed on a line to fill that line, which at 390px gave a 4/4 Measure
+ * three Beats of 110px and then one of 341 — four equal durations at four very
+ * unequal sizes. Equal tracks make a Beat's width its duration's width, and the
+ * differing Slot counts sit inside them instead.
+ *
+ * `minmax(min-content, 1fr)` is what keeps that safe: the tracks share the width
+ * evenly, but no track can be driven below what its Slots need at the 24px
+ * minimum, so an over-ambitious column count cannot scroll the grid sideways
+ * (AC-15.1.10, AC-15.1.14/2).
+ *
+ * `--beat-cols` is set by `ui/beat-layout.js` — the one part of this CSS cannot
+ * express, since it depends on the measured minimum and so on the reader's font.
+ * The fallback is `--beat-count`: every Beat on one line, written by `renderGrid`
+ * from the Pattern alone, and the right answer at every width a Measure fits.
  */
 .beats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(var(--beat-cols, var(--beat-count, 1)), minmax(min-content, 1fr));
   flex: 1 1 auto;
-  flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
+}
+
+/*
+ * The probe state `beat-layout.js` reads the minimum through: one min-content
+ * column, so every Beat lays out at the widest minimum in its Measure and a
+ * single `getBoundingClientRect` answers for the whole Measure. Held for one
+ * synchronous read between two writes, so it is never painted.
+ */
+.beats.measuring {
+  grid-template-columns: min-content;
 }
 
 /*
@@ -208,6 +242,8 @@ body {
   min-width: var(--slot-min);
   min-height: 52px;
   padding: 0;
+  /* The type inside sizes to the cell, not to a fixed value — see .slot-label. */
+  container-type: inline-size;
   background: var(--accent-off);
   border: 1px solid var(--grid-slot-line);
   border-radius: 3px;
@@ -258,15 +294,24 @@ body {
   justify-content: center;
   min-height: calc(52px - var(--slot-bar-h));
   padding-bottom: var(--slot-bar-h);
-  font: 500 10px/1.3 var(--font-mono);
+/*
+ * The counting syllable sizes to its cell, not to a constant.
+ *
+ * A Slot's width is whatever its Beat's Recipe leaves it: four Slots on Straight
+ * 16ths, two on Straight 8ths, one undivided — so the same 15px that fills a
+ * 16th-note cell sits as a small mark in the middle of an 8th-note cell twice
+ * its width. `cqi` is a percentage of the Slot's own inline size, so the count
+ * keeps its proportion to the cell at every subdivision.
+ *
+ * The floor is the old constant: a Slot at the 24px minimum still gets 15px,
+ * because legibility at density is the constraint that set it. The cap stops an
+ * undivided Beat on a wide screen from setting the syllable at display size.
+ */
+  font: 700 15px/1.3 var(--font-mono);
+  font-size: clamp(15px, 34cqi, 26px);
   color: var(--ink);
   text-align: center;
   pointer-events: none;
-}
-
-.slot.playing {
-  outline: 2px solid var(--ink);
-  outline-offset: -2px;
 }
 
 /* --- the split Slot, in editable Melodic mode (AC-2.2.10) ----------------- */
@@ -294,6 +339,7 @@ body {
   gap: var(--slot-zone-gap);
   min-height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
   height: auto;
+  container-type: inline-size;
   background: transparent;
   border: 0;
   overflow: visible;
@@ -318,31 +364,37 @@ body {
  */
 .slot-note {
   flex: 0 0 auto;
-  min-height: var(--slot-note-h);
+  /*
+   * Two different heights, on purpose. The BUTTON is the tap target; the STRIP
+   * drawn inside it is --slot-note-h, which is smaller, because the thin strip
+   * is what should be seen and the target is not. The difference is transparent
+   * padding.
+   *
+   * 24px is the default because that is what a finger needs (AC-2.2.12). A
+   * precise pointer does not, so the rule below hands those devices the strip's
+   * own height back — see AC-2.2.17. The safe value is the default deliberately:
+   * a browser that does not understand `pointer` keeps the finger-sized target.
+   */
+  min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #171a24;
-  border: 1px solid var(--grid-zone-line);
-  border-radius: 3px;
-  cursor: pointer;
-  overflow: hidden;
-}
-.slot-note:hover:not(:disabled) { background: #232838; }
-
-/* A Slot that does not sound has no note to pitch. The band reads as unusable
-   rather than merely doing nothing when tapped (AC-2.2.5). */
-.slot-note:disabled {
   background: transparent;
-  border-color: transparent;
-  cursor: default;
+  border: 0;
+  cursor: pointer;
 }
+.slot-note:hover:not(:disabled) .slot-pitch { background: #232838; }
+
+/* A Slot that does not sound has no note to pitch, and carries no badge at all,
+   so nothing is drawn — the band reads as unusable rather than merely doing
+   nothing when tapped (AC-2.2.5). */
+.slot-note:disabled { cursor: default; }
 
 /* In a split Slot the badge sits in its own band, laid out by the band's flex
    centring. Its colours are the same at every Accent Level now that the Accent
    is a bar at the Slot's foot and never reaches the badge. */
-.slot.has-note .slot-pitch { position: static; }
+.slot.has-note .slot-pitch { position: static; width: 100%; }
 
 /*
  * The label centres in the accent zone, not in the whole Slot.
@@ -359,12 +411,88 @@ body {
  * as reinforcement for readers whose browsers honour them.
  */
 .slot.has-note .slot-label {
-  font-size: 15px;
+  font-size: clamp(15px, 34cqi, 26px);
   font-weight: 700;
   line-height: 1.3;
   min-height: var(--slot-accent-h);
-  padding-bottom: var(--slot-bar-h);
+  padding-bottom: 0;
 }
+
+/*
+ * A mouse or trackpad hits a smaller target than a finger, so on those devices
+ * the note button shrinks to the strip it draws and the Slot gets shorter
+ * (AC-2.2.17). Keyed on the pointing device rather than the viewport, because
+ * that is the thing the 24px floor was ever about: a tablet held in the hand
+ * reports `coarse` at any width and keeps the finger-sized target.
+ */
+@media (pointer: fine) {
+  .slot-note { min-height: var(--slot-note-h); }
+}
+
+/*
+ * A Slot that does not sound recedes. AC-3.1.17.
+ *
+ * Every syllable used to render identically whether or not its Slot sounded, so
+ * the largest, boldest thing in an empty cell was text carrying no information
+ * about the rhythm — which made the shape of what actually plays hard to read
+ * across a Measure.
+ *
+ * Three channels, not one. Weight and size are the obvious two and neither is
+ * sufficient alone: a browser with a minimum font size clamps the reduced size
+ * back up to the same value as the full one, and a substituted typeface can
+ * flatten the weight. Colour is the channel no reader setting overrules, so it
+ * carries the distinction when the other two are unavailable.
+ */
+.slot.accent-off .slot-label {
+  font-weight: 400;
+  font-size: clamp(11px, 25cqi, 19px);
+  color: var(--ink-dim);
+}
+
+/* --- the playback cursor (AC-4.1.7) -------------------------------------- */
+
+/*
+ * A filled cell, not an outline, and always the cell carrying the COUNT.
+ *
+ * Outlining the whole Slot drew the box around the note band too, which in
+ * Melodic mode reads as marking the note name rather than the beat. And an
+ * outline has to be looked for at all — while playing along that is work. A
+ * solid block of colour is found without hunting.
+ *
+ * The fill is the Slot's own Accent colour, so the cursor says WHAT is sounding
+ * as well as WHERE: a Strong beat flashes amber, a Weak one blue. The syllable
+ * flips to whichever of dark or light clears that colour — the one place a
+ * text-colour flip is still right, because it is momentary and it is exactly
+ * the thing the eye is meant to land on.
+ *
+ * These rules come last in the grid section deliberately: `.slot.has-note
+ * .slot-accent` sets the resting background at the same specificity, so the
+ * cursor only wins by order.
+ */
+.slot.playing.accent-off    { --cursor-fill: #3a3f52;              --cursor-ink: var(--ink); }
+.slot.playing.accent-weak   { --cursor-fill: var(--accent-weak);   --cursor-ink: #ffffff; }
+.slot.playing.accent-medium { --cursor-fill: var(--accent-medium); --cursor-ink: #0b0c15; }
+.slot.playing.accent-strong { --cursor-fill: var(--accent-strong); --cursor-ink: #0b0c15; }
+
+/* Percussive: the Slot itself is the counting cell. */
+.slot.playing:not(.has-note) {
+  background: var(--cursor-fill);
+  outline: 2px solid var(--cursor-ink);
+  outline-offset: -2px;
+}
+
+/* Melodic: the accent zone is, and the note band beneath is left alone. */
+.slot.has-note.playing .slot-accent {
+  background: var(--cursor-fill);
+  outline: 2px solid var(--cursor-ink);
+  outline-offset: -2px;
+}
+
+.slot.playing .slot-label { color: var(--cursor-ink); }
+
+/* The Accent bar is redundant while the cell is flooded with its own colour,
+   and on a light fill it would read as a smudge along the bottom edge. */
+.slot.playing .slot-fill { opacity: 0; }
 
 /* --- responsive ---------------------------------------------------------- */
 
@@ -476,9 +604,17 @@ body {
   position: absolute;
   top: 2px; left: 0; right: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: baseline;
   justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  min-height: var(--slot-note-h);
+  padding: 0 2px;
+  background: #171a24;
+  border: 1px solid var(--grid-zone-line);
+  border-radius: 3px;
+  overflow: hidden;
   color: var(--ink);
   text-align: center;
   pointer-events: none;
@@ -498,10 +634,12 @@ body {
  */
 .slot-degree {
   font: 400 10px/1.4 var(--font-mono);
+  font-size: clamp(10px, 21cqi, 16px);
   color: var(--ink-dim);
 }
 .slot-note-name {
   font: 400 10px/1.4 var(--font-mono);
+  font-size: clamp(10px, 21cqi, 16px);
   letter-spacing: -0.03em;
   color: var(--ink-faint);
 }

@@ -191,14 +191,14 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-006** | US-1.2 — Time signature support without implied grouping | AC-1.2.1–AC-1.2.4 | T039 | T040 |
 | **P-007** | US-1.3 — Mixed subdivision within a Beat, via Recipes | AC-1.3.1–AC-1.3.10 | T041–T043 | T044 |
 | **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045 | T046 |
-| **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.16 | T047–T048, T050 | T049 |
-| **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.6 | T051–T055 | T056 |
+| **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.17 | T047–T048, T050, T166 | T049, T166 |
+| **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.7 | T051–T055, T165 | T056, T165 |
 | **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.3 | T057–T058 | T059 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.5 | T063 | T064 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.5 | T065 | T066 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
-| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.16 | T069, T160, T162, T163, T164 | T070, T161, T162, T163, T164 |
+| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.17 | T069, T160, T162, T163, T164, T165 | T070, T161, T162, T163, T164, T165 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.13 | T074–T075, T162 | T076, T163 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
@@ -217,8 +217,8 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-032** | US-11.2 — Detect and surface Pattern Families | AC-11.2.1–AC-11.2.5 | T105, T148 | T106, T155 |
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
-| **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T167 | T113, T168 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.13 | T114–T116, T160 | T117, T161 |
+| **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169 | T113, T170 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.14 | T114–T116, T160, T167 | T117, T161, T168 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.5 | T160 | T161 |
 

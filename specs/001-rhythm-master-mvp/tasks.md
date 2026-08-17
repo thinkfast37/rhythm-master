@@ -618,6 +618,23 @@ record is complete rather than starting mid-stream.
 
   *Superseded description: build the view and panel — AC-11.1.4, AC-11.1.5, AC-11.2.4, AC-11.2.5, and the naming-time warning in AC-11.1.3.* `src/core/similarity.js` computes all of it correctly and `src/main.js` exposes `currentDuplicates`, `currentFamily` and `unresolvedLibraryDuplicates` — but only on the `window.__rm` test seam. There is no view, no panel, no CSS, and no way for the musician to reach any of it. AC-11.1.4 calls the view "the sole safety net" for duplicates that emerge through ongoing edits, so at present there is none. AC-11.2.5 specifies the panel below the editor at ≥768px and nothing below that. Thirteen tests of fingerprint arithmetic in `tests/unit/core/similarity.test.js` carry these Stories' AC IDs, which is why this read as complete. **This is unbuilt work, not a naming defect — it is why the audit happened.**
 
+- [X] T166 **[new capability]** Make a silent Slot recede, so the shape of what plays is legible — `specs/001-rhythm-master-mvp/spec.md`, `src/styles/tokens.css`, `tests/e2e/grid.spec.js`. AC-3.1.17 added with Cases. Extends P-009.
+
+  Every counting syllable rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm. The maintainer could not see which subdivisions play without reading each cell in turn — which is the opposite of what a grid is for.
+
+  A silent Slot's syllable is now regular rather than bold, about three quarters the size, and dimmer. **Three channels deliberately.** The maintainer asked for the first two; on their machine neither works alone, because a browser-enforced minimum font size clamps the reduced size back up to the full one and a substituted typeface flattens the weight. Colour is the only one of the three no reader setting overrules, so AC-3.1.17/3 states it separately and its test re-asserts the distinction with size and weight forced equal.
+
+  The Accent bar also scales with the cell now (AC-3.1.17/4): its height was a flat 5px, which is proportionate in a 16th-note cell and a hairline in an undivided one.
+
+- [X] T165 **[new capability]** Make the sounding Slot findable without hunting, and stop the note band competing with the count — `specs/001-rhythm-master-mvp/spec.md`, `src/styles/tokens.css`, `tests/e2e/playback.spec.js`, `tests/e2e/melodic.spec.js`, `tests/e2e/grid-boundaries.spec.js`. AC-4.1.7 added with Cases; AC-2.2.17 added with Cases; AC-2.2.15/3 reversed. Extends P-010 and P-016.
+
+  Four reports from practising against it, and they share a root: the grid's visual weight was distributed by rules that never asked what the cell was for.
+
+  - **The playback cursor was a 2px outline on the whole Slot**, which in Melodic mode boxed the note band in with the accent zone — so it read as marking the note name rather than the beat. It now fills the accent zone with that Slot's own Accent colour, so a Strong beat flashes amber and a Weak one blue, and the syllable flips to whichever of dark or light clears it. A silent Slot lights neutral grey, so the pulse can still be followed through rests. AC-4.1.2 had fixed the highlight's *timing* and said nothing about its appearance, which is how an outline shipped as the answer to "where am I".
+  - **Percussive counts were 10px** — the note band's size — so the count read as the least important text in a mode whose cell contains nothing else. Now the same treatment as Melodic.
+  - **The count did not fill a wide cell.** A Slot's width is whatever its Recipe leaves it, so 15px that fills a 16th-note cell sits as a small mark in an 8th-note cell twice as wide. The syllable now sizes in `cqi` against the Slot's own width, floored at 15px and capped at 26px, so it holds its proportion at every subdivision.
+  - **The note band was two lines and too tall.** One line now, and the visible strip is 18px. The 24px of AC-2.2.12 is a *tap target*, not a look, so the button keeps 24px while the strip inside it is thinner — and AC-2.2.17 keys that target on the pointing device rather than the viewport, so a trackpad gets the strip's own height back and a tablet held in the hand keeps the finger-sized one at any width.
+
 - [X] T164 **[bug]** Carry the Slot's text hierarchy on colour, and fix the two text colours that were inverted — `specs/001-rhythm-master-mvp/spec.md` (AC-2.2.14/6 added), `src/styles/tokens.css`, `tests/e2e/melodic.spec.js`. Extends P-016.
 
   The counting syllable was `--ink-dim` while the scale degree was `--ink`, so the note the maintainer wanted to recede was literally the brightest text in the Slot. That is a plain inversion and it had been there since T160.
@@ -754,7 +771,27 @@ record is complete rather than starting mid-stream.
 
 - [ ] T166 **[bug]** 205 stored Accent Levels across 36 shipped Patterns are equal to the value the metric default would compute, which data-model §3 forbids outright: "present only when the user overrode the computed default … never written speculatively." Found by T165's new `AC-16.1.7` test when it briefly asserted the §3 rule; the assertion was withdrawn because §3 is not what `AC-16.1.7` claims, and the debt logged here instead rather than silently widened into a criterion that never covered it. 243 accents in the same Patterns are genuine overrides, so this cannot be fixed by stripping the field wholesale — each has to be compared against `defaultAccent`. Affected include "Downbeat ska", "3 middle up downbeat", "Downbeat triplet upbeat", "8th-8th-Quarter Tumble", "Rumba Clave 3-2 Mod". Stripping the redundant ones is inaudible by construction — the computed default replaces them — which is what makes this safe and also what has let it sit unnoticed.
 
-- [X] T167 **[bug]** Submit did nothing: the whole hand-off half of US-13.1 was unbuilt — `specs/001-rhythm-master-mvp/spec.md` (Cases added to AC-13.1.1, AC-13.1.3, AC-13.1.4; AC-13.1.4 clarified), `specs/001-rhythm-master-mvp/plan.md` (P-035), `src/export/submit.js`, `src/storage/localMeta.js`, `src/ui/dialogs.js`, `src/ui/controls.js`, `src/styles/tokens.css`, `src/main.js`. Implements P-035, AC-13.1.1–AC-13.1.5.
+- [X] T167 **[new capability]** Beats in a Measure lay out on one shared column width, and a wrapped Measure balances its lines — `specs/001-rhythm-master-mvp/spec.md` (AC-15.1.14 added), `specs/001-rhythm-master-mvp/plan.md` (P-036), `src/ui/beat-layout.js`, `src/ui/grid.js`, `src/main.js`, `src/styles/tokens.css`. Implements P-036.
+
+  Reported against a 4/4 Pattern on a phone: measured at 390px, the Measure laid its Beats out at 110, 110, 110 and then 341 — three narrow Beats on the first line and the fourth spread across the whole of the second, all four sounding the same duration.
+
+  `.beats` was a wrapping flexbox of `flex: 1 1 auto` Beats, and a flexbox grows whatever landed on a line to fill that line. AC-15.1.10 required the wrap and forbade a Beat splitting across it, but said nothing about the widths that come out, so this is a new criterion (AC-15.1.14) rather than a bug — written, with its plan row and both tasks, before the code (§1, §2).
+
+  Now a CSS grid of `repeat(var(--beat-cols), minmax(min-content, 1fr))`: equal tracks, none of which can be driven below what its Slots need at the 24px minimum, so an over-ambitious column count cannot overflow (AC-15.1.10 continues to hold). The column COUNT is the one part CSS cannot express — it depends on the measured minimum, and so on the reader's font — so `ui/beat-layout.js` measures it and writes `--beat-cols`. The count is deliberately not "as many as fit": the most that fit gives the LINE count, and the Beats then divide evenly between those lines, which is what turns 3-and-1 into 2-and-2.
+
+  **Not inside `renderGrid`**, which stays a pure function of (pattern, transportPosition) per Principle II — how much room the grid has is neither. `renderGrid` writes `--beat-count` from the Pattern alone as the one-line fallback; `main.js` balances immediately after the render, before the task yields to paint, and again on resize and through a `ResizeObserver` — the library opening or collapsing changes the grid's width and fires no resize event at all (AC-15.1.14/5). The measured minimum is cached by the Measure's Slot shape, since playback re-renders the grid on every Slot and an uncached probe would force a layout tens of times a second.
+
+  **The maintainer chose equal widths at every viewport**, not mobile-only: a Measure whose Beats carry different Recipes now shows them at one width with the Slot counts differing inside, at desktop and tablet as well as on a phone. Verified at 1400, 900 and 390px.
+
+  One assertion had to be a margin rather than an equality: `1fr` tracks divide a fractional container width, so twelve Beats across 802px come out 61.328px and 61.344px. The tests assert the spread is under a pixel.
+
+- [X] T168 **[new capability]** Tests for T167 — `tests/unit/ui/beat-layout.test.js`, `tests/e2e/grid.spec.js`. Covers AC-15.1.14/1–AC-15.1.14/5.
+
+  Five e2e tests, one per Case, plus unit tests of the column arithmetic for the edges a browser cannot easily reach — a Beat wider than the viewport, a Measure of one Beat. The unit tests deliberately do not stand for the criterion: AC-15.1.14 is UI-level (T6) and what it asserts is what a Measure looks like on a screen.
+
+  AC-15.1.14/2 asserts each `.beats` container's own `scrollWidth` as well as the page's, because `overflow-x: hidden` on the body means an over-wide Measure is CLIPPED rather than scrolled — it would hide half a Measure while every page-level overflow check still passed.
+
+- [X] T169 **[bug]** Submit did nothing: the whole hand-off half of US-13.1 was unbuilt — `specs/001-rhythm-master-mvp/spec.md` (Cases added to AC-13.1.1, AC-13.1.3, AC-13.1.4; AC-13.1.4 clarified), `specs/001-rhythm-master-mvp/plan.md` (P-035), `src/export/submit.js`, `src/storage/localMeta.js`, `src/ui/dialogs.js`, `src/ui/controls.js`, `src/styles/tokens.css`, `src/main.js`. Implements P-035, AC-13.1.1–AC-13.1.5.
 
   Reported: "there is a submit button in export & actions, it doesn't seem to do anything." Correct, and it had never done anything. `handlers.onSubmit` built the submission and **returned** it; `renderActions`'s click handler discarded the return value. Nothing opened the URL, nothing showed a link, and no clipboard path existed anywhere in `src/`. The one observable effect was a lie: it stamped `submittedAt`, marking as submitted a Pattern that was never sent.
 
@@ -768,7 +805,7 @@ record is complete rather than starting mid-stream.
 
   Bulk submission is a second control, `Submit All…`, beside Submit. It copies the full text to the clipboard unconditionally (AC-13.1.2), not only in the oversized case — these Patterns exist in one browser and nowhere else, so a submission GitHub rejects for length must not lose them. `copyToClipboard` falls back from the async Clipboard API to `execCommand`, since the app is also opened from `file://` and over plain HTTP on a phone, where the API is unavailable.
 
-- [X] T168 **[bug]** Tests for T167 — `tests/unit/export/export.test.js`, `tests/e2e/submission.spec.js`. Covers AC-13.1.1/1–/3, AC-13.1.2, AC-13.1.3/1–/2, AC-13.1.4/1–/3, AC-13.1.5.
+- [X] T170 **[bug]** Tests for T169 — `tests/unit/export/export.test.js`, `tests/e2e/submission.spec.js`. Covers AC-13.1.1/1–/3, AC-13.1.2, AC-13.1.3/1–/2, AC-13.1.4/1–/3, AC-13.1.5.
 
   AC-13.1.1 and AC-13.1.3 are UI-level (T6), so the new e2e file proves them at the DOM: Submit opens a dialog carrying a real `<a>` whose `href` holds the title, label and body; clicking it opens a second tab on github.com; and only then does `submittedAt` appear. github.com is stubbed at the context — the app is offline by design and a test that depends on a third party fails for reasons of its own. That stub is also how AC-13.1.1/3 is proved: every request the app makes is visible, and none is to `api.github.com`.
 
