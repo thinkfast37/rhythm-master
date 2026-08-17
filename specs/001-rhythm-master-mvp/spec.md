@@ -1,63 +1,47 @@
-# Rhythm Master — Build Specification (v1)
+# Feature Specification: Rhythm Master MVP
 
-A browser-based rhythm and melody practice and composition tool. In future this tool may be encapsulated in a mobile application wrapper deployable to the Android and iOS app stores.
+**Feature Branch**: `main` *(no branch-creation hook is installed; this spec lives in `specs/001-rhythm-master-mvp/`)*
 
-**Scope:** Arrangements (multi-section pieces) are out of scope for this version.
+**Created**: 2026-08-16
 
----
+**Status**: Draft
 
-## Traceability & Testing Convention
-
-Every requirement in this document is a numbered **Acceptance Criterion (AC)**, written as a Given/When/Then scenario, belonging to a numbered **User Story (US)**:
-
-- **User Story ID**: `US-<epic>.<story>` — e.g. `US-1.1` is Epic 1's first story.
-- **Acceptance Criterion ID**: `AC-<epic>.<story>.<n>` — e.g. `AC-1.1.3` is the third acceptance criterion under `US-1.1`.
-
-**Every downstream artifact must reference these IDs**: commits, PR descriptions, code comments on the function/component implementing a given behavior, and — most importantly — **test names/tags**, so a single AC traces end-to-end from this spec → implementation → an automated test that proves it (e.g. a test literally named/tagged `AC-1.1.3` that asserts exactly the Given/When/Then below it). A test suite should be able to report "AC-1.1.3: covered / not covered" for every AC in this document.
-
-Where a note marks something as **Assumption**, it's a judgment call made without your explicit confirmation — everything else in this document reflects a decision you've made directly.
-
-**Naming convention — read this before any AC below:** Every AC is a concrete, worked scenario rather than an abstract rule, per your earlier direction that ACs must be testable. To make each scenario concrete, quoted Pattern names like "Bossa Groove," "Samba Break," "My Custom Fill," or "Groove A" are used throughout as **illustrative example data** — fixture names invented purely so the Given/When/Then has something specific to point at. **None of these names are required content.** They don't imply a Pattern with that exact name must exist in the shipped library or anywhere else; an implementation or test may substitute any equivalent fixture data that satisfies the same Given clause. Where an AC's title says e.g. "Beat Accent table" or "restart per Beat," that title — not the example name inside it — is the actual thing being specified.
+**Input**: User description: "A browser-based rhythm and melody practice and composition tool. Musicians build rhythmic patterns with mixed meter and mixed subdivision, assign per-slot accents and pitches, practise them with metronome, count-in and swing, and organise them in a searchable library. Full scope, all epics, as an MVP."
 
 ---
 
-## Personas
+## Conventions
 
-| Persona | Who they are | What they're here for |
-|---|---|---|
-| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing real pieces, inventing new ones, combining/layering/varying existing material. Comfortable with music-notation concepts (time signatures, subdivisions, scale degrees) and wants precise control without friction. | Epics 1, 2, 3, 7, 8, 9, 10, 12 |
-| **The Practicing Musician** | A musician (often a student) using the tool to drill and internalize rhythms and melodies on their own instrument, at their own tempo, with practice aids (metronome, count-in, counting syllables). May or may not compose their own Patterns. | Epics 4, 5, 6, 15 |
-| **The New User** | A first-time visitor who doesn't yet know the tool's concepts or rhythm fundamentals. | *(Currently unused — was Epic 14, Tutorial System, which is deferred. Kept defined for when that epic returns.)* |
-| **The Contributor** | A Composer who wants their original Patterns to become part of the shared library for other users. | Epic 13 |
+**Traceability.** Every requirement carries a stable ID. User Stories map to `US-<epic>.<story>`
+identifiers shown under each story heading; Acceptance Criteria carry `AC-<epic>.<story>.<n>`.
+Per Constitution Principle IV, every commit, pull request, code comment, and test name MUST
+reference the IDs it implements, and every AC MUST have at least one automated test referencing
+its ID. These IDs are the connective tissue between this spec, the implementation, and the test
+suite — do not renumber them without updating every reference in the same change.
 
----
-
-## Key Entities / Glossary
-
-| Term | Definition |
-|---|---|
-| **Pattern** | A rhythmic (and optionally melodic) idea, built from one or more Measures. The single unit that lives in the Library, gets rated, tagged, played, and exported. |
-| **Measure** | One instance of a Time Signature at a position in a Pattern. A Pattern is an ordered sequence of Measures; each Measure has its own Time Signature. |
-| **Time Signature** | e.g. 4/4, 2/4, 7/8. Supported set: 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8, 12/8. A per-Measure property. There is no simple/compound distinction in the data model — see Epic 1. |
-| **Beat** | One pulse within a Measure, one note-value long (the Time Signature's denominator — e.g. a quarter note in 4/4, an eighth note in 6/8). Beat count per Measure always equals the Time Signature's numerator. |
-| **Recipe** | A named subdivision template applied to a Beat: how many Slots it has and their feel (straight or triplet), sized to fit within that Beat's own note-value. Recipes always support at least 16th-note granularity. |
-| **Subdivision Group** | A contiguous run of Slots within a Beat sharing one rhythmic feel. A Beat has more than one Subdivision Group only when its Recipe mixes feels. |
-| **Slot** | The smallest addressable rhythmic unit — one on/off + Accent Level +, in Melodic Patterns, a Pitch. Belongs to exactly one Subdivision Group. |
-| **Accent Level** | Integer 0–3 (off / weak / medium / strong), set per Slot via tap-cycle, defaulting to a computed value based on metric position (Epic 3). |
-| **Sound Mode** | A Pattern is either **Percussive** or **Melodic**. |
-| **Pitch** | In a Melodic Pattern, a single note (scale degree + octave) assigned to a Slot. One Pitch per Slot maximum. |
-| **Key** | The root note a Melodic Pattern's degrees transpose against. |
-| **Rating** | 0–5 stars on any Pattern. |
-| **Tag** | A free-form or system-applied label on a Pattern. The sole organizational mechanism — there is no separate Category. |
-| **Pattern Family** | A set of Patterns sharing identical rhythm content but differing in Sound Mode and/or Pitch. Discovery relationship only, not a data link. |
-| **Local Metadata** | App-local bookkeeping tracked *about* a Pattern (e.g. whether it's been submitted before, whether a duplicate prompt has already been resolved for it) that is never part of the Pattern's own portable definition. Stored separately, referenced by Pattern identity, and explicitly excluded from every export/submission payload (US-13.1) — a Pattern exported today and imported into a fresh app instance carries none of its Local Metadata history. |
+**Example data in scenarios.** Acceptance Scenarios are written as concrete worked examples rather
+than abstract rules, so each is directly testable. Quoted Pattern names — "Samba Break",
+"Bossa Groove", "My Custom Fill", "Groove A" — are **illustrative fixture data**, invented so a
+scenario has something specific to point at. None are required content: no Pattern with any of
+these names must exist in the shipped library, and any equivalent fixture satisfying the same
+Given clause is acceptable. Where a scenario carries a short title (e.g. "Beat Accent table"),
+that title names the behaviour under test — not the example inside it.
 
 ---
 
-## Epic 1 — Rhythm & Meter Data Model
+## User Scenarios & Testing *(mandatory)*
 
-### US-1.1 — A Pattern is a sequence of Measures, each with its own Time Signature
+### User Story 1 - Measure sequence & per-Measure Time Signature (Priority: P1)
+
+*Traceability: `US-1.1` — A Pattern is a sequence of Measures, each with its own Time Signature*
+
 **As** the Composer, **I want** different Measures within one Pattern to use different time signatures, **so that** I can transcribe pieces that genuinely shift meter (e.g. a bar of 4/4 followed by a bar of 2/4) instead of being forced into one meter for the whole piece.
+
+**Why this priority**: Nothing in the app exists without a Pattern to hold it. The Measure sequence is the root of the entire data model — every Beat, Slot, accent, and pitch hangs off it.
+
+**Independent Test**: Create a Pattern, add and remove Measures, change a Measure's Time Signature, and confirm inheritance, the 6-Measure cap, and reset behaviour — all verifiable without audio or any other epic.
+
+**Acceptance Scenarios**:
 
 - **AC-1.1.1** — New Pattern defaults
   - **Given** no existing Pattern
@@ -113,8 +97,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-1.2 — Time signature support
+### User Story 2 - Time signature support without implied grouping (Priority: P1)
+
+*Traceability: `US-1.2` — Time signature support*
+
 **As** the Composer, **I want** to transcribe in a range of common time signatures, including asymmetric ones, without the tool imposing a beat grouping I didn't specify, **so that** I can accurately represent meters like 7/8 exactly as they're actually felt, rather than the tool guessing at a 2+2+3-style grouping on my behalf.
+
+**Why this priority**: The set of supported meters and the rule that Beat count equals the numerator determine the shape of every Pattern. Getting this wrong invalidates everything downstream.
+
+**Independent Test**: Set a Measure to each of the ten supported Time Signatures and assert its Beat count and note-value — pure data assertions, no UI or audio needed.
+
+**Acceptance Scenarios**:
 
 - **AC-1.2.1** — Beat count and note-value are independent per Measure
   - **Given** a Measure set to 5/4 and a Measure set to 6/8
@@ -154,8 +147,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-1.3 — Mixed subdivision within a Beat, via Recipes
+### User Story 3 - Mixed subdivision within a Beat, via Recipes (Priority: P1)
+
+*Traceability: `US-1.3` — Mixed subdivision within a Beat, via Recipes*
+
 **As** the Composer, **I want** to give one part of a Beat a different subdivision feel than another part, **so that** I can capture patterns that actually mix feels within a single beat (e.g. straight 8ths for the first half, triplet feel for the second half), which the tool previously couldn't represent at all.
+
+**Why this priority**: Mixed-feel subdivision is the headline capability the previous tool could not represent at all. It is the reason this rebuild exists.
+
+**Independent Test**: Apply each Recipe to a Beat and assert its Slot count and Subdivision Group structure, including both mixed-feel split Recipes.
+
+**Acceptance Scenarios**:
 
 - **AC-1.3.1** — Default Recipe for a quarter-note Beat
   - **Given** a Beat in a 4/4 Measure is created or reset
@@ -218,8 +220,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-1.4 — Display and change a Measure's Time Signature in the grid
+### User Story 4 - Display and change a Measure's Time Signature in the grid (Priority: P1)
+
+*Traceability: `US-1.4` — Display and change a Measure's Time Signature in the grid*
+
 **As** the Composer, **I want** each Measure to show its own Time Signature directly in the grid and let me change it by tapping it, **so that** I can see at a glance where the meter shifts in a Pattern and edit it in place, without hunting for a separate control.
+
+**Why this priority**: Without an in-grid control, a multi-meter Pattern cannot be authored or read at all. This is the primary interaction surface for the meter model.
+
+**Independent Test**: Render a multi-meter Pattern and confirm each Measure shows its own label with correct prominent/dimmed treatment, and that tapping a label changes only that Measure.
+
+**Acceptance Scenarios**:
 
 - **AC-1.4.1** — Time Signature label is itself the picker control
   - **Given** a Pattern containing 3 Measures
@@ -270,10 +281,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-## Epic 2 — Melodic Mode & Pitch
+### User Story 5 - Choose Sound Mode (Priority: P2)
 
-### US-2.1 — Choose Sound Mode
+*Traceability: `US-2.1` — Choose Sound Mode*
+
 **As** the Composer, **I want** to set a Pattern to Percussive or Melodic, **so that** I control whether it plays fixed accent-driven tones for pure rhythm practice, or specific pitched notes for melodic practice, without needing two separate tools.
+
+**Why this priority**: Melodic mode is a major capability, but the app is fully usable for rhythm practice without it. Percussive is the default and the core case.
+
+**Independent Test**: Toggle a Pattern between Percussive and Melodic and assert Key initialisation, Pitch-data preservation, and that Accent Levels are untouched.
+
+**Acceptance Scenarios**:
 
 - **AC-2.1.1** — Sound Mode changes take effect immediately
   - **Given** a loaded Pattern
@@ -302,8 +320,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-2.2 — Assign Pitch to a Slot
+### User Story 6 - Assign Pitch to a Slot (Priority: P2)
+
+*Traceability: `US-2.2` — Assign Pitch to a Slot*
+
 **As** the Composer, once a Pattern is Melodic with a Key chosen, **I want** to assign each active Slot a specific scale degree and octave, **so that** I'm authoring a real, deliberate melody rather than relying on some automatic pitch-cycling behavior I can't fully control.
+
+**Why this priority**: Delivers melodic authoring, the second of the app's two practice modes. Depends on the accent system and grid already existing.
+
+**Independent Test**: In a Melodic Pattern, paint pitches onto Slots via the pitch strip and assert the Pitch/Accent invariant holds on every path.
+
+**Acceptance Scenarios**:
 
 - **AC-2.2.1** — One Pitch per Slot, no chords
   - **Given** a Slot that already has a Pitch assigned
@@ -352,8 +379,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-2.3 — Transpose to a Key
+### User Story 7 - Transpose to a Key (Priority: P2)
+
+*Traceability: `US-2.3` — Transpose to a Key*
+
 **As** the Composer, **I want** to pick a root key for a Melodic Pattern, **so that** I can practice or transcribe the same melodic shape in whatever key I actually need, without re-authoring every Pitch by hand.
+
+**Why this priority**: Lets one authored melody serve any key — high practice value, but meaningless until per-Slot Pitch exists.
+
+**Independent Test**: Change a Melodic Pattern's Key and assert playback re-transposes while stored degree/octave data is unchanged.
+
+**Acceptance Scenarios**:
 
 - **AC-2.3.1** — Default Key
   - **Given** a Pattern newly switched to Melodic mode with no Key previously chosen
@@ -372,8 +408,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-2.4 — Audio quality
+### User Story 8 - Sampled piano playback (Priority: P2)
+
+*Traceability: `US-2.4` — Audio quality*
+
 **As** the Practicing Musician, **I want** Melodic notes to sound like an actual piano rather than a synthesized tone, **so that** practicing melodic material sounds musically real, while the app still loads and runs entirely in a browser.
+
+**Why this priority**: Determines whether melodic practice sounds musical enough to be worth doing. Carries the app's only significant asset-loading risk.
+
+**Independent Test**: Load the app and assert the soundfont downloads asynchronously, Percussive playback is never blocked by it, and Melodic Play waits with a loading state.
+
+**Acceptance Scenarios**:
 
 - **AC-2.4.1** — Melodic playback uses sampled piano, not synthesis
   - **Given** a Melodic Pattern during playback
@@ -403,10 +448,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-## Epic 3 — Accent System
+### User Story 9 - Per-Slot dynamics with musically-normal defaults (Priority: P1)
 
-### US-3.1 — Set per-Slot dynamics, defaulting to musically-normal accent
+*Traceability: `US-3.1` — Set per-Slot dynamics, defaulting to musically-normal accent*
+
 **As** the Composer, **I want** a Slot to default to the accent a musician would naturally give that metric position when I turn it on, **so that** I'm not manually re-accenting every downbeat and backbeat by hand on every single pattern I build.
+
+**Why this priority**: Accent is core musical content, not decoration, and computing sensible defaults removes the single most tedious part of authoring in the previous tool.
+
+**Independent Test**: Turn on Slots across every Beat position and Recipe and assert each lands on its computed metric default, then assert the override cycle from each starting default.
+
+**Acceptance Scenarios**:
 
 - **AC-3.1.1** — Turning on a Slot lands on its computed default, not a fixed value
   - **Given** Beat 2 of a 4/4 Measure, currently off
@@ -498,10 +550,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-## Epic 4 — Playback Engine
+### User Story 10 - Play a Pattern on loop (Priority: P1)
 
-### US-4.1 — Play a Pattern on loop
+*Traceability: `US-4.1` — Play a Pattern on loop*
+
 **As** the Practicing Musician, **I want** to press Play and have the Pattern loop continuously with synced audio and a visual cursor, **so that** I can drill it hands-free without having to keep restarting it myself.
+
+**Why this priority**: Hearing the Pattern is the entire point of the tool. Until this works, nothing authored can be evaluated.
+
+**Independent Test**: Play a multi-meter Pattern and assert timing accuracy over sustained looping, visual/audio sync, and correct per-Measure iteration.
+
+**Acceptance Scenarios**:
 
 - **AC-4.1.1** — Playback stays sample-accurate over long loops
   - **Given** a Pattern at 120 BPM playing continuously for 500 loop repeats
@@ -525,8 +584,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-4.2 — Adjust tempo
+### User Story 11 - Adjust tempo (Priority: P1)
+
+*Traceability: `US-4.2` — Adjust tempo*
+
 **As** the Practicing Musician, **I want** to set tempo via a slider or presets, **so that** I can practice a difficult pattern slower before working up to performance speed.
+
+**Why this priority**: Practising slow and working up to speed is the fundamental practice technique this tool exists to support.
+
+**Independent Test**: Change tempo during playback and assert immediate restart at the new tempo, clamping at both bounds, and per-Pattern vs global default resolution.
+
+**Acceptance Scenarios**:
 
 - **AC-4.2.1** — Default tempo and range
   - **Given** a new Pattern
@@ -546,8 +614,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-4.3 — Metronome click and count-in
+### User Story 12 - Metronome click and count-in (Priority: P2)
+
+*Traceability: `US-4.3` — Metronome click and count-in*
+
 **As** the Practicing Musician, **I want** to enable a metronome click and a count-in measure, **so that** I have a clear timing reference before and during playback.
+
+**Why this priority**: Important practice aids, but the tool is usable without them; playback itself is the P1 dependency.
+
+**Independent Test**: Enable each, assert the click is Sound-Mode-independent, count-in length matches the first Measure's Beat count, and both settings survive a reload.
+
+**Acceptance Scenarios**:
 
 - **AC-4.3.1** — Metronome/count-in defaults
   - **Given** a new Pattern
@@ -582,8 +659,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-4.4 — Swing
+### User Story 13 - Swing (Priority: P2)
+
+*Traceability: `US-4.4` — Swing*
+
 **As** the Composer, **I want** to apply swing to straight-feel portions of a Pattern, **so that** it feels less mechanical without forcing me to hand-author a triplet feel where I don't actually want one.
+
+**Why this priority**: Makes patterns feel human rather than mechanical, but every Pattern remains fully playable at swing 0.
+
+**Independent Test**: Set swing on a straight Subdivision Group and assert the computed onset shift, and that triplet groups are unaffected and expose no control.
+
+**Acceptance Scenarios**:
 
 - **AC-4.4.1** — Swing default and range
   - **Given** a straight-feel Subdivision Group
@@ -613,10 +699,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-## Epic 5 — Pattern Library, Browsing & Organization
+### User Story 14 - Browse the library (Priority: P2)
 
-### US-5.1 — Browse the library
+*Traceability: `US-5.1` — Browse the library*
+
 **As** the Practicing Musician, **I want** to see every Pattern in one place, **so that** I don't have to remember or guess where a given rhythm or melody lives before I can practice it.
+
+**Why this priority**: Once more than a handful of Patterns exist, they are unusable without a list. Required before the library has any practical value.
+
+**Independent Test**: Populate the library with shipped and custom Patterns and assert unified listing, correct metadata display, and Rating-then-alphabetical sort order.
+
+**Acceptance Scenarios**:
 
 - **AC-5.1.1** — Shipped and custom Patterns appear in one unified list
   - **Given** the library contains "Bossa Groove" (shipped with the app) and "My Custom Fill" (composed by the Practicing Musician)
@@ -650,8 +743,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-5.2 — Search by text
+### User Story 15 - Search by text (Priority: P2)
+
+*Traceability: `US-5.2` — Search by text*
+
 **As** the Practicing Musician, **I want** to filter the library by typing, **so that** I can jump straight to a Pattern I already know the name or description of.
+
+**Why this priority**: The fastest path to a known Pattern once the library grows; low cost, high daily value.
+
+**Independent Test**: Type a query and assert case-insensitive matching against name and description, with sort order preserved.
+
+**Acceptance Scenarios**:
 
 - **AC-5.2.1** — Search matches name/description
   - **Given** the library contains "Bossa Nova Groove" and "Samba Break," and no other Pattern's name or description contains "bossa"
@@ -670,8 +772,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-5.3 — Organize by Tag, including automatic Tags
+### User Story 16 - Organise by Tag, including automatic Tags (Priority: P3)
+
+*Traceability: `US-5.3` — Organize by Tag, including automatic Tags*
+
 **As** the Practicing Musician, **I want** to filter and organize Patterns purely by Tag, with some Tags applied automatically, **so that** I always have accurate, low-effort organization (e.g. finding every melodic pattern) without manually tagging every Pattern myself.
+
+**Why this priority**: Organisational enrichment. Valuable at scale but not required to build or practise a Pattern.
+
+**Independent Test**: Change a Pattern's Sound Mode and swing and assert automatic Tags recompute; add user Tags and assert limits, de-duplication, and pill ordering.
+
+**Acceptance Scenarios**:
 
 - **AC-5.3.1** — Auto-tags recompute immediately on configuration change
   - **Given** a Pattern named "New Groove," currently Percussive (carrying `percussive`) with swing 0 on every Subdivision Group (no `swing` Tag)
@@ -721,13 +832,17 @@ Where a note marks something as **Assumption**, it's a judgment call made withou
 
 ---
 
-### US-5.4 — Rate a Pattern
-See Epic 6 (US-6.1).
+### User Story 17 - Navigate sequentially (Priority: P3)
 
----
+*Traceability: `US-5.5` — Navigate sequentially*
 
-### US-5.5 — Navigate sequentially
 **As** the Practicing Musician, **I want** to step through patterns with Prev/Next, **so that** I can drill through a filtered set (e.g. all 4/4 patterns tagged "warmup") without returning to the full list each time.
+
+**Why this priority**: A drilling convenience that speeds practice sessions but duplicates what the list already allows.
+
+**Independent Test**: Apply a filter and step with Prev/Next, asserting it walks the filtered list and disables rather than wraps at both ends.
+
+**Acceptance Scenarios**:
 
 - **AC-5.5.1** — Prev/Next steps through the filtered list, not the full library
   - **Given** the Tag filter "warmup" is active, matching exactly "Bossa Groove," "Samba Break," and "Simple Fill," in that list order
@@ -742,8 +857,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-5.6 — Counting system toggle
+### User Story 18 - Counting system toggle (Priority: P3)
+
+*Traceability: `US-5.6` — Counting system toggle*
+
 **As** the Practicing Musician, **I want** to switch between counting systems (Takadimi syllables, numeric 1-e-&-a, or straight Numbered), **so that** the grid matches whichever system I personally count in.
+
+**Why this priority**: Meets musicians where their own counting habits are, but any single system is workable on its own.
+
+**Independent Test**: Toggle between the three systems and assert live label updates, plus the Numbered-only restriction on Patterns containing a mixed-feel Recipe.
+
+**Acceptance Scenarios**:
 
 - **AC-5.6.1** — Counting-system toggle updates labels live
   - **Given** "Samba Break" is loaded and playing, currently showing Takadimi syllables
@@ -805,10 +929,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 6 — Rating
+### User Story 19 - Rate a Pattern (Priority: P3)
 
-### US-6.1 — Rate a Pattern
+*Traceability: `US-6.1` — Rate a Pattern*
+
 **As** the Practicing Musician, **I want** to rate any Pattern 0–5 stars, **so that** I can remember which ones I like and quickly find my best-rated material later.
+
+**Why this priority**: Drives library sort order and shortlisting, but is pure organisation layered on an already-working library.
+
+**Independent Test**: Set, change, and clear a Rating and assert the minimum-rating filter combines with existing filters.
+
+**Acceptance Scenarios**:
 
 - **AC-6.1.1** — New Pattern defaults to Rating 0
   - **Given** the Composer creates a new Pattern named "New Pattern"
@@ -842,10 +973,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 7 — Composing & Editing a Pattern
+### User Story 20 - Build a Pattern from scratch (Priority: P1)
 
-### US-7.1 — Build a Pattern from scratch
+*Traceability: `US-7.1` — Build a Pattern from scratch*
+
 **As** the Composer, **I want** to add Measures and Beats, pick Recipes, toggle Slots, and — in Melodic mode — assign Pitch, **so that** I can create an original rhythm or melody from nothing.
+
+**Why this priority**: Authoring is the primary creative act of the app. Without it there is nothing to play, save, or organise.
+
+**Independent Test**: Create a Pattern and assert its name default, name validation, and immediate presence in the library.
+
+**Acceptance Scenarios**:
 
 - **AC-7.1.1** — New Pattern name default and validation
   - **Given** a new Pattern
@@ -860,8 +998,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-7.2 — Continuous auto-save for a Pattern you own
+### User Story 21 - Continuous auto-save for a Pattern you own (Priority: P1)
+
+*Traceability: `US-7.2` — Continuous auto-save for a Pattern you own*
+
 **As** the Composer editing a Pattern I already own (carrying the `custom` Tag), **I want** every edit to save automatically and immediately, **so that** I never have to remember to save or risk losing work, and there's no separate Save action to think about.
+
+**Why this priority**: Determines whether authoring work survives at all. Losing edits is the most damaging possible failure.
+
+**Independent Test**: Edit an owned Pattern and assert each change persists individually and survives closing the app mid-edit.
+
+**Acceptance Scenarios**:
 
 - **AC-7.2.1** — Edits to an owned Pattern save immediately, no Save action
   - **Given** "My Custom Fill" (carrying `custom`) is loaded
@@ -880,8 +1027,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-7.3 — Editing a shipped Pattern requires naming a new Pattern first
+### User Story 22 - Editing a shipped Pattern requires naming a new Pattern first (Priority: P2)
+
+*Traceability: `US-7.3` — Editing a shipped Pattern requires naming a new Pattern first*
+
 **As** the Composer, **I want** any attempt to edit a Pattern I don't own (one shipped with the app) to immediately prompt me to name a new Pattern for my changes, **so that** shipped content can never be silently altered, and my edit always has a clear, named home from the very first change I make.
+
+**Why this priority**: Protects shipped content from silent mutation. Needed as soon as users start editing library Patterns rather than only authoring new ones.
+
+**Independent Test**: Edit a shipped Pattern and assert the naming prompt fires before the edit applies, that cancelling discards it, and that the original is never altered.
+
+**Acceptance Scenarios**:
 
 - **AC-7.3.1** — Editing a shipped Pattern triggers a naming prompt before the edit applies
   - **Given** "Bossa Groove" (shipped, no `custom` Tag, currently Percussive) is loaded
@@ -910,8 +1066,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-7.4 — Make a named copy of a Pattern you own
+### User Story 23 - Make a named copy of a Pattern you own (Priority: P2)
+
+*Traceability: `US-7.4` — Make a named copy of a Pattern you own*
+
 **As** the Composer, **I want** to explicitly make a copy of a custom Pattern under a new name, **so that** I can deliberately branch a second version (e.g. a Melodic take on a Percussive Pattern I built) while my original keeps auto-saving independently.
+
+**Why this priority**: The deliberate path to variants — a Percussive original plus Melodic takes — which is central to how the tool is meant to be used.
+
+**Independent Test**: Invoke Make Copy on an owned Pattern and assert an independent copy is created, named, and immediately detected as a Pattern Family member.
+
+**Acceptance Scenarios**:
 
 - **AC-7.4.1** — Make Copy prompts for a name with no default
   - **Given** "My Custom Fill" (carrying `custom`) is loaded
@@ -945,8 +1110,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-7.5 — Delete a Pattern
+### User Story 24 - Delete a Pattern (Priority: P3)
+
+*Traceability: `US-7.5` — Delete a Pattern*
+
 **As** the Composer, **I want** to permanently delete a Pattern I created, **so that** I can remove clutter from my library without leaving discontinued work lying around indefinitely.
+
+**Why this priority**: Library hygiene. Valuable over time but nothing is blocked by its absence.
+
+**Independent Test**: Delete an owned Pattern and assert confirmation, permanence, unaffected Family members, and that shipped Patterns expose no Delete control.
+
+**Acceptance Scenarios**:
 
 - **AC-7.5.1** — Delete requires a naming confirmation
   - **Given** "My Custom Fill" (carrying the `custom` Tag) is loaded
@@ -970,10 +1144,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 8 — Combine
+### User Story 25 - Append a second Pattern (Priority: P3)
 
-### US-8.1 — Append a second Pattern
+*Traceability: `US-8.1` — Append a second Pattern*
+
 **As** the Composer, **I want** to pick a second Pattern and append it after my current one, **so that** I can build longer phrases out of existing pieces instead of re-authoring them from scratch.
+
+**Why this priority**: A composition convenience that saves re-authoring, but every resulting Pattern could be built manually instead.
+
+**Independent Test**: Combine two Patterns and assert concatenation, picker filtering against the Measure cap, and correct owned vs shipped save behaviour.
+
+**Acceptance Scenarios**:
 
 - **AC-8.1.1** — Combine has no meter-matching restriction
   - **Given** "Groove A" (4/4) and "Bossa Take 2" (a mix of 6/8 and 7/8 Measures)
@@ -1012,10 +1193,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 10 — Duplicate
+### User Story 26 - Duplicate a Pattern to build a variation (Priority: P3)
 
-### US-10.1 — Duplicate a Pattern to build a variation
+*Traceability: `US-10.1` — Duplicate a Pattern to build a variation*
+
 **As** the Composer, **I want** to double a Pattern's length with an identical copy of its content, **so that** I can edit the second half into a variation, like a fill or a turnaround, without retyping the first half.
+
+**Why this priority**: Speeds up building call-and-response and fill variations; entirely optional to the core loop.
+
+**Independent Test**: Duplicate a Pattern and assert exact content copying, focus placement, and cap-based enabling.
+
+**Acceptance Scenarios**:
 
 - **AC-10.1.1** — Duplicate copies the full Measure sequence exactly
   - **Given** "Groove A" (3 Measures), regardless of Sound Mode or content
@@ -1049,10 +1237,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 11 — Duplicate Detection & Pattern Families
+### User Story 27 - Detect true duplicates (Priority: P3)
 
-### US-11.1 — Detect true duplicates
+*Traceability: `US-11.1` — Detect true duplicates*
+
 **As** the Composer, **I want** to be warned only when a Pattern is a genuine duplicate, **so that** I don't accumulate clutter, while still being free to keep intentionally different renditions of the same rhythm.
+
+**Why this priority**: Prevents library clutter without blocking intentional variants. Only matters once a library has accumulated.
+
+**Independent Test**: Compare Patterns differing in each dimension and assert only genuinely identical ones are flagged, at the correct moments.
+
+**Acceptance Scenarios**:
 
 - **AC-11.1.1** — True duplicate match criteria
   - **Given** "Samba Break" and "Samba Break (copy)": identical Measure sequences (Time Signatures, Recipes, Slot on/off, Accent Levels), both Percussive, and identical swing values on every Subdivision Group
@@ -1083,8 +1278,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-11.2 — Detect and surface Pattern Families
+### User Story 28 - Detect and surface Pattern Families (Priority: P3)
+
+*Traceability: `US-11.2` — Detect and surface Pattern Families*
+
 **As** the Composer, **I want** the system to notice when several Patterns share identical rhythm content but differ in Sound Mode or Pitch, **so that** I can find other versions of a rhythm I've already built (e.g. a root-note-drone version next to an arpeggiated version of the same groove) instead of losing track of them.
+
+**Why this priority**: Makes deliberate variants discoverable rather than lost, but is discovery convenience rather than capability.
+
+**Independent Test**: Create variants differing only in Sound Mode or Pitch and assert Family detection, independence, and viewport-dependent display.
+
+**Acceptance Scenarios**:
 
 - **AC-11.2.1** — Family match criteria
   - **Given** "Samba Break" (Percussive) and "Samba Break (Melodic)" (Melodic): identical Measure sequences, Recipes, Slot on/off, and Accent Levels, differing only in Sound Mode
@@ -1114,8 +1318,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-### US-11.3 — Detect when a library update duplicates one of your own custom Patterns
+### User Story 29 - Detect when a library update duplicates your own custom Pattern (Priority: P3)
+
+*Traceability: `US-11.3` — Detect when a library update duplicates one of your own custom Patterns*
+
 **As** the Composer, **I want** to be proactively told when a Pattern I submitted (US-13.1) has been merged and now ships with the app, duplicating my own custom copy, **so that** I can clean up the redundant copy without having to notice it myself.
+
+**Why this priority**: Closes the loop after a submitted Pattern is merged upstream; only reachable after community sharing exists.
+
+**Independent Test**: Simulate a shipped-library update that duplicates a custom Pattern and assert the one-time Remove/Keep prompt and its persistence.
+
+**Acceptance Scenarios**:
 
 - **AC-11.3.1** — Trigger: app load after a library update
   - **Given** the app loads and the shipped library has changed since the last time it loaded (a new app version with newly merged Patterns)
@@ -1144,10 +1357,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 12 — MIDI Export (single Pattern)
+### User Story 30 - Export a single Pattern as MIDI (Priority: P3)
 
-### US-12.1 — Export a single Pattern as MIDI
+*Traceability: `US-12.1` — Export a single Pattern as MIDI*
+
 **As** the Composer, **I want** to download the current Pattern as a `.mid` file, **so that** I can bring it into a DAW without re-transcribing it by ear.
+
+**Why this priority**: Bridges to a DAW for users taking a Pattern further, but the practice tool is complete without it.
+
+**Independent Test**: Export Percussive and Melodic Patterns and assert channel routing, velocity mapping, and correct mixed-meter timing.
+
+**Acceptance Scenarios**:
 
 - **AC-12.1.1** — MIDI generation is entirely client-side
   - **Given** "Samba Break" is loaded
@@ -1171,10 +1391,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 13 — Community Sharing
+### User Story 31 - Submit a Pattern for review (Priority: P3)
 
-### US-13.1 — Submit a Pattern for review
+*Traceability: `US-13.1` — Submit a Pattern for review*
+
 **As** the Contributor, **I want** to submit a Pattern, or a batch of my Patterns, for review, **so that** my original work can become part of the shared library for other users — and, in the absence of any sync/export-import feature, this is also the only way one of my custom Patterns ever becomes available to me on a different browser or device: once merged, it ships with the app itself rather than living only in the browser storage where I created it.
+
+**Why this priority**: The only path by which a custom Pattern reaches other devices or users, but depends on a mature library to be worth using.
+
+**Independent Test**: Trigger single and bulk submission and assert payload completeness, the oversized-URL fallback, and that Local Metadata never leaks.
+
+**Acceptance Scenarios**:
 
 - **AC-13.1.1** — Submission mechanism: pre-filled GitHub issue link, no auth stored in-app
   - **Given** "Samba Break": Percussive, Rating 4, Tags `custom`/`swing`/"warmup," one 4/4 Measure on the Straight 16ths Recipe with Slot 1 at Strong and swing 30 on that Beat's Subdivision Group
@@ -1212,10 +1439,17 @@ See Epic 6 (US-6.1).
 
 ---
 
-## Epic 15 — Responsive Layout
+### User Story 32 - Desktop, tablet, and mobile adaptation (Priority: P2)
 
-### US-15.1 — Desktop, tablet, and mobile adaptation
+*Traceability: `US-15.1` — Desktop, tablet, and mobile adaptation*
+
 **As** the Practicing Musician on any device, **I want** the layout to adapt to my screen size, **so that** the app stays usable without zooming or hunting for controls, whether I'm at a desk or holding a phone while practicing.
+
+**Why this priority**: The tool is used with an instrument in hand, often from a phone or tablet on a music stand. Responsive behaviour is a usage requirement, not polish.
+
+**Independent Test**: Render at each breakpoint and assert sidebar behaviour, accordion collapsing, section order, and that no control forces horizontal page scroll.
+
+**Acceptance Scenarios**:
 
 - **AC-15.1.1** — Breakpoint definitions
   - **Given** a viewport 767px wide, one 768px wide, one 1100px wide, and one 1101px wide
@@ -1272,40 +1506,152 @@ See Epic 6 (US-6.1).
   - *(Flagged: this is the hardest responsive case in the app — 144 Slots on a phone. It's specified here as a constraint, but the actual layout strategy for it — horizontal scroll, per-Measure paging, zoom-out, or something else — is a UI design decision not settled in this document.)*
 
 ---
+### Edge Cases
 
-## Open items still needing your input
+- **Meter change destroys Slot content.** Changing a Measure's Time Signature resets its Beats and
+  discards existing Slot content rather than remapping it, because there is no unsurprising way to
+  carry Slots across a Beat-count change. This is mitigated by making the reset a single undoable
+  action (AC-1.1.7) rather than by attempting a remap.
+- **Recipe change shrinks a Beat.** Selecting a Recipe with fewer Slots than are currently active
+  requires confirmation naming the number of notes that will be cleared (AC-1.3.7); growing the
+  Slot count applies silently (AC-1.3.8).
+- **A Pattern that cannot express the selected counting system.** A Pattern containing a mixed-feel
+  Recipe has no Takadimi or 1-e-&-a vocabulary for half-Beat groups, so it renders in Numbered
+  regardless of the global setting, without overwriting that setting (AC-5.6.2, AC-5.6.3).
+- **Duplicates that emerge mid-edit.** Because owned Patterns auto-save continuously, there is no
+  discrete save moment at which to interrupt with a duplicate warning. Duplicates created this way
+  surface only in the standing possible-duplicates view (AC-11.1.4), never as a modal.
+- **A submitted Pattern is later merged upstream.** The user then holds a custom copy duplicating a
+  newly-shipped one; a one-time Remove/Keep prompt resolves it, and the resolution is remembered as
+  Local Metadata (US-11.3).
+- **Bulk submission exceeds the URL length limit.** Falls back to a title/label-only prefilled issue
+  plus clipboard copy with paste instructions, rather than emitting a broken link (AC-13.1.3).
+- **Melodic playback before samples finish loading.** Play shows a loading state and waits;
+  Percussive playback is unaffected and remains immediately available (AC-2.4.3).
+- **The densest supported Pattern on the smallest supported screen.** 6 Measures of 12/8 at Straight
+  16ths is 144 Slots on a 390 px viewport — overflow is contained to the grid's own scroll region so
+  the page body never scrolls horizontally (AC-15.1.10).
+- **Editing a Pattern the user does not own.** Any edit to a shipped Pattern triggers a naming prompt
+  before the edit applies; cancelling discards the edit and leaves the shipped Pattern untouched
+  (US-7.3). Shipped Patterns are never mutated and never deletable.
 
-*(No unresolved content gaps remain — the half-Beat syllable question that previously sat here was resolved by restricting Patterns containing mixed-feel Recipes to the Numbered system, per AC-5.6.2, rather than inventing Takadimi/1-e-&-a vocabulary that doesn't exist.)*
+## Requirements *(mandatory)*
 
-### A. Values I chose without your input — confirm or override
+### Functional Requirements
 
-1. **AC-5.6.6** — Default counting system on first load: currently Takadimi. *(The original rationale — "it's the app's namesake" — no longer applies now that the app is Rhythm Master, so this default is genuinely unjustified rather than merely unconfirmed. Numbered is arguably the better default: it's the only system that works on every Pattern, including mixed-feel ones. Worth a deliberate decision.)*
-2. **AC-5.3.7** — User Tag limits: 30 characters per Tag, 20 Tags per Pattern.
-3. **AC-2.2.3 / AC-2.2.4** — Octave range 1–7, and degree strip showing 1–8 by default extending to 15. Chosen for reasonable coverage without knowing your intended instrumental range.
-4. **AC-4.1.1 / AC-4.1.2** — Timing tolerances: <10ms audio drift over 500 loops, <20ms audio-to-visual sync. Reasonable engineering starting bounds, not measured requirements.
-5. **AC-2.1.4** — Pitch data is preserved (not deleted) when toggling Melodic → Percussive → Melodic, so exploratory mode-switching doesn't destroy authoring work.
+These are cross-cutting requirements that hold across all user stories. Story-specific behaviour is
+specified in the Acceptance Scenarios above.
 
-### B. Behavior carried over from the original app — confirm it should persist
+- **FR-001**: All meter, beat, subdivision, accent, swing, and pitch calculations MUST derive from a
+  single canonical module implemented as pure, deterministic functions — never duplicated or
+  hardcoded per view or per component.
+- **FR-002**: Beat count MUST always equal the Time Signature's numerator, for every supported
+  meter, with no assumed sub-grouping applied anywhere in authoring, playback, display, or export.
+- **FR-003**: A Slot's default Accent Level MUST be computed from its metric position on demand and
+  MUST NOT be stored; only user overrides are persisted.
+- **FR-004**: The system MUST persist all user-created data in browser-local storage only, with no
+  backend, no user accounts, and no remote sync.
+- **FR-005**: Every persisted store and every exported or submitted payload MUST carry a schema
+  version field, and format changes MUST ship a migration that upgrades prior data rather than
+  discarding it.
+- **FR-006**: Local Metadata — submission history, resolved-duplicate-prompt state, and similar
+  operational bookkeeping — MUST be stored separately from Pattern definitions, keyed by Pattern
+  identity, and MUST NOT appear in any export or submission payload.
+- **FR-007**: Patterns shipped with the app MUST NOT be mutated in place; editing one MUST produce a
+  new user-owned Pattern. Provenance MUST be a durable property, not derived from mutable state.
+- **FR-008**: No API key, token, or secret may appear in client code. Third-party write operations
+  MUST be designed around user-authenticated flows on the third party's own domain.
+- **FR-009**: Playback scheduling MUST be driven by the audio clock via a lookahead scheduler.
+  Wall-clock timers MUST NOT determine when a note sounds, and event times MUST be computed from an
+  absolute origin rather than accumulated.
+- **FR-010**: Audio MUST NOT play on page load, Pattern load, or any state change — only on direct
+  user interaction with a transport control.
+- **FR-011**: The audio context MUST be created or resumed inside a user-gesture handler and MUST
+  recover from being suspended by the browser or OS on the next user gesture.
+- **FR-012**: Every piece of musical information — Slot on/off, Accent Level, straight vs. triplet
+  feel, and active playback position — MUST carry a non-color indicator so it remains interpretable
+  in monochrome and under common color vision deficiencies.
+- **FR-013**: Every interactive element MUST be reachable and operable by keyboard, and MUST expose
+  an accessible name conveying its musical position and state.
+- **FR-014**: Rendering MUST be a pure function of the Pattern object plus transport position; no
+  component may hold authoritative display state outside it.
+- **FR-015**: Every Acceptance Criterion in this specification MUST have at least one automated test
+  referencing its AC ID, and the suite MUST be able to report coverage per AC ID.
 
-6. **AC-4.4.5** — Swing timing formula, including the `0.95 × d` cap on maximum shift.
-7. **AC-12.1.3** — MIDI velocity mapping: Weak/Medium/Strong → 50/80/110.
-8. **AC-13.1.3** — 8,000-character threshold before bulk submission falls back to clipboard-paste (safe margin under GitHub's ~8,192 request-URI limit).
+### Key Entities
 
-### C. Specified as behavior, but the visual/interaction design is not settled
+- **Pattern**: A rhythmic and optionally melodic idea, built from one or more Measures. The unit
+  that lives in the Library and is rated, tagged, played, and exported. Carries a Sound Mode, an
+  optional Key, Tags, and a Rating.
+- **Measure**: One instance of a Time Signature at a position in a Pattern. A Pattern is an ordered
+  sequence of Measures, each carrying its own Time Signature, capped at 6 per Pattern.
+- **Time Signature**: One of ten supported values — 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8,
+  12/8. A per-Measure property. Determines Beat count (the numerator) and each Beat's note-value
+  (the denominator).
+- **Beat**: One pulse within a Measure, one note-value long.
+- **Recipe**: A named subdivision template applied to a Beat, defining its Slot count and the feel
+  of each Subdivision Group. Quarter-note Beats offer five Recipes including two mixed-feel splits;
+  eighth-note Beats offer two.
+- **Subdivision Group**: A contiguous run of Slots within a Beat sharing one rhythmic feel. Carries
+  its own swing amount when straight-feel. A Beat has more than one only under a mixed-feel Recipe.
+- **Slot**: The smallest addressable rhythmic unit — an Accent Level and, in Melodic Patterns, a
+  Pitch. Belongs to exactly one Subdivision Group.
+- **Accent Level**: Integer 0–3 (off, weak, medium, strong) per Slot, defaulting to a value computed
+  from metric position and overridable by tap-cycling.
+- **Pitch**: In a Melodic Pattern, a single scale degree plus octave assigned to a Slot. Exactly one
+  per Slot; no chords.
+- **Tag**: A label on a Pattern. User-typed Tags are free-form; four system Tags (`custom`,
+  `melodic`, `percussive`, `swing`) are applied automatically from the Pattern's own configuration
+  and are not user-removable.
+- **Pattern Family**: A set of Patterns sharing identical rhythm content but differing in Sound Mode
+  or Pitch. A discovery relationship only — members are fully independent.
+- **Local Metadata**: App-local bookkeeping about a Pattern, stored separately from it and never
+  included in any portable payload.
 
-9. **AC-15.1.10** — How the grid handles the largest supported Pattern (6 Measures of 12/8 at Straight 16ths = 144 Slots) on a 390px phone. The constraint is stated; the strategy (horizontal scroll, per-Measure paging, zoom-out, etc.) is not.
-10. **AC-11.1.4 / AC-11.1.5** — The standing "possible duplicates" view and its cleanup flow: functionally specified, exact list/detail layout not designed.
-11. **AC-5.3.5** — Automatic Tags must render "visually distinct" from user Tags; the specific treatment (lock icon, color, separate row) is not chosen.
+## Success Criteria *(mandatory)*
 
-### D. Deferred scope — intentionally out of this version
+### Measurable Outcomes
 
-12. **Epic 9 (Layer)** — removed; Combine (Epic 8) covers the retained use case.
-13. **Epic 14 (Tutorial System)** — deferred, to be specified later. The New User persona remains defined but currently unused.
-14. **Arrangements** (multi-section pieces) — out of scope, per the header.
-15. **Cross-device sync / export-import** — explicitly not built. Community submission (US-13.1) is the only path by which a custom Pattern reaches another browser or device, and only if merged into the shipped library.
+- **SC-001**: A musician can open the app, author a one-Measure rhythm, and hear it looping in under
+  60 seconds, without consulting documentation.
+- **SC-002**: Playback holds time across a 10-minute continuous practice session with no audible
+  drift between the click, the pattern, and the visual cursor.
+- **SC-003**: All three accent levels are distinguishable both by ear during playback and by eye on
+  a greyscale rendering of the grid.
+- **SC-004**: A piece that changes meter mid-phrase can be transcribed as a single Pattern, without
+  splitting it into multiple Patterns or leaving the tool.
+- **SC-005**: A beat that is part straight-feel and part triplet-feel can be authored and played back
+  accurately — a capability the previous tool could not represent at all.
+- **SC-006**: No authored edit is ever lost. Closing the app at any point preserves every change made
+  up to that moment, with no explicit save action having been taken.
+- **SC-007**: Every authoring and practice task can be completed on a 390 px-wide phone held in one
+  hand, including on the largest Pattern the app permits.
+- **SC-008**: A musician can locate a specific Pattern in a library of 100+ Patterns in under 10
+  seconds using search, tags, or rating filters.
+- **SC-009**: 100% of Acceptance Criteria in this specification have at least one passing automated
+  test referencing their AC ID.
+- **SC-010**: The app is interactive — browsing, viewing, and editing Patterns — within 2 seconds of
+  page load, regardless of whether sampled instrument assets have finished downloading.
 
----
+## Assumptions
 
-## Next step
-
-Ready to go section by section — starting with Epic 1, or wherever you'd like to begin.
+- **Single user, single device.** No accounts, no authentication, no cross-device sync. A user's
+  custom Patterns live in one browser's local storage; the only path to another device is
+  submitting a Pattern upstream and having it merged into the shipped library (US-13.1).
+- **Modern browser with Web Audio support.** Sample-accurate scheduling against an audio clock and
+  asynchronous sample loading are both assumed available.
+- **Local storage is sufficient and available.** Capacity limits are assumed adequate for a personal
+  Pattern library; behaviour when storage is full or disabled is not specified in this version.
+- **Sampled piano is an accepted dependency.** Synthesised approximation was evaluated and rejected
+  as insufficiently musical for melodic practice. This is a documented standing exception to the
+  constitution's dependency-minimalism principle.
+- **Solo maintainer.** Test verification is developer-run rather than enforced by a CI pipeline.
+- The following values are reasonable defaults chosen without external validation and may be revised:
+  default counting system on first load (Takadimi); user Tag limits (30 characters, 20 per Pattern);
+  octave range 1–7 and degree strip span 1–8 extending to 15; timing tolerances of 10 ms audio drift
+  and 20 ms audio-to-visual sync.
+- The following are carried over from the predecessor application and assumed still correct: the
+  swing timing formula including its 0.95 cap; MIDI velocity mapping of 50/80/110 for
+  weak/medium/strong; the 8,000-character threshold before bulk submission falls back to clipboard.
+- **Out of scope for this version**: multi-section Arrangements; a guided tutorial system; layering
+  two Patterns by merging their accents; and any form of export/import or cloud sync.

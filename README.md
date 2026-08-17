@@ -32,7 +32,7 @@ Pre-implementation. The specification is complete; no application code exists ye
 | Document | Purpose |
 |---|---|
 | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project principles — correctness, accessibility, traceability, and scope constraints that all work is held to |
-| [`docs/build-spec.md`](docs/build-spec.md) | Full build specification: 13 epics, ~155 acceptance criteria in Given/When/Then form |
+| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 32 user stories, 187 acceptance criteria in Given/When/Then form |
 
 ## Traceability
 
@@ -52,5 +52,5 @@ speckit-constitution → specify → plan → tasks → implement → converge
 optional: clarify, analyze, checklist
 ```
 
-To work on a feature, run `/speckit-specify` with the relevant epic from
-`docs/build-spec.md`, then continue through the chain.
+The MVP specification is complete at `specs/001-rhythm-master-mvp/`. The next step
+is `/speckit-plan`.
