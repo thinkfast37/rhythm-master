@@ -26,7 +26,21 @@ import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import { renderGrid } from './ui/grid.js';
-import { renderControls } from './ui/controls.js';
+import {
+  renderHeader,
+  renderPlayControls,
+  renderPlaybackSettings,
+  renderEditControls,
+  renderActionControls,
+} from './ui/controls.js';
+import {
+  applyViewport,
+  applyAccordions,
+  closeDrawer,
+  openDrawer,
+  isMobile,
+  scrollMeasureIntoView,
+} from './ui/responsive.js';
 import { renderLibrary, buildEntries, neighbours } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildSubmission } from './export/submit.js';
@@ -464,23 +478,99 @@ export { handlers };
 
 // --- mounting ---------------------------------------------------------------
 
+/**
+ * Build the app shell.
+ *
+ * Main-panel section order is fixed top to bottom and does not vary by
+ * viewport (AC-15.1.8): Pattern header, grid, play controls, playback settings,
+ * edit controls, actions, quick navigation. DOM order is the priority order.
+ */
 export function mount(root) {
-  const controlsEl = document.createElement('div');
-  const gridEl = document.createElement('div');
-  const navEl = document.createElement('div');
-  navEl.className = 'pattern-nav';
-  const libraryEl = document.createElement('div');
-  root.append(controlsEl, gridEl, navEl, libraryEl);
+  root.innerHTML = '';
+  const shell = document.createElement('div');
+  shell.className = 'shell';
 
+  // --- sidebar (library) ---
+  const sidebar = document.createElement('aside');
+  sidebar.className = 'sidebar';
+  const libraryEl = document.createElement('div');
+  sidebar.appendChild(libraryEl);
+
+  const drawerToggle = document.createElement('button');
+  drawerToggle.type = 'button';
+  drawerToggle.className = 'drawer-toggle';
+  drawerToggle.dataset.action = 'toggle-drawer';
+  drawerToggle.textContent = 'Library';
+  const syncDrawerToggle = () => {
+    const open = shell.dataset.drawer === 'open';
+    drawerToggle.textContent = open ? 'Close' : 'Library';
+    drawerToggle.setAttribute('aria-expanded', String(open));
+  };
+  drawerToggle.addEventListener('click', () => {
+    if (shell.dataset.drawer === 'open') closeDrawer(shell);
+    else openDrawer(shell);
+    syncDrawerToggle();
+  });
+
+  const scrim = document.createElement('div');
+  scrim.className = 'drawer-scrim';
+  scrim.addEventListener('click', () => {
+    closeDrawer(shell);
+    syncDrawerToggle();
+  });
+
+  // --- main panel, in priority order ---
+  const main = document.createElement('main');
+  main.className = 'main-panel';
+
+  const headerEl = document.createElement('header');
+  const gridEl = document.createElement('div');
+  const playEl = document.createElement('section');
+  playEl.dataset.primary = 'true';
+  playEl.dataset.section = 'play';
+
+  const settingsEl = document.createElement('details');
+  settingsEl.dataset.section = 'playback-settings';
+  const settingsSummary = document.createElement('summary');
+  settingsSummary.textContent = 'Playback settings';
+  const settingsBody = document.createElement('div');
+  settingsEl.append(settingsSummary, settingsBody);
+
+  const editEl = document.createElement('details');
+  editEl.dataset.section = 'edit';
+  const editSummary = document.createElement('summary');
+  editSummary.textContent = 'Edit';
+  const editBody = document.createElement('div');
+  editEl.append(editSummary, editBody);
+
+  const actionsEl = document.createElement('details');
+  actionsEl.dataset.section = 'actions';
+  const actionsSummary = document.createElement('summary');
+  actionsSummary.textContent = 'Export & actions';
+  const actionsBody = document.createElement('div');
+  actionsEl.append(actionsSummary, actionsBody);
+
+  for (const section of [settingsEl, editEl, actionsEl]) {
+    section.addEventListener('toggle', () => {
+      section.dataset.touched = 'true';
+    });
+  }
+
+  const navEl = document.createElement('nav');
+  navEl.className = 'pattern-nav';
   for (const direction of ['previous', 'next']) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'nav-button';
     b.dataset.action = direction === 'previous' ? 'prev-pattern' : 'next-pattern';
-    b.textContent = direction === 'previous' ? '‹ Prev' : 'Next ›';
+    b.textContent = direction === 'previous' ? '\u2039 Prev' : 'Next \u203a';
     b.addEventListener('click', () => handlers.onNavigate(direction));
     navEl.appendChild(b);
   }
+
+  main.append(drawerToggle, headerEl, gridEl, playEl, settingsEl, editEl, actionsEl, navEl);
+  shell.append(sidebar, scrim, main);
+  root.appendChild(shell);
 
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
@@ -495,13 +585,38 @@ export function mount(root) {
     }
   });
 
-  subscribe((pattern, position, s) => {
-    renderControls(controlsEl, pattern, s, handlers);
-    renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
-    renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
+  // Selecting a Pattern closes the drawer on mobile, revealing what was just
+  // loaded; above mobile the sidebar is a column and stays put (AC-15.1.6).
+  sidebar.addEventListener('click', (event) => {
+    if (event.target.closest('[data-action="open-pattern"]')) {
+      closeDrawer(shell);
+      syncDrawerToggle();
+    }
   });
 
-  return { controlsEl, gridEl, libraryEl, navEl };
+  applyViewport(shell, { openDrawerOnMobile: isMobile() });
+  syncDrawerToggle();
+  applyAccordions([settingsEl, editEl, actionsEl]);
+  window.addEventListener('resize', () => {
+    applyViewport(shell);
+    syncDrawerToggle();
+    applyAccordions([settingsEl, editEl, actionsEl]);
+  });
+
+  subscribe((pattern, position, s) => {
+    renderHeader(headerEl, pattern, s);
+    renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
+    renderPlayControls(playEl, pattern, s, handlers);
+    renderPlaybackSettings(settingsBody, pattern, s, handlers);
+    renderEditControls(editBody, pattern, s, handlers);
+    renderActionControls(actionsBody, pattern, s, handlers);
+    renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
+
+    // Keep what is sounding on screen (AC-15.1.11).
+    if (position) scrollMeasureIntoView(gridEl, position.measureIndex);
+  });
+
+  return { shell, sidebar, libraryEl, headerEl, gridEl, playEl, settingsEl, editEl, actionsEl, navEl };
 }
 
 /** Isolated so tests can pin it; core/ stays clock-free (Principle I). */
@@ -521,7 +636,7 @@ export function unresolvedLibraryDuplicates() {
   return patternStore
     .loadAll()
     .filter((owned) => !localMetaStore.forPattern(owned.id).duplicateResolved)
-    .map((owned) => ({ owned, shipped: shipped.find((s) => isDuplicate(owned, s)) }))
+    .map((owned) => ({ owned, shipped: shipped.find((sp) => isDuplicate(owned, sp)) }))
     .filter((pair) => Boolean(pair.shipped));
 }
 
@@ -535,9 +650,14 @@ export function currentDuplicates() {
   return findDuplicates(state.pattern, [...seedStore.loadAll(), ...patternStore.loadAll()]);
 }
 
+/**
+ * One prompt per Pattern that a library update has duplicated, on load.
+ * Answering either way records the resolution, so it never asks twice
+ * (US-11.3).
+ */
 async function promptLibraryDuplicates() {
   for (const { owned, shipped } of unresolvedLibraryDuplicates()) {
-    const keep = await ask({
+    const choice = await ask({
       message:
         `"${owned.name}" is now identical to "${shipped.name}", which ships with the app. ` +
         'Remove your copy, or keep it?',
@@ -546,11 +666,10 @@ async function promptLibraryDuplicates() {
         { label: 'Keep both', value: 'keep', primary: true },
       ],
     });
-    if (keep === 'remove') {
+    if (choice === 'remove') {
       patternStore.remove(owned.id);
       localMetaStore.forget(owned.id);
     } else {
-      // Remembering the answer is what stops this asking again every load.
       localMetaStore.update(owned.id, { duplicateResolved: true });
     }
   }

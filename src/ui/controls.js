@@ -54,6 +54,60 @@ export function renderControls(root, pattern, state, handlers) {
   return root;
 }
 
+/** The Pattern header: name, provenance, and Measure count. */
+export function renderHeader(root, pattern, state) {
+  root.innerHTML = '';
+  root.className = 'pattern-header';
+  root.dataset.owned = String(state.isOwned);
+
+  root.appendChild(el('h1', 'pattern-title', { textContent: pattern.name }));
+  root.appendChild(
+    el('p', 'pattern-meta', {
+      textContent:
+        `${state.isOwned ? 'Yours' : 'Ships with the app'} · ` +
+        `${pattern.measures.length} measure${pattern.measures.length === 1 ? '' : 's'} · ` +
+        `${pattern.measures.map((m) => m.timeSignature).join(', ')}`,
+    })
+  );
+  return root;
+}
+
+/** Play controls only — the primary transport, never collapsible. */
+export function renderPlayControls(root, pattern, state, handlers) {
+  root.innerHTML = '';
+  root.className = 'controls play-controls';
+  root.appendChild(renderTransport(state, handlers));
+  return root;
+}
+
+/** Playback settings: tempo, swing, counting system. */
+export function renderPlaybackSettings(root, pattern, state, handlers) {
+  root.innerHTML = '';
+  root.className = 'controls playback-settings';
+  root.appendChild(renderTempo(pattern, handlers));
+  root.appendChild(renderSwing(pattern, handlers));
+  root.appendChild(renderCounting(pattern, state, handlers));
+  return root;
+}
+
+/** Edit controls: structure, subdivision, sound mode, pitch. */
+export function renderEditControls(root, pattern, state, handlers) {
+  root.innerHTML = '';
+  root.className = 'controls edit-controls';
+  root.appendChild(renderStructure(pattern, handlers));
+  root.appendChild(renderSound(pattern, handlers));
+  if (pattern.soundMode === 'melodic') root.appendChild(renderPitch(pattern, state, handlers));
+  return root;
+}
+
+/** MIDI export and other whole-Pattern actions. */
+export function renderActionControls(root, pattern, state, handlers) {
+  root.innerHTML = '';
+  root.className = 'controls action-controls';
+  root.appendChild(renderActions(pattern, state, handlers));
+  return root;
+}
+
 /** Whole-Pattern operations: copy, delete, append, duplicate, export, submit. */
 function renderActions(pattern, state, handlers) {
   const group = el('div', 'control-group actions');
