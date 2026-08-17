@@ -28,6 +28,14 @@ const CONTRAST_HELPERS = `
   const ratio = (a, b) => { const s = [lum(parse(a)), lum(parse(b))].sort((p, q) => q - p);
                             return (s[0] + 0.05) / (s[1] + 0.05); };
   const cs = (e) => getComputedStyle(e);
+  // Cell grounds are translucent tints now (AC-3.1.18), so a colour must be
+  // composited over what sits behind it before it means anything to the eye.
+  const over = (fg, bg) => {
+    const f = fg.match(/[\\d.]+/g).map(Number);
+    const b = bg.match(/[\\d.]+/g).map(Number);
+    const a = f.length > 3 ? f[3] : 1;
+    return 'rgb(' + [0, 1, 2].map((i) => f[i] * a + b[i] * (1 - a)).join(',') + ')';
+  };
 `;
 
 /** A Melodic Pattern with a sounding Slot, which is what puts a divider on screen. */
@@ -81,7 +89,8 @@ test('AC-15.2.1/4 — A Melodic Slot’s accent-to-note divider, against the Slo
     // the thinner thing you see (AC-2.2.15/3).
     const strip = document.querySelector('.slot-note:not([disabled]) .slot-pitch');
     const zone = document.querySelector('.slot.has-note .slot-accent');
-    return ratio(cs(strip).borderTopColor, cs(zone).backgroundColor);
+    const ground = over(cs(zone).backgroundColor, cs(zone.closest('.measure')).backgroundColor);
+    return ratio(cs(strip).borderTopColor, ground);
   })()`);
   expect(contrast).toBeGreaterThanOrEqual(3);
 });

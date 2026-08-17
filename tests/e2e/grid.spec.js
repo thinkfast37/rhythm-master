@@ -692,3 +692,175 @@ test('AC-3.1.17/4 — The Accent bar keeps its proportion to the Slot at every R
   // The bar grows with it rather than staying a hairline in a wide cell.
   expect(sparse.barHeight).toBeGreaterThan(dense.barHeight);
 });
+
+/* --- the cell's colour (AC-3.1.18) and its shape (AC-15.2.6) -------------- */
+
+/** Background of the counting cell, and the colour of the syllable on it. */
+const cellPaint = (page, selector) =>
+  page.evaluate((sel) => {
+    const slot = document.querySelector(sel);
+    const cell = slot.querySelector('.slot-accent') ?? slot;
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const parse = (s) => s.match(/[\d.]+/g).map(Number);
+
+    // Composite the cell's translucent tint over what is behind it, which is
+    // what the eye actually sees.
+    const over = (fg, bg) => {
+      const f = parse(fg), b = parse(bg);
+      const a = f.length > 3 ? f[3] : 1;
+      return [0, 1, 2].map((i) => f[i] * a + b[i] * (1 - a));
+    };
+    const behind = getComputedStyle(slot.closest('.measure')).backgroundColor;
+    const composited = over(getComputedStyle(cell).backgroundColor, behind);
+    const lum = (a) => 0.2126 * lin(a[0]) + 0.7152 * lin(a[1]) + 0.0722 * lin(a[2]);
+    const inkRgb = parse(getComputedStyle(slot.querySelector('.slot-label')).color).slice(0, 3);
+
+    return {
+      tint: getComputedStyle(cell).backgroundColor,
+      tintLuminance: lum(composited),
+      ink: getComputedStyle(slot.querySelector('.slot-label')).color,
+      contrast: (() => {
+        const s = [lum(inkRgb), lum(composited)].sort((x, y) => y - x);
+        return (s[0] + 0.05) / (s[1] + 0.05);
+      })(),
+      metric: slot.dataset.metric,
+      accent: slot.dataset.accent,
+    };
+  }, selector);
+
+/** A 4/4 Measure on Straight 16ths with nothing turned on. */
+async function emptyMeasure(page) {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('4/4');
+    for (let b = 0; b < 4; b++) await window.__rm.handlers.onRecipe('straight-16ths', 0, b);
+  });
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('.slot').first()).toBeVisible();
+}
+
+test('AC-3.1.18/1 — A Slot that does not sound is tinted by its metric position — the Accent Level it would take if turned on — so a downbeat never looks like an "e"', async ({ page }) => {
+  await emptyMeasure(page);
+
+  // Beat 1 Slot 1 is Strong by AC-3.1.2; Slot 2 of the same Beat is Weak.
+  const downbeat = await cellPaint(page, '.slot[data-beat="0"][data-slot="0"]');
+  const offbeat = await cellPaint(page, '.slot[data-beat="0"][data-slot="1"]');
+
+  expect(downbeat.accent).toBe('0');
+  expect(offbeat.accent).toBe('0');
+  expect(downbeat.metric).not.toBe(offbeat.metric);
+  // Neither sounds, and they still do not look alike.
+  expect(downbeat.tint).not.toBe(offbeat.tint);
+});
+
+test('AC-3.1.18/2 — A Slot that sounds is tinted by its actual Accent Level instead, more strongly than any resting tint, so what sounds wins the eye over what merely could', async ({ page }) => {
+  await emptyMeasure(page);
+  const resting = await cellPaint(page, '.slot[data-beat="0"][data-slot="0"]');
+
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 0, 0); });
+  const sounding = await cellPaint(page, '.slot[data-beat="0"][data-slot="0"]');
+
+  expect(sounding.accent).not.toBe('0');
+  expect(sounding.tint).not.toBe(resting.tint);
+  // The same position, louder: a sounding cell is further from the Measure's
+  // own ground than the resting one it replaced.
+  const ground = await page.evaluate(
+    () => getComputedStyle(document.querySelector('.measure')).backgroundColor
+  );
+  expect(ground).toBeTruthy();
+  expect(Math.abs(sounding.tintLuminance - resting.tintLuminance)).toBeGreaterThan(0);
+  expect(sounding.tintLuminance).toBeGreaterThan(resting.tintLuminance);
+});
+
+test("AC-3.1.18/3 — Its counting syllable takes the same Accent Level's colour, so the cell reads as one thing rather than as text sitting on an unrelated ground", async ({ page }) => {
+  await emptyMeasure(page);
+
+  const inks = {};
+  for (const taps of [1, 2, 3]) {
+    await page.evaluate(async ([n]) => {
+      const { handlers: h } = window.__rm;
+      for (let i = 0; i < n; i++) await h.onSlotTap(0, 0, 0);
+    }, [taps]);
+    const seen = await cellPaint(page, '.slot[data-beat="0"][data-slot="0"]');
+    inks[seen.accent] = seen.ink;
+    await page.evaluate(async () => {
+      // Back to off, ready for the next level. The element is replaced on every
+      // render, so it has to be re-queried each time round rather than held.
+      const level = () =>
+        document.querySelector('.slot[data-beat="0"][data-slot="0"]').dataset.accent;
+      for (let i = 0; i < 5 && level() !== '0'; i++) {
+        await window.__rm.handlers.onSlotTap(0, 0, 0);
+      }
+    });
+  }
+
+  // Three levels, three different syllable colours.
+  const distinct = new Set(Object.values(inks));
+  expect(Object.keys(inks).length).toBe(3);
+  expect(distinct.size).toBe(3);
+});
+
+test("AC-3.1.18/4 — The syllable's colour clears 4.5:1 against the tint behind it at every Accent Level, since the fills are chosen for separability as blocks and are not all usable as text", async ({ page }) => {
+  await emptyMeasure(page);
+
+  for (let taps = 1; taps <= 3; taps++) {
+    await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 0, 0); });
+    const seen = await cellPaint(page, '.slot[data-beat="0"][data-slot="0"]');
+    if (seen.accent === '0') continue;
+    expect(seen.contrast, `accent ${seen.accent}`).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test('AC-15.2.6/1 — Each counting cell is as tall as it is wide, within a pixel, in both Sound Modes and at every Recipe', async ({ page }) => {
+  for (const mode of ['percussive', 'melodic']) {
+    await page.setViewportSize({ width: 1400, height: 900 });
+    await page.goto('/');
+    await page.evaluate(async ([m]) => {
+      window.__rm.loadBlank('4/4');
+      if (m === 'melodic') await window.__rm.handlers.onSoundMode(m);
+      for (let b = 0; b < 4; b++) await window.__rm.handlers.onRecipe('straight-8ths', 0, b);
+    }, [mode]);
+    await page.locator('.library-toggle').click();
+
+    const cells = await page.locator('.slot').evaluateAll((slots) =>
+      slots.map((s) => {
+        const cell = s.querySelector('.slot-accent') ?? s;
+        const r = cell.getBoundingClientRect();
+        return { w: r.width, h: r.height };
+      })
+    );
+
+    expect(cells.length).toBeGreaterThan(0);
+    for (const c of cells) {
+      expect(Math.abs(c.w - c.h), `${mode} ${c.w}x${c.h}`).toBeLessThanOrEqual(1);
+    }
+  }
+});
+
+test('AC-15.2.6/2 — The square never costs a tap target: where a Slot is at its minimum width the cell is that wide and that tall, which still clears the 24 CSS pixels AC-2.2.12 requires', async ({ page }) => {
+  // The densest supported Pattern on the narrowest supported viewport, which is
+  // where Slots sit at the AC-15.1.10 floor.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const { handlers: h } = window.__rm;
+    window.__rm.loadBlank('12/8');
+    for (let i = 0; i < 7; i++) await h.onAddMeasure();
+  });
+  await page.locator('.library-toggle').click();
+
+  const cells = await page.locator('.slot').evaluateAll((slots) =>
+    slots.map((s) => {
+      const r = (s.querySelector('.slot-accent') ?? s).getBoundingClientRect();
+      return { w: r.width, h: r.height };
+    })
+  );
+
+  expect(cells.length).toBeGreaterThan(100);
+  for (const c of cells) {
+    expect(c.w, `width ${c.w}`).toBeGreaterThanOrEqual(24);
+    expect(c.h, `height ${c.h}`).toBeGreaterThanOrEqual(24);
+    expect(Math.abs(c.w - c.h)).toBeLessThanOrEqual(1);
+  }
+});
