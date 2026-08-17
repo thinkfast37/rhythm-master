@@ -618,6 +618,14 @@ record is complete rather than starting mid-stream.
 
   *Superseded description: build the view and panel — AC-11.1.4, AC-11.1.5, AC-11.2.4, AC-11.2.5, and the naming-time warning in AC-11.1.3.* `src/core/similarity.js` computes all of it correctly and `src/main.js` exposes `currentDuplicates`, `currentFamily` and `unresolvedLibraryDuplicates` — but only on the `window.__rm` test seam. There is no view, no panel, no CSS, and no way for the musician to reach any of it. AC-11.1.4 calls the view "the sole safety net" for duplicates that emerge through ongoing edits, so at present there is none. AC-11.2.5 specifies the panel below the editor at ≥768px and nothing below that. Thirteen tests of fingerprint arithmetic in `tests/unit/core/similarity.test.js` carry these Stories' AC IDs, which is why this read as complete. **This is unbuilt work, not a naming defect — it is why the audit happened.**
 
+- [X] T164 **[bug]** Carry the Slot's text hierarchy on colour, and fix the two text colours that were inverted — `specs/001-rhythm-master-mvp/spec.md` (AC-2.2.14/6 added), `src/styles/tokens.css`, `tests/e2e/melodic.spec.js`. Extends P-016.
+
+  The counting syllable was `--ink-dim` while the scale degree was `--ink`, so the note the maintainer wanted to recede was literally the brightest text in the Slot. That is a plain inversion and it had been there since T160.
+
+  The larger point is why three passes at "make the note text smaller" changed nothing the maintainer could see: **their browser enforces a minimum font size**, which raises the syllable's 15px and the pitch's 10px to that same value. No declared ratio survives it. Weight is no better — a dyslexia-friendly face with heavy weighted bottoms reads as bold at every weight. Both channels AC-2.2.14/3 and /4 rely on are ones a reader's own settings overrule.
+
+  Colour is the one channel neither setting touches, so the ordering now rests on it: syllable `--ink`, degree `--ink-dim`, name `--ink-faint` (new). AC-2.2.14/6 states it, and its test asserts strictly descending relative luminance **and** re-asserts the ordering with size and weight forced identical — the state the maintainer's browser actually produces. /3 and /4 stay as reinforcement where a browser honours them.
+
 - [X] T163 **[approach change]** Move the Accent's second channel from fill height to a bottom bar, and pin the grid's typefaces — `specs/001-rhythm-master-mvp/research.md` (D-005 amended), `src/ui/grid.js`, `src/styles/tokens.css`, `tests/e2e/grid.spec.js`, `tests/e2e/melodic.spec.js`. No AC changes: nothing in the spec ever specified the fill, only D-005 did, and it named itself revisable.
 
   Two reports from the maintainer, one cause between them.
