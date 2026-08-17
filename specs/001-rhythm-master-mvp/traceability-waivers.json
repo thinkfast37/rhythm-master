@@ -1,0 +1,4 @@
+{
+  "note": "Gaps deliberately left open, each with a written reason (CLAUDE.md §2b). This is NOT the baseline: the baseline is debt still owed and expected to shrink, a waiver is a decision that a gap will not be closed. Only LOW and MEDIUM gaps may be waived — CRITICAL (no test at all) and HIGH (the test proves something else, or a UI criterion has only a pure unit test) are the states that let unbuilt work report as complete, and no reason clears them (Constitution Principle IV). A waiver naming a criterion the spec does not declare, carrying no real reason, or covering a gap that has since been fixed, fails check T9.",
+  "waived": []
+}

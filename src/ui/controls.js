@@ -211,9 +211,57 @@ function renderActions(pattern, state, handlers) {
     disabled: pattern.measures.length * 2 > MAX_MEASURES,
   });
   button('export-midi', 'Export MIDI', () => handlers.onExportMidi());
+  // The standing possible-duplicates view (AC-11.1.4). It is library-wide, not about the
+  // current Pattern, but it lives here because this is where whole-Pattern operations
+  // are — and AC-15.1.8 already accounts for the actions area holding them.
+  button('show-duplicates', 'Duplicates…', () => handlers.onShowDuplicates());
   button('submit-pattern', 'Submit', () => handlers.onSubmit());
 
   return group;
+}
+
+/**
+ * The current Pattern's Family members. AC-11.2.5, AC-15.1.8.
+ *
+ * Last in the main panel, because these are a way *out* of the current Pattern rather
+ * than a control on it — putting them higher would separate the transport from the
+ * controls it drives.
+ *
+ * Hidden below 768px by CSS keyed on the shell's `data-viewport`, not by checking the
+ * width here: `applyViewport` updates that attribute on resize but nothing re-renders,
+ * so a JS width check would be right on load and wrong the moment the window changed.
+ *
+ * Absent entirely when there are no members — an empty "no related Patterns" row is a
+ * permanent piece of furniture reporting nothing.
+ */
+export function renderFamilyMembers(root, family, handlers) {
+  root.innerHTML = '';
+  root.className = 'family-members';
+  root.hidden = family.length === 0;
+  if (family.length === 0) return;
+
+  root.appendChild(
+    el('h2', 'family-title', {
+      textContent: family.length === 1 ? 'Same rhythm, 1 other version' : `Same rhythm, ${family.length} other versions`,
+    })
+  );
+
+  const list = el('ul', 'family-list');
+  for (const member of family) {
+    const item = el('li', 'family-item');
+    const link = el('button', 'family-link', { type: 'button', textContent: member.name });
+    link.dataset.action = 'load-family-member';
+    link.dataset.patternId = member.id;
+    // What differs is the whole point of the relationship, so name it rather than
+    // leaving the musician to open each one to find out.
+    link.appendChild(
+      el('span', 'family-kind', { textContent: member.soundMode === 'melodic' ? 'Melodic' : 'Percussive' })
+    );
+    link.addEventListener('click', () => handlers.onOpen(member.id, member.owned));
+    item.appendChild(link);
+    list.appendChild(item);
+  }
+  root.appendChild(list);
 }
 
 /**

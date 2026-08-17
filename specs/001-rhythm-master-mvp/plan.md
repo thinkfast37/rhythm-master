@@ -73,12 +73,13 @@ findings, held in `traceability-baseline.json` so the gate can block new drift w
 are worked off. They are not a plan deviation to be waived — they are logged as T147–T153
 in `tasks.md` and burn down from there. The two that matter most:
 
-- **US-11.1's possible-duplicates view and US-11.2's Family panel were never built.**
-  `core/similarity.js` computes both correctly and `main.js` exposes `currentDuplicates`
-  and `currentFamily`, but only as test seams on `window.__rm`. There is no view, no
-  panel, and no CSS. Thirteen tests of fingerprint arithmetic carry those Stories' AC IDs,
-  so the old gate read 100%. AC-11.1.4 calls the view "the sole safety net" for duplicates
-  that emerge through ongoing edits; there is currently no safety net.
+- ~~**US-11.1's possible-duplicates view and US-11.2's Family panel were never built.**~~
+  Built by T148 on 2026-08-17. `core/similarity.js` had computed both correctly all along,
+  but `main.js` exposed `currentDuplicates` and `currentFamily` only as test seams on
+  `window.__rm` — no view, no panel, no CSS — while thirteen tests of fingerprint
+  arithmetic carried those Stories' AC IDs, so the old gate read 100%. AC-11.1.4 called
+  the view "the sole safety net" for duplicates that emerge through ongoing edits, and
+  there was none.
 - **83 criteria are proved by a test that asserts something else**, in contiguous runs
   consistent with ACs being inserted and the spec renumbered while test names stayed put —
   `counting.test.js` across AC-5.6.6–AC-5.6.11, `seed.test.js` across AC-16.1.3–AC-16.1.11,
@@ -212,8 +213,8 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-028** | US-6.1 — Rate a Pattern | AC-6.1.1–AC-6.1.6 | T096 | T097 |
 | **P-029** | US-8.1 — Append a second Pattern | AC-8.1.1–AC-8.1.6 | T098 | T099 |
 | **P-030** | US-10.1 — Duplicate a Pattern to build a variation | AC-10.1.1–AC-10.1.6 | T100 | T101 |
-| **P-031** | US-11.1 — Detect true duplicates | AC-11.1.1–AC-11.1.5 | T102–T103 | T104 |
-| **P-032** | US-11.2 — Detect and surface Pattern Families | AC-11.2.1–AC-11.2.5 | T105 | T106 |
+| **P-031** | US-11.1 — Detect true duplicates | AC-11.1.1–AC-11.1.6 | T102–T103, T148 | T104, T155 |
+| **P-032** | US-11.2 — Detect and surface Pattern Families | AC-11.2.1–AC-11.2.5 | T105, T148 | T106, T155 |
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112 | T113 |

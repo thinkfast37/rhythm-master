@@ -1,6 +1,40 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.3.0 → 3.4.0
+
+3.4.0 — The traceability matrix must report coverage as well as gaps, gaps carry a
+  derived severity, and a narrow waiver mechanism is admitted — one that cannot reach
+  the states this whole line of work exists to prevent.
+
+  v3.3.0 required the matrix. In use it turned out to answer only half the question. A
+  list of what is wrong cannot say whether the work is good enough to ship: that needs
+  the proportion proven, and it needs the gaps ranked, because a test proving the wrong
+  thing and a test with an untidy name were being summed into a single number that meant
+  nothing. The matrix now reports coverage overall and per User Story, and ranks every
+  gap CRITICAL / HIGH / MEDIUM / LOW.
+
+  Severity is DERIVED from the kind of gap, never assigned per criterion. An assigned
+  severity is a judgement made under whatever pressure applied at the time, and it can be
+  revised downward by anyone in a hurry; a derived one cannot be argued with.
+
+  The waiver mechanism is the risk here, and it is deliberately narrow. A LOW or MEDIUM
+  gap may be signed off with a written reason recorded in its own file and shown in the
+  matrix row. A CRITICAL or HIGH gap may NOT be waived by anyone for any reason: those
+  are precisely the states in which US-2.2's pitch strip and US-11.1/US-11.2's duplicate
+  and Family views sat while reporting as complete. Admitting a waiver for them would
+  make the non-negotiable clause negotiable and hand the next session under time pressure
+  a sanctioned way to turn red green.
+
+  MINOR: no principle is removed or redefined. The coverage and severity requirements are
+  additions, and the waiver clause narrows rather than relaxes — it names the one thing
+  that may be signed off and forecloses everything else, where previously nothing said.
+
+  Enforcement: check T9 (`npm run check:trace`) fails a waiver that names an undeclared
+  criterion, carries no real reason, covers a gap that has since been fixed, or reaches
+  above MEDIUM. Covered by the skill's own tests.
+
+Earlier:
 Version change: 3.2.0 → 3.3.0
 
 3.3.0 — Principle IV gains two requirements: the traceability matrix must exist as a
@@ -248,6 +282,23 @@ project's connective tissue and MUST be preserved across all artifacts.
   none — it looks like assurance. Every change presents the same rows filtered to what it
   touches, so a reviewer sees which criteria the change could have affected rather than
   being asked to work it out from a diff.
+- **The matrix MUST report coverage as well as gaps**, overall and per User Story. A list
+  of only what is wrong cannot answer whether the work is fit to ship; that needs the
+  proportion proven alongside it.
+- **Every gap MUST carry a severity, derived from the kind of gap and never assigned per
+  criterion**: CRITICAL where no test names the criterion at all; HIGH where a test names
+  it but proves something else, or where a UI-level criterion has only a pure unit test;
+  MEDIUM where a compound AC has not been decomposed, so one test stands in for several
+  claims; LOW where the right test is merely named in its own words. Severities are
+  derived because an assigned one is a judgement made under whatever pressure applied at
+  the time, and can be revised downward by anyone in a hurry.
+- **A LOW or MEDIUM gap MAY be waived with a written reason**, recorded in a file of its
+  own and shown in the matrix row so it is argued for in review rather than hidden. **A
+  CRITICAL or HIGH gap MUST NOT be waived, by anyone, for any reason (NON-NEGOTIABLE).**
+  Those two are exactly the states in which a specified requirement sits while unbuilt and
+  reporting as complete, which is how US-2.2's pitch strip and US-11.1/US-11.2's duplicate
+  and Family views were lost. A waiver that names an undeclared criterion, gives no real
+  reason, or covers a gap that has since been fixed is itself a defect and fails the build.
 - **The tooling that enforces traceability MUST itself be tested**, against fixtures
   covering each defect class it claims to catch, and asserting it stays silent on a clean
   project. A checker is the one place where a false PASS is invisible by construction: a
@@ -393,6 +444,7 @@ code reviews, tickets, or other documents must be resolved in favor of this cons
    - Principle I in its entirety (rhythmic and metric correctness)
    - The per-criterion automated test requirement in Principle IV
    - The prohibition in Principle IV on weakening a test to make a failure go away
+   - The prohibition in Principle IV on waiving a CRITICAL or HIGH traceability gap
    - The no-secrets-in-client-code clause in Principle V
    - The Local Metadata separation rule in Client-Side Architecture Constraints
 3. Bump the constitution version per the rules below. Update the `Last Amended` date.
@@ -412,4 +464,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.3.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17
+**Version**: 3.4.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17

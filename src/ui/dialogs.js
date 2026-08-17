@@ -242,3 +242,142 @@ export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
     input.focus();
   });
 }
+
+/**
+ * The possible-duplicates view. AC-11.1.4, AC-11.1.5, AC-11.1.6.
+ *
+ * Library-wide and standing, rather than a warning: duplicates that emerge through
+ * ongoing auto-saved edits never interrupt anyone (AC-11.1.3 confines warnings to the
+ * two moments a Pattern is actually created), so this view is the only place such a
+ * pair is ever seen. It stays open across removals, because a library with one
+ * duplicate pair usually has several and closing after each would make clearing them
+ * a sequence of round trips.
+ *
+ * @param {object} spec
+ * @param {() => Array<Array<object>>} spec.groups     recomputed after every removal
+ * @param {(id: string) => boolean}    spec.isOwned    shipped Patterns get no Remove (AC-7.5.3)
+ * @param {(pattern: object, survivors: Array<object>) => Promise<boolean>} spec.onRemove
+ */
+export function showDuplicates({ groups, isOwned, onRemove }) {
+  const root = ensureHost();
+
+  return new Promise((resolve) => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+
+    const box = document.createElement('div');
+    box.className = 'dialog duplicates-view';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'Possible duplicates');
+
+    const close = () => {
+      root.innerHTML = '';
+      resolve();
+    };
+
+    const paint = () => {
+      box.innerHTML = '';
+      box.appendChild(
+        Object.assign(document.createElement('h2'), {
+          className: 'dialog-title',
+          textContent: 'Possible duplicates',
+        })
+      );
+
+      const found = groups();
+
+      if (found.length === 0) {
+        box.appendChild(
+          Object.assign(document.createElement('p'), {
+            className: 'dialog-message',
+            textContent: 'No two Patterns in your library are note-for-note identical.',
+          })
+        );
+      } else {
+        box.appendChild(
+          Object.assign(document.createElement('p'), {
+            className: 'dialog-message',
+            textContent:
+              found.length === 1
+                ? 'One set of Patterns is note-for-note identical.'
+                : `${found.length} sets of Patterns are note-for-note identical.`,
+          })
+        );
+
+        const list = document.createElement('ul');
+        list.className = 'duplicate-groups';
+
+        for (const group of found) {
+          const groupItem = document.createElement('li');
+          groupItem.className = 'duplicate-group';
+
+          for (const pattern of group) {
+            const row = document.createElement('div');
+            row.className = 'duplicate-row';
+            row.dataset.patternId = pattern.id;
+
+            const name = document.createElement('span');
+            name.className = 'duplicate-name';
+            name.textContent = pattern.name;
+            row.appendChild(name);
+
+            // A shipped Pattern is never removable (AC-7.5.3), and says why rather
+            // than showing a control that would refuse.
+            if (isOwned(pattern.id)) {
+              const remove = document.createElement('button');
+              remove.type = 'button';
+              remove.className = 'dialog-button duplicate-remove';
+              remove.dataset.action = 'remove-duplicate';
+              remove.dataset.patternId = pattern.id;
+              remove.textContent = 'Remove';
+              remove.addEventListener('click', async () => {
+                const survivors = group.filter((p) => p.id !== pattern.id);
+                const removed = await onRemove(pattern, survivors);
+                // `onRemove` puts up a confirmation, which shares this host and empties
+                // it — so the view has to be put back, not merely repainted into a box
+                // that is no longer in the document.
+                show(removed);
+              });
+              row.appendChild(remove);
+            } else {
+              const note = document.createElement('span');
+              note.className = 'duplicate-note';
+              note.textContent = 'ships with the app';
+              row.appendChild(note);
+            }
+
+            groupItem.appendChild(row);
+          }
+          list.appendChild(groupItem);
+        }
+        box.appendChild(list);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'dialog-actions';
+      const done = document.createElement('button');
+      done.type = 'button';
+      done.className = 'dialog-button primary';
+      done.dataset.action = 'close-duplicates';
+      done.textContent = 'Done';
+      done.addEventListener('click', close);
+      actions.appendChild(done);
+      box.appendChild(actions);
+      done.focus();
+    };
+
+    /**
+     * Put the view on screen, repainting it first when the library has changed under it.
+     * Re-attaching every time is what survives a confirmation dialog having cleared the
+     * shared host in between.
+     */
+    function show(repaint = true) {
+      if (repaint) paint();
+      root.innerHTML = '';
+      backdrop.appendChild(box);
+      root.appendChild(backdrop);
+    }
+
+    show();
+  });
+}

@@ -617,3 +617,118 @@ body {
   gap: 6px;
   margin-top: 8px;
 }
+
+/* --- Family members (AC-11.2.5, AC-15.1.8) ------------------------------- */
+
+/*
+ * Last in the main panel, and absent below 768px. The rule keys on the shell's
+ * `data-viewport`, which `applyViewport` maintains on resize — a width check in JS
+ * would be correct on load and wrong the moment the window changed, because a resize
+ * does not re-render.
+ */
+.family-members {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+[data-viewport='mobile'] .family-members {
+  display: none;
+}
+
+.family-members[hidden] {
+  display: none;
+}
+
+.family-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.family-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.family-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.family-link:hover,
+.family-link:focus-visible {
+  border-color: var(--brand);
+}
+
+.family-kind {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+/* --- Possible duplicates view (AC-11.1.4 … AC-11.1.6) -------------------- */
+
+.duplicates-view {
+  max-width: 520px;
+}
+
+.dialog-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.duplicate-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 0;
+  list-style: none;
+  /* A library with one duplicate pair usually has several; the view scrolls itself
+     rather than growing past the viewport. */
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.duplicate-group {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+
+.duplicate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+.duplicate-name {
+  font-size: 14px;
+}
+
+.duplicate-note {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.duplicate-remove {
+  flex: none;
+}

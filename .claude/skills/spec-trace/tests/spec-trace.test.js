@@ -18,7 +18,14 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { DEFAULTS } from '../lib/config.mjs';
-import { run, masterMatrix, checkMatrixFreshness, criteriaTouchedBy } from '../lib/project.mjs';
+import {
+  run,
+  masterMatrix,
+  checkMatrixFreshness,
+  checkWaivers,
+  criteriaTouchedBy,
+} from '../lib/project.mjs';
+import { statusOf, renderChange, SEVERITY_OF, WAIVABLE } from '../lib/matrix.mjs';
 import { assertionCount, claimedTitle, normalise, findingKey, buildCriteria } from '../lib/analyse.mjs';
 import { expandRange, readSpec } from '../lib/parse.mjs';
 
@@ -309,22 +316,26 @@ describe('the change matrix', () => {
     // The route a diff alone misses: src/widget.js names no AC anywhere in it.
     const { state } = checkAll();
     const touched = criteriaTouchedBy(['src/widget.js'], state);
-    expect([...touched].sort()).toEqual(['AC-1.1.1', 'AC-1.1.2', 'AC-1.1.3/1', 'AC-1.1.3/2']);
+    expect([...touched.keys()].sort()).toEqual(['AC-1.1.1', 'AC-1.1.2', 'AC-1.1.3/1', 'AC-1.1.3/2']);
+    // ...but only as a blast radius, not as a claim about any one criterion.
+    expect([...new Set(touched.values())]).toEqual(['indirect']);
   });
 
   it('reaches a criterion through a changed TEST file that names it', () => {
     const { state } = checkAll();
     const touched = criteriaTouchedBy(['tests/e2e/widget.spec.js'], state);
-    // Deliberately the union of both routes, not just the ID in the file: the changed
-    // file is also named by test task T003, which the plan lists for all of P-002. A
-    // change matrix that under-reports is worse than one that over-reports — the point
-    // is to show a reviewer everything this change could have affected.
-    expect([...touched].sort()).toEqual(['AC-1.1.1', 'AC-1.1.2', 'AC-1.1.3/1', 'AC-1.1.3/2']);
+    // Still the union of both routes — the file is also named by test task T003, which
+    // the plan lists for all of P-002 — but the criterion whose own test changed is
+    // marked `direct`, and the rest `indirect`. Without that split a change touching the
+    // composition root reports most of the application and buries the real rows.
+    expect(touched.get('AC-1.1.2')).toBe('direct');
+    expect(touched.get('AC-1.1.1')).toBe('indirect');
+    expect([...touched.keys()].sort()).toEqual(['AC-1.1.1', 'AC-1.1.2', 'AC-1.1.3/1', 'AC-1.1.3/2']);
   });
 
   it('reports nothing for a change that touches no traced file', () => {
     const { state } = checkAll();
-    expect([...criteriaTouchedBy(['README.md'], state)]).toEqual([]);
+    expect([...criteriaTouchedBy(['README.md'], state).keys()]).toEqual([]);
   });
 });
 
@@ -373,5 +384,188 @@ describe('parsing', () => {
     const ids = buildCriteria(acs, DEFAULTS).map((c) => c.id);
     expect(ids).toContain('AC-1.1.3/1');
     expect(ids).not.toContain('AC-1.1.3');
+  });
+});
+
+describe('gap severity', () => {
+  /** Break the fixture in a chosen way and read the resulting status of AC-1.1.1. */
+  function statusAfter(breakIt) {
+    breakIt();
+    const cfg = config();
+    const state = run(cfg);
+    const { text } = masterMatrix(state, cfg, new Set());
+    checkMatrixFreshness(state, cfg, text);
+    return statusOf('AC-1.1.1', state.findings, new Set(), findingKey);
+  }
+
+  it('ranks a criterion with no test at all CRITICAL', () => {
+    const s = statusAfter(() =>
+      edit('tests/unit/core/widget.test.js', (t) =>
+        t.replace("it('AC-1.1.1 — A widget has a name', () => {});", '')
+      )
+    );
+    expect(s).toMatchObject({ mark: 'NO TEST', severity: 'CRITICAL' });
+  });
+
+  it('ranks a test that proves something else HIGH', () => {
+    const s = statusAfter(() =>
+      edit('tests/unit/core/widget.test.js', (t) =>
+        t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — sprockets rotate counterclockwise')
+      )
+    );
+    expect(s).toMatchObject({ mark: 'WRONG TEST', severity: 'HIGH' });
+  });
+
+  it('ranks a UI criterion with only a pure unit test HIGH', () => {
+    const cfg = config();
+    rmSync(join(root, 'tests/e2e/widget.spec.js'));
+    edit('tests/unit/core/widget.test.js', (t) =>
+      `${t}\nit('AC-1.1.2 — The widget button is disabled at the cap', () => {});\n`
+    );
+    const state = run(cfg);
+    expect(statusOf('AC-1.1.2', state.findings, new Set(), findingKey)).toMatchObject({
+      mark: 'NOT PROVABLE',
+      severity: 'HIGH',
+    });
+  });
+
+  it('ranks a merely misnamed test LOW, because it still proves the criterion', () => {
+    const s = statusAfter(() =>
+      edit('tests/unit/core/widget.test.js', (t) =>
+        t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — a widget carries its own name')
+      )
+    );
+    expect(s).toMatchObject({ mark: 'MISNAMED', severity: 'LOW' });
+  });
+
+  it('never lets CRITICAL or HIGH be waivable', () => {
+    for (const [mark, severity] of Object.entries(SEVERITY_OF)) {
+      expect(WAIVABLE.has(severity)).toBe(severity === 'LOW' || severity === 'MEDIUM');
+      expect(mark).toBeTruthy();
+    }
+    expect([...WAIVABLE].sort()).toEqual(['LOW', 'MEDIUM']);
+  });
+});
+
+describe('waivers', () => {
+  const REASON = 'Deliberate: this wording is checked by hand each release.';
+
+  /** Waive a criterion and run everything, returning the state and its rows. */
+  function withWaiver(criterion, reason = REASON) {
+    const cfg = config();
+    writeFileSync(
+      join(root, cfg.waivers),
+      JSON.stringify({ waived: [{ criterion, reason, date: '2026-08-17' }] }, null, 2)
+    );
+    const state = run(cfg);
+    const waivers = new Map([[criterion, { criterion, reason }]]);
+    const { rows, text } = masterMatrix(state, cfg, new Set(), waivers);
+    checkMatrixFreshness(state, cfg, text);
+    checkWaivers(state, waivers, new Set());
+    return { state, rows };
+  }
+
+  it('marks a LOW gap waived, and shows the reason in its row', () => {
+    edit('tests/unit/core/widget.test.js', (t) =>
+      t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — a widget carries its own name')
+    );
+    const { state, rows } = withWaiver('AC-1.1.1');
+    const row = rows.find((r) => r.id === 'AC-1.1.1');
+    expect(row.status).toMatchObject({ mark: 'MISNAMED', severity: 'LOW', waived: true });
+    expect(row.status.reason).toBe(REASON);
+    expect(state.findings.T9).toEqual([]);
+  });
+
+  it('refuses to waive a HIGH gap, however good the reason', () => {
+    edit('tests/unit/core/widget.test.js', (t) =>
+      t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — sprockets rotate counterclockwise')
+    );
+    const { state, rows } = withWaiver('AC-1.1.1');
+    // The row is still a HIGH gap...
+    expect(rows.find((r) => r.id === 'AC-1.1.1').status).toMatchObject({
+      severity: 'HIGH',
+      waived: false,
+    });
+    // ...and the attempt to waive it is itself a finding.
+    expect(state.findings.T9).toHaveLength(1);
+    expect(state.findings.T9[0].why).toContain('HIGH');
+  });
+
+  it('refuses a waiver that does not say why', () => {
+    edit('tests/unit/core/widget.test.js', (t) =>
+      t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — a widget carries its own name')
+    );
+    const { state } = withWaiver('AC-1.1.1', 'because');
+    expect(state.findings.T9[0].why).toContain('without saying why');
+  });
+
+  it('refuses a waiver for a criterion the spec does not declare', () => {
+    const { state } = withWaiver('AC-9.9.9');
+    expect(state.findings.T9[0].why).toContain('does not declare');
+  });
+
+  it('refuses a waiver whose gap has been fixed, so the file cannot rot', () => {
+    // AC-1.1.1 is clean in the good fixture, so this waiver excuses nothing.
+    const { state } = withWaiver('AC-1.1.1');
+    expect(state.findings.T9[0].why).toContain('no longer exists');
+  });
+});
+
+describe('coverage reporting', () => {
+  it('reports how much is proven, not only what is missing', () => {
+    const { text, rows } = checkAll();
+    expect(rows.every((r) => r.status.mark === 'OK')).toBe(true);
+    expect(text).toContain('**Coverage**: 4 of 4 criteria proven (100.0%)');
+    expect(text).toContain('## Coverage by User Story');
+  });
+
+  it('counts a waived gap as accounted for, but never as proven', () => {
+    edit('tests/unit/core/widget.test.js', (t) =>
+      t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — a widget carries its own name')
+    );
+    const cfg = config();
+    const state = run(cfg);
+    const waivers = new Map([[
+      'AC-1.1.1',
+      { criterion: 'AC-1.1.1', reason: 'Deliberate: checked by hand each release.' },
+    ]]);
+    const { text } = masterMatrix(state, cfg, new Set(), waivers);
+    expect(text).toContain('3 of 4 criteria proven');
+    expect(text).toContain('plus 1 waived');
+  });
+});
+
+describe('the change matrix, rendered', () => {
+  // These exist because the split shipped with the CLI not passing `reach` at all, and
+  // nothing caught it: the empty-change path returned before reading it, so the only
+  // exercised case was the one that could not fail.
+  const opts = (reach) => ({ touchedFiles: ['src/widget.js'], reason: 'Base: test.', reach });
+
+  it('lists directly affected criteria in full and collapses the blast radius', () => {
+    const { rows } = checkAll();
+    const reach = new Map([
+      ['AC-1.1.1', 'direct'],
+      ['AC-1.1.2', 'indirect'],
+      ['AC-1.1.3/1', 'indirect'],
+    ]);
+    const text = renderChange(rows.filter((r) => reach.has(r.id)), opts(reach));
+
+    expect(text).toContain('**1 criterion directly affected**');
+    expect(text).toContain('AC-1.1.1');
+    // The indirect ones are counted, not tabulated.
+    expect(text).toContain('2 further criteria could be affected');
+    expect(text).toContain('<details>');
+    expect(text).not.toContain('| US-1.1 | `AC-1.1.2`');
+  });
+
+  it('says so plainly when a change touches no criterion', () => {
+    const text = renderChange([], opts(new Map()));
+    expect(text).toContain('No Acceptance Criteria are touched');
+  });
+
+  it('renders without a reach map rather than throwing', () => {
+    const { rows } = checkAll();
+    const text = renderChange(rows, { touchedFiles: [], reason: 'Base: test.' });
+    expect(text).toContain('further criteria could be affected');
   });
 });

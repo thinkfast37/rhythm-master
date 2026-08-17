@@ -125,10 +125,13 @@ test('AC-15.1.7 — secondary sections are collapsed accordions on mobile, expan
   }
 });
 
-test('AC-15.1.8 — main-panel section order is fixed and identical at every width', async ({ page }) => {
+test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
   // The pitch strip sits between the grid and the play controls, and is present
   // in the DOM at both Sound Modes — hidden rather than removed in Percussive,
-  // so the order itself never depends on the mode (AC-2.2.13).
+  // so the order itself never depends on the mode (AC-2.2.13). The family members
+  // area is last and follows the same convention: always in the DOM, shown only at
+  // 768px and wider and only when there are members (AC-11.2.5, which is where its
+  // visibility is proved).
   const expected = [
     'HEADER.pattern-header',
     'DIV.grid',
@@ -138,6 +141,7 @@ test('AC-15.1.8 — main-panel section order is fixed and identical at every wid
     'DETAILS[edit]',
     'DETAILS[actions]',
     'NAV.pattern-nav',
+    'SECTION[family]',
   ];
 
   const orderNow = () =>

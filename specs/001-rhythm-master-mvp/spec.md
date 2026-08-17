@@ -1340,13 +1340,33 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 
 - **AC-11.1.4** — Possible-duplicates view catches duplicates from ongoing edits
   - **Given** ongoing auto-saved edits (US-7.2) to "My Custom Fill" make it, at some point, a true duplicate of an existing Pattern it wasn't a duplicate of before
-  - **When** the Composer opens the "possible duplicates" view
-  - **Then** it lists "My Custom Fill" alongside its duplicate, even though no interrupting warning ever fired for it — this view is the sole safety net for duplicates that emerge through ongoing edits rather than at Pattern-creation time
+  - **When** the Composer opens the "possible duplicates" view from the actions area (AC-15.1.8)
+  - **Then** it lists "My Custom Fill" alongside its duplicate as a pair, even though no interrupting warning ever fired for it — this view is the sole safety net for duplicates that emerge through ongoing edits rather than at Pattern-creation time
+  - **And** the view covers the whole library, not only the Pattern currently loaded, since a duplicate that emerged through editing may be between two Patterns neither of which is open
+  - **Cases**:
+    - **AC-11.1.4/1** — The view lists a duplicate that no warning ever fired for
+    - **AC-11.1.4/2** — The view covers the whole library, not only the loaded Pattern
+  - *(Revised 2026-08-17. The AC required a view but never said how it is reached, which left the one thing a musician has to do first — find it — unspecified, and it was duly never built. It opens from the actions area alongside Export MIDI, which AC-15.1.8 already covers as "other actions", so no section order changes.)*
 
 - **AC-11.1.5** — Removing a confirmed duplicate
   - **Given** "Samba Break" and "Samba Break (copy)" are a confirmed true duplicate pair, and the Composer selects "Samba Break (copy)" to remove
   - **When** they confirm the removal, having been shown that "Samba Break (copy)" specifically will be deleted
   - **Then** "Samba Break (copy)" is deleted from the library, and "Samba Break" remains
+  - **And** a Pattern shipped with the app offers no Remove control in this view, consistent with AC-7.5.3 — where a pair is one shipped and one owned, only the owned one can be removed
+  - **Cases**:
+    - **AC-11.1.5/1** — Confirming removal deletes that Pattern and leaves its twin
+    - **AC-11.1.5/2** — A shipped Pattern offers no Remove control in this view
+  - *(Extended 2026-08-17 with the shipped-Pattern clause. The view is a new place a deletion can be initiated from, and AC-7.5.3's rule has to hold there too; stating it here means the view is specified rather than relying on whoever builds it to remember.)*
+
+- **AC-11.1.6** — Removing the Pattern you currently have open
+  - **Given** the possible-duplicates view lists "My Custom Fill" and "My Custom Fill (copy)" as a pair, and "My Custom Fill" is the Pattern currently loaded in the editor
+  - **When** the Composer removes "My Custom Fill"
+  - **Then** it is deleted and "My Custom Fill (copy)" — the surviving member of that pair — is loaded into the editor
+  - **And** the editor is never left showing a Pattern that no longer exists
+  - **Cases**:
+    - **AC-11.1.6/1** — Removing the open Pattern loads its surviving twin
+    - **AC-11.1.6/2** — Removing a Pattern that is not open leaves the editor where it was
+  - *(Added 2026-08-17. The view invites deleting a Pattern while it is open, which US-7.5's Delete never does, so the question of where the editor lands afterwards is new. It lands on the surviving twin because that is the same music the Composer was comparing — anywhere else discards the context that brought them here.)*
 
 ---
 
@@ -1385,6 +1405,9 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the viewport is narrower than 768px
   - **Then** no family information is shown
   - **And**, when the viewport is 768px or wider, a compact area at the bottom of the editor lists the current Pattern's detected family members by name, each a link that loads that member into the editor
+  - **Cases**:
+    - **AC-11.2.5/1** — Below 768px no family information is shown
+    - **AC-11.2.5/2** — At 768px and wider the editor lists family members as links
 
 ---
 
@@ -1560,9 +1583,10 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom: Pattern header → grid → pitch strip (US-2.2, Melodic only) → play controls → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation
-  - **And** in Percussive mode the pitch strip is absent rather than an empty row, so the order there is the same list with that entry removed
+  - **Then** the order is fixed top to bottom: Pattern header → grid → pitch strip (US-2.2, Melodic only) → play controls → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
+  - **And** in Percussive mode the pitch strip is absent rather than an empty row, so the order there is the same list with that entry removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
+  - *(Revised again 2026-08-17 for the family members area. As written, this AC said the order is identical at every width, which AC-11.2.5 directly contradicts: it requires that area at 768px and wider and nothing below it. Both cannot be true, so the conflict is resolved here rather than left for whoever hit it next. The entry is conditional in the same way the pitch strip already is — an absent entry rather than a reordered list — so what this AC guarantees is unchanged: the sections that are present are always in this order, and none ever swaps places with another. Family members go last because they are a way out of the current Pattern, not a control on it; putting them above quick navigation would separate the transport from the controls it drives.)*
 
 - **AC-15.1.9** — Wide controls never force horizontal page scrolling
   - **Given** a 390px-wide (mobile) viewport
