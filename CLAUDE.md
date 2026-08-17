@@ -132,7 +132,7 @@ AC being written down and quietly never scheduled.
 
 ### The matrix
 
-`specs/001-rhythm-master-mvp/traceability-matrix.md` is the chain as a document: one row
+`specs/traceability-matrix.md` is the chain as a document: one row
 per criterion, carrying its User Story, the criterion's own words, its plan item, its
 implementation tasks, its test tasks (listed **separately**, because "who builds it" and
 "who proves it" are different questions), the test that proves it, and a status.
@@ -378,6 +378,7 @@ Tags a user adds to a built-in Pattern live in `rm.overlays.v1` under
 | `specs/001-rhythm-master-mvp/research.md` | Technical decisions (D-00x) with rejected alternatives. |
 | `specs/001-rhythm-master-mvp/data-model.md` | Pattern shape, storage schema, validation rules. |
 | `specs/001-rhythm-master-mvp/tasks.md` | MVP build plan, plus the Post-MVP task log. |
+| `specs/traceability-matrix.md` | Generated. The AC → plan → task → test chain, whole-application, outliving any one feature folder. |
 | `data/seed-patterns.json` | The shipped Patterns. Plain data — see `data/README.md`. |
 | `src/core/` | Pure musical arithmetic. |
 | `tests/ac-coverage.js` | The gate that makes per-AC testing real. |
