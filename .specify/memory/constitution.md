@@ -28,9 +28,9 @@ Templates reviewed:
   - .specify/templates/spec-template.md   ✅ — unaffected
   - .specify/templates/tasks-template.md  ✅ — unaffected
 
-Follow-up required:
-  - specs/001-rhythm-master-mvp/spec.md still carries FR-013 (keyboard operability and accessible
-    names), which this version no longer requires. Remove or rescope it during the spec pass.
+Follow-up required: None.
+  - RESOLVED: spec.md's FR-013 (keyboard operability and accessible names) was deleted and the
+    remaining functional requirements renumbered; the spec now carries FR-001..FR-014.
 
 Deferred TODOs: None.
 ==================

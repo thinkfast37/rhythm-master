@@ -31,13 +31,11 @@ that title names the behaviour under test — not the example inside it.
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Measure sequence & per-Measure Time Signature (Priority: P1)
+### User Story 1 - Measure sequence & per-Measure Time Signature
 
 *Traceability: `US-1.1` — A Pattern is a sequence of Measures, each with its own Time Signature*
 
 **As** the Composer, **I want** different Measures within one Pattern to use different time signatures, **so that** I can transcribe pieces that genuinely shift meter (e.g. a bar of 4/4 followed by a bar of 2/4) instead of being forced into one meter for the whole piece.
-
-**Why this priority**: Nothing in the app exists without a Pattern to hold it. The Measure sequence is the root of the entire data model — every Beat, Slot, accent, and pitch hangs off it.
 
 **Independent Test**: Create a Pattern, add and remove Measures, change a Measure's Time Signature, and confirm inheritance, the 6-Measure cap, and reset behaviour — all verifiable without audio or any other epic.
 
@@ -97,13 +95,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 2 - Time signature support without implied grouping (Priority: P1)
+### User Story 2 - Time signature support without implied grouping
 
 *Traceability: `US-1.2` — Time signature support*
 
 **As** the Composer, **I want** to transcribe in a range of common time signatures, including asymmetric ones, without the tool imposing a beat grouping I didn't specify, **so that** I can accurately represent meters like 7/8 exactly as they're actually felt, rather than the tool guessing at a 2+2+3-style grouping on my behalf.
-
-**Why this priority**: The set of supported meters and the rule that Beat count equals the numerator determine the shape of every Pattern. Getting this wrong invalidates everything downstream.
 
 **Independent Test**: Set a Measure to each of the ten supported Time Signatures and assert its Beat count and note-value — pure data assertions, no UI or audio needed.
 
@@ -148,13 +144,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 3 - Mixed subdivision within a Beat, via Recipes (Priority: P1)
+### User Story 3 - Mixed subdivision within a Beat, via Recipes
 
 *Traceability: `US-1.3` — Mixed subdivision within a Beat, via Recipes*
 
 **As** the Composer, **I want** to give one part of a Beat a different subdivision feel than another part, **so that** I can capture patterns that actually mix feels within a single beat (e.g. straight 8ths for the first half, triplet feel for the second half), which the tool previously couldn't represent at all.
-
-**Why this priority**: Mixed-feel subdivision is the headline capability the previous tool could not represent at all. It is the reason this rebuild exists.
 
 **Independent Test**: Apply each Recipe to a Beat and assert its Slot count and Subdivision Group structure, including both mixed-feel split Recipes.
 
@@ -204,30 +198,34 @@ that title names the behaviour under test — not the example inside it.
   - **Then** Beat 1's Slots reset to 4 off Slots
   - **And** Beat 2's Slots, and every Slot in every other Measure, are unchanged
 
-- **AC-1.3.7** — Recipe change that would clear active Slots requires confirmation
-  - **Given** a Beat on the Straight 16ths Recipe (4 Slots) with 3 of its 4 Slots active
-  - **When** the Composer selects the Undivided Recipe (1 Slot) for it
-  - **Then** the system requires confirmation — *"Changing subdivision will clear 3 active note(s) on this beat — continue?"* — before applying
+- **AC-1.3.7** — Recipe change on a Beat that has notes requires confirmation
+  - **Given** a Beat on the Straight 16ths Recipe (4 Slots) with Slots 1, 2, and 4 active
+  - **When** the Composer selects the Straight 8ths Recipe (2 Slots) for it
+  - **Then** the system requires confirmation — *"Changing subdivision will clear 3 note(s) on this beat — continue?"* — before applying
+  - **And** on confirming, the Beat becomes 2 Slots, both off; on cancelling, the Beat keeps the Straight 16ths Recipe and all 3 notes
 
-- **AC-1.3.8** — Recipe change that doesn't reduce Slot count applies without confirmation
+- **AC-1.3.8** — Confirmation is required in both directions, since any Recipe change clears the Beat
   - **Given** a Beat on the Straight 8ths Recipe (2 Slots) with both Slots active
   - **When** the Composer selects the Straight 16ths Recipe (4 Slots) for it
-  - **Then** the change applies immediately with no confirmation, since 4 Slots is not fewer than the 2 currently active
+  - **Then** the system still requires confirmation — *"Changing subdivision will clear 2 note(s) on this beat — continue?"* — even though 4 Slots is more than 2, because AC-1.3.6 clears the Beat regardless of direction
 
 - **AC-1.3.9** — Accent works identically on a triplet-feel Slot
   - **Given** a Slot in the triplet-feel first group of a Beat on the Triplet → Straight split Recipe
   - **When** the Composer taps it
   - **Then** Accent Level 0–3 is available on it exactly as on any straight-feel Slot, with its specific default computed per Epic 3
 
+- **AC-1.3.10** — Recipe change on an empty Beat applies with no confirmation
+  - **Given** a Beat on the Straight 8ths Recipe with both Slots off
+  - **When** the Composer selects the Triplet 8ths Recipe for it
+  - **Then** the change applies immediately with no prompt, since no notes are lost
+
 ---
 
-### User Story 4 - Display and change a Measure's Time Signature in the grid (Priority: P1)
+### User Story 4 - Display and change a Measure's Time Signature in the grid
 
 *Traceability: `US-1.4` — Display and change a Measure's Time Signature in the grid*
 
 **As** the Composer, **I want** each Measure to show its own Time Signature directly in the grid and let me change it by tapping it, **so that** I can see at a glance where the meter shifts in a Pattern and edit it in place, without hunting for a separate control.
-
-**Why this priority**: Without an in-grid control, a multi-meter Pattern cannot be authored or read at all. This is the primary interaction surface for the meter model.
 
 **Independent Test**: Render a multi-meter Pattern and confirm each Measure shows its own label with correct prominent/dimmed treatment, and that tapping a label changes only that Measure.
 
@@ -284,13 +282,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 5 - Choose Sound Mode (Priority: P2)
+### User Story 5 - Choose Sound Mode
 
 *Traceability: `US-2.1` — Choose Sound Mode*
 
 **As** the Composer, **I want** to set a Pattern to Percussive or Melodic, **so that** I control whether it plays fixed accent-driven tones for pure rhythm practice, or specific pitched notes for melodic practice, without needing two separate tools.
-
-**Why this priority**: Melodic mode is a major capability, but the app is fully usable for rhythm practice without it. Percussive is the default and the core case.
 
 **Independent Test**: Toggle a Pattern between Percussive and Melodic and assert Key initialisation, Pitch-data preservation, and that Accent Levels are untouched.
 
@@ -323,13 +319,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 6 - Assign Pitch to a Slot (Priority: P2)
+### User Story 6 - Assign Pitch to a Slot
 
 *Traceability: `US-2.2` — Assign Pitch to a Slot*
 
 **As** the Composer, once a Pattern is Melodic with a Key chosen, **I want** to assign each active Slot a specific scale degree and octave, **so that** I'm authoring a real, deliberate melody rather than relying on some automatic pitch-cycling behavior I can't fully control.
-
-**Why this priority**: Delivers melodic authoring, the second of the app's two practice modes. Depends on the accent system and grid already existing.
 
 **Independent Test**: In a Melodic Pattern, paint pitches onto Slots via the pitch strip and assert the Pitch/Accent invariant holds on every path.
 
@@ -382,13 +376,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 7 - Transpose to a Key (Priority: P2)
+### User Story 7 - Transpose to a Key
 
 *Traceability: `US-2.3` — Transpose to a Key*
 
 **As** the Composer, **I want** to pick a root key for a Melodic Pattern, **so that** I can practice or transcribe the same melodic shape in whatever key I actually need, without re-authoring every Pitch by hand.
-
-**Why this priority**: Lets one authored melody serve any key — high practice value, but meaningless until per-Slot Pitch exists.
 
 **Independent Test**: Change a Melodic Pattern's Key and assert playback re-transposes while stored degree/octave data is unchanged.
 
@@ -411,13 +403,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 8 - Sampled piano playback (Priority: P2)
+### User Story 8 - Sampled piano playback
 
 *Traceability: `US-2.4` — Audio quality*
 
 **As** the Practicing Musician, **I want** Melodic notes to sound like an actual piano rather than a synthesized tone, **so that** practicing melodic material sounds musically real, while the app still loads and runs entirely in a browser.
-
-**Why this priority**: Determines whether melodic practice sounds musical enough to be worth doing. Carries the app's only significant asset-loading risk.
 
 **Independent Test**: Load the app and assert the soundfont downloads asynchronously, Percussive playback is never blocked by it, and Melodic Play waits with a loading state.
 
@@ -451,13 +441,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 9 - Per-Slot dynamics with musically-normal defaults (Priority: P1)
+### User Story 9 - Per-Slot dynamics with musically-normal defaults
 
 *Traceability: `US-3.1` — Set per-Slot dynamics, defaulting to musically-normal accent*
 
 **As** the Composer, **I want** a Slot to default to the accent a musician would naturally give that metric position when I turn it on, **so that** I'm not manually re-accenting every downbeat and backbeat by hand on every single pattern I build.
-
-**Why this priority**: Accent is core musical content, not decoration, and computing sensible defaults removes the single most tedious part of authoring in the previous tool.
 
 **Independent Test**: Turn on Slots across every Beat position and Recipe and assert each lands on its computed metric default, then assert the override cycle from each starting default.
 
@@ -554,13 +542,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 10 - Play a Pattern on loop (Priority: P1)
+### User Story 10 - Play a Pattern on loop
 
 *Traceability: `US-4.1` — Play a Pattern on loop*
 
 **As** the Practicing Musician, **I want** to press Play and have the Pattern loop continuously with synced audio and a visual cursor, **so that** I can drill it hands-free without having to keep restarting it myself.
-
-**Why this priority**: Hearing the Pattern is the entire point of the tool. Until this works, nothing authored can be evaluated.
 
 **Independent Test**: Play a multi-meter Pattern and assert timing accuracy over sustained looping, visual/audio sync, and correct per-Measure iteration.
 
@@ -588,13 +574,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 11 - Adjust tempo (Priority: P1)
+### User Story 11 - Adjust tempo
 
 *Traceability: `US-4.2` — Adjust tempo*
 
 **As** the Practicing Musician, **I want** to set tempo via a slider or presets, **so that** I can practice a difficult pattern slower before working up to performance speed.
-
-**Why this priority**: Practising slow and working up to speed is the fundamental practice technique this tool exists to support.
 
 **Independent Test**: Change tempo during playback and assert immediate restart at the new tempo, clamping at both bounds, and per-Pattern vs global default resolution.
 
@@ -618,13 +602,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 12 - Metronome click and count-in (Priority: P2)
+### User Story 12 - Metronome click and count-in
 
 *Traceability: `US-4.3` — Metronome click and count-in*
 
 **As** the Practicing Musician, **I want** to enable a metronome click and a count-in measure, **so that** I have a clear timing reference before and during playback.
-
-**Why this priority**: Important practice aids, but the tool is usable without them; playback itself is the P1 dependency.
 
 **Independent Test**: Enable each, assert the click is Sound-Mode-independent, count-in length matches the first Measure's Beat count, and both settings survive a reload.
 
@@ -663,13 +645,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 13 - Swing (Priority: P2)
+### User Story 13 - Swing
 
 *Traceability: `US-4.4` — Swing*
 
 **As** the Composer, **I want** to apply swing to straight-feel portions of a Pattern, **so that** it feels less mechanical without forcing me to hand-author a triplet feel where I don't actually want one.
-
-**Why this priority**: Makes patterns feel human rather than mechanical, but every Pattern remains fully playable at swing 0.
 
 **Independent Test**: Set swing on a straight Subdivision Group and assert the computed onset shift, and that triplet groups are unaffected and expose no control.
 
@@ -703,13 +683,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 14 - Browse the library (Priority: P2)
+### User Story 14 - Browse the library
 
 *Traceability: `US-5.1` — Browse the library*
 
 **As** the Practicing Musician, **I want** to see every Pattern in one place, **so that** I don't have to remember or guess where a given rhythm or melody lives before I can practice it.
-
-**Why this priority**: Once more than a handful of Patterns exist, they are unusable without a list. Required before the library has any practical value.
 
 **Independent Test**: Populate the library with shipped and custom Patterns and assert unified listing, correct metadata display, and Rating-then-alphabetical sort order.
 
@@ -747,13 +725,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 15 - Search by text (Priority: P2)
+### User Story 15 - Search by text
 
 *Traceability: `US-5.2` — Search by text*
 
 **As** the Practicing Musician, **I want** to filter the library by typing, **so that** I can jump straight to a Pattern I already know the name or description of.
-
-**Why this priority**: The fastest path to a known Pattern once the library grows; low cost, high daily value.
 
 **Independent Test**: Type a query and assert case-insensitive matching against name and description, with sort order preserved.
 
@@ -776,13 +752,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 16 - Organise by Tag, including automatic Tags (Priority: P3)
+### User Story 16 - Organise by Tag, including automatic Tags
 
 *Traceability: `US-5.3` — Organize by Tag, including automatic Tags*
 
 **As** the Practicing Musician, **I want** to filter and organize Patterns purely by Tag, with some Tags applied automatically, **so that** I always have accurate, low-effort organization (e.g. finding every melodic pattern) without manually tagging every Pattern myself.
-
-**Why this priority**: Organisational enrichment. Valuable at scale but not required to build or practise a Pattern.
 
 **Independent Test**: Change a Pattern's Sound Mode and swing and assert automatic Tags recompute; add user Tags and assert limits, de-duplication, and pill ordering.
 
@@ -836,13 +810,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 17 - Navigate sequentially (Priority: P3)
+### User Story 17 - Navigate sequentially
 
 *Traceability: `US-5.5` — Navigate sequentially*
 
 **As** the Practicing Musician, **I want** to step through patterns with Prev/Next, **so that** I can drill through a filtered set (e.g. all 4/4 patterns tagged "warmup") without returning to the full list each time.
-
-**Why this priority**: A drilling convenience that speeds practice sessions but duplicates what the list already allows.
 
 **Independent Test**: Apply a filter and step with Prev/Next, asserting it walks the filtered list and disables rather than wraps at both ends.
 
@@ -861,13 +833,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 18 - Counting system toggle (Priority: P3)
+### User Story 18 - Counting system toggle
 
 *Traceability: `US-5.6` — Counting system toggle*
 
 **As** the Practicing Musician, **I want** to switch between counting systems (Takadimi syllables, numeric 1-e-&-a, or straight Numbered), **so that** the grid matches whichever system I personally count in.
-
-**Why this priority**: Meets musicians where their own counting habits are, but any single system is workable on its own.
 
 **Independent Test**: Toggle between the three systems and assert live label updates, plus the Numbered-only restriction on Patterns containing a mixed-feel Recipe.
 
@@ -933,13 +903,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 19 - Rate a Pattern (Priority: P3)
+### User Story 19 - Rate a Pattern
 
 *Traceability: `US-6.1` — Rate a Pattern*
 
 **As** the Practicing Musician, **I want** to rate any Pattern 0–5 stars, **so that** I can remember which ones I like and quickly find my best-rated material later.
-
-**Why this priority**: Drives library sort order and shortlisting, but is pure organisation layered on an already-working library.
 
 **Independent Test**: Set, change, and clear a Rating and assert the minimum-rating filter combines with existing filters.
 
@@ -977,13 +945,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 20 - Build a Pattern from scratch (Priority: P1)
+### User Story 20 - Build a Pattern from scratch
 
 *Traceability: `US-7.1` — Build a Pattern from scratch*
 
 **As** the Composer, **I want** to add Measures and Beats, pick Recipes, toggle Slots, and — in Melodic mode — assign Pitch, **so that** I can create an original rhythm or melody from nothing.
-
-**Why this priority**: Authoring is the primary creative act of the app. Without it there is nothing to play, save, or organise.
 
 **Independent Test**: Create a Pattern and assert its name default, name validation, and immediate presence in the library.
 
@@ -1002,13 +968,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 21 - Continuous auto-save for a Pattern you own (Priority: P1)
+### User Story 21 - Continuous auto-save for a Pattern you own
 
 *Traceability: `US-7.2` — Continuous auto-save for a Pattern you own*
 
 **As** the Composer editing a Pattern I already own (carrying the `custom` Tag), **I want** every edit to save automatically and immediately, **so that** I never have to remember to save or risk losing work, and there's no separate Save action to think about.
-
-**Why this priority**: Determines whether authoring work survives at all. Losing edits is the most damaging possible failure.
 
 **Independent Test**: Edit an owned Pattern and assert each change persists individually and survives closing the app mid-edit.
 
@@ -1031,13 +995,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 22 - Editing a shipped Pattern requires naming a new Pattern first (Priority: P2)
+### User Story 22 - Editing a shipped Pattern requires naming a new Pattern first
 
 *Traceability: `US-7.3` — Editing a shipped Pattern requires naming a new Pattern first*
 
 **As** the Composer, **I want** any attempt to edit a Pattern I don't own (one shipped with the app) to immediately prompt me to name a new Pattern for my changes, **so that** shipped content can never be silently altered, and my edit always has a clear, named home from the very first change I make.
-
-**Why this priority**: Protects shipped content from silent mutation. Needed as soon as users start editing library Patterns rather than only authoring new ones.
 
 **Independent Test**: Edit a shipped Pattern and assert the naming prompt fires before the edit applies, that cancelling discards it, and that the original is never altered.
 
@@ -1070,13 +1032,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 23 - Make a named copy of a Pattern you own (Priority: P2)
+### User Story 23 - Make a named copy of a Pattern you own
 
 *Traceability: `US-7.4` — Make a named copy of a Pattern you own*
 
 **As** the Composer, **I want** to explicitly make a copy of a custom Pattern under a new name, **so that** I can deliberately branch a second version (e.g. a Melodic take on a Percussive Pattern I built) while my original keeps auto-saving independently.
-
-**Why this priority**: The deliberate path to variants — a Percussive original plus Melodic takes — which is central to how the tool is meant to be used.
 
 **Independent Test**: Invoke Make Copy on an owned Pattern and assert an independent copy is created, named, and immediately detected as a Pattern Family member.
 
@@ -1114,13 +1074,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 24 - Delete a Pattern (Priority: P3)
+### User Story 24 - Delete a Pattern
 
 *Traceability: `US-7.5` — Delete a Pattern*
 
 **As** the Composer, **I want** to permanently delete a Pattern I created, **so that** I can remove clutter from my library without leaving discontinued work lying around indefinitely.
-
-**Why this priority**: Library hygiene. Valuable over time but nothing is blocked by its absence.
 
 **Independent Test**: Delete an owned Pattern and assert confirmation, permanence, unaffected Family members, and that shipped Patterns expose no Delete control.
 
@@ -1148,13 +1106,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 25 - Append a second Pattern (Priority: P3)
+### User Story 25 - Append a second Pattern
 
 *Traceability: `US-8.1` — Append a second Pattern*
 
 **As** the Composer, **I want** to pick a second Pattern and append it after my current one, **so that** I can build longer phrases out of existing pieces instead of re-authoring them from scratch.
-
-**Why this priority**: A composition convenience that saves re-authoring, but every resulting Pattern could be built manually instead.
 
 **Independent Test**: Combine two Patterns and assert concatenation, picker filtering against the Measure cap, and correct owned vs shipped save behaviour.
 
@@ -1197,13 +1153,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 26 - Duplicate a Pattern to build a variation (Priority: P3)
+### User Story 26 - Duplicate a Pattern to build a variation
 
 *Traceability: `US-10.1` — Duplicate a Pattern to build a variation*
 
 **As** the Composer, **I want** to double a Pattern's length with an identical copy of its content, **so that** I can edit the second half into a variation, like a fill or a turnaround, without retyping the first half.
-
-**Why this priority**: Speeds up building call-and-response and fill variations; entirely optional to the core loop.
 
 **Independent Test**: Duplicate a Pattern and assert exact content copying, focus placement, and cap-based enabling.
 
@@ -1241,13 +1195,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 27 - Detect true duplicates (Priority: P3)
+### User Story 27 - Detect true duplicates
 
 *Traceability: `US-11.1` — Detect true duplicates*
 
 **As** the Composer, **I want** to be warned only when a Pattern is a genuine duplicate, **so that** I don't accumulate clutter, while still being free to keep intentionally different renditions of the same rhythm.
-
-**Why this priority**: Prevents library clutter without blocking intentional variants. Only matters once a library has accumulated.
 
 **Independent Test**: Compare Patterns differing in each dimension and assert only genuinely identical ones are flagged, at the correct moments.
 
@@ -1282,13 +1234,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 28 - Detect and surface Pattern Families (Priority: P3)
+### User Story 28 - Detect and surface Pattern Families
 
 *Traceability: `US-11.2` — Detect and surface Pattern Families*
 
 **As** the Composer, **I want** the system to notice when several Patterns share identical rhythm content but differ in Sound Mode or Pitch, **so that** I can find other versions of a rhythm I've already built (e.g. a root-note-drone version next to an arpeggiated version of the same groove) instead of losing track of them.
-
-**Why this priority**: Makes deliberate variants discoverable rather than lost, but is discovery convenience rather than capability.
 
 **Independent Test**: Create variants differing only in Sound Mode or Pitch and assert Family detection, independence, and viewport-dependent display.
 
@@ -1322,13 +1272,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 29 - Detect when a library update duplicates your own custom Pattern (Priority: P3)
+### User Story 29 - Detect when a library update duplicates your own custom Pattern
 
 *Traceability: `US-11.3` — Detect when a library update duplicates one of your own custom Patterns*
 
 **As** the Composer, **I want** to be proactively told when a Pattern I submitted (US-13.1) has been merged and now ships with the app, duplicating my own custom copy, **so that** I can clean up the redundant copy without having to notice it myself.
-
-**Why this priority**: Closes the loop after a submitted Pattern is merged upstream; only reachable after community sharing exists.
 
 **Independent Test**: Simulate a shipped-library update that duplicates a custom Pattern and assert the one-time Remove/Keep prompt and its persistence.
 
@@ -1361,13 +1309,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 30 - Export a single Pattern as MIDI (Priority: P3)
+### User Story 30 - Export a single Pattern as MIDI
 
 *Traceability: `US-12.1` — Export a single Pattern as MIDI*
 
 **As** the Composer, **I want** to download the current Pattern as a `.mid` file, **so that** I can bring it into a DAW without re-transcribing it by ear.
-
-**Why this priority**: Bridges to a DAW for users taking a Pattern further, but the practice tool is complete without it.
 
 **Independent Test**: Export Percussive and Melodic Patterns and assert channel routing, velocity mapping, and correct mixed-meter timing.
 
@@ -1395,13 +1341,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 31 - Submit a Pattern for review (Priority: P3)
+### User Story 31 - Submit a Pattern for review
 
 *Traceability: `US-13.1` — Submit a Pattern for review*
 
 **As** the Contributor, **I want** to submit a Pattern, or a batch of my Patterns, for review, **so that** my original work can become part of the shared library for other users — and, in the absence of any sync/export-import feature, this is also the only way one of my custom Patterns ever becomes available to me on a different browser or device: once merged, it ships with the app itself rather than living only in the browser storage where I created it.
-
-**Why this priority**: The only path by which a custom Pattern reaches other devices or users, but depends on a mature library to be worth using.
 
 **Independent Test**: Trigger single and bulk submission and assert payload completeness, the oversized-URL fallback, and that Local Metadata never leaks.
 
@@ -1443,13 +1387,11 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
-### User Story 32 - Desktop, tablet, and mobile adaptation (Priority: P2)
+### User Story 32 - Desktop, tablet, and mobile adaptation
 
 *Traceability: `US-15.1` — Desktop, tablet, and mobile adaptation*
 
 **As** the Practicing Musician on any device, **I want** the layout to adapt to my screen size, **so that** the app stays usable without zooming or hunting for controls, whether I'm at a desk or holding a phone while practicing.
-
-**Why this priority**: The tool is used with an instrument in hand, often from a phone or tablet on a music stand. Responsive behaviour is a usage requirement, not polish.
 
 **Independent Test**: Render at each breakpoint and assert sidebar behaviour, accordion collapsing, section order, and that no control forces horizontal page scroll.
 
@@ -1510,18 +1452,13 @@ that title names the behaviour under test — not the example inside it.
   - *(Flagged: this is the hardest responsive case in the app — 144 Slots on a phone. It's specified here as a constraint, but the actual layout strategy for it — horizontal scroll, per-Measure paging, zoom-out, or something else — is a UI design decision not settled in this document.)*
 
 ---
-### User Story 33 - Ship with a seeded Pattern library (Priority: P1)
+### User Story 33 - Ship with a seeded Pattern library
 
 *Traceability: `US-16.1` — Seed the library by converting the predecessor application's Patterns*
 
 **As** the Practicing Musician, **I want** the app to arrive already stocked with a substantial
 library of Patterns, **so that** I have material to practise on the first time I open it rather
 than facing an empty list and having to author everything myself before the tool is useful.
-
-**Why this priority**: An empty library makes the app unusable on first run and makes most other
-stories untestable in any realistic way — browsing, search, tags, rating, sort order, duplicate
-detection, and Pattern Families all need a populated library to exercise. The seed data is also a
-fixed input, not a design problem, so it can land early.
 
 **Independent Test**: Load the app with a cleared browser profile and assert the shipped library is
 present, correctly structured, and immediately playable without any authoring step.
@@ -1607,18 +1544,13 @@ present, correctly structured, and immediately playable without any authoring st
 
 ---
 
-### User Story 34 - Add Patterns by editing a data file (Priority: P1)
+### User Story 34 - Add Patterns by editing a data file
 
 *Traceability: `US-16.2` — The shipped Pattern library is data, not code*
 
 **As** the maintainer, **I want** the shipped Pattern library to live in a plain data file that I can
 edit directly, **so that** I can add, correct, or remove Patterns without touching application code,
 running a build, or going through a specification workflow.
-
-**Why this priority**: The library grows continuously and independently of feature work — new
-Patterns arrive from submissions (US-13.1) and from the maintainer's own transcription. If adding a
-Pattern requires editing source, every content change becomes a code change, which is both slower
-and riskier than it needs to be.
 
 **Independent Test**: Add a well-formed Pattern to the data file by hand, reload the app, and confirm
 it appears in the library and plays correctly, with no source file modified.
@@ -1722,11 +1654,9 @@ specified in the Acceptance Scenarios above.
 - **FR-012**: Every piece of musical information — Slot on/off, Accent Level, straight vs. triplet
   feel, and active playback position — MUST carry a non-color indicator so it remains interpretable
   in monochrome and under common color vision deficiencies.
-- **FR-013**: Every interactive element MUST be reachable and operable by keyboard, and MUST expose
-  an accessible name conveying its musical position and state.
-- **FR-014**: Rendering MUST be a pure function of the Pattern object plus transport position; no
+- **FR-013**: Rendering MUST be a pure function of the Pattern object plus transport position; no
   component may hold authoritative display state outside it.
-- **FR-015**: Every Acceptance Criterion in this specification MUST have at least one automated test
+- **FR-014**: Every Acceptance Criterion in this specification MUST have at least one automated test
   referencing its AC ID, and the suite MUST be able to report coverage per AC ID.
 
 ### Key Entities
@@ -1763,26 +1693,25 @@ specified in the Acceptance Scenarios above.
 
 ### Measurable Outcomes
 
-- **SC-001**: A musician can open the app, author a one-Measure rhythm, and hear it looping in under
-  60 seconds, without consulting documentation.
-- **SC-002**: Playback holds time across a 10-minute continuous practice session with no audible
-  drift between the click, the pattern, and the visual cursor.
-- **SC-003**: All three accent levels are distinguishable both by ear during playback and by eye on
-  a greyscale rendering of the grid.
-- **SC-004**: A piece that changes meter mid-phrase can be transcribed as a single Pattern, without
-  splitting it into multiple Patterns or leaving the tool.
-- **SC-005**: A beat that is part straight-feel and part triplet-feel can be authored and played back
-  accurately — a capability the previous tool could not represent at all.
-- **SC-006**: No authored edit is ever lost. Closing the app at any point preserves every change made
-  up to that moment, with no explicit save action having been taken.
-- **SC-007**: Every authoring and practice task can be completed on a 390 px-wide phone held in one
-  hand, including on the largest Pattern the app permits.
-- **SC-008**: A musician can locate a specific Pattern in a library of 100+ Patterns in under 10
-  seconds using search, tags, or rating filters.
-- **SC-009**: 100% of Acceptance Criteria in this specification have at least one passing automated
-  test referencing their AC ID.
-- **SC-010**: The app is interactive — browsing, viewing, and editing Patterns — within 2 seconds of
-  page load, regardless of whether sampled instrument assets have finished downloading.
+- **SC-001**: **The tool is genuinely useful for practice.** A musician can sit down with an
+  instrument and run a real practice session against it — choosing material, setting a tempo they
+  can actually play at, and drilling it — without the tool getting in the way or needing to be
+  restarted.
+- **SC-002**: **It survives a long session.** A 30-minute continuous practice run holds time from
+  start to finish, with no audible drift between click, pattern, and cursor, and no degradation,
+  stall, or need to reload.
+- **SC-003**: **What you author is what you hear.** Every Pattern plays back at the beat count,
+  subdivision, accent, pitch, and octave it was written at — in the app and in any export.
+- **SC-004**: **Entering a rhythm is faster than the alternatives.** Transcribing a rhythm the
+  musician already has in their head takes meaningfully less effort here than notating it by hand
+  or building it in a DAW — including rhythms that shift meter or mix subdivisions, which those
+  alternatives handle badly.
+- **SC-005**: **Nothing is ever lost.** Authored work survives closing the app, reloading, and
+  returning days later. No session ends with work the musician has to redo.
+- **SC-006**: **The library stays worth returning to.** As it grows past a hundred Patterns, the
+  musician can still find the one they want quickly, and can tell their own variations apart.
+- **SC-007**: **Every feature is actually usable where practice happens.** The full authoring and
+  practice workflow works on a phone propped on a music stand, not only at a desk.
 
 ## Assumptions
 
