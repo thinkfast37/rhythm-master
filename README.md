@@ -63,7 +63,7 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2
 |---|---|
 | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project principles — correctness, visual and audio clarity, traceability, and scope constraints that all work is held to |
 | [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 34 user stories, 211 acceptance criteria in Given/When/Then form |
-| [`data/seed-patterns.json`](data/seed-patterns.json) | The Patterns the app ships with (110 at present). Plain JSON — add or edit Patterns here directly, no code change needed (US-16.2) |
+| [`data/seed-patterns.json`](data/seed-patterns.json) | The Patterns the app ships with. Plain JSON — add or edit Patterns here directly, no code change needed (US-16.2) |
 | [`specs/001-rhythm-master-mvp/plan.md`](specs/001-rhythm-master-mvp/plan.md) | Implementation plan: stack, project structure, and the Constitution Check |
 | [`specs/001-rhythm-master-mvp/research.md`](specs/001-rhythm-master-mvp/research.md) | Every technical decision, with the alternatives that were rejected and why |
 | [`specs/001-rhythm-master-mvp/data-model.md`](specs/001-rhythm-master-mvp/data-model.md) | The ratified Pattern format, storage schema, and validation rules |
