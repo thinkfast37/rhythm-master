@@ -13,6 +13,32 @@ test('AC-1.1.1 — the app opens with a Pattern in the grid, not an empty page',
   await expect(page.locator('.slot').first()).toBeVisible();
 });
 
+test('AC-1.1.3 — 8-Measure cap disables +Measure', async ({ page }) => {
+  await page.goto('/');
+  const add = page.locator('[data-action="add-measure"]');
+
+  // Seven Measures: one short of the cap, so the control is still live.
+  await page.evaluate(() => {
+    const base = window.__rm.getState().pattern;
+    window.__rm.loadPattern(
+      {
+        ...structuredClone(base),
+        id: 'p_seven',
+        name: 'Seven',
+        measures: Array.from({ length: 7 }, () => structuredClone(base.measures[0])),
+      },
+      { owned: true }
+    );
+  });
+  await expect(page.locator('.measure')).toHaveCount(7);
+  await expect(add).toBeEnabled();
+
+  // Taking it to the cap disables it — proving the disable is the cap, not the control.
+  await add.click();
+  await expect(page.locator('.measure')).toHaveCount(8);
+  await expect(add).toBeDisabled();
+});
+
 test('AC-1.4.1 — each Measure shows its own Time Signature in the grid', async ({ page }) => {
   await page.goto('/');
   const meter = page.locator('.measure-meter').first();
@@ -225,11 +251,13 @@ test('AC-7.2.1 — edits to an owned Pattern survive a reload with no save actio
   ).toHaveAttribute('data-accent', '1');
 });
 
-test('AC-15.1.10 — the densest Pattern stacks vertically with no horizontal scroll', async ({ page }) => {
+test('AC-15.1.10 — Grid remains usable for the largest supported Pattern on mobile', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
 
-  // 6 Measures of 12/8 at Straight 16ths — 144 Slots.
+  // 8 Measures of 12/8 at Straight 16ths — 192 Slots.
   await page.evaluate(() => {
     const measure = {
       timeSignature: '12/8',
@@ -246,20 +274,20 @@ test('AC-15.1.10 — the densest Pattern stacks vertically with no horizontal sc
         tempo: 80,
         tags: [],
         rating: 0,
-        measures: Array.from({ length: 6 }, () => structuredClone(measure)),
+        measures: Array.from({ length: 8 }, () => structuredClone(measure)),
       },
       { owned: true }
     );
   });
 
-  await expect(page.locator('.measure')).toHaveCount(6);
-  await expect(page.locator('.slot')).toHaveCount(144);
+  await expect(page.locator('.measure')).toHaveCount(8);
+  await expect(page.locator('.slot')).toHaveCount(192);
 
   // One Measure per row: each row starts at a distinct vertical offset.
   const tops = await page.locator('.measure').evaluateAll((els) =>
     els.map((e) => Math.round(e.getBoundingClientRect().top))
   );
-  expect(new Set(tops).size).toBe(6);
+  expect(new Set(tops).size).toBe(8);
 
   // Nothing scrolls sideways — not the body, not the grid.
   const overflow = await page.evaluate(() => ({

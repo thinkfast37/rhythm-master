@@ -16,14 +16,14 @@
 **Feature**: specs/001-rhythm-master-mvp/spec.md
 **Criteria**: 220 across 34 User Stories
 
-**Coverage**: 14 of 220 criteria proven (6.4%)
+**Coverage**: 17 of 220 criteria proven (7.7%)
 
 | | Criteria | Share |
 |---|---|---|
-| Proven | 14 | 6.4% |
-| Gap — HIGH | 82 | 37.3% |
-| Gap — MEDIUM | 41 | 18.6% |
-| Gap — LOW | 83 | 37.7% |
+| Proven | 17 | 7.7% |
+| Gap — HIGH | 80 | 36.4% |
+| Gap — MEDIUM | 42 | 19.1% |
+| Gap — LOW | 81 | 36.8% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -46,14 +46,14 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (206 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (203 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
 
 | User Story | Criteria | Proven | Waived | CRITICAL | HIGH | MEDIUM | LOW |
 |---|---|---|---|---|---|---|---|
-| US-1.1 | 9 | 0 | · | · | 5 | · | 4 |
+| US-1.1 | 9 | 1 | · | · | 4 | · | 4 |
 | US-1.2 | 4 | 0 | · | · | · | 4 | · |
 | US-1.3 | 10 | 0 | · | · | 1 | 3 | 6 |
 | US-1.4 | 8 | 0 | · | · | 2 | 4 | 2 |
@@ -78,13 +78,13 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.4 | 6 | 0 | · | · | 1 | · | 5 |
 | US-7.5 | 4 | 0 | · | · | 1 | · | 3 |
 | US-8.1 | 6 | 0 | · | · | 1 | 1 | 4 |
-| US-10.1 | 6 | 0 | · | · | 1 | · | 5 |
+| US-10.1 | 6 | 2 | · | · | 1 | · | 3 |
 | US-11.1 | 9 | 8 | · | · | · | 1 | · |
 | US-11.2 | 6 | **6** | · | · | · | · | · |
 | US-11.3 | 5 | 0 | · | · | 4 | · | 1 |
 | US-12.1 | 4 | 0 | · | · | 4 | · | · |
 | US-13.1 | 5 | 0 | · | · | 2 | 1 | 2 |
-| US-15.1 | 13 | 0 | · | · | 2 | 8 | 3 |
+| US-15.1 | 13 | 0 | · | · | 1 | 9 | 3 |
 | US-16.1 | 11 | 0 | · | · | 10 | 1 | · |
 | US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
 
@@ -94,7 +94,7 @@ fail the build, and it is outstanding work — never a settled decision.
 |---|---|---|---|---|---|---|---|
 | US-1.1 | `AC-1.1.1` | New Pattern defaults | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js`, `grid.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | **HIGH** · NOT PROVABLE ᵃ |
-| US-1.1 | `AC-1.1.3` 🖵 | 6-Measure cap disables +Measure | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | **HIGH** · NOT PROVABLE ᵃ |
+| US-1.1 | `AC-1.1.3` 🖵 | 8-Measure cap disables +Measure | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js`, `grid.spec.js` | OK |
 | US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | **HIGH** · WRONG TEST ᵃ |
 | US-1.1 | `AC-1.1.5` | Multi-Measure change prompts apply-to-all vs. this-one | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | **LOW** · MISNAMED ᵃ |
 | US-1.1 | `AC-1.1.6` | Time Signature change resets that Measure's content | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | **LOW** · MISNAMED ᵃ |
@@ -244,15 +244,15 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.5 | `AC-7.5.3` 🖵 | Only owned Patterns can be deleted | P-023 | T085 (1/1 done) | T086 (1/1 done) | `operations.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-7.5 | `AC-7.5.4` 🖵 | Deleting one Family member doesn't affect the other | P-023 | T085 (1/1 done) | T086 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.1` | Combine has no meter-matching restriction | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | **HIGH** · WRONG TEST ᵃ |
-| US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 6-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | **LOW** · MISNAMED ᵃ |
-| US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 6 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
+| US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 8-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | **LOW** · MISNAMED ᵃ |
+| US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 8 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
 | US-8.1 | `AC-8.1.4` | Combine into an owned Pattern auto-saves | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.5` 🖵 | Combine into a shipped Pattern triggers the naming prompt | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.6` 🖵 | Combine picker re-filters correctly on repeated use | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.1` | Duplicate copies the full Measure sequence exactly | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js`, `operations.spec.js` | **HIGH** · WRONG TEST ᵃ |
-| US-10.1 | `AC-10.1.2` | Duplicate focuses the newly-added second half | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js`, `operations.spec.js` | **LOW** · MISNAMED ᵃ |
-| US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 6-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
-| US-10.1 | `AC-10.1.4` 🖵 | Duplicate is disabled when doubling would exceed the cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
+| US-10.1 | `AC-10.1.2` | Duplicate focuses the newly-added second half | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js` | **LOW** · MISNAMED ᵃ |
+| US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 8-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | OK |
+| US-10.1 | `AC-10.1.4` 🖵 | Duplicate is disabled when doubling would exceed the cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `operations.spec.js`, `remaining.spec.js` | OK |
 | US-10.1 | `AC-10.1.5` | Duplicate into an owned Pattern auto-saves | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.6` 🖵 | Duplicate into a shipped Pattern triggers the naming prompt | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | **LOW** · MISNAMED ᵃ |
 | US-11.1 | `AC-11.1.1` | True duplicate match criteria | P-031 | T102, T103, T148 (3/3 done) | T104, T155 (2/2 done) | `similarity.test.js` | OK |
@@ -293,7 +293,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `grid.spec.js` | **HIGH** · WRONG TEST ᵃ |
+| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `grid.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | **MEDIUM** · NEEDS CASES ᵃ |

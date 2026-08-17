@@ -16,7 +16,7 @@ import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey } from './pitch.js';
 import { isValidSwing } from './swing.js';
 
-export const MAX_MEASURES = 6;
+export const MAX_MEASURES = 8;
 export const MIN_TEMPO = 18;
 export const MAX_TEMPO = 220;
 export const DEFAULT_TEMPO = 80;
