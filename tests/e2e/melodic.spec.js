@@ -170,3 +170,58 @@ test('AC-4.4.2 — a mixed Recipe swings its straight half only', async ({ page 
   await expect(groups.nth(0)).toHaveAttribute('data-swing', '60');
   await expect(groups.nth(1)).not.toHaveAttribute('data-swing', /.*/);
 });
+
+test('AC-2.4.1 — the soundfont is served from this app’s own origin, never a CDN', async ({ page }) => {
+  // Anything not served by our own dev/preview server is a third-party request.
+  const external = [];
+  page.on('request', (r) => {
+    const { hostname } = new URL(r.url());
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') external.push(r.url());
+  });
+
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
+  await page.locator('[data-action="play"]').click();
+
+  await page.waitForFunction(
+    () => ['ready', 'fallback'].includes(window.__rm.getState().pianoStatus.status),
+    null,
+    { timeout: 20000 }
+  );
+
+  // Principle V: the app is a static artifact. Nothing may reach a third-party
+  // host at runtime — a CDN is someone else's uptime standing in for ours.
+  expect(external, `unexpected third-party requests: ${external.join(', ')}`).toEqual([]);
+
+  const base = await page.evaluate(() => window.__rm.piano.soundfontBaseUrl);
+  expect(base).not.toMatch(/^https?:\/\//);
+  expect(base).toContain('soundfonts/');
+});
+
+test('AC-2.4.5 — a missing soundfont degrades to synthesis with an explanatory status', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
+  await page.locator('[data-action="play"]').click();
+
+  await page.waitForFunction(
+    () => ['ready', 'fallback'].includes(window.__rm.getState().pianoStatus.status),
+    null,
+    { timeout: 20000 }
+  );
+
+  const status = await page.evaluate(() => {
+    const s = window.__rm.piano.getStatus();
+    return { status: s.status, message: s.error?.message ?? null };
+  });
+
+  if (status.status === 'fallback') {
+    // The message must say what to do about it, not merely that it failed.
+    expect(status.message).toContain('fetch:soundfont');
+  }
+  // Either way the Pattern plays.
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+});

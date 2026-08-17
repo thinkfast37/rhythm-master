@@ -65,7 +65,16 @@ exception permitting exactly this dependency.
 - *Pure Web Audio synthesis* — zero bytes and instant. Rejected because it is the thing US-2.4 was
   written to replace.
 
-**Consequences to handle in implementation**: The soundfont is fetched rather than bundled, so
+**RESOLVED (2026-08-17)**: the soundfont is **vendored, not fetched from a CDN**. It lives in
+`public/soundfonts/`, downloaded once by `npm run fetch:soundfont` and committed. A runtime
+dependency on a third party's host would mean the app's core Melodic feature breaks when that host
+moves a file, which sits badly with Principle V's static-artifact goal. An e2e test asserts that
+playback makes no third-party request at all.
+
+Until the files are vendored, Melodic playback degrades to a synthesised voice at the correct pitch
+and octave, with a status message naming the command to fix it — never silence.
+
+**Consequences to handle in implementation**: The soundfont is loaded asynchronously, so
 Principle III's non-blocking rule is load-bearing here. Percussive playback must be fully available
 before any sample has loaded, and Melodic play must show a loading state rather than failing
 silently (AC-2.4.3). The fetch must be cached so a second melodic play is instant, and a failed
@@ -183,6 +192,3 @@ These are genuinely low-stakes and do not need a decision before tasks are writt
 
 - The exact accent palette values, beyond passing the CVD check.
 - The metronome click timbre, beyond being audibly separable from Pattern voices.
-- Whether the soundfont is fetched from a CDN or committed as an asset — a size-versus-offline
-  tradeoff best judged once the actual file size is known. Note that a CDN fetch must still respect
-  the no-external-dependency-at-runtime spirit of Principle V; if it proves fragile, commit it.

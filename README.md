@@ -37,11 +37,17 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2
 
 ## Before release
 
-- **The piano soundfont is fetched from a third-party CDN.** research.md D-003 left
-  CDN-versus-committed-asset open. A runtime dependency on someone else's host means
-  Melodic mode breaks when that host does. Self-host the files and point
-  `setSoundfontBaseUrl` at them. A failed load currently falls back to a synthesised
-  voice at the correct pitch rather than going silent.
+- **Vendor the piano soundfont** — one command, on a machine with open internet:
+
+  ```bash
+  npm run fetch:soundfont
+  git add public/soundfonts && git commit -m "Vendor the piano soundfont"
+  ```
+
+  The app already loads it from its own origin; the files just aren't present yet.
+  Until they are, Melodic playback uses a synthesised voice at the correct pitch and
+  octave, with a status message saying so. Percussive playback is pure synthesis and
+  is unaffected.
 - **Run the 30-minute continuous playback check by hand** (quickstart.md V7). The
   automated suite asserts the property that makes it hold — absolute-origin
   scheduling — over 30 seconds and 500 loops, not the full half hour.

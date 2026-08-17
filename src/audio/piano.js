@@ -41,11 +41,20 @@ function setStatus(next, error = null) {
 }
 
 /**
- * Where the soundfont comes from. Overridable so the app can be pointed at a
- * self-hosted copy rather than a third party — see the note at the bottom of
- * this file.
+ * Where the soundfont comes from: this app's own origin, under `public/`.
+ *
+ * Deliberately NOT a CDN. Melodic playback is a core feature, and a runtime
+ * dependency on a third party's host means it breaks when they move a file —
+ * which also sits badly with Principle V's static-artifact goal. Vendor the
+ * files with `npm run fetch:soundfont` and commit them (research.md D-003).
+ *
+ * Overridable so a deployment can serve them from elsewhere if it wants to.
  */
-export let soundfontBaseUrl = 'https://gleitz.github.io/midi-js-soundfonts/MusyngKite/';
+const BASE = typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
+  ? import.meta.env.BASE_URL
+  : '/';
+
+export let soundfontBaseUrl = `${BASE}soundfonts/MusyngKite/`;
 
 export function setSoundfontBaseUrl(url) {
   soundfontBaseUrl = url;
@@ -77,13 +86,22 @@ export function load(ctx) {
     })
     .catch((err) => {
       /*
-       * A failed soundfont fetch must not silence Melodic mode entirely. Falling
-       * back to a synthesised voice keeps every Pattern playable at the correct
-       * pitch and octave — which is the correctness requirement (SC-003) — while
-       * the status makes it visible that the piano is not what is sounding.
+       * A missing soundfont must not silence Melodic mode entirely. Falling back
+       * to a synthesised voice keeps every Pattern playable at the correct pitch
+       * and octave — the actual correctness requirement (SC-003) — while the
+       * status makes it visible that the piano is not what is sounding.
+       *
+       * The usual cause is simply that the files have not been vendored yet.
        */
       instrument = null;
-      setStatus(STATUS.FALLBACK, err);
+      setStatus(
+        STATUS.FALLBACK,
+        new Error(
+          `Piano samples unavailable from ${soundfontBaseUrl} (${err.message}). ` +
+            'Run `npm run fetch:soundfont` and commit the result. Playing a synthesised ' +
+            'voice at the correct pitch in the meantime.'
+        )
+      );
       return getStatus();
     })
     .finally(() => {
@@ -153,12 +171,9 @@ export function __reset() {
 export { STATUS };
 
 /*
- * DEPLOYMENT NOTE — the soundfont is fetched from a third-party CDN by default.
+ * D-003 is RESOLVED: the soundfont is vendored, not fetched from a CDN.
  *
- * research.md D-003 left "CDN versus committed asset" open, to be judged once
- * the real file size was known. It should be resolved before release: a runtime
- * dependency on someone else's host means the app's core Melodic feature breaks
- * when that host does, which sits badly with Principle V's static-artifact goal.
- * Self-hosting the MusyngKite acoustic_grand_piano files and pointing
- * `setSoundfontBaseUrl` at them removes the dependency.
+ * `npm run fetch:soundfont` downloads it into public/soundfonts/, and it is
+ * committed from there. Until that has been run the app degrades to the
+ * synthesised fallback above rather than failing.
  */

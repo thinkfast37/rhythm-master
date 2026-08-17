@@ -14,7 +14,8 @@
     "coverage:ac": "node tests/ac-coverage.js",
     "validate:seed": "node tools/validate-seed.js",
     "check:cvd": "node tools/check-cvd.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "fetch:soundfont": "node tools/fetch-soundfont.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
