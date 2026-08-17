@@ -538,3 +538,27 @@ from Phase 24 — but none of those is a release boundary.
 **The gate that matters**: `npm run coverage:ac` must reach zero uncovered ACs before Phase 37
 closes. It will report 206 gaps at the start of Phase 2 and should fall monotonically. A phase is
 not done while its ACs are uncovered.
+
+---
+
+## Post-MVP task log
+
+Every change after the MVP build gets a numbered task here — bug, data fix,
+feature, or governance amendment — with the files it touched and the US/AC IDs
+it implements or revises. See `CLAUDE.md` §3.
+
+`T125`–`T132` are backfilled from work done before this log existed, so the
+record is complete rather than starting mid-stream.
+
+- [X] T125 **[approach change]** Vendor the piano soundfont instead of fetching it from a CDN — `src/audio/piano.js`, `tools/fetch-soundfont.js`, `research.md` D-003. *Superseded by T126.*
+- [X] T126 **[approach change]** Port the predecessor's synthesis engine for both Sound Modes; remove the sampled path entirely — `src/audio/nodes.js`, `src/audio/voices.js`, `src/audio/melodic.js`. Reversed US-2.4 (rewritten), amended research.md D-003, retired the Constitution's sampled-piano exception (v3.1.0). *This is the change the blast-radius rule in CLAUDE.md §1 was written for.*
+- [X] T127 **[bug]** Shared audio nodes were cached module-globally rather than per AudioContext; a replaced context would have thrown on every connect — `src/audio/nodes.js`.
+- [X] T128 **[new capability]** Add Tags from the UI; lock a built-in Pattern's own Tags while leaving user-added ones removable — `src/ui/library.js`, `src/storage/overlays.js`, `src/main.js`. AC-5.3.5 extended.
+- [X] T129 **[spec defect]** Provenance was shown as the prose "ships with the app"; it is now the automatic Tag `built-in`, paired with `custom` — `src/core/pattern.js`, `src/ui/controls.js`, `src/ui/dialogs.js`. AC-5.3.5 extended.
+- [X] T130 **[data]** Merge the redundant "Song Signatures" Tag into "Song" across 14 Patterns — `data/seed-patterns.json`.
+- [X] T131 **[bug]** The mobile drawer stayed open when a Pattern was created from it — `src/main.js`. AC-15.1.6 rewritten around the rule rather than the control.
+- [X] T132 **[spec defect]** The "&" subdivision took Medium only on Beat 1, which was inconsistent between Beats and ranked a subdivision equal to the Beat-3 downbeat — `src/core/accents.js`. AC-3.1.4 and AC-3.1.5 revised, AC-3.1.16 added.
+- [X] T133 **[new capability]** Filter by several Tags at once, ANDed — `src/ui/library.js`, `src/main.js`. AC-5.3.9 added.
+- [X] T134 **[new capability]** Move a Pattern's Tags onto the Pattern header and stop repeating them down the library list — `src/ui/controls.js`, `src/ui/library.js`, `src/main.js`. AC-5.3.10 added.
+- [X] T135 **[process]** Codify the workflow: blast-radius rule, change-type triage, task logging, verification gates — `CLAUDE.md`, this section.
+- [ ] T136 **[data]** Correct inaccurate Tags across the shipped library, decided pattern-by-pattern with the maintainer — `data/seed-patterns.json`. *In progress.*
