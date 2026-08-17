@@ -845,7 +845,7 @@ exist).
   - *(Tags are ANDed rather than ORed because the point of selecting a second one is to drill in. ORing them could only ever widen the result, which no combination of Tags would ever narrow.)*
 
 - **AC-5.3.10** — A Pattern's Tags live on the Pattern, not repeated down the library list
-  - **Given** the library showing all 110 Patterns
+  - **Given** the library showing every shipped Pattern
   - **When** the Practicing Musician looks at the list
   - **Then** no Pattern row shows its Tags — the rows carry name and Rating only
   - **And** the currently open Pattern shows its full Tag set in its header, with the same three kinds and the same removal rules as AC-5.3.5
@@ -1571,8 +1571,15 @@ present, correctly structured, and immediately playable without any authoring st
 - **AC-16.1.1** — Shipped library present on first run
   - **Given** a browser profile with no stored data
   - **When** the Practicing Musician opens the app for the first time
-  - **Then** the library contains the full set of 110 shipped Patterns, each immediately selectable
-    and playable
+  - **Then** the library contains every Pattern in `data/seed-patterns.json`, each immediately
+    selectable and playable
+  - **And** the library's counter reports that same number, whatever it currently is
+  - *(Revised 2026-08-17. This previously named a literal count — "the full set of 110 shipped
+    Patterns". The library grows by addition: a Pattern is appended to the data file and no code
+    changes (US-16.2), so a number written into an Acceptance Criterion is stale the moment the next
+    one lands, and the spec would have to be amended for a change it does not govern. The count is
+    still asserted, against the data file rather than a literal, so a loader or list that drops
+    Patterns still fails.)*
 
 - **AC-16.1.2** — Shipped Patterns are not marked as user-authored
   - **Given** any shipped Pattern in the seeded library
@@ -1847,8 +1854,9 @@ specified in the Acceptance Scenarios above.
 - The following are carried over from the predecessor application and assumed still correct: the
   swing timing formula including its 0.95 cap; MIDI velocity mapping of 50/80/110 for
   weak/medium/strong; the 8,000-character threshold before bulk submission falls back to clipboard.
-- **The seeded library is curated, not frozen.** Its 110 Patterns are converted
+- **The seeded library is curated, not frozen.** The 110 Patterns it launched with are converted
   mechanically from the predecessor application; their musical content is assumed correct as
-  authored and is not re-evaluated here.
+  authored and is not re-evaluated here. That figure is a record of the conversion, not a size the
+  library holds to — it grows by appending to `data/seed-patterns.json` (AC-16.1.1).
 - **Out of scope for this version**: multi-section Arrangements; a guided tutorial system; layering
   two Patterns by merging their accents; and any form of export/import or cloud sync.

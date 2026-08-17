@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { SEED_PATTERN_COUNT } from '../seed-count.js';
 
 test.use({ launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefined } });
 
 test('AC-5.1.1 — the library lists every shipped Pattern on first load', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.pattern-item')).toHaveCount(110);
-  await expect(page.locator('.library-count')).toHaveText('110 patterns');
+  await expect(page.locator('.pattern-item')).toHaveCount(SEED_PATTERN_COUNT);
+  await expect(page.locator('.library-count')).toHaveText(`${SEED_PATTERN_COUNT} patterns`);
 });
 
 test('AC-5.1.2 — the list is alphabetical', async ({ page }) => {
@@ -20,7 +21,7 @@ test('AC-5.2.1 — typing filters the list', async ({ page }) => {
   await page.locator('.library-search').fill('clave');
   const count = await page.locator('.pattern-item').count();
   expect(count).toBeGreaterThan(0);
-  expect(count).toBeLessThan(110);
+  expect(count).toBeLessThan(SEED_PATTERN_COUNT);
   for (const name of await page.locator('.pattern-name').allTextContents()) {
     expect(name.toLowerCase()).toContain('clave');
   }
@@ -30,7 +31,7 @@ test('AC-5.2.3 — clearing the search restores the full list', async ({ page })
   await page.goto('/');
   await page.locator('.library-search').fill('clave');
   await page.locator('.library-search').fill('');
-  await expect(page.locator('.pattern-item')).toHaveCount(110);
+  await expect(page.locator('.pattern-item')).toHaveCount(SEED_PATTERN_COUNT);
 });
 
 test('AC-5.3.5 — automatic Tags are outlined with no removal control; user Tags are filled with one', async ({
@@ -60,7 +61,7 @@ test('AC-5.3.3 — clicking a Tag chip filters by it', async ({ page }) => {
   await page.locator('.tag-filter', { hasText: 'melodic' }).first().click();
   const count = await page.locator('.pattern-item').count();
   expect(count).toBeGreaterThan(0);
-  expect(count).toBeLessThan(110);
+  expect(count).toBeLessThan(SEED_PATTERN_COUNT);
 
   // Every listed Pattern genuinely carries the Tag, checked against the data
   // rather than the row, which no longer repeats Tags.
@@ -354,7 +355,7 @@ test('AC-5.3.7 — every shipped Pattern carries at least one tag', async ({ pag
 
 test('AC-5.3.10 — the library list does not repeat every Pattern’s Tags', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.pattern-item')).toHaveCount(110);
+  await expect(page.locator('.pattern-item')).toHaveCount(SEED_PATTERN_COUNT);
 
   // Repeating Tags on every row made the list far longer to scroll for
   // information the filter chips above already act on.
