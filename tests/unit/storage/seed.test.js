@@ -3,12 +3,21 @@ import * as seed from '../../../src/storage/seed.js';
 import { validate } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { beatCount, isSupported } from '../../../src/core/meter.js';
+import { SEED_PATTERN_COUNT } from '../../seed-count.js';
 
 const library = seed.loadAll();
 
+/**
+ * The size of the library as converted from the predecessor application. A
+ * historical figure, not the library's size: everything from index 110 onward
+ * was authored later and is appended, never inserted (see data/README.md).
+ */
+const CONVERTED_LIBRARY_SIZE = 110;
+
 describe('the shipped Pattern library', () => {
-  it('AC-16.1.1 — the app arrives stocked with 110 Patterns', () => {
-    expect(library).toHaveLength(110);
+  it('AC-16.1.1 — the app arrives stocked with every shipped Pattern', () => {
+    expect(library).toHaveLength(SEED_PATTERN_COUNT);
+    expect(library.length).toBeGreaterThanOrEqual(CONVERTED_LIBRARY_SIZE);
   });
 
   it('AC-16.1.2 — every shipped Pattern is valid against the data model', () => {
@@ -20,7 +29,8 @@ describe('the shipped Pattern library', () => {
   it('AC-16.1.3 — the conversion preserved every note from the predecessor', () => {
     // 1,053 at conversion, less the 26 notes in the two placeholder Patterns
     // ("New Rhythm", "My Rhythm") removed during the 2026-08-17 tag audit.
-    expect(seed.noteOnCount()).toBe(1027);
+    // Counted over the converted slice, so later additions cannot disturb it.
+    expect(seed.noteOnCount(library.slice(0, CONVERTED_LIBRARY_SIZE))).toBe(1027);
   });
 
   it('AC-16.1.4 — ids are deterministic, unique, and derived from seed position', () => {

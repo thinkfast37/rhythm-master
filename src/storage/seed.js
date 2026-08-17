@@ -52,9 +52,14 @@ export function validateAll() {
   return { valid: errors.length === 0, errors };
 }
 
-/** Total sounding Slots across the library — the figure the conversion preserved. */
-export function noteOnCount() {
-  return loadAll().reduce(
+/**
+ * Total sounding Slots across the given Patterns, defaulting to the whole
+ * library. The conversion from the predecessor preserved this figure over the
+ * Patterns it converted, so that check passes the converted slice rather than
+ * the library, which grows.
+ */
+export function noteOnCount(patterns = loadAll()) {
+  return patterns.reduce(
     (total, p) =>
       total +
       p.measures.reduce(
