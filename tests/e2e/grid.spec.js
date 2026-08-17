@@ -121,6 +121,17 @@ test('AC-5.6.4 — the grid labels Slots in the selected counting system', async
   await expect(relabelled.nth(1)).toHaveText('e');
 });
 
+test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number", async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.counting-picker').selectOption('one-e-and-a');
+
+  for (let beat = 0; beat < 4; beat++) {
+    const firstLabel = page.locator(`.beat[data-beat="${beat}"] .slot-label`).first();
+    await expect(firstLabel).toHaveText(String(beat + 1));
+  }
+});
+
 test('AC-1.3.4 — a mixed-feel Recipe renders two groups with different feels', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));

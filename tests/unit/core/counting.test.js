@@ -95,4 +95,31 @@ describe('core/counting', () => {
     a[0] = 'XX';
     expect(labelsFor('straight-16ths', 'quarter', 'takadimi')[0]).toBe('ta');
   });
+
+  it("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number", () => {
+    const measure = [0, 1, 2, 3].map((beatIndex) =>
+      labelsFor('straight-8ths', 'quarter', 'one-e-and-a', beatIndex)
+    );
+    expect(measure).toEqual([
+      ['1', '&'],
+      ['2', '&'],
+      ['3', '&'],
+      ['4', '&'],
+    ]);
+    // Restarts fresh at 1 for the next Measure.
+    expect(labelsFor('straight-8ths', 'quarter', 'one-e-and-a', 0)).toEqual(['1', '&']);
+    // Every other system is untouched by beatIndex.
+    expect(labelsFor('straight-8ths', 'quarter', 'takadimi', 2)).toEqual(['ta', 'di']);
+    expect(labelsFor('straight-8ths', 'quarter', 'numbered', 2)).toEqual(['1', '2']);
+  });
+
+  it('AC-5.6.13 — 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity', () => {
+    const measure = Array.from({ length: 7 }, (_, beatIndex) =>
+      labelsFor('straight-16ths', 'eighth', 'one-e-and-a', beatIndex)
+    );
+    expect(measure).toEqual([
+      ['1', '&'], ['2', '&'], ['3', '&'], ['4', '&'],
+      ['5', '&'], ['6', '&'], ['7', '&'],
+    ]);
+  });
 });
