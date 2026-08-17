@@ -14,7 +14,7 @@
  */
 import { beatNoteValue } from '../core/meter.js';
 import { slotCount, subdivisionGroups } from '../core/recipes.js';
-import { effectiveAccent } from '../core/accents.js';
+import { effectiveAccent, defaultAccent } from '../core/accents.js';
 import { labelsFor, effectiveSystem } from '../core/counting.js';
 import { noteName } from '../core/pitch.js';
 
@@ -229,6 +229,13 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
   el.dataset.beat = String(beatIndex);
   el.dataset.slot = String(slotIndex);
   el.dataset.accent = String(accent);
+  /*
+   * What this position WOULD sound at if it were turned on — the metric
+   * strength of the Slot, independent of whether it holds a note. It tints the
+   * resting cell, so the shape of the Beat is legible before anything is
+   * written into it, and a downbeat never looks like an "e".
+   */
+  el.dataset.metric = String(defaultAccent(measure, beatIndex, slotIndex));
 
   const active =
     position &&

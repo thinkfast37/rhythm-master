@@ -155,6 +155,37 @@
                "DejaVu Sans Mono", "Courier New", monospace;
 }
 
+/*
+ * Accent colour, in the three roles a Slot needs it.
+ *
+ * `--accent-*` is the fill: the bar, and the playback cursor's flood. It is the
+ * CVD-gated palette and is not touched here.
+ *
+ * `--tint-*` is the cell's resting ground — the same hue at low alpha, so a
+ * cell carries its weight without competing with the syllable on top of it.
+ *
+ * `--accent-ink-*` is the syllable. The fills cannot be reused for text:
+ * --accent-weak (#3a6ea8) on the Slot's ground is about 2.5:1, well under what
+ * small text needs, so the weak ink is a lightened form of the same blue rather
+ * than the fill itself.
+ */
+:root {
+  --tint-weak: rgba(58, 110, 168, 0.20);
+  --tint-medium: rgba(159, 208, 232, 0.16);
+  --tint-strong: rgba(240, 160, 32, 0.16);
+
+  --accent-ink-weak: #8fb4e0;
+  --accent-ink-medium: #b7dcee;
+  --accent-ink-strong: #f2b451;
+
+  /* The same three at rest, where the cell is showing metric position rather
+     than a note: present enough to read the Beat's shape, quiet enough that a
+     sounding Slot still wins the eye. */
+  --rest-tint-weak: rgba(58, 110, 168, 0.07);
+  --rest-tint-medium: rgba(159, 208, 232, 0.06);
+  --rest-tint-strong: rgba(240, 160, 32, 0.07);
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -296,7 +327,6 @@ body {
   position: relative;
   flex: 1 1 auto;
   min-width: var(--slot-min);
-  min-height: 52px;
   padding: 0;
   /* The type inside sizes to the cell, not to a fixed value — see .slot-label. */
   container-type: inline-size;
@@ -348,7 +378,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(52px - var(--slot-bar-h));
+  min-height: 0;
   padding-bottom: var(--slot-bar-h);
 /*
  * The counting syllable sizes to its cell, not to a constant.
@@ -393,8 +423,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--slot-zone-gap);
-  min-height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
   height: auto;
+  aspect-ratio: auto;
   container-type: inline-size;
   background: transparent;
   border: 0;
@@ -404,7 +434,6 @@ body {
 .slot.has-note .slot-accent {
   position: relative;
   flex: 0 0 auto;
-  min-height: var(--slot-accent-h);
   padding: 0;
   background: var(--accent-off);
   border: 1px solid var(--grid-slot-line);
@@ -470,7 +499,6 @@ body {
   font-size: clamp(15px, 34cqi, 26px);
   font-weight: 700;
   line-height: 1.3;
-  min-height: var(--slot-accent-h);
   padding-bottom: 0;
 }
 
@@ -484,6 +512,56 @@ body {
 @media (pointer: fine) {
   .slot-note { min-height: var(--slot-note-h); }
 }
+
+/*
+ * A rounded square, not a rounded rectangle. AC-15.2.6.
+ *
+ * The counting cell is the unit the eye counts, and a square reads as one unit
+ * where a wide rectangle reads as a span of time.
+ *
+ * Sized from `cqi` — a percentage of the Slot's own inline size — rather than
+ * with `aspect-ratio`, and that is not a stylistic preference. `.beats` is a
+ * grid of `minmax(min-content, 1fr)` tracks (AC-15.1.14), and an aspect-ratio
+ * feeds the cell's height back into its min-content WIDTH: it silently became a
+ * floor that both unbalanced the tracks and wrapped a 4/4 Measure which
+ * AC-15.1.14/4 requires to fit one line. A container-query length is resolved
+ * after the width is, so it cannot affect it.
+ *
+ * Plain `100cqi`, with no correction for the Slot's border: measured, that
+ * comes out exactly square (150.5 x 150.5 at one width). Adding or subtracting
+ * the 2px border throws it out by exactly that much in the corresponding
+ * direction, so the container query length is already accounting for it.
+ */
+.slot:not(.has-note) .slot-label { min-height: 100cqi; }
+.slot.has-note .slot-accent { height: 100cqi; }
+
+/* --- the cell's colour, by what it is and what it would be --------------- */
+
+/*
+ * A Slot that sounds is tinted and lettered by its Accent Level; one that does
+ * not is tinted by its metric position — what it would sound at if turned on.
+ *
+ * So the Beat's shape is legible before a note is written into it: a downbeat
+ * reads as a downbeat rather than as an identical empty box, which is what
+ * makes a half-written Pattern possible to read at all.
+ */
+.slot[data-metric='1'] .slot-accent,
+.slot[data-metric='1']:not(.has-note) { background: var(--rest-tint-weak); }
+.slot[data-metric='2'] .slot-accent,
+.slot[data-metric='2']:not(.has-note) { background: var(--rest-tint-medium); }
+.slot[data-metric='3'] .slot-accent,
+.slot[data-metric='3']:not(.has-note) { background: var(--rest-tint-strong); }
+
+.slot.accent-weak .slot-accent,
+.slot.accent-weak:not(.has-note) { background: var(--tint-weak); }
+.slot.accent-medium .slot-accent,
+.slot.accent-medium:not(.has-note) { background: var(--tint-medium); }
+.slot.accent-strong .slot-accent,
+.slot.accent-strong:not(.has-note) { background: var(--tint-strong); }
+
+.slot.accent-weak .slot-label { color: var(--accent-ink-weak); }
+.slot.accent-medium .slot-label { color: var(--accent-ink-medium); }
+.slot.accent-strong .slot-label { color: var(--accent-ink-strong); }
 
 /*
  * A Slot that does not sound recedes. AC-3.1.17.
@@ -575,16 +653,12 @@ body {
 @media (max-width: 767px) {
     .grid { padding: 8px; gap: 10px; }
   .measure { flex-wrap: wrap; }
-  .slot { min-height: 44px; }
   .slot-label { min-height: calc(44px - var(--slot-bar-h)); }
   /* A split Slot keeps its full height on mobile: both zones are tap targets
      with a floor of their own (AC-2.2.12), so this is the last place to
      compress them. The rule above would otherwise override the composed
      height and squeeze the note band to a sliver. */
-  .slot.has-note {
-    min-height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
-  }
-  .slot.has-note .slot-label { min-height: var(--slot-accent-h); }
+  .slot.has-note .slot-label { min-height: 0; }
 }
 
 /* --- controls ------------------------------------------------------------ */

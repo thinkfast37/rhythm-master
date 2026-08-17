@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 265 across 35 User Stories
+**Criteria**: 271 across 35 User Stories
 
-**Coverage**: 67 of 265 criteria proven (25.3%)
+**Coverage**: 73 of 271 criteria proven (26.9%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 67 | 25.3% |
-| 🔴 Gap — HIGH | 77 | 29.1% |
-| 🟠 Gap — MEDIUM | 42 | 15.8% |
-| 🟡 Gap — LOW | 79 | 29.8% |
+| 🟢 Proven | 73 | 26.9% |
+| 🔴 Gap — HIGH | 77 | 28.4% |
+| 🟠 Gap — MEDIUM | 42 | 15.5% |
+| 🟡 Gap — LOW | 79 | 29.2% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -66,7 +66,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-2.2 | 29 | 16 | · | · | 1 | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
-| 🔴 US-3.1 | 20 | 4 | · | · | 3 | 1 | 12 |
+| 🔴 US-3.1 | 24 | 8 | · | · | 3 | 1 | 12 |
 | 🔴 US-4.1 | 10 | 4 | · | · | 3 | 1 | 2 |
 | 🔴 US-4.2 | 3 | 0 | · | · | 1 | 2 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
@@ -92,7 +92,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-15.1 | 18 | 5 | · | · | 1 | 9 | 3 |
 | 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
-| 🟢 US-15.2 | 8 | **8** | · | · | · | · | · |
+| 🟢 US-15.2 | 10 | **10** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -145,7 +145,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.2 | `AC-2.2.9` 🖵 | Changing the armed pitch doesn't retroactively affect stamped Slots | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.2 | `AC-2.2.10` 🖵 | A Melodic Slot has two tap zones, and they do different jobs | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.2 | `AC-2.2.11` 🖵 | Turning a Slot on takes the armed pitch | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.12` 🖵 | Both zones stay tappable at the smallest supported Slot | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.12` 🖵 | Both zones stay tappable at the smallest supported Slot | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `grid.spec.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.2 | `AC-2.2.17/1` 🖵 | On a precise pointer the note band's hit area shrinks to the strip it draws, so the Slot is shorter and the strip reads as the thin thing it is | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.17/2` 🖵 | On a touchscreen, at any viewport width, it keeps the 24 CSS pixel target AC-2.2.12 requires — a tablet held in the hand is a touchscreen whatever its width | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.17/3` 🖵 | The finger-sized target is the default, so a browser that cannot report the pointing device keeps it rather than losing it | P-016 | T069, T160, T162, T163, T164, T165 (6/6 done) | T070, T161, T162, T163, T164, T165 (6/6 done) | `melodic.spec.js` | 🟢 OK |
@@ -171,26 +171,30 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-2.4 | `AC-2.4.4` | Melodic notes share one reverb and one compressor | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.17/1` 🖵 | A silent Slot shows a dot in place of its counting syllable, so a cell either carries a syllable or does not, rather than carrying the same syllable at two weights | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.17/2` 🖵 | That dot is dimmer than a sounding Slot's syllable, so the distinction survives a reader whose browser clamps small sizes to a minimum | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.17/3` 🖵 | The syllable the dot stands for stays available to assistive technology, so nothing is lost that a sighted reader still gets from position | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.17/4` 🖵 | The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.17/1` 🖵 | A silent Slot shows a dot in place of its counting syllable, so a cell either carries a syllable or does not, rather than carrying the same syllable at two weights | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/2` 🖵 | That dot is dimmer than a sounding Slot's syllable, so the distinction survives a reader whose browser clamps small sizes to a minimum | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/3` 🖵 | The syllable the dot stands for stays available to assistive technology, so nothing is lost that a sighted reader still gets from position | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/4` 🖵 | The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.18/1` 🖵 | A Slot that does not sound is tinted by its metric position — the Accent Level it would take if turned on — so a downbeat never looks like an "e" | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.18/2` 🖵 | A Slot that sounds is tinted by its actual Accent Level instead, more strongly than any resting tint, so what sounds wins the eye over what merely could | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.18/3` 🖵 | Its counting syllable takes the same Accent Level's colour, so the cell reads as one thing rather than as text sitting on an unrelated ground | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.18/4` 🖵 | The syllable's colour clears 4.5:1 against the tint behind it at every Accent Level, since the fills are chosen for separability as blocks and are not all usable as text | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-4.1 | `AC-4.1.7/1` 🖵 | It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟢 OK |
@@ -355,11 +359,13 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-16.2 | `AC-16.2.2` | Adding a Pattern requires no code change | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.2 | `AC-16.2.3` | Malformed entries fail loudly, not silently | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.2 | `AC-16.2.4` | The data file is versioned | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.1/4` 🖵 | A Melodic Slot's accent-to-note divider, against the Slot's unfilled background | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.2` 🖵 | A Beat boundary is drawn, not left to spacing alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/4` 🖵 | A Melodic Slot's accent-to-note divider, against the Slot's unfilled background | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.2` 🖵 | A Beat boundary is drawn, not left to spacing alone | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.6/1` 🖵 | Each counting cell is as tall as it is wide, within a pixel, in both Sound Modes and at every Recipe | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.6/2` 🖵 | The square never costs a tap target: where a Slot is at its minimum width the cell is that wide and that tall, which still clears the 24 CSS pixels AC-2.2.12 requires | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |

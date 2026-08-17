@@ -618,6 +618,18 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - *(Added 2026-08-17. Every syllable was rendered identically whether or not its Slot sounded, so the largest, boldest thing in an empty cell was text carrying no information about the rhythm.)*
   - *(Revised the same day. The first attempt kept the syllable on a silent Slot and made it lighter, smaller and dimmer — three channels, and still too subtle to scan across a Measure in which most Slots sound. Replacing it outright is what the maintainer's predecessor app did and what they asked for: a cell either has a syllable in it or it has a dot, which is a difference in kind rather than in degree. /2 survives from that attempt because the reason for it does — at a browser-enforced minimum font size a smaller dot is clamped back up, and colour is the channel no reader setting overrules.)*
 
+- **AC-3.1.18** — A cell is coloured by what it sounds, or by what it would sound
+  - **Given** a Measure part-way through being written, where some Slots sound and some do not
+  - **When** the Composer looks at it
+  - **Then** each cell carries a colour saying where it sits in the Beat, so the Beat's shape is
+    legible before anything has been written into it
+  - **Cases**:
+    - **AC-3.1.18/1** — A Slot that does not sound is tinted by its metric position — the Accent Level it would take if turned on — so a downbeat never looks like an "e"
+    - **AC-3.1.18/2** — A Slot that sounds is tinted by its actual Accent Level instead, more strongly than any resting tint, so what sounds wins the eye over what merely could
+    - **AC-3.1.18/3** — Its counting syllable takes the same Accent Level's colour, so the cell reads as one thing rather than as text sitting on an unrelated ground
+    - **AC-3.1.18/4** — The syllable's colour clears 4.5:1 against the tint behind it at every Accent Level, since the fills are chosen for separability as blocks and are not all usable as text
+  - *(Added 2026-08-17, carried over from a predecessor app of the maintainer's that reads better than this one did. The grid had one ground for every cell, so an empty Measure was a row of identical boxes and a half-written one gave no clue which positions were structurally strong. Tinting by metric position is the same information AC-3.1.2's table already computes, shown rather than left implicit.)*
+
 - **AC-3.1.16** — The within-Beat shape is identical in every Beat
   - **Given** a 4/4 Measure with every Beat on the Straight 16ths Recipe
   - **When** every Slot's default accent is computed
@@ -1949,6 +1961,17 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
     nesting as the thing making the grid hard to read, not the thing making it legible. A single
     rule between Beats draws the same boundary with one line instead of four. What the criterion
     protects is unchanged: the boundary is drawn rather than implied by a few pixels of extra gap.)*
+
+- **AC-15.2.6** — A counting cell is square
+  - **Given** the grid at any viewport width
+  - **When** the Practicing Musician looks at the cells carrying the counting syllables
+  - **Then** the cell is square rather than stretched to whatever width its Recipe leaves it
+  - **Cases**:
+    - **AC-15.2.6/1** — Each counting cell is as tall as it is wide, within a pixel, in both Sound Modes and at every Recipe
+    - **AC-15.2.6/2** — The square never costs a tap target: where a Slot is at its minimum width the cell is that wide and that tall, which still clears the 24 CSS pixels AC-2.2.12 requires
+  - *(Added 2026-08-17. A counting cell is the unit the eye counts, and a square reads as one unit
+    where a wide rectangle reads as a span of time — which is what an undivided Beat's cell had
+    become. Carried over from the maintainer's predecessor app.)*
 
 - **AC-15.2.3** — The boundaries form a hierarchy, so nesting is readable
   - **Given** a Measure containing Beats containing Slots
