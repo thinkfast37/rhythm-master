@@ -8,6 +8,8 @@
  *   pattern-intake accept <issue…>      append to data/seed-patterns.json
  *       --force                         accept a name that already exists
  *       --dry-run                       render what would be appended, write nothing
+ *   pattern-intake close <issue…>       close a submission that has actually shipped
+ *       --dry-run                       print the comment, post nothing
  *
  * `accept` writes the seed file and stops. Validating and committing are separate
  * on purpose: `npm run validate:seed` is the gate that decides whether the write
@@ -21,6 +23,7 @@ import { patternsFromIssue } from './lib/decode.mjs';
 import { renderPattern } from './lib/render.mjs';
 import { appendPatterns, readSeed, seedId } from './lib/seed.mjs';
 import { SUBMISSION_LABEL, mergeSubmissions, isLabelled } from './lib/select.mjs';
+import { locateInLibrary, closingComment } from './lib/landed.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const SEED = join(ROOT, 'data/seed-patterns.json');
@@ -55,6 +58,14 @@ const labelExists = () =>
  * Every open submission: those carrying the label, plus those whose title says
  * they are one and whose label GitHub dropped (see lib/select.mjs).
  */
+function gitOut(args) {
+  try {
+    return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }).trim();
+  } catch (err) {
+    return die(`git failed: ${err.stderr?.trim() || err.message}`);
+  }
+}
+
 const fetchIssues = (numbers) =>
   numbers.length
     ? numbers.map((n) => {
@@ -164,6 +175,61 @@ async function accept(numbers, { force, dryRun }) {
   console.log('\nNow run the gates before committing:\n  npm run validate:seed\n  npm test');
 }
 
+/**
+ * The shipped library as it exists on the DEFAULT BRANCH, not in this working tree.
+ *
+ * `main` is the live site (CLAUDE.md §5), so it is the only thing that answers
+ * "has this Pattern shipped". A working tree can hold an accept that was never
+ * committed, a branch that never merged, or a change a gate sent back.
+ */
+function shippedLibrary() {
+  const branch = gitOut(['symbolic-ref', 'refs/remotes/origin/HEAD']).replace('refs/remotes/', '') || 'origin/main';
+  gitOut(['fetch', '--quiet', 'origin']);
+  const raw = gitOut(['show', `${branch}:data/seed-patterns.json`]);
+  if (!raw) die(`Could not read data/seed-patterns.json from ${branch}.`);
+  return { branch, patterns: JSON.parse(raw).patterns };
+}
+
+/**
+ * Close a submission, saying which id it shipped as.
+ *
+ * REFUSES unless every Pattern the issue carries is actually in the shipped
+ * library on the default branch. That check is the whole point: this is the only
+ * command that speaks to the Contributor, and a "your Pattern is in the library"
+ * posted against a change that never landed is a lie nothing would ever correct.
+ */
+async function close(numbers, { dryRun }) {
+  if (numbers.length === 0) die('close needs at least one issue number.');
+  const { entries, failures } = await decodeAll(fetchIssues(numbers));
+  report(failures);
+  if (failures.length) die('Refusing to close while an issue could not be decoded.');
+  if (entries.length === 0) die('Nothing to close.');
+
+  const { branch, patterns: shipped } = shippedLibrary();
+
+  for (const number of numbers) {
+    const mine = entries.filter((e) => e.issue === number);
+    const { found, missing } = locateInLibrary(mine.map((e) => e.pattern), shipped);
+    if (missing.length) {
+      die(
+        `Refusing to close #${number} — not in the shipped library on ${branch}:\n` +
+          missing.map((n) => `  ${n}`).join('\n') +
+          '\n\nAccept it, land the PR and let the deploy go green first. Closing an issue\n' +
+          'for a change that has not shipped tells the Contributor something untrue.'
+      );
+    }
+
+    const comment = closingComment(found);
+    if (dryRun) {
+      console.log(`Would comment on #${number} and close it:\n\n${comment}\n`);
+      continue;
+    }
+    gh(['issue', 'comment', String(number), '--body', comment]);
+    gh(['issue', 'close', String(number)]);
+    console.log(`Closed #${number} — ${found.map((f) => f.id).join(', ')}`);
+  }
+}
+
 const [command, ...rest] = process.argv.slice(2);
 const flags = new Set(rest.filter((a) => a.startsWith('--')));
 const numbers = rest.filter((a) => !a.startsWith('--')).map((a) => Number(a.replace('#', '')));
@@ -173,9 +239,10 @@ const commands = {
   list: () => list(),
   show: () => show(numbers),
   accept: () => accept(numbers, { force: flags.has('--force'), dryRun: flags.has('--dry-run') }),
+  close: () => close(numbers, { dryRun: flags.has('--dry-run') }),
 };
 
 if (!commands[command]) {
-  die('Usage: pattern-intake <list|show|accept> [issue…] [--force] [--dry-run]');
+  die('Usage: pattern-intake <list|show|accept|close> [issue…] [--force] [--dry-run]');
 }
 await commands[command]();
