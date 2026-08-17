@@ -178,12 +178,12 @@ Nothing in this phase renders anything.
 
 **Independent test**: Play a multi-meter Pattern and assert timing accuracy over sustained looping, visual/audio sync, per-Measure iteration, and stop-and-reset on device suspension.
 
-- [ ] T051 [US4.1] Implement `src/audio/context.js` — AudioContext created inside a user-gesture handler, resume on gesture, and suspension detection (FR-010, FR-011)
-- [ ] T052 [US4.1] Implement `src/audio/scheduler.js` — lookahead transport computing every event time from an absolute audio-clock origin, never accumulated (FR-009)
-- [ ] T053 [US4.1] Implement `src/audio/voices.js` — percussive synthesis with the three Accent Levels audibly distinct
-- [ ] T054 [US4.1] Drive the playback cursor in `src/ui/grid.js` from the scheduler's event queue, not a separate animation loop
-- [ ] T055 [US4.1] Implement stop-and-reset on device suspension in `src/audio/context.js` and `src/main.js` — transport to stopped, cursor to Measure 1, loop counter to 0, no auto-resume on refocus (AC-4.1.5, AC-4.1.6)
-- [ ] T056 [US4.1] Tests in `tests/e2e/us-4-1.spec.js` covering AC-4.1.1–AC-4.1.6, including the 500-loop drift assertion and the 20 ms visual sync bound
+- [X] T051 [US4.1] Implement `src/audio/context.js` — AudioContext created inside a user-gesture handler, resume on gesture, and suspension detection (FR-010, FR-011)
+- [X] T052 [US4.1] Implement `src/audio/scheduler.js` — lookahead transport computing every event time from an absolute audio-clock origin, never accumulated (FR-009)
+- [X] T053 [US4.1] Implement `src/audio/voices.js` — percussive synthesis with the three Accent Levels audibly distinct
+- [X] T054 [US4.1] Drive the playback cursor in `src/ui/grid.js` from the scheduler's event queue, not a separate animation loop
+- [X] T055 [US4.1] Implement stop-and-reset on device suspension in `src/audio/context.js` and `src/main.js` — transport to stopped, cursor to Measure 1, loop counter to 0, no auto-resume on refocus (AC-4.1.5, AC-4.1.6)
+- [X] T056 [US4.1] Tests in `tests/e2e/us-4-1.spec.js` covering AC-4.1.1–AC-4.1.6, including the 500-loop drift assertion and the 20 ms visual sync bound
 
 ---
 
@@ -193,9 +193,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Change tempo during playback and assert immediate restart at the new tempo, clamping at both bounds, and per-Pattern vs global default resolution.
 
-- [ ] T057 [US4.2] Implement the tempo control in `src/ui/controls.js` with clamping at 18 and 220
-- [ ] T058 [US4.2] Implement restart-on-tempo-change in `src/audio/scheduler.js`, resetting the loop counter (AC-4.2.2)
-- [ ] T059 [US4.2] Tests in `tests/e2e/us-4-2.spec.js` covering AC-4.2.1–AC-4.2.3
+- [X] T057 [US4.2] Implement the tempo control in `src/ui/controls.js` with clamping at 18 and 220
+- [X] T058 [US4.2] Implement restart-on-tempo-change in `src/audio/scheduler.js`, resetting the loop counter (AC-4.2.2)
+- [X] T059 [US4.2] Tests in `tests/e2e/us-4-2.spec.js` covering AC-4.2.1–AC-4.2.3
 
 ---
 
@@ -205,9 +205,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Enable both; assert the click lands on Beats, is timbrally separable from Pattern voices, and that count-in precedes the first loop only.
 
-- [ ] T060 [US4.3] Implement the metronome voice in `src/audio/voices.js`, timbrally outside the Pattern voices' range
-- [ ] T061 [US4.3] Implement count-in scheduling in `src/audio/scheduler.js`
-- [ ] T062 [US4.3] Tests in `tests/e2e/us-4-3.spec.js` covering AC-4.3.1–AC-4.3.6
+- [X] T060 [US4.3] Implement the metronome voice in `src/audio/voices.js`, timbrally outside the Pattern voices' range
+- [X] T061 [US4.3] Implement count-in scheduling in `src/audio/scheduler.js`
+- [X] T062 [US4.3] Tests in `tests/e2e/us-4-3.spec.js` covering AC-4.3.1–AC-4.3.6
 
 ---
 
@@ -477,7 +477,7 @@ Nothing in this phase renders anything.
 
 - [X] T114 [US15.1] Implement breakpoints and the desktop/tablet layouts in `src/ui/responsive.js` and `src/styles/`
 - [X] T115 [US15.1] Implement per-Measure vertical row paging with a 24 px minimum Slot width in `src/ui/grid.js` and `src/ui/responsive.js` (AC-15.1.10, D-006)
-- [ ] T116 [US15.1] Implement playback autoscroll in `src/ui/responsive.js` and `src/ui/grid.js`, keeping the sounding Measure in view including on loop wrap (AC-15.1.11)
+- [X] T116 [US15.1] Implement playback autoscroll in `src/ui/responsive.js` and `src/ui/grid.js`, keeping the sounding Measure in view including on loop wrap (AC-15.1.11)
 - [ ] T117 [US15.1] Tests in `tests/e2e/us-15-1.spec.js` covering AC-15.1.1–AC-15.1.11 across the three viewport classes
 
 ---

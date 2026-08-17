@@ -22,6 +22,7 @@ import * as seedStore from './storage/seed.js';
 import { renderGrid } from './ui/grid.js';
 import { renderControls } from './ui/controls.js';
 import { ask, confirmRecipeChange, askApplyToAllMeasures, askNewPatternName } from './ui/dialogs.js';
+import { createTransport } from './audio/scheduler.js';
 
 const state = {
   pattern: create(),
@@ -29,6 +30,7 @@ const state = {
   /** Provenance: true when the Pattern came from the user's own store (data-model §5). */
   isOwned: false,
   isPlaying: false,
+  loop: 0,
   settings: settingsStore.DEFAULTS,
 };
 
@@ -150,8 +152,9 @@ const handlers = {
     state.pattern = { ...state.pattern, tempo: bpm };
     if (state.isOwned) patternStore.upsert(state.pattern);
     state.settings = settingsStore.save({ lastTempo: bpm });
-    // Tempo change restarts playback at the new tempo (AC-4.2.2); the scheduler
-    // wires that in T057-T058.
+    // Restart from the top at the new tempo, resetting the loop counter, rather
+    // than retiming the running loop in place (AC-4.2.2).
+    if (state.isPlaying) transport.restart(state.pattern, state.settings);
     render();
   },
 
@@ -179,20 +182,47 @@ const handlers = {
 
   onSetting(partial) {
     state.settings = settingsStore.save(partial);
+    if (state.isPlaying) transport.restart(state.pattern, state.settings);
     render();
   },
 
-  onPlay() {
+  /** The only entry point to audio, and it is a user gesture (FR-010). */
+  async onPlay() {
     state.isPlaying = true;
+    state.loop = 0;
     render();
+    await transport.start(state.pattern, state.settings);
   },
 
   onStop() {
-    state.isPlaying = false;
-    state.transportPosition = null;
-    render();
+    transport.stop();
   },
 };
+
+/**
+ * The transport reports position from its own scheduled queue, so the cursor
+ * cannot drift from the audio (Principle III).
+ */
+const transport = createTransport({
+  onPosition(position) {
+    state.transportPosition = position;
+    render();
+  },
+  onLoop(loop) {
+    state.loop = loop;
+    render();
+  },
+  onStop() {
+    // Reaching here means either the musician stopped, or the device suspended
+    // audio. Both reset to the top of the Pattern (AC-4.1.5).
+    state.isPlaying = false;
+    state.transportPosition = null;
+    state.loop = 0;
+    render();
+  },
+});
+
+export { transport };
 
 export { handlers };
 
@@ -245,6 +275,7 @@ if (typeof window !== 'undefined') {
     handlers,
     seedStore,
     patternStore,
+    transport,
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {
       let p = create(name);
