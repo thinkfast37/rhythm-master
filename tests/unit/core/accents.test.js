@@ -51,14 +51,34 @@ describe('core/accents', () => {
     expect(levels(m, 0)).toEqual([STRONG, WEAK, MEDIUM, WEAK]);
   });
 
-  it('AC-3.1.4 — 4-Slot Recipe on a Weak Beat floors at Weak', () => {
+  it('AC-3.1.4 — the "&" is Medium even on a Weak Beat', () => {
     const m = measureWith('4/4', 'straight-16ths');
-    expect(levels(m, 1)).toEqual([WEAK, WEAK, WEAK, WEAK]);
+    expect(levels(m, 1)).toEqual([WEAK, WEAK, MEDIUM, WEAK]);
   });
 
-  it('AC-3.1.5 — 4-Slot Recipe on a Medium Beat', () => {
+  it('AC-3.1.5 — a Medium Beat carries its own level on Slot 1 and Medium on the "&"', () => {
     const m = measureWith('4/4', 'straight-16ths');
-    expect(levels(m, 2)).toEqual([MEDIUM, WEAK, WEAK, WEAK]);
+    expect(levels(m, 2)).toEqual([MEDIUM, WEAK, MEDIUM, WEAK]);
+  });
+
+  it('AC-3.1.16 — the within-Beat shape is identical in every Beat', () => {
+    const m = measureWith('4/4', 'straight-16ths');
+    expect([0, 1, 2, 3].map((b) => levels(m, b))).toEqual([
+      [STRONG, WEAK, MEDIUM, WEAK],
+      [WEAK, WEAK, MEDIUM, WEAK],
+      [MEDIUM, WEAK, MEDIUM, WEAK],
+      [WEAK, WEAK, MEDIUM, WEAK],
+    ]);
+  });
+
+  it('AC-3.1.16 — only Slot 1 varies between Beats; the rest never do', () => {
+    for (const ts of ['2/4', '3/4', '4/4', '5/4', '6/4', '7/4']) {
+      const m = measureWith(ts, 'straight-16ths');
+      const tails = m.beats.map((_, b) => levels(m, b).slice(1));
+      for (const tail of tails) {
+        expect(tail, `${ts}`).toEqual([WEAK, MEDIUM, WEAK]);
+      }
+    }
   });
 
   it('AC-3.1.6 — a 2-Slot Recipe never produces a Medium Slot', () => {

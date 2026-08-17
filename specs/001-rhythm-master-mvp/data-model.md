@@ -151,11 +151,23 @@ medium  if N is even and N > 2 and i === (N / 2) + 1
 weak    otherwise
 ```
 
-Applied at Beat level across the Measure's Beats, and again at Slot level across the Beat's Slots.
-A Slot's default is the weaker-sounding combination of its Beat's level and its within-Beat level,
-per the tables in AC-3.1.2 through AC-3.1.9. Consequences worth stating because they are easy to
-get wrong: a 3-Slot or 5-Slot Recipe never produces a Medium Slot (odd *N*), and a 2-Slot Recipe
-never does either (*N* not > 2).
+Applied at Beat level across the Measure's Beats, and again at Slot level within each Beat, then
+combined:
+
+| Within-Beat position | Resulting default |
+|---|---|
+| Slot 1 | that Beat's own level |
+| the midpoint Slot (the "&") | **Medium, in every Beat** |
+| everything else | Weak |
+
+The "&" is uniformly Medium rather than derived from its Beat's level, so the within-Beat shape is
+identical wherever you are in the Measure and only Slot 1 varies (AC-3.1.16). Three Accent Levels
+cannot represent the full hierarchy — bar, half-bar, beat, eighth, sixteenth — so something has to
+collapse; this is the collapse that matches how the subdivision is actually played.
+
+Consequences worth stating because they are easy to get wrong: a 3-Slot or 5-Slot Recipe never
+produces a Medium Slot (odd *N* has no midpoint), and a 2-Slot Recipe never does either
+(*N* not > 2).
 
 ---
 

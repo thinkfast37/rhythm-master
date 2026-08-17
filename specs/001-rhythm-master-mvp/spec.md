@@ -503,12 +503,19 @@ exist).
 - **AC-3.1.4** — Within-Beat rule, 4-Slot Recipe on a Weak Beat
   - **Given** Beat 2 of a 4/4 Measure (Weak, per AC-3.1.2) on the Straight 16ths Recipe (4 Slots)
   - **When** each Slot's default accent is computed
-  - **Then** Slot 1 = Weak, Slot 2 = Weak, Slot 3 = Weak, Slot 4 = Weak — one level below Weak floors at Weak, so Slot 3 does not go any lower
+  - **Then** Slot 1 = Weak, Slot 2 = Weak, Slot 3 = Medium, Slot 4 = Weak — the "&" is Medium in every Beat, not only in strong ones, so the within-Beat shape is the same wherever you are in the Measure
 
 - **AC-3.1.5** — Within-Beat rule, 4-Slot Recipe on a Medium Beat
   - **Given** Beat 3 of a 4/4 Measure (Medium, per AC-3.1.2) on the Straight 16ths Recipe (4 Slots)
   - **When** each Slot's default accent is computed
-  - **Then** Slot 1 = Medium, Slot 2 = Weak, Slot 3 = Weak (one level below Medium), Slot 4 = Weak
+  - **Then** Slot 1 = Medium (the Beat's own level), Slot 2 = Weak, Slot 3 = Medium (the "&"), Slot 4 = Weak
+
+- **AC-3.1.16** — The within-Beat shape is identical in every Beat
+  - **Given** a 4/4 Measure with every Beat on the Straight 16ths Recipe
+  - **When** every Slot's default accent is computed
+  - **Then** the four Beats read: Strong Weak Medium Weak · Weak Weak Medium Weak · Medium Weak Medium Weak · Weak Weak Medium Weak
+  - **And** only Slot 1 varies between Beats — it carries that Beat's own level — while Slots 2, 3 and 4 are Weak, Medium, Weak in every Beat without exception
+  - *(Revised 2026-08-17. The "&" previously took one level below its own Beat, floored at Weak, so only Beat 1's "&" came out Medium. That was inconsistent between Beats, and it also made Beat 1's "&" equal in weight to the Beat 3 downbeat, which the metric hierarchy does not support. Three Accent Levels cannot represent a four-deep hierarchy, and this is the collapse that matches how the subdivision is played.)*
 
 - **AC-3.1.6** — Within-Beat rule, 2-Slot Recipe
   - **Given** Beat 1 of a 2/4 Measure (Strong, per AC-3.1.2) on the Straight 8ths Recipe (2 Slots)

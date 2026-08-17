@@ -51,14 +51,24 @@ export function beatAccent(timeSignature, beatIndex) {
  * The within-Beat position is scored by the same formula, then combined with
  * the Beat's own level:
  *
- *   within Strong (Slot 1)  → the Beat's level, whatever it is
- *   within Medium           → one level below the Beat's, floored at Weak
+ *   within Strong (Slot 1)  → the Beat's own level, whatever it is
+ *   within Medium (the "&") → Medium, in every Beat
  *   within Weak             → Weak
  *
- * So Slot 1 of a Medium Beat is Medium (AC-3.1.5), and the mid-Slot of a Weak
- * Beat floors at Weak rather than dropping to off (AC-3.1.4). A Recipe spanning
- * two Subdivision Groups is scored across the whole Beat, not per group
- * (AC-3.1.8).
+ * The "&" is Medium uniformly rather than derived from its Beat's level. Three
+ * levels cannot represent the full hierarchy (bar → half-bar → beat → eighth →
+ * sixteenth), so something has to collapse, and this is the collapse that
+ * matches how the subdivision is actually played: every "&" takes a slight
+ * lift, in every Beat. One pattern to internalise instead of a special case.
+ *
+ * The earlier rule dropped the "&" one level below its Beat, floored at Weak,
+ * which meant only Beat 1's "&" survived as Medium — inconsistent across Beats,
+ * and it also promoted that one Slot to equal footing with the Beat-3 downbeat,
+ * which the hierarchy does not support.
+ *
+ * A Recipe spanning two Subdivision Groups is scored across the whole Beat,
+ * not per group (AC-3.1.8). An odd Slot count has no midpoint, so triplets and
+ * the 5-Slot splits never produce a Medium at all.
  */
 export function defaultAccent(measure, beatIndex, slotIndex) {
   const beat = measure.beats[beatIndex];
@@ -66,10 +76,9 @@ export function defaultAccent(measure, beatIndex, slotIndex) {
 
   const n = slotCount(beat.recipe, beatNoteValue(measure.timeSignature));
   const within = metricLevel(slotIndex + 1, n);
-  const beatLevel = beatAccent(measure.timeSignature, beatIndex);
 
-  if (within === STRONG) return beatLevel;
-  if (within === MEDIUM) return Math.max(WEAK, beatLevel - 1);
+  if (within === STRONG) return beatAccent(measure.timeSignature, beatIndex);
+  if (within === MEDIUM) return MEDIUM;
   return WEAK;
 }
 
