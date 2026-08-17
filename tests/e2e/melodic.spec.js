@@ -311,7 +311,7 @@ test('AC-2.2.14/2 — A visible gap separates the two zones, so neither reads as
   expect(gap).toBeGreaterThanOrEqual(3);
 });
 
-test("AC-2.2.14/3 — The note band's text is rendered at a smaller font size than the counting syllable's", async ({ page }) => {
+test("AC-2.2.14/3 — The note band's text is rendered at least a third smaller than the counting syllable, so the difference is legible as a difference rather than merely present", async ({ page }) => {
   await melodicBlank(page);
   await accentZone(page, 0, 0).click(); // sound it, so it carries a pitch to show
 
@@ -324,11 +324,18 @@ test("AC-2.2.14/3 — The note band's text is rendered at a smaller font size th
       name: px(slot.querySelector('.slot-note-name')),
     };
   });
-  expect(sizes.degree).toBeLessThan(sizes.syllable);
-  expect(sizes.name).toBeLessThan(sizes.syllable);
+
+  // A margin, not merely `<`. The first implementation put 10px under 13px,
+  // which passes any "is it smaller" check and looks identical on screen.
+  for (const [what, size] of [['degree', sizes.degree], ['name', sizes.name]]) {
+    expect(sizes.syllable / size, `${what} vs syllable`).toBeGreaterThanOrEqual(4 / 3);
+  }
+  // And the pitch stays readable: shrinking it is not an allowed way to pass.
+  expect(sizes.degree).toBeGreaterThanOrEqual(10);
+  expect(sizes.name).toBeGreaterThanOrEqual(10);
 });
 
-test("AC-2.2.14/4 — The counting syllable is rendered bolder than the note band's text", async ({ page }) => {
+test(`AC-2.2.14/4 — The counting syllable is rendered bold and the note band's text is not, at a weight separation of at least 300 — a Medium face reads as bold at these sizes, so "bolder" is not enough`, async ({ page }) => {
   await melodicBlank(page);
   await accentZone(page, 0, 0).click();
 
@@ -341,8 +348,53 @@ test("AC-2.2.14/4 — The counting syllable is rendered bolder than the note ban
       name: w(slot.querySelector('.slot-note-name')),
     };
   });
-  expect(weights.syllable).toBeGreaterThan(weights.degree);
-  expect(weights.syllable).toBeGreaterThan(weights.name);
+
+  expect(weights.syllable).toBeGreaterThanOrEqual(700);
+  // 500 is not "not bold": in SF Mono at 10px a Medium face is
+  // indistinguishable from Bold, which is how the first implementation looked
+  // bold while satisfying a `>` comparison.
+  for (const [what, weight] of [['degree', weights.degree], ['name', weights.name]]) {
+    expect(weight, `${what} weight`).toBeLessThanOrEqual(400);
+    expect(weights.syllable - weight, `${what} separation`).toBeGreaterThanOrEqual(300);
+  }
+});
+
+test("AC-2.2.14/5 — Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved", async ({ page }) => {
+  await melodicBlank(page);
+  await page.locator('.key-picker').selectOption('Gb');
+
+  // Glyphs with the tallest ascenders and deepest descenders this can produce,
+  // plus the widest name any Key spells (Abb4, the flattened second of Gb).
+  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
+  await page.locator('.degree[data-degree="2"]').click();
+  await accentZone(page, 0, 0).click();
+  await expect(slotAt(page, 0, 0).locator('.slot-note-name')).toHaveText('Abb4');
+
+  const fit = await page.evaluate(() => {
+    const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+    const band = slot.querySelector('.slot-note');
+    const badge = slot.querySelector('.slot-pitch');
+    const lines = [...badge.querySelectorAll('.slot-degree, .slot-note-name')];
+    return {
+      // Both axes. The first implementation checked width only, and shipped
+      // text clipped vertically past a green gate.
+      badgeH: badge.getBoundingClientRect().height,
+      bandContentH: band.clientHeight,
+      overflowY: badge.scrollHeight > band.clientHeight,
+      overflowX: lines.some((l) => l.scrollWidth > band.clientWidth + 0.5),
+      // Each line needs real leading: a line box no taller than its font size
+      // has nowhere to put ascenders and descenders.
+      leading: lines.map((l) => {
+        const c = getComputedStyle(l);
+        return parseFloat(c.lineHeight) - parseFloat(c.fontSize);
+      }),
+    };
+  });
+
+  expect(fit.overflowY).toBe(false);
+  expect(fit.overflowX).toBe(false);
+  expect(fit.badgeH).toBeLessThanOrEqual(fit.bandContentH);
+  for (const leading of fit.leading) expect(leading).toBeGreaterThanOrEqual(2);
 });
 
 test("AC-2.2.15/1 — The band shows the Slot's scale degree, including any accidental", async ({ page }) => {
@@ -403,11 +455,16 @@ test('AC-2.2.15/3 — The two are shown on separate lines within the band, so ne
       const band = badge.closest('.slot-note') ?? badge.closest('.slot');
       for (const line of [degree, name]) {
         if (line.scrollWidth > band.clientWidth + 0.5) {
-          clipped.push({ text: line.textContent, need: line.scrollWidth, have: band.clientWidth });
+          clipped.push({ axis: 'x', text: line.textContent, need: line.scrollWidth, have: band.clientWidth });
         }
       }
+      // Both axes. Checking width alone is what let vertically clipped text
+      // ship past this test once already.
+      if (badge.scrollHeight > band.clientHeight) {
+        clipped.push({ axis: 'y', text: badge.textContent, need: badge.scrollHeight, have: band.clientHeight });
+      }
     }
-    return { count: stacked.length, allStacked: stacked.every(Boolean), clipped };
+    return { count: stacked.length, allStacked: stacked.every(Boolean), clipped: clipped.slice(0, 5) };
   });
 
   expect(report.count).toBeGreaterThan(100);

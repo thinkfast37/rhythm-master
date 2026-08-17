@@ -449,9 +449,11 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Cases**:
     - **AC-2.2.14/1** — The note band is rendered below the accent zone, not above it
     - **AC-2.2.14/2** — A visible gap separates the two zones, so neither reads as part of the other
-    - **AC-2.2.14/3** — The note band's text is rendered at a smaller font size than the counting syllable's
-    - **AC-2.2.14/4** — The counting syllable is rendered bolder than the note band's text
+    - **AC-2.2.14/3** — The note band's text is rendered at least a third smaller than the counting syllable, so the difference is legible as a difference rather than merely present
+    - **AC-2.2.14/4** — The counting syllable is rendered bold and the note band's text is not, at a weight separation of at least 300 — a Medium face reads as bold at these sizes, so "bolder" is not enough
+    - **AC-2.2.14/5** — Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved
   - *(Added 2026-08-17. The band was previously flush against the accent zone and carried heavier text than it needed, which is what made the two compete. Note that /3 was met by *raising* the syllable rather than shrinking the pitch: the maintainer could not read the pitch at the size that would otherwise have been needed, so the separation comes from the syllable growing.)*
+  - *(/3 and /4 tightened, and /5 added, later on 2026-08-17. As first written, /3 said only "a smaller font size" and /4 only "bolder" — which 13px against 10px, and weight 700 against 500, both satisfied while looking identical on screen. A criterion that any difference passes is not a criterion; both now carry the margin that makes the difference visible. /5 exists because the first implementation shipped clipped text past a green gate: the truncation check ran on the horizontal axis only, and the two lines were overflowing the band vertically.)*
 
 - **AC-2.2.15** — A Slot's note band names the note as well as the degree
   - **Given** a sounding Slot in a Melodic Pattern with a Key
