@@ -234,6 +234,39 @@ test('AC-4.3.1 — the metronome and count-in are off by default and toggleable'
   await expect(page.locator('[data-action="toggle-metronome"]')).toHaveClass(/\bon\b/);
 });
 
+test('toggling the metronome during playback does not desync the Play/Stop button or the transport', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  // Toggle the click on and off repeatedly, mid-playback. Each toggle must take
+  // effect, and none of them may stop the transport or flip the Play/Stop
+  // button back to "Play" while the Pattern is still actually playing.
+  for (let i = 0; i < 4; i++) {
+    await page.locator('[data-action="toggle-metronome"]').click();
+    const expectOn = i % 2 === 0;
+    if (expectOn) {
+      await expect(page.locator('[data-action="toggle-metronome"]')).toHaveClass(/\bon\b/);
+    } else {
+      await expect(page.locator('[data-action="toggle-metronome"]')).not.toHaveClass(/\bon\b/);
+    }
+
+    const state = await page.evaluate(() => ({
+      isPlaying: window.__rm.getState().isPlaying,
+      running: window.__rm.transport.isRunning,
+      metronomeEnabled: window.__rm.getState().settings.metronomeEnabled,
+    }));
+    expect(state.isPlaying).toBe(true);
+    expect(state.running).toBe(true);
+    expect(state.metronomeEnabled).toBe(expectOn);
+  }
+
+  await expect(page.locator('button.transport')).toHaveText('Stop');
+  await expect(page.locator('[data-action="stop"]')).toBeVisible();
+});
+
 test('AC-4.1.2 — Stop clears the cursor and halts the transport', async ({ page }) => {
   await page.goto('/');
   await loadSimple(page);
