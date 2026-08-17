@@ -1688,6 +1688,22 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **And**, when they reload the page, the library is open again at every width regardless of how they left it — the collapsed state is a within-session position, not a stored preference, so the app never opens with its library missing
   - *(Added 2026-08-17, with the collapse behaviour in AC-15.1.6. The "open on every load" half generalises AC-15.1.5 from the mobile drawer to all three widths.)*
 
+- **AC-15.1.14** — Beats are one width, and a wrapped Measure's lines are balanced
+  - **Given** a Measure whose Beats wrap, per AC-15.1.10 — a 4/4 Measure at 390px, where three Beats fit a line and the fourth does not
+  - **When** the Practicing Musician views it
+  - **Then** the Beats are laid out on a shared column width rather than each Beat taking whatever
+    room its line has left, and they are divided between lines as evenly as the Beat count allows
+  - **And** the shared width holds whatever Recipe a Beat carries: in a Measure whose Beats are
+    subdivided differently, a 2-Slot Beat and a 4-Slot Beat are the same width and it is their
+    Slots that differ, since the two sound the same duration
+  - **Cases**:
+    - **AC-15.1.14/1** — Every Beat in a Measure is the same width as every other Beat in it, on its own line and across lines
+    - **AC-15.1.14/2** — No Beat is narrower than its own Slots need at the 24px minimum, so the grid still never scrolls sideways
+    - **AC-15.1.14/3** — Beats divide evenly between lines: four Beats where three fit lay out two and two, never three and one
+    - **AC-15.1.14/4** — Where every Beat fits one line, they occupy that one line and still share the width
+    - **AC-15.1.14/5** — The layout re-balances when the width available to the grid changes
+  - *(Added 2026-08-17. Reported against a 4/4 Pattern on a phone: three Beats sat on the first line and the fourth spread across the whole of the second. AC-15.1.10 required the wrap and forbade a Beat splitting across it, but said nothing about the widths that come out, and the flexbox implementing it grew whatever landed on a line to fill that line. This states the widths, which AC-15.1.10 leaves open, and does not change what it requires.)*
+
 ---
 ### User Story 33 - Ship with a seeded Pattern library
 

@@ -29,6 +29,7 @@ import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import { renderGrid } from './ui/grid.js';
+import { balanceBeatLines, forgetBeatWidths, observeGridWidth } from './ui/beat-layout.js';
 import {
   renderHeader,
   renderPlayControls,
@@ -903,7 +904,15 @@ export function mount(root) {
     applyViewport(shell);
     syncLibraryToggle();
     applyAccordions([settingsEl, editEl, actionsEl]);
+    // A resize can change the font the Slots lay out in as well as the room they
+    // have, so the measured minimums go with it (AC-15.1.14/5).
+    forgetBeatWidths();
+    balanceBeatLines(gridEl);
   });
+
+  // The library opening or collapsing changes the grid's width without a resize
+  // event, so the element is watched rather than the window (AC-15.1.14/5).
+  observeGridWidth(gridEl);
 
   subscribe((pattern, position, s) => {
     // The header needs the same Tag breakdown the library computes, so the two
@@ -915,6 +924,9 @@ export function mount(root) {
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
     renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
+    // Immediately after the render that built the Beats, and before this task
+    // yields to paint, so the one-line fallback is never seen (AC-15.1.14).
+    balanceBeatLines(gridEl);
     renderPitchStrip(pitchEl, pattern, s, handlers);
     renderPlayControls(playEl, pattern, s, handlers);
     renderPlaybackSettings(settingsBody, pattern, s, handlers);
