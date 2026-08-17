@@ -445,6 +445,49 @@ test("AC-2.2.14/5 — Neither line of the note band is clipped on any axis: the 
   for (const leading of fit.leading) expect(leading).toBeGreaterThanOrEqual(2);
 });
 
+test("AC-2.2.14/6 — The counting syllable is the brightest text in the Slot, the scale degree dimmer, and the note name dimmer still — so the ordering survives a reader whose browser settings flatten every size and weight difference", async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+
+  const lum = await page.evaluate(() => {
+    const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const L = (el) => {
+      const [r, g, b] = getComputedStyle(el).color.match(/[\d.]+/g).slice(0, 3).map(Number);
+      return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    };
+    return {
+      syllable: L(slot.querySelector('.slot-label')),
+      degree: L(slot.querySelector('.slot-degree')),
+      name: L(slot.querySelector('.slot-note-name')),
+    };
+  });
+
+  // Strictly descending, with a real gap at the top. This is the channel the
+  // hierarchy rests on: a minimum-font-size setting flattens the sizes and a
+  // substituted face flattens the weights, but neither touches colour.
+  expect(lum.syllable).toBeGreaterThan(lum.degree);
+  expect(lum.degree).toBeGreaterThan(lum.name);
+  expect(lum.syllable / lum.degree).toBeGreaterThanOrEqual(1.5);
+
+  // And it still holds with size and weight forced identical, which is exactly
+  // the state the maintainer's browser settings produce.
+  const flattened = await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent =
+      '.slot-label,.slot-degree,.slot-note-name{font-size:16px !important;font-weight:400 !important}';
+    document.head.appendChild(style);
+    void document.body.offsetHeight;
+    const slot = document.querySelector('.slot[data-beat="0"][data-slot="0"]');
+    const c = (sel) => getComputedStyle(slot.querySelector(sel)).color;
+    const out = { syllable: c('.slot-label'), degree: c('.slot-degree'), name: c('.slot-note-name') };
+    style.remove();
+    return out;
+  });
+  expect(flattened.syllable).not.toBe(flattened.degree);
+  expect(flattened.degree).not.toBe(flattened.name);
+});
+
 test("AC-2.2.15/1 — The band shows the Slot's scale degree, including any accidental", async ({ page }) => {
   await melodicBlank(page);
   await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
