@@ -31,7 +31,25 @@
   --line: #262a38;
   --brand: #f0a020;
 
-  --slot-min: 24px; /* AC-15.1.10 — never smaller than this, on any viewport */
+  /*
+   * AC-15.1.10's floor: never smaller than this, on any viewport. It is the
+   * value mobile uses, where fitting the Pattern is the binding constraint.
+   */
+  --slot-min: 24px;
+  /*
+   * Above mobile there is room to be comfortable, so Slots take a wider
+   * minimum and a Measure whose Beats no longer fit wraps onto another line
+   * rather than shrinking every cell to fit one. Wrapping is already how this
+   * grid handles density (AC-15.1.10) and the lines stay balanced by
+   * AC-15.1.14 — so the choice is between more rows of legible cells and one
+   * row of cramped ones, and the maintainer reads this while playing.
+   *
+   * 38px, not more: a 4/4 Measure at Straight 16ths is the commonest Pattern
+   * there is, and it still fits one line down to about 900px at this value.
+   * Pushing the minimum higher wraps that Measure on an ordinary laptop window,
+   * which trades a real cost for cells already comfortably legible.
+   */
+  --slot-min-comfortable: 38px;
   /*
    * The note band, as a thin strip under the accent zone (AC-2.2.14).
    *
@@ -58,6 +76,26 @@
   /* Between the two zones, so neither reads as part of the other
      (AC-2.2.14/2). */
   --slot-zone-gap: 4px;
+
+  /*
+   * The grid's breathing room. These were 2px between Slots and 6px between
+   * Beats, which put the Beat separator hard against the cells on either side
+   * and left the whole grid reading as crowded. The relationship matters more
+   * than any one value: the gap BETWEEN Beats has to be several times the gap
+   * within one, or the separator is doing all the work of a grouping the
+   * spacing should already suggest.
+   *
+   * These are the compact values, and they are the BASE rather than an override
+   * because the constraint they answer — AC-15.1.10's 24px Slot minimum, and a
+   * Measure that must not scroll sideways — is the one that binds whenever room
+   * is short. Desktop widens them further down, where there is room to spend.
+   * At tablet widths the sidebar takes 240px of a 900px window, so the space
+   * left is nearer a phone's than a desktop's and the compact values hold.
+   */
+  --grid-gap-slot: 3px;
+  --grid-gap-group: 4px;
+  --grid-gap-beat: 12px;
+  --grid-pad-measure: 8px;
   --radius: 4px;
 }
 
@@ -145,7 +183,7 @@ body {
   background: var(--panel);
   border: 1px solid var(--grid-measure-line);
   border-radius: var(--radius);
-  padding: 8px;
+  padding: var(--grid-pad-measure);
 }
 
 .measure-meter {
@@ -189,7 +227,7 @@ body {
   display: grid;
   grid-template-columns: repeat(var(--beat-cols, var(--beat-count, 1)), minmax(min-content, 1fr));
   flex: 1 1 auto;
-  gap: 6px;
+  gap: var(--grid-gap-beat);
   min-width: 0;
 }
 
@@ -216,7 +254,7 @@ body {
   position: relative;
   display: flex;
   flex: 1 1 auto;
-  gap: 3px;
+  gap: var(--grid-gap-group);
   min-width: min-content;
 }
 
@@ -229,9 +267,9 @@ body {
 .beat + .beat::before {
   content: '';
   position: absolute;
-  left: -4px;
-  top: 1px;
-  bottom: 1px;
+  left: calc(-0.5 * var(--grid-gap-beat) - 1px);
+  top: 2px;
+  bottom: 2px;
   width: 2px;
   border-radius: 1px;
   background: var(--grid-beat-line);
@@ -242,7 +280,7 @@ body {
 .group {
   display: flex;
   flex: 1 1 auto;
-  gap: 2px;
+  gap: var(--grid-gap-slot);
   min-width: min-content;
 }
 .group.feel-triplet {
@@ -466,6 +504,27 @@ body {
   color: var(--ink-faint);
 }
 
+/*
+ * Desktop has room to spend, so the grid takes it: wider gutters between Beats,
+ * more air between Slots, and a Slot minimum that lets a Measure wrap rather
+ * than shrink every cell to fit one line.
+ *
+ * Keyed at 1101px rather than 768px because a tablet gives the library a 240px
+ * column out of a 900px window, leaving the grid nearer a phone's width than a
+ * desktop's — spending space it does not have there wraps a plain 4/4 Measure
+ * that would otherwise fit one line (AC-15.1.14/4).
+ */
+@media (min-width: 1101px) {
+  :root {
+    --grid-gap-slot: 5px;
+    --grid-gap-group: 7px;
+    --grid-gap-beat: 22px;
+    --grid-pad-measure: 12px;
+  }
+  .grid { gap: 16px; padding: 16px; }
+  .slot { min-width: var(--slot-min-comfortable); }
+}
+
 /* --- the playback cursor (AC-4.1.7) -------------------------------------- */
 
 /*
@@ -514,7 +573,7 @@ body {
 /* --- responsive ---------------------------------------------------------- */
 
 @media (max-width: 767px) {
-  .grid { padding: 8px; gap: 8px; }
+    .grid { padding: 8px; gap: 10px; }
   .measure { flex-wrap: wrap; }
   .slot { min-height: 44px; }
   .slot-label { min-height: calc(44px - var(--slot-bar-h)); }
