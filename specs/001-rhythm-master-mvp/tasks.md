@@ -285,8 +285,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: From an empty app, create a Pattern, add Measures and Beats, set Recipes, toggle Slots, and play it.
 
-- [ ] T077 [US7.1] Implement the new-Pattern flow in `src/ui/controls.js` and `src/main.js` (AC-7.1.1, AC-7.1.2)
-- [ ] T078 [US7.1] Tests in `tests/e2e/us-7-1.spec.js` covering AC-7.1.1–AC-7.1.2
+- [X] T077 [US7.1] Implement the new-Pattern flow in `src/ui/controls.js` and `src/main.js` (AC-7.1.1, AC-7.1.2)
+- [X] T078 [US7.1] Tests in `tests/e2e/us-7-1.spec.js` covering AC-7.1.1–AC-7.1.2
 
 ---
 
@@ -296,8 +296,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Edit an owned Pattern and reload mid-edit without saving; every edit is present.
 
-- [ ] T079 [US7.2] Implement auto-save on every mutation in `src/main.js` and `src/storage/patterns.js`
-- [ ] T080 [US7.2] Tests in `tests/e2e/us-7-2.spec.js` covering AC-7.2.1–AC-7.2.3
+- [X] T079 [US7.2] Implement auto-save on every mutation in `src/main.js` and `src/storage/patterns.js`
+- [X] T080 [US7.2] Tests in `tests/e2e/us-7-2.spec.js` covering AC-7.2.1–AC-7.2.3
 
 ---
 
@@ -318,8 +318,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Copy an owned Pattern; assert both exist independently and edits to one don't affect the other.
 
-- [ ] T083 [US7.4] Implement Make Copy in `src/ui/controls.js` and `src/core/pattern.js`
-- [ ] T084 [US7.4] Tests in `tests/e2e/us-7-4.spec.js` covering AC-7.4.1–AC-7.4.6
+- [X] T083 [US7.4] Implement Make Copy in `src/ui/controls.js` and `src/core/pattern.js`
+- [X] T084 [US7.4] Tests in `tests/e2e/us-7-4.spec.js` covering AC-7.4.1–AC-7.4.6
 
 ---
 
@@ -329,8 +329,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Delete an owned Pattern; assert it's gone after reload and that shipped Patterns offer no delete.
 
-- [ ] T085 [US7.5] Implement delete with confirmation in `src/ui/dialogs.js` and `src/storage/patterns.js`
-- [ ] T086 [US7.5] Tests in `tests/e2e/us-7-5.spec.js` covering AC-7.5.1–AC-7.5.4
+- [X] T085 [US7.5] Implement delete with confirmation in `src/ui/dialogs.js` and `src/storage/patterns.js`
+- [X] T086 [US7.5] Tests in `tests/e2e/us-7-5.spec.js` covering AC-7.5.1–AC-7.5.4
 
 ---
 
@@ -396,8 +396,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Append a 2-Measure Pattern to a 3-Measure one; assert 5 Measures, each keeping its own meter, and that the cap is enforced.
 
-- [ ] T098 [US8.1] Implement the append flow in `src/ui/controls.js` over `core/pattern.append`
-- [ ] T099 [US8.1] Tests in `tests/e2e/us-8-1.spec.js` covering AC-8.1.1–AC-8.1.6
+- [X] T098 [US8.1] Implement the append flow in `src/ui/controls.js` over `core/pattern.append`
+- [X] T099 [US8.1] Tests in `tests/e2e/us-8-1.spec.js` covering AC-8.1.1–AC-8.1.6
 
 ---
 
@@ -407,8 +407,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Duplicate a 2-Measure Pattern; assert 4 Measures and that editing the second half leaves the first intact.
 
-- [ ] T100 [US10.1] Implement duplicate in `src/ui/controls.js` over `core/pattern.duplicate`, enforcing the cap
-- [ ] T101 [US10.1] Tests in `tests/e2e/us-10-1.spec.js` covering AC-10.1.1–AC-10.1.6
+- [X] T100 [US10.1] Implement duplicate in `src/ui/controls.js` over `core/pattern.duplicate`, enforcing the cap
+- [X] T101 [US10.1] Tests in `tests/e2e/us-10-1.spec.js` covering AC-10.1.1–AC-10.1.6
 
 ---
 
@@ -419,8 +419,8 @@ Nothing in this phase renders anything.
 **Independent test**: Create a Pattern identical to an existing one; assert the warning fires at naming and Make Copy only, and that mid-edit duplicates surface only in the standing view.
 
 - [X] T102 [US11.1] Implement `src/core/similarity.js` — `rhythmFingerprint`, `isDuplicate`, `isSameFamily`
-- [ ] T103 [US11.1] Implement the duplicate warning at the two creation moments and the standing possible-duplicates view in `src/ui/library.js` and `src/ui/dialogs.js`
-- [ ] T104 [US11.1] Tests in `tests/unit/core/similarity.test.js` and `tests/e2e/us-11-1.spec.js` covering AC-11.1.1–AC-11.1.5
+- [X] T103 [US11.1] Implement the duplicate warning at the two creation moments and the standing possible-duplicates view in `src/ui/library.js` and `src/ui/dialogs.js`
+- [X] T104 [US11.1] Tests in `tests/unit/core/similarity.test.js` and `tests/e2e/us-11-1.spec.js` covering AC-11.1.1–AC-11.1.5
 
 ---
 
@@ -441,8 +441,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Add a shipped Pattern duplicating an owned one; assert the prompt fires once and never again after resolution.
 
-- [ ] T107 [US11.3] Implement the one-time prompt in `src/ui/dialogs.js`, recording resolution in `src/storage/localMeta.js` and never on the Pattern (FR-006)
-- [ ] T108 [US11.3] Tests in `tests/e2e/us-11-3.spec.js` covering AC-11.3.1–AC-11.3.5
+- [X] T107 [US11.3] Implement the one-time prompt in `src/ui/dialogs.js`, recording resolution in `src/storage/localMeta.js` and never on the Pattern (FR-006)
+- [X] T108 [US11.3] Tests in `tests/e2e/us-11-3.spec.js` covering AC-11.3.1–AC-11.3.5
 
 ---
 
@@ -452,8 +452,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Export a mixed-meter melodic Pattern; assert the file's meters, pitches, ticks and velocities match playback.
 
-- [ ] T109 [US12.1] Implement `src/export/midi.js` consuming `core/timeline.buildTimeline` — never re-deriving timing, pitch or accent (contracts/file-formats.md §2)
-- [ ] T110 [US12.1] Tests in `tests/unit/export/midi.test.js` covering AC-12.1.1–AC-12.1.4, including accent-to-velocity mapping and per-Measure Time Signature events
+- [X] T109 [US12.1] Implement `src/export/midi.js` consuming `core/timeline.buildTimeline` — never re-deriving timing, pitch or accent (contracts/file-formats.md §2)
+- [X] T110 [US12.1] Tests in `tests/unit/export/midi.test.js` covering AC-12.1.1–AC-12.1.4, including accent-to-velocity mapping and per-Measure Time Signature events
 
 ---
 
@@ -463,9 +463,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Submit a batch; assert the URL carries one JSON block per Pattern in seed-file shape, with no ids or Local Metadata, and that oversize payloads fall back to clipboard.
 
-- [ ] T111 [US13.1] Implement `src/export/submit.js` — prefilled issue URL builder with the oversize fallback (AC-13.1.3), no token anywhere (FR-008)
-- [ ] T112 [US13.1] Record submission time in `src/storage/localMeta.js`, never on the Pattern
-- [ ] T113 [US13.1] Tests in `tests/unit/export/submit.test.js` covering AC-13.1.1–AC-13.1.5
+- [X] T111 [US13.1] Implement `src/export/submit.js` — prefilled issue URL builder with the oversize fallback (AC-13.1.3), no token anywhere (FR-008)
+- [X] T112 [US13.1] Record submission time in `src/storage/localMeta.js`, never on the Pattern
+- [X] T113 [US13.1] Tests in `tests/unit/export/submit.test.js` covering AC-13.1.1–AC-13.1.5
 
 ---
 

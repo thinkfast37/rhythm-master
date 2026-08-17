@@ -49,8 +49,39 @@ export function renderControls(root, pattern, state, handlers) {
   root.appendChild(renderSwing(pattern, handlers));
   root.appendChild(renderCounting(pattern, state, handlers));
   if (pattern.soundMode === 'melodic') root.appendChild(renderPitch(pattern, state, handlers));
+  root.appendChild(renderActions(pattern, state, handlers));
 
   return root;
+}
+
+/** Whole-Pattern operations: copy, delete, append, duplicate, export, submit. */
+function renderActions(pattern, state, handlers) {
+  const group = el('div', 'control-group actions');
+
+  const button = (action, label, onClick, { disabled = false } = {}) => {
+    const b = el('button', 'action', { type: 'button', textContent: label, disabled });
+    b.dataset.action = action;
+    b.addEventListener('click', onClick);
+    group.appendChild(b);
+    return b;
+  };
+
+  button('make-copy', 'Make Copy', () => handlers.onMakeCopy());
+
+  // Only an owned Pattern can be deleted; a shipped one has no delete control
+  // at all rather than a disabled one (US-7.5, FR-007).
+  if (state.isOwned) button('delete-pattern', 'Delete', () => handlers.onDelete());
+
+  button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), {
+    disabled: pattern.measures.length >= MAX_MEASURES,
+  });
+  button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), {
+    disabled: pattern.measures.length * 2 > MAX_MEASURES,
+  });
+  button('export-midi', 'Export MIDI', () => handlers.onExportMidi());
+  button('submit-pattern', 'Submit', () => handlers.onSubmit());
+
+  return group;
 }
 
 /**

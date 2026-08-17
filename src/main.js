@@ -16,6 +16,8 @@ import {
   countActiveSlots,
   setGroupSwing,
   setPitch,
+  append,
+  duplicate,
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
 import { buildTimeline } from './core/timeline.js';
@@ -26,7 +28,17 @@ import * as overlayStore from './storage/overlays.js';
 import { renderGrid } from './ui/grid.js';
 import { renderControls } from './ui/controls.js';
 import { renderLibrary, buildEntries, neighbours } from './ui/library.js';
-import { ask, confirmRecipeChange, askApplyToAllMeasures, askNewPatternName } from './ui/dialogs.js';
+import { downloadMidi } from './export/midi.js';
+import { buildSubmission } from './export/submit.js';
+import { findDuplicates, findFamily, isDuplicate } from './core/similarity.js';
+import * as localMetaStore from './storage/localMeta.js';
+import {
+  ask,
+  confirm,
+  confirmRecipeChange,
+  askApplyToAllMeasures,
+  askNewPatternName,
+} from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
 import * as piano from './audio/piano.js';
 import { getContext } from './audio/context.js';
@@ -333,6 +345,87 @@ const handlers = {
     render();
   },
 
+  // --- whole-Pattern operations ---
+
+  /**
+   * An explicit copy under a new name. This is the second of the two moments a
+   * duplicate warning may fire — the other is the forced-naming prompt on a
+   * shipped Pattern. Duplicates that emerge from ongoing edits surface only in
+   * the standing view, because auto-save has no discrete moment to interrupt.
+   */
+  async onMakeCopy() {
+    const name = await askNewPatternName(`${state.pattern.name} copy`);
+    if (name === null) return;
+
+    const copy = { ...structuredClone(state.pattern), id: patternStore.nextId(), name, rating: 0 };
+
+    const clash = findDuplicates(copy, [...seedStore.loadAll(), ...patternStore.loadAll()]);
+    if (clash.length > 0) {
+      const proceed = await confirm(
+        `This is note-for-note identical to "${clash[0].name}". Make the copy anyway?`,
+        { confirmLabel: 'Make Copy', cancelLabel: 'Cancel' }
+      );
+      if (!proceed) return;
+    }
+
+    patternStore.upsert(copy);
+    loadPattern(copy, { owned: true });
+  },
+
+  async onDelete() {
+    if (!state.isOwned) return; // shipped Patterns are never deletable
+    const proceed = await confirm(`Delete "${state.pattern.name}" permanently?`, {
+      confirmLabel: 'Delete',
+    });
+    if (!proceed) return;
+
+    const id = state.pattern.id;
+    patternStore.remove(id);
+    localMetaStore.forget(id); // its bookkeeping goes with it
+    const remaining = patternStore.loadAll();
+    const next = remaining[0] ?? structuredClone(seedStore.loadAll()[0]);
+    loadPattern(next, { owned: remaining.length > 0 });
+  },
+
+  async onAppendPrompt() {
+    const entries = libraryEntries();
+    const options = entries
+      .slice(0, 40)
+      .map((e) => ({ label: e.pattern.name, value: e.pattern.id }));
+    options.push({ label: 'Cancel', value: null });
+
+    const id = await ask({ message: 'Append which Pattern?', options });
+    if (!id || id === 'null') return;
+    if (!(await guardShipped())) return;
+
+    const other = entries.find((e) => e.pattern.id === id);
+    if (!other) return;
+    try {
+      apply(append, other.pattern);
+    } catch (err) {
+      await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
+    }
+  },
+
+  async onDuplicate() {
+    if (!(await guardShipped())) return;
+    try {
+      apply(duplicate);
+    } catch (err) {
+      await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
+    }
+  },
+
+  onExportMidi() {
+    downloadMidi(state.pattern);
+  },
+
+  onSubmit() {
+    const submission = buildSubmission([state.pattern]);
+    if (state.pattern.id) localMetaStore.update(state.pattern.id, { submittedAt: nowIso() });
+    return submission;
+  },
+
   /** Prev/Next follow the filtered, sorted order on screen (US-5.5). */
   onNavigate(direction) {
     const { previous, next } = neighbours(libraryEntries(), state.view);
@@ -411,6 +504,59 @@ export function mount(root) {
   return { controlsEl, gridEl, libraryEl, navEl };
 }
 
+/** Isolated so tests can pin it; core/ stays clock-free (Principle I). */
+function nowIso() {
+  return new Date().toISOString();
+}
+
+/**
+ * Patterns of the musician's that a library update has since duplicated.
+ *
+ * Prompted once each, and the answer is remembered as Local Metadata rather
+ * than on the Pattern — so the fact that you were asked never travels with an
+ * export (FR-006, US-11.3).
+ */
+export function unresolvedLibraryDuplicates() {
+  const shipped = seedStore.loadAll();
+  return patternStore
+    .loadAll()
+    .filter((owned) => !localMetaStore.forPattern(owned.id).duplicateResolved)
+    .map((owned) => ({ owned, shipped: shipped.find((s) => isDuplicate(owned, s)) }))
+    .filter((pair) => Boolean(pair.shipped));
+}
+
+/** Patterns sharing this one's rhythm but differing in Sound Mode or Pitch. */
+export function currentFamily() {
+  return findFamily(state.pattern, [...seedStore.loadAll(), ...patternStore.loadAll()]);
+}
+
+/** Possible duplicates of the current Pattern — the standing view (AC-11.1.4). */
+export function currentDuplicates() {
+  return findDuplicates(state.pattern, [...seedStore.loadAll(), ...patternStore.loadAll()]);
+}
+
+async function promptLibraryDuplicates() {
+  for (const { owned, shipped } of unresolvedLibraryDuplicates()) {
+    const keep = await ask({
+      message:
+        `"${owned.name}" is now identical to "${shipped.name}", which ships with the app. ` +
+        'Remove your copy, or keep it?',
+      options: [
+        { label: 'Remove mine', value: 'remove' },
+        { label: 'Keep both', value: 'keep', primary: true },
+      ],
+    });
+    if (keep === 'remove') {
+      patternStore.remove(owned.id);
+      localMetaStore.forget(owned.id);
+    } else {
+      // Remembering the answer is what stops this asking again every load.
+      localMetaStore.update(owned.id, { duplicateResolved: true });
+    }
+  }
+  render();
+}
+
 export function init(root = document.getElementById('app')) {
   state.settings = settingsStore.load();
 
@@ -422,6 +568,7 @@ export function init(root = document.getElementById('app')) {
 
   mount(root);
   render();
+  promptLibraryDuplicates();
 }
 
 /** Test seam: lets e2e drive state directly rather than through the DOM. */
@@ -433,7 +580,11 @@ if (typeof window !== 'undefined') {
     seedStore,
     patternStore,
     overlayStore,
+    localMetaStore,
     transport,
+    currentDuplicates,
+    currentFamily,
+    unresolvedLibraryDuplicates,
     piano,
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {
