@@ -228,3 +228,16 @@ body {
   border-radius: var(--radius); padding: 9px 14px; cursor: pointer;
 }
 .dialog-button.primary { background: var(--brand); color: #0b0c15; border-color: var(--brand); font-weight: 700; }
+
+.slot-pitch {
+  position: absolute;
+  top: 2px; left: 0; right: 0;
+  font: 700 9px/1 ui-monospace, monospace;
+  color: var(--ink);
+  text-align: center;
+  pointer-events: none;
+}
+.slot.accent-medium .slot-pitch,
+.slot.accent-strong .slot-pitch { color: #0b0c15; }
+.pitch-hint { margin: 0; font-size: 11px; color: var(--ink-dim); }
+.piano-status { flex-basis: 100%; margin: 0; font-size: 11px; color: var(--ink-dim); }

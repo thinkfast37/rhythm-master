@@ -10,6 +10,8 @@ import { recipesFor } from '../core/recipes.js';
 import { KEYS } from '../core/pitch.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
+import { subdivisionGroups } from '../core/recipes.js';
+import { MIN_SWING, MAX_SWING } from '../core/swing.js';
 
 /** Preset tempos, carried over from the predecessor. */
 export const TEMPO_PRESETS = [57, 67, 80, 90, 104, 120, 150, 180, 200, 220];
@@ -44,9 +46,87 @@ export function renderControls(root, pattern, state, handlers) {
   root.appendChild(renderTempo(pattern, handlers));
   root.appendChild(renderStructure(pattern, handlers));
   root.appendChild(renderSound(pattern, handlers));
+  root.appendChild(renderSwing(pattern, handlers));
   root.appendChild(renderCounting(pattern, state, handlers));
+  if (pattern.soundMode === 'melodic') root.appendChild(renderPitch(pattern, state, handlers));
 
   return root;
+}
+
+/**
+ * Swing, per straight-feel Subdivision Group of Beat 1.
+ *
+ * Triplet groups get no control at all — swing is inapplicable to triplet feel,
+ * not merely unavailable, so showing a disabled slider would misdescribe it
+ * (AC-4.4.3).
+ */
+function renderSwing(pattern, handlers) {
+  const group = el('div', 'control-group');
+  const measure = pattern.measures[0];
+  const beat = measure.beats[0];
+  const noteValue = beatNoteValue(measure.timeSignature);
+
+  subdivisionGroups(beat.recipe, noteValue).forEach((g, groupIndex) => {
+    if (g.feel !== 'straight') return;
+    if (g.slotIndices.length % 2 !== 0) return; // odd groups have no midpoint to swing
+
+    const value = beat.swing?.[groupIndex] ?? 0;
+    const slider = el('input', 'swing-slider', {
+      type: 'range',
+      min: String(MIN_SWING),
+      max: String(MAX_SWING),
+      step: '1',
+      value: String(value),
+    });
+    slider.dataset.action = 'set-swing';
+    slider.dataset.group = String(groupIndex);
+    slider.addEventListener('input', (e) => handlers.onSwing(groupIndex, Number(e.target.value)));
+    group.appendChild(labelled(`Swing ${value}`, slider));
+  });
+
+  return group;
+}
+
+/**
+ * Per-Slot pitch entry. Applies to whichever Slot is selected in the grid;
+ * degree and octave are separate controls because they are separate musical
+ * decisions (US-2.2).
+ */
+function renderPitch(pattern, state, handlers) {
+  const group = el('div', 'control-group pitch-group');
+  const target = state.selectedSlot;
+
+  if (!target) {
+    group.appendChild(el('p', 'pitch-hint', { textContent: 'Select a note to set its pitch.' }));
+    return group;
+  }
+
+  const slot = pattern.measures[target.measureIndex].beats[target.beatIndex].slots[target.slotIndex];
+  const pitch = slot.pitch ?? { degree: '1', octaveOffset: 0 };
+
+  const degree = el('select', 'degree-picker');
+  degree.dataset.action = 'set-degree';
+  for (const d of ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7', '9', '11', '13']) {
+    degree.appendChild(el('option', null, { value: d, textContent: d }));
+  }
+  degree.value = pitch.degree;
+  degree.addEventListener('change', (e) =>
+    handlers.onPitch({ ...pitch, degree: e.target.value })
+  );
+  group.appendChild(labelled('Degree', degree));
+
+  const octave = el('select', 'octave-picker');
+  octave.dataset.action = 'set-octave';
+  for (const o of [-2, -1, 0, 1, 2]) {
+    octave.appendChild(el('option', null, { value: String(o), textContent: o > 0 ? `+${o}` : String(o) }));
+  }
+  octave.value = String(pitch.octaveOffset ?? 0);
+  octave.addEventListener('change', (e) =>
+    handlers.onPitch({ ...pitch, octaveOffset: Number(e.target.value) })
+  );
+  group.appendChild(labelled('Octave', octave));
+
+  return group;
 }
 
 function renderTransport(state, handlers) {

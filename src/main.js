@@ -14,8 +14,11 @@ import {
   setRecipe,
   cycleAccent,
   countActiveSlots,
+  setGroupSwing,
+  setPitch,
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
+import { buildTimeline } from './core/timeline.js';
 import * as patternStore from './storage/patterns.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
@@ -23,6 +26,8 @@ import { renderGrid } from './ui/grid.js';
 import { renderControls } from './ui/controls.js';
 import { ask, confirmRecipeChange, askApplyToAllMeasures, askNewPatternName } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
+import * as piano from './audio/piano.js';
+import { getContext } from './audio/context.js';
 
 const state = {
   pattern: create(),
@@ -31,6 +36,9 @@ const state = {
   isOwned: false,
   isPlaying: false,
   loop: 0,
+  /** Which Slot the pitch controls act on, in Melodic mode (US-2.2). */
+  selectedSlot: null,
+  pianoStatus: piano.getStatus(),
   settings: settingsStore.DEFAULTS,
 };
 
@@ -145,7 +153,28 @@ const handlers = {
 
   async onSlotTap(measureIndex, beatIndex, slotIndex) {
     if (!(await guardShipped())) return;
+    state.selectedSlot = { measureIndex, beatIndex, slotIndex };
     apply(cycleAccent, measureIndex, beatIndex, slotIndex);
+
+    // A Slot switched on in Melodic mode needs a pitch, or it has no musical
+    // content at all. Default to the tonic rather than leaving it undefined.
+    const slot = state.pattern.measures[measureIndex].beats[beatIndex].slots[slotIndex];
+    if (state.pattern.soundMode === 'melodic' && slot.on && !slot.pitch) {
+      apply(setPitch, measureIndex, beatIndex, slotIndex, { degree: '1', octaveOffset: 0 });
+    }
+  },
+
+  async onSwing(groupIndex, amount, measureIndex = 0, beatIndex = 0) {
+    if (!(await guardShipped())) return;
+    apply(setGroupSwing, measureIndex, beatIndex, groupIndex, amount);
+    if (state.isPlaying) transport.restart(state.pattern, state.settings);
+  },
+
+  async onPitch(pitch) {
+    if (!state.selectedSlot) return;
+    if (!(await guardShipped())) return;
+    const { measureIndex, beatIndex, slotIndex } = state.selectedSlot;
+    apply(setPitch, measureIndex, beatIndex, slotIndex, pitch);
   },
 
   onTempo(bpm) {
@@ -160,9 +189,30 @@ const handlers = {
 
   async onSoundMode(mode) {
     if (!(await guardShipped())) return;
-    const next = { ...state.pattern, soundMode: mode };
-    if (mode === 'melodic') next.key = next.key ?? 'C';
-    else delete next.key;
+    const next = structuredClone(state.pattern);
+    next.soundMode = mode;
+
+    if (mode === 'melodic') {
+      next.key = next.key ?? 'C';
+      // Every sounding Slot needs a pitch for the Pattern to be valid and
+      // playable; default them to the tonic rather than producing silence.
+      for (const measure of next.measures) {
+        for (const beat of measure.beats) {
+          for (const slot of beat.slots) {
+            if (slot.on && !slot.pitch) slot.pitch = { degree: '1', octaveOffset: 0 };
+          }
+        }
+      }
+    } else {
+      delete next.key;
+      // Pitch is meaningless in Percussive mode and would fail validation.
+      for (const measure of next.measures) {
+        for (const beat of measure.beats) {
+          for (const slot of beat.slots) delete slot.pitch;
+        }
+      }
+    }
+
     state.pattern = next;
     if (state.isOwned) patternStore.upsert(next);
     render();
@@ -191,6 +241,20 @@ const handlers = {
     state.isPlaying = true;
     state.loop = 0;
     render();
+
+    /*
+     * Melodic playback waits for samples and shows a loading state; Percussive
+     * never waits on them at all (AC-2.4.3, Principle III).
+     */
+    if (state.pattern.soundMode === 'melodic') {
+      state.pianoStatus = { status: 'loading', error: null };
+      render();
+      await piano.load(getContext());
+      state.pianoStatus = piano.getStatus();
+      render();
+      if (!state.isPlaying) return; // stopped while loading
+    }
+
     await transport.start(state.pattern, state.settings);
   },
 
@@ -204,6 +268,7 @@ const handlers = {
  * cannot drift from the audio (Principle III).
  */
 const transport = createTransport({
+  playMelodic: piano.playMelodic,
   onPosition(position) {
     state.transportPosition = position;
     render();
@@ -276,6 +341,7 @@ if (typeof window !== 'undefined') {
     seedStore,
     patternStore,
     transport,
+    piano,
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {
       let p = create(name);
@@ -283,6 +349,14 @@ if (typeof window !== 'undefined') {
       loadPattern({ ...p, id: 'p_test' }, { owned: true });
       return getState().pattern;
     },
+  };
+}
+
+/** Test seam: the MIDI note the first sounding Slot resolves to. */
+if (typeof window !== 'undefined') {
+  window.__rmMidi = () => {
+    const events = buildTimeline(state.pattern);
+    return events[0]?.pitch?.midiNote ?? null;
   };
 }
 

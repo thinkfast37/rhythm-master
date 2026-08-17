@@ -217,8 +217,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Set swing on the straight group of a mixed Recipe; assert the triplet group is unaffected and offsets match `core/swing.js`.
 
-- [ ] T063 [US4.4] Store per-group swing on the Beat in `src/core/pattern.js` and expose the control in `src/ui/controls.js`, disabled on triplet groups
-- [ ] T064 [US4.4] Tests in `tests/e2e/us-4-4.spec.js` covering AC-4.4.1–AC-4.4.5
+- [X] T063 [US4.4] Store per-group swing on the Beat in `src/core/pattern.js` and expose the control in `src/ui/controls.js`, disabled on triplet groups
+- [X] T064 [US4.4] Tests in `tests/e2e/us-4-4.spec.js` covering AC-4.4.1–AC-4.4.5
 
 ---
 
@@ -228,8 +228,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Toggle mode; assert pitch controls appear only in Melodic and that Percussive playback needs no samples.
 
-- [ ] T065 [US2.1] Implement the Sound Mode toggle in `src/ui/controls.js`, showing and hiding pitch affordances
-- [ ] T066 [US2.1] Tests in `tests/e2e/us-2-1.spec.js` covering AC-2.1.1–AC-2.1.5
+- [X] T065 [US2.1] Implement the Sound Mode toggle in `src/ui/controls.js`, showing and hiding pitch affordances
+- [X] T066 [US2.1] Tests in `tests/e2e/us-2-1.spec.js` covering AC-2.1.1–AC-2.1.5
 
 ---
 
@@ -239,8 +239,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Change key; assert every Slot's sounding pitch transposes and stored degrees are unchanged.
 
-- [ ] T067 [US2.3] Implement the key selector in `src/ui/controls.js`, enabled only in Melodic mode
-- [ ] T068 [US2.3] Tests in `tests/e2e/us-2-3.spec.js` covering AC-2.3.1–AC-2.3.3
+- [X] T067 [US2.3] Implement the key selector in `src/ui/controls.js`, enabled only in Melodic mode
+- [X] T068 [US2.3] Tests in `tests/e2e/us-2-3.spec.js` covering AC-2.3.1–AC-2.3.3
 
 ---
 
@@ -250,8 +250,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Assign degrees and octaves across a Pattern; assert each Slot sounds and exports at exactly what was authored.
 
-- [ ] T069 [US2.2] Implement the per-Slot pitch input in `src/ui/controls.js` and `src/ui/grid.js`
-- [ ] T070 [US2.2] Tests in `tests/e2e/us-2-2.spec.js` covering AC-2.2.1–AC-2.2.9
+- [X] T069 [US2.2] Implement the per-Slot pitch input in `src/ui/controls.js` and `src/ui/grid.js`
+- [X] T070 [US2.2] Tests in `tests/e2e/us-2-2.spec.js` covering AC-2.2.1–AC-2.2.9
 
 ---
 
@@ -261,9 +261,9 @@ Nothing in this phase renders anything.
 
 **Independent test**: Load the app and play Percussive immediately; then play Melodic and assert a loading state rather than silence or failure.
 
-- [ ] T071 [US2.4] Implement `src/audio/piano.js` — asynchronous soundfont loading, caching, and a clear error state on fetch failure
-- [ ] T072 [US2.4] Implement the Melodic loading state in `src/ui/controls.js` so Percussive playback is never gated on samples (AC-2.4.3)
-- [ ] T073 [US2.4] Tests in `tests/e2e/us-2-4.spec.js` covering AC-2.4.1–AC-2.4.5
+- [X] T071 [US2.4] Implement `src/audio/piano.js` — asynchronous soundfont loading, caching, and a clear error state on fetch failure
+- [X] T072 [US2.4] Implement the Melodic loading state in `src/ui/controls.js` so Percussive playback is never gated on samples (AC-2.4.3)
+- [X] T073 [US2.4] Tests in `tests/e2e/us-2-4.spec.js` covering AC-2.4.1–AC-2.4.5
 
 ---
 

@@ -72,6 +72,7 @@ function renderMeasure(measure, measureIndex, pattern, position, system) {
 }
 
 function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system) {
+  const melodic = pattern.soundMode === 'melodic';
   const el = document.createElement('div');
   el.className = 'beat';
   el.dataset.beat = String(beatIndex);
@@ -87,10 +88,17 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
     groupEl.className = `group feel-${group.feel}`;
     groupEl.dataset.group = String(groupIndex);
     groupEl.dataset.feel = group.feel;
+    // Swing is inapplicable to triplet feel, so a triplet group carries no
+    // swing data at all rather than a disabled zero (AC-4.4.3).
+    if (group.feel === 'straight') {
+      groupEl.dataset.swing = String(beat.swing?.[groupIndex] ?? 0);
+    }
 
     group.slotIndices.forEach((slotIndex) => {
       groupEl.appendChild(
-        renderSlot(measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position)
+        renderSlot(
+          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic
+        )
       );
     });
 
@@ -106,8 +114,9 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
   return el;
 }
 
-function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position) {
+function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic) {
   const accent = effectiveAccent(measure, beatIndex, slotIndex);
+  const slot = measure.beats[beatIndex].slots[slotIndex];
 
   const el = document.createElement('button');
   el.type = 'button';
@@ -136,6 +145,19 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
   text.className = 'slot-label';
   text.textContent = label;
   el.appendChild(text);
+
+  // In Melodic mode the Slot shows its scale degree and octave, since that is
+  // the musical content there — the counting syllable is secondary.
+  if (melodic && slot.on && slot.pitch) {
+    const pitch = document.createElement('span');
+    pitch.className = 'slot-pitch';
+    pitch.dataset.degree = slot.pitch.degree;
+    pitch.dataset.octave = String(slot.pitch.octaveOffset ?? 0);
+    const marks = slot.pitch.octaveOffset > 0 ? "'".repeat(slot.pitch.octaveOffset)
+      : slot.pitch.octaveOffset < 0 ? ','.repeat(-slot.pitch.octaveOffset) : '';
+    pitch.textContent = `${slot.pitch.degree}${marks}`;
+    el.appendChild(pitch);
+  }
 
   return el;
 }
