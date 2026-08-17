@@ -247,9 +247,25 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
   fill.className = 'slot-fill';
   fill.style.width = `${[0, 33, 67, 100][accent]}%`;
 
+  /*
+   * A Slot that sounds shows its counting syllable; one that does not shows a
+   * dot (AC-3.1.17/1). Making the silent syllable merely lighter and smaller
+   * was not enough to scan across a Measure where most Slots sound — a cell
+   * needs to either have a syllable in it or not, which is a difference in kind
+   * rather than in degree.
+   *
+   * The syllable it stands for is kept on the element and as its accessible
+   * name, so nothing a sighted reader gets from position is lost to a screen
+   * reader, and so the counting system remains inspectable (AC-3.1.17/3).
+   */
   const text = document.createElement('span');
   text.className = 'slot-label';
-  text.textContent = label;
+  text.dataset.syllable = label;
+  text.textContent = slot.on ? label : '\u00b7';
+  if (!slot.on) {
+    text.setAttribute('aria-label', label);
+    text.dataset.rest = 'true';
+  }
 
   if (!split) {
     el.append(fill, text);

@@ -176,9 +176,9 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.17/1` 🖵 | A silent Slot's counting syllable is not bold, while a sounding one's is | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.17/2` 🖵 | A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.17/3` 🖵 | A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/1` 🖵 | A silent Slot shows a dot in place of its counting syllable, so a cell either carries a syllable or does not, rather than carrying the same syllable at two weights | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/2` 🖵 | That dot is dimmer than a sounding Slot's syllable, so the distinction survives a reader whose browser clamps small sizes to a minimum | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/3` 🖵 | The syllable the dot stands for stays available to assistive technology, so nothing is lost that a sighted reader still gets from position | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
 | US-3.1 | `AC-3.1.17/4` 🖵 | The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
 | US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -358,7 +358,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.1/4` 🖵 | A Melodic Slot's accent-to-note divider, against the Slot's unfilled background | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.2` 🖵 | A Beat is bounded by a drawn border, not by spacing alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.2` 🖵 | A Beat boundary is drawn, not left to spacing alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
