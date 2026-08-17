@@ -1474,15 +1474,18 @@ exist).
   - **When** layout breakpoints are evaluated
   - **Then** 767px resolves to mobile, 768px and 1100px both resolve to tablet, and 1101px resolves to desktop — mobile is ≤767px, tablet is 768–1100px inclusive, desktop is >1100px
 
-- **AC-15.1.2** — Desktop sidebar is persistent at 300px
+- **AC-15.1.2** — Desktop sidebar is a 300px column, open on load and collapsible
   - **Given** a 1400px-wide (desktop) viewport
   - **When** the app loads
-  - **Then** the sidebar renders as a persistent 300px-wide column alongside the main panel, always visible, with no drawer toggle
+  - **Then** the sidebar renders as a 300px-wide column alongside the main panel, open
+  - **And** a library toggle is present in the main panel, which collapses the sidebar out of the layout entirely — the main panel then occupies the full width — and reopens it
+  - *(Revised 2026-08-17. This previously read "always visible, with no drawer toggle". The library is the tallest thing in the app, so it is the pane most likely to be scrolled; leaving it permanently on screen meant the musician who had just chosen a Pattern kept a 300px column of what they were no longer looking at. It is open on load and one control away thereafter, so nothing is hidden by default — see AC-15.1.6 and AC-15.1.13.)*
 
-- **AC-15.1.3** — Tablet sidebar is persistent at 240px
+- **AC-15.1.3** — Tablet sidebar is a 240px column, open on load and collapsible
   - **Given** a 900px-wide (tablet) viewport
   - **When** the app loads
-  - **Then** the sidebar renders as a persistent 240px-wide column — narrower than desktop's 300px, but still always visible rather than becoming a drawer
+  - **Then** the sidebar renders as a 240px-wide column — narrower than desktop's 300px — open, and collapsible by the same toggle, rather than becoming a drawer
+  - *(Revised 2026-08-17, with AC-15.1.2. Tablet differs from desktop only in the column's width; the collapse behaviour is identical, so a Pattern loaded at 900px does not behave differently from one loaded at 1400px.)*
 
 - **AC-15.1.4** — Mobile sidebar is an off-canvas drawer
   - **Given** a 390px-wide (mobile) viewport
@@ -1495,13 +1498,14 @@ exist).
   - **Then** the drawer opens automatically
   - **And**, when the Practicing Musician reloads the page again later, it auto-opens again — this happens on every load at mobile width, not only the first-ever visit
 
-- **AC-15.1.6** — Mobile drawer closes whenever a Pattern is loaded
-  - **Given** a 390px-wide (mobile) viewport with the drawer open
+- **AC-15.1.6** — The library collapses whenever a Pattern is loaded, at every width
+  - **Given** the library open at a 390px (mobile), 900px (tablet) or 1400px (desktop) viewport
   - **When** the Practicing Musician selects a Pattern from it, **or** creates a new one from it
-  - **Then** the drawer closes automatically, revealing the loaded Pattern in the main panel
-  - **And**, given instead they search, filter by Tag or Rating, rate a Pattern, or add a Tag, the drawer stays open — those are work done *inside* the library, and dismissing it would interrupt them
-  - **And**, given any of these on a 900px (tablet) or 1400px (desktop) viewport, the sidebar stays visible, since it isn't a drawer there
+  - **Then** the library collapses automatically, revealing the loaded Pattern in the main panel — as an off-canvas drawer sliding away on mobile, and as a column leaving the layout above it
+  - **And** the main panel is returned to its top, so the loaded Pattern is what the musician is looking at rather than whatever was at that scroll offset before
+  - **And**, given instead they search, filter by Tag or Rating, rate a Pattern, or add a Tag, the library stays open at every width — those are work done *inside* the library, and dismissing it would interrupt them
   - *(The rule is "did this change what the main panel shows", not "was this a particular control" — otherwise every new way to load a Pattern has to remember to close the drawer, and one of them will not.)*
+  - *(Revised 2026-08-17. This previously applied at mobile only and stated explicitly that the sidebar stays visible on tablet and desktop. Scrolling deep into a 110-Pattern list and picking one left the musician with the chosen Pattern on screen and the list still occupying a third of the window — so the rule now holds at every width, and the mobile special case is gone. Reopening is AC-15.1.13.)*
 
 - **AC-15.1.7** — Secondary control sections collapse to accordions on mobile
   - **Given** a 390px-wide (mobile) viewport
@@ -1533,6 +1537,22 @@ exist).
   - **When** playback reaches Measure 5
   - **Then** the grid scrolls Measure 5 into view without the musician touching the screen
   - **And** on looping back to Measure 1, the grid scrolls back to it
+
+- **AC-15.1.12** — The library and the main panel scroll independently
+  - **Given** a 1400px (desktop) or 900px (tablet) viewport, the library open, and both panes holding more content than fits — the full Pattern list beside a six-Measure Pattern with every section expanded
+  - **When** the Practicing Musician scrolls the library to the bottom of the list
+  - **Then** the main panel does not move: the Pattern header, grid and transport stay exactly where they were
+  - **And**, when they scroll the main panel instead, the library does not move
+  - **And** neither pane extends the page: the document itself never scrolls vertically, each pane is bounded to the viewport height and carries its own scrollbar
+  - *(Added 2026-08-17. The two panes previously shared the document's single scrollbar, so reading down the library carried the player off the top of the window and choosing a Pattern left the musician scrolled to a position that had nothing to do with it.)*
+
+- **AC-15.1.13** — The collapsed library is one control away, and every load starts it open
+  - **Given** the library collapsed at any viewport width
+  - **When** the Practicing Musician activates the library toggle in the main panel
+  - **Then** the library reopens — as the drawer on mobile, as the column above it — and the toggle reports its open state to assistive technology
+  - **And** the toggle stays reachable however far the main panel has been scrolled, so reopening the library never requires scrolling back up to find the control first
+  - **And**, when they reload the page, the library is open again at every width regardless of how they left it — the collapsed state is a within-session position, not a stored preference, so the app never opens with its library missing
+  - *(Added 2026-08-17, with the collapse behaviour in AC-15.1.6. The "open on every load" half generalises AC-15.1.5 from the mobile drawer to all three widths.)*
 
 ---
 ### User Story 33 - Ship with a seeded Pattern library

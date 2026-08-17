@@ -301,23 +301,69 @@ body {
 
 /* --- app shell ----------------------------------------------------------- */
 
-.shell { display: flex; min-height: 100vh; }
+/*
+ * Two scroll layers, not one (AC-15.1.12).
+ *
+ * The shell is pinned to the viewport and clips, so the DOCUMENT never scrolls;
+ * the library and the main panel each carry their own scrollbar. Previously the
+ * shell was `min-height: 100vh` and the sidebar's `overflow-y: auto` never
+ * engaged — the tallest pane stretched the page and one scrollbar dragged both,
+ * so reading to the bottom of a 110-Pattern list took the player off the top of
+ * the window with it.
+ *
+ * `dvh` after `vh` so mobile browser chrome does not clip the last row; the
+ * `vh` line is the fallback for anything that has not got `dvh`.
+ */
+.shell {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
 
-/* Desktop: persistent 300px sidebar column (AC-15.1.2). */
+/* Desktop: 300px sidebar column, open on load (AC-15.1.2). */
 .sidebar {
   flex: 0 0 300px;
   width: 300px;
   border-right: 1px solid var(--line);
   background: var(--panel);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.main-panel { flex: 1 1 auto; min-width: 0; }
-.drawer-toggle { display: none; }
+.main-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .drawer-scrim { display: none; }
 
-/* Tablet: persistent but narrower at 240px (AC-15.1.3). */
+/* The way back to a collapsed library, at every width (AC-15.1.13). Sticky
+   within the main panel's own scroll, so it is reachable from any offset rather
+   than only from the top. */
+.library-toggle {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  display: block;
+  margin: 12px;
+  padding: 10px 14px;
+  font: 600 13px/1 system-ui, sans-serif;
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+
+/* Tablet: same behaviour, narrower at 240px (AC-15.1.3). */
 @media (min-width: 768px) and (max-width: 1100px) {
   .sidebar { flex-basis: 240px; width: 240px; }
+}
+
+/* Above mobile a collapsed library leaves the layout entirely and the main
+   panel takes the full width (AC-15.1.6). Mobile slides it off-canvas instead,
+   below, so it must keep its box. */
+@media (min-width: 768px) {
+  .shell[data-library='collapsed'] .sidebar { display: none; }
 }
 
 /* Mobile: off-canvas drawer at 85vw, capped at 320px (AC-15.1.4). */
@@ -332,30 +378,21 @@ body {
     transform: translateX(-100%);
     transition: transform 180ms ease;
   }
-  .shell[data-drawer='open'] .sidebar { transform: translateX(0); }
+  .shell[data-library='open'] .sidebar { transform: translateX(0); }
   /* While the drawer is open the toggle becomes its close control, floated
      clear of the drawer itself. Without this it sits underneath the open
      drawer and the only way out is the scrim. */
-  .shell[data-drawer='open'] .drawer-toggle {
+  .shell[data-library='open'] .library-toggle {
     position: fixed;
     top: 8px;
     right: 8px;
     z-index: 45;
     margin: 0;
   }
-  .shell[data-drawer='open'] .drawer-scrim {
+  .shell[data-library='open'] .drawer-scrim {
     display: block;
     position: fixed; inset: 0; z-index: 30;
     background: rgba(4, 5, 10, .6);
-  }
-  .drawer-toggle {
-    display: block;
-    margin: 12px;
-    padding: 10px 14px;
-    font: 600 13px/1 system-ui, sans-serif;
-    color: var(--ink); background: #1c1f2b;
-    border: 1px solid var(--line); border-radius: var(--radius);
-    cursor: pointer;
   }
 }
 

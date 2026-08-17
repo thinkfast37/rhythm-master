@@ -1,14 +1,20 @@
 /**
- * Viewport behaviour: sidebar, drawer, accordions, playback autoscroll.
+ * Viewport behaviour: sidebar, library collapse, accordions, playback autoscroll.
  * US-15.1.
  *
  * Three classes, by width:
- *   desktop ≥ 1101px — persistent 300px sidebar
- *   tablet  768–1100 — persistent 240px sidebar
+ *   desktop ≥ 1101px — 300px sidebar column
+ *   tablet  768–1100 — 240px sidebar column
  *   mobile  ≤ 767px  — off-canvas drawer, 85vw capped at 320px
  *
  * The breakpoints and sizes are carried over from the predecessor, where they
  * were arrived at by use rather than by theory.
+ *
+ * Open-or-collapsed is ONE state — `data-library` — meaningful at all three
+ * widths (AC-15.1.2, AC-15.1.3, AC-15.1.6). Only the presentation differs:
+ * mobile slides a drawer off-canvas, the others drop the column out of the
+ * layout. It is deliberately not called `data-drawer` any more, because above
+ * mobile there is no drawer for it to describe.
  */
 
 export const BREAKPOINTS = { tablet: 768, desktop: 1101 };
@@ -24,38 +30,36 @@ export function viewportClass(width = window.innerWidth) {
 export const isMobile = (width = window.innerWidth) => viewportClass(width) === 'mobile';
 
 /**
- * Apply the viewport class to the shell and open the drawer if we have just
- * arrived at mobile width.
+ * Apply the viewport class to the shell, and optionally open the library.
  *
- * The drawer auto-opens on EVERY load at mobile width, not only the first
- * (AC-15.1.5): the library is the reason to open the app, and a musician
+ * The library opens on EVERY load, at every width, not only the first
+ * (AC-15.1.5, AC-15.1.13): it is the reason to open the app, and a musician
  * reaching for their phone mid-practice should not have to find a toggle first.
+ * Collapsed is therefore a within-session position and is never stored — an app
+ * that remembered it would eventually open with no library and no explanation.
+ *
+ * A resize passes no flag, so it carries the current state across rather than
+ * re-opening the library under the musician.
  */
-export function applyViewport(shell, { openDrawerOnMobile = false } = {}) {
+export function applyViewport(shell, { openLibrary: open = false } = {}) {
   const klass = viewportClass();
   shell.dataset.viewport = klass;
 
-  if (klass === 'mobile') {
-    if (openDrawerOnMobile) shell.dataset.drawer = 'open';
-    else shell.dataset.drawer ??= 'closed';
-  } else {
-    // Above mobile the sidebar is a column, never a drawer, so any drawer state
-    // is meaningless and is cleared rather than left to leak back on resize.
-    delete shell.dataset.drawer;
-  }
+  if (open) shell.dataset.library = 'open';
+  else shell.dataset.library ??= 'open';
   return klass;
 }
 
-export function openDrawer(shell) {
-  if (viewportClass() === 'mobile') shell.dataset.drawer = 'open';
+export function openLibrary(shell) {
+  shell.dataset.library = 'open';
 }
 
-export function closeDrawer(shell) {
-  if (viewportClass() === 'mobile') shell.dataset.drawer = 'closed';
+export function collapseLibrary(shell) {
+  shell.dataset.library = 'collapsed';
 }
 
-export function isDrawerOpen(shell) {
-  return shell.dataset.drawer === 'open';
+export function isLibraryOpen(shell) {
+  return shell.dataset.library === 'open';
 }
 
 /**
@@ -65,6 +69,11 @@ export function isDrawerOpen(shell) {
  * view — the musician would be watching Measure 1 while hearing Measure 5.
  * Only scrolls when the Measure is actually outside the viewport, so a Pattern
  * that already fits never jitters.
+ *
+ * The comparison stays against the viewport even though the main panel is the
+ * scroll container (AC-15.1.12): the panel is bounded to the viewport height and
+ * starts at its top, so the two agree, and `scrollIntoView` walks up to whatever
+ * ancestor actually scrolls.
  */
 export function scrollMeasureIntoView(gridEl, measureIndex) {
   const measure = gridEl.querySelector(`.measure[data-measure="${measureIndex}"]`);
