@@ -87,11 +87,18 @@ assigned severity gets revised downward by whoever is in a hurry):
 
 | | Gap | Why |
 |---|---|---|
-| **CRITICAL** | No test names the criterion | Nobody has looked. The state an unbuilt requirement sits in. |
-| **HIGH** | A test names it but proves something else | Unproven while reporting as covered. |
-| **HIGH** | UI-level, but only a pure unit test | Same failure, reached differently. |
-| **MEDIUM** | Compound AC not decomposed | Partly proven; one test stands in for several claims. |
-| **LOW** | Right test, named in its own words | Proven. Clerical. |
+| 🔴 **CRITICAL** | No test names the criterion | Nobody has looked. The state an unbuilt requirement sits in. |
+| 🔴 **HIGH** | A test names it but proves something else | Unproven while reporting as covered. |
+| 🔴 **HIGH** | UI-level, but only a pure unit test | Same failure, reached differently. |
+| 🟠 **MEDIUM** | Compound AC not decomposed | Partly proven; one test stands in for several claims. |
+| 🟡 **LOW** | Right test, named in its own words | Proven. Clerical. |
+
+Every row, every User Story and every headline count carries that colour — 🟢 proven, 🔵
+waived, 🟡 → 🟠 → 🔴 as a gap gets more serious — so a matrix of hundreds of rows can be
+scanned for trouble rather than read. A User Story takes the colour of its **worst**
+criterion, since one unproven claim is the thing worth seeing. The colour is always
+printed beside the words it repeats, never instead of them: red and green are the one pair
+a colour-blind reader cannot separate, and the matrix has to survive a plain-text diff.
 
 ## Waivers
 

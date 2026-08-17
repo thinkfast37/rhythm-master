@@ -152,6 +152,12 @@ The matrix reports **coverage as well as gaps** — the proportion proven, overa
 User Story — because a list of only what is wrong cannot say whether the work is fit to
 ship.
 
+Every row, User Story and headline count is colour-marked — 🟢 proven, 🔵 waived, and
+🟡 → 🟠 → 🔴 as a gap gets more serious — so hundreds of rows can be scanned rather than
+read. A User Story takes the colour of its **worst** criterion. The colour sits beside the
+words it repeats and never replaces them, since red and green are the one pair a
+colour-blind reader cannot separate.
+
 `trace:changed` splits its rows by how the criterion was reached. **Direct** means a test
 naming that criterion changed in the diff; that is the near-certain set and it is listed
 in full. **Indirect** means the change touched a file some task mentions, which in a
@@ -166,11 +172,11 @@ whoever is in a hurry.
 
 | | Gap | Why |
 |---|---|---|
-| **CRITICAL** | No test names the criterion | Nobody has looked. The state an unbuilt requirement sits in. |
-| **HIGH** | A test names it but proves something else | Unproven while reporting as covered — what hid US-2.2 and US-11.1/11.2. |
-| **HIGH** | UI-level, but only a pure unit test | Same failure, reached differently: `core/` cannot see a screen. |
-| **MEDIUM** | Compound AC not decomposed | Partly proven; one test stands in for several claims. |
-| **LOW** | Right test, named in its own words | Proven. Clerical. |
+| 🔴 **CRITICAL** | No test names the criterion | Nobody has looked. The state an unbuilt requirement sits in. |
+| 🔴 **HIGH** | A test names it but proves something else | Unproven while reporting as covered — what hid US-2.2 and US-11.1/11.2. |
+| 🔴 **HIGH** | UI-level, but only a pure unit test | Same failure, reached differently: `core/` cannot see a screen. |
+| 🟠 **MEDIUM** | Compound AC not decomposed | Partly proven; one test stands in for several claims. |
+| 🟡 **LOW** | Right test, named in its own words | Proven. Clerical. |
 
 ### Waivers
 

@@ -25,7 +25,15 @@ import {
   checkWaivers,
   criteriaTouchedBy,
 } from '../lib/project.mjs';
-import { statusOf, renderChange, SEVERITY_OF, WAIVABLE } from '../lib/matrix.mjs';
+import {
+  statusOf,
+  renderChange,
+  SEVERITY_OF,
+  SEVERITY_ORDER,
+  WAIVABLE,
+  MARK_OF,
+  markFor,
+} from '../lib/matrix.mjs';
 import { assertionCount, claimedTitle, normalise, findingKey, buildCriteria } from '../lib/analyse.mjs';
 import { expandRange, readSpec } from '../lib/parse.mjs';
 
@@ -532,6 +540,69 @@ describe('coverage reporting', () => {
     const { text } = masterMatrix(state, cfg, new Set(), waivers);
     expect(text).toContain('3 of 4 criteria proven');
     expect(text).toContain('plus 1 waived');
+  });
+});
+
+describe('the colour of a row', () => {
+  /** Break AC-1.1.1 so it renders as a HIGH gap, leaving the other three proven. */
+  const breakOne = () =>
+    edit('tests/unit/core/widget.test.js', (t) =>
+      t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — sprockets rotate counterclockwise')
+    );
+
+  it('gives every state a colour, so none can be added without one', () => {
+    for (const sev of SEVERITY_ORDER) expect(MARK_OF[sev]).toBeTruthy();
+    expect(MARK_OF.OK).toBeTruthy();
+    expect(MARK_OF.WAIVED).toBeTruthy();
+    // Green is proven and only proven; red is reserved for the two that hide unbuilt work.
+    expect(MARK_OF.OK).not.toBe(MARK_OF.LOW);
+    expect(MARK_OF.CRITICAL).toBe(MARK_OF.HIGH);
+    expect(new Set([MARK_OF.OK, MARK_OF.LOW, MARK_OF.MEDIUM, MARK_OF.HIGH]).size).toBe(4);
+  });
+
+  it('colours a row by its status, waived before severity', () => {
+    expect(markFor({ mark: 'OK' })).toBe(MARK_OF.OK);
+    expect(markFor({ mark: 'MISNAMED', severity: 'LOW', waived: false })).toBe(MARK_OF.LOW);
+    expect(markFor({ mark: 'MISNAMED', severity: 'LOW', waived: true })).toBe(MARK_OF.WAIVED);
+  });
+
+  it('marks proven green and a serious gap red, in the same table', () => {
+    breakOne();
+    const { text } = checkAll({ freshMatrix: false });
+    expect(text).toContain(`${MARK_OF.HIGH} **HIGH** · WRONG TEST`);
+    expect(text).toContain(`${MARK_OF.OK} OK`);
+  });
+
+  it('never lets the colour stand in for the words', () => {
+    breakOne();
+    const { text, rows } = checkAll({ freshMatrix: false });
+    // Strip every mark: the matrix must still say what each row's status is.
+    const plain = Object.values(MARK_OF)
+      .reduce((s, m) => s.split(`${m} `).join(''), text)
+      .replace(/\n\n+/g, '\n');
+    expect(plain).toContain('**HIGH** · WRONG TEST');
+    expect(plain).toContain('| Proven |');
+    expect(plain).toContain('| US-1.1 | 4 | 3 |');
+    expect(rows.filter((r) => r.status.mark === 'OK')).toHaveLength(3);
+  });
+
+  it('colours a User Story by its worst criterion, not its average', () => {
+    breakOne();
+    const { text } = checkAll({ freshMatrix: false });
+    // Three of the four are proven, and the row is still red.
+    expect(text).toContain(`| ${MARK_OF.HIGH} US-1.1 | 4 | 3 |`);
+  });
+
+  it('shows a waived gap in its own colour, with the reason still spelled out', () => {
+    edit('tests/unit/core/widget.test.js', (t) =>
+      t.replace('AC-1.1.1 — A widget has a name', 'AC-1.1.1 — a widget carries its own name')
+    );
+    const cfg = config();
+    const state = run(cfg);
+    const reason = 'Deliberate: checked by hand each release.';
+    const waivers = new Map([['AC-1.1.1', { criterion: 'AC-1.1.1', reason }]]);
+    const { text } = masterMatrix(state, cfg, new Set(), waivers);
+    expect(text).toContain(`${MARK_OF.WAIVED} WAIVED (MISNAMED) — ${reason}`);
   });
 });
 
