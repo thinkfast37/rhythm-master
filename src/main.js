@@ -48,7 +48,7 @@ import {
 } from './ui/responsive.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
-import { buildSubmission } from './export/submit.js';
+import { buildSubmission, selectForBulk, submissionDigest } from './export/submit.js';
 import { findDuplicates, findFamily, isDuplicate, duplicateGroups } from './core/similarity.js';
 import * as localMetaStore from './storage/localMeta.js';
 import {
@@ -59,6 +59,8 @@ import {
   askApplyToAllMeasures,
   askNewPatternName,
   showDuplicates,
+  showSubmission,
+  copyToClipboard,
 } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
@@ -699,9 +701,60 @@ const handlers = {
     downloadMidi(state.pattern);
   },
 
+  /**
+   * Hand the Contributor a pre-filled GitHub issue for this Pattern (AC-13.1.1).
+   *
+   * The submission is recorded when the link is *followed*, not when Submit is
+   * pressed: a Pattern marked as submitted that was only looked at would exclude
+   * itself from the next bulk run (AC-13.1.4) and quietly never be sent.
+   */
   onSubmit() {
-    const submission = buildSubmission([state.pattern]);
-    if (state.pattern.id) localMetaStore.update(state.pattern.id, { submittedAt: nowIso() });
+    return handlers.onSubmitPatterns([state.pattern], {
+      summary: `Submitting "${state.pattern.name}" for the shared library. Review it on GitHub and click "Submit new issue".`,
+    });
+  },
+
+  /**
+   * Every one of the Contributor's own Patterns that is not already submitted and
+   * untouched since, batched into one issue (AC-13.1.2, AC-13.1.4).
+   */
+  async onSubmitAll() {
+    const pending = selectForBulk(patternStore.loadAll(), localMetaStore.forPattern);
+
+    if (pending.length === 0) {
+      await confirm(
+        'Nothing to submit — every Pattern you have made has already been submitted, unchanged since.',
+        { confirmLabel: 'OK', cancelLabel: 'Dismiss' }
+      );
+      return;
+    }
+
+    const noun = pending.length === 1 ? 'Pattern' : 'Patterns';
+    await handlers.onSubmitPatterns(pending, {
+      summary: `Submitting ${pending.length} ${noun} for the shared library: ${pending
+        .map((p) => p.name)
+        .join(', ')}.`,
+      // A standing backup, whether or not the body fitted in the URL (AC-13.1.2):
+      // these Patterns exist in this browser and nowhere else.
+      copyFirst: true,
+    });
+  },
+
+  async onSubmitPatterns(patterns, { summary, copyFirst = false } = {}) {
+    const submission = buildSubmission(patterns);
+    if (copyFirst) await copyToClipboard(submission.body);
+
+    await showSubmission({
+      submission,
+      summary,
+      onOpened() {
+        const submittedAt = nowIso();
+        for (const p of patterns) {
+          if (!p.id) continue;
+          localMetaStore.update(p.id, { submittedAt, submittedDigest: submissionDigest(p) });
+        }
+      },
+    });
     return submission;
   },
 

@@ -244,6 +244,138 @@ export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
 }
 
 /**
+ * Copy text to the clipboard, falling back to a selection-and-`execCommand` when
+ * the async Clipboard API is unavailable — it needs a secure context, and the app
+ * is also opened from `file://` and over plain HTTP on a phone on the same network.
+ *
+ * @returns {Promise<boolean>} whether the text actually reached the clipboard
+ */
+export async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Denied, or no secure context. The fallback below still has a chance.
+  }
+  try {
+    const scratch = document.createElement('textarea');
+    scratch.value = text;
+    scratch.setAttribute('readonly', '');
+    scratch.style.position = 'fixed';
+    scratch.style.opacity = '0';
+    document.body.appendChild(scratch);
+    scratch.select();
+    const ok = document.execCommand('copy');
+    scratch.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The submission hand-off. AC-13.1.1, AC-13.1.2, AC-13.1.3.
+ *
+ * The app never posts to GitHub — it builds a URL and hands it over on GitHub's
+ * own domain, where the Contributor is authenticated as themselves (Principle V,
+ * FR-008). So this dialog's whole job is to present that URL as a link the
+ * Contributor clicks, and it opens in a new tab so the app and everything unsaved
+ * in it survives the trip.
+ *
+ * The full text is always here to be copied, whether or not it fitted in the URL
+ * (AC-13.1.2), because a submission that GitHub rejects for length would otherwise
+ * lose work that only exists in this browser.
+ *
+ * @param {object} spec
+ * @param {{url: string, body: string, truncated: boolean}} spec.submission
+ * @param {string} spec.summary       what is being submitted, in words
+ * @param {() => void} [spec.onOpened] called when the link is actually followed —
+ *   which is the moment worth recording as "submitted", not the moment the button
+ *   was pressed
+ */
+export function showSubmission({ submission, summary, onOpened }) {
+  const root = ensureHost();
+
+  return new Promise((resolve) => {
+    root.innerHTML = '';
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    const box = document.createElement('div');
+    box.className = 'dialog submission-view';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'Submit to the shared library');
+
+    box.appendChild(
+      Object.assign(document.createElement('p'), {
+        className: 'dialog-message',
+        textContent: summary,
+      })
+    );
+
+    const link = document.createElement('a');
+    link.className = 'dialog-link';
+    link.dataset.action = 'open-submission';
+    link.href = submission.url;
+    link.target = '_blank';
+    // Opener access is never needed and is the one thing a new tab should not get.
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'Open the pre-filled issue on GitHub';
+    link.addEventListener('click', () => onOpened?.());
+    box.appendChild(link);
+
+    if (submission.truncated) {
+      box.appendChild(
+        Object.assign(document.createElement('p'), {
+          className: 'dialog-note submission-fallback',
+          textContent:
+            'This batch is too long to pre-fill. Click "Copy all to clipboard", then paste into the issue body once the page opens.',
+        })
+      );
+    }
+
+    const status = Object.assign(document.createElement('p'), {
+      className: 'dialog-note',
+      hidden: true,
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'dialog-actions';
+
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = `dialog-button${submission.truncated ? ' primary' : ''}`;
+    copy.dataset.action = 'copy-submission';
+    copy.textContent = 'Copy all to clipboard';
+    copy.addEventListener('click', async () => {
+      const ok = await copyToClipboard(submission.body);
+      status.textContent = ok
+        ? 'Copied. Paste it into the issue body.'
+        : 'This browser blocked the copy — select the text on GitHub’s page and paste it yourself.';
+      status.hidden = false;
+    });
+
+    const done = document.createElement('button');
+    done.type = 'button';
+    done.className = `dialog-button${submission.truncated ? '' : ' primary'}`;
+    done.dataset.action = 'close-submission';
+    done.textContent = 'Done';
+    done.addEventListener('click', () => {
+      root.innerHTML = '';
+      resolve();
+    });
+
+    actions.append(copy, done);
+    box.append(actions, status);
+    backdrop.appendChild(box);
+    root.appendChild(backdrop);
+    link.focus();
+  });
+}
+
+/**
  * The possible-duplicates view. AC-11.1.4, AC-11.1.5, AC-11.1.6.
  *
  * Library-wide and standing, rather than a warning: duplicates that emerge through

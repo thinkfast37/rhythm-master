@@ -217,6 +217,10 @@ function renderActions(pattern, state, handlers) {
   // are — and AC-15.1.8 already accounts for the actions area holding them.
   button('show-duplicates', 'Duplicates…', () => handlers.onShowDuplicates());
   button('submit-pattern', 'Submit', () => handlers.onSubmit());
+  // Bulk submission is library-wide rather than about this Pattern (AC-13.1.2), and sits
+  // beside Submit for the same reason Duplicates… does: this is where whole-Pattern
+  // operations live, and separating the two Submits would only make the batch harder to find.
+  button('submit-all', 'Submit All…', () => handlers.onSubmitAll());
 
   return group;
 }

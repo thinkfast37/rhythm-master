@@ -217,7 +217,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-032** | US-11.2 — Detect and surface Pattern Families | AC-11.2.1–AC-11.2.5 | T105, T148 | T106, T155 |
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
-| **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112 | T113 |
+| **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T167 | T113, T168 |
 | **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.13 | T114–T116, T160 | T117, T161 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.5 | T160 | T161 |

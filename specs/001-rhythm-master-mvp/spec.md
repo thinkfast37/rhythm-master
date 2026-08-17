@@ -1559,6 +1559,10 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** the app constructs a `github.com/<org>/<repo>/issues/new` URL with the title "New Pattern: Samba Break," the label `new-pattern`, and a body containing "Samba Break"'s full definition as a fenced code block, all encoded as URL query parameters, and presents it as a clickable link
   - **And** clicking it opens a new browser tab to GitHub's own issue-creation page, pre-filled, where the Contributor — authenticated as themselves, not the app — reviews and clicks "Submit new issue"
   - **And** the app itself never holds a GitHub credential or calls GitHub's API directly at any point
+  - **Cases**:
+    - **AC-13.1.1/1** — The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters
+    - **AC-13.1.1/2** — Submit presents the URL as a clickable link that opens GitHub's own issue page in a new tab
+    - **AC-13.1.1/3** — No GitHub credential is held and GitHub's API is never called
 
 - **AC-13.1.2** — Bulk submission batches multiple Patterns into one issue
   - **Given** three `custom`-tagged Patterns not yet submitted: "Samba Break," "My Fill," and "Bossa Take 2"
@@ -1570,6 +1574,9 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the Contributor triggers it
   - **Then** the app does not attempt that oversized URL — it links instead to a GitHub issue pre-filled with only the title and label (no body), and shows a note instructing the Contributor to click "Copy all to clipboard" and paste the content into the issue body manually once the page opens
   - **And**, given the full URL is 8,000 characters or under, the complete title + label + body all prefill normally, per AC-13.1.2 *(Assumption: the 8,000-character threshold is carried over from the original app's implementation, chosen as a safe margin under GitHub's actual ~8,192-character request-URI limit.)*
+  - **Cases**:
+    - **AC-13.1.3/1** — An oversized submission links to a title-and-label-only issue and shows the paste-it-yourself note
+    - **AC-13.1.3/2** — A submission within the limit prefills title, label and body in full
 
 - **AC-13.1.4** — Already-submitted, unedited Patterns are excluded from later bulk submissions
   - **Given** "Samba Break" was submitted yesterday and has not been edited since
@@ -1577,6 +1584,15 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** "Samba Break" is excluded from it
   - **And**, given "My Fill" was submitted yesterday but has since been edited (auto-saved per US-7.2)
   - **Then** "My Fill" is included in the new bulk submission
+  - *(Clarified 2026-08-17. "Edited since" was undefined, and a Pattern carries no
+    modified timestamp — adding one would change the stored Pattern shape for a
+    bookkeeping question. It is decided by comparing the Pattern's current submission
+    payload against the payload that was last submitted, both held as Local Metadata:
+    an edit that is undone before the next bulk run is correctly not an edit.)*
+  - **Cases**:
+    - **AC-13.1.4/1** — A Pattern submitted and unedited since is excluded from a later bulk submission
+    - **AC-13.1.4/2** — A Pattern edited since it was submitted is included again
+    - **AC-13.1.4/3** — A Pattern never submitted is included
 
 - **AC-13.1.5** — Submission-tracking is Local Metadata, never part of the export payload
   - **Given** "Samba Break"'s last-submitted timestamp (Local Metadata)

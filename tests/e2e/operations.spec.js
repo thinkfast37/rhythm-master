@@ -2,6 +2,16 @@ import { test, expect } from '@playwright/test';
 
 test.use({ launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefined } });
 
+/**
+ * Nothing here may actually reach github.com: the submission hand-off opens a real
+ * tab, and a test that depends on a third party fails for reasons of its own.
+ */
+async function stubGitHub(page) {
+  await page.context().route('https://github.com/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: '<p>GitHub, stubbed.</p>' })
+  );
+}
+
 /** Create an owned Pattern by editing a shipped one and naming the copy. */
 async function makeOwned(page, name = 'Mine') {
   await page.locator('.slot').first().click();
@@ -76,9 +86,18 @@ test('AC-7.5.2 — a shipped Pattern offers no Delete control at all', async ({ 
 });
 
 test('AC-7.5.3 — deleting a Pattern drops its Local Metadata with it', async ({ page }) => {
+  await stubGitHub(page);
   await page.goto('/');
   await makeOwned(page, 'Doomed');
+
+  // Give the Pattern some Local Metadata to lose: submitting records it, and the
+  // record is made when the link is followed, not when the dialog opens.
   await page.locator('[data-action="submit-pattern"]').click();
+  await Promise.all([
+    page.context().waitForEvent('page'),
+    page.locator('[data-action="open-submission"]').click(),
+  ]);
+  await page.locator('[data-action="close-submission"]').click();
 
   const before = await page.evaluate(() => {
     const id = window.__rm.getState().pattern.id;
@@ -148,14 +167,23 @@ test('AC-12.1.1 — Export MIDI produces a downloadable .mid named after the Pat
   expect(file.suggestedFilename()).toBe('export-me.mid');
 });
 
-test('AC-13.1.1 — Submit builds a GitHub issue URL and records the submission locally', async ({ page }) => {
+test('AC-13.1.5 — Submission-tracking is Local Metadata, never part of the export payload: keyed by the Pattern, never written onto it', async ({
+  page,
+}) => {
+  await stubGitHub(page);
   await page.goto('/');
   await makeOwned(page, 'Contribute Me');
 
-  const result = await page.evaluate(() => window.__rm.handlers.onSubmit());
-  expect(result.url).toContain('https://github.com/');
-  expect(result.url).toContain('labels=new-pattern');
-  expect(result.body).toContain('### Pattern: Contribute Me');
+  await page.locator('[data-action="submit-pattern"]').click();
+  const href = await page.locator('[data-action="open-submission"]').getAttribute('href');
+  expect(href).toContain('https://github.com/');
+  expect(href).toContain('labels=new-pattern');
+  expect(decodeURIComponent(href)).toContain('### Pattern: Contribute Me');
+
+  await Promise.all([
+    page.context().waitForEvent('page'),
+    page.locator('[data-action="open-submission"]').click(),
+  ]);
 
   const meta = await page.evaluate(() => {
     const id = window.__rm.getState().pattern.id;
@@ -165,6 +193,7 @@ test('AC-13.1.1 — Submit builds a GitHub issue URL and records the submission 
   // Submission history is Local Metadata, never Pattern data (FR-006).
   const pattern = await page.evaluate(() => window.__rm.getState().pattern);
   expect(pattern).not.toHaveProperty('submittedAt');
+  expect(pattern).not.toHaveProperty('submittedDigest');
 });
 
 test('AC-11.2.1 — Family match criteria: a melodic variant surfaces as a Family, not a duplicate', async ({
