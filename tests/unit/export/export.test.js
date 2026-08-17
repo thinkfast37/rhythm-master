@@ -5,6 +5,8 @@ import {
   buildSubmission,
   buildIssueBody,
   buildIssueTitle,
+  readSubmissionBody,
+  readSubmittedPatterns,
   selectForBulk,
   submissionDigest,
   MAX_URL_LENGTH,
@@ -101,8 +103,8 @@ describe('export/midi', () => {
 });
 
 describe('export/submit', () => {
-  it("AC-13.1.1/1 — The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters", () => {
-    const { url } = buildSubmission([withNote(create('Samba Break'))]);
+  it("AC-13.1.1/1 — The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters", async () => {
+    const { url } = await buildSubmission([withNote(create('Samba Break'))]);
     const params = new URL(url).searchParams;
 
     expect(url.startsWith('https://github.com/')).toBe(true);
@@ -130,17 +132,17 @@ describe('export/submit', () => {
     expect(toSubmissionShape(create('Beat'))).not.toHaveProperty('key');
   });
 
-  it("AC-13.1.1/3 — No GitHub credential is held and GitHub's API is never called", () => {
-    const { url } = buildSubmission([withNote(create('Groove'))]);
+  it("AC-13.1.1/3 — No GitHub credential is held and GitHub's API is never called", async () => {
+    const { url } = await buildSubmission([withNote(create('Groove'))]);
     // The web form on github.com, never api.github.com — the app is not a client.
     expect(url.startsWith('https://github.com/')).toBe(true);
     expect(url).not.toContain('api.github.com');
     expect(url).not.toMatch(/token|api_key|authorization/i);
   });
 
-  it('AC-13.1.2 — Bulk submission batches multiple Patterns into one issue', () => {
+  it('AC-13.1.2 — Bulk submission batches multiple Patterns into one issue', async () => {
     const three = ['Samba Break', 'My Fill', 'Bossa Take 2'].map((n) => withNote(create(n)));
-    const { url } = buildSubmission(three);
+    const { url } = await buildSubmission(three);
     const body = buildIssueBody(three);
 
     expect(buildIssueTitle(three)).toBe('Bulk Pattern Submission (3 patterns)');
@@ -151,21 +153,61 @@ describe('export/submit', () => {
     }
   });
 
-  it('AC-13.1.3/1 — An oversized submission links to a title-and-label-only issue and shows the paste-it-yourself note', () => {
-    // Enough Patterns to blow past the URL limit.
+  it('AC-13.1.3/1 — A submission too large to prefill readably prefills the same content compressed', async () => {
+    // Enough Patterns to blow past the URL limit as readable JSON.
     const many = Array.from({ length: 40 }, (_, i) => withNote(create(`Pattern ${i}`)));
-    const { url, body, truncated } = buildSubmission(many);
+    const readable = buildIssueBody(many);
+    expect(encodeURIComponent(readable).length).toBeGreaterThan(MAX_URL_LENGTH);
+
+    const { url, body, truncated, compressed } = await buildSubmission(many);
+
+    expect(compressed).toBe(true);
+    expect(truncated).toBe(false);
+    expect(url.length).toBeLessThanOrEqual(MAX_URL_LENGTH);
+    // Still prefilled — nobody is asked to paste anything.
+    expect(url).toContain('body=');
+    expect(url).toContain('labels=new-pattern');
+
+    // And it is the SAME content: the compressed block decodes to the readable body,
+    // byte for byte, so nothing was dropped to make it fit.
+    const sent = new URL(url).searchParams.get('body');
+    expect(await readSubmissionBody(sent)).toBe(readable);
+    expect(await readSubmittedPatterns(sent)).toHaveLength(40);
+    // `body` stays readable whichever tier was used — it is what the clipboard gets.
+    expect(body).toBe(readable);
+  });
+
+  it('AC-13.1.3/3 — A submission too large even compressed falls back to title and label with the paste-it-yourself note', async () => {
+    // Real entropy in the music is the one thing gzip cannot fold away, so this is
+    // what it takes to defeat the compressed tier rather than merely the readable one.
+    let seed = 1;
+    const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const noisy = (i) => {
+      let p = create(`Take ${i}`);
+      for (let m = 1; m < 4; m++) p = addMeasure(p);
+      for (let m = 0; m < 4; m++) {
+        for (let b = 0; b < 4; b++) {
+          for (let s = 0; s < p.measures[m].beats[b].slots.length; s++) {
+            for (let t = 0, times = Math.floor(rand() * 4); t < times; t++) p = cycleAccent(p, m, b, s);
+          }
+        }
+      }
+      return p;
+    };
+    const many = Array.from({ length: 80 }, (_, i) => noisy(i));
+    const { url, body, truncated, compressed } = await buildSubmission(many);
 
     expect(truncated).toBe(true);
+    expect(compressed).toBe(false);
     expect(url.length).toBeLessThanOrEqual(MAX_URL_LENGTH);
     expect(url).not.toContain('body=');
     expect(url).toContain('labels=new-pattern');
-    // The full content is still available for the clipboard — nothing is lost.
-    expect(body.match(/```json/g)).toHaveLength(40);
+    // The full readable content is still there for the clipboard — nothing is lost.
+    expect(body.match(/```json/g)).toHaveLength(80);
   });
 
-  it('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full', () => {
-    const { url, truncated } = buildSubmission([withNote(create('Small'))]);
+  it('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full', async () => {
+    const { url, truncated } = await buildSubmission([withNote(create('Small'))]);
     expect(truncated).toBe(false);
     expect(url).toContain('body=');
     expect(url.length).toBeLessThanOrEqual(MAX_URL_LENGTH);
@@ -175,7 +217,7 @@ describe('export/submit', () => {
     expect(MAX_URL_LENGTH).toBe(8000);
   });
 
-  it('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full: an ordinary multi-Measure Pattern is within it', () => {
+  it('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full: an ordinary multi-Measure Pattern is within it', async () => {
     // The reported case: a four-Measure line fell into the oversized-BULK fallback,
     // because the body was pretty-printed and every newline costs three characters
     // once percent-encoded. 1,657 characters of music became 14,281 of URL.
@@ -185,7 +227,7 @@ describe('export/submit', () => {
       for (let b = 0; b < p.measures[m].beats.length; b++) p = cycleAccent(p, m, b, 0);
     }
 
-    const { url, truncated } = buildSubmission([p]);
+    const { url, truncated } = await buildSubmission([p]);
     expect(truncated).toBe(false);
     expect(url).toContain('body=');
     expect(url.length).toBeLessThanOrEqual(MAX_URL_LENGTH);
@@ -235,11 +277,11 @@ describe('export/submit', () => {
     expect(selectForBulk([fresh], () => ({})).map((p) => p.name)).toEqual(['Bossa Take 2']);
   });
 
-  it('AC-13.1.5 — Submission-tracking is Local Metadata, never part of the export payload', () => {
+  it('AC-13.1.5 — Submission-tracking is Local Metadata, never part of the export payload', async () => {
     const pattern = { ...withNote(create('Groove')), id: 'p_1' };
     localMeta.update('p_1', { submittedAt: '2026-08-14T10:22:00Z', duplicateResolved: true });
 
-    const submission = JSON.stringify(buildSubmission([pattern]));
+    const submission = JSON.stringify(await buildSubmission([pattern]));
     const midi = String.fromCharCode(...buildMidi(pattern));
 
     for (const field of localMeta.LOCAL_META_FIELDS) {

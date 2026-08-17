@@ -49,7 +49,12 @@ import {
 } from './ui/responsive.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
-import { buildSubmission, selectForBulk, submissionDigest } from './export/submit.js';
+import {
+  buildSubmission,
+  selectForBulk,
+  submissionDigest,
+  readSubmittedPatterns,
+} from './export/submit.js';
 import { findDuplicates, findFamily, isDuplicate, duplicateGroups } from './core/similarity.js';
 import * as localMetaStore from './storage/localMeta.js';
 import {
@@ -742,7 +747,7 @@ const handlers = {
   },
 
   async onSubmitPatterns(patterns, { summary, copyFirst = false } = {}) {
-    const submission = buildSubmission(patterns);
+    const submission = await buildSubmission(patterns);
     if (copyFirst) await copyToClipboard(submission.body);
 
     await showSubmission({
@@ -1099,6 +1104,7 @@ if (typeof window !== 'undefined') {
     getState,
     loadPattern,
     handlers,
+    readSubmittedPatterns,
     seedStore,
     patternStore,
     overlayStore,

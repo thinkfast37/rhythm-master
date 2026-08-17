@@ -849,3 +849,37 @@ record is complete rather than starting mid-stream.
   **The fallback still fires at the extreme end, and that is genuine.** 8 Measures of 12/8 at Straight 16ths is 192 Slots — 6,515 characters compact, 11,867 encoded — and the same Pattern in Melodic mode with every Slot pitched is 16,507 compact, 29,167 encoded. No formatting choice fits 29KB into an 8KB URL; that is what AC-13.1.3's clipboard path exists for. Measured breakpoints, single Pattern: **4/4 at any Recipe, all 8 Measures**; 12/8 Straight 16ths, **5 Measures**; Melodic 4/4 Straight 16ths with every Slot sounding, **4 Measures**.
 
   A claim made to the maintainer mid-report — that no Pattern the app can represent would exceed the limit once compacted — was wrong, and is corrected above. It came from measuring 8 Measures of 4/4 (128 Slots) rather than the densest Pattern the app supports (192).
+
+- [X] T173 **[spec defect]** Compress a submission that will not fit readably, instead of asking the Contributor to paste it — `specs/001-rhythm-master-mvp/spec.md` (AC-13.1.3 revised, Cases renumbered to three; AC-13.1.2 amended), `src/export/submit.js`, `src/ui/dialogs.js`, `src/main.js`. Implements P-035, AC-13.1.2, AC-13.1.3.
+
+  Asked for after T172: *"if it's still not able to accommodate a reasonable pattern size then how about we use base64 encoding?"*
+
+  **Base64 alone does not work, and was measured rather than assumed.** It is 4/3 the size of the raw bytes and only wins by avoiding percent-encoding — about 26%. The densest Pattern the app can represent goes 11,515 → 8,533, still over the 8,000 limit, and its Melodic equivalent 25,359 → 19,296. It would have failed at exactly the Patterns that were already failing, while making every submission unreadable.
+
+  **Compression is what does it**, with base64url as the transport. The payload is enormously repetitive — a Recipe id per Beat, most Slots the same four bytes — so gzip takes the two worst cases to 798 and 912 characters of URL. `CompressionStream` is a platform API, so this costs no dependency (Principle V).
+
+  **Three tiers now, and the middle one is new** (AC-13.1.3, revised): readable JSON when it fits, compressed when it does not, title-and-label-only when even compressed will not. The old two-tier criterion made the manual paste the answer to *merely dense*, when it is the one step in the flow a Contributor can silently get wrong. Readability is kept where it is free — after T172 that is every 4/4 Pattern at the full 8-Measure cap.
+
+  **The compressed block decodes to exactly the readable body**, byte for byte, not to some second representation. So anything reading a submission has one shape to understand: decompress if the marker is there, then parse the same Markdown either way — which is what keeps `pattern-intake` a single parser rather than a fork. `readSubmissionBody` and `readSubmittedPatterns` are exported for that reason and asserted round-trip.
+
+  `buildSubmission` is now async, since `CompressionStream` is. Callers and their tests follow; `export/` is not bound by the `core/` purity rule, and the alternative — a synchronous deflate — would have meant a runtime dependency.
+
+  The dialog says plainly when a submission was compressed. An issue that looks like a wall of characters, unexplained, would reasonably read as something having gone wrong.
+
+- [X] T174 **[spec defect]** Tests for T173 — `tests/unit/export/export.test.js`, `tests/e2e/submission.spec.js`. Covers AC-13.1.2, AC-13.1.3/1–/3.
+
+  AC-13.1.3/1's old test — 40 Patterns falling back to a title-only link — now proves the compressed tier instead, because that batch compresses. It was rewritten to the revised criterion rather than retitled: it asserts the URL still carries a body, that the block decodes to the readable body byte for byte, and that all 40 Patterns survive.
+
+  **AC-13.1.3/3 needed a batch that defeats compression, which took measuring.** Repetition is what gzip eats, so more of the same Pattern does not help; only real entropy in the music does. 80 four-Measure Patterns of pseudo-random accents still compress to 7,489. The unit test uses 80 of them at four Measures with a seeded PRNG, and the e2e 160 at eight Measures — both sized from a measured breakpoint, both noted in the test so the next person does not have to rediscover it.
+
+- [X] T175 **[new capability]** `pattern-intake` skill — review submitted Patterns and add the good ones — `.claude/skills/pattern-intake/SKILL.md`, `.claude/skills/pattern-intake/lib/decode.mjs`, `.claude/skills/pattern-intake/lib/render.mjs`, `.claude/skills/pattern-intake/lib/seed.mjs`, `.claude/skills/pattern-intake/pattern-intake.mjs`, `.claude/skills/pattern-intake/tests/pattern-intake.test.js`.
+
+  Asked for alongside T173: *"you need to also write a skill that allows me to review and add submitted patterns via here … you can present it to me in a readable format even if it was base64 encoded."* T173 makes that a requirement rather than a convenience — a compressed submission cannot be read at all without something that decodes it.
+
+  **No AC and no spec pass.** This is maintainer tooling, like `spec-trace`, not app behaviour: it runs from the repository, never ships, and US-13.1 says nothing about how a submission is reviewed. Its own tests live beside it and run under `npm test`, which is the `spec-trace` precedent.
+
+  **It imports the app rather than reimplementing it**, and that is the opposite choice from `spec-trace`, deliberately. `spec-trace` is dependency-free so it can be copied into other projects; this skill exists to serve *this* format, so `lib/decode.mjs` imports `src/export/submit.js` and `lib/render.mjs` reads Accent Levels through `src/core/accents.js`. One implementation of the wire format cannot drift from itself, and the grid shown is what will actually sound (Principle I).
+
+  **Appended, never inserted, enforced in code.** `lib/seed.mjs` will only write at the end of `data/seed-patterns.json`, because shipped ids are positional and inserting renumbers every later Pattern — orphaning the ratings and added Tags that `rm.overlays.v1` keys by id. A name already in the library is refused case-insensitively unless forced, as are two Patterns in one batch sharing a name.
+
+  **`accept` does not validate its own write.** It appends and stops, and tells you to run `npm run validate:seed`. A tool that blesses its own output is a gate that proves nothing. It also never commits, pushes or opens a PR — landing a change is §5's business and includes a task entry and the full gate run.

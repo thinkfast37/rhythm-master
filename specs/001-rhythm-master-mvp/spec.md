@@ -1601,16 +1601,29 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-13.1.2** — Bulk submission batches multiple Patterns into one issue
   - **Given** three `custom`-tagged Patterns not yet submitted: "Samba Break," "My Fill," and "Bossa Take 2"
   - **When** the Contributor triggers bulk submission
-  - **Then** the app constructs one issue URL titled "Bulk Pattern Submission (3 patterns)," labeled `new-pattern`, with a body containing one fenced code block per Pattern under its own heading — and also copies the same full text to the clipboard as a standing backup, regardless of URL length
+  - **Then** the app constructs one issue URL titled "Bulk Pattern Submission (3 patterns)," labeled `new-pattern`, with a body containing one fenced code block per Pattern under its own heading — or, when that will not fit, the single compressed block of AC-13.1.3, which decodes to exactly that text — and also copies the same full readable text to the clipboard as a standing backup, regardless of URL length *(Revised 2026-08-17 alongside AC-13.1.3; see the parenthetical there.)*
 
-- **AC-13.1.3** — Oversized bulk submissions fall back to title/label-only prefill plus manual paste
-  - **Given** a bulk submission whose full pre-filled URL (title + label + body) would exceed 8,000 characters
+- **AC-13.1.3** — Submissions too large to prefill readably are compressed before anyone is asked to paste
+  - **Given** a submission whose pre-filled URL carrying the readable body (title + label + body) would exceed 8,000 characters
   - **When** the Contributor triggers it
-  - **Then** the app does not attempt that oversized URL — it links instead to a GitHub issue pre-filled with only the title and label (no body), and shows a note instructing the Contributor to click "Copy all to clipboard" and paste the content into the issue body manually once the page opens
-  - **And**, given the full URL is 8,000 characters or under, the complete title + label + body all prefill normally, per AC-13.1.2 *(Assumption: the 8,000-character threshold is carried over from the original app's implementation, chosen as a safe margin under GitHub's actual ~8,192-character request-URI limit.)*
+  - **Then** the app does not attempt that oversized URL, and does not ask for a manual paste either — it prefills the same content compressed, as one fenced `rhythm-master` block holding a gzip+base64url payload that decodes to exactly the readable body, so the submission still arrives complete and prefilled
+  - **And**, given even the compressed URL would exceed 8,000 characters, the app links to an issue pre-filled with only the title and label (no body), and shows a note instructing the Contributor to click "Copy all to clipboard" and paste the readable content into the issue body manually once the page opens
+  - **And**, given the URL carrying the readable body is 8,000 characters or under, the complete title + label + readable body all prefill normally, per AC-13.1.2 *(Assumption: the 8,000-character threshold is carried over from the original app's implementation, chosen as a safe margin under GitHub's actual ~8,192-character request-URI limit.)*
+  - *(Revised 2026-08-17. Was "Oversized bulk submissions fall back to title/label-only prefill
+    plus manual paste" — two tiers, readable or nothing. The manual paste is a real cost: it is
+    the one step in the whole flow that a Contributor can silently get wrong, and it was being
+    paid by anyone whose Pattern was merely dense rather than genuinely enormous. The submitted
+    JSON is highly repetitive, so it gzips to under 500 characters in every case the app can
+    represent, which turns "cannot prefill" into "prefills, less readably". Readability is not
+    given up where it is free: a Pattern whose readable body fits still sends readable JSON,
+    which after T172 is every 4/4 Pattern at the full 8-Measure cap. The manual-paste tier
+    survives as the last resort, because a large enough batch can still exceed the limit
+    compressed. Reviewing a compressed submission needs the `pattern-intake` skill, which
+    decodes either form — the reason that skill is part of the same change.)*
   - **Cases**:
-    - **AC-13.1.3/1** — An oversized submission links to a title-and-label-only issue and shows the paste-it-yourself note
+    - **AC-13.1.3/1** — A submission too large to prefill readably prefills the same content compressed
     - **AC-13.1.3/2** — A submission within the limit prefills title, label and body in full
+    - **AC-13.1.3/3** — A submission too large even compressed falls back to title and label with the paste-it-yourself note
 
 - **AC-13.1.4** — Already-submitted, unedited Patterns are excluded from later bulk submissions
   - **Given** "Samba Break" was submitted yesterday and has not been edited since
