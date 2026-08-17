@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 250 across 35 User Stories
+**Criteria**: 254 across 35 User Stories
 
-**Coverage**: 47 of 250 criteria proven (18.8%)
+**Coverage**: 51 of 254 criteria proven (20.1%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 47 | 18.8% |
-| 🔴 Gap — HIGH | 79 | 31.6% |
-| 🟠 Gap — MEDIUM | 43 | 17.2% |
-| 🟡 Gap — LOW | 81 | 32.4% |
+| 🟢 Proven | 51 | 20.1% |
+| 🔴 Gap — HIGH | 79 | 31.1% |
+| 🟠 Gap — MEDIUM | 43 | 16.9% |
+| 🟡 Gap — LOW | 81 | 31.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -66,7 +66,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-2.2 | 29 | 16 | · | · | 1 | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
-| 🔴 US-3.1 | 16 | 0 | · | · | 3 | 1 | 12 |
+| 🔴 US-3.1 | 20 | 4 | · | · | 3 | 1 | 12 |
 | 🔴 US-4.1 | 10 | 4 | · | · | 3 | 1 | 2 |
 | 🔴 US-4.2 | 3 | 0 | · | · | 1 | 2 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
@@ -171,22 +171,26 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-2.4 | `AC-2.4.4` | Melodic notes share one reverb and one compressor | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050 (3/3 done) | T049 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.4` | Within-Beat rule, 4-Slot Recipe on a Weak Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.5` | Within-Beat rule, 4-Slot Recipe on a Medium Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.17/1` 🖵 | A silent Slot's counting syllable is not bold, while a sounding one's is | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/2` 🖵 | A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/3` 🖵 | A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.17/4` 🖵 | The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `grid.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050, T166 (3/4 done) | T049, T166 (1/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-4.1 | `AC-4.1.7/1` 🖵 | It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟢 OK |

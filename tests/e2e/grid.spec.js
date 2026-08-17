@@ -350,3 +350,96 @@ test('AC-15.1.1 — the layout adapts across desktop, tablet, and phone', async 
     expect(bodyOverflow, `${size.width}px`).toBeLessThanOrEqual(0);
   }
 });
+
+/* --- a silent Slot recedes (AC-3.1.17) ------------------------------------ */
+
+/** A 4/4 Measure on Straight 16ths with Slot 1 of Beat 1 sounding and the rest off. */
+async function mixedMeasure(page, recipe = 'straight-16ths') {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await page.goto('/');
+  await page.evaluate(async ([r]) => {
+    const { handlers: h } = window.__rm;
+    window.__rm.loadBlank('4/4');
+    for (let b = 0; b < 4; b++) await h.onRecipe(r, 0, b);
+    await h.onSlotTap(0, 0, 0);
+  }, [recipe]);
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('.slot.accent-off').first()).toBeVisible();
+}
+
+const labelStyle = (page, selector) =>
+  page.evaluate((sel) => {
+    const cs = getComputedStyle(document.querySelector(sel));
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const [r, g, b] = cs.color.match(/[\d.]+/g).slice(0, 3).map(Number);
+    return {
+      size: parseFloat(cs.fontSize),
+      weight: Number(cs.fontWeight),
+      luminance: 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b),
+    };
+  }, selector);
+
+test("AC-3.1.17/1 — A silent Slot's counting syllable is not bold, while a sounding one's is", async ({ page }) => {
+  await mixedMeasure(page);
+  const sounding = await labelStyle(page, '.slot:not(.accent-off) .slot-label');
+  const silent = await labelStyle(page, '.slot.accent-off .slot-label');
+
+  expect(sounding.weight).toBeGreaterThanOrEqual(700);
+  expect(silent.weight).toBeLessThanOrEqual(400);
+});
+
+test("AC-3.1.17/2 — A silent Slot's counting syllable is rendered at about three quarters the size of a sounding one's", async ({ page }) => {
+  await mixedMeasure(page);
+  const sounding = await labelStyle(page, '.slot:not(.accent-off) .slot-label');
+  const silent = await labelStyle(page, '.slot.accent-off .slot-label');
+
+  const ratio = silent.size / sounding.size;
+  expect(ratio).toBeGreaterThan(0.65);
+  expect(ratio).toBeLessThan(0.85);
+});
+
+test("AC-3.1.17/3 — A silent Slot's counting syllable is dimmer than a sounding one's, so the distinction survives a reader whose browser clamps small sizes to a minimum", async ({ page }) => {
+  await mixedMeasure(page);
+  const sounding = await labelStyle(page, '.slot:not(.accent-off) .slot-label');
+  const silent = await labelStyle(page, '.slot.accent-off .slot-label');
+  expect(sounding.luminance).toBeGreaterThan(silent.luminance * 1.5);
+
+  // The distinction has to hold once size and weight are gone, which is the
+  // state a minimum-font-size setting and a substituted typeface produce
+  // together. Colour is the only channel neither of them touches.
+  const flattened = await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent = '.slot-label{font-size:16px !important;font-weight:400 !important}';
+    document.head.appendChild(style);
+    void document.body.offsetHeight;
+    const c = (sel) => getComputedStyle(document.querySelector(sel)).color;
+    const out = {
+      sounding: c('.slot:not(.accent-off) .slot-label'),
+      silent: c('.slot.accent-off .slot-label'),
+    };
+    style.remove();
+    return out;
+  });
+  expect(flattened.sounding).not.toBe(flattened.silent);
+});
+
+test('AC-3.1.17/4 — The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail', async ({ page }) => {
+  const barFor = async (recipe) => {
+    await mixedMeasure(page, recipe);
+    return page.evaluate(() => {
+      const slot = document.querySelector('.slot:not(.accent-off)');
+      return {
+        slotWidth: slot.getBoundingClientRect().width,
+        barHeight: parseFloat(getComputedStyle(slot.querySelector('.slot-fill')).height),
+      };
+    });
+  };
+
+  const dense = await barFor('straight-16ths');
+  const sparse = await barFor('straight-8ths');
+
+  // Half as many Slots to a Beat means roughly twice the width each.
+  expect(sparse.slotWidth).toBeGreaterThan(dense.slotWidth * 1.5);
+  // The bar grows with it rather than staying a hairline in a wide cell.
+  expect(sparse.barHeight).toBeGreaterThan(dense.barHeight);
+});
