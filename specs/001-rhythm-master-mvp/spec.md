@@ -1459,11 +1459,13 @@ exist).
   - **Then** the drawer opens automatically
   - **And**, when the Practicing Musician reloads the page again later, it auto-opens again — this happens on every load at mobile width, not only the first-ever visit
 
-- **AC-15.1.6** — Mobile drawer closes on Pattern selection
+- **AC-15.1.6** — Mobile drawer closes whenever a Pattern is loaded
   - **Given** a 390px-wide (mobile) viewport with the drawer open
-  - **When** the Practicing Musician selects a Pattern from it
+  - **When** the Practicing Musician selects a Pattern from it, **or** creates a new one from it
   - **Then** the drawer closes automatically, revealing the loaded Pattern in the main panel
-  - **And**, given the same action on a 900px (tablet) or 1400px (desktop) viewport, the sidebar stays visible, since it isn't a drawer there
+  - **And**, given instead they search, filter by Tag or Rating, rate a Pattern, or add a Tag, the drawer stays open — those are work done *inside* the library, and dismissing it would interrupt them
+  - **And**, given any of these on a 900px (tablet) or 1400px (desktop) viewport, the sidebar stays visible, since it isn't a drawer there
+  - *(The rule is "did this change what the main panel shows", not "was this a particular control" — otherwise every new way to load a Pattern has to remember to close the drawer, and one of them will not.)*
 
 - **AC-15.1.7** — Secondary control sections collapse to accordions on mobile
   - **Given** a 390px-wide (mobile) viewport

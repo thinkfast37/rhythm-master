@@ -731,10 +731,20 @@ export function mount(root) {
     }
   });
 
-  // Selecting a Pattern closes the drawer on mobile, revealing what was just
-  // loaded; above mobile the sidebar is a column and stays put (AC-15.1.6).
+  /*
+   * Anything that loads a Pattern into the main panel closes the drawer on
+   * mobile, so the musician sees what just happened instead of having to dismiss
+   * the drawer to find out (AC-15.1.6). Above mobile the sidebar is a column and
+   * stays put.
+   *
+   * The rule is "did this change what the main panel shows", not "was this a
+   * particular button" — searching, filtering, rating and tagging all leave the
+   * drawer open, because you are still working in it.
+   */
+  const LOADS_A_PATTERN = ['open-pattern', 'new-pattern'];
   sidebar.addEventListener('click', (event) => {
-    if (event.target.closest('[data-action="open-pattern"]')) {
+    const action = event.target.closest('[data-action]')?.dataset.action;
+    if (LOADS_A_PATTERN.includes(action)) {
       closeDrawer(shell);
       syncDrawerToggle();
     }

@@ -210,3 +210,35 @@ test('AC-15.1.1 — the library is reachable at every width', async ({ page }) =
     await expect(page.locator('.pattern-item').first()).toBeVisible();
   }
 });
+
+test('AC-15.1.6 — creating a new Pattern closes the drawer so you can see it', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'open');
+
+  await page.locator('[data-action="new-pattern"]').click();
+
+  // The drawer gets out of the way, revealing the Pattern that was just made.
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
+  await expect(page.locator('.pattern-title')).toHaveValue('New Pattern');
+  await expect(page.locator('.grid .measure').first()).toBeInViewport();
+});
+
+test('AC-15.1.6 — working inside the drawer leaves it open', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'open');
+
+  // Searching, filtering and rating are all work done *in* the library.
+  await page.locator('.library-search').fill('clave');
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'open');
+
+  await page.locator('.rating-option', { hasText: 'All' }).click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'open');
+
+  await page.locator('.pattern-item').first().locator('.star').nth(2).click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'open');
+
+  await page.locator('.tag-filter').first().click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'open');
+});
