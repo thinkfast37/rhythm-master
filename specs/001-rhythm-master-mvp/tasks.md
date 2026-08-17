@@ -931,3 +931,14 @@ record is complete rather than starting mid-stream.
   **The append is 203 insertions and 0 deletions.** Ids are positional (`s_${index + 1}`), so anything but an append renumbers every later Pattern and orphans the ratings and added Tags `rm.overlays.v1` keys by id.
 
   **`pattern-intake close` cannot close #32, and that is correct behaviour, not a bug.** It matches an issue to the library by name, and this Pattern shipped under a different one — so it refuses rather than guessing. The closing comment was posted by hand, naming `s_208`, only after the deploy went green.
+- [X] T179 **[spec defect]** Two stale ACs corrected, and US-1.4's HIGH traceability gaps closed — `specs/001-rhythm-master-mvp/spec.md`, `tests/e2e/grid.spec.js`. Revises AC-1.1.5 and AC-1.4.2; covers AC-1.1.5/1, AC-1.1.5/2, AC-1.4.1, AC-1.4.2.
+
+  Found while triaging the 77 `check:trace` HIGH findings, before writing any test for them. Both ACs described something that was never built, and both were reporting as covered.
+
+  **AC-1.1.5 said any Measure's meter change prompts apply-to-all; the code has always gated that prompt on the first Measure** (`main.js:279`). The maintainer settled it as a spec defect: only the first Measure meaningfully stands for the whole Pattern, and prompting on each of up to eight Measures nags without informing. The AC now says so, and gained Cases — adding the "any other Measure" clause made it compound, which `T4` caught immediately.
+
+  **AC-1.4.2's title said 10 while its body listed eleven** and `TIME_SIGNATURES` held eleven; 1/4 was added without the title following. Not merely untidy: `T5` matches a test name against the AC *title*, so a verbatim-named test would have claimed ten while proving eleven.
+
+  **The four tests are e2e because all four criteria are UI-level.** The two that previously named AC-1.4.1 and AC-1.4.2 proved neither — one duplicated AC-1.4.1's subject, the other asserted beat counts that AC-1.2.2 already covers — so they were rewritten to the criteria rather than retitled.
+
+  **The first drafts failed, and the tests were wrong, not the code.** They assumed the editor opens on a blank 4/4 Pattern; it opens on a shipped one, so the first click hit US-7.3's naming guard and the meter picker never opened. Fixed by starting from `loadBlank('4/4')`, which hands back an owned Pattern.
