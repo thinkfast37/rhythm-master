@@ -22,7 +22,7 @@ import {
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
-import { playClick, accentVoice } from './audio/voices.js';
+import { playClick, accentVoice, playPercussive } from './audio/voices.js';
 import * as patternStore from './storage/patterns.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
@@ -56,8 +56,7 @@ import {
   askNewPatternName,
 } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
-import * as piano from './audio/piano.js';
-import { getContext } from './audio/context.js';
+import * as melodic from './audio/melodic.js';
 
 const state = {
   pattern: create(),
@@ -68,7 +67,7 @@ const state = {
   loop: 0,
   /** Which Slot the pitch controls act on, in Melodic mode (US-2.2). */
   selectedSlot: null,
-  pianoStatus: piano.getStatus(),
+  soundStatus: melodic.getStatus(),
   /** Library view state: search text, Tag and rating filters, and what is open. */
   view: { query: '', tag: null, minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
@@ -335,19 +334,9 @@ const handlers = {
     state.loop = 0;
     render();
 
-    /*
-     * Melodic playback waits for samples and shows a loading state; Percussive
-     * never waits on them at all (AC-2.4.3, Principle III).
-     */
-    if (state.pattern.soundMode === 'melodic') {
-      state.pianoStatus = { status: 'loading', error: null };
-      render();
-      await piano.load(getContext());
-      state.pianoStatus = piano.getStatus();
-      render();
-      if (!state.isPlaying) return; // stopped while loading
-    }
-
+    // Both Sound Modes are pure Web Audio synthesis, so neither waits on an
+    // asset — nothing to load, nothing to block on (AC-2.4.3).
+    state.soundStatus = melodic.getStatus();
     await transport.start(state.pattern, state.settings);
   },
 
@@ -564,7 +553,7 @@ const handlers = {
  * cannot drift from the audio (Principle III).
  */
 const transport = createTransport({
-  playMelodic: piano.playMelodic,
+  playMelodic: melodic.playMelodic,
   onPosition(position) {
     state.transportPosition = position;
     render();
@@ -818,7 +807,7 @@ if (typeof window !== 'undefined') {
     currentDuplicates,
     currentFamily,
     unresolvedLibraryDuplicates,
-    piano,
+    melodic,
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {
       let p = create(name);
@@ -832,8 +821,8 @@ if (typeof window !== 'undefined') {
 /** Test seams. */
 if (typeof window !== 'undefined') {
   window.__rmRenderGrid = renderGrid;
-  window.__rmAudio = { playClick, accentVoice };
-  window.__rmPianoDynamics = () => piano.DYNAMICS;
+  window.__rmAudio = { playClick, accentVoice, playPercussive };
+  window.__rmMelodicDynamics = () => melodic.DYNAMICS;
   window.__rmTimeline = { buildTimeline, buildBeatGrid };
 
   window.__rmMidi = () => {

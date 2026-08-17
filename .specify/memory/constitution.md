@@ -1,6 +1,14 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.0.0 → 3.1.0 (see also 2.0.0 → 3.0.0 below)
+
+3.1.0 — Principle V: retired the standing exception permitting a sampled piano soundfont.
+  It is now unused: both Sound Modes are Web Audio synthesis and the app ships no audio
+  assets. MINOR rather than PATCH because removing an exception tightens the dependency
+  rule rather than merely clarifying it. See research.md D-003.
+
+Earlier:
 Version change: 2.0.0 → 3.0.0
 Modified principles:
   - Principle II — retitled from "Grid Consistency & Non-Color Encoding" to "Grid Consistency &
@@ -180,10 +188,11 @@ not deferred features.
 - The dependency footprint MUST be kept minimal. Prefer native Web APIs (Web Audio,
   Canvas, SVG) over heavyweight UI frameworks. A new dependency requires explicit
   justification that it cannot reasonably be replaced with a modest amount of direct
-  DOM/API code. **Standing exception**: a sampled piano soundfont is an accepted
-  dependency — synthesized approximation was evaluated and rejected as insufficiently
-  musical for melodic practice. This exception covers sample assets and a thin
-  playback wrapper; it does not open the door to general audio frameworks.
+  DOM/API code. The app ships **no audio assets at all**: both Sound Modes are Web
+  Audio synthesis, and the melodic reverb impulse is generated at runtime. A former
+  standing exception permitting a sampled piano soundfont was retired on 2026-08-17,
+  unused — the maintainer preferred the synthesized engine once both were built and
+  heard (research.md D-003).
 - YAGNI applies strictly: do not build configuration hooks, plugin systems, or
   abstractions for hypothetical features. Implement the minimum surface area that
   satisfies current requirements.
@@ -276,4 +285,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17
+**Version**: 3.1.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17

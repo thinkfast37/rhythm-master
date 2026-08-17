@@ -37,17 +37,6 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2
 
 ## Before release
 
-- **Vendor the piano soundfont** — one command, on a machine with open internet:
-
-  ```bash
-  npm run fetch:soundfont
-  git add public/soundfonts && git commit -m "Vendor the piano soundfont"
-  ```
-
-  The app already loads it from its own origin; the files just aren't present yet.
-  Until they are, Melodic playback uses a synthesised voice at the correct pitch and
-  octave, with a status message saying so. Percussive playback is pure synthesis and
-  is unaffected.
 - **Run the 30-minute continuous playback check by hand** (quickstart.md V7). The
   automated suite asserts the property that makes it hold — absolute-origin
   scheduling — over 30 seconds and 500 loops, not the full half hour.
@@ -62,7 +51,7 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2
   musician would naturally give that metric position, rather than a flat default, with
   tap-to-cycle override.
 - **Melodic mode** — assign an explicit scale degree and octave per Slot, played back
-  through a sampled piano, transposable to any key.
+  through the predecessor's synthesis engine, transposable to any key.
 - **Practice tooling** — 18–220 BPM, metronome, count-in, per-subdivision-group swing,
   and three counting systems (Takadimi, 1-e-&-a, Numbered).
 - **Library** — rate, tag, search, combine, duplicate, and MIDI-export Patterns, with

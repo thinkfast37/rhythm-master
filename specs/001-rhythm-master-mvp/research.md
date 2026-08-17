@@ -49,36 +49,37 @@ what makes "every AC has a test" an enforced claim rather than an aspiration.
 
 ---
 
-## D-003 — Piano samples for Melodic mode
+## D-003 — Melodic and percussive voicing
 
-**Decision**: A full sampled soundfont via `soundfont-player`, using an acoustic grand piano set.
+**Decision (revised 2026-08-17)**: port the predecessor's synthesised audio engine verbatim, for
+both Sound Modes. No samples, no soundfont, no audio assets at all.
 
-**Rationale**: US-2.4 exists specifically because synthesised approximation sounded wrong for
-melodic practice. A complete sampled set means every note is a real recorded note, with no stretch
-artefacts at the extremes of the octave range. The constitution already carries a standing
-exception permitting exactly this dependency.
+**How this changed.** The original decision was a full sampled soundfont, on the reasoning that
+US-2.4 existed because synthesis "sounded wrong for melodic practice". That reasoning was
+second-hand — it came from the predecessor's early oscillator voicing, not from the engine the
+predecessor actually ships today, which had since gained a chorus, a filter sweep, a synthesised
+reverb, and a compressor. Once the rebuild was playable the maintainer heard both and preferred the
+predecessor's. The sampled path was removed.
 
-**Alternatives considered**:
-- *Small bundled sample set with pitch-shifting* — a few MB in-repo, fully offline, no third-party
-  code. Rejected in favour of sound quality; stretch artefacts are most audible at the range
-  extremes, which is where the octave controls invite the user to go.
-- *Pure Web Audio synthesis* — zero bytes and instant. Rejected because it is the thing US-2.4 was
-  written to replace.
+**What is ported:**
 
-**RESOLVED (2026-08-17)**: the soundfont is **vendored, not fetched from a CDN**. It lives in
-`public/soundfonts/`, downloaded once by `npm run fetch:soundfont` and committed. A runtime
-dependency on a third party's host would mean the app's core Melodic feature breaks when that host
-moves a file, which sits badly with Principle V's static-artifact goal. An e2e test asserts that
-playback makes no third-party request at all.
+- *Percussive*: one sine oscillator per hit, bending down to 0.85× over a 0.1 s decay, through the
+  shared compressor. The pitch bend is what makes it read as a struck drum rather than a beep — its
+  absence was the specific reason the first rebuild attempt sounded harsh.
+- *Melodic*: three detuned sine oscillators (chorus) into a shared gain envelope shaped per Accent
+  Level, a low-pass sweeping 2000 → 600 Hz over the decay, then a dry path plus a 35% reverb send.
+- *Shared*: one `DynamicsCompressor` and one `ConvolverNode` whose impulse response is synthesised
+  from decaying noise at runtime, so there is still no audio file anywhere.
 
-Until the files are vendored, Melodic playback degrades to a synthesised voice at the correct pitch
-and octave, with a status message naming the command to fix it — never silence.
+**What this bought back.** The app is a genuinely self-contained static artifact again — no CDN, no
+vendored megabytes, nothing to fetch, nothing to cache, and no melodic loading state to design
+around. Constitution Principle V's standing sampled-piano exception is now unused; it can be
+retired at the next amendment.
 
-**Consequences to handle in implementation**: The soundfont is loaded asynchronously, so
-Principle III's non-blocking rule is load-bearing here. Percussive playback must be fully available
-before any sample has loaded, and Melodic play must show a loading state rather than failing
-silently (AC-2.4.3). The fetch must be cached so a second melodic play is instant, and a failed
-fetch must surface as a clear message rather than silence.
+**Alternatives considered**: a sampled soundfont from a CDN (rejected — someone else's uptime for a
+core feature); a vendored soundfont (built, then removed — several MB in the repo for a sound the
+maintainer liked less); a small pitch-shifted sample set (rejected earlier on stretch artefacts, and
+moot now).
 
 ---
 

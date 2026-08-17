@@ -240,7 +240,6 @@ body {
 .slot.accent-medium .slot-pitch,
 .slot.accent-strong .slot-pitch { color: #0b0c15; }
 .pitch-hint { margin: 0; font-size: 11px; color: var(--ink-dim); }
-.piano-status { flex-basis: 100%; margin: 0; font-size: 11px; color: var(--ink-dim); }
 
 /* --- library ------------------------------------------------------------- */
 

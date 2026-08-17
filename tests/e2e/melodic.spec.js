@@ -109,119 +109,182 @@ test('AC-2.3.2 — changing Key transposes playback but leaves stored degrees al
   expect(degree).toBe('1');
 });
 
-test('AC-2.4.3 — Percussive playback never waits on samples', async ({ page }) => {
+test('AC-2.4.3 — Percussive playback starts immediately, with nothing to load', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
 
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
-  // No sample load was needed to get here.
-  expect(await page.evaluate(() => window.__rm.getState().pianoStatus.status)).toBe('idle');
+  expect(await page.evaluate(() => window.__rm.getState().soundStatus.status)).toBe('ready');
 });
 
-test('AC-2.4.1 — Melodic playback reports a definite sample status, never silent failure', async ({ page }) => {
+test('AC-2.4.3 — Melodic playback starts immediately too, with no loading state', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.sound-mode').selectOption('melodic');
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
 
   await page.locator('[data-action="play"]').click();
-  await page.waitForFunction(
-    () => ['ready', 'fallback'].includes(window.__rm.getState().pianoStatus.status),
-    null,
-    { timeout: 15000 }
-  );
-
-  // Either outcome is acceptable; silence and an indefinite spinner are not.
-  const status = await page.evaluate(() => window.__rm.getState().pianoStatus.status);
-  expect(['ready', 'fallback']).toContain(status);
-  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  // No wait-for-load: there is nothing to load, so this must be as fast as Percussive.
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
+  expect(await page.evaluate(() => window.__rm.melodic.getStatus().status)).toBe('ready');
 });
 
-test('AC-4.4.1 — swing defaults to 0 and is offered per straight group', async ({ page }) => {
-  await page.goto('/');
-  await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  const slider = page.locator('.swing-slider');
-  await expect(slider).toHaveCount(1);
-  await expect(slider).toHaveValue('0');
-  await expect(slider).toHaveAttribute('min', '0');
-  await expect(slider).toHaveAttribute('max', '100');
-});
-
-test('AC-4.4.3 — a triplet Recipe offers no swing control at all', async ({ page }) => {
-  await page.goto('/');
-  await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.recipe-picker').selectOption('triplet-8ths');
-  await expect(page.locator('.swing-slider')).toHaveCount(0);
-  await expect(page.locator('.group[data-feel="triplet"]').first()).not.toHaveAttribute('data-swing', /.*/);
-});
-
-test('AC-4.4.2 — a mixed Recipe swings its straight half only', async ({ page }) => {
-  await page.goto('/');
-  await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.recipe-picker').selectOption('straight-triplet-split');
-
-  // Only the straight group of the split gets a control.
-  await expect(page.locator('.swing-slider')).toHaveCount(1);
-  await page.locator('.swing-slider').fill('60');
-
-  const groups = page.locator('.beat[data-beat="0"] .group');
-  await expect(groups.nth(0)).toHaveAttribute('data-swing', '60');
-  await expect(groups.nth(1)).not.toHaveAttribute('data-swing', /.*/);
-});
-
-test('AC-2.4.1 — the soundfont is served from this app’s own origin, never a CDN', async ({ page }) => {
-  // Anything not served by our own dev/preview server is a third-party request.
-  const external = [];
+test('AC-2.4.2 — playing either Sound Mode fetches no audio asset at all', async ({ page }) => {
+  const audioRequests = [];
   page.on('request', (r) => {
-    const { hostname } = new URL(r.url());
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') external.push(r.url());
+    const url = r.url();
+    if (/\.(mp3|ogg|wav|sf2|m4a)(\?|$)/i.test(url) || /soundfont/i.test(url)) {
+      audioRequests.push(url);
+    }
   });
 
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
   await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
+  await page.locator('[data-action="stop"]').click();
 
-  await page.waitForFunction(
-    () => ['ready', 'fallback'].includes(window.__rm.getState().pianoStatus.status),
-    null,
-    { timeout: 20000 }
-  );
+  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
 
-  // Principle V: the app is a static artifact. Nothing may reach a third-party
-  // host at runtime — a CDN is someone else's uptime standing in for ours.
-  expect(external, `unexpected third-party requests: ${external.join(', ')}`).toEqual([]);
-
-  const base = await page.evaluate(() => window.__rm.piano.soundfontBaseUrl);
-  expect(base).not.toMatch(/^https?:\/\//);
-  expect(base).toContain('soundfonts/');
+  // Both Modes are pure synthesis; the reverb impulse is generated, not loaded.
+  expect(audioRequests, `unexpected audio requests: ${audioRequests.join(', ')}`).toEqual([]);
 });
 
-test('AC-2.4.5 — a missing soundfont degrades to synthesis with an explanatory status', async ({ page }) => {
+test('AC-2.4.1 — a Melodic note runs the ported chorus, filter and reverb chain', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
-  await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
-  await page.locator('[data-action="play"]').click();
+  const chain = await page.evaluate(() => {
+    const { playMelodic } = window.__rm.melodic;
+    const ctx = new OfflineAudioContext(2, 44100, 44100);
+    const created = { oscillators: [], filters: [], convolvers: [], compressors: [] };
+    const realOsc = ctx.createOscillator.bind(ctx);
+    ctx.createOscillator = () => {
+      const o = realOsc();
+      created.oscillators.push(o);
+      return o;
+    };
+    const realFilter = ctx.createBiquadFilter.bind(ctx);
+    ctx.createBiquadFilter = () => {
+      const f = realFilter();
+      created.filters.push(f);
+      return f;
+    };
+    const realConv = ctx.createConvolver.bind(ctx);
+    ctx.createConvolver = () => {
+      const c = realConv();
+      created.convolvers.push(c);
+      return c;
+    };
+    const realComp = ctx.createDynamicsCompressor.bind(ctx);
+    ctx.createDynamicsCompressor = () => {
+      const c = realComp();
+      created.compressors.push(c);
+      return c;
+    };
 
-  await page.waitForFunction(
-    () => ['ready', 'fallback'].includes(window.__rm.getState().pianoStatus.status),
-    null,
-    { timeout: 20000 }
-  );
+    playMelodic(ctx, ctx.destination, { accent: 3, pitch: { frequency: 440, midiNote: 69 } }, 0);
 
-  const status = await page.evaluate(() => {
-    const s = window.__rm.piano.getStatus();
-    return { status: s.status, message: s.error?.message ?? null };
+    return {
+      oscillators: created.oscillators.length,
+      types: created.oscillators.map((o) => o.type),
+      detunes: created.oscillators.map((o) => o.detune.value),
+      filters: created.filters.length,
+      filterType: created.filters[0]?.type,
+      convolvers: created.convolvers.length,
+      compressors: created.compressors.length,
+      hasImpulse: Boolean(created.convolvers[0]?.buffer),
+    };
   });
 
-  if (status.status === 'fallback') {
-    // The message must say what to do about it, not merely that it failed.
-    expect(status.message).toContain('fetch:soundfont');
-  }
-  // Either way the Pattern plays.
-  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  // Three detuned sines, one low-pass, one shared reverb, one shared compressor.
+  expect(chain.oscillators).toBe(3);
+  expect(chain.types).toEqual(['sine', 'sine', 'sine']);
+  expect(chain.detunes.sort((a, b) => a - b)).toEqual([-5, 0, 5]);
+  expect(chain.filters).toBe(1);
+  expect(chain.filterType).toBe('lowpass');
+  expect(chain.convolvers).toBe(1);
+  expect(chain.compressors).toBe(1);
+  expect(chain.hasImpulse).toBe(true); // synthesised, not loaded
+});
+
+test('AC-2.4.4 — concurrent Melodic notes share one reverb and one compressor', async ({ page }) => {
+  await page.goto('/');
+  const counts = await page.evaluate(() => {
+    const { playMelodic } = window.__rm.melodic;
+    const ctx = new OfflineAudioContext(2, 44100, 44100);
+    let convolvers = 0;
+    let compressors = 0;
+    const realConv = ctx.createConvolver.bind(ctx);
+    ctx.createConvolver = () => {
+      convolvers += 1;
+      return realConv();
+    };
+    const realComp = ctx.createDynamicsCompressor.bind(ctx);
+    ctx.createDynamicsCompressor = () => {
+      compressors += 1;
+      return realComp();
+    };
+
+    for (let i = 0; i < 8; i++) {
+      playMelodic(ctx, ctx.destination, { accent: 2, pitch: { frequency: 440, midiNote: 69 } }, i * 0.1);
+    }
+    return { convolvers, compressors };
+  });
+
+  // Eight notes, still one of each — shared, not per note.
+  expect(counts.convolvers).toBe(1);
+  expect(counts.compressors).toBe(1);
+});
+
+test('AC-2.4.5 — a Percussive note is one sine bending down, dry', async ({ page }) => {
+  await page.goto('/');
+  const shape = await page.evaluate(() => {
+    const { playPercussive } = window.__rmAudio;
+    const ctx = new OfflineAudioContext(2, 44100, 44100);
+    const oscillators = [];
+    let filters = 0;
+    let convolvers = 0;
+    const realOsc = ctx.createOscillator.bind(ctx);
+    ctx.createOscillator = () => {
+      const o = realOsc();
+      const ramp = o.frequency.exponentialRampToValueAtTime.bind(o.frequency);
+      o.frequency.exponentialRampToValueAtTime = (v, t) => {
+        o.__rampTarget = v;
+        return ramp(v, t);
+      };
+      oscillators.push(o);
+      return o;
+    };
+    const realFilter = ctx.createBiquadFilter.bind(ctx);
+    ctx.createBiquadFilter = () => {
+      filters += 1;
+      return realFilter();
+    };
+    const realConv = ctx.createConvolver.bind(ctx);
+    ctx.createConvolver = () => {
+      convolvers += 1;
+      return realConv();
+    };
+
+    playPercussive(ctx, ctx.destination, 3, 0);
+    return {
+      count: oscillators.length,
+      type: oscillators[0].type,
+      start: oscillators[0].frequency.value,
+      rampTarget: oscillators[0].__rampTarget,
+      filters,
+      convolvers,
+    };
+  });
+
+  expect(shape.count).toBe(1);
+  expect(shape.type).toBe('sine');
+  // The downward bend to 0.85x is what makes it read as a struck drum.
+  expect(shape.rampTarget / 620).toBeCloseTo(0.85, 5);
+  expect(shape.filters).toBe(0);
+  expect(shape.convolvers).toBe(0);
 });

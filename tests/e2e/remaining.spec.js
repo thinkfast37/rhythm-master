@@ -121,49 +121,48 @@ test('AC-2.3.3 — a Percussive Pattern has no Key control at all', async ({ pag
 
 // --- US-2.4: sampled piano --------------------------------------------------
 
-test('AC-2.4.2 — the app is interactive immediately; samples never gate it', async ({ page }) => {
+test('AC-2.4.2 — the app is interactive immediately, with no audio asset to gate it', async ({ page }) => {
   await page.goto('/');
-  // Editing and browsing work with the soundfont still untouched.
-  expect(await page.evaluate(() => window.__rm.piano.getStatus().status)).toBe('idle');
+  // Nothing to load, so nothing can be waiting.
+  expect(await page.evaluate(() => window.__rm.melodic.getStatus().status)).toBe('ready');
   await expect(page.locator('.pattern-item').first()).toBeVisible();
   await page.locator('.library-search').fill('clave');
   await expect(page.locator('.pattern-item').first()).toBeVisible();
 });
 
-test('AC-2.4.4 — a second Melodic play reuses the loaded instrument rather than reloading', async ({
-  page,
-}) => {
+test('AC-2.4.4 — a second Melodic play needs no reload, because nothing loads', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.sound-mode').selectOption('melodic');
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
 
   await page.locator('[data-action="play"]').click();
-  await page.waitForFunction(
-    () => ['ready', 'fallback'].includes(window.__rm.piano.getStatus().status),
-    null,
-    { timeout: 20000 }
-  );
-  const first = await page.evaluate(() => window.__rm.piano.getStatus().status);
-
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
   await page.locator('[data-action="stop"]').click();
-  await page.locator('[data-action="play"]').click();
 
-  // Resolved state is kept, so the second play does not go through loading again.
-  expect(await page.evaluate(() => window.__rm.piano.getStatus().status)).toBe(first);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
+  expect(await page.evaluate(() => window.__rm.melodic.getStatus().status)).toBe('ready');
 });
 
-test('AC-2.4.5 — Percussive voices stay single-oscillator synthesis with no sampled path', async ({
+test('AC-2.4.5 — Percussive playback never builds the melodic reverb it does not use', async ({
   page,
 }) => {
   await page.goto('/');
-  await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
-  await page.locator('[data-action="play"]').click();
-  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
-
-  // Percussive playback never touches the soundfont.
-  expect(await page.evaluate(() => window.__rm.piano.getStatus().status)).toBe('idle');
+  const built = await page.evaluate(() => {
+    const { playPercussive } = window.__rmAudio;
+    const ctx = new OfflineAudioContext(2, 44100, 44100);
+    let convolvers = 0;
+    const real = ctx.createConvolver.bind(ctx);
+    ctx.createConvolver = () => {
+      convolvers += 1;
+      return real();
+    };
+    for (let i = 0; i < 4; i++) playPercussive(ctx, ctx.destination, 2, i * 0.1);
+    return convolvers;
+  });
+  // A rhythm-only session should not synthesise a 1.5s impulse response.
+  expect(built).toBe(0);
 });
 
 // --- US-6.1: ratings --------------------------------------------------------
@@ -679,7 +678,7 @@ test('AC-3.1.15 — melodic accent changes gain and decay, never pitch', async (
   expect(events[0].accent).not.toBe(events[1].accent);
   expect(events[0].midi).toBe(events[1].midi);
 
-  const dynamics = await page.evaluate(() => window.__rmPianoDynamics());
+  const dynamics = await page.evaluate(() => window.__rmMelodicDynamics());
   expect(dynamics[3].gain).toBeGreaterThan(dynamics[1].gain);
   expect(dynamics[3].decay).not.toBe(dynamics[1].decay);
 });

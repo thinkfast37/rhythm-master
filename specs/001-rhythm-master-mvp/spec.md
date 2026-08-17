@@ -422,41 +422,42 @@ exist).
 
 ---
 
-### User Story 8 - Sampled piano playback
+### User Story 8 - Audio quality
 
 *Traceability: `US-2.4` — Audio quality*
 
-**As** the Practicing Musician, **I want** Melodic notes to sound like an actual piano rather than a synthesized tone, **so that** practicing melodic material sounds musically real, while the app still loads and runs entirely in a browser.
+**As** the Practicing Musician, **I want** both Sound Modes to sound the way the predecessor application did, **so that** what I practise against is the sound I already know, and the app stays a self-contained static artifact with no audio assets to fetch.
 
-**Independent Test**: Load the app and assert the soundfont downloads asynchronously, Percussive playback is never blocked by it, and Melodic Play waits with a loading state.
+*(Revised 2026-08-17. This story originally specified a sampled piano, on the assumption that synthesis sounded insufficiently musical. Built and heard, the maintainer preferred the predecessor's synthesised engine for both Modes. That engine is now ported verbatim — see research.md D-003. The sampled-piano path and its soundfont dependency were removed.)*
+
+**Independent Test**: Play both Sound Modes and assert each routes through the ported chain, that no network request is made for audio, and that neither Mode waits on an asset.
 
 **Acceptance Scenarios**:
 
-- **AC-2.4.1** — Melodic playback uses sampled piano, not synthesis
+- **AC-2.4.1** — Melodic playback uses the ported synthesis chain
   - **Given** a Melodic Pattern during playback
   - **When** any note sounds
-  - **Then** it is produced from real recorded piano samples (a compact soundfont), covering the full Pitch range the app supports (octaves 1–7, degrees 1–15 per US-2.2), not a synthesized waveform
+  - **Then** it is produced by three detuned sine oscillators through a shared gain envelope, a low-pass filter sweeping 2000 Hz down to 600 Hz across the note's decay, and both a dry path and a reverb send — the predecessor's chain, unchanged
 
-- **AC-2.4.2** — Soundfont loads in the background without blocking the app
-  - **Given** the app is opened
-  - **When** the page loads
-  - **Then** the piano soundfont begins downloading in the background, and the app remains interactive immediately — the Composer can browse the library, view, and edit Patterns without waiting for it
+- **AC-2.4.2** — No audio asset is ever fetched
+  - **Given** the app is opened and both Sound Modes are played
+  - **When** network activity is observed
+  - **Then** no request is made for any audio asset, from this origin or any other — both Modes are pure Web Audio synthesis, and the reverb impulse is generated at runtime rather than loaded
 
-- **AC-2.4.3** — Melodic Play waits on the soundfont; Percussive Play doesn't
-  - **Given** the piano soundfont has not yet finished downloading
-  - **When** the Composer opens a Melodic Pattern and looks at Play
-  - **Then** Play shows a loading state and does not produce sound until the soundfont finishes downloading, at which point it becomes playable normally
-  - **And**, given a Percussive Pattern in the same unloaded state, Play works immediately and is unaffected, since Percussive audio has no dependency on the soundfont
+- **AC-2.4.3** — Neither Sound Mode waits on anything to load
+  - **Given** the app has just opened
+  - **When** the Composer presses Play on a Melodic Pattern, or on a Percussive one
+  - **Then** each sounds immediately, with no loading state — there is nothing to load, so Melodic has no dependency Percussive lacks
 
-- **AC-2.4.4** — Soundfont is cached after first load
-  - **Given** the piano soundfont has been downloaded once in the browser
-  - **When** the Composer reloads the app or returns in a later session
-  - **Then** it loads from cache rather than re-downloading, and Play is available for Melodic Patterns without the AC-2.4.3 loading delay
+- **AC-2.4.4** — Melodic notes share one reverb and one compressor
+  - **Given** several Melodic notes sounding at once
+  - **When** they play
+  - **Then** they route through a single shared convolver and a single shared dynamics compressor rather than one per note, so overlapping notes cost nothing extra and stacked notes cannot clip
 
-- **AC-2.4.5** — Percussive playback stays pure synthesis
+- **AC-2.4.5** — Percussive playback stays dry and single-oscillator
   - **Given** a Percussive Pattern during playback
   - **When** any note sounds
-  - **Then** it is produced via a single-oscillator synthesized path with no chorus, filter, or reverb, routed only through shared dynamics compression — Percussive audio remains pure Web Audio API synthesis, unaffected by AC-2.4.1's shift to sampled piano
+  - **Then** it is a single sine oscillator bending down to 0.85× its starting frequency across a 0.1 s decay, routed through the shared compressor only — no chorus, no filter, no reverb
 
 ---
 

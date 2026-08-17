@@ -14,8 +14,7 @@
     "coverage:ac": "node tests/ac-coverage.js",
     "validate:seed": "node tools/validate-seed.js",
     "check:cvd": "node tools/check-cvd.js",
-    "lint": "eslint .",
-    "fetch:soundfont": "node tools/fetch-soundfont.js"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -24,8 +23,5 @@
     "prettier": "^3.9.6",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
-  },
-  "dependencies": {
-    "soundfont-player": "^0.12.0"
   }
 }

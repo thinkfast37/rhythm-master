@@ -1,65 +1,78 @@
 /**
- * Percussive voices and the metronome click.
+ * Percussive voices and the metronome click, ported from the predecessor's
+ * engine — the sound the maintainer actually practises against.
  *
- * Accent Level drives both amplitude and brightness, deterministically — never
- * randomised (AC-3.1.14). In Percussive mode the syllable name is a visual
- * mnemonic only; sonic identity comes entirely from accent.
+ * Accent Level drives amplitude and pitch deterministically, never randomly
+ * (AC-3.1.14). In Percussive mode the syllable name is a visual mnemonic only;
+ * sonic identity is entirely accent-driven.
  */
+import { ensureCompressor } from './nodes.js';
 
-/** Fixed per level. Carried over from the predecessor's percussive design. */
-const VOICE = {
-  1: { frequency: 200, gain: 0.35 },
-  2: { frequency: 370, gain: 0.6 },
-  3: { frequency: 620, gain: 0.88 },
-};
+/** Amplitude per Accent Level, carried over unchanged from the predecessor. */
+export const ACCENT_AMPS = { 1: 0.35, 2: 0.6, 3: 0.88 };
+
+/** Base frequency per level. Higher and louder as the accent strengthens. */
+const ACCENT_FREQUENCIES = { 1: 200, 2: 370, 3: 620 };
 
 const DECAY_SECONDS = 0.1;
 
 export function accentVoice(accent) {
-  const voice = VOICE[accent];
-  if (!voice) throw new Error(`No percussive voice for Accent Level ${accent}`);
-  return voice;
+  const gain = ACCENT_AMPS[accent];
+  const frequency = ACCENT_FREQUENCIES[accent];
+  if (gain === undefined) throw new Error(`No percussive voice for Accent Level ${accent}`);
+  return { frequency, gain };
 }
 
 /**
- * Schedule one percussive hit at an absolute audio-clock time.
- * Uniform decay across levels, so accents differ by weight rather than length.
+ * One percussive hit at an absolute audio-clock time.
+ *
+ * A sine with a downward pitch bend to 0.85× over the decay — that bend is what
+ * makes it read as a struck drum rather than a beep, and it is the single
+ * biggest difference from a plain oscillator tone. Routed through the shared
+ * compressor only: no chorus, filter, or reverb (AC-2.4.5).
  */
-export function playPercussive(ctx, destination, accent, when) {
-  const { frequency, gain } = accentVoice(accent);
+export function playPercussive(ctx, _destination, accent, when) {
+  const compressor = ensureCompressor(ctx);
+  const { frequency, gain: amp } = accentVoice(accent);
 
   const osc = ctx.createOscillator();
-  osc.type = 'square';
+  osc.type = 'sine';
   osc.frequency.setValueAtTime(frequency, when);
+  osc.frequency.exponentialRampToValueAtTime(frequency * 0.85, when + DECAY_SECONDS);
 
   const env = ctx.createGain();
-  env.gain.setValueAtTime(gain, when);
-  env.gain.exponentialRampToValueAtTime(0.0001, when + DECAY_SECONDS);
+  env.gain.setValueAtTime(0.001, when);
+  env.gain.linearRampToValueAtTime(amp, when + 0.004);
+  env.gain.exponentialRampToValueAtTime(0.001, when + DECAY_SECONDS);
 
-  osc.connect(env).connect(destination);
+  osc.connect(env);
+  env.connect(compressor);
   osc.start(when);
-  osc.stop(when + DECAY_SECONDS);
+  osc.stop(when + DECAY_SECONDS + 0.01);
   return osc;
 }
 
 /**
- * The metronome click.
+ * The metronome click: a short square at 1100 Hz.
  *
- * Deliberately a short high sine well above the percussive voices' 200–620 Hz
- * range, so the reference pulse is never mistaken for Pattern content
+ * Deliberately above the percussive voices' 200–620 Hz range and a different
+ * waveform, so the reference pulse is never mistaken for Pattern content
  * (Constitution, Audio clarity).
  */
-export function playClick(ctx, destination, { downbeat = false, when = 0 } = {}) {
+export function playClick(ctx, _destination, { downbeat = false, when = 0 } = {}) {
+  const compressor = ensureCompressor(ctx);
+
   const osc = ctx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(downbeat ? 1600 : 1200, when);
+  osc.type = 'square';
+  osc.frequency.value = 1100;
 
   const env = ctx.createGain();
-  env.gain.setValueAtTime(downbeat ? 0.5 : 0.32, when);
-  env.gain.exponentialRampToValueAtTime(0.0001, when + 0.04);
+  env.gain.setValueAtTime(downbeat ? 0.3 : 0.22, when);
+  env.gain.exponentialRampToValueAtTime(0.001, when + 0.025);
 
-  osc.connect(env).connect(destination);
+  osc.connect(env);
+  env.connect(compressor);
   osc.start(when);
-  osc.stop(when + 0.05);
+  osc.stop(when + 0.03);
   return osc;
 }
