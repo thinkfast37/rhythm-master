@@ -11,10 +11,11 @@ import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { create, addMeasure, setTimeSignature, setRecipe, cycleAccent } from '../../../../src/core/pattern.js';
-import { buildSubmission, buildIssueBody } from '../../../../src/export/submit.js';
+import { buildSubmission, buildIssueBody, buildIssueTitle } from '../../../../src/export/submit.js';
 import { patternsFromIssue } from '../lib/decode.mjs';
 import { renderPattern, renderMeasure, countNotes } from '../lib/render.mjs';
 import { appendPatterns, findNameClash, seedId } from '../lib/seed.mjs';
+import { SUBMISSION_LABEL, looksLikeSubmission, isLabelled, mergeSubmissions } from '../lib/select.mjs';
 
 const issueFrom = (body, number = 42) => ({
   number,
@@ -164,5 +165,65 @@ describe('pattern-intake/seed', () => {
   it('finds a clash by name, ignoring surrounding space', () => {
     expect(findNameClash({ patterns: existing }, '  already here  ')?.name).toBe('Already Here');
     expect(findNameClash({ patterns: existing }, 'Something Else')).toBeNull();
+  });
+});
+
+describe('pattern-intake/select', () => {
+  const labelled = (number, title) => ({ number, title, labels: [{ name: SUBMISSION_LABEL }] });
+  const bare = (number, title) => ({ number, title, labels: [] });
+
+  it('recognises the titles the app actually builds, single and bulk', () => {
+    const one = create('Samba Break');
+    expect(looksLikeSubmission(buildIssueTitle([one]))).toBe(true);
+    expect(looksLikeSubmission(buildIssueTitle([one, create('My Fill'), create('Bossa Take 2')]))).toBe(true);
+  });
+
+  it('leaves issues that are not submissions alone', () => {
+    expect(looksLikeSubmission('Cursor drifts at 200 BPM')).toBe(false);
+    expect(looksLikeSubmission('')).toBe(false);
+    expect(looksLikeSubmission(undefined)).toBe(false);
+  });
+
+  it('finds a submission GitHub stripped the label from, and says it is bare', () => {
+    const merged = mergeSubmissions([], [bare(32, 'New Pattern: Another One Bites the Dust')]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].number).toBe(32);
+    expect(merged[0].unlabelled).toBe(true);
+  });
+
+  it('trusts the issue\u2019s own labels, not the lagging label query that returned it', () => {
+    // `gh issue list --label` is search-indexed and keeps returning an issue whose
+    // label was just removed. Believing it would hide the very misconfiguration
+    // the title fallback exists to surface.
+    const stale = bare(32, 'New Pattern: Samba Break');
+    expect(mergeSubmissions([stale], [])[0].unlabelled).toBe(true);
+  });
+
+  it('reports a labelled submission as labelled', () => {
+    expect(mergeSubmissions([labelled(7, 'New Pattern: Samba Break')], [])[0].unlabelled).toBe(false);
+    expect(isLabelled(labelled(7, 'x'))).toBe(true);
+    expect(isLabelled(bare(7, 'x'))).toBe(false);
+  });
+
+  it('lists an issue once when both queries return it', () => {
+    const issue = labelled(7, 'New Pattern: Samba Break');
+    expect(mergeSubmissions([issue], [issue])).toHaveLength(1);
+  });
+
+  it('ignores an unlabelled issue that is not shaped like a submission', () => {
+    expect(mergeSubmissions([], [bare(9, 'Cursor drifts at 200 BPM')])).toHaveLength(0);
+  });
+
+  it('returns submissions in issue order however the queries were ordered', () => {
+    const merged = mergeSubmissions(
+      [labelled(30, 'New Pattern: C')],
+      [bare(12, 'New Pattern: A'), bare(21, 'New Pattern: B')]
+    );
+    expect(merged.map((i) => i.number)).toEqual([12, 21, 30]);
+  });
+
+  it('keeps a labelled issue labelled even if it has other labels too', () => {
+    const issue = { number: 5, title: 'anything', labels: [{ name: 'bug' }, { name: SUBMISSION_LABEL }] };
+    expect(mergeSubmissions([issue], [])[0].unlabelled).toBe(false);
   });
 });

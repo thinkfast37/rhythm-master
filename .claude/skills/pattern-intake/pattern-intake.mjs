@@ -20,10 +20,11 @@ import { fileURLToPath } from 'node:url';
 import { patternsFromIssue } from './lib/decode.mjs';
 import { renderPattern } from './lib/render.mjs';
 import { appendPatterns, readSeed, seedId } from './lib/seed.mjs';
+import { SUBMISSION_LABEL, mergeSubmissions, isLabelled } from './lib/select.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const SEED = join(ROOT, 'data/seed-patterns.json');
-const LABEL = 'new-pattern';
+const LABEL = SUBMISSION_LABEL;
 
 const die = (message) => {
   console.error(message);
@@ -41,10 +42,26 @@ function gh(args) {
   }
 }
 
+const FIELDS = 'number,title,body,author,url,labels';
+
+const listIssues = (args) =>
+  JSON.parse(gh(['issue', 'list', '--state', 'open', '--json', FIELDS, '--limit', '100', ...args]));
+
+/** Does the repo actually have the label the app's submission URL asks for? */
+const labelExists = () =>
+  JSON.parse(gh(['label', 'list', '--json', 'name', '--limit', '200'])).some((l) => l.name === LABEL);
+
+/**
+ * Every open submission: those carrying the label, plus those whose title says
+ * they are one and whose label GitHub dropped (see lib/select.mjs).
+ */
 const fetchIssues = (numbers) =>
   numbers.length
-    ? numbers.map((n) => JSON.parse(gh(['issue', 'view', String(n), '--json', 'number,title,body,author,url'])))
-    : JSON.parse(gh(['issue', 'list', '--label', LABEL, '--state', 'open', '--json', 'number,title,body,author,url', '--limit', '100']));
+    ? numbers.map((n) => {
+        const issue = JSON.parse(gh(['issue', 'view', String(n), '--json', FIELDS]));
+        return { ...issue, unlabelled: !isLabelled(issue) };
+      })
+    : mergeSubmissions(listIssues(['--label', LABEL]), listIssues([]));
 
 async function decodeAll(issues) {
   const entries = [];
@@ -62,20 +79,51 @@ async function decodeAll(issues) {
 
 const report = (failures) => failures.forEach((f) => console.error(`  ! ${f}`));
 
+/**
+ * A repo with no `new-pattern` label silently strips it from every submission
+ * (lib/select.mjs), so say so loudly and give the one command that fixes it.
+ * Reported whether or not anything was found: the symptom of this misconfiguration
+ * is an empty list, which is indistinguishable from nobody having submitted.
+ */
+function warnIfLabelMissing() {
+  if (labelExists()) return;
+  console.error(
+    `\nThe \`${LABEL}\` label does not exist in this repo, so GitHub is dropping it\n` +
+      'from every submission the app prefills. Create it, and future submissions\n' +
+      'will label themselves:\n\n' +
+      `  gh label create ${LABEL} --description "A Pattern submitted for the shared library (US-13.1)" --color 0e8a16\n`
+  );
+}
+
 async function list() {
   const issues = fetchIssues([]);
-  if (issues.length === 0) return console.log(`No open issues labelled \`${LABEL}\`.`);
+  if (issues.length === 0) {
+    console.log(`No open issues labelled \`${LABEL}\`.`);
+    return warnIfLabelMissing();
+  }
 
   const { failures } = await decodeAll(issues);
   for (const issue of issues) {
     const { entries } = await decodeAll([issue]);
     const count = entries.length ? `${entries.length} Pattern${entries.length === 1 ? '' : 's'}` : 'unreadable';
-    console.log(`#${issue.number}  ${issue.title}  — ${count}, by ${issue.author?.login ?? 'unknown'}`);
+    const mark = issue.unlabelled ? '  [unlabelled]' : '';
+    console.log(`#${issue.number}  ${issue.title}  — ${count}, by ${issue.author?.login ?? 'unknown'}${mark}`);
+  }
+
+  const bare = issues.filter((i) => i.unlabelled);
+  if (bare.length) {
+    console.error(
+      `\nFound by title, not by label — GitHub dropped the \`${LABEL}\` label. Label them so\n` +
+        'they stay findable:\n' +
+        bare.map((i) => `  gh issue edit ${i.number} --add-label ${LABEL}`).join('\n') +
+        '\n'
+    );
   }
   if (failures.length) {
     console.error('\nCould not decode:');
     report(failures);
   }
+  warnIfLabelMissing();
 }
 
 async function show(numbers) {

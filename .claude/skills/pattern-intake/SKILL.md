@@ -31,8 +31,9 @@ node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
 
 ## The workflow
 
-1. **`list`** — every open `new-pattern` issue, with how many Patterns each carries. An issue
-   that cannot be decoded is reported, not skipped silently.
+1. **`list`** — every open submission, with how many Patterns each carries. An issue
+   that cannot be decoded is reported, not skipped silently, and so is one that arrived
+   without its label (see below).
 2. **`show <issue>`** — decode and render. Present this to the maintainer and let them decide;
    never accept on their behalf. It looks like:
 
@@ -68,6 +69,18 @@ node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
 - **`accept` does not validate its own write.** `npm run validate:seed` is the gate; a tool
   that blesses its own output is a gate that proves nothing. Run it after, and revert if it
   fails.
+- **The label is not trusted on its own.** The app asks for the `new-pattern` label in the
+  submission URL (AC-13.1.1/1), but GitHub applies it only if the label already exists in the
+  repo — otherwise it drops the parameter, without creating the label and without complaining.
+  A correct submission then lands bare and a label-only query reports nothing, which looks
+  exactly like nobody having submitted. That is a real thing that happened, to issue #32. So
+  `list` also matches the title shapes the app builds, marks anything found that way
+  `[unlabelled]` with the command to fix it, and says outright when the repo has no such
+  label at all.
+- **Whether an issue is labelled is read off the issue, never off the query.**
+  `gh issue list --label` is served by GitHub's search index, which lags: strip a label and
+  that query keeps returning the issue for a while. Believing it would report a bare issue as
+  labelled and hide the misconfiguration the fallback exists to surface.
 - **Nothing here re-derives musical arithmetic.** The renderer reads Accent Levels through
   `src/core/accents.js`, so what you see is what will sound (Constitution Principle I).
 - **The decoder is the app's own.** `lib/decode.mjs` imports `src/export/submit.js` rather than
@@ -89,9 +102,20 @@ node .claude/skills/pattern-intake/pattern-intake.mjs accept 42
 `gh`, authenticated (`gh auth status`). Node 18+ for `DecompressionStream`, which is what
 unpacks a compressed submission.
 
+The repo needs a `new-pattern` label for submissions to label themselves:
+
+```bash
+gh label create new-pattern --description "A Pattern submitted for the shared library (US-13.1)" --color 0e8a16
+```
+
 ## Tests
 
 `.claude/skills/pattern-intake/tests/`, run by `npm test`. They cover both submission forms
-round-tripping, the append-never-insert rule, name-clash refusal, and the rendering — because
-a decoder that silently drops a Measure would otherwise be invisible until a wrong Pattern
-shipped.
+round-tripping, the append-never-insert rule, name-clash refusal, issue selection, and the
+rendering — because a decoder that silently drops a Measure would otherwise be invisible until
+a wrong Pattern shipped.
+
+The selection tests assert the title matchers against `buildIssueTitle`'s real output rather
+than against typed-out strings. The matchers are the one place this skill re-expresses a format
+`src/export/submit.js` owns — unavoidable, since a title cannot be un-built — so the test is
+what stops a change to the titles silently narrowing what intake can see.

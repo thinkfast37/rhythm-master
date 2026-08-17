@@ -883,3 +883,15 @@ record is complete rather than starting mid-stream.
   **Appended, never inserted, enforced in code.** `lib/seed.mjs` will only write at the end of `data/seed-patterns.json`, because shipped ids are positional and inserting renumbers every later Pattern — orphaning the ratings and added Tags that `rm.overlays.v1` keys by id. A name already in the library is refused case-insensitively unless forced, as are two Patterns in one batch sharing a name.
 
   **`accept` does not validate its own write.** It appends and stops, and tells you to run `npm run validate:seed`. A tool that blesses its own output is a gate that proves nothing. It also never commits, pushes or opens a PR — landing a change is §5's business and includes a task entry and the full gate run.
+
+- [X] T176 **[bug]** Submissions arrive unlabelled, so intake cannot see them — `.claude/skills/pattern-intake/lib/select.mjs`, `.claude/skills/pattern-intake/pattern-intake.mjs`, `.claude/skills/pattern-intake/SKILL.md`, `.claude/skills/pattern-intake/tests/pattern-intake.test.js`. Covers AC-13.1.1/1.
+
+  The first real submission — issue #32, "Another One Bites the Dust bass groove" — was invisible to `pattern-intake list`, which reported "No open issues labelled `new-pattern`" while the Pattern sat there perfectly readable.
+
+  **The app was right; the repo was misconfigured.** `buildSubmission` puts `&labels=new-pattern` in the URL exactly as AC-13.1.1/1 requires. But GitHub applies a label from a prefilled issue URL only if that label already exists in the repo — and it did not. GitHub does not create it and does not complain: it drops the parameter, and the issue lands bare. **No AC changed and no code in `src/` changed**, because neither was wrong.
+
+  **The label now exists**, created once with `gh label create new-pattern`, and #32 has been labelled. That alone is the fix for the reported symptom: a Contributor now has to do nothing but press "Submit new issue".
+
+  **But the failure was silent, and that is the part worth engineering against.** The symptom of a missing label is an empty list, which is indistinguishable from nobody having submitted — and no gate can see a repo's label list. So `list` no longer trusts the label alone: it also matches the title shapes `buildIssueTitle` builds, marks anything found that way `[unlabelled]` with the command to fix it, and says outright when the repo has no such label. The title matchers are asserted against real `buildIssueTitle` output, since they are the one place the skill re-expresses a format `src/export/submit.js` owns.
+
+  **`gh issue list --label` is not evidence that an issue is labelled.** Found while testing this: that query is served by GitHub's search index, which lags — strip a label and it keeps returning the issue for a while. So `unlabelled` is read off the issue's own `labels`, never off which query returned it. Trusting the query would have reported a bare issue as labelled and hidden the exact misconfiguration the fallback exists to surface.
