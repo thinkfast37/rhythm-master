@@ -1,6 +1,44 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.1.0 → 3.2.0
+
+3.2.0 — Principle IV rewritten around the full traceability chain, and a new
+  NON-NEGOTIABLE clause added forbidding a test from being weakened to make a failure
+  go away.
+
+  The per-AC test requirement said only that a test must "reference its ID". That is
+  what `coverage:ac` enforced, and it turned out to prove nothing: an ID in a test name
+  is a claim, not a demonstration. US-2.2's pitch strip was specified and never built
+  while eight tests of unrelated semitone arithmetic carried its AC IDs (T145). The same
+  audit then found US-11.1's possible-duplicates view and US-11.2's Family panel in the
+  same state — specified, never built, 100% covered (T147). Principle IV now requires:
+
+    - one criterion, one test, with compound ACs decomposed into numbered Cases so
+      "one test" is a statement about a single assertion rather than about twelve rows
+      of a table;
+    - a test NAME that is its criterion's title verbatim, so the spec's wording travels
+      into the suite and rewording an AC forces someone to open the test;
+    - a UI-level criterion to be proved by a test that can reach a DOM, since `src/core/`
+      is pure by construction and cannot satisfy one however it is named;
+    - the chain AC → plan item → implementation task + test task, so an AC cannot be
+      specified and silently skipped at the planning stage;
+    - orphan IDs to fail rather than warn.
+
+  New NON-NEGOTIABLE clause: a failing test is evidence about the code. It may only be
+  changed when the test itself is what is wrong, and that must be stated. Relaxing an
+  assertion, narrowing a case, or deleting a test to turn a build green is prohibited.
+
+  MINOR rather than MAJOR: no principle is removed or redefined backward-incompatibly.
+  Principle IV's existing requirements all survive; the change adds requirements around
+  them. Per the versioning policy, a material expansion of guidance that imposes new
+  requirements is MINOR.
+
+  Enforcement: `npm run check:trace` (tools/check-traceability.js), added to the
+  required gates. It lands FAILING by design — the findings are the audit, and they are
+  logged as T147–T153 in tasks.md rather than papered over.
+
+Earlier:
 Version change: 3.0.0 → 3.1.0 (see also 2.0.0 → 3.0.0 below)
 
 3.1.0 — Principle V: retired the standing exception permitting a sampled piano soundfont.
@@ -142,9 +180,38 @@ Every requirement in this project carries a stable identifier: User Stories as
 `US-<epic>.<story>`, Acceptance Criteria as `AC-<epic>.<story>.<n>`. These IDs are the
 project's connective tissue and MUST be preserved across all artifacts.
 
-- **Every AC MUST have at least one automated test that references its ID** in the test
-  name or tag. The suite MUST be able to report, for any AC ID, whether it is covered.
-  An AC with no corresponding test is an incomplete implementation, not a passing one.
+- **One criterion, one test.** An AC that asserts one thing is one criterion. An AC that
+  asserts several — multiple `Then`/`And` clauses, or a table of rows — MUST be
+  decomposed into numbered **Cases** (`AC-<epic>.<story>.<n>/<case>`), each asserting one
+  thing and each carrying its own test. A single test standing in for a twelve-row table
+  proves one row and claims twelve.
+- **Every criterion MUST have at least one automated test, and that test's NAME MUST be
+  the criterion's title verbatim** — not a paraphrase. A test may append its own
+  qualifier after the title when a criterion needs more than one. Verbatim naming is what
+  makes the requirement checkable: a paraphrase can only be judged by similarity, and
+  every similarity threshold has a band where a correct test is flagged and a wrong one is
+  let through. It also means rewording an AC fails the gate until someone opens the test
+  and confirms it still proves the new wording.
+- **A UI-level criterion MUST be proved by a test that can reach a rendered document.**
+  Any criterion naming a control, view, panel, prompt, gesture, or viewport is UI-level.
+  `src/core/` is pure by construction, so a `tests/unit/core/` test cannot satisfy one
+  whatever it is named — and an AC whose only proof is a pure unit test is the exact shape
+  of an unbuilt feature reporting as covered.
+- **Every AC MUST trace to a numbered plan item, and every plan item carrying ACs MUST
+  have both an implementation task and a test task.** A specified AC that no plan item
+  claims is work that was never scheduled; a plan item with no test task is work whose
+  proof was never scheduled. Both are how a requirement gets half-built.
+- **A test naming an AC or Case ID the spec does not declare FAILS the build**, rather
+  than warning. A renumbered AC leaves its old ID behind on a test that now proves
+  nothing, and a warning is not read.
+- **A failing test is evidence about the code, not an obstacle to it (NON-NEGOTIABLE).**
+  When a test fails, the default conclusion is that the implementation is wrong and the
+  implementation is what changes. A test MAY be changed only when the test itself is the
+  defect — it asserted something the AC never said, or encoded an assumption the AC
+  contradicts — and that MUST be stated explicitly in the task and the commit, naming the
+  AC that settles it. Relaxing an assertion, narrowing a case, deleting a test, or marking
+  it skipped in order to turn a build green is prohibited. If the AC turns out to be wrong,
+  that is a spec defect: revise the AC first, in the same change, before the test.
 - **Every commit, pull request, and non-obvious code comment MUST cite the US/AC IDs it
   implements or modifies**, so any line of behavior traces back to the requirement that
   justified it, and any requirement traces forward to its implementation and proof.
@@ -167,6 +234,15 @@ project's connective tissue and MUST be preserved across all artifacts.
 mapping, "we implemented the spec" is an unverifiable claim. Without ID citation in
 commits and tests, the spec silently drifts from the code within weeks and neither can be
 trusted to describe the other.
+
+The verbatim-naming and one-criterion-one-test clauses were added after two User Stories
+were found specified, unbuilt, and reporting full coverage — US-2.2's pitch strip (T145)
+and US-11.1/US-11.2's duplicate and Family views (T147). In both cases the ID was present
+in a test name and the gate was satisfied. A coverage number that can be satisfied by
+typing is not a measurement, and the temptation to satisfy it that way is strongest at
+exactly the moment the work is unfinished. The no-weakening clause exists for the same
+reason from the other direction: the cheapest way to make a red suite green is to lower
+what it asks, and that converts a caught defect into a shipped one.
 
 ### V. Simplicity & Scope Discipline
 
@@ -265,7 +341,8 @@ code reviews, tickets, or other documents must be resolved in favor of this cons
 2. Any amendment that weakens a NON-NEGOTIABLE clause requires explicit documented
    justification. The non-negotiable clauses are:
    - Principle I in its entirety (rhythmic and metric correctness)
-   - The per-AC automated test requirement in Principle IV
+   - The per-criterion automated test requirement in Principle IV
+   - The prohibition in Principle IV on weakening a test to make a failure go away
    - The no-secrets-in-client-code clause in Principle V
    - The Local Metadata separation rule in Client-Side Architecture Constraints
 3. Bump the constitution version per the rules below. Update the `Last Amended` date.
@@ -285,4 +362,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.1.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17
+**Version**: 3.2.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17

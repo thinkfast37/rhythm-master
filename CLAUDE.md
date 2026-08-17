@@ -41,6 +41,7 @@ edit can be a governance change; a thousand-line refactor can be a bug fix.
 | The change… | Type | Required path |
 |---|---|---|
 | Code doesn't do what an AC already says | **Bug** | Write the failing test first → fix → verify. No spec edit. |
+| A test fails | **See §2a** | Fix the *code*. Changing the test is a separate, named decision. |
 | An AC is wrong, impossible, or ambiguous | **Spec defect** | Revise the AC **first**, with a dated parenthetical saying what changed and why → then fix. |
 | Nothing in the spec covers it | **New capability** | `/speckit-specify` → `/speckit-tasks` → `/speckit-implement`. Add `/speckit-plan` only when technical assumptions change. |
 | Contradicts a research decision | **Approach change** | Amend the D-00x entry in `research.md` with the reversal and its reasoning → then whatever the row above implies. |
@@ -51,6 +52,99 @@ edit can be a governance change; a thousand-line refactor can be a bug fix.
 change *before* the implementation, so the intent can be objected to rather than
 the finished work. Backfilling ACs to match what was already built keeps the spec
 truthful but defeats the point of having one.
+
+---
+
+## 2a. When a test fails, the code is wrong
+
+This is a Constitution non-negotiable (Principle IV), not a preference.
+
+**A failing test is evidence about the code.** The default conclusion is that the
+implementation is wrong, and the implementation is what changes. Work the failure
+until the code satisfies the test as written.
+
+A test may be changed **only** when the test itself is the defect — it asserted
+something the AC never said, or encoded an assumption the AC contradicts. When
+that is genuinely the case:
+
+1. Say so explicitly, naming the AC that settles it.
+2. Log it in the task and cite it in the commit.
+3. Fix the test to match the AC — not to match the code.
+
+If the *AC* is what's wrong, that is a **spec defect**: revise the AC first, in the
+same change, before touching the test (§2).
+
+**Never** relax an assertion, narrow a case, delete a test, or mark it skipped in
+order to turn a build green. The cheapest way to make a red suite green is to lower
+what it asks, and that converts a caught defect into a shipped one. If you cannot
+make a test pass, say so and stop — a reported failure is worth more than a
+green build that means nothing.
+
+---
+
+## 2b. Traceability: what stops a requirement being half-built
+
+`npm run check:trace` enforces the chain below. It exists because a green
+`coverage:ac` twice hid an entire unbuilt User Story — US-2.2's pitch strip (T145)
+and US-11.1/US-11.2's duplicate and Family views (T147). In both, the AC ID was
+present in a test name and nothing checked that the test had anything to do with it.
+
+```text
+AC  →  Case (if the AC asserts more than one thing)
+    →  plan item (P-0xx, plan.md's Traceability Matrix)
+    →  implementation task  +  test task  (tasks.md)
+    →  a test named for the criterion, verbatim
+```
+
+Seven checks, each failing on its own:
+
+| | Rule |
+|---|---|
+| **T1** | Every AC traces to a numbered plan item in `plan.md`. |
+| **T2** | Every plan item carrying ACs has an implementation task **and** a test task. |
+| **T3** | Every file path a *completed* task names exists. (Open tasks may name files that are the work.) |
+| **T4** | An AC asserting more than one thing declares numbered **Cases**. |
+| **T5** | Every criterion has a test whose **name is its title, verbatim**. |
+| **T6** | A UI-level criterion has a test that can reach the DOM (`tests/e2e/` or `tests/unit/ui/`). |
+| **T7** | No test names an AC or Case ID the spec does not declare. |
+
+Three consequences worth stating outright:
+
+- **A test name is not a claim, it is the criterion.** Write
+  `it('AC-1.1.9 — Measure removal is always from the end', …)`, copying the AC's
+  title. Append a qualifier after it when a criterion needs several tests:
+  `'AC-1.1.9 — Measure removal is always from the end: from six down to one'`.
+  If the AC's wording changes, T5 fails until you open the test and confirm it
+  still proves the new wording. That failure is the point.
+- **A compound AC must be decomposed, not summarised.** An AC with several
+  `Then`/`And` clauses or a table gets numbered Cases (`AC-1.2.2/1`, `/2`, …), one
+  test each. One test standing in for twelve table rows proves one and claims twelve.
+- **`src/core/` cannot prove a UI criterion.** It is pure by construction (§6). An
+  AC that names a control, view, panel, prompt, gesture, or viewport needs an e2e or
+  `tests/unit/ui/` test. An AC whose only proof is a pure unit test is the exact
+  shape of an unbuilt feature reporting as covered.
+
+**Adding a new AC means adding its plan item row and both tasks in the same
+change.** Not afterwards — T1 and T2 fail until they exist, which is what stops an
+AC being written down and quietly never scheduled.
+
+### The baseline
+
+The gate arrived after the damage, with 333 findings already standing. A gate that is
+permanently red gates nothing, so `traceability-baseline.json` holds the debt that
+existed the day it landed: those findings are **reported but do not fail the build**.
+Anything not in it does.
+
+**The baseline may only shrink.** `npm run check:trace -- --prune-baseline` strikes off
+entries that are no longer findings, and nothing writes new ones. Taking on new debt means
+hand-editing a checked-in file, which shows up in a diff and has to be argued for.
+
+Two consequences when you touch this file's neighbourhood:
+
+- **Fixing a baselined finding fails the gate until you prune.** That is deliberate: it
+  keeps the list honest, so it can never quietly re-excuse a regression later.
+- **A baselined finding is outstanding work, not a settled decision.** It is on the
+  burn-down list in `tasks.md`, and "it's in the baseline" is never a reason to leave it.
 
 ---
 
@@ -74,16 +168,25 @@ npm run lint          # includes the core/ purity boundary
 npm test              # Vitest over core/ and storage/
 npm run test:e2e      # Playwright; needs CHROMIUM_PATH (see below)
 npm run coverage:ac   # every AC has a test naming it — must be 100%
+npm run check:trace   # the AC → plan → task → test chain (§2b)
 npm run validate:seed # the shipped library against data-model §7
 npm run check:cvd     # accent palette under simulated colour blindness
 ```
+
+`npm run check:trace --silent -- --summary` prints one line per check when you only
+need to know which are red.
 
 ```bash
 CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
 ```
 
-**AC coverage must stay at 100%.** A new AC without a test is an incomplete
-change, not a passing one. Commit messages cite the US/AC IDs they touch.
+**AC coverage must stay at 100%, and `check:trace` must report no new findings.**
+A new AC without a test is an incomplete change, not a passing one — and a new AC
+whose test does not prove it is the same thing wearing a green badge. Commit
+messages cite the US/AC IDs they touch.
+
+**A gate that fails stops the change.** Not "is noted and worked around": §2a
+governs what to do next, and the answer is never to make the gate ask for less.
 
 ---
 
