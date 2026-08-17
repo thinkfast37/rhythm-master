@@ -1,113 +1,151 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Rhythm Master MVP
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `main` (spec lives at `specs/001-rhythm-master-mvp/`) | **Date**: 2026-08-17 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `/speckit-plan` command; its definition describes the execution workflow.
+**Input**: Feature specification from `/specs/001-rhythm-master-mvp/spec.md`
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Rhythm Master is a single-page, client-side rhythm and melody practice tool. A musician builds
+Patterns from Measures that each carry their own Time Signature, subdivides each Beat via a fixed
+menu of Recipes (including two mixed-feel splits), assigns per-Slot accents and — in Melodic mode —
+explicit scale degrees and octaves, then drills the result against a metronome with count-in and
+per-group swing. Patterns live in a searchable, taggable, rateable local library seeded with 112
+converted Patterns.
+
+The technical approach is a **vanilla ES-module app built with Vite**, organised around a pure
+`core/` layer that owns every musical calculation and a thin `ui/` layer that renders as a function
+of Pattern state plus transport position. Audio is scheduled with a lookahead scheduler against
+`AudioContext.currentTime`. Persistence is `localStorage` under version-stamped, separated keys.
+Tests are Vitest for the core and Playwright for grid, transport, and responsive behaviour, with
+every test named for the AC it proves.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+**Language/Version**: JavaScript (ES2022 modules), no TypeScript
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**Primary Dependencies**: Vite (dev server + build); `soundfont-player` with an acoustic grand piano
+soundfont for Melodic playback (the constitution's standing sampled-piano exception). No UI
+framework, no state library, no CSS framework.
 
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Storage**: Browser `localStorage`, split across separate version-stamped keys — `rm.patterns.v1`,
+`rm.localMeta.v1`, `rm.settings.v1` — so FR-006's Local Metadata separation is structural rather
+than conventional.
 
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**Testing**: Vitest for `core/` (pure functions, exhaustive) and `storage/`; Playwright driving
+Chromium for grid interaction, transport, audio/visual sync, and responsive ACs. Every test name is
+prefixed with the AC ID it proves, and a coverage reporter maps AC ID → covered/not covered.
 
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
+**Target Platform**: Evergreen browsers with Web Audio support — Chrome, Safari (including iOS
+Safari), Firefox, Edge. No build-time backend.
 
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: Single-page client-side web application, served as static files.
 
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
+**Performance Goals**: No audible drift between click, Pattern, and cursor over a 30-minute
+continuous run (SC-002); scheduled-event timing within 10 ms of predicted and visual highlight
+within 20 ms of its audio event (AC-4.1.1, AC-4.1.2); grid re-render cheap enough that a 144-Slot
+Pattern updates its playback cursor without dropping frames.
 
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**Constraints**: No backend, no accounts, no remote sync, no analytics (Principle V). No secrets in
+client code. Sampled-piano loading must never block browsing or editing. The app must be fully
+usable on a 390 px viewport.
 
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
-
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Scale/Scope**: 34 User Stories, 206 Acceptance Criteria across 14 epics. 112 seeded Patterns at
+ship, with a personal library expected to grow into the hundreds.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: evaluated against constitution v3.0.0. Re-checked after Phase 1 design.*
 
-[Gates determined based on constitution file]
+| Principle | How this plan satisfies it | Status |
+|---|---|---|
+| **I. Rhythmic & Metric Correctness** (NON-NEGOTIABLE) | All meter/Recipe/accent/swing/pitch arithmetic lives in `src/core/`, exported as pure functions with no DOM or audio imports. Nothing outside `core/` may compute a beat count, a slot duration, or an accent default; an import-boundary lint rule enforces it. Exhaustive Vitest coverage over every supported meter, every Recipe, the accent tables at Beat and Slot level, swing at 0 and 100, and pitch across the full octave range in all 12 Keys. | PASS |
+| **II. Grid Consistency & Accent Legibility** | One grid component instance, rendered from `(pattern, transportPosition)`. Every control dispatches a Pattern mutation and re-renders through the same path. Accent palette validated against deuteranopia/protanopia/tritanopia simulation as an automated check; fill height is used as a second channel for scannability — a design choice recorded in research.md, not a constitutional requirement. | PASS |
+| **III. Audio Timing & Playback Behavior** | Lookahead scheduler polls on a timer but computes every event time as `origin + elapsedBeats × secondsPerBeat` from the transport's absolute audio-clock origin — never accumulated. The visual cursor is driven from the same scheduled queue. Audio only starts from a transport control; the AudioContext is created inside that gesture handler. Soundfont loads asynchronously; Percussive playback never waits on it. | PASS |
+| **IV. Traceability & Testing Standards** | Every test is named `AC-x.y.z — …`. A `npm run coverage:ac` script parses the spec's AC IDs and the suite's test names and reports any AC with no test. Commits cite the US/AC IDs they touch. | PASS |
+| **V. Simplicity & Scope Discipline** | No framework, no state library, no CSS framework. Two runtime dependencies: `soundfont-player` (constitutional standing exception) and the piano soundfont asset. Vite is a devDependency producing static output. `localStorage` only; every key version-stamped with a migration path. | PASS |
+| **Visual & Audio Clarity** | Accent palette CVD-verified (above). 390 px legibility met by one-Measure-per-row vertical paging with a 24 px minimum Slot width (AC-15.1.10). Melodic pitch resolution unit-tested per Key and octave. Metronome click uses a timbre outside the Pattern voices' range. | PASS |
+| **Client-Side Architecture Constraints** | Pattern is one serializable object; rendering is a pure function of it. Local Metadata is a physically separate storage key with no code path that merges it into a Pattern's export shape — enforced by a serialization test. Provenance is determined by which store a Pattern was loaded from rather than by a field on the Pattern, so an edit cannot forge it (data-model §5). | PASS |
+
+**No violations. Complexity Tracking is empty.**
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit-plan command output)
-├── research.md          # Phase 0 output (/speckit-plan command)
-├── data-model.md        # Phase 1 output (/speckit-plan command)
-├── quickstart.md        # Phase 1 output (/speckit-plan command)
-├── contracts/           # Phase 1 output (/speckit-plan command)
-└── tasks.md             # Phase 2 output (/speckit-tasks command - NOT created by /speckit-plan)
+specs/001-rhythm-master-mvp/
+├── plan.md              # This file
+├── spec.md              # 34 User Stories, 206 ACs
+├── research.md          # Phase 0 — decisions and rejected alternatives
+├── data-model.md        # Phase 1 — Pattern shape, storage schema, invariants
+├── quickstart.md        # Phase 1 — how to run, test, and validate
+├── contracts/           # Phase 1 — core API, storage, seed-file, MIDI contracts
+└── checklists/
+    └── requirements.md  # Spec quality validation record
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+index.html                  # Single page; Vite entry
+
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+├── main.js                 # Composition root: wires storage → state → ui → audio
+├── core/                   # PURE. No DOM, no Web Audio, no localStorage imports.
+│   ├── meter.js            # Time Signatures, beat counts, Beat note values
+│   ├── recipes.js          # Recipe catalogue, Slot counts, Subdivision Groups
+│   ├── accents.js          # Metric accent defaults at Beat and Slot level
+│   ├── swing.js            # Per-group swing offsets
+│   ├── pitch.js            # Scale degree + octave + Key → frequency / MIDI note
+│   ├── timeline.js         # Pattern → flat ordered list of scheduled events
+│   ├── pattern.js          # Pattern construction and mutation
+│   ├── similarity.js       # Duplicate and Pattern Family detection
+│   └── counting.js         # Takadimi / 1-e-&-a / Numbered syllable labels
+├── audio/
+│   ├── context.js          # AudioContext lifecycle, gesture unlock, suspend handling
+│   ├── scheduler.js        # Lookahead transport driving core/timeline events
+│   ├── voices.js           # Percussive synthesis + accent dynamics
+│   └── piano.js            # Soundfont loading and Melodic note playback
+├── ui/
+│   ├── grid.js             # The one grid view
+│   ├── controls.js         # Meter, Recipe, pitch, tempo, swing, counting controls
+│   ├── library.js          # Browse, search, Tag filter, rating, navigation
+│   ├── dialogs.js          # Naming, confirmation, duplicate prompts
+│   └── responsive.js       # Breakpoints, per-Measure row paging, playback autoscroll
+├── storage/
+│   ├── patterns.js         # rm.patterns.v1
+│   ├── localMeta.js        # rm.localMeta.v1  (never exported — FR-006)
+│   ├── settings.js         # rm.settings.v1
+│   └── migrate.js          # schemaVersion migrations
+├── export/
+│   ├── midi.js             # MIDI file builder
+│   └── submit.js           # Prefilled GitHub issue URL builder
+└── styles/
+    ├── tokens.css          # Colour tokens, incl. the CVD-verified accent palette
+    └── *.css
+
+data/
+└── seed-patterns.json      # 112 shipped Patterns (US-16.2 — data, not code)
 
 tests/
-├── contract/
-├── integration/
-└── unit/
+├── unit/                   # Vitest over core/ and storage/
+├── e2e/                    # Playwright over ui/, audio/, responsive
+└── ac-coverage.js          # Maps spec AC IDs to test names; fails on gaps
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+tools/
+└── convert-legacy-patterns.js
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+.github/workflows/
+└── deploy.yml              # Test → build → publish to GitHub Pages
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Single project, no frontend/backend split, because there is no backend and
+never will be (Principle V). The layering that matters here is not by feature but by purity: `core/`
+is pure and exhaustively tested; `audio/`, `ui/`, and `storage/` are the impure edges. This is the
+structural expression of Principle I — the import boundary is what stops musical arithmetic from
+being re-derived inside a view, which is the failure mode the predecessor application had.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No Constitution Check violations. Table intentionally empty.

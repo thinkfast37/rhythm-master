@@ -821,7 +821,8 @@ exist).
 - **AC-5.3.5** — Auto-tags are not user-removable and render distinctly
   - **Given** a Pattern carrying `swing` because one Subdivision Group has swing 25
   - **When** the user looks for a way to remove the `swing` Tag directly
-  - **Then** no removal control is available for it, and it renders visually distinct (e.g. a lock indicator) from a user-typed Tag like "warmup" on the same Pattern
+  - **Then** no removal control is available for it — no "×" affordance appears on it at any point
+  - **And** it renders as an outlined chip, while a user-typed Tag like "warmup" on the same Pattern renders as a filled chip carrying a "×" — so the two are told apart by chip treatment rather than by colour alone
 
 - **AC-5.3.6** — User Tag de-duplication is case-insensitive
   - **Given** a Pattern already tagged "Warmup"
@@ -1480,8 +1481,15 @@ exist).
 - **AC-15.1.10** — Grid remains usable for the largest supported Pattern on mobile
   - **Given** a 390px-wide (mobile) viewport and a Pattern at the maximum size: 6 Measures of 12/8, every Beat on the Straight 16ths Recipe (144 Slots total)
   - **When** the Practicing Musician views it
-  - **Then** the grid remains readable and tappable, with any overflow contained to the grid's own horizontal scrolling rather than the page body
-  - *(Flagged: this is the hardest responsive case in the app — 144 Slots on a phone. It's specified here as a constraint, but the actual layout strategy for it — horizontal scroll, per-Measure paging, zoom-out, or something else — is a UI design decision not settled in this document.)*
+  - **Then** each Measure occupies its own row, the six rows stack vertically, and the musician reads down the page
+  - **And** no Slot is narrower than 24 CSS pixels, so every Slot stays tappable
+  - **And** neither the page body nor the grid scrolls horizontally at any point
+
+- **AC-15.1.11** — Playback keeps the sounding Measure in view on mobile
+  - **Given** the Pattern from AC-15.1.10 playing on a 390px viewport, with Measure 1 visible and Measure 5 below the fold
+  - **When** playback reaches Measure 5
+  - **Then** the grid scrolls Measure 5 into view without the musician touching the screen
+  - **And** on looping back to Measure 1, the grid scrolls back to it
 
 ---
 ### User Story 33 - Ship with a seeded Pattern library
@@ -1647,8 +1655,9 @@ it appears in the library and plays correctly, with no source file modified.
 - **Melodic playback before samples finish loading.** Play shows a loading state and waits;
   Percussive playback is unaffected and remains immediately available (AC-2.4.3).
 - **The densest supported Pattern on the smallest supported screen.** 6 Measures of 12/8 at Straight
-  16ths is 144 Slots on a 390 px viewport — overflow is contained to the grid's own scroll region so
-  the page body never scrolls horizontally (AC-15.1.10).
+  16ths is 144 Slots on a 390 px viewport. Rather than shrinking Slots below a tappable size or
+  scrolling sideways, each Measure takes its own row and the Pattern is read down the page, with
+  playback auto-scrolling the sounding Measure into view (AC-15.1.10, AC-15.1.11).
 - **A legacy Pattern shorter than one Measure.** The predecessor allowed one- and two-beat drill
   cells that looped sub-measure while nominally carrying a 4/4 meter. These convert to 1/4 and 2/4
   Measures respectively (AC-16.1.6), preserving the original loop length exactly. This is why 1/4
@@ -1691,8 +1700,9 @@ specified in the Acceptance Scenarios above.
 - **FR-011**: The audio context MUST be created or resumed inside a user-gesture handler and MUST
   recover from being suspended by the browser or OS on the next user gesture.
 - **FR-012**: Every piece of musical information — Slot on/off, Accent Level, straight vs. triplet
-  feel, and active playback position — MUST carry a non-color indicator so it remains interpretable
-  in monochrome and under common color vision deficiencies.
+  feel, and active playback position — MUST remain reliably distinguishable to users with common
+  color vision deficiencies (deuteranopia, protanopia, tritanopia). Whether that is achieved by
+  palette choice alone or by an additional visual channel is a design decision.
 - **FR-013**: Rendering MUST be a pure function of the Pattern object plus transport position; no
   component may hold authoritative display state outside it.
 - **FR-014**: Every Acceptance Criterion in this specification MUST have at least one automated test

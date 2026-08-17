@@ -36,7 +36,7 @@
 
 ### Validation record
 
-**Scale**: 34 User Stories, 205 Acceptance Criteria, 14 Functional Requirements, 7 Success
+**Scale**: 34 User Stories, 206 Acceptance Criteria, 14 Functional Requirements, 7 Success
 Criteria. Every User Story and Acceptance Criterion carries a stable `US-`/`AC-` identifier, and
 five Personas are defined so each story states whose problem it solves.
 
@@ -74,11 +74,13 @@ in two tabs at once were both raised, considered, and dropped as not worth speci
 single-user personal tool. They are named here so a later reviewer knows they were decided rather
 than overlooked.
 
-**Known design work remaining** (behaviour specified, visual treatment not yet chosen — appropriate
-for `/speckit-plan` rather than blocking this spec):
-- The non-color encoding of Accent Level (FR-012 states the requirement; the specific indicator is
-  a design decision).
-- Grid layout strategy for the densest supported Pattern on the smallest supported viewport
-  (AC-15.1.10 states the constraint; the approach is undecided).
-- Visual distinction between automatic and user-typed Tags (AC-5.3.5).
+**Design work resolved by `/speckit-plan`** (recorded in [research.md](../research.md)):
+- Accent Level encoding — FR-012 rescoped to a colour-vision-deficiency requirement rather than a
+  non-colour one, and constitution v3.0.0 amended to match (D-005).
+- Grid layout for the densest Pattern on the smallest viewport — one Measure per row, paged
+  vertically, 24 px minimum Slot width (D-006; AC-15.1.10 rewritten, AC-15.1.11 added).
+- Automatic versus user-typed Tag treatment — outlined versus filled chips (D-007; AC-5.3.5
+  settled).
+
+**Design work still remaining**:
 - Layout of the standing possible-duplicates view (AC-11.1.4, AC-11.1.5).

@@ -32,8 +32,12 @@ Pre-implementation. The specification is complete; no application code exists ye
 | Document | Purpose |
 |---|---|
 | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project principles — correctness, visual and audio clarity, traceability, and scope constraints that all work is held to |
-| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 34 user stories, 205 acceptance criteria in Given/When/Then form |
+| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 34 user stories, 206 acceptance criteria in Given/When/Then form |
 | [`data/seed-patterns.json`](data/seed-patterns.json) | The 112 Patterns the app ships with. Plain JSON — add or edit Patterns here directly, no code change needed (US-16.2) |
+| [`specs/001-rhythm-master-mvp/plan.md`](specs/001-rhythm-master-mvp/plan.md) | Implementation plan: stack, project structure, and the Constitution Check |
+| [`specs/001-rhythm-master-mvp/research.md`](specs/001-rhythm-master-mvp/research.md) | Every technical decision, with the alternatives that were rejected and why |
+| [`specs/001-rhythm-master-mvp/data-model.md`](specs/001-rhythm-master-mvp/data-model.md) | The ratified Pattern format, storage schema, and validation rules |
+| [`specs/001-rhythm-master-mvp/quickstart.md`](specs/001-rhythm-master-mvp/quickstart.md) | How to run it, and the eight scenarios that validate it end to end |
 | [`tools/convert-legacy-patterns.js`](tools/convert-legacy-patterns.js) | One-time migration that produced the seed data; kept so the conversion is reproducible rather than hand-edited |
 
 ## Traceability
@@ -54,5 +58,5 @@ speckit-constitution → specify → plan → tasks → implement → converge
 optional: clarify, analyze, checklist
 ```
 
-The MVP specification is complete at `specs/001-rhythm-master-mvp/`. The next step
-is `/speckit-plan`.
+The MVP specification and implementation plan are complete at
+`specs/001-rhythm-master-mvp/`. The next step is `/speckit-tasks`.

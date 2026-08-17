@@ -1,36 +1,38 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 2.0.0
+Version change: 2.0.0 → 3.0.0
 Modified principles:
-  - Replaced the "Accessibility & Inclusive Design" section with "Visual & Audio Clarity".
-    The prior section was inherited from a sibling project and imported disability-accommodation
-    requirements (keyboard navigability, screen-reader naming, WCAG AA contrast ratios) that were
-    never asked for on this project. Removed those. Retained what the maintainer actually requires:
-    the non-color accent-encoding rule and 390px grid legibility. Added audio-clarity requirements
-    that had no home before — correct pitch and octave on Melodic Slots, audibly distinct Accent
-    Levels at practice tempo, and a metronome click separable from Pattern content.
-  - Principle II — the non-color Accent Level rule is now marked NON-NEGOTIABLE.
-  - Principle IV — P0 classification broadened from musical correctness alone to three categories:
-    musical correctness, data loss, and clarity. Data loss was added because auto-save is the only
-    save mechanism, so no user action can mitigate a persistence bug.
-  - Governance — the non-negotiable clause list is now enumerated explicitly rather than named
-    inline, and now has five entries.
+  - Principle II — retitled from "Grid Consistency & Non-Color Encoding" to "Grid Consistency &
+    Accent Legibility". The rule requiring Accent Level to carry a non-color indicator was
+    REMOVED. It was inherited from a sibling project's accessibility section, not requested here,
+    and survived the 2.0.0 rewrite only because it was relocated rather than re-examined. Replaced
+    with a color-vision-deficiency requirement: the three Accent Levels, Slot on/off, and the
+    straight/triplet group boundary MUST be distinguishable to users with common CVD, which a
+    deuteranopia- and protanopia-safe palette satisfies on its own.
+  - Visual & Audio Clarity — same replacement applied to its visual-clarity clause.
+  - Governance — the non-negotiable clause list drops the non-color-encoding entry and now has
+    four entries.
 
-MAJOR bump rationale: a whole section was removed and replaced, and P0 scope was redefined.
+MAJOR bump rationale: a NON-NEGOTIABLE clause was removed, which is a backward-incompatible
+redefinition of Principle II. Per the amendment procedure, the documented justification is that
+the clause was never a maintainer requirement: it encoded a monochrome-legibility guarantee
+imported from another project, whereas the actual requirement is that the levels be told apart by
+users with color vision deficiencies. Using a second visual channel (fill height) remains the
+intended design and is recorded in plan.md, but as a design decision that may be revised, not as
+a constitutional constraint.
 
-Added sections: Visual & Audio Clarity
-Removed sections: Accessibility & Inclusive Design
+Added sections: None
+Removed sections: None
 
 Templates reviewed:
-  - .specify/templates/plan-template.md   ✅ — Constitution Check and Complexity Tracking remain
-    the enforcement points; the gate is binding on plans and PRs per Governance
+  - .specify/templates/plan-template.md   ✅ — Constitution Check remains the enforcement point
   - .specify/templates/spec-template.md   ✅ — unaffected
   - .specify/templates/tasks-template.md  ✅ — unaffected
 
 Follow-up required: None.
-  - RESOLVED: spec.md's FR-013 (keyboard operability and accessible names) was deleted and the
-    remaining functional requirements renumbered; the spec now carries FR-001..FR-014.
+  - spec.md's FR-012 was rescoped in the same change to require CVD-distinguishable encoding
+    rather than a non-color indicator.
 
 Deferred TODOs: None.
 ==================
@@ -70,7 +72,7 @@ instantly — a musician drilling against a wrong pattern internalizes the wrong
 Rhythm bugs are never cosmetic; they are P0 correctness failures regardless of where
 they surface.
 
-### II. Grid Consistency & Non-Color Encoding
+### II. Grid Consistency & Accent Legibility
 
 The rendered Pattern grid is the single on-screen source of truth. Every control
 (time signature picker, Recipe picker, pitch strip, counting-system toggle, tempo,
@@ -81,23 +83,23 @@ instances.
   Time Signature prominence) MUST be a pure, deterministic function of the current
   Pattern state plus transport position. No hidden mutable UI variable may hold display
   state that can diverge from the canonical Pattern object.
-- **Accent Level MUST NOT be conveyed by color alone (NON-NEGOTIABLE).** The three active levels
-  (Weak / Medium / Strong) MUST each carry a distinct non-color indicator — height,
-  fill density, border weight, glyph, or text — so they remain distinguishable in
-  monochrome and under common color vision deficiencies. This is the single highest-risk
-  accessibility surface in the app, because Accent Level is core musical information,
-  not decoration.
+- **The three Accent Levels (Weak / Medium / Strong) MUST be reliably distinguishable
+  from one another, and from an off Slot, by users with common color vision
+  deficiencies** — deuteranopia, protanopia, and tritanopia. Accent Level is core musical
+  information, not decoration, so a palette whose levels collapse into each other under
+  simulated CVD is a defect. How the distinction is achieved is a design decision: a
+  CVD-safe palette satisfies this on its own, and a second visual channel may be used
+  where it also improves scannability.
 - Slot on/off state, and the distinction between straight-feel and triplet-feel
-  Subdivision Groups within a mixed Recipe, MUST likewise be legible without relying on
-  color alone.
+  Subdivision Groups within a mixed Recipe, MUST meet the same standard.
 - The grid MUST remain readable and tappable at the largest Pattern the app permits
   (6 Measures of 12/8 at Straight 16ths = 144 Slots) on a 390 px-wide viewport. Overflow
   is contained to the grid's own scroll region; the page body MUST NOT scroll
   horizontally.
 
 **Rationale**: A drifting visual model creates silent inconsistencies that are harder to
-debug than crashes. Accent Level encoded only as color is functionally invisible to a
-meaningful share of users, and accent is musical content — not styling.
+debug than crashes. Accent Level is musical content, not styling — a palette that renders
+two levels indistinguishable to a colorblind musician is showing them the wrong pattern.
 
 ### III. Audio Timing & Playback Behavior
 
@@ -197,11 +199,11 @@ Both are treated as correctness criteria, not polish.
 
 **Visual clarity**
 
-- **Accent Level MUST NOT be distinguishable by color alone (NON-NEGOTIABLE).** Each of the
-  three active levels MUST carry a second visual channel — height, fill, border weight, or a
-  glyph — so the difference survives a monochrome screen or a color vision deficiency.
+- The three Accent Levels MUST stay distinguishable from one another, and from an off Slot,
+  under common color vision deficiencies (Principle II). Verifying this against a CVD
+  simulation is part of accepting any change to the grid palette.
 - Slot on/off state, and the boundary between straight-feel and triplet-feel groups inside a
-  mixed Recipe, MUST be readable without relying on color alone.
+  mixed Recipe, MUST meet the same standard.
 - The grid MUST stay legible at the densest Pattern the app permits (6 Measures of 12/8 at
   Straight 16ths — 144 Slots) on a 390 px viewport, and Slots MUST stay reliably tappable there.
 
@@ -254,7 +256,6 @@ code reviews, tickets, or other documents must be resolved in favor of this cons
 2. Any amendment that weakens a NON-NEGOTIABLE clause requires explicit documented
    justification. The non-negotiable clauses are:
    - Principle I in its entirety (rhythmic and metric correctness)
-   - The non-color-encoding rule for Accent Level (Principle II and Visual & Audio Clarity)
    - The per-AC automated test requirement in Principle IV
    - The no-secrets-in-client-code clause in Principle V
    - The Local Metadata separation rule in Client-Side Architecture Constraints
@@ -275,4 +276,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 2.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-16
+**Version**: 3.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17

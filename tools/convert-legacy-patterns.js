@@ -17,10 +17,10 @@
  *    the new model has no runtime pitch cycling
  *  - `cat` becomes a Tag;  `disp` is dropped (it was search-only metadata)
  *
- * NOTE: the emitted field names and nesting follow the spec's Key Entities section but
- * are PROVISIONAL until /speckit-plan produces data-model.md. The conversion *logic*
- * here is independent of serialisation; if the ratified model differs, reshape the
- * output rather than redoing the mapping.
+ * The emitted shape is now RATIFIED: it matches the Pattern format defined in
+ * specs/001-rhythm-master-mvp/data-model.md and the seed-file contract in
+ * specs/001-rhythm-master-mvp/contracts/file-formats.md. Shipped Patterns carry no
+ * `id` and no provenance field by design — both are assigned on load.
  */
 const fs = require('fs'), vm = require('vm');
 
