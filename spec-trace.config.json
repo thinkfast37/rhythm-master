@@ -2,8 +2,9 @@
   "spec": "specs/001-rhythm-master-mvp/spec.md",
   "plan": "specs/001-rhythm-master-mvp/plan.md",
   "tasks": "specs/001-rhythm-master-mvp/tasks.md",
-  "matrix": "specs/001-rhythm-master-mvp/traceability-matrix.md",
-  "baseline": "specs/001-rhythm-master-mvp/traceability-baseline.json",
+  "matrix": "specs/traceability-matrix.md",
+  "baseline": "specs/traceability-baseline.json",
+  "waivers": "specs/traceability-waivers.json",
   "testDirs": ["tests/unit", "tests/e2e"],
   "domCapable": ["tests/e2e/", "tests/unit/ui/"]
 }

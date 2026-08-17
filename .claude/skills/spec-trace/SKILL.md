@@ -139,12 +139,18 @@ Copy this whole folder to `.claude/skills/spec-trace/`, then add a
   "spec": "specs/001-my-feature/spec.md",
   "plan": "specs/001-my-feature/plan.md",
   "tasks": "specs/001-my-feature/tasks.md",
-  "matrix": "specs/001-my-feature/traceability-matrix.md",
-  "baseline": "specs/001-my-feature/traceability-baseline.json",
+  "matrix": "specs/traceability-matrix.md",
+  "baseline": "specs/traceability-baseline.json",
+  "waivers": "specs/traceability-waivers.json",
   "testDirs": ["tests/unit", "tests/e2e"],
   "domCapable": ["tests/e2e/", "tests/unit/ui/"]
 }
 ```
+
+`spec`, `plan` and `tasks` are feature-scoped and live under that feature's numbered
+folder. `matrix`, `baseline` and `waivers` are not — the matrix reports on the whole
+application, and outlives any one feature, so keep them at the `specs/` root rather than
+nested inside a folder that one release will eventually be the last change to touch.
 
 There are no dependencies and nothing to install. See `README.md` in this folder for the
 document conventions the tool expects and how to adopt it on a project that already has
