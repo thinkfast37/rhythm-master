@@ -942,3 +942,13 @@ record is complete rather than starting mid-stream.
   **The four tests are e2e because all four criteria are UI-level.** The two that previously named AC-1.4.1 and AC-1.4.2 proved neither — one duplicated AC-1.4.1's subject, the other asserted beat counts that AC-1.2.2 already covers — so they were rewritten to the criteria rather than retitled.
 
   **The first drafts failed, and the tests were wrong, not the code.** They assumed the editor opens on a blank 4/4 Pattern; it opens on a shipped one, so the first click hit US-7.3's naming guard and the meter picker never opened. Fixed by starting from `loadBlank('4/4')`, which hands back an owned Pattern.
+
+- [X] T180 **[data]** README: document every guardrail, and what none of them catch — `README.md`. No AC; documentation only.
+
+  Asked for directly: *"how did you miss all this when we originally built it and how do we avoid it again? do we have all the guardrails in place? if so, can you add all the guardrails in place into the readme."*
+
+  **The honest answer is that the guardrails are in place and were muted.** `T6 AC-1.1.8` and `T6 AC-1.1.9` — the −Measure control's criteria, flagged as UI-level with only a pure unit test — are in `traceability-baseline.json` right now. The check fired correctly when it was introduced; the baseline exists so the gate is not permanently red, and the finding has been sitting in it since.
+
+  So the new section leads with the nine checks and then states the three holes plainly: the baseline mutes 296 findings, nothing detects code that is built but never wired, and `coverage:ac` at 100% cannot tell a test *of* an AC from a test merely *named* for one. A guardrail list that reads as complete is worse than no list.
+
+  **Stale facts corrected while in there**: 333 findings → the matrix is now the source; "211 acceptance criteria" → 232; "the next step is `/speckit-tasks`" (untrue since the MVP shipped); and a `CHROMIUM_PATH` that pointed at a container path which does not exist on the maintainer's machine, wrongly implying e2e needs setup locally.
