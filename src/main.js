@@ -39,9 +39,9 @@ import {
 import {
   applyViewport,
   applyAccordions,
-  closeDrawer,
-  openDrawer,
-  isMobile,
+  collapseLibrary,
+  openLibrary,
+  isLibraryOpen,
   scrollMeasureIntoView,
 } from './ui/responsive.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
@@ -649,27 +649,32 @@ export function mount(root) {
   const libraryEl = document.createElement('div');
   sidebar.appendChild(libraryEl);
 
-  const drawerToggle = document.createElement('button');
-  drawerToggle.type = 'button';
-  drawerToggle.className = 'drawer-toggle';
-  drawerToggle.dataset.action = 'toggle-drawer';
-  drawerToggle.textContent = 'Library';
-  const syncDrawerToggle = () => {
-    const open = shell.dataset.drawer === 'open';
-    drawerToggle.textContent = open ? 'Close' : 'Library';
-    drawerToggle.setAttribute('aria-expanded', String(open));
+  /*
+   * The one way back to a collapsed library, at every width (AC-15.1.13). It is
+   * sticky within the main panel rather than merely first in it, so a musician
+   * who has scrolled down to the edit controls can still reach it.
+   */
+  const libraryToggle = document.createElement('button');
+  libraryToggle.type = 'button';
+  libraryToggle.className = 'library-toggle';
+  libraryToggle.dataset.action = 'toggle-library';
+  libraryToggle.textContent = 'Library';
+  const syncLibraryToggle = () => {
+    const open = isLibraryOpen(shell);
+    libraryToggle.textContent = open ? 'Close Library' : 'Library';
+    libraryToggle.setAttribute('aria-expanded', String(open));
   };
-  drawerToggle.addEventListener('click', () => {
-    if (shell.dataset.drawer === 'open') closeDrawer(shell);
-    else openDrawer(shell);
-    syncDrawerToggle();
+  libraryToggle.addEventListener('click', () => {
+    if (isLibraryOpen(shell)) collapseLibrary(shell);
+    else openLibrary(shell);
+    syncLibraryToggle();
   });
 
   const scrim = document.createElement('div');
   scrim.className = 'drawer-scrim';
   scrim.addEventListener('click', () => {
-    closeDrawer(shell);
-    syncDrawerToggle();
+    collapseLibrary(shell);
+    syncLibraryToggle();
   });
 
   // --- main panel, in priority order ---
@@ -721,7 +726,7 @@ export function mount(root) {
     navEl.appendChild(b);
   }
 
-  main.append(drawerToggle, headerEl, gridEl, playEl, settingsEl, editEl, actionsEl, navEl);
+  main.append(libraryToggle, headerEl, gridEl, playEl, settingsEl, editEl, actionsEl, navEl);
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
 
@@ -739,30 +744,34 @@ export function mount(root) {
   });
 
   /*
-   * Anything that loads a Pattern into the main panel closes the drawer on
-   * mobile, so the musician sees what just happened instead of having to dismiss
-   * the drawer to find out (AC-15.1.6). Above mobile the sidebar is a column and
-   * stays put.
+   * Anything that loads a Pattern into the main panel collapses the library, at
+   * every width, so the musician sees what just happened instead of keeping a
+   * column of the list they have finished with (AC-15.1.6).
    *
    * The rule is "did this change what the main panel shows", not "was this a
    * particular button" — searching, filtering, rating and tagging all leave the
-   * drawer open, because you are still working in it.
+   * library open, because you are still working in it.
+   *
+   * The main panel goes back to its top with it: the panel keeps its own scroll
+   * offset now (AC-15.1.12), and an offset chosen for the previous Pattern means
+   * nothing for this one.
    */
   const LOADS_A_PATTERN = ['open-pattern', 'new-pattern'];
   sidebar.addEventListener('click', (event) => {
     const action = event.target.closest('[data-action]')?.dataset.action;
     if (LOADS_A_PATTERN.includes(action)) {
-      closeDrawer(shell);
-      syncDrawerToggle();
+      collapseLibrary(shell);
+      syncLibraryToggle();
+      main.scrollTop = 0;
     }
   });
 
-  applyViewport(shell, { openDrawerOnMobile: isMobile() });
-  syncDrawerToggle();
+  applyViewport(shell, { openLibrary: true });
+  syncLibraryToggle();
   applyAccordions([settingsEl, editEl, actionsEl]);
   window.addEventListener('resize', () => {
     applyViewport(shell);
-    syncDrawerToggle();
+    syncLibraryToggle();
     applyAccordions([settingsEl, editEl, actionsEl]);
   });
 
@@ -786,7 +795,20 @@ export function mount(root) {
     if (position) scrollMeasureIntoView(gridEl, position.measureIndex);
   });
 
-  return { shell, sidebar, libraryEl, headerEl, gridEl, playEl, settingsEl, editEl, actionsEl, navEl };
+  return {
+    shell,
+    sidebar,
+    libraryEl,
+    libraryToggle,
+    main,
+    headerEl,
+    gridEl,
+    playEl,
+    settingsEl,
+    editEl,
+    actionsEl,
+    navEl,
+  };
 }
 
 /** Isolated so tests can pin it; core/ stays clock-free (Principle I). */

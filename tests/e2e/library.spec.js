@@ -383,18 +383,18 @@ test('AC-5.3.10 — on mobile, tagging needs no trip to the drawer', async ({ pa
   await page.goto('/');
 
   // Close the auto-opened drawer: everything below happens in the main panel.
-  await page.locator('.drawer-toggle').click();
-  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
 
   await page.locator('.header-tags [data-action="add-tag"]').click();
   await page.locator('.dialog-input').fill('practice');
   await page.locator('.dialog-button', { hasText: 'Add' }).click();
 
   await expect(page.locator('.header-tags .tag-chip.user', { hasText: 'practice' })).toBeVisible();
-  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
+  await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
 
   // And removing it likewise.
   await page.locator('.header-tags .tag-chip.user .tag-remove').click();
   await expect(page.locator('.header-tags .tag-chip.user', { hasText: 'practice' })).toHaveCount(0);
-  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
+  await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
 });

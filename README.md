@@ -9,8 +9,8 @@ entirely in the browser with no backend.
 
 ## Status
 
-Implemented. All 34 User Stories are built, and all 206 Acceptance Criteria carry at
-least one automated test — `npm run coverage:ac` reports 206/206.
+Implemented. All 34 User Stories are built, and all 211 Acceptance Criteria carry at
+least one automated test — `npm run coverage:ac` reports 211/211.
 
 ## Running it
 
@@ -62,7 +62,7 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2
 | Document | Purpose |
 |---|---|
 | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project principles — correctness, visual and audio clarity, traceability, and scope constraints that all work is held to |
-| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 34 user stories, 206 acceptance criteria in Given/When/Then form |
+| [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 34 user stories, 211 acceptance criteria in Given/When/Then form |
 | [`data/seed-patterns.json`](data/seed-patterns.json) | The Patterns the app ships with (110 at present). Plain JSON — add or edit Patterns here directly, no code change needed (US-16.2) |
 | [`specs/001-rhythm-master-mvp/plan.md`](specs/001-rhythm-master-mvp/plan.md) | Implementation plan: stack, project structure, and the Constitution Check |
 | [`specs/001-rhythm-master-mvp/research.md`](specs/001-rhythm-master-mvp/research.md) | Every technical decision, with the alternatives that were rejected and why |
