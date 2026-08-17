@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 271 across 35 User Stories
+**Criteria**: 272 across 35 User Stories
 
-**Coverage**: 73 of 271 criteria proven (26.9%)
+**Coverage**: 75 of 272 criteria proven (27.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 73 | 26.9% |
-| 🔴 Gap — HIGH | 77 | 28.4% |
-| 🟠 Gap — MEDIUM | 42 | 15.5% |
-| 🟡 Gap — LOW | 79 | 29.2% |
+| 🟢 Proven | 75 | 27.6% |
+| 🔴 Gap — HIGH | 75 | 27.6% |
+| 🟠 Gap — MEDIUM | 44 | 16.2% |
+| 🟡 Gap — LOW | 78 | 28.7% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -51,17 +51,17 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (198 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (197 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
 
 | User Story | Criteria | 🟢 Proven | 🔵 Waived | 🔴 CRITICAL | 🔴 HIGH | 🟠 MEDIUM | 🟡 LOW |
 |---|---|---|---|---|---|---|---|
-| 🔴 US-1.1 | 9 | 1 | · | · | 4 | · | 4 |
+| 🔴 US-1.1 | 10 | 3 | · | · | 4 | · | 3 |
 | 🟠 US-1.2 | 4 | 0 | · | · | · | 4 | · |
 | 🔴 US-1.3 | 10 | 0 | · | · | 1 | 3 | 6 |
-| 🔴 US-1.4 | 8 | 0 | · | · | 2 | 4 | 2 |
+| 🟠 US-1.4 | 8 | 0 | · | · | · | 6 | 2 |
 | 🔴 US-2.1 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-2.2 | 29 | 16 | · | · | 1 | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
@@ -102,7 +102,8 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
 | US-1.1 | `AC-1.1.3` 🖵 | 8-Measure cap disables +Measure | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-1.1 | `AC-1.1.5` | Multi-Measure change prompts apply-to-all vs. this-one | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.1 | `AC-1.1.5/1` 🖵 | The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.5/2` 🖵 | A Measure other than the first changes alone, with no prompt | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.6` | Time Signature change resets that Measure's content | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.1 | `AC-1.1.7` | Time Signature reset is undoable | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.1 | `AC-1.1.8` 🖵 | Last remaining Measure can't be removed | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
@@ -121,8 +122,8 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-1.3 | `AC-1.3.8` | Confirmation is required in both directions, since any Recipe change clears the Beat | P-007 | T041, T042, T043 (3/3 done) | T044 (1/1 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.3 | `AC-1.3.9` 🖵 | Accent works identically on a triplet-feel Slot | P-007 | T041, T042, T043 (3/3 done) | T044 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.3 | `AC-1.3.10` 🖵 | Recipe change on an empty Beat applies with no confirmation | P-007 | T041, T042, T043 (3/3 done) | T044 (1/1 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.4 | `AC-1.4.1` 🖵 | Time Signature label is itself the picker control | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-1.4 | `AC-1.4.2` 🖵 | Picker offers exactly the 10 supported values | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-1.4 | `AC-1.4.1` 🖵 | Time Signature label is itself the picker control | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-1.4 | `AC-1.4.2` 🖵 | Picker offers exactly the 11 supported values | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.3` 🖵 | Each Measure's label reflects only its own Time Signature | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.test.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.4 | `AC-1.4.4` 🖵 | Prominent vs. dimmed label rendering | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.test.js`, `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.5` 🖵 | Uniform-meter Pattern renders only Measure 1 prominently | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.test.js` | 🟡 **LOW** · MISNAMED ᵃ |

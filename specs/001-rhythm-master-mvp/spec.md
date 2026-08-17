@@ -86,13 +86,25 @@ exist).
   - **When** the Composer changes that Measure's Time Signature
   - **Then** the change applies immediately with no prompt, the Measure's Time Signature updates, and its Beats reset to the new Time Signature's default Recipe with all Slots cleared to off
 
-- **AC-1.1.5** — Multi-Measure change prompts apply-to-all vs. this-one
+- **AC-1.1.5** — First-Measure change prompts apply-to-all vs. this-one
   - **Given** a Pattern with more than one Measure
-  - **When** the Composer changes one Measure's Time Signature
+  - **When** the Composer changes the **first** Measure's Time Signature
   - **Then** the system prompts *"Apply [new time signature] to all measures in this pattern?"* with three choices:
     - **Apply to all** → every Measure's Time Signature is set to the new value, and every Measure's Beats reset to the new default Recipe, all Slots cleared
     - **This measure only** → only the edited Measure's Time Signature changes and resets (AC-1.1.6); every other Measure is untouched
     - **Cancel** → no change is made anywhere
+  - **And**, when the Composer changes any Measure *other* than the first, the change applies
+    to that Measure alone with no prompt, exactly as AC-1.1.4 describes for a single-Measure
+    Pattern
+  - **Cases**:
+    - **AC-1.1.5/1** — The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel
+    - **AC-1.1.5/2** — A Measure other than the first changes alone, with no prompt
+  - *(Revised 2026-08-17. This previously read "Multi-Measure change" and prompted on any
+    Measure. Only the first Measure meaningfully stands for the whole Pattern — a meter
+    change there reads as "this Pattern is in 6/8", whereas a change to Measure 3 reads as a
+    local event, and prompting on every one of up to eight Measures nags without informing.
+    The implementation has always gated the prompt on the first Measure; this AC was
+    describing something that was never built.)*
 
 - **AC-1.1.6** — Time Signature change resets that Measure's content
   - **Given** a Measure whose Time Signature has just changed (via AC-1.1.4 or AC-1.1.5)
@@ -261,13 +273,17 @@ exist).
   - **Then** each of the 3 Measures displays its own Time Signature label showing that Measure's current Time Signature
   - **And** that label is itself the control — tapping it opens that Measure's Time Signature picker
 
-- **AC-1.4.2** — Picker offers exactly the 10 supported values
+- **AC-1.4.2** — Picker offers exactly the 11 supported values
   - **Given** the Composer taps a Measure's Time Signature label
   - **When** the picker opens
   - **Then** exactly these eleven values are offered: 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8, 12/8
   - **And** 1/4 is offered specifically so a single-beat drill cell can be a valid Pattern in its own
     right, looping every beat, rather than being padded or repeated to fill a longer Measure
   - **And** no free-text entry is possible
+  - *(Revised 2026-08-17. The title said 10 while the body listed eleven and `TIME_SIGNATURES`
+    held eleven — 1/4 was added without the title following. The count matters beyond tidiness:
+    T5 matches a test name against the AC **title**, so a test named verbatim would have
+    claimed ten while proving eleven.)*
 
 - **AC-1.4.3** — Each Measure's label reflects only its own Time Signature
   - **Given** a Pattern whose Measure 1 is 4/4 and Measure 2 is 3/4

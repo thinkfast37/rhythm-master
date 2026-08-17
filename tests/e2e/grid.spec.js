@@ -39,20 +39,88 @@ test('AC-1.1.3 — 8-Measure cap disables +Measure', async ({ page }) => {
   await expect(add).toBeDisabled();
 });
 
-test('AC-1.4.1 — each Measure shows its own Time Signature in the grid', async ({ page }) => {
+/**
+ * A Pattern of `count` Measures, each carrying the meters given, loaded into the
+ * editor. Used by the US-1.4 and US-1.1 picker tests below, which all need more
+ * than the one Measure a fresh Pattern opens with.
+ */
+async function loadMeasures(page, meters) {
+  await page.evaluate((list) => {
+    // From a blank 4/4, not from whatever the app opened with: the app opens on a
+    // shipped Pattern, which is neither 4/4 nor editable without the naming prompt
+    // (US-7.3). `loadBlank` hands back an owned Pattern, so the picker opens directly.
+    const base = window.__rm.loadBlank('4/4');
+    window.__rm.loadPattern(
+      {
+        ...structuredClone(base),
+        id: 'p_meters',
+        name: 'Meters',
+        measures: list.map(() => structuredClone(base.measures[0])),
+      },
+      { owned: true }
+    );
+  }, meters);
+  for (const [i, ts] of meters.entries()) {
+    if (ts === '4/4') continue;
+    await page.locator(`[data-action="change-time-signature"][data-measure="${i}"]`).click();
+    await page.locator(`.dialog-button[data-value="${ts}"]`).click();
+    // Measure 1 in a multi-Measure Pattern asks whether to apply throughout (AC-1.1.5).
+    const scope = page.locator('.dialog-button[data-value="one"]');
+    if (await scope.isVisible().catch(() => false)) await scope.click();
+  }
+  await expect(page.locator('.measure')).toHaveCount(meters.length);
+}
+
+test('AC-1.4.1 — Time Signature label is itself the picker control: every Measure shows its own current Time Signature', async ({
+  page,
+}) => {
   await page.goto('/');
-  const meter = page.locator('.measure-meter').first();
-  await expect(meter).toBeVisible();
-  await expect(meter).toHaveText(/^\d+\/\d+$/);
+  await loadMeasures(page, ['4/4', '3/4', '7/8']);
+
+  const measures = await page.locator('.measure').all();
+  expect(measures).toHaveLength(3);
+  for (const measure of measures) {
+    const ts = await measure.getAttribute('data-time-signature');
+    // The label is that Measure's own meter, not the Pattern's or its neighbour's.
+    await expect(measure.locator('.measure-meter')).toHaveText(ts);
+  }
+  expect(
+    await page.locator('.measure').evaluateAll((els) => els.map((e) => e.dataset.timeSignature))
+  ).toEqual(['4/4', '3/4', '7/8']);
 });
 
-test('AC-1.4.2 — the Time Signature shown matches the Measure it labels', async ({ page }) => {
+test('AC-1.4.1 — Time Signature label is itself the picker control: tapping a Measure’s label opens that Measure’s picker', async ({
+  page,
+}) => {
   await page.goto('/');
-  const measure = page.locator('.measure').first();
-  const ts = await measure.getAttribute('data-time-signature');
-  await expect(measure.locator('.measure-meter')).toHaveText(ts);
-  const numerator = Number(ts.split('/')[0]);
-  await expect(measure.locator('.beat')).toHaveCount(numerator);
+  await loadMeasures(page, ['4/4', '3/4', '7/8']);
+
+  // The label itself is the control — a button, not a caption sat beside one.
+  const label = page.locator('[data-action="change-time-signature"][data-measure="1"]');
+  await expect(label).toHaveClass(/measure-meter/);
+  await expect(page.locator('.dialog')).toHaveCount(0);
+
+  await label.click();
+  // And the picker it opens is that Measure's: it names Measure 2, not Measure 1.
+  await expect(page.locator('.dialog-message')).toHaveText(/Measure 2/);
+});
+
+test('AC-1.4.2 — Picker offers exactly the 11 supported values', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('[data-action="change-time-signature"][data-measure="0"]').click();
+
+  const offered = await page
+    .locator('.dialog-button')
+    .evaluateAll((els) => els.map((e) => e.dataset.value));
+  // Cancel is a way out of the picker, not a Time Signature it offers.
+  expect(offered.filter((v) => v !== 'null')).toEqual([
+    '1/4', '2/4', '3/4', '4/4', '5/4', '6/4', '7/4', '6/8', '7/8', '9/8', '12/8',
+  ]);
+  // 1/4 specifically, so a single-beat drill cell is a valid Pattern in its own right.
+  expect(offered).toContain('1/4');
+  // No free-text entry: the picker is a closed set of buttons.
+  await expect(page.locator('.dialog input, .dialog textarea')).toHaveCount(0);
 });
 
 test('AC-1.2.2 — every Measure renders exactly its numerator in Beats', async ({ page }) => {
@@ -863,4 +931,42 @@ test('AC-15.2.6/2 — The square never costs a tap target: where a Slot is at it
     expect(c.h, `height ${c.h}`).toBeGreaterThanOrEqual(24);
     expect(Math.abs(c.w - c.h)).toBeLessThanOrEqual(1);
   }
+});
+
+test('AC-1.1.5/1 — The first Measure’s Time Signature change offers Apply to all, This measure only, and Cancel', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '4/4', '4/4']);
+
+  await page.locator('[data-action="change-time-signature"][data-measure="0"]').click();
+  await page.locator('.dialog-button[data-value="6/8"]').click();
+
+  // Three choices, and only three: apply throughout, apply here, or back out.
+  const choices = await page
+    .locator('.dialog-button')
+    .evaluateAll((els) => els.map((e) => e.dataset.value));
+  expect(choices).toEqual(['all', 'one', 'cancel']);
+
+  // Cancel makes no change anywhere.
+  await page.locator('.dialog-button[data-value="cancel"]').click();
+  expect(
+    await page.locator('.measure').evaluateAll((els) => els.map((e) => e.dataset.timeSignature))
+  ).toEqual(['4/4', '4/4', '4/4']);
+});
+
+test('AC-1.1.5/2 — A Measure other than the first changes alone, with no prompt', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '4/4', '4/4']);
+
+  await page.locator('[data-action="change-time-signature"][data-measure="1"]').click();
+  await page.locator('.dialog-button[data-value="6/8"]').click();
+
+  // No apply-to-all question: the change lands the moment the meter is picked.
+  await expect(page.locator('.dialog-button[data-value="all"]')).toHaveCount(0);
+  expect(
+    await page.locator('.measure').evaluateAll((els) => els.map((e) => e.dataset.timeSignature))
+  ).toEqual(['4/4', '6/8', '4/4']);
 });
