@@ -112,6 +112,12 @@ Every change lands the same way:
    the reasoning outlives a compaction and lives somewhere a commit message
    cannot. Open it even in Auto mode, even for a one-line data fix.
 5. **Auto: merge it.** Review: hand over the link and stop.
+6. **Watch the deploy, and report what is actually live.** Merging is not
+   landing. `verify` and `build` can both pass and the `deploy` job still fail
+   on its own — a Pages outage, a rate-limited action download — leaving `main`
+   correct and the site stale, which looks from the musician's chair exactly
+   like the work never happened. Check the run. If it is red, say so, name the
+   failure, and do not describe the change as delivered.
 
 **A failing or skipped gate stops the merge in either mode.** Auto is permission
 to merge *passing* work without waiting; it is never permission to merge red work
@@ -133,6 +139,14 @@ can catch either and a merge deploys them straight to the musician:
   practising with it daily.
 
 Say so in the option text and let them choose. Do not change the default.
+
+**A red deploy is your problem, not GitHub's.** Re-run the failed job if you
+can. If the token cannot (`403 Resource not accessible by integration` on
+`rerun-failed-jobs` and on `workflow_dispatch` — it holds `contents` and `pages`
+write, not `actions: write`), say plainly that the maintainer has to press
+**Re-run failed jobs** on the run, and give them the link. The next merge to
+`main` also retriggers it, so a genuinely transient outage clears itself on the
+following change.
 
 ---
 
