@@ -844,6 +844,15 @@ exist).
   - **And** Tag selection narrows alongside the text search and the Rating filter rather than replacing either (AC-6.1.6)
   - *(Tags are ANDed rather than ORed because the point of selecting a second one is to drill in. ORing them could only ever widen the result, which no combination of Tags would ever narrow.)*
 
+- **AC-5.3.10** — A Pattern's Tags live on the Pattern, not repeated down the library list
+  - **Given** the library showing all 112 Patterns
+  - **When** the Practicing Musician looks at the list
+  - **Then** no Pattern row shows its Tags — the rows carry name and Rating only
+  - **And** the currently open Pattern shows its full Tag set in its header, with the same three kinds and the same removal rules as AC-5.3.5
+  - **And** a Tag can be added to, or removed from, the open Pattern from that header
+  - **And**, given a 390px viewport with the drawer closed, both actions work without opening the drawer at all
+  - *(Tags were repeated on every one of 112 rows, which made the list far longer to scroll for information the filter chips above it already act on — and on a phone it meant opening the drawer and finding a row just to tag the Pattern already on screen. The filter chips remain: one instance, not one per row.)*
+
 - **AC-5.3.6** — User Tag de-duplication is case-insensitive
   - **Given** a Pattern already tagged "Warmup"
   - **When** the user types "warmup" (lowercase) and adds it as a Tag

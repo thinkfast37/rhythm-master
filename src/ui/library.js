@@ -199,7 +199,7 @@ export function renderLibrary(root, entries, viewState, handlers) {
 }
 
 function renderEntry(entry, viewState, handlers) {
-  const { pattern, owned, autoTags, lockedTags, userTags } = entry;
+  const { pattern, owned } = entry;
 
   const item = el('li', 'pattern-item');
   item.dataset.patternId = pattern.id;
@@ -213,44 +213,12 @@ function renderEntry(entry, viewState, handlers) {
 
   item.appendChild(renderStars(pattern, handlers));
 
-  const tags = el('div', 'pattern-tags');
-
-  // Automatic and built-in Tags: outlined, no removal control. The absent "×"
-  // is what says "not yours to delete" — no glyph to interpret (AC-5.3.5).
-  for (const t of autoTags) {
-    const chip = el('span', 'tag-chip automatic', { textContent: t });
-    chip.dataset.automatic = 'true';
-    tags.appendChild(chip);
-  }
-  for (const t of lockedTags) {
-    const chip = el('span', 'tag-chip automatic locked', { textContent: t });
-    chip.dataset.automatic = 'true';
-    chip.dataset.locked = 'true';
-    tags.appendChild(chip);
-  }
-
-  // The musician's own Tags: filled, with a "×".
-  for (const t of userTags) {
-    const chip = el('span', 'tag-chip user', { textContent: t });
-    chip.dataset.automatic = 'false';
-    const remove = el('button', 'tag-remove', { type: 'button', textContent: '×' });
-    remove.dataset.action = 'remove-tag';
-    remove.dataset.tag = t;
-    remove.setAttribute('title', `Remove tag "${t}"`);
-    remove.addEventListener('click', () => handlers.onRemoveTag(pattern.id, t));
-    chip.appendChild(remove);
-    tags.appendChild(chip);
-  }
-
-  // Adding a Tag works on any Pattern, built-in included.
-  const add = el('button', 'tag-add', { type: 'button', textContent: '+ tag' });
-  add.dataset.action = 'add-tag';
-  add.setAttribute('title', 'Add a tag');
-  add.addEventListener('click', () => handlers.onAddTagPrompt(pattern.id));
-  tags.appendChild(add);
-
-  item.appendChild(tags);
-
+  /*
+   * Deliberately no Tag chips per row. They repeated on every one of 112 rows,
+   * which made the list far longer to scroll for information the filter chips
+   * above already act on. A Pattern's Tags are shown — and edited — on the
+   * Pattern itself, where you are when you care about them.
+   */
   return item;
 }
 

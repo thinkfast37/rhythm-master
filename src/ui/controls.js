@@ -68,14 +68,7 @@ export function renderHeader(root, pattern, state, handlers = {}) {
   name.addEventListener('blur', (e) => handlers.onRename?.(e.target.value));
   root.appendChild(name);
 
-  if (handlers.onUndo) {
-    const undoButton = el('button', 'undo', { type: 'button', textContent: 'Undo' });
-    undoButton.dataset.action = 'undo';
-    undoButton.disabled = !state.canUndo;
-    undoButton.addEventListener('click', () => handlers.onUndo());
-    root.appendChild(undoButton);
-  }
-  // Provenance reads as a Tag in the library, not as a sentence here.
+  // Provenance reads as a Tag below, not as a sentence here.
   root.appendChild(
     el('p', 'pattern-meta', {
       textContent:
@@ -83,7 +76,63 @@ export function renderHeader(root, pattern, state, handlers = {}) {
         `${pattern.measures.map((m) => m.timeSignature).join(', ')}`,
     })
   );
+
+  root.appendChild(renderHeaderTags(pattern, state, handlers));
+
+  if (handlers.onUndo) {
+    const undoButton = el('button', 'undo', { type: 'button', textContent: 'Undo' });
+    undoButton.dataset.action = 'undo';
+    undoButton.disabled = !state.canUndo;
+    undoButton.addEventListener('click', () => handlers.onUndo());
+    root.appendChild(undoButton);
+  }
+
   return root;
+}
+
+/**
+ * The current Pattern's Tags, shown and edited here rather than in the library
+ * list. Tagging is something you do while looking at a Pattern, so on a phone it
+ * should not require opening the drawer and finding its row.
+ *
+ * Three kinds, distinguished by whether they carry a removal control:
+ * automatic (derived), built-in (the Pattern's own, if it ships with the app),
+ * and the musician's own.
+ */
+function renderHeaderTags(pattern, state, handlers) {
+  const wrap = el('div', 'header-tags');
+  const tags = state.currentTags ?? { autoTags: [], lockedTags: [], userTags: [] };
+
+  for (const t of tags.autoTags) {
+    const chip = el('span', 'tag-chip automatic', { textContent: t });
+    chip.dataset.automatic = 'true';
+    wrap.appendChild(chip);
+  }
+  for (const t of tags.lockedTags) {
+    const chip = el('span', 'tag-chip automatic locked', { textContent: t });
+    chip.dataset.automatic = 'true';
+    chip.dataset.locked = 'true';
+    wrap.appendChild(chip);
+  }
+  for (const t of tags.userTags) {
+    const chip = el('span', 'tag-chip user', { textContent: t });
+    chip.dataset.automatic = 'false';
+    const remove = el('button', 'tag-remove', { type: 'button', textContent: '×' });
+    remove.dataset.action = 'remove-tag';
+    remove.dataset.tag = t;
+    remove.setAttribute('title', `Remove tag "${t}"`);
+    remove.addEventListener('click', () => handlers.onRemoveTag?.(pattern.id, t));
+    chip.appendChild(remove);
+    wrap.appendChild(chip);
+  }
+
+  const add = el('button', 'tag-add', { type: 'button', textContent: '+ tag' });
+  add.dataset.action = 'add-tag';
+  add.setAttribute('title', 'Add a tag');
+  add.addEventListener('click', () => handlers.onAddTagPrompt?.(pattern.id));
+  wrap.appendChild(add);
+
+  return wrap;
 }
 
 /** Play controls only — the primary transport, never collapsible. */

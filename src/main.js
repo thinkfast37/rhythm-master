@@ -18,6 +18,7 @@ import {
   setPitch,
   append,
   duplicate,
+  automaticTags,
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
@@ -766,7 +767,14 @@ export function mount(root) {
   });
 
   subscribe((pattern, position, s) => {
-    renderHeader(headerEl, pattern, { ...s, canUndo: canUndo() }, handlers);
+    // The header needs the same Tag breakdown the library computes, so the two
+    // cannot disagree about what is removable.
+    const entry = libraryEntries().find((e) => e.pattern.id === pattern.id);
+    const currentTags = entry
+      ? { autoTags: entry.autoTags, lockedTags: entry.lockedTags, userTags: entry.userTags }
+      : { autoTags: automaticTags(pattern, s.isOwned), lockedTags: [], userTags: pattern.tags ?? [] };
+
+    renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
     renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
     renderPlayControls(playEl, pattern, s, handlers);
     renderPlaybackSettings(settingsBody, pattern, s, handlers);

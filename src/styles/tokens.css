@@ -443,3 +443,11 @@ body {
   color: var(--ink); background: transparent;
   border: 1px solid var(--ink-dim); cursor: pointer;
 }
+
+/* A Pattern's own Tags, shown where you are when you care about them. */
+.header-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}

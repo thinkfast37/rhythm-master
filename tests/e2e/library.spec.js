@@ -37,18 +37,20 @@ test('AC-5.3.5 — automatic Tags are outlined with no removal control; user Tag
   page,
 }) => {
   await page.goto('/');
-  // Every shipped Pattern carries at least the Sound Mode automatic Tag.
-  const auto = page.locator('.pattern-item .tag-chip.automatic').first();
+  // Tags live on the Pattern, not repeated down the library list.
+  await expect(page.locator('.pattern-item .tag-chip')).toHaveCount(0);
+
+  const auto = page.locator('.header-tags .tag-chip.automatic').first();
   await expect(auto).toBeVisible();
   await expect(auto).toHaveAttribute('data-automatic', 'true');
   await expect(auto.locator('.tag-remove')).toHaveCount(0);
 
-  // Give a shipped Pattern a user Tag and confirm the contrasting treatment.
+  // Add a Tag to the open Pattern and confirm the contrasting treatment.
   await page.evaluate(() => {
-    const id = window.__rm.seedStore.loadAll()[0].id;
+    const id = window.__rm.getState().pattern.id;
     window.__rm.handlers.onAddTag(id, 'warmup');
   });
-  const user = page.locator('.pattern-item .tag-chip.user', { hasText: 'warmup' }).first();
+  const user = page.locator('.header-tags .tag-chip.user', { hasText: 'warmup' });
   await expect(user).toHaveAttribute('data-automatic', 'false');
   await expect(user.locator('.tag-remove')).toHaveCount(1);
 });
@@ -59,41 +61,46 @@ test('AC-5.3.3 — clicking a Tag chip filters by it', async ({ page }) => {
   const count = await page.locator('.pattern-item').count();
   expect(count).toBeGreaterThan(0);
   expect(count).toBeLessThan(112);
-  for (const item of await page.locator('.pattern-item').all()) {
-    await expect(item.locator('.tag-chip', { hasText: 'melodic' }).first()).toBeVisible();
-  }
+
+  // Every listed Pattern genuinely carries the Tag, checked against the data
+  // rather than the row, which no longer repeats Tags.
+  const allMelodic = await page.evaluate(() =>
+    [...document.querySelectorAll('.pattern-item')].every((el) => {
+      const id = el.dataset.patternId;
+      const all = [...window.__rm.seedStore.loadAll(), ...window.__rm.patternStore.loadAll()];
+      return all.find((p) => p.id === id)?.soundMode === 'melodic';
+    })
+  );
+  expect(allMelodic).toBe(true);
 });
 
 test('AC-5.3.6 — a Tag you added is removable; a built-in Pattern’s own Tags are not', async ({
   page,
 }) => {
   await page.goto('/');
-  const target = await page.evaluate(() => {
+  const builtInTag = await page.evaluate(() => {
     const p = window.__rm.seedStore.loadAll().find((x) => x.tags.length > 0);
+    window.__rm.loadPattern(structuredClone(p), { owned: false });
     window.__rm.handlers.onAddTag(p.id, 'warmup');
-    return { id: p.id, tag: p.tags[0] };
+    return p.tags[0];
   });
-  const builtInTag = target.tag;
 
-  // Address the Pattern by id: the list is alphabetical, so seed order says
-  // nothing about where it appears.
-  const item = page.locator(`.pattern-item[data-pattern-id="${target.id}"]`);
+  const header = page.locator('.header-tags');
 
   // The Tag the musician added carries a removal control.
-  const mine = item.locator('.tag-chip.user', { hasText: 'warmup' });
+  const mine = header.locator('.tag-chip.user', { hasText: 'warmup' });
   await expect(mine).toBeVisible();
   await expect(mine.locator('.tag-remove')).toHaveCount(1);
 
   // The Pattern's own Tag does not — it describes what the Pattern is.
-  const locked = item.locator('.tag-chip.locked', { hasText: builtInTag });
+  const locked = header.locator('.tag-chip.locked', { hasText: builtInTag });
   await expect(locked).toBeVisible();
   await expect(locked).toHaveAttribute('data-locked', 'true');
   await expect(locked.locator('.tag-remove')).toHaveCount(0);
 
   await mine.locator('.tag-remove').click();
-  await expect(item.locator('.tag-chip.user', { hasText: 'warmup' })).toHaveCount(0);
-  // Removing yours left the built-in one alone.
-  await expect(item.locator('.tag-chip.locked', { hasText: builtInTag })).toBeVisible();
+  await expect(header.locator('.tag-chip.user', { hasText: 'warmup' })).toHaveCount(0);
+  await expect(header.locator('.tag-chip.locked', { hasText: builtInTag })).toBeVisible();
 });
 
 test('AC-5.3.6 — a built-in Tag survives an attempt to remove it programmatically', async ({
@@ -113,15 +120,16 @@ test('AC-5.3.6 — a built-in Tag survives an attempt to remove it programmatica
   expect(result.notMovedToOverlay).toBe(0);
 });
 
-test('AC-5.3.2 — a Tag can be added from the library, on a built-in Pattern', async ({ page }) => {
+test('AC-5.3.2 — a Tag can be added from the Pattern itself, without opening the library', async ({
+  page,
+}) => {
   await page.goto('/');
-  const item = page.locator('.pattern-item').first();
 
-  await item.locator('[data-action="add-tag"]').click();
+  await page.locator('.header-tags [data-action="add-tag"]').click();
   await page.locator('.dialog-input').fill('warmup');
   await page.locator('.dialog-button', { hasText: 'Add' }).click();
 
-  await expect(item.locator('.tag-chip.user', { hasText: 'warmup' })).toBeVisible();
+  await expect(page.locator('.header-tags .tag-chip.user', { hasText: 'warmup' })).toBeVisible();
 
   // It persists, and it is filterable like any other Tag.
   await page.reload();
@@ -130,8 +138,9 @@ test('AC-5.3.2 — a Tag can be added from the library, on a built-in Pattern', 
 
 test('AC-5.3.1 — provenance reads as a Tag, not as prose about the software', async ({ page }) => {
   await page.goto('/');
-  const first = page.locator('.pattern-item').first();
-  await expect(first.locator('.tag-chip.automatic', { hasText: 'built-in' })).toBeVisible();
+  await expect(
+    page.locator('.header-tags .tag-chip.automatic', { hasText: 'built-in' })
+  ).toBeVisible();
 
   // No developer-facing phrasing anywhere on the page.
   const body = await page.locator('body').innerText();
@@ -242,9 +251,9 @@ test('AC-5.1.6 — an owned Pattern joins the library alongside built-in ones', 
 
   const mine = page.locator('.pattern-item', { hasText: 'Aaa My Pattern' });
   await expect(mine).toHaveAttribute('data-owned', 'true');
-  await expect(mine.locator('.tag-chip.automatic', { hasText: 'custom' })).toBeVisible();
-  // Owned and shipped Patterns interleave by name rather than being segregated.
-  await expect(mine.locator('.tag-chip.automatic', { hasText: 'percussive' })).toBeVisible();
+  // The Pattern is open, so its Tags show on it.
+  await expect(page.locator('.header-tags .tag-chip', { hasText: 'custom' })).toBeVisible();
+  await expect(page.locator('.header-tags .tag-chip', { hasText: 'percussive' })).toBeVisible();
 });
 
 test('AC-5.3.7 — "Song Signatures" is gone; those Patterns are tagged Song', async ({ page }) => {
@@ -283,11 +292,16 @@ test('AC-5.3.9 — several Tags can be selected, and each one narrows further', 
     'true'
   );
 
-  // And every remaining Pattern genuinely carries both.
-  for (const item of await page.locator('.pattern-item').all()) {
-    await expect(item.locator('.tag-chip', { hasText: /^Song$/ })).toHaveCount(1);
-    await expect(item.locator('.tag-chip', { hasText: /^melodic$/ })).toHaveCount(1);
-  }
+  // And every remaining Pattern genuinely carries both, checked against the data.
+  const allBoth = await page.evaluate(() =>
+    [...document.querySelectorAll('.pattern-item')].every((el) => {
+      const id = el.dataset.patternId;
+      const all = [...window.__rm.seedStore.loadAll(), ...window.__rm.patternStore.loadAll()];
+      const p = all.find((x) => x.id === id);
+      return p && p.soundMode === 'melodic' && p.tags.includes('Song');
+    })
+  );
+  expect(allBoth).toBe(true);
 });
 
 test('AC-5.3.9 — clicking a selected Tag deselects just that one', async ({ page }) => {
@@ -329,4 +343,51 @@ test('AC-5.3.9 — a combination nothing carries shows an empty list, not a wron
   // No Pattern is both, and the app says so rather than quietly dropping a Tag.
   await expect(page.locator('.pattern-item')).toHaveCount(0);
   await expect(page.locator('.library-count')).toHaveText('0 patterns');
+});
+
+test('AC-5.3.10 — the library list does not repeat every Pattern’s Tags', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.pattern-item')).toHaveCount(112);
+
+  // 112 rows each repeating their Tags made the list far longer to scroll for
+  // information the filter chips above already act on.
+  await expect(page.locator('.pattern-item .tag-chip')).toHaveCount(0);
+  await expect(page.locator('.pattern-item [data-action="add-tag"]')).toHaveCount(0);
+
+  // The filter row is still there — one instance, not one per row.
+  await expect(page.locator('.tag-filter').first()).toBeVisible();
+});
+
+test('AC-5.3.10 — the open Pattern shows its own Tags in the header', async ({ page }) => {
+  await page.goto('/');
+  const expected = await page.evaluate(() => {
+    const p = window.__rm.seedStore.loadAll().find((x) => x.tags.length > 0);
+    window.__rm.loadPattern(structuredClone(p), { owned: false });
+    return { name: p.name, tag: p.tags[0] };
+  });
+
+  await expect(page.locator('.pattern-title')).toHaveValue(expected.name);
+  await expect(page.locator('.header-tags .tag-chip', { hasText: expected.tag })).toBeVisible();
+  await expect(page.locator('.header-tags .tag-chip', { hasText: 'built-in' })).toBeVisible();
+});
+
+test('AC-5.3.10 — on mobile, tagging needs no trip to the drawer', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  // Close the auto-opened drawer: everything below happens in the main panel.
+  await page.locator('.drawer-toggle').click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
+
+  await page.locator('.header-tags [data-action="add-tag"]').click();
+  await page.locator('.dialog-input').fill('practice');
+  await page.locator('.dialog-button', { hasText: 'Add' }).click();
+
+  await expect(page.locator('.header-tags .tag-chip.user', { hasText: 'practice' })).toBeVisible();
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
+
+  // And removing it likewise.
+  await page.locator('.header-tags .tag-chip.user .tag-remove').click();
+  await expect(page.locator('.header-tags .tag-chip.user', { hasText: 'practice' })).toHaveCount(0);
+  await expect(page.locator('.shell')).toHaveAttribute('data-drawer', 'closed');
 });
