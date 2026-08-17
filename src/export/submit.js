@@ -34,9 +34,22 @@ export function toSubmissionShape(pattern) {
   return out;
 }
 
+/**
+ * The submitted JSON is COMPACT, and that is what keeps a real Pattern submittable.
+ *
+ * Indentation is nearly free in a file and ruinous in a URL: every newline and space
+ * costs three characters once percent-encoded, and each Slot is its own object. A
+ * four-Measure Pattern is 1,657 characters of music, 5,353 pretty-printed, and 14,281
+ * encoded — so it fell into AC-13.1.3's fallback, which describes an oversized *bulk*
+ * submission, while AC-13.1.1 puts no size caveat on submitting one Pattern at all.
+ *
+ * Compact, the densest Pattern the app can represent (8 Measures of 12/8 at Straight
+ * 16ths) encodes to well under the limit, so the fallback is now reachable only by a
+ * batch of many Patterns — which is the only case the criterion describes.
+ */
 export function buildIssueBody(patterns) {
   const blocks = patterns.map(
-    (p) => `### Pattern: ${p.name}\n\n\`\`\`json\n${JSON.stringify(toSubmissionShape(p), null, 2)}\n\`\`\``
+    (p) => `### Pattern: ${p.name}\n\n\`\`\`json\n${JSON.stringify(toSubmissionShape(p))}\n\`\`\``
   );
   return [
     patterns.length === 1

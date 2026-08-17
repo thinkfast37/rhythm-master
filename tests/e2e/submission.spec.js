@@ -161,6 +161,27 @@ test('AC-13.1.3/2 — A submission within the limit prefills title, label and bo
   await expect(page.locator('.submission-fallback')).toHaveCount(0);
 });
 
+test('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full: a four-Measure Pattern, as reported', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await makeOwned(page, 'Four Bar Line');
+  // The reported case, built through the UI it was reported against.
+  for (let i = 1; i < 4; i++) await page.locator('[data-action="add-measure"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.measures.length)).toBe(4);
+
+  await page.locator('[data-action="submit-pattern"]').click();
+
+  const href = await submissionLink(page).getAttribute('href');
+  expect(href).toContain('body=');
+  expect(href.length).toBeLessThanOrEqual(8000);
+  await expect(page.locator('.submission-fallback')).toHaveCount(0);
+
+  // The whole Pattern is in the link, not a prefix of it.
+  const body = new URL(href).searchParams.get('body');
+  expect(JSON.parse(body.slice(body.indexOf('{'), body.lastIndexOf('}') + 1)).measures).toHaveLength(4);
+});
+
 test('AC-13.1.4/1 — A Pattern submitted and unedited since is excluded from a later bulk submission', async ({ page }) => {
   await stubGitHub(page);
   await page.goto('/');

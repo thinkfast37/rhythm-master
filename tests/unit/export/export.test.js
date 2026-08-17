@@ -175,6 +175,31 @@ describe('export/submit', () => {
     expect(MAX_URL_LENGTH).toBe(8000);
   });
 
+  it('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full: an ordinary multi-Measure Pattern is within it', () => {
+    // The reported case: a four-Measure line fell into the oversized-BULK fallback,
+    // because the body was pretty-printed and every newline costs three characters
+    // once percent-encoded. 1,657 characters of music became 14,281 of URL.
+    let p = create('Four Bar Line');
+    for (let i = 1; i < 4; i++) p = addMeasure(p);
+    for (let m = 0; m < 4; m++) {
+      for (let b = 0; b < p.measures[m].beats.length; b++) p = cycleAccent(p, m, b, 0);
+    }
+
+    const { url, truncated } = buildSubmission([p]);
+    expect(truncated).toBe(false);
+    expect(url).toContain('body=');
+    expect(url.length).toBeLessThanOrEqual(MAX_URL_LENGTH);
+  });
+
+  it('AC-13.1.3/2 — A submission within the limit prefills title, label and body in full: the body carries no indentation to pay for', () => {
+    const body = buildIssueBody([withNote(create('Compact'))]);
+    const json = body.slice(body.indexOf('{'), body.lastIndexOf('}') + 1);
+
+    expect(JSON.parse(json)).toMatchObject({ name: 'Compact' });
+    // Indentation is nearly free in a file and ruinous in a URL.
+    expect(json).not.toContain('\n');
+  });
+
   it('AC-13.1.4/1 — A Pattern submitted and unedited since is excluded from a later bulk submission', () => {
     const samba = { ...withNote(create('Samba Break')), id: 'p_1' };
     const meta = { p_1: { submittedAt: '2026-08-16T09:00:00Z', submittedDigest: submissionDigest(samba) } };
