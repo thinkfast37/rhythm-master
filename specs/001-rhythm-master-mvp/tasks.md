@@ -671,3 +671,15 @@ record is complete rather than starting mid-stream.
   **AC-1.1.3 got the DOM test it has been owed since T150.** It names a control — a disabled `+Measure` button — and `src/core/` cannot observe one, so it was passing T6 only by being in the baseline. The new e2e test checks the control is *enabled* at 7 Measures before checking it is disabled at 8, so it proves the cap is doing the disabling and not some unrelated always-off state. Struck from T150's list, and the baseline pruned rather than left to re-excuse it later.
 
   Baseline 316 → 310: five T5 entries (AC-1.1.3, AC-8.1.3, AC-10.1.3, AC-10.1.4, AC-15.1.10) and one T6 entry (AC-1.1.3) are no longer findings, since revising an AC's title forces its test to be reread and renamed to match.
+
+- [X] T158 **[data]** Transcribe Winning Rhythms Exercise 1 into the shipped library — `data/seed-patterns.json` (9 Patterns appended, `s_111`–`s_119`), `tests/e2e/library.spec.js`.
+
+  Nine Patterns, `WR 1-B` through `WR 1-J`, all 4/4, four Measures each, tempo 80, tagged `WR Book`. **Line A was deliberately skipped** — sixteen undifferentiated quarter notes is a metronome, not an exercise, and the maintainer excluded it.
+
+  **Appended, never inserted.** Shipped ids are `s_${index + 1}` (`src/storage/seed.js`), so inserting anywhere but the end would renumber every later Pattern and orphan the ratings and added Tags that `rm.overlays.v1` keys by id. The diff is 1863 insertions and 0 deletions, which is the check that this held.
+
+  **Straight 8ths, not Straight 16ths, for a quarter-note Beat.** There is no Undivided Recipe for a quarter-note Beat (data-model §3), so a plain quarter note cannot be one Slot. Straight 8ths is the thinnest available — one dead "&" per Beat instead of Straight 16ths' three.
+
+  **Only onsets are transcribed**, per the tool's design: a half note is a sounding Slot on its own Beat and silence on the next, and a tie contributes no onset at all. Eight of the ten lines carry a previous owner's pencilled counting, which agrees with this reading on every one; line E has none and rests on the transcription alone.
+
+  One test outside the change failed and was corrected: `AC-5.1.6`'s test asserted `toHaveCount(111)`, a hardcoded library size. Per §2a the test was the defect — the criterion asserts nothing about how many Patterns exist, and the same file already imports `SEED_PATTERN_COUNT` and uses it two tests earlier. This is a literal that T144/#4 missed when it stopped the library's size being hardcoded; it is now derived. (That test is also mislabelled — `AC-5.1.6` is about list order, not owned Patterns joining the library — which is T149's territory and left for it.)

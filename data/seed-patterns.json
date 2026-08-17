@@ -13420,6 +13420,1869 @@
           ]
         }
       ]
+    },
+    {
+      "name": "WR 1-B",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-C",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-D",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-E",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-F",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-G",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-H",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-I",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WR 1-J",
+      "soundMode": "percussive",
+      "tempo": 80,
+      "tags": [
+        "WR Book"
+      ],
+      "rating": 0,
+      "measures": [
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "timeSignature": "4/4",
+          "beats": [
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": false
+                },
+                {
+                  "on": false
+                }
+              ]
+            },
+            {
+              "recipe": "straight-8ths",
+              "slots": [
+                {
+                  "on": true
+                },
+                {
+                  "on": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

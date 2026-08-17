@@ -248,7 +248,7 @@ test('AC-5.1.6 — an owned Pattern joins the library alongside built-in ones', 
   await page.locator('.dialog-input').fill('Aaa My Pattern');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
 
-  await expect(page.locator('.pattern-item')).toHaveCount(111);
+  await expect(page.locator('.pattern-item')).toHaveCount(SEED_PATTERN_COUNT + 1);
 
   const mine = page.locator('.pattern-item', { hasText: 'Aaa My Pattern' });
   await expect(mine).toHaveAttribute('data-owned', 'true');
