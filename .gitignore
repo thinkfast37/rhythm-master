@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.log
+.env*
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+coverage/
+test-results/
+playwright-report/
+tests/.vitest-report.json
+tests/.playwright-report.json

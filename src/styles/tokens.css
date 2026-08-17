@@ -1,0 +1,21 @@
+/*
+ * Design tokens.
+ *
+ * The accent palette below is gated by `npm run check:cvd` (Constitution
+ * Principle II): the four Accent states must stay separable under simulated
+ * deuteranopia, protanopia and tritanopia. Do not change these values without
+ * re-running that check.
+ *
+ * Colour is the requirement; fill height is used alongside it in the grid
+ * because a height difference scans faster than a hue difference at mobile
+ * density (research.md D-005).
+ */
+:root {
+  color-scheme: light dark;
+
+  /* Accent Levels: off / Weak(1) / Medium(2) / Strong(3) */
+  --accent-off: #1a1c24;
+  --accent-weak: #3a6ea8;
+  --accent-medium: #9fd0e8;
+  --accent-strong: #f0a020;
+}

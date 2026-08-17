@@ -1,0 +1,27 @@
+{
+  "name": "rhythm-master",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A browser-based rhythm and melody practice and composition tool",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "coverage:ac": "node tests/ac-coverage.js",
+    "validate:seed": "node tools/validate-seed.js",
+    "check:cvd": "node tools/check-cvd.js",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

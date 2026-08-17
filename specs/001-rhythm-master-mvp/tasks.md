@@ -34,17 +34,17 @@ Single project at repository root: `src/`, `tests/`, `data/`, per plan.md's Proj
 **Purpose**: A running dev server, a test runner, and the guardrails that make the constitution
 enforceable rather than aspirational.
 
-- [ ] T001 Create the directory skeleton from plan.md's Project Structure in `src/core/`, `src/audio/`, `src/ui/`, `src/storage/`, `src/export/`, `src/styles/`, `tests/unit/`, `tests/e2e/`
-- [ ] T002 Initialize npm project and Vite in `package.json` and `vite.config.js`, with `dev`, `build`, and `preview` scripts and `base` set for GitHub Pages
-- [ ] T003 Create the app shell in `index.html` and `src/main.js` — an empty composition root that imports nothing yet
-- [ ] T004 [P] Add Vitest in `vitest.config.js` with the `test` script, and a smoke test in `tests/unit/smoke.test.js`
-- [ ] T005 [P] Add Playwright in `playwright.config.js` with the `test:e2e` script, pointing at the pre-installed Chromium via `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`
-- [ ] T006 [P] Configure ESLint and Prettier in `eslint.config.js` and `.prettierrc`
-- [ ] T007 Add the `core/` purity lint rule to `eslint.config.js` — an import-boundary restriction failing the build if any `src/core/**` module imports from `ui/`, `audio/`, `storage/`, or `export/`, or references `window`, `document`, `localStorage`, or `Date.now` (Constitution Principle I)
-- [ ] T008 Implement the per-AC coverage reporter in `tests/ac-coverage.js` — parse AC IDs from `spec.md`, parse test names from both suites, report every AC with no matching test, exit non-zero on any gap; wire as the `coverage:ac` script (FR-014)
-- [ ] T009 [P] Implement the seed validator in `tools/validate-seed.js` per data-model §7, wired as the `validate:seed` script
-- [ ] T010 [P] Implement the CVD palette check in `tools/check-cvd.js` — render the accent palette under simulated deuteranopia, protanopia and tritanopia and assert a minimum perceptual distance between off/Weak/Medium/Strong; wire as the `check:cvd` script (FR-012, D-005)
-- [ ] T011 Create the deploy workflow in `.github/workflows/deploy.yml` — test → e2e → coverage:ac → validate:seed → build → publish to Pages, with a failing step blocking the deploy (D-008)
+- [X] T001 Create the directory skeleton from plan.md's Project Structure in `src/core/`, `src/audio/`, `src/ui/`, `src/storage/`, `src/export/`, `src/styles/`, `tests/unit/`, `tests/e2e/`
+- [X] T002 Initialize npm project and Vite in `package.json` and `vite.config.js`, with `dev`, `build`, and `preview` scripts and `base` set for GitHub Pages
+- [X] T003 Create the app shell in `index.html` and `src/main.js` — an empty composition root that imports nothing yet
+- [X] T004 [P] Add Vitest in `vitest.config.js` with the `test` script, and a smoke test in `tests/unit/smoke.test.js`
+- [X] T005 [P] Add Playwright in `playwright.config.js` with the `test:e2e` script, pointing at the pre-installed Chromium via `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`
+- [X] T006 [P] Configure ESLint and Prettier in `eslint.config.js` and `.prettierrc`
+- [X] T007 Add the `core/` purity lint rule to `eslint.config.js` — an import-boundary restriction failing the build if any `src/core/**` module imports from `ui/`, `audio/`, `storage/`, or `export/`, or references `window`, `document`, `localStorage`, or `Date.now` (Constitution Principle I)
+- [X] T008 Implement the per-AC coverage reporter in `tests/ac-coverage.js` — parse AC IDs from `spec.md`, parse test names from both suites, report every AC with no matching test, exit non-zero on any gap; wire as the `coverage:ac` script (FR-014)
+- [X] T009 [P] Implement the seed validator in `tools/validate-seed.js` per data-model §7, wired as the `validate:seed` script
+- [X] T010 [P] Implement the CVD palette check in `tools/check-cvd.js` — render the accent palette under simulated deuteranopia, protanopia and tritanopia and assert a minimum perceptual distance between off/Weak/Medium/Strong; wire as the `check:cvd` script (FR-012, D-005)
+- [X] T011 Create the deploy workflow in `.github/workflows/deploy.yml` — test → e2e → coverage:ac → validate:seed → build → publish to Pages, with a failing step blocking the deploy (D-008)
 
 **Checkpoint**: `npm run dev` serves a blank page; `npm test` and `npm run test:e2e` run; `npm run coverage:ac` reports 206 uncovered ACs.
 
