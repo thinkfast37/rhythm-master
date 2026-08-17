@@ -137,9 +137,18 @@ Slot content is carried across, in either direction.
 { "degree": "b3", "octaveOffset": -1 }
 ```
 
-`degree` is a scale-degree token: `"1"`–`"7"` with optional flat/sharp prefix, resolved against the
-Pattern's `key`. `octaveOffset` is an integer, 0 being the base octave. Resolution to a frequency or
-MIDI note number is `core/pitch.js`'s job and depends on `(degree, octaveOffset, key)` only.
+`degree` is a scale-degree token: a positive integer with an optional flat or sharp prefix, resolved
+against the Pattern's `key`. Degrees above 7 continue upward by octave, so `"9"` is a ninth above the
+tonic — the same note as `"2"` an octave up, written the way a musician writes it. The pitch strip
+(US-2.2) offers `"1"`–`"8"` by default and extends to `"15"`; the shipped library uses up to `"10"`.
+`octaveOffset` is an integer, 0 being the base octave — octave 4, whose degree 1 in C is middle C.
+The strip spans `octaveOffset` −3 to +3, shown to the musician as absolute octaves 1 to 7
+(AC-2.2.3). Resolution to a frequency or MIDI note number is `core/pitch.js`'s job and depends on
+`(degree, octaveOffset, key)` only.
+
+*(Revised 2026-08-17. This previously said degrees ran `"1"`–`"7"`, which neither `core/pitch.js`
+nor `tools/validate-seed.js` has ever enforced and which the shipped library already contradicts —
+four Patterns use `"8"`, `"9"` and `"10"`.)*
 
 ### Computed Accent defaults (never stored — FR-003)
 

@@ -29,7 +29,61 @@ const DEGREE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 /** The octave a Slot with octaveOffset 0 sounds in. Middle C is MIDI 60. */
 const BASE_MIDI = 60;
 
+/**
+ * Two ways of naming the same thing. A Pattern stores `octaveOffset`, an integer
+ * relative to the base octave; a musician reads an absolute octave number. The
+ * base octave is 4, so degree 1 in C at offset 0 is middle C (AC-2.2.3).
+ *
+ * Only the display side clamps. Stored data is not re-ranged by this — a Pattern
+ * carrying an offset outside the strip's span still resolves (data-model §4).
+ */
+export const BASE_OCTAVE = 4;
+export const MIN_OCTAVE = 1;
+export const MAX_OCTAVE = 7;
+
+/** The degree strip's default span: one octave of the scale (AC-2.2.4). */
+export const DEFAULT_DEGREES = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+/** Revealed by the strip's extend control, reaching a fifteenth without the stepper. */
+export const EXTENDED_DEGREES = ['9', '10', '11', '12', '13', '14', '15'];
+
+/** Alterations the strip can apply to whatever degree is armed. */
+export const ACCIDENTALS = ['b', '', '#'];
+
 const DEGREE_PATTERN = /^([b#]?)([1-9]\d*)$/;
+
+/** Split a degree token into its accidental and its number: "b3" -> ["b", "3"]. */
+export function splitDegree(degree) {
+  const m = DEGREE_PATTERN.exec(String(degree));
+  if (!m) throw new Error(`Invalid scale degree: ${degree}`);
+  return [m[1], m[2]];
+}
+
+/** Rebuild a degree token from its parts, so the strip never string-concatenates. */
+export function degreeToken(number, accidental = '') {
+  const token = `${accidental}${number}`;
+  splitDegree(token); // reject a malformed pair here rather than at resolve time
+  return token;
+}
+
+/** The absolute octave a stored offset sounds in. */
+export function octaveNumber(octaveOffset = 0) {
+  return BASE_OCTAVE + octaveOffset;
+}
+
+/** The offset to store for an absolute octave the musician chose. */
+export function octaveOffsetFor(octave) {
+  return octave - BASE_OCTAVE;
+}
+
+/**
+ * Stepping past either end holds at that end rather than wrapping (AC-2.2.3) —
+ * a stepper that wraps from 7 to 1 moves the note six octaves on what reads as
+ * a one-step nudge.
+ */
+export function clampOctave(octave) {
+  return Math.min(MAX_OCTAVE, Math.max(MIN_OCTAVE, octave));
+}
 
 export function isSupportedKey(key) {
   return Object.prototype.hasOwnProperty.call(KEY_SEMITONES, key);
@@ -39,9 +93,7 @@ export function isSupportedKey(key) {
  * Semitones above the tonic for a degree token such as "1", "b3", "#4", "9".
  */
 export function degreeSemitones(degree) {
-  const m = DEGREE_PATTERN.exec(String(degree));
-  if (!m) throw new Error(`Invalid scale degree: ${degree}`);
-  const [, accidental, digits] = m;
+  const [accidental, digits] = splitDegree(degree);
 
   const n = Number(digits);
   const octaves = Math.floor((n - 1) / 7);

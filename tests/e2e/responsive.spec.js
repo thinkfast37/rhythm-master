@@ -126,35 +126,58 @@ test('AC-15.1.7 — secondary sections are collapsed accordions on mobile, expan
 });
 
 test('AC-15.1.8 — main-panel section order is fixed and identical at every width', async ({ page }) => {
+  // The pitch strip sits between the grid and the play controls, and is present
+  // in the DOM at both Sound Modes — hidden rather than removed in Percussive,
+  // so the order itself never depends on the mode (AC-2.2.13).
   const expected = [
     'HEADER.pattern-header',
     'DIV.grid',
-    'SECTION',
+    'SECTION[pitch]',
+    'SECTION[play]',
     'DETAILS[playback-settings]',
     'DETAILS[edit]',
     'DETAILS[actions]',
     'NAV.pattern-nav',
   ];
 
-  for (const size of [DESKTOP, TABLET, MOBILE]) {
-    await page.setViewportSize(size);
-    await page.goto('/');
-    const order = await page.locator('.main-panel > *').evaluateAll((els) =>
+  const orderNow = () =>
+    page.locator('.main-panel > *').evaluateAll((els) =>
       els
         .filter((e) => !e.classList.contains('library-toggle'))
         .map((e) => {
           if (e.tagName === 'DETAILS') return `DETAILS[${e.dataset.section}]`;
-          if (e.tagName === 'SECTION') return 'SECTION';
+          if (e.tagName === 'SECTION') return `SECTION[${e.dataset.section}]`;
           return e.className ? `${e.tagName}.${e.className.split(' ')[0]}` : e.tagName;
         })
     );
-    expect(order, `${size.width}px`).toEqual(expected);
+
+  for (const size of [DESKTOP, TABLET, MOBILE]) {
+    await page.setViewportSize(size);
+    await page.goto('/');
+    expect(await orderNow(), `${size.width}px`).toEqual(expected);
+
+    // Same order in Melodic mode, where the strip is the one that becomes
+    // visible rather than the one that moves.
+    // Driven through the handler rather than the Sound Mode control, which is
+    // inside the Edit accordion and so collapsed at mobile width (AC-15.1.7) —
+    // and the point here is the section order, not how the mode was reached.
+    await page.evaluate(async () => {
+      window.__rm.loadBlank('4/4');
+      await window.__rm.handlers.onSoundMode('melodic');
+    });
+    await expect(page.locator('.pitch-strip')).toBeVisible();
+    expect(await orderNow(), `${size.width}px melodic`).toEqual(expected);
   }
 });
 
 test('AC-15.1.9 — wide controls never push the page sideways on mobile', async ({ page }) => {
   await page.setViewportSize(MOBILE);
   await page.goto('/');
+
+  // A Pattern of our own. The app opens on a shipped one, and editing that
+  // asks for a copy name first (US-7.3) — a dialog that would swallow the mode
+  // change and leave this measuring a Percussive panel.
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
   await page.locator('.library-toggle').click(); // close the auto-opened drawer
 
@@ -163,6 +186,11 @@ test('AC-15.1.9 — wide controls never push the page sideways on mobile', async
     await page.locator(`details[data-section="${name}"] > summary`).click();
   }
   await page.locator('.sound-mode').selectOption('melodic');
+  await expect(page.locator('.pitch-strip')).toBeVisible();
+  // The pitch strip at its widest: all fifteen degrees, not just the default
+  // eight. It wraps within the panel rather than scrolling the page (US-2.2).
+  await page.locator('[data-action="toggle-extended-degrees"]').click();
+  await expect(page.locator('.degree')).toHaveCount(15);
 
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth

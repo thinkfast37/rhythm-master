@@ -138,14 +138,49 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
   return el;
 }
 
+/**
+ * The Slot's Pitch, as shown in the grid: scale degree plus octave marks, the
+ * way a musician annotates one. Absent on a Slot that does not sound, because
+ * such a Slot holds no Pitch to show (AC-2.2.8).
+ */
+function renderPitchBadge(slot) {
+  if (!slot.on || !slot.pitch) return null;
+
+  const pitch = document.createElement('span');
+  pitch.className = 'slot-pitch';
+  pitch.dataset.degree = slot.pitch.degree;
+  pitch.dataset.octave = String(slot.pitch.octaveOffset ?? 0);
+  const marks = slot.pitch.octaveOffset > 0 ? "'".repeat(slot.pitch.octaveOffset)
+    : slot.pitch.octaveOffset < 0 ? ','.repeat(-slot.pitch.octaveOffset) : '';
+  pitch.textContent = `${slot.pitch.degree}${marks}`;
+  return pitch;
+}
+
+/**
+ * A Slot.
+ *
+ * In editable Melodic mode it is split into two controls (AC-2.2.10): a note
+ * band along the top that stamps the armed pitch, and an accent zone filling
+ * the rest that cycles Accent Level. They are separate elements rather than one
+ * button reading its click coordinates, so each carries its own hit area, focus
+ * ring and accessible name, and neither can be triggered by aiming at the other.
+ *
+ * Everywhere else — Percussive, and any read-only grid — the Slot stays the
+ * single accent control it has always been. The outer `.slot` keeps its dataset
+ * and its `playing` class in both shapes, so nothing downstream has to know
+ * which one it is looking at.
+ */
 function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic, readOnly) {
   const accent = effectiveAccent(measure, beatIndex, slotIndex);
   const slot = measure.beats[beatIndex].slots[slotIndex];
+  const split = melodic && !readOnly;
 
-  const el = document.createElement('button');
-  el.type = 'button';
-  el.className = `slot accent-${ACCENT_CLASS[accent]}`;
-  if (!readOnly) el.dataset.action = 'cycle-accent';
+  const el = document.createElement(split ? 'div' : 'button');
+  if (!split) {
+    el.type = 'button';
+    if (!readOnly) el.dataset.action = 'cycle-accent';
+  }
+  el.className = `slot accent-${ACCENT_CLASS[accent]}${split ? ' has-note' : ''}`;
   el.dataset.measure = String(measureIndex);
   el.dataset.beat = String(beatIndex);
   el.dataset.slot = String(slotIndex);
@@ -163,25 +198,51 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
   const fill = document.createElement('span');
   fill.className = 'slot-fill';
   fill.style.height = `${[0, 34, 67, 100][accent]}%`;
-  el.appendChild(fill);
 
   const text = document.createElement('span');
   text.className = 'slot-label';
   text.textContent = label;
-  el.appendChild(text);
 
-  // In Melodic mode the Slot shows its scale degree and octave, since that is
-  // the musical content there — the counting syllable is secondary.
-  if (melodic && slot.on && slot.pitch) {
-    const pitch = document.createElement('span');
-    pitch.className = 'slot-pitch';
-    pitch.dataset.degree = slot.pitch.degree;
-    pitch.dataset.octave = String(slot.pitch.octaveOffset ?? 0);
-    const marks = slot.pitch.octaveOffset > 0 ? "'".repeat(slot.pitch.octaveOffset)
-      : slot.pitch.octaveOffset < 0 ? ','.repeat(-slot.pitch.octaveOffset) : '';
-    pitch.textContent = `${slot.pitch.degree}${marks}`;
-    el.appendChild(pitch);
+  if (!split) {
+    el.append(fill, text);
+    // In Melodic mode the Slot shows its scale degree and octave, since that is
+    // the musical content there — the counting syllable is secondary.
+    if (melodic) {
+      const badge = renderPitchBadge(slot);
+      if (badge) el.appendChild(badge);
+    }
+    return el;
   }
 
+  // A Slot that does not sound has no note to pitch, so its band is inert
+  // rather than tappable-and-refusing (AC-2.2.5). `disabled` is what says that
+  // to a pointer, a keyboard and a screen reader at once.
+  const note = document.createElement('button');
+  note.type = 'button';
+  note.className = 'slot-note';
+  note.dataset.action = 'stamp-pitch';
+  note.dataset.measure = String(measureIndex);
+  note.dataset.beat = String(beatIndex);
+  note.dataset.slot = String(slotIndex);
+  note.disabled = !slot.on;
+  const badge = renderPitchBadge(slot);
+  if (badge) note.appendChild(badge);
+  note.setAttribute(
+    'title',
+    slot.on
+      ? `Set this note's pitch to the armed pitch (currently ${badge?.textContent ?? '—'})`
+      : 'Turn this Slot on below before giving it a pitch'
+  );
+
+  const accentZone = document.createElement('button');
+  accentZone.type = 'button';
+  accentZone.className = 'slot-accent';
+  accentZone.dataset.action = 'cycle-accent';
+  accentZone.dataset.measure = String(measureIndex);
+  accentZone.dataset.beat = String(beatIndex);
+  accentZone.dataset.slot = String(slotIndex);
+  accentZone.append(fill, text);
+
+  el.append(note, accentZone);
   return el;
 }
