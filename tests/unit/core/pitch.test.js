@@ -15,6 +15,7 @@ import {
   octaveNumber,
   octaveOffsetFor,
   clampOctave,
+  noteName,
 } from '../../../src/core/pitch.js';
 
 describe('core/pitch', () => {
@@ -153,6 +154,96 @@ describe('core/pitch — the pitch strip’s vocabulary (US-2.2)', () => {
     // to fail here rather than reach a Pattern.
     expect(() => degreeToken('0')).toThrow(/Invalid scale degree/);
     expect(() => degreeToken('3', 'x')).toThrow(/Invalid scale degree/);
+  });
+
+  it('AC-2.2.15/5 — The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave: the major scale of every Key', () => {
+    // Each Key's seven degrees, spelled the way its key signature is written.
+    // The property that matters is not any single name but that the seven use
+    // seven different letters — that is what makes a scale readable, and it is
+    // what pitch-class naming would break.
+    const expected = {
+      C: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'],
+      G: ['G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F#5'],
+      F: ['F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'E5'],
+      Db: ['Db4', 'Eb4', 'F4', 'Gb4', 'Ab4', 'Bb4', 'C5'],
+      B: ['B4', 'C#5', 'D#5', 'E5', 'F#5', 'G#5', 'A#5'],
+      Gb: ['Gb4', 'Ab4', 'Bb4', 'Cb5', 'Db5', 'Eb5', 'F5'],
+    };
+
+    for (const [key, names] of Object.entries(expected)) {
+      const got = ['1', '2', '3', '4', '5', '6', '7'].map(
+        (degree) => noteName({ degree, octaveOffset: 0 }, key).text
+      );
+      expect(got, key).toEqual(names);
+    }
+
+    // The seven-different-letters property, across every supported Key.
+    for (const key of KEYS) {
+      const letters = ['1', '2', '3', '4', '5', '6', '7'].map(
+        (degree) => noteName({ degree, octaveOffset: 0 }, key).letter
+      );
+      expect(new Set(letters).size, key).toBe(7);
+    }
+  });
+
+  it('AC-2.2.15/5 — The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave: altered degrees keep their own letter', () => {
+    // The point of diatonic spelling. b3 in Db sounds the same key as E, but a
+    // third must be spelled on the third's letter, so it is Fb.
+    expect(noteName({ degree: 'b3', octaveOffset: 0 }, 'Db').text).toBe('Fb4');
+    expect(noteName({ degree: 'b3', octaveOffset: 0 }, 'C').text).toBe('Eb4');
+    expect(noteName({ degree: '#4', octaveOffset: 0 }, 'C').text).toBe('F#4');
+    expect(noteName({ degree: 'b7', octaveOffset: 0 }, 'C').text).toBe('Bb4');
+    // A double accidental is a real spelling, not an error: the second degree
+    // of Gb is Ab, and flattening it gives Abb.
+    expect(noteName({ degree: 'b2', octaveOffset: 0 }, 'Gb').text).toBe('Abb4');
+  });
+
+  it("AC-2.2.15/2 — The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number: the octave follows the letter, not the sounding note", () => {
+    // Cb5 sounds MIDI 71, which is B4's number — but it is a C, so it belongs
+    // to octave 5. Naming it B4 would put it on the wrong line of the stave.
+    const cb = noteName({ degree: '4', octaveOffset: 0 }, 'Gb');
+    expect(cb.text).toBe('Cb5');
+    expect(resolve({ degree: '4', octaveOffset: 0 }, 'Gb').midiNote).toBe(
+      resolve({ degree: '7', octaveOffset: 0 }, 'C').midiNote
+    );
+
+    // Degree 8 is the octave, so it names the tonic one octave up.
+    expect(noteName({ degree: '8', octaveOffset: 0 }, 'C').text).toBe('C5');
+    expect(noteName({ degree: '15', octaveOffset: 0 }, 'C').text).toBe('C6');
+
+    // The stepper's range moves the octave number and nothing else.
+    expect(noteName({ degree: '1', octaveOffset: -3 }, 'C').text).toBe('C1');
+    expect(noteName({ degree: '1', octaveOffset: 3 }, 'C').text).toBe('C7');
+  });
+
+  it("AC-2.2.15/2 — The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number: the name always agrees with what sounds", () => {
+    // The name is a label on the resolved pitch, so it can never drift from it:
+    // re-deriving the pitch class from the printed name must return the note
+    // that resolve() produced. This is the invariant that keeps SC-003 honest
+    // on screen as well as in the .mid file.
+    const NATURAL = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    const SHIFT = { bb: -2, b: -1, '': 0, '#': 1, '##': 2 };
+
+    for (const key of KEYS) {
+      for (const degree of [...DEFAULT_DEGREES, ...EXTENDED_DEGREES]) {
+        for (const accidental of ['', 'b', '#']) {
+          for (const octaveOffset of [-3, 0, 3]) {
+            const pitch = { degree: degreeToken(degree, accidental), octaveOffset };
+            let named;
+            try {
+              named = noteName(pitch, key);
+            } catch {
+              continue; // a spelling beyond a double accidental; refused, not guessed
+            }
+            const { midiNote } = resolve(pitch, key);
+            const fromName = (NATURAL[named.letter] + SHIFT[named.accidental] + 12) % 12;
+            expect(fromName, `${pitch.degree} in ${key} -> ${named.text}`).toBe(
+              ((midiNote % 12) + 12) % 12
+            );
+          }
+        }
+      }
+    }
   });
 
   it('AC-2.2.4 — the strip reaches every degree the shipped library uses', () => {

@@ -33,7 +33,45 @@
      (AC-2.2.12). It is the same 24px as --slot-min because it is the same
      requirement seen along the other axis. */
   --slot-note-h: 24px;
+  /* The accent zone in a split Slot. Taller than the 24px floor because the
+     count and the accent are what is read while working on rhythm, and the
+     syllable now sets at 13px (AC-2.2.14). */
+  --slot-accent-h: 40px;
+  /* Between the two zones, so neither reads as part of the other
+     (AC-2.2.14/2). */
+  --slot-zone-gap: 4px;
   --radius: 4px;
+}
+
+/*
+ * The grid's own boundaries. US-15.2.
+ *
+ * These are deliberately NOT --line. Every structural line in the grid used to
+ * be that one token at #262a38 — about 1.2:1 against the panel behind it, which
+ * is why the grid could not be read without straining, and why a Beat had no
+ * boundary at all beyond a slightly wider gap.
+ *
+ * Each clears 3:1 against the surface it is drawn on (AC-15.2.1), and they
+ * descend Measure > Beat > Slot so the nesting resolves in that order rather
+ * than presenting three identical lines (AC-15.2.3). They are grid-scoped so
+ * that tuning the grid for reading a Pattern does not restyle the dialogs,
+ * the control bar or the library (AC-15.2.4).
+ *
+ * Measured against --panel (#14161f) unless noted:
+ *   measure #7a84a8 → 5.28:1 (against --bg, which is what a Measure sits on)
+ *   beat    #707a9c → 4.25:1
+ *   slot    #666f8f → 3.64:1
+ *   zone    #7a84a8 → 4.61:1 (against --accent-off, the Slot's own ground)
+ *
+ * Changing any of these means re-running the contrast assertions in
+ * tests/unit/ui/grid-boundaries.test.js, which compute the ratios rather than
+ * trusting this comment.
+ */
+:root {
+  --grid-measure-line: #7a84a8;
+  --grid-beat-line: #707a9c;
+  --grid-slot-line: #666f8f;
+  --grid-zone-line: #7a84a8;
 }
 
 * { box-sizing: border-box; }
@@ -62,7 +100,7 @@ body {
   align-items: stretch;
   gap: 8px;
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 1px solid var(--grid-measure-line);
   border-radius: var(--radius);
   padding: 8px;
 }
@@ -96,11 +134,20 @@ body {
   min-width: 0;
 }
 
+/*
+ * A Beat carries a drawn border, not just a wider gap (AC-15.2.2). Previously
+ * the only thing separating one Beat from the next was 6px of whitespace
+ * against 2px between Slots — a four-pixel difference asked to carry the entire
+ * grouping, which at 24px Slots on a phone it cannot.
+ */
 .beat {
   display: flex;
   flex: 1 1 auto;
   gap: 3px;
   min-width: min-content;
+  border: 1px solid var(--grid-beat-line);
+  border-radius: 3px;
+  padding: 2px;
 }
 
 /* A mixed Recipe's halves are separate boxes, so the straight/triplet boundary
@@ -127,7 +174,7 @@ body {
   height: 52px;
   padding: 0;
   background: var(--accent-off);
-  border: 1px solid var(--line);
+  border: 1px solid var(--grid-slot-line);
   border-radius: 3px;
   cursor: pointer;
   overflow: hidden;
@@ -167,23 +214,49 @@ body {
 /* --- the split Slot, in editable Melodic mode (AC-2.2.10) ----------------- */
 
 /*
- * Two stacked controls inside the Slot's box: a fixed note band on top, and an
- * accent zone taking the rest. The Slot itself stops being a button here and
- * becomes their container, so it keeps its border, dataset and `playing`
- * outline while each zone owns its own hit area.
+ * Two stacked controls: the accent zone on top, and a note band beneath it with
+ * a gap between them. The Slot itself stops being a button here and becomes
+ * their container — and, unlike the Percussive Slot, it draws no box of its
+ * own, because each zone now carries its own border and a third one around both
+ * would read as a fourth kind of boundary.
  *
- * The height is the two minimums added, not a look: 24px of band over 24px of
- * accent zone is the floor AC-2.2.12 sets, and 32px for the accent zone leaves
- * the counting syllable legible at the density AC-15.1.10 allows. It is the
- * same at every width — a phone is where the tap targets matter most, so it is
- * the last place to shave them.
+ * The band was on top until 2026-08-17. Underneath is what the maintainer
+ * reported wanting after using it: with the pitch above, it sat between the eye
+ * and the accent fill it belongs to, and neither resolved (AC-2.2.14/1).
+ *
+ * Heights are requirements, not looks. The band stays at 24px because that is
+ * the tap floor AC-2.2.12 sets, and the accent zone is 40px so the syllable can
+ * set at 13px — the count and the accent are what is tracked while working on
+ * rhythm. Same at every width: a phone is where tap targets matter most, so it
+ * is the last place to shave them.
  */
 .slot.has-note {
   display: flex;
   flex-direction: column;
-  height: calc(var(--slot-note-h) + 32px);
+  gap: var(--slot-zone-gap);
+  height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
+  background: transparent;
+  border: 0;
+  overflow: visible;
 }
 
+.slot.has-note .slot-accent {
+  position: relative;
+  flex: 0 0 var(--slot-accent-h);
+  min-height: var(--slot-accent-h);
+  padding: 0;
+  background: var(--accent-off);
+  border: 1px solid var(--grid-slot-line);
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/*
+ * The accent-to-melody divider — the boundary the maintainer named directly.
+ * It is the brightest line in the grid (AC-15.2.1/4) because it separates two
+ * different kinds of information rather than two instances of the same one.
+ */
 .slot-note {
   flex: 0 0 var(--slot-note-h);
   min-height: var(--slot-note-h);
@@ -191,30 +264,20 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #20242f;
-  border: 0;
-  border-bottom: 1px solid var(--line);
+  background: #171a24;
+  border: 1px solid var(--grid-zone-line);
+  border-radius: 3px;
   cursor: pointer;
+  overflow: hidden;
 }
-.slot-note:hover:not(:disabled) { background: #2b303f; }
+.slot-note:hover:not(:disabled) { background: #232838; }
 
 /* A Slot that does not sound has no note to pitch. The band reads as unusable
    rather than merely doing nothing when tapped (AC-2.2.5). */
 .slot-note:disabled {
   background: transparent;
-  border-bottom-color: transparent;
+  border-color: transparent;
   cursor: default;
-}
-
-.slot-accent {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: var(--slot-note-h);
-  padding: 0;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  overflow: hidden;
 }
 
 /* In a split Slot the badge sits in its own band, so it is laid out by the
@@ -224,8 +287,15 @@ body {
 .slot.has-note.accent-medium .slot-pitch,
 .slot.has-note.accent-strong .slot-pitch { color: var(--ink); }
 
-/* The label centres in the accent zone, not in the whole Slot. */
-.slot.has-note .slot-label { line-height: 32px; }
+/* The label centres in the accent zone, not in the whole Slot. Bold and at
+   13px against the note band's 10px: the syllable was RAISED to separate the
+   two rather than the pitch being shrunk, because the pitch has to stay
+   readable (AC-2.2.14/3, AC-2.2.14/4). */
+.slot.has-note .slot-label {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: var(--slot-accent-h);
+}
 
 /* --- responsive ---------------------------------------------------------- */
 
@@ -234,6 +304,14 @@ body {
   .measure { flex-wrap: wrap; }
   .slot { height: 44px; }
   .slot-label { line-height: 44px; }
+  /* A split Slot keeps its full height on mobile: both zones are tap targets
+     with a floor of their own (AC-2.2.12), so this is the last place to
+     compress them. The rule above would otherwise override the composed
+     height and squeeze the note band to a sliver. */
+  .slot.has-note {
+    height: calc(var(--slot-accent-h) + var(--slot-zone-gap) + var(--slot-note-h));
+  }
+  .slot.has-note .slot-label { line-height: var(--slot-accent-h); }
 }
 
 /* --- controls ------------------------------------------------------------ */
@@ -296,16 +374,49 @@ body {
 }
 .dialog-button.primary { background: var(--brand); color: #0b0c15; border-color: var(--brand); font-weight: 700; }
 
+/*
+ * The Pitch badge: scale degree, and under it the note that degree names in
+ * this Key (AC-2.2.15).
+ *
+ * Stacked because side by side does not fit. Measured on a 390px viewport at
+ * the densest supported Pattern (8 Measures of 12/8 at Straight 16ths) the band
+ * is 29.2px wide. The widest name any Key can produce is a double accidental —
+ * `Abb4`, the flattened second of G♭ — four characters needing 24.1px stacked,
+ * against 36.1px for the same Pitch written on one line. Neither line may be
+ * truncated (AC-2.2.15/3), so the tracking is tightened slightly to keep the
+ * four-character case clear of the edge.
+ *
+ * Neither line is bold: the syllable above carries the weight, and bolding the
+ * pitch as well is what made the two compete (AC-2.2.14/4).
+ */
 .slot-pitch {
   position: absolute;
   top: 2px; left: 0; right: 0;
-  font: 700 9px/1 ui-monospace, monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: var(--ink);
   text-align: center;
   pointer-events: none;
 }
 .slot.accent-medium .slot-pitch,
 .slot.accent-strong .slot-pitch { color: #0b0c15; }
+
+.slot-degree {
+  font: 500 10px/1.05 ui-monospace, monospace;
+  color: inherit;
+}
+.slot-note-name {
+  font: 500 10px/1.05 ui-monospace, monospace;
+  letter-spacing: -0.03em;
+  color: var(--ink-dim);
+}
+/* The dim on the name is against the Slot's dark ground. Where the accent fill
+   reaches the badge — the unsplit, read-only Melodic Slot — that inverts. */
+.slot.accent-medium .slot-note-name,
+.slot.accent-strong .slot-note-name { color: #2b2f3c; }
+.slot.has-note .slot-note-name { color: var(--ink-dim); }
 /* --- the pitch strip (US-2.2) --------------------------------------------- */
 
 /*
@@ -353,6 +464,28 @@ body {
 }
 .pitch-strip button:hover:not(:disabled) { background: #262b3a; }
 .pitch-strip button:disabled { color: var(--ink-dim); cursor: default; }
+
+/*
+ * A degree button names the note it will stamp, under the degree itself
+ * (AC-2.2.16) — the same pairing the grid shows, so the palette and the thing
+ * it stamps read alike. Unlike the grid there is room here, so both lines are
+ * comfortably sized; the strip's controls are not competing with 144 siblings
+ * for the width of a phone.
+ */
+.pitch-strip .degree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 40px;
+  padding: 4px 6px;
+}
+.degree-number { font: 600 13px/1 ui-monospace, monospace; }
+.degree-name { font: 500 10px/1 ui-monospace, monospace; color: var(--ink-dim); }
+/* On the armed button the ground is --brand, so the dim grey the name uses
+   elsewhere would drop below readable against it. */
+.pitch-strip .degree[aria-pressed='true'] .degree-name { color: #3d2c05; }
 
 /* What is armed is marked by more than colour — a filled chip with a border
    change — so the strip does not rely on hue alone (Principle II). */

@@ -198,7 +198,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.5 | T063 | T064 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.5 | T065 | T066 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
-| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.13 | T069 | T070 |
+| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.16 | T069, T160 | T070, T161 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.11 | T074–T075 | T076 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
@@ -218,8 +218,9 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112 | T113 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.13 | T114–T116 | T117 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.13 | T114–T116, T160 | T117, T161 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
+| **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.5 | T160 | T161 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

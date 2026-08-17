@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 220 across 34 User Stories
+**Criteria**: 239 across 35 User Stories
 
-**Coverage**: 17 of 220 criteria proven (7.7%)
+**Coverage**: 36 of 239 criteria proven (15.1%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 17 | 7.7% |
-| 🔴 Gap — HIGH | 80 | 36.4% |
-| 🟠 Gap — MEDIUM | 42 | 19.1% |
-| 🟡 Gap — LOW | 81 | 36.8% |
+| 🟢 Proven | 36 | 15.1% |
+| 🔴 Gap — HIGH | 80 | 33.5% |
+| 🟠 Gap — MEDIUM | 42 | 17.6% |
+| 🟡 Gap — LOW | 81 | 33.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -63,7 +63,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-1.3 | 10 | 0 | · | · | 1 | 3 | 6 |
 | 🔴 US-1.4 | 8 | 0 | · | · | 2 | 4 | 2 |
 | 🔴 US-2.1 | 5 | 0 | · | · | 2 | · | 3 |
-| 🔴 US-2.2 | 13 | 0 | · | · | 1 | 7 | 5 |
+| 🔴 US-2.2 | 24 | 11 | · | · | 1 | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-3.1 | 16 | 0 | · | · | 3 | 1 | 12 |
@@ -92,6 +92,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-15.1 | 13 | 0 | · | · | 1 | 9 | 3 |
 | 🔴 US-16.1 | 11 | 0 | · | · | 10 | 1 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
+| 🟢 US-15.2 | 8 | **8** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -133,19 +134,30 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.1 | `AC-2.1.3` | Switching to Melodic requires a Key, defaulting to C | P-014 | T065 (1/1 done) | T066 (1/1 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.1 | `AC-2.1.4` 🖵 | Pitch data survives a Sound Mode round-trip | P-014 | T065 (1/1 done) | T066 (1/1 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-2.1 | `AC-2.1.5` | Sound Mode changes never alter Accent Levels | P-014 | T065 (1/1 done) | T066 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.1` | One Pitch per Slot, no chords | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.2` 🖵 | Armed pitch defaults to degree 1, octave 4, and stays armed | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.4` 🖵 | Degree strip default span | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.5` 🖵 | A Slot that is not sounding cannot be stamped | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-2.2 | `AC-2.2.6` 🖵 | Stamping a sounding Slot changes only its Pitch | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.7` 🖵 | Cycling Accent to off clears Pitch too | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.8` | Accent/Pitch null-state invariant | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.9` 🖵 | Changing the armed pitch doesn't retroactively affect stamped Slots | P-016 | T069 (1/1 done) | T070 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.10` 🖵 | A Melodic Slot has two tap zones, and they do different jobs | P-016 | T069 (1/1 done) | T070 (1/1 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.11` 🖵 | Turning a Slot on takes the armed pitch | P-016 | T069 (1/1 done) | T070 (1/1 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.2 | `AC-2.2.12` 🖵 | Both zones stay tappable at the smallest supported Slot | P-016 | T069 (1/1 done) | T070 (1/1 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.13` 🖵 | The pitch strip is present wherever pitches are edited | P-016 | T069 (1/1 done) | T070 (1/1 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.1` | One Pitch per Slot, no chords | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.2` 🖵 | Armed pitch defaults to degree 1, octave 4, and stays armed | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.4` 🖵 | Degree strip default span | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.5` 🖵 | A Slot that is not sounding cannot be stamped | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.2 | `AC-2.2.6` 🖵 | Stamping a sounding Slot changes only its Pitch | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.7` 🖵 | Cycling Accent to off clears Pitch too | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.8` | Accent/Pitch null-state invariant | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.9` 🖵 | Changing the armed pitch doesn't retroactively affect stamped Slots | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.10` 🖵 | A Melodic Slot has two tap zones, and they do different jobs | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.11` 🖵 | Turning a Slot on takes the armed pitch | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.2 | `AC-2.2.12` 🖵 | Both zones stay tappable at the smallest supported Slot | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.13` 🖵 | The pitch strip is present wherever pitches are edited | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.14/1` 🖵 | The note band is rendered below the accent zone, not above it | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/2` 🖵 | A visible gap separates the two zones, so neither reads as part of the other | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/3` 🖵 | The note band's text is rendered at a smaller font size than the counting syllable's | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.14/4` 🖵 | The counting syllable is rendered bolder than the note band's text | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/1` 🖵 | The band shows the Slot's scale degree, including any accidental | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/2` 🖵 | The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/3` 🖵 | The two are shown on separate lines within the band, so neither is truncated at the smallest supported Slot width (AC-2.2.12) | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/4` 🖵 | Changing the Pattern's Key updates every note name shown, while no stored degree or octave value changes (AC-2.3.2) | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.15/5` | The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `pitch.test.js`, `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.16/1` 🖵 | Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.16/2` 🖵 | Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called | P-016 | T069, T160 (2/2 done) | T070, T161 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.3 | `AC-2.3.1` | Default Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.2` | Changing Key re-transposes without altering stored data | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.3` 🖵 | Percussive Patterns have no Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -289,19 +301,19 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-13.1 | `AC-13.1.3` 🖵 | Oversized bulk submissions fall back to title/label-only prefill plus manual paste | P-035 | T111, T112 (2/2 done) | T113 (1/1 done) | `export.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
 | US-13.1 | `AC-13.1.4` | Already-submitted, unedited Patterns are excluded from later bulk submissions | P-035 | T111, T112 (2/2 done) | T113 (1/1 done) | `export.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-13.1 | `AC-13.1.5` | Submission-tracking is Local Metadata, never part of the export payload | P-035 | T111, T112 (2/2 done) | T113 (1/1 done) | `export.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.5` 🖵 | Mobile drawer auto-opens on every page load | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.6` 🖵 | The library collapses whenever a Pattern is loaded, at every width | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116 (3/3 done) | T117 (1/1 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.5` 🖵 | Mobile drawer auto-opens on every page load | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.6` 🖵 | The library collapses whenever a Pattern is loaded, at every width | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116, T160 (4/4 done) | T117, T161 (2/2 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-16.1 | `AC-16.1.1` | Shipped library present on first run | P-003 | T032 (1/1 done) | T033 (1/1 done) | `timeline.test.js`, `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.2` 🖵 | Shipped Patterns are not marked as user-authored | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
 | US-16.1 | `AC-16.1.3` | Legacy category becomes a Tag | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
@@ -317,3 +329,11 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-16.2 | `AC-16.2.2` | Adding a Pattern requires no code change | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.2 | `AC-16.2.3` | Malformed entries fail loudly, not silently | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.2 | `AC-16.2.4` | The data file is versioned | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/4` 🖵 | A Melodic Slot's accent-to-note divider, against the Slot's unfilled background | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.2` 🖵 | A Beat is bounded by a drawn border, not by spacing alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160 (1/1 done) | T161 (1/1 done) | `grid-boundaries.spec.js` | 🟢 OK |

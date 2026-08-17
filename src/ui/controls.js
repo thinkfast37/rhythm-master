@@ -16,6 +16,7 @@ import {
   octaveNumber,
   octaveOffsetFor,
   clampOctave,
+  noteName,
 } from '../core/pitch.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
@@ -349,12 +350,30 @@ export function renderPitchStrip(root, pattern, state, handlers) {
   const shown = state.degreesExtended
     ? [...DEFAULT_DEGREES, ...EXTENDED_DEGREES]
     : DEFAULT_DEGREES;
+  const key = pattern.key ?? 'C';
   for (const d of shown) {
-    const b = el('button', 'degree', { type: 'button', textContent: d });
+    const token = degreeToken(d, accidental);
+    const b = el('button', 'degree');
+    b.type = 'button';
     b.dataset.action = 'set-degree';
     b.dataset.degree = d;
     b.setAttribute('aria-pressed', String(d === number));
-    b.addEventListener('click', () => handlers.onArmDegree(degreeToken(d, accidental)));
+
+    b.appendChild(el('span', 'degree-number', { textContent: d }));
+
+    // What this button will actually stamp, at the accidental and octave armed
+    // right now — so the palette reads the same way the grid does (AC-2.2.16).
+    // It describes the button's effect, so it moves when the Key, the
+    // accidental or the octave moves.
+    const named = spell({ degree: token, octaveOffset: armed.octaveOffset ?? 0 }, key);
+    if (named) {
+      const name = el('span', 'degree-name', { textContent: named });
+      b.appendChild(name);
+      b.dataset.noteName = named;
+    }
+    b.setAttribute('aria-label', named ? `Degree ${token} — ${named}` : `Degree ${token}`);
+
+    b.addEventListener('click', () => handlers.onArmDegree(token));
     degrees.appendChild(b);
   }
   root.appendChild(degrees);
@@ -371,6 +390,21 @@ export function renderPitchStrip(root, pattern, state, handlers) {
 
   root.appendChild(renderOctaveStepper(armed, handlers));
   return root;
+}
+
+/**
+ * A Pitch's note name, or nothing if this Key cannot spell it.
+ *
+ * An extended degree carrying an accidental can need a triple flat, which
+ * `noteName` refuses rather than inventing a glyph for. A degree button with no
+ * name under it is a smaller problem than a strip that fails to render.
+ */
+function spell(pitch, key) {
+  try {
+    return noteName(pitch, key).text;
+  } catch {
+    return null;
+  }
 }
 
 /**

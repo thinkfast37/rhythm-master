@@ -795,14 +795,18 @@ export function mount(root) {
 
   const headerEl = document.createElement('header');
   const gridEl = document.createElement('div');
-  // Directly under the grid, and never inside an accordion: it is the palette
-  // the grid is stamped from, so it has to be aimable while you stamp
-  // (AC-2.2.13). Percussive Patterns render it empty and hidden.
-  const pitchEl = document.createElement('section');
-  pitchEl.dataset.section = 'pitch';
   const playEl = document.createElement('section');
   playEl.dataset.primary = 'true';
   playEl.dataset.section = 'play';
+  // Below the play controls, and never inside an accordion: it is the palette
+  // the grid is stamped from, so it has to be aimable while you stamp without
+  // opening anything first (AC-2.2.13). It sits under the transport rather than
+  // above it because the transport is reached on every Pattern in either Mode
+  // and the strip only while composing a melody — putting the strip first
+  // displaced Play on every Melodic Pattern (AC-15.1.8). Percussive Patterns
+  // render it empty and hidden.
+  const pitchEl = document.createElement('section');
+  pitchEl.dataset.section = 'pitch';
 
   const settingsEl = document.createElement('details');
   settingsEl.dataset.section = 'playback-settings';
@@ -847,7 +851,7 @@ export function mount(root) {
   }
 
   main.append(
-    libraryToggle, headerEl, gridEl, pitchEl, playEl, settingsEl, editEl, actionsEl, navEl, familyEl
+    libraryToggle, headerEl, gridEl, playEl, pitchEl, settingsEl, editEl, actionsEl, navEl, familyEl
   );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);

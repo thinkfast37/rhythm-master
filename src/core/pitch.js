@@ -129,3 +129,72 @@ export function resolve(pitch, key) {
 export function midiToFrequency(midiNote) {
   return 440 * 2 ** ((midiNote - 69) / 12);
 }
+
+/* --- naming a Pitch (AC-2.2.15, AC-2.2.16) -------------------------------- */
+
+/** The seven letters, in scale order, and the pitch class each names naturally. */
+const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+const LETTER_SEMITONES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+/** How many semitones each accidental glyph shifts its letter. */
+const ACCIDENTAL_ALTERATION = { bb: -2, b: -1, '': 0, '#': 1, '##': 2 };
+const ALTERATION_GLYPH = Object.fromEntries(
+  Object.entries(ACCIDENTAL_ALTERATION).map(([glyph, n]) => [n, glyph])
+);
+
+/**
+ * Name a Pitch as a musician would write it, resolved through a Key.
+ *
+ * Spelling is **diatonic**, not by pitch class: the letter comes from counting
+ * degrees up the alphabet from the Key's own letter, and the accidental is
+ * whatever reconciles that letter with the note actually sounding. So degree 3
+ * in Db is `F` and `b3` is `Fb` — not `E`, which is the same key on a piano and
+ * the wrong interval on a stave. Every degree gets its own letter, which is the
+ * property that makes a scale readable.
+ *
+ * The octave follows the *letter*, not the sounding note, so `Cb5` is named for
+ * the C it is a flattened form of even though it sounds a semitone below it.
+ *
+ * @param {{degree: string, octaveOffset: number}} pitch
+ * @param {string} key
+ * @returns {{letter: string, accidental: string, octave: number, text: string}}
+ */
+export function noteName(pitch, key) {
+  const { midiNote } = resolve(pitch, key);
+
+  const [, digits] = splitDegree(pitch.degree);
+  const keyLetter = key[0];
+
+  // Count that many letters up from the Key's letter. Degree 1 is the Key's own
+  // letter, degree 8 is it again an octave up, so the step is (n - 1) mod 7.
+  const letter = LETTERS[(LETTERS.indexOf(keyLetter) + (Number(digits) - 1)) % 7];
+
+  // The accidental is the gap between what the letter names naturally and what
+  // is actually sounding, centred so it comes out as a small +/- rather than a
+  // number near 12.
+  const alteration =
+    (((midiNote % 12) - LETTER_SEMITONES[letter] + 18) % 12) - 6;
+  const accidental = ALTERATION_GLYPH[alteration];
+  if (accidental === undefined) {
+    throw new Error(
+      `Degree ${pitch.degree} in ${key} needs ${alteration} semitones of accidental to spell as ${letter}`
+    );
+  }
+
+  // Scientific pitch notation, against this app's middle C = MIDI 60 = C4. The
+  // alteration is removed first so the octave belongs to the letter: Cb5 sounds
+  // as MIDI 71, which is B4's number, but it is a C and so an octave 5 note.
+  const octave = Math.floor((midiNote - alteration) / 12) - 1;
+
+  return { letter, accidental, octave, text: `${letter}${accidental}${octave}` };
+}
+
+/**
+ * The degree token as a musician writes it, with a proper accidental glyph.
+ * The stored token uses `b` and `#` because those are typeable; this is for
+ * display only and never round-trips back into storage.
+ */
+export function degreeLabel(degree) {
+  const [accidental, digits] = splitDegree(degree);
+  return `${accidental === 'b' ? '♭' : accidental === '#' ? '♯' : ''}${digits}`;
+}
