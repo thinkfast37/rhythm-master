@@ -136,6 +136,7 @@ Everything below is optional and lives in `spec-trace.config.json`.
 
 | Key | Meaning |
 |---|---|
+| `waivers` | Gaps signed off with a reason (default `specs/traceability-waivers.json`) |
 | `testDirs` | Where tests live |
 | `domCapable` | Test paths that can reach a rendered document |
 | `uiVocabulary` | Words that make a criterion UI-level |
@@ -159,6 +160,11 @@ wrong too.
 - **A criterion already at the worst severity cannot get worse.** If a finding is
   baselined as `mismatched`, further damage to that test raises no new finding. It is
   already on the burn-down list.
-- **The change matrix over-reports rather than under-reports.** A changed file reaches
-  every criterion its plan item covers, because that is the honest answer to "what could
-  this have affected".
+- **The change matrix separates confidence rather than pretending to precision.** A
+  criterion whose own test changed is listed in full; one reached only because the change
+  touched a file some task mentions is collapsed to a count. The second set is a blast
+  radius, and in a codebase with a composition root it is most of the application — early
+  versions listed all of it and buried the rows a reviewer needed.
+- **A waiver is a decision, not a measurement.** The tool checks that one exists, is
+  reasoned, still applies, and stays within LOW/MEDIUM. It cannot check that the reason is
+  a good one; that is what showing it in the matrix row is for.

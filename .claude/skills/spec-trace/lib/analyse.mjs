@@ -174,6 +174,7 @@ export const CHECKS = {
   T6: 'Every UI-level criterion has a test that can reach the DOM',
   T7: 'No test names a criterion the spec does not declare',
   T8: 'The generated traceability matrix is up to date',
+  T9: 'Every waiver is valid, reasoned, and still needed',
 };
 
 /**
@@ -198,7 +199,7 @@ export function findingKey(check, f) {
 export function analyse({ acs, plan, tasks, suite, config }) {
   const canonical = canonicalMap(config.synonyms);
   const criteria = buildCriteria(acs, config);
-  const findings = { T1: [], T2: [], T3: [], T4: [], T5: [], T6: [], T7: [], T8: [] };
+  const findings = { T1: [], T2: [], T3: [], T4: [], T5: [], T6: [], T7: [], T8: [], T9: [] };
 
   const testsFor = new Map();
   for (const t of suite.titles) {

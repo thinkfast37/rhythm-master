@@ -108,6 +108,7 @@ Seven checks, each failing on its own:
 | **T6** | A UI-level criterion has a test that can reach the DOM (`tests/e2e/` or `tests/unit/ui/`). |
 | **T7** | No test names an AC or Case ID the spec does not declare. |
 | **T8** | The committed traceability matrix is up to date. |
+| **T9** | Every waiver is valid, reasoned, and still needed. |
 
 Three consequences worth stating outright:
 
@@ -147,10 +148,41 @@ T8 fails when it is stale, so a change that alters the chain cannot land without
 matrix being regenerated and the diff reviewed. That diff is the point: it is where a
 criterion silently losing its test becomes visible.
 
-`trace:changed` reaches a criterion three ways — a changed test file naming it, a changed
-source file named by a task whose plan item covers it, and a changed spec. It deliberately
-over-reports rather than under-reports: the question it answers is "what could this have
-affected".
+The matrix reports **coverage as well as gaps** — the proportion proven, overall and per
+User Story — because a list of only what is wrong cannot say whether the work is fit to
+ship.
+
+`trace:changed` splits its rows by how the criterion was reached. **Direct** means a test
+naming that criterion changed in the diff; that is the near-certain set and it is listed
+in full. **Indirect** means the change touched a file some task mentions, which in a
+codebase with a composition root is most of the application — collapsed to a count, since
+it is a blast radius rather than a finding.
+
+### Gap severity
+
+Derived from the kind of gap, never assigned per criterion — an assigned severity is a
+judgement made under whatever pressure applied at the time, and gets revised downward by
+whoever is in a hurry.
+
+| | Gap | Why |
+|---|---|---|
+| **CRITICAL** | No test names the criterion | Nobody has looked. The state an unbuilt requirement sits in. |
+| **HIGH** | A test names it but proves something else | Unproven while reporting as covered — what hid US-2.2 and US-11.1/11.2. |
+| **HIGH** | UI-level, but only a pure unit test | Same failure, reached differently: `core/` cannot see a screen. |
+| **MEDIUM** | Compound AC not decomposed | Partly proven; one test stands in for several claims. |
+| **LOW** | Right test, named in its own words | Proven. Clerical. |
+
+### Waivers
+
+A **LOW or MEDIUM** gap may be signed off in `traceability-waivers.json` with a written
+reason, which shows in its matrix row. Use it when a gap is genuinely not worth closing —
+a criterion checked by hand each release, a case outside the realm of the possible.
+
+**CRITICAL and HIGH can never be waived, by anyone, for any reason** (Constitution
+Principle IV, non-negotiable). Those are exactly the states in which a specified
+requirement sits while unbuilt and reporting as complete. T9 fails a waiver that reaches
+above MEDIUM, names a criterion the spec does not declare, gives no real reason, or covers
+a gap that has since been fixed — so the file cannot rot into a blanket pass.
 
 ### The tooling
 

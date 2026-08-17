@@ -44,6 +44,7 @@ npm run trace:prune              # strike off baseline entries that are no longe
 | **T6** | A UI-level criterion has a test that can reach the DOM | A pure unit test cannot prove a criterion about a control, whatever it is named |
 | **T7** | No test names an AC or Case ID the spec does not declare | A renumbered AC leaves its old ID on a test that now proves nothing |
 | **T8** | The committed matrix is up to date | A matrix that drifts is worse than none — it looks like assurance |
+| **T9** | Every waiver is valid, reasoned, and still needed | A waiver file that rots becomes a blanket pass |
 
 ## When you are working in a spec-kit project
 
@@ -73,8 +74,42 @@ it asserted something the AC never said — and say so explicitly, naming the AC
 it. Never relax, narrow, delete or skip a test to make a build green.
 
 **Before opening a pull request**: run `npm run trace:matrix`, commit the result, and paste
-`npm run trace:changed` into the PR body so the reviewer sees which criteria the change
-touches.
+`npm run trace:changed` into the PR body. It lists **directly affected** criteria — ones
+whose own test changed — in full, and collapses the indirect blast radius to a count.
+
+## Coverage and gap severity
+
+The matrix reports the proportion **proven**, overall and per User Story, alongside the
+gaps — a list of only what is wrong cannot say whether the work is fit to ship.
+
+Every gap carries a severity **derived from its kind**, never assigned per criterion (an
+assigned severity gets revised downward by whoever is in a hurry):
+
+| | Gap | Why |
+|---|---|---|
+| **CRITICAL** | No test names the criterion | Nobody has looked. The state an unbuilt requirement sits in. |
+| **HIGH** | A test names it but proves something else | Unproven while reporting as covered. |
+| **HIGH** | UI-level, but only a pure unit test | Same failure, reached differently. |
+| **MEDIUM** | Compound AC not decomposed | Partly proven; one test stands in for several claims. |
+| **LOW** | Right test, named in its own words | Proven. Clerical. |
+
+## Waivers
+
+A **LOW or MEDIUM** gap may be signed off in the waivers file with a written reason, shown
+in its matrix row:
+
+```json
+{
+  "waived": [
+    { "criterion": "AC-3.1.9", "reason": "Verified by hand each release; …", "date": "2026-08-17" }
+  ]
+}
+```
+
+**CRITICAL and HIGH can never be waived, by anyone, for any reason.** Those are the states
+in which a specified requirement sits while unbuilt and reporting as complete. T9 fails a
+waiver that reaches above MEDIUM, names an undeclared criterion, gives no real reason, or
+covers a gap that has since been fixed.
 
 ## The baseline
 

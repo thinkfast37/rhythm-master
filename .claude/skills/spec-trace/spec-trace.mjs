@@ -34,9 +34,11 @@ import { renderChange } from './lib/matrix.mjs';
 import {
   run,
   readBaseline,
+  readWaivers,
   writeBaseline,
   masterMatrix,
   checkMatrixFreshness,
+  checkWaivers,
   criteriaTouchedBy,
   currentKeys,
 } from './lib/project.mjs';
@@ -64,14 +66,26 @@ const flag = (name) => argv.includes(`--${name}`);
 
 const state = run(config);
 const baseline = readBaseline(config);
-const { rows, text: matrixText } = masterMatrix(state, config, baseline);
+const waivers = readWaivers(config);
+const { rows, text: matrixText } = masterMatrix(state, config, baseline, waivers);
 checkMatrixFreshness(state, config, matrixText);
+checkWaivers(state, waivers, baseline);
+
+/**
+ * Criteria whose gap has been validly waived. `statusOf` has already refused to mark a
+ * CRITICAL or HIGH gap as waived, so this can only ever excuse LOW and MEDIUM — and an
+ * invalid waiver is itself a T9 finding, which nothing excuses.
+ */
+const waived = new Set(rows.filter((r) => r.status.waived).map((r) => r.id));
+const excused = (check, f) =>
+  baseline.has(findingKey(check, f)) ||
+  (['T4', 'T5', 'T6'].includes(check) && waived.has(f.id));
 
 const current = currentKeys(state.findings);
 const regressions = [];
 for (const [check, list] of Object.entries(state.findings)) {
   for (const f of list) {
-    if (!baseline.has(findingKey(check, f))) regressions.push({ check, ...f });
+    if (!excused(check, f)) regressions.push({ check, ...f });
   }
 }
 const fixed = [...baseline].filter((k) => !current.has(k));
@@ -127,6 +141,7 @@ if (command === 'changed') {
       rows.filter((r) => touched.has(r.id)),
       {
         touchedFiles: files,
+        reach: touched,
         reason: `Base: ${label}. Reached via changed tests, and via tasks naming changed files.`,
       }
     )
@@ -169,7 +184,7 @@ if (flag('json')) {
 } else if (flag('summary')) {
   for (const [checkId, label] of Object.entries(CHECKS)) {
     const all = state.findings[checkId].length;
-    const fresh = state.findings[checkId].filter((f) => !baseline.has(findingKey(checkId, f))).length;
+    const fresh = state.findings[checkId].filter((f) => !excused(checkId, f)).length;
     let detail = all ? ` — ${all} finding(s), ${fresh} not in baseline` : '';
     if (checkId === 'T5' && all) {
       const by = { untested: 0, mismatched: 0, reworded: 0 };
@@ -180,7 +195,7 @@ if (flag('json')) {
   }
   console.log(
     `\n${failed ? 'FAIL' : 'PASS'}  Overall — ${baseline.size} accepted, ` +
-      `${regressions.length} new, ${fixed.length} fixed but still listed.`
+      `${waived.size} waived, ${regressions.length} new, ${fixed.length} fixed but still listed.`
   );
 } else {
   console.log(
@@ -188,7 +203,7 @@ if (flag('json')) {
       `${state.plan.size} plan items, ${state.tasks.size} tasks.\n`
   );
   for (const [checkId, label] of Object.entries(CHECKS)) {
-    const list = state.findings[checkId].filter((f) => !baseline.has(findingKey(checkId, f)));
+    const list = state.findings[checkId].filter((f) => !excused(checkId, f));
     const accepted = state.findings[checkId].length - list.length;
     if (list.length === 0) {
       console.log(`PASS  ${checkId}  ${label}${accepted ? ` (${accepted} accepted)` : ''}`);
@@ -214,7 +229,10 @@ if (flag('json')) {
     }
     console.log('');
   }
-  console.log(`Baseline: ${baseline.size} finding(s) accepted as pre-existing debt.`);
+  console.log(
+    `Baseline: ${baseline.size} finding(s) accepted as pre-existing debt.` +
+      (waived.size ? `\nWaived:   ${waived.size} gap(s) signed off with a reason (LOW/MEDIUM only).` : '')
+  );
 
   if (fixed.length) {
     console.log(
