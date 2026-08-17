@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as seed from '../../../src/storage/seed.js';
-import { validate } from '../../../src/core/pattern.js';
+import { validate, MAX_MEASURES } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { beatCount, isSupported } from '../../../src/core/meter.js';
 import { SEED_PATTERN_COUNT } from '../../seed-count.js';
@@ -64,9 +64,36 @@ describe('the shipped Pattern library', () => {
     }
   });
 
-  it('AC-16.1.7 — no shipped Pattern exceeds the six-Measure cap', () => {
+  it('AC-16.1.7 — Deliberate accents are preserved; everything else uses computed defaults', () => {
+    let withOverrides = 0;
+    let withoutAny = 0;
     for (const p of library) {
-      expect(p.measures.length, p.name).toBeLessThanOrEqual(6);
+      let explicit = 0;
+      for (const m of p.measures) {
+        for (const [bi, b] of m.beats.entries()) {
+          for (const [si, s] of b.slots.entries()) {
+            if (!('accent' in s)) continue;
+            explicit += 1;
+            // An override only means anything on a sounding Slot: Accent Level 0
+            // is not a stored value, it is what `on: false` means (data-model §3).
+            expect(s.on, `${p.name} beat ${bi} slot ${si}`).toBe(true);
+            expect([1, 2, 3], `${p.name} beat ${bi} slot ${si}`).toContain(s.accent);
+          }
+        }
+      }
+      if (explicit > 0) withOverrides += 1;
+      else withoutAny += 1;
+    }
+    // First clause: legacy accents survived conversion as explicit overrides.
+    expect(withOverrides).toBeGreaterThan(0);
+    // Second clause: a Pattern with no stored accents carries none at all, so
+    // the metric defaults (AC-3.1.2, AC-3.1.3) compute them at read time.
+    expect(withoutAny).toBeGreaterThan(0);
+  });
+
+  it('AC-16.1.10 — Seeded data satisfies every structural rule in this specification: the Measure cap', () => {
+    for (const p of library) {
+      expect(p.measures.length, p.name).toBeLessThanOrEqual(MAX_MEASURES);
     }
   });
 

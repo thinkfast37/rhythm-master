@@ -21,8 +21,8 @@
 | | Criteria | Share |
 |---|---|---|
 | 🟢 Proven | 39 | 16.1% |
-| 🔴 Gap — HIGH | 80 | 33.1% |
-| 🟠 Gap — MEDIUM | 42 | 17.4% |
+| 🔴 Gap — HIGH | 79 | 32.6% |
+| 🟠 Gap — MEDIUM | 43 | 17.8% |
 | 🟡 Gap — LOW | 81 | 33.5% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
@@ -90,7 +90,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-12.1 | 4 | 0 | · | · | 4 | · | · |
 | 🔴 US-13.1 | 5 | 0 | · | · | 2 | 1 | 2 |
 | 🔴 US-15.1 | 13 | 0 | · | · | 1 | 9 | 3 |
-| 🔴 US-16.1 | 11 | 0 | · | · | 10 | 1 | · |
+| 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
 | 🟢 US-15.2 | 8 | **8** | · | · | · | · | · |
 
@@ -323,7 +323,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-16.1 | `AC-16.1.4` | Straight and triplet beats map to Recipes | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.5` | One Pattern-wide meter becomes a per-Measure Time Signature | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.6` | Sub-measure drill cells become their own short Measure | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-16.1 | `AC-16.1.7` | Deliberate accents are preserved; everything else uses computed defaults | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-16.1 | `AC-16.1.7` | Deliberate accents are preserved; everything else uses computed defaults | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-16.1 | `AC-16.1.8` | Melodic Patterns have their pitches resolved at conversion time | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.9` | Trailing silent Measures are dropped | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.10` | Seeded data satisfies every structural rule in this specification | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
