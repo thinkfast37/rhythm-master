@@ -29,6 +29,25 @@ that title names the behaviour under test — not the example inside it.
 
 ---
 
+## Personas
+
+Every User Story below is written from one of these points of view. They are lenses on the same
+person as often as they are different people — one musician may compose in the morning and drill
+in the evening — but separating them keeps each story honest about whose problem it solves.
+
+| Persona | Who they are | Stories written from this view |
+|---|---|---|
+| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-3.1, US-4.4, US-7.1–7.5, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-16.1 |
+| **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
+| **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
+
+Two personas from earlier drafts are deliberately absent: **The New User**, who belonged to the
+deferred tutorial epic, and any persona for Pattern layering, which was cut (US-9.x does not
+exist).
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Measure sequence & per-Measure Time Signature
