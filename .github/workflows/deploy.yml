@@ -41,7 +41,7 @@ jobs:
         run: npm run test:e2e
       - name: Per-AC coverage
         run: npm run coverage:ac
-      - name: Traceability — AC to plan to task to test (CLAUDE.md §2b)
+      - name: Traceability — AC to plan to task to test, and the matrix (CLAUDE.md §2b)
         run: npm run check:trace
 
   build:

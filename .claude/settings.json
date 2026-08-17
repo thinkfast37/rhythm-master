@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/skills/spec-trace/hooks/stop-notify.mjs",
+            "timeout": 60,
+            "statusMessage": "Checking traceability…"
+          }
+        ]
+      }
+    ]
+  }
+}

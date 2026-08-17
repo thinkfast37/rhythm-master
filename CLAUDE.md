@@ -107,6 +107,7 @@ Seven checks, each failing on its own:
 | **T5** | Every criterion has a test whose **name is its title, verbatim**. |
 | **T6** | A UI-level criterion has a test that can reach the DOM (`tests/e2e/` or `tests/unit/ui/`). |
 | **T7** | No test names an AC or Case ID the spec does not declare. |
+| **T8** | The committed traceability matrix is up to date. |
 
 Three consequences worth stating outright:
 
@@ -127,6 +128,42 @@ Three consequences worth stating outright:
 **Adding a new AC means adding its plan item row and both tasks in the same
 change.** Not afterwards — T1 and T2 fail until they exist, which is what stops an
 AC being written down and quietly never scheduled.
+
+### The matrix
+
+`specs/001-rhythm-master-mvp/traceability-matrix.md` is the chain as a document: one row
+per criterion, carrying its User Story, the criterion's own words, its plan item, its
+implementation tasks, its test tasks (listed **separately**, because "who builds it" and
+"who proves it" are different questions), the test that proves it, and a status.
+
+**It is generated. Never edit it by hand.**
+
+```bash
+npm run trace:matrix     # regenerate; commit the result
+npm run trace:changed    # the rows this change touches — paste into the PR body
+```
+
+T8 fails when it is stale, so a change that alters the chain cannot land without the
+matrix being regenerated and the diff reviewed. That diff is the point: it is where a
+criterion silently losing its test becomes visible.
+
+`trace:changed` reaches a criterion three ways — a changed test file naming it, a changed
+source file named by a task whose plan item covers it, and a changed spec. It deliberately
+over-reports rather than under-reports: the question it answers is "what could this have
+affected".
+
+### The tooling
+
+`npm run check:trace` and the matrix come from `.claude/skills/spec-trace/` — a
+self-contained, dependency-free skill, portable to any spec-kit project by copying the
+folder and writing a `spec-trace.config.json`. Its own tests live beside it and run under
+`npm test`. **Changing the checker means changing its tests**: it is the one place where a
+false PASS is invisible, since a gate that never fires looks exactly like a gate with
+nothing to find.
+
+A `Stop` hook (`.claude/settings.json`) runs the check when a session ends and surfaces
+new findings. It never blocks — a hook that halts a session over a documentation gap gets
+switched off, and a gate that is off enforces nothing.
 
 ### The baseline
 
@@ -168,6 +205,7 @@ npm run lint          # includes the core/ purity boundary
 npm test              # Vitest over core/ and storage/
 npm run test:e2e      # Playwright; needs CHROMIUM_PATH (see below)
 npm run coverage:ac   # every AC has a test naming it — must be 100%
+npm run trace:matrix  # regenerate the matrix, and commit it (§2b)
 npm run check:trace   # the AC → plan → task → test chain (§2b)
 npm run validate:seed # the shipped library against data-model §7
 npm run check:cvd     # accent palette under simulated colour blindness
@@ -214,6 +252,11 @@ Every change lands the same way:
    carries the spec revisions, the AC IDs and the gate results in one place, so
    the reasoning outlives a compaction and lives somewhere a commit message
    cannot. Open it even in Auto mode, even for a one-line data fix.
+
+   **Include the change matrix.** Paste `npm run trace:changed` into the body, so
+   the PR states which criteria this change could have affected rather than
+   leaving the maintainer to infer it from a file list. If it comes back empty,
+   say so — a change touching no criterion is a fine thing to be told.
 5. **Auto: merge it.** Review: hand over the link and stop.
 6. **Watch the deploy, and report what is actually live.** Merging is not
    landing. `verify` and `build` can both pass and the `deploy` job still fail
