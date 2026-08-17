@@ -96,8 +96,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Load the app with empty storage; all 112 Patterns are present, valid, and match the legacy note-on count.
 
-- [ ] T032 [US16.1] Implement seed loading in `src/storage/seed.js` — read `data/seed-patterns.json`, assign deterministic ids from seed position, mark provenance as shipped by origin store (data-model §5)
-- [ ] T033 [US16.1] Tests in `tests/unit/storage/seed.test.js` covering AC-16.1.1–AC-16.1.11, including the 1,053 note-on total and the 1/4 and 2/4 drill-cell conversions (AC-16.1.6)
+- [X] T032 [US16.1] Implement seed loading in `src/storage/seed.js` — read `data/seed-patterns.json`, assign deterministic ids from seed position, mark provenance as shipped by origin store (data-model §5)
+- [X] T033 [US16.1] Tests in `tests/unit/storage/seed.test.js` covering AC-16.1.1–AC-16.1.11, including the 1,053 note-on total and the 1/4 and 2/4 drill-cell conversions (AC-16.1.6)
 
 ---
 
@@ -107,8 +107,8 @@ Nothing in this phase renders anything.
 
 **Independent test**: Append a hand-written Pattern to `data/seed-patterns.json`; it appears in the library on reload with no other change.
 
-- [ ] T034 [US16.2] Document the seed-file format in `data/README.md`, mirroring contracts/file-formats.md §1
-- [ ] T035 [US16.2] Tests in `tests/unit/storage/seed-format.test.js` covering AC-16.2.1–AC-16.2.4, including that a hand-added Pattern with no `id` loads correctly
+- [X] T034 [US16.2] Document the seed-file format in `data/README.md`, mirroring contracts/file-formats.md §1
+- [X] T035 [US16.2] Tests in `tests/unit/storage/seed-format.test.js` covering AC-16.2.1–AC-16.2.4, including that a hand-added Pattern with no `id` loads correctly
 
 ---
 
