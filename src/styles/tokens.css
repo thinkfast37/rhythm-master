@@ -51,6 +51,21 @@
    */
   --slot-min-comfortable: 38px;
   /*
+   * The size a cell WANTS to be, at every viewport and in every Pattern
+   * (AC-15.2.7). 44px is the predecessor app's cell, which the maintainer
+   * described as good and consistent — and it is where the counting syllable's
+   * clamp bottoms out at 15px, so nothing inside the cell changes between a
+   * dense Pattern and a sparse one.
+   *
+   * A ceiling, never a floor. The two minimums above still govern the dense
+   * case: a Measure that cannot fit its Beats at this size shrinks its cells
+   * towards them and wraps (AC-15.1.10, AC-15.1.14). What this stops is the
+   * other direction — a one-Beat Measure's cell taking the whole line because
+   * the line was there. `ui/beat-layout.js` measures each Measure's Beats at
+   * this size and writes the result to `--beats-max`, below.
+   */
+  --slot-size: 44px;
+  /*
    * The note band, as a thin strip under the accent zone (AC-2.2.14).
    *
    * One line of text, so this is a floor rather than a fitted height — the band
@@ -253,6 +268,14 @@ body {
  * express, since it depends on the measured minimum and so on the reader's font.
  * The fallback is `--beat-count`: every Beat on one line, written by `renderGrid`
  * from the Pattern alone, and the right answer at every width a Measure fits.
+ *
+ * `--beats-max` is the other thing it writes (AC-15.2.7): the width this
+ * Measure's columns come to with every cell at `--slot-size`. The `1fr` tracks
+ * share whatever width the container has, so capping the container is what
+ * caps the cells — and it caps them all together, which keeps AC-15.1.14/1's
+ * one shared Beat width. Where the line is narrower than the cap, the cap does
+ * nothing and the dense case is exactly what it was. Absent the measurement,
+ * `none`: the fill-the-line layout, which is only ever the fallback.
  */
 .beats {
   display: grid;
@@ -260,16 +283,36 @@ body {
   flex: 1 1 auto;
   gap: var(--grid-gap-beat);
   min-width: 0;
+  max-width: var(--beats-max, none);
 }
 
 /*
- * The probe state `beat-layout.js` reads the minimum through: one min-content
- * column, so every Beat lays out at the widest minimum in its Measure and a
- * single `getBoundingClientRect` answers for the whole Measure. Held for one
- * synchronous read between two writes, so it is never painted.
+ * The probe states `beat-layout.js` reads through, each held for one
+ * synchronous read between two writes, so neither is ever painted. Both lift
+ * the cap, since the cap is what they exist to compute.
+ *
+ * `measuring` is the MINIMUM: one min-content column, so every Beat lays out at
+ * the widest minimum in its Measure and a single `getBoundingClientRect` answers
+ * for the whole Measure.
+ *
+ * `measuring-preferred` is the PREFERRED width: one max-content column, with
+ * every Slot pinned at `--slot-size` or its own content, whichever is wider — a
+ * wide note name in the Melodic band still gets its room (AC-15.2.7). Read the
+ * same way, and it is what `--beats-max` is made from.
  */
+.beats.measuring,
+.beats.measuring-preferred {
+  max-width: none;
+}
 .beats.measuring {
   grid-template-columns: min-content;
+}
+.beats.measuring-preferred {
+  grid-template-columns: max-content;
+}
+.beats.measuring-preferred .slot {
+  flex: 0 0 auto;
+  min-width: var(--slot-size);
 }
 
 /*
@@ -287,6 +330,16 @@ body {
   flex: 1 1 auto;
   gap: var(--grid-gap-group);
   min-width: min-content;
+  /*
+   * Top-aligned, not stretched. In a Measure whose Beats are subdivided
+   * differently, an 8th-note cell is twice a 16th-note cell's width
+   * (AC-15.1.14) and so twice its height (AC-15.2.6) — and flex's default
+   * stretch then pulled every 16th-note cell on the row up to that height,
+   * 44 wide by 93 tall. The Melodic split Slot already sat at its own height;
+   * this makes the Percussive cell do the same, so a cell is square at every
+   * Recipe rather than only in a uniform Measure (AC-15.2.6/1).
+   */
+  align-items: flex-start;
 }
 
 /*
@@ -313,6 +366,7 @@ body {
   flex: 1 1 auto;
   gap: var(--grid-gap-slot);
   min-width: min-content;
+  align-items: flex-start; /* as .beat, and for the same reason */
 }
 .group.feel-triplet {
   border-bottom: 2px dotted var(--ink-dim);

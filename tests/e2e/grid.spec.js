@@ -655,10 +655,19 @@ test('AC-15.1.14/5 — The layout re-balances when the width available to the gr
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
   const collapsed = await beatLayout(page);
   await page.locator('.library-toggle').click();
-  await expect.poll(async () => (await beatLayout(page)).beatsOverflow).toBeLessThanOrEqual(0);
+  // Polled, like the two resizes above: the re-balance runs from a
+  // ResizeObserver, which is delivered with the next frame rather than inside
+  // the click. This used to poll the overflow instead, which is satisfied
+  // before the re-balance as well as after — and passed only because the
+  // fill-the-line tracks changed width the moment the container did. Under
+  // AC-15.2.7 a stale column count keeps the same capped widths until the
+  // observer runs, so the wait has to be for the thing the criterion claims.
+  await expect
+    .poll(async () => (await beatLayout(page)).widths[0])
+    .not.toBe(collapsed.widths[0]);
 
   const reopened = await beatLayout(page);
-  expect(reopened.widths[0]).not.toBe(collapsed.widths[0]);
+  expect(reopened.beatsOverflow).toBeLessThanOrEqual(0);
   expect(spread(reopened.widths)).toBeLessThan(1);
 });
 
@@ -758,8 +767,22 @@ test("AC-3.1.17/3 — The syllable the dot stands for stays available to assisti
 });
 
 test('AC-3.1.17/4 — The Accent bar keeps its proportion to the Slot at every Recipe, so a wide cell does not reduce the Accent to a detail', async ({ page }) => {
-  const barFor = async (recipe) => {
-    await mixedMeasure(page, recipe);
+  // A wide cell is an 8th-note Beat BESIDE 16th-note Beats: the Beats share one
+  // width (AC-15.1.14) and the 8th's two Slots take twice the room each. It
+  // used to be any 8ths Measure, when cells grew to fill the line — AC-15.2.7
+  // ended that, and a uniform Measure's cells are now 44px at every Recipe.
+  const barFor = async (firstBeatRecipe) => {
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await page.goto('/');
+    await page.evaluate(async ([r]) => {
+      const { handlers: h } = window.__rm;
+      window.__rm.loadBlank('4/4');
+      for (let b = 1; b < 4; b++) await h.onRecipe('straight-16ths', 0, b);
+      await h.onRecipe(r, 0, 0);
+      await h.onSlotTap(0, 0, 0);
+    }, [firstBeatRecipe]);
+    await page.locator('.library-toggle').click();
+    await expect(page.locator('.slot.accent-off').first()).toBeVisible();
     return page.evaluate(() => {
       const slot = document.querySelector('.slot:not(.accent-off)');
       return {
@@ -948,6 +971,174 @@ test('AC-15.2.6/2 — The square never costs a tap target: where a Slot is at it
     expect(c.h, `height ${c.h}`).toBeGreaterThanOrEqual(24);
     expect(Math.abs(c.w - c.h)).toBeLessThanOrEqual(1);
   }
+});
+
+test('AC-15.2.6/1 — Each counting cell is as tall as it is wide, within a pixel, in both Sound Modes and at every Recipe: in a Measure whose Beats are subdivided differently', async ({ page }) => {
+  // The case a uniform Measure cannot show: an 8th-note cell is twice a 16th's
+  // width (AC-15.1.14) and so twice its height, and flex's default stretch was
+  // pulling every 16th-note cell on the row up to it — 44 wide by 93 tall.
+  for (const mode of ['percussive', 'melodic']) {
+    await page.setViewportSize({ width: 1400, height: 900 });
+    await page.goto('/');
+    await page.evaluate(async ([m]) => {
+      const { handlers: h } = window.__rm;
+      window.__rm.loadBlank('4/4');
+      if (m === 'melodic') await h.onSoundMode(m);
+      await h.onRecipe('straight-8ths', 0, 1);
+      await h.onRecipe('triplet-8ths', 0, 2);
+    }, [mode]);
+    await page.locator('.library-toggle').click();
+
+    const cells = await page.locator('.slot').evaluateAll((slots) =>
+      slots.map((s) => {
+        const r = (s.querySelector('.slot-accent') ?? s).getBoundingClientRect();
+        return { w: r.width, h: r.height };
+      })
+    );
+    expect(cells.length).toBe(13);
+    // Three different cell widths on the row, and every one of them square.
+    expect(new Set(cells.map((c) => Math.round(c.w))).size).toBe(3);
+    for (const c of cells) {
+      expect(Math.abs(c.w - c.h), `${mode} ${c.w}x${c.h}`).toBeLessThanOrEqual(1);
+    }
+  }
+});
+
+/* --- one cell size across Patterns (AC-15.2.7) ---------------------------- */
+
+/** Every counting cell's size, as `WxH` rounded to the pixel, deduplicated. */
+const cellSizes = (page) =>
+  page.locator('.slot').evaluateAll((slots) => {
+    const seen = new Set();
+    for (const s of slots) {
+      const r = (s.querySelector('.slot-accent') ?? s).getBoundingClientRect();
+      seen.add(`${Math.round(r.width)}x${Math.round(r.height)}`);
+    }
+    return [...seen];
+  });
+
+/** A blank Pattern of one Measure in `meter`, its Beats on the default Recipe. */
+async function blank(page, meter) {
+  await page.evaluate((m) => window.__rm.loadBlank(m), meter);
+  await expect(page.locator('.measure')).toHaveCount(1);
+}
+
+test('AC-15.2.7/1 — A one-Beat Pattern, a four-Beat Pattern and a twelve-Beat Pattern render their counting cells at the same width and height on a desktop viewport wide enough to hold all three at that size', async ({ page }) => {
+  // 1600, not 1400: twelve 8th-note Beats at 44px cells need 1358px of line,
+  // and a 1400px window with the library collapsed offers 1290. There the
+  // twelve-Beat Measure shrinks to 41px, which is /5's business, not /1's.
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+
+  const sizes = {};
+  for (const meter of ['1/4', '4/4', '12/8']) {
+    await blank(page, meter);
+    sizes[meter] = await cellSizes(page);
+    // One size within the Pattern...
+    expect(sizes[meter], meter).toHaveLength(1);
+  }
+  // ...and the same one across all three. The old layout gave the one-Beat
+  // Pattern a cell five times the size of the twelve-Beat Pattern's.
+  expect(sizes['4/4']).toEqual(sizes['1/4']);
+  expect(sizes['12/8']).toEqual(sizes['1/4']);
+});
+
+test('AC-15.2.7/2 — Adding a Measure to a Pattern leaves every cell, old and new, at the size the cells were before', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+
+  await blank(page, '4/4');
+  const before = await cellSizes(page);
+  expect(before).toHaveLength(1);
+
+  await page.evaluate(() => window.__rm.handlers.onAddMeasure());
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(await cellSizes(page)).toEqual(before);
+
+  // And on the sparse Pattern where the second Measure was reported as
+  // "also huge".
+  await blank(page, '1/4');
+  const sparse = await cellSizes(page);
+  await page.evaluate(() => window.__rm.handlers.onAddMeasure());
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(await cellSizes(page)).toEqual(sparse);
+  expect(sparse).toEqual(before);
+});
+
+test('AC-15.2.7/3 — At the preferred size a cell is 44 CSS pixels wide, within a pixel, in both Sound Modes', async ({ page }) => {
+  for (const mode of ['percussive', 'melodic']) {
+    await page.setViewportSize({ width: 1400, height: 900 });
+    await page.goto('/');
+    await page.evaluate(async ([m]) => {
+      window.__rm.loadBlank('4/4');
+      if (m === 'melodic') await window.__rm.handlers.onSoundMode(m);
+    }, [mode]);
+    await page.locator('.library-toggle').click();
+
+    const widths = await page.locator('.slot').evaluateAll((slots) =>
+      slots.map((s) => (s.querySelector('.slot-accent') ?? s).getBoundingClientRect().width)
+    );
+    expect(widths.length).toBe(16);
+    for (const w of widths) expect(Math.abs(w - 44), `${mode} ${w}`).toBeLessThanOrEqual(1);
+  }
+});
+
+test('AC-15.2.7/4 — Where every Beat fits one line at the preferred size, the Beats occupy the start of the line and no cell is wider than the preferred size', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
+  await page.locator('.library-toggle').click();
+
+  const { perLine, widths } = await beatLayout(page);
+  expect(perLine).toEqual([4]);
+  expect(spread(widths)).toBeLessThan(1);
+
+  const geometry = await page.evaluate(() => {
+    const beatsEl = document.querySelector('.measure .beats');
+    const beats = [...beatsEl.querySelectorAll('.beat')].map((b) => b.getBoundingClientRect());
+    const container = beatsEl.getBoundingClientRect();
+    const measure = document.querySelector('.measure').getBoundingClientRect();
+    return {
+      firstBeatLeft: beats[0].left,
+      containerLeft: container.left,
+      lastBeatRight: beats[beats.length - 1].right,
+      measureRight: measure.right,
+      cellWidths: [...document.querySelectorAll('.slot')].map((s) => s.getBoundingClientRect().width),
+    };
+  });
+  // Against the start of the line...
+  expect(Math.abs(geometry.firstBeatLeft - geometry.containerLeft)).toBeLessThanOrEqual(1);
+  // ...with the line's spare room left spare rather than spent on the cells.
+  expect(geometry.measureRight - geometry.lastBeatRight).toBeGreaterThan(100);
+  for (const w of geometry.cellWidths) expect(w).toBeLessThanOrEqual(45);
+});
+
+test('AC-15.2.7/5 — Where the Beats do not fit at the preferred size, cells shrink and Beats wrap as before, and the grid still never scrolls sideways', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
+  await expect(page.locator('.slot')).toHaveCount(192);
+
+  const { perLine, widths, beatsOverflow } = await beatLayout(page);
+  expect(perLine.length).toBeGreaterThan(1);
+  expect(spread(widths)).toBeLessThan(1);
+  expect(beatsOverflow).toBeLessThanOrEqual(0);
+
+  const cells = await page
+    .locator('.slot')
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+  // Below the preferred size, and never below the floor.
+  expect(Math.max(...cells)).toBeLessThan(44);
+  expect(Math.min(...cells)).toBeGreaterThanOrEqual(24);
+
+  const overflow = await page.evaluate(() => ({
+    body: document.body.scrollWidth - document.body.clientWidth,
+    grid: document.querySelector('.grid').scrollWidth - document.querySelector('.grid').clientWidth,
+  }));
+  expect(overflow.body).toBeLessThanOrEqual(0);
+  expect(overflow.grid).toBeLessThanOrEqual(0);
 });
 
 test('AC-1.1.5/1 — The first Measure’s Time Signature change offers Apply to all, This measure only, and Cancel', async ({
