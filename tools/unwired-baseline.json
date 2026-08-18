@@ -1,0 +1,23 @@
+{
+  "note": "Exports nothing in src/ reaches, accepted as pre-existing debt on 2026-08-17, the day check:unwired landed. Reported but not build-failing; anything not listed here fails. A gate that is permanently red gates nothing, which is why this file exists — but an entry here is OUTSTANDING WORK, never a settled decision. This list may only shrink: `npm run check:unwired -- --prune` strikes off entries that are no longer findings, and nothing writes new ones. Adding an entry by hand means taking on debt deliberately, and has to be argued for in review.",
+  "accepted": {
+    "src/audio/context.js __reset": "Test seam. Tears down the shared AudioContext between tests; the app has no reason to reset one. Permanent.",
+    "src/audio/melodic.js __reset": "Test seam, as above. Permanent.",
+    "src/audio/nodes.js __reset": "Test seam, as above. Permanent.",
+    "src/main.js setTransportPosition": "Test seam. Drives the visual cursor to a known position without running the transport, so rendering can be asserted as a pure function of (pattern, position). Permanent.",
+    "src/storage/keyValue.js useBackingStore": "Test seam. Swaps localStorage for an in-memory store so storage tests do not depend on a browser. Permanent.",
+    "src/storage/keyValue.js clearStore": "Test seam, as above. Permanent.",
+    "src/storage/seed.js validateAll": "Called by the seed tests rather than by the app — the shipped library is validated at build time by `npm run validate:seed`, not on load. Permanent.",
+    "src/storage/seed.js noteOnCount": "Test-only measure of the shipped library's density, used to pin the conversion's output. Permanent.",
+    "src/audio/context.js isReady": "OUTSTANDING. No consumer in src/. Either a leftover from the gesture-gating work or a query the UI ought to be making before it offers transport controls — needs a decision, not a permanent home here.",
+    "src/core/pattern.js removeMeasure": "OUTSTANDING, and the finding this gate was built for. AC-1.1.8 and AC-1.1.9 specify a −Measure control; no such control exists, so the mutator behind it has never been called. Scheduled to be built.",
+    "src/core/similarity.js familyGroups": "OUTSTANDING. US-11.2's Family panel was specified and never built — already known (T147) and already on the burn-down. This gate finds it independently, which is the point.",
+    "src/ui/controls.js renderControls": "OUTSTANDING. main.js imports the individual render functions instead, so this looks like a superseded aggregate left behind. Confirm and delete rather than baseline permanently.",
+    "src/core/meter.js measureDurationSeconds": "OUTSTANDING. No consumer in src/. Plausibly wanted by the loop-duration path, which computes its own; confirm which is right and remove the loser.",
+    "src/core/pitch.js ACCIDENTALS": "OUTSTANDING. The pitch strip builds its accidental control from its own list; if these must agree, one of them should be reading this.",
+    "src/core/pitch.js degreeLabel": "OUTSTANDING. No consumer in src/. Check against how the grid labels degrees before deleting.",
+    "src/core/recipes.js labelFor": "OUTSTANDING. The Recipe picker builds its option labels itself; same question as ACCIDENTALS.",
+    "src/ui/responsive.js SIDEBAR_WIDTH": "OUTSTANDING. The widths are declared here and again in CSS. Documented in the module comment as the source of truth, but nothing reads it, so the CSS is the real source.",
+    "src/ui/responsive.js DRAWER_MAX_WIDTH": "OUTSTANDING. The mobile drawer's 320px cap, declared here and again in CSS with nothing reading this copy. Same question as SIDEBAR_WIDTH: pick one source of truth."
+  }
+}

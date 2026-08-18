@@ -43,6 +43,8 @@ jobs:
         run: npm run coverage:ac
       - name: Traceability — AC to plan to task to test, and the matrix (CLAUDE.md §2b)
         run: npm run check:trace
+      - name: Reachability — every export something in src/ can reach
+        run: npm run check:unwired
 
   build:
     needs: verify

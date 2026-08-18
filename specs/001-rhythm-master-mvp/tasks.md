@@ -952,3 +952,17 @@ record is complete rather than starting mid-stream.
   So the new section leads with the nine checks and then states the three holes plainly: the baseline mutes 296 findings, nothing detects code that is built but never wired, and `coverage:ac` at 100% cannot tell a test *of* an AC from a test merely *named* for one. A guardrail list that reads as complete is worse than no list.
 
   **Stale facts corrected while in there**: 333 findings → the matrix is now the source; "211 acceptance criteria" → 232; "the next step is `/speckit-tasks`" (untrue since the MVP shipped); and a `CHROMIUM_PATH` that pointed at a container path which does not exist on the maintainer's machine, wrongly implying e2e needs setup locally.
+
+- [X] T181 **[new capability]** `check:unwired` — a gate for code the application cannot reach — `tools/check-unwired.mjs`, `tools/unwired-baseline.json`, `tests/unit/tools/unwired.test.js`, `package.json`, `.github/workflows/deploy.yml`, `README.md`, `CLAUDE.md`. No AC: maintainer tooling, like `spec-trace` (T175 precedent).
+
+  Asked for after the README guardrail audit named it as the one hole with no check at all: *"do we have all the guardrails in place?"* — we did not.
+
+  **The failure it exists for.** `removeMeasure` was specified (AC-1.1.8, AC-1.1.9), written, exported, unit-tested, and called by nothing outside `core/` for the whole life of the project, while every gate stayed green. `coverage:ac` saw an AC ID in a test name; `lint` guards the direction `core/` must not import, never whether anything imports back; `check:trace` T6 flagged it and the finding went into the baseline.
+
+  **The rule is deliberately narrow**: a finding is an export that nothing anywhere in `src/` mentions. A helper used by its own module is wired. Three earlier formulations were measured and thrown away first — "unreferenced outside `core/`" flagged 33, "unreferenced outside its own module" flagged 67, both mostly legitimate internals. A gate that cries wolf gets switched off.
+
+  **Tests are not uses**, because an export whose only consumer is a test is precisely the shape being hunted. Genuine test seams are baselined with a written reason, and the checker's own tests fail a reason shorter than 30 characters — which caught a lazy "OUTSTANDING, as above." on the first run.
+
+  **18 findings baselined**, each with a reason distinguishing a permanent test seam from outstanding work. Two are real and named as such: `removeMeasure`, and `familyGroups` — US-11.2's Family panel, specified and never built, already known as T147 and found here independently, which is the point.
+
+  **What it cannot see, stated in the docs rather than left to be discovered**: partial reachability. The Recipe and Swing controls are wired to Measure 1, Beat 1 only; every export involved is used, so nothing flags them.
