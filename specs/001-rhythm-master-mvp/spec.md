@@ -205,10 +205,10 @@ exist).
   - **When** its Slots are initialized
   - **Then** every one of its Slots starts off, Accent Level 0
 
-- **AC-1.3.4** — Recipe menu for a quarter-note Beat
+- **AC-1.3.4** — Recipes applicable to a quarter-note Beat
   - **Given** a Beat in a 4/4 Measure
-  - **When** the Composer opens its Recipe picker
-  - **Then** exactly these five Recipes are offered:
+  - **When** the Composer arms a Recipe and taps that Beat (AC-1.3.11)
+  - **Then** exactly these five Recipes apply to it, and any other Recipe is inert on it:
 
   | Recipe | Slots | Subdivision Groups |
   |---|---|---|
@@ -218,15 +218,27 @@ exist).
   | Straight → Triplet split | 5 | Slots 1–2: straight 16ths (the beat's first 8th note); Slots 3–5: triplet 16ths (the beat's second 8th note) |
   | Triplet → Straight split | 5 | Slots 1–3: triplet 16ths (the beat's first 8th note); Slots 4–5: straight 16ths (the beat's second 8th note) |
 
-- **AC-1.3.5** — Recipe menu for an eighth-note Beat
+- **AC-1.3.5** — Recipes applicable to an eighth-note Beat
   - **Given** a Beat in a 6/8, 7/8, 9/8, or 12/8 Measure
-  - **When** the Composer opens its Recipe picker
-  - **Then** exactly these two Recipes are offered, and no triplet or mixed-feel option is present:
+  - **When** the Composer arms a Recipe and taps that Beat (AC-1.3.11)
+  - **Then** exactly these two Recipes apply to it, and no triplet or mixed-feel Recipe does — arming one and tapping this Beat changes nothing:
 
   | Recipe | Slots | Subdivision Groups |
   |---|---|---|
   | Undivided | 1 | one group: 1 Slot, the whole eighth note |
   | Straight 16ths | 2 | one group: 2 straight 16th-note Slots |
+
+  - *(AC-1.3.4 and AC-1.3.5 revised 2026-08-17. Both described a per-Beat Recipe *menu* —
+    "when the Composer opens its Recipe picker, exactly these N are offered". No per-Beat
+    picker was ever built: the only Recipe control was one dropdown hardwired to Measure 1,
+    Beat 1, so no Beat but that one could be given a Recipe at all. Rather than build a menu
+    on every Beat — which the grid cannot afford, since AC-15.1.14/1 requires every Beat in a
+    Measure to be the same width and AC-15.1.10 forbids sideways scroll at 192 Slots — Recipes
+    are now armed on a strip and painted onto Beats, the idiom the pitch strip already uses.
+    A Pattern may mix 4/4 and 6/8 Measures, so one strip necessarily shows Recipes that some
+    visible Beats cannot take; these ACs now say which Recipes *apply* to a Beat and that the
+    rest are inert on it, which is the same musical guarantee — no triplet feel on an eighth-note
+    Beat — stated for the interaction that exists.)*
 
 - **AC-1.3.6** — Recipe change resets only that Beat
   - **Given** Beat 1 has the Triplet 8ths Recipe with Slot 2 accented, and Beat 2 (in the same Measure) has the Straight 8ths Recipe with both Slots accented
@@ -254,6 +266,26 @@ exist).
   - **Given** a Beat on the Straight 8ths Recipe with both Slots off
   - **When** the Composer selects the Triplet 8ths Recipe for it
   - **Then** the change applies immediately with no prompt, since no notes are lost
+
+- **AC-1.3.11** — A Recipe is armed on a strip, then painted onto any Beat
+  - **Given** a Pattern of more than one Measure
+  - **When** the Composer arms a Recipe on the Recipe strip and taps anywhere within a Beat
+  - **Then** that Beat takes the armed Recipe — any Beat of any Measure, not only the first —
+    subject to the applicability rules of AC-1.3.4 and AC-1.3.5 and the clear-confirmation of
+    AC-1.3.7 and AC-1.3.8
+  - **Cases**:
+    - **AC-1.3.11/1** — With no Recipe armed, tapping within a Beat cycles Slot accents exactly as before
+    - **AC-1.3.11/2** — With a Recipe armed, tapping any Beat of any Measure applies it to that Beat alone
+    - **AC-1.3.11/3** — A Recipe inapplicable to the tapped Beat's note value leaves that Beat unchanged
+    - **AC-1.3.11/4** — The armed Recipe stays armed across taps, and tapping the armed chip disarms it
+  - *(Added 2026-08-17. The Recipe control was one dropdown hardwired to Measure 1, Beat 1, so
+    US-1.3's whole subject — mixed subdivision across a Pattern — was unreachable for every other
+    Beat. Arming and painting is chosen over a control on each Beat because the grid has no
+    horizontal room to spare: AC-15.1.14/1 requires every Beat in a Measure to be the same width,
+    and AC-15.1.10 forbids sideways scroll at the densest supported Pattern. It costs the grid
+    nothing, works identically on every Beat, and reuses the pitch strip's idiom (US-2.2). A
+    Recipe is not shown as a label on each Beat because the Slots already say it: four cells is
+    Straight 16ths, three is Triplet 8ths, and a mixed Recipe draws its two groups apart.)*
 
 ---
 
@@ -1737,11 +1769,18 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom: Pattern header → grid → play controls → pitch strip (US-2.2, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
+  - **Then** the order is fixed top to bottom: Pattern header → grid → play controls → Recipe strip (US-1.3) → pitch strip (US-2.2, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the pitch strip is absent rather than an empty row, so the order there is the same list with that entry removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
   - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
   - *(Revised again 2026-08-17 for the family members area. As written, this AC said the order is identical at every width, which AC-11.2.5 directly contradicts: it requires that area at 768px and wider and nothing below it. Both cannot be true, so the conflict is resolved here rather than left for whoever hit it next. The entry is conditional in the same way the pitch strip already is — an absent entry rather than a reordered list — so what this AC guarantees is unchanged: the sections that are present are always in this order, and none ever swaps places with another. Family members go last because they are a way out of the current Pattern, not a control on it; putting them above quick navigation would separate the transport from the controls it drives.)*
+
+  - *(Revised again 2026-08-17 for the Recipe strip. It sits directly below the play controls
+    and above the pitch strip, for the reason the entry order already encodes: it is a palette,
+    like the pitch strip, so it belongs with it rather than among the collapsed control
+    sections — but unlike the pitch strip it applies to every Pattern in either Sound Mode, so
+    the always-present palette comes first and the Melodic-only one follows. Nothing above it
+    moves, so the transport keeps the position the previous revision was careful to give it.)*
 
 - **AC-15.1.9** — Wide controls never force horizontal page scrolling
   - **Given** a 390px-wide (mobile) viewport

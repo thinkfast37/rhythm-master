@@ -33,7 +33,13 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
   const readOnly = options.readOnly === true;
 
   root.innerHTML = '';
-  root.className = readOnly ? 'grid read-only' : 'grid';
+  // `recipe-armed` says a tap in the grid will apply the armed Recipe to a Beat
+  // rather than cycle a Slot's accent (AC-1.3.11) — the only mode the app has, so
+  // it is marked on the grid itself rather than left to be inferred.
+  const classes = ['grid'];
+  if (readOnly) classes.push('read-only');
+  if (options.recipeArmed) classes.push('recipe-armed');
+  root.className = classes.join(' ');
 
   pattern.measures.forEach((measure, measureIndex) => {
     root.appendChild(

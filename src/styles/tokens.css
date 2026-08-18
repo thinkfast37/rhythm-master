@@ -1244,3 +1244,54 @@ body {
 .duplicate-remove {
   flex: none;
 }
+
+/*
+ * The Recipe strip (AC-1.3.11): the palette a Beat's subdivision is painted from.
+ *
+ * Deliberately the pitch strip's idiom rather than a new one — arm a chip, then
+ * tap the grid — because the app now has two palettes and a musician should not
+ * have to learn two gestures. The chips are word-labelled where the pitch strip's
+ * are glyphs, since "Straight → Triplet split" has no symbol a reader would know.
+ */
+.recipe-strip { display: flex; flex-direction: column; gap: 6px; }
+.recipe-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.recipe-chip {
+  min-height: 32px;
+  padding: 0 10px;
+  font: 600 12px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.recipe-chip:hover:not(:disabled) { background: #262b3a; }
+
+/* Disabled means no Measure in this Pattern has a Beat that can take it — shown
+   rather than hidden, so the palette does not rearrange as meters change. */
+.recipe-chip:disabled { color: var(--ink-dim); cursor: default; opacity: .5; }
+
+/* Armed carries a border and a weight change as well as the fill, so the state
+   survives a reader who cannot separate the fill from the ground. */
+.recipe-chip.armed {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #1a1300;
+  font-weight: 700;
+}
+
+.recipe-hint { margin: 0; font: 500 11px/1.4 var(--font-ui); color: var(--ink-dim); }
+.recipe-hint[data-armed='true'] { color: var(--brand); }
+
+/* While a Recipe is armed the grid is a brush, so every Beat reads as a target
+   rather than the Slots reading as individually tappable. */
+.grid.recipe-armed .beat {
+  cursor: copy;
+  /* --ink-dim, not --line: the resting armed outline has to be legible against the
+     grid's own ground, and --line is a hairline meant to sit almost unseen. An
+     affordance nobody can see is not one. */
+  outline: 1px dashed var(--ink-dim);
+  outline-offset: 2px;
+}
+.grid.recipe-armed .beat:hover { outline: 2px solid var(--brand); }

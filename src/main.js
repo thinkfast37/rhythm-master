@@ -38,6 +38,7 @@ import {
   renderFamilyMembers,
   renderActionControls,
   renderPitchStrip,
+  renderRecipeStrip,
 } from './ui/controls.js';
 import {
   applyViewport,
@@ -84,6 +85,15 @@ const state = {
    * switch, and a reload starts it back at the root (AC-2.2.2).
    */
   armedPitch: { degree: '1', octaveOffset: 0 },
+  /**
+   * The Recipe strip's armed value, painted onto a Beat by tapping it (AC-1.3.11).
+   *
+   * null means unarmed, and unarmed is the resting state — while a Recipe is armed
+   * a tap in the grid changes a Beat's subdivision instead of cycling a Slot's
+   * accent, which is the app's only mode. It is not persisted: a reload starts
+   * unarmed, so the grid never comes back in a state the musician did not choose.
+   */
+  armedRecipe: null,
   /** Whether the strip is showing degrees 9-15 as well as 1-8 (AC-2.2.4). */
   degreesExtended: false,
   soundStatus: melodic.getStatus(),
@@ -343,6 +353,15 @@ const handlers = {
    * Pattern into "my version" before a single note has been stamped, and must
    * not leave an undo step behind (AC-2.2.9).
    */
+  /**
+   * Arm or disarm a Recipe. Tapping the armed chip disarms it (AC-1.3.11/4),
+   * because a mode you cannot leave by the control that entered it is a trap.
+   */
+  onArmRecipe(recipeId) {
+    state.armedRecipe = state.armedRecipe === recipeId ? null : recipeId;
+    render();
+  },
+
   onArmDegree(degree) {
     state.armedPitch = { ...state.armedPitch, degree };
     render();
@@ -867,6 +886,11 @@ export function mount(root) {
   const pitchEl = document.createElement('section');
   pitchEl.dataset.section = 'pitch';
 
+  // The Recipe strip sits with the editing controls rather than beside the pitch
+  // strip: it applies to every Pattern, where the pitch strip is Melodic-only.
+  const recipeEl = document.createElement('section');
+  recipeEl.dataset.section = 'recipe';
+
   const settingsEl = document.createElement('details');
   settingsEl.dataset.section = 'playback-settings';
   const settingsSummary = document.createElement('summary');
@@ -910,7 +934,7 @@ export function mount(root) {
   }
 
   main.append(
-    libraryToggle, headerEl, gridEl, playEl, pitchEl, settingsEl, editEl, actionsEl, navEl, familyEl
+    libraryToggle, headerEl, gridEl, playEl, recipeEl, pitchEl, settingsEl, editEl, actionsEl, navEl, familyEl
   );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
@@ -918,6 +942,25 @@ export function mount(root) {
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
   gridEl.addEventListener('click', (event) => {
+    /*
+     * An armed Recipe turns the grid into a Recipe brush: a tap anywhere within a
+     * Beat gives that Beat the armed subdivision (AC-1.3.11/2). Checked before the
+     * per-Slot actions, because the Slot is what the tap actually lands on and the
+     * Beat is what the gesture means while a Recipe is armed.
+     *
+     * Unarmed, this is inert and the grid behaves exactly as before (AC-1.3.11/1).
+     */
+    const beatEl = event.target.closest('.beat');
+    if (state.armedRecipe && beatEl) {
+      const measureEl = beatEl.closest('.measure');
+      handlers.onRecipe(
+        state.armedRecipe,
+        Number(measureEl.dataset.measure),
+        Number(beatEl.dataset.beat)
+      );
+      return;
+    }
+
     const target = event.target.closest('[data-action]');
     if (!target) return;
     const m = Number(target.dataset.measure);
@@ -981,11 +1024,15 @@ export function mount(root) {
       : { autoTags: automaticTags(pattern, s.isOwned), lockedTags: [], userTags: pattern.tags ?? [] };
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
-    renderGrid(gridEl, pattern, position, { countingSystem: s.settings.countingSystem });
+    renderGrid(gridEl, pattern, position, {
+      countingSystem: s.settings.countingSystem,
+      recipeArmed: Boolean(s.armedRecipe),
+    });
     // Immediately after the render that built the Beats, and before this task
     // yields to paint, so the one-line fallback is never seen (AC-15.1.14).
     balanceBeatLines(gridEl);
     renderPitchStrip(pitchEl, pattern, s, handlers);
+    renderRecipeStrip(recipeEl, pattern, s, handlers);
     renderPlayControls(playEl, pattern, s, handlers);
     renderPlaybackSettings(settingsBody, pattern, s, handlers);
     renderEditControls(editBody, pattern, s, handlers);
@@ -1006,6 +1053,7 @@ export function mount(root) {
     headerEl,
     gridEl,
     pitchEl,
+    recipeEl,
     playEl,
     settingsEl,
     editEl,

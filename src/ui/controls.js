@@ -6,7 +6,7 @@
  * and Recipe menus all come from core/.
  */
 import { TIME_SIGNATURES, beatNoteValue } from '../core/meter.js';
-import { recipesFor } from '../core/recipes.js';
+import { recipesFor, isOffered } from '../core/recipes.js';
 import {
   KEYS,
   DEFAULT_DEGREES,
@@ -516,19 +516,70 @@ function renderStructure(pattern, handlers) {
   add.addEventListener('click', () => handlers.onAddMeasure());
   group.appendChild(add);
 
-  // Recipe picker for a chosen Beat. The menu is whatever core/ offers for this
-  // Beat's note value — five on a quarter-note Beat, two on an eighth.
-  const measureIndex = 0;
-  const noteValue = beatNoteValue(pattern.measures[measureIndex].timeSignature);
-  const recipe = el('select', 'recipe-picker');
-  recipe.dataset.action = 'set-recipe';
-  for (const r of recipesFor(noteValue)) {
-    recipe.appendChild(el('option', null, { value: r.id, textContent: r.label }));
-  }
-  recipe.value = pattern.measures[measureIndex].beats[0].recipe;
-  recipe.addEventListener('change', (e) => handlers.onRecipe(e.target.value));
-  group.appendChild(labelled('Subdivision', recipe));
+  return group;
+}
 
+/**
+ * The Recipe strip: the palette a Beat's subdivision is painted from (AC-1.3.11).
+ *
+ * It holds one armed Recipe and does not itself touch the Pattern. Tapping
+ * anywhere within a Beat gives that Beat the armed Recipe, which is what makes
+ * mixed subdivision reachable on every Beat rather than only the first — this
+ * replaced a single dropdown hardwired to Measure 1, Beat 1.
+ *
+ * Arming rather than a control on each Beat, because the grid has no horizontal
+ * room to spend: AC-15.1.14/1 requires every Beat in a Measure to be the same
+ * width, and AC-15.1.10 forbids sideways scroll at the densest supported Pattern.
+ * A strip costs the grid nothing.
+ *
+ * The strip shows every Recipe the Pattern's Measures can take between them, so a
+ * Pattern mixing 4/4 and 6/8 shows both sets. A Recipe no Measure can take is
+ * disabled rather than hidden, so the palette does not rearrange itself as the
+ * Pattern's meters change (AC-1.3.4, AC-1.3.5).
+ */
+export function renderRecipeStrip(root, pattern, state, handlers) {
+  root.textContent = '';
+  const group = el('div', 'control-group recipe-strip');
+
+  const noteValues = [...new Set(pattern.measures.map((m) => beatNoteValue(m.timeSignature)))];
+  // Union across the meters present, in catalogue order, without duplicates.
+  const seen = new Set();
+  const offered = [];
+  for (const nv of ['quarter', 'eighth']) {
+    for (const r of recipesFor(nv)) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+      offered.push({ ...r, applies: noteValues.some((v) => isOffered(r.id, v)) });
+    }
+  }
+
+  const chips = el('div', 'recipe-chips');
+  for (const r of offered) {
+    const armed = state.armedRecipe === r.id;
+    const chip = el('button', `recipe-chip${armed ? ' armed' : ''}`, {
+      type: 'button',
+      textContent: r.label,
+    });
+    chip.dataset.action = 'arm-recipe';
+    chip.dataset.recipe = r.id;
+    chip.disabled = !r.applies;
+    chip.setAttribute('aria-pressed', String(armed));
+    chip.addEventListener('click', () => handlers.onArmRecipe(r.id));
+    chips.appendChild(chip);
+  }
+  group.appendChild(labelled('Subdivision', chips));
+
+  // Says what a tap will do now, because arming changes what the grid does with
+  // one — the only mode in the app, so it states itself rather than being learned.
+  const hint = el('p', 'recipe-hint', {
+    textContent: state.armedRecipe
+      ? 'Tap any Beat to give it this subdivision. Tap the chip again to stop.'
+      : 'Pick a subdivision, then tap the Beats to apply it to.',
+  });
+  hint.dataset.armed = String(Boolean(state.armedRecipe));
+  group.appendChild(hint);
+
+  root.appendChild(group);
   return group;
 }
 

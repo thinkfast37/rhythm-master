@@ -966,3 +966,15 @@ record is complete rather than starting mid-stream.
   **18 findings baselined**, each with a reason distinguishing a permanent test seam from outstanding work. Two are real and named as such: `removeMeasure`, and `familyGroups` — US-11.2's Family panel, specified and never built, already known as T147 and found here independently, which is the point.
 
   **What it cannot see, stated in the docs rather than left to be discovered**: partial reachability. The Recipe and Swing controls are wired to Measure 1, Beat 1 only; every export involved is used, so nothing flags them.
+
+- [X] T182 **[new capability]** Recipe strip: arm a Recipe, paint it onto any Beat — `src/ui/controls.js`, `src/ui/grid.js`, `src/main.js`, `src/styles/tokens.css`. Implements AC-1.3.11 and makes AC-1.3.4, AC-1.3.5, AC-1.3.6 reachable on every Beat.
+
+- [X] T183 **[new capability]** Tests for T182 — `tests/e2e/grid.spec.js`, `tests/e2e/remaining.spec.js`, `tests/e2e/responsive.spec.js`. Covers AC-1.3.11/1–/4, AC-1.3.4, AC-1.3.5, AC-15.1.8.
+
+  **The maintainer designed this one.** Asked how a Beat should expose its Recipe picker, the answer was to mirror the pitch strip — *"with the recipe picker you could just click anywhere within the beat"* — and, on whether to label each Beat with its Recipe, *"won't it be apparent from the cells that are displayed?"* Both were right, and the second removes the whole vertical cost a per-Beat label would have added.
+
+  **AC-1.3.4 and AC-1.3.5 had to be revised first.** Both described a per-Beat *menu* offering exactly N Recipes. A single armed strip has no per-Beat menu to scope, and a Pattern mixing 4/4 and 6/8 necessarily shows Recipes some visible Beats cannot take. They now say which Recipes *apply* to a Beat and that the rest are inert on it — the same musical guarantee, stated for the interaction that exists.
+
+  **AC-15.1.8 had to be revised too**, and that was not foreseen: it pins the main panel's section order, and adding a section broke its test. The strip sits below the play controls and above the pitch strip — a palette belongs with the other palette, and the always-present one precedes the Melodic-only one, so nothing above it moves.
+
+  **The mode has a real cost, and the tests found it the way a user would.** While a Recipe is armed, a tap in the grid paints a Beat instead of cycling a Slot's accent — so three existing tests broke by clicking a Slot while still armed. That is the interaction working as designed, not a defect, but it is why the strip states in words what a tap will do and why tapping the armed chip disarms it (AC-1.3.11/4).

@@ -81,7 +81,12 @@ test('AC-1.1.7 — Undo is unavailable when there is nothing to undo', async ({ 
 test('AC-1.3.9 — accent cycles identically on a triplet-feel Slot of a mixed Recipe', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.recipe-picker').selectOption('triplet-straight-split');
+  const chip = page.locator('.recipe-chip[data-recipe="triplet-straight-split"]');
+  await chip.click();
+  await page.locator('.measure[data-measure="0"] .beat[data-beat="0"]').click();
+  // Disarm: this test goes on to tap Slots, and an armed Recipe would paint over
+  // them instead of cycling their accents (AC-1.3.11/2).
+  await chip.click();
 
   // Slot 2 sits inside the leading triplet group.
   const slot = page.locator('.slot[data-beat="0"][data-slot="1"]');
