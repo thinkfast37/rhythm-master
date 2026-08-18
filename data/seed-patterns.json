@@ -3605,7 +3605,7 @@
       ]
     },
     {
-      "name": "Five Four \u2014 Five Quarters",
+      "name": "Five Four — Five Quarters",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -3706,7 +3706,7 @@
       ]
     },
     {
-      "name": "Five Four \u2014 Three Plus Two",
+      "name": "Five Four — Three Plus Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -3807,7 +3807,7 @@
       ]
     },
     {
-      "name": "Five Four \u2014 Two Plus Three",
+      "name": "Five Four — Two Plus Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -4110,7 +4110,7 @@
       ]
     },
     {
-      "name": "Seven Four \u2014 Seven Quarters",
+      "name": "Seven Four — Seven Quarters",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -4245,7 +4245,7 @@
       ]
     },
     {
-      "name": "Seven Four \u2014 Four Plus Three",
+      "name": "Seven Four — Four Plus Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -4380,7 +4380,7 @@
       ]
     },
     {
-      "name": "Seven Four \u2014 Three Plus Four",
+      "name": "Seven Four — Three Plus Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -4515,7 +4515,7 @@
       ]
     },
     {
-      "name": "Seven Four \u2014 Two Plus Two Plus Three",
+      "name": "Seven Four — Two Plus Two Plus Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -5245,7 +5245,7 @@
       ]
     },
     {
-      "name": "Paradise \u2014 Intro",
+      "name": "Paradise — Intro",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -5548,7 +5548,7 @@
       ]
     },
     {
-      "name": "Paradise \u2014 Verse",
+      "name": "Paradise — Verse",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -5838,7 +5838,7 @@
       ]
     },
     {
-      "name": "Enjoy the Silence \u2014 Intro",
+      "name": "Enjoy the Silence — Intro",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -6141,7 +6141,7 @@
       ]
     },
     {
-      "name": "Enjoy the Silence \u2014 Hook",
+      "name": "Enjoy the Silence — Hook",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
@@ -6853,7 +6853,7 @@
       ]
     },
     {
-      "name": "Lucky You \u2014 Verse",
+      "name": "Lucky You — Verse",
       "soundMode": "percussive",
       "tempo": 69,
       "tags": [
@@ -6937,7 +6937,7 @@
       ]
     },
     {
-      "name": "Lucky You \u2014 Chorus",
+      "name": "Lucky You — Chorus",
       "soundMode": "percussive",
       "tempo": 69,
       "tags": [
@@ -7021,7 +7021,7 @@
       ]
     },
     {
-      "name": "Fascination Street \u2014 Bass",
+      "name": "Fascination Street — Bass",
       "soundMode": "percussive",
       "tempo": 98,
       "tags": [
@@ -13422,11 +13422,13 @@
       ]
     },
     {
-      "name": "WR 1-B",
+      "name": "Quarter Notes — Rest on Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -13629,11 +13631,13 @@
       ]
     },
     {
-      "name": "WR 1-C",
+      "name": "Quarter Notes — One Wandering Rest",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -13836,11 +13840,13 @@
       ]
     },
     {
-      "name": "WR 1-D",
+      "name": "Quarter Notes — Filling In",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -14043,11 +14049,13 @@
       ]
     },
     {
-      "name": "WR 1-E",
+      "name": "Quarter Notes — Thinning Out",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -14250,11 +14258,13 @@
       ]
     },
     {
-      "name": "WR 1-F",
+      "name": "Quarter Notes — Rest Lands on One",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -14457,11 +14467,13 @@
       ]
     },
     {
-      "name": "WR 1-G",
+      "name": "Quarter Notes — Downbeat Rests",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -14664,11 +14676,13 @@
       ]
     },
     {
-      "name": "WR 1-H",
+      "name": "Quarter Notes — Mostly Rests",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -14871,11 +14885,13 @@
       ]
     },
     {
-      "name": "WR 1-I",
+      "name": "Quarter Notes — Late Entry",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -15078,11 +15094,13 @@
       ]
     },
     {
-      "name": "WR 1-J",
+      "name": "Quarter Notes — One Note Per Bar",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -15285,11 +15303,13 @@
       ]
     },
     {
-      "name": "WR 2-B",
+      "name": "Quarter Notes — Five-Bar Fade",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -15541,11 +15561,13 @@
       ]
     },
     {
-      "name": "WR 2-C",
+      "name": "Quarter Notes — Full Bar Then Sparse",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -15797,11 +15819,13 @@
       ]
     },
     {
-      "name": "WR 2-D",
+      "name": "Quarter Notes — Rest on One, Five Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -16053,11 +16077,13 @@
       ]
     },
     {
-      "name": "WR 2-E",
+      "name": "Quarter Notes — Long Rests into a Full Bar",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -16309,11 +16335,14 @@
       ]
     },
     {
-      "name": "WR 2-F",
+      "name": "In Two — Rest Swaps Sides",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -16509,11 +16538,14 @@
       ]
     },
     {
-      "name": "WR 2-G",
+      "name": "In Two — Silent Bar in the Middle",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -16709,11 +16741,14 @@
       ]
     },
     {
-      "name": "WR 2-H",
+      "name": "In Two — Rest on One to Start",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -16909,11 +16944,14 @@
       ]
     },
     {
-      "name": "WR 2-I",
+      "name": "In Two — Alternating One and Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -17109,11 +17147,14 @@
       ]
     },
     {
-      "name": "WR 2-J",
+      "name": "In Two — Two Silent Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -17309,11 +17350,13 @@
       ]
     },
     {
-      "name": "WR 3-C",
+      "name": "Eighth Pairs — On One, Rest on Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -17467,11 +17510,13 @@
       ]
     },
     {
-      "name": "WR 3-D",
+      "name": "Eighth Pairs — On Two and Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -17625,11 +17670,14 @@
       ]
     },
     {
-      "name": "WR 3-E",
+      "name": "Eighth Pairs in Two — Leading Eighths",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -17744,11 +17792,14 @@
       ]
     },
     {
-      "name": "WR 3-F",
+      "name": "Eighth Pairs in Two — Every Other Bar",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -17863,11 +17914,14 @@
       ]
     },
     {
-      "name": "WR 3-G",
+      "name": "Eighth Pairs in Two — Trading Beats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -17982,11 +18036,14 @@
       ]
     },
     {
-      "name": "WR 3-H",
+      "name": "Eighth Pairs in Two — Rest on Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -18101,11 +18158,14 @@
       ]
     },
     {
-      "name": "WR 3-I",
+      "name": "Eighth Pairs in Two — Rest on One",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -18220,11 +18280,14 @@
       ]
     },
     {
-      "name": "WR 3-J",
+      "name": "Eighth Pairs in Two — Silent Downbeats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -18339,11 +18402,13 @@
       ]
     },
     {
-      "name": "WR 4-A",
+      "name": "Eighths and Quarters — No Rests",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -18497,11 +18562,13 @@
       ]
     },
     {
-      "name": "WR 4-B",
+      "name": "Eighths and Quarters — Rest on Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -18704,11 +18771,13 @@
       ]
     },
     {
-      "name": "WR 4-C",
+      "name": "Eighths and Quarters — Eighths on Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -18911,11 +18980,13 @@
       ]
     },
     {
-      "name": "WR 4-D",
+      "name": "Eighths and Quarters — Building Density",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -19118,11 +19189,13 @@
       ]
     },
     {
-      "name": "WR 4-E",
+      "name": "Eighths and Quarters — Eighths on Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -19325,11 +19398,13 @@
       ]
     },
     {
-      "name": "WR 4-F",
+      "name": "Eighths and Quarters — Rest on Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -19532,11 +19607,13 @@
       ]
     },
     {
-      "name": "WR 4-G",
+      "name": "Eighths and Quarters — Rest on Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -19739,11 +19816,13 @@
       ]
     },
     {
-      "name": "WR 4-H",
+      "name": "Eighths and Quarters — Alternating Rests",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -19897,11 +19976,13 @@
       ]
     },
     {
-      "name": "WR 4-I",
+      "name": "Eighths and Quarters — Sparse, Rest on One",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -20104,11 +20185,13 @@
       ]
     },
     {
-      "name": "WR 4-J",
+      "name": "Eighths and Quarters — Mostly Rests",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -20262,11 +20345,14 @@
       ]
     },
     {
-      "name": "WR 5-A",
+      "name": "Quarter Notes — Rest on Three, Eighths at the End",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -20469,11 +20555,14 @@
       ]
     },
     {
-      "name": "WR 5-B",
+      "name": "Quarter Notes — Rest on Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -20676,11 +20765,13 @@
       ]
     },
     {
-      "name": "WR 5-C",
+      "name": "Quarter Notes — Backbeat Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes"
       ],
       "rating": 0,
       "measures": [
@@ -20883,11 +20974,14 @@
       ]
     },
     {
-      "name": "WR 5-D",
+      "name": "Quarter Notes — Eighths First, Then Space",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -21090,11 +21184,14 @@
       ]
     },
     {
-      "name": "WR 5-E",
+      "name": "Quarter Notes — Long Rest into Eighths",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -21297,11 +21394,14 @@
       ]
     },
     {
-      "name": "WR 5-F",
+      "name": "Quarter Notes — One and Four, Then Eighths",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -21504,11 +21604,14 @@
       ]
     },
     {
-      "name": "WR 5-G",
+      "name": "Quarter Notes — Rest on Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -21711,11 +21814,14 @@
       ]
     },
     {
-      "name": "WR 5-H",
+      "name": "Quarter Notes — Eighths First, Then One and Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Beginner",
+        "Quarter Notes",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -21918,11 +22024,13 @@
       ]
     },
     {
-      "name": "WR 6-A",
+      "name": "Eighth Pairs — On One and Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -22076,11 +22184,14 @@
       ]
     },
     {
-      "name": "WR 6-B",
+      "name": "Eighth Pairs — Front-Loaded, Offbeat Ending",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -22283,11 +22394,13 @@
       ]
     },
     {
-      "name": "WR 6-C",
+      "name": "Eighth Pairs — On Three, Rest at the End",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -22490,11 +22603,13 @@
       ]
     },
     {
-      "name": "WR 6-D",
+      "name": "Eighth Pairs — On Three, Rest in Bar Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -22697,11 +22812,13 @@
       ]
     },
     {
-      "name": "WR 6-E",
+      "name": "Eighth Pairs — Rest on Two, Eighths on Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -22904,11 +23021,13 @@
       ]
     },
     {
-      "name": "WR 6-F",
+      "name": "Eighth Pairs — Quarters First, Eighths Later",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -23111,11 +23230,13 @@
       ]
     },
     {
-      "name": "WR 6-G",
+      "name": "Eighth Pairs — Moving Through the Bar",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -23318,11 +23439,13 @@
       ]
     },
     {
-      "name": "WR 6-H",
+      "name": "Eighth Pairs — Every Other Downbeat",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes"
       ],
       "rating": 0,
       "measures": [
@@ -23525,11 +23648,14 @@
       ]
     },
     {
-      "name": "WR 6-J",
+      "name": "Four to Two — Eighths First",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -23715,11 +23841,14 @@
       ]
     },
     {
-      "name": "WR 6-K",
+      "name": "Four to Two — Rest on Four Hinge",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -23905,11 +24034,14 @@
       ]
     },
     {
-      "name": "WR 7-A",
+      "name": "Two to Four — Eighths on Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -24095,11 +24227,14 @@
       ]
     },
     {
-      "name": "WR 7-B",
+      "name": "Two to Four — Eighths Everywhere",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -24258,11 +24393,14 @@
       ]
     },
     {
-      "name": "WR 7-C",
+      "name": "Four and Two Alternating — Eighths on One",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -24421,11 +24559,14 @@
       ]
     },
     {
-      "name": "WR 7-D",
+      "name": "Four and Two Alternating — Eighths on Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -24584,11 +24725,14 @@
       ]
     },
     {
-      "name": "WR 7-E",
+      "name": "Two and Four Alternating — Eighths on Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -24747,11 +24891,14 @@
       ]
     },
     {
-      "name": "WR 7-F",
+      "name": "Two and Four Alternating — Quarters First",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -24910,11 +25057,14 @@
       ]
     },
     {
-      "name": "WR 7-G",
+      "name": "Offbeat Eighths — First Upbeats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -25068,11 +25218,15 @@
       ]
     },
     {
-      "name": "WR 7-H",
+      "name": "Offbeat Eighths in Two — Silent Bar, Late Upbeat",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -25187,11 +25341,14 @@
       ]
     },
     {
-      "name": "WR 7-I",
+      "name": "Eighth Pairs in Two — Six Bars, Thinning",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -25360,11 +25517,14 @@
       ]
     },
     {
-      "name": "WR 7-J",
+      "name": "Four and Two — Short Bar in the Middle",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -25545,11 +25705,14 @@
       ]
     },
     {
-      "name": "WR 7-K",
+      "name": "Eighth Pairs in Two — Seven Bars, Trading Beats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -25745,11 +25908,14 @@
       ]
     },
     {
-      "name": "WR 7-L",
+      "name": "Two to Four and Back — Eighths",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -25962,11 +26128,15 @@
       ]
     },
     {
-      "name": "WR 7-M",
+      "name": "Offbeat Eighths in Two — Seven Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -26162,11 +26332,14 @@
       ]
     },
     {
-      "name": "WR 7-N",
+      "name": "Four and Two Alternating — Five Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -26374,11 +26547,14 @@
       ]
     },
     {
-      "name": "WR 7-O",
+      "name": "Eighth Pairs in Two — Six Bars, No Rests",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -26547,11 +26723,14 @@
       ]
     },
     {
-      "name": "WR 7-P",
+      "name": "Two and Four Alternating — Five Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Mixed Meter"
       ],
       "rating": 0,
       "measures": [
@@ -26737,11 +26916,14 @@
       ]
     },
     {
-      "name": "WR 7-Q",
+      "name": "Offbeat Eighths — Rest on One, Upbeat of Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -26895,11 +27077,15 @@
       ]
     },
     {
-      "name": "WR 8-A",
+      "name": "Upbeat of Two — Steady",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -27068,11 +27254,15 @@
       ]
     },
     {
-      "name": "WR 8-B",
+      "name": "Upbeat of Two — Seven Bars",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -27268,11 +27458,15 @@
       ]
     },
     {
-      "name": "WR 8-C",
+      "name": "Upbeat of Two — Quarter Start",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -27468,11 +27662,15 @@
       ]
     },
     {
-      "name": "WR 8-D",
+      "name": "Upbeat of Two — Eighth Pairs in the Middle",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -27641,11 +27839,15 @@
       ]
     },
     {
-      "name": "WR 8-E",
+      "name": "Upbeat of Two — Mixed with Quarters",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -27814,11 +28016,15 @@
       ]
     },
     {
-      "name": "WR 8-F",
+      "name": "Upbeat of Two — Eighths into Upbeat",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -27987,11 +28193,15 @@
       ]
     },
     {
-      "name": "WR 8-G",
+      "name": "Upbeat of Two — Upbeat Alone",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -28160,11 +28370,15 @@
       ]
     },
     {
-      "name": "WR 8-H",
+      "name": "Upbeat of Two — Rest on One Start",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Intermediate",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -28333,11 +28547,14 @@
       ]
     },
     {
-      "name": "WR 9-A",
+      "name": "Offbeat Eighths — Upbeat of Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -28540,11 +28757,14 @@
       ]
     },
     {
-      "name": "WR 9-B",
+      "name": "Offbeat Eighths — And of Four, Three Times",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -28747,11 +28967,14 @@
       ]
     },
     {
-      "name": "WR 9-C",
+      "name": "Offbeat Eighths — And of Three",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -29003,11 +29226,14 @@
       ]
     },
     {
-      "name": "WR 9-D",
+      "name": "Offbeat Eighths — And of Two and Four, Then Quarters",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -29210,11 +29436,14 @@
       ]
     },
     {
-      "name": "WR 9-E",
+      "name": "Offbeat Eighths — And of Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -29417,11 +29646,14 @@
       ]
     },
     {
-      "name": "WR 9-F",
+      "name": "Offbeat Eighths — Eighth Pairs into Upbeats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -29624,11 +29856,14 @@
       ]
     },
     {
-      "name": "WR 9-G",
+      "name": "Offbeat Eighths — Upbeat Drifting Earlier",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -29831,11 +30066,14 @@
       ]
     },
     {
-      "name": "WR 9-H",
+      "name": "Offbeat Eighths — Single Upbeat",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -30038,11 +30276,14 @@
       ]
     },
     {
-      "name": "WR 9-I",
+      "name": "Offbeat Eighths — Upbeats Alone",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -30245,11 +30486,14 @@
       ]
     },
     {
-      "name": "WR 9-J",
+      "name": "Offbeat Eighths — All Upbeats, Then All Downbeats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -30452,11 +30696,15 @@
       ]
     },
     {
-      "name": "WR 9-K",
+      "name": "Offbeat Eighths in Two — Upbeat of One",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -30598,11 +30846,15 @@
       ]
     },
     {
-      "name": "WR 9-L",
+      "name": "Offbeat Eighths in Two — Upbeat of One and Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -30744,11 +30996,15 @@
       ]
     },
     {
-      "name": "WR 9-M",
+      "name": "Offbeat Eighths in Two — Upbeats First",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -30917,11 +31173,15 @@
       ]
     },
     {
-      "name": "WR 9-N",
+      "name": "Offbeat Eighths in Two — Upbeat Pairs",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats",
+        "2/4"
       ],
       "rating": 0,
       "measures": [
@@ -31063,11 +31323,14 @@
       ]
     },
     {
-      "name": "WR 10-F",
+      "name": "Syncopated Eighths — And of Three and One",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -31270,11 +31533,14 @@
       ]
     },
     {
-      "name": "WR 10-G",
+      "name": "Syncopated Eighths — Upbeats of Three and Four",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -31477,11 +31743,14 @@
       ]
     },
     {
-      "name": "WR 10-H",
+      "name": "Syncopated Eighths — Upbeat of Two",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -31684,11 +31953,14 @@
       ]
     },
     {
-      "name": "WR 10-K",
+      "name": "Syncopated Eighths — Sparse Upbeats",
       "soundMode": "percussive",
       "tempo": 80,
       "tags": [
-        "WR Book"
+        "Exercise",
+        "Advanced",
+        "Eighth Notes",
+        "Offbeats"
       ],
       "rating": 0,
       "measures": [
@@ -31940,7 +32212,7 @@
       ]
     },
     {
-      "name": "Another One Bites the Dust \u2014 Bass",
+      "name": "Another One Bites the Dust — Bass",
       "soundMode": "melodic",
       "tempo": 104,
       "tags": [
