@@ -220,7 +220,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
 | **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.14 | T114–T116, T160, T167 | T117, T161, T168 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
-| **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.7 | T160, T169, T184 | T161, T169, T185 |
+| **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

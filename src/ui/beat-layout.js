@@ -183,9 +183,15 @@ function gridWidth(gridEl) {
  */
 function measure(jobs) {
   // A Measure being re-balanced in place — the grid's width changed under it —
-  // still carries the cap from last time. Both probes lift it in CSS, but the
+  // still carries the width from last time. Both probes lift it in CSS, but the
   // read-back below is taken outside them, so it goes now.
   for (const job of jobs) job.beatsEl.style.removeProperty('--beats-max');
+
+  // The Measure box hugs its Beats (AC-15.2.8/2), so while it is being measured
+  // it is held at the full width it COULD take — otherwise "available" reads as
+  // however wide the box happens to be right now, which is the answer to last
+  // time's question. `.measure.measuring` in the CSS.
+  for (const job of jobs) job.measureEl.classList.add('measuring');
 
   for (const job of jobs) job.beatsEl.classList.add('measuring');
   for (const job of jobs) {
@@ -213,6 +219,8 @@ function measure(jobs) {
     const cols = balancedColumns(job.beatCount, available, job.min, job.gap);
     layouts.set(job.key, { cols, max: beatsMaxWidth(cols, job.preferred, job.gap) });
   }
+
+  for (const job of jobs) job.measureEl.classList.remove('measuring');
 }
 
 /** Forget the worked-out layouts — the width, and so the answers, have moved. */
