@@ -230,7 +230,22 @@ body {
   border: 1px solid var(--grid-measure-line);
   border-radius: var(--radius);
   padding: var(--grid-pad-measure);
+  /*
+   * As wide as its Beats and label, not as wide as the column (AC-15.2.8/2).
+   * A bar with more in it is a wider bar, and the box stops being a frame
+   * around empty panel. `max-width: 100%` is what lets a Measure that wants
+   * more than the column has take the column instead and wrap its Beats
+   * inside (AC-15.2.8/3) — the mobile case, unchanged. Its width is genuine
+   * because `.beats` below declares one, since a grid of `1fr` tracks has no
+   * intrinsic width worth hugging.
+   */
+  width: fit-content;
+  max-width: 100%;
 }
+/* Held at the full width it could take while `beat-layout.js` measures it, so
+   "available" is the line and not last time's answer. One synchronous read
+   between two writes, never painted. */
+.measure.measuring { width: auto; }
 
 .measure-meter {
   flex: 0 0 auto;
@@ -271,11 +286,18 @@ body {
  *
  * `--beats-max` is the other thing it writes (AC-15.2.7): the width this
  * Measure's columns come to with every cell at `--slot-size`. The `1fr` tracks
- * share whatever width the container has, so capping the container is what
- * caps the cells — and it caps them all together, which keeps AC-15.1.14/1's
- * one shared Beat width. Where the line is narrower than the cap, the cap does
- * nothing and the dense case is exactly what it was. Absent the measurement,
- * `none`: the fill-the-line layout, which is only ever the fallback.
+ * share whatever width the container has, so sizing the container is what
+ * sizes the cells — and it sizes them all together, which keeps AC-15.1.14/1's
+ * one shared Beat width.
+ *
+ * It is the container's WIDTH, not only its ceiling, because the Measure box
+ * hugs its content (AC-15.2.8/2) and a grid of `1fr` tracks has no intrinsic
+ * width to hug — measured, it came to the Slots' minimums, and the box shrank
+ * the cells to 38px. A declared width is what the box wraps. It still gives:
+ * `flex-shrink` and `min-width: 0` let a Measure narrower than its Beats want
+ * squeeze them, so where the line is narrower than the cap the dense case is
+ * exactly what it was. Absent the measurement, `auto`: the fill-the-line
+ * layout, which is only ever the fallback.
  */
 .beats {
   display: grid;
@@ -283,13 +305,13 @@ body {
   flex: 1 1 auto;
   gap: var(--grid-gap-beat);
   min-width: 0;
-  max-width: var(--beats-max, none);
+  width: var(--beats-max, auto);
 }
 
 /*
  * The probe states `beat-layout.js` reads through, each held for one
  * synchronous read between two writes, so neither is ever painted. Both lift
- * the cap, since the cap is what they exist to compute.
+ * the declared width, since that width is what they exist to compute.
  *
  * `measuring` is the MINIMUM: one min-content column, so every Beat lays out at
  * the widest minimum in its Measure and a single `getBoundingClientRect` answers
@@ -302,7 +324,7 @@ body {
  */
 .beats.measuring,
 .beats.measuring-preferred {
-  max-width: none;
+  width: auto;
 }
 .beats.measuring {
   grid-template-columns: min-content;
@@ -1030,7 +1052,29 @@ body {
   min-width: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /*
+   * A content column, left-aligned (AC-15.2.8).
+   *
+   * Once the cells stopped filling the line (AC-15.2.7) a 4/4 bar is about
+   * 900px wide, and every control the panel holds lives in its left 800px — so
+   * on a wide window each section was a 2000px band with its content in one
+   * corner, and the Measure box drew a border around the emptiness. Everything
+   * in the panel now sits in one column, so it reads as a document rather than
+   * as bands.
+   *
+   * 1120px holds the common Patterns on one line — a 4/4 Straight-16ths
+   * Measure is 830px of Beats, twelve 8th-note Beats about 1360px, which shrink
+   * to 41px cells as they did before — with the same 12px margin the sections
+   * already carry. Left-aligned rather than centred, so nothing in the panel
+   * moves when the library takes or gives back its column beside it.
+   */
+  --content-max: 1120px;
 }
+/* `min(…, 100%)` keeps AC-15.1.9's no-wider-than-the-panel guarantee, which
+   .controls below states on its own; the extra selector depth is so this rule
+   wins over that one, since a later `max-width: 100%` would otherwise let the
+   transport row alone escape the column. */
+.shell .main-panel > * { max-width: min(var(--content-max), 100%); }
 .drawer-scrim { display: none; }
 
 /* The way back to a collapsed library, at every width (AC-15.1.13). Sticky
@@ -1308,6 +1352,11 @@ body {
  * are glyphs, since "Straight → Triplet split" has no symbol a reader would know.
  */
 .recipe-strip { display: flex; flex-direction: column; gap: 6px; }
+/* On the panel's left edge with everything else (AC-15.2.8/4). It inherits
+   .control-group's centring, which is right for a row of controls and wrong for
+   a column of them: centred, the strip floated in the middle of a wide panel,
+   detached from the left-aligned sections above and below it. */
+.recipe-strip { align-items: flex-start; padding: 0 12px 10px; }
 .recipe-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 
 .recipe-chip {

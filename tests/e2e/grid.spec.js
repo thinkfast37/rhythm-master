@@ -651,9 +651,20 @@ test('AC-15.1.14/5 — The layout re-balances when the width available to the gr
   await expect.poll(async () => (await beatLayout(page)).perLine.join(',')).toBe('4');
 
   // The library taking or giving back its column changes the grid's width
-  // without resizing the window at all.
+  // without resizing the window at all. At a 1000px tablet, where the 240px
+  // column is a quarter of the window: with it open a 12/8 Measure lays out on
+  // two lines of six, and without it on one line of twelve. (This was done at
+  // 1400px until AC-15.2.8 bounded the panel to a content column — there the
+  // toggle now moves the grid from 1100px to 1120px, which re-balances to the
+  // same answer and so proves nothing.)
+  await page.setViewportSize({ width: 1000, height: 900 });
+  // The library is open — the test hook's `loadPattern` does not collapse it,
+  // unlike choosing one in the list — so this starts on two lines of six and
+  // the click takes the column away.
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
-  const collapsed = await beatLayout(page);
+  await expect(page.locator('.library-toggle')).toHaveAttribute('aria-expanded', 'true');
+  const withLibrary = await beatLayout(page);
+  expect(withLibrary.perLine).toEqual([6, 6]);
   await page.locator('.library-toggle').click();
   // Polled, like the two resizes above: the re-balance runs from a
   // ResizeObserver, which is delivered with the next frame rather than inside
@@ -663,12 +674,12 @@ test('AC-15.1.14/5 — The layout re-balances when the width available to the gr
   // AC-15.2.7 a stale column count keeps the same capped widths until the
   // observer runs, so the wait has to be for the thing the criterion claims.
   await expect
-    .poll(async () => (await beatLayout(page)).widths[0])
-    .not.toBe(collapsed.widths[0]);
+    .poll(async () => (await beatLayout(page)).perLine.join(','))
+    .toBe('12');
 
-  const reopened = await beatLayout(page);
-  expect(reopened.beatsOverflow).toBeLessThanOrEqual(0);
-  expect(spread(reopened.widths)).toBeLessThan(1);
+  const withoutLibrary = await beatLayout(page);
+  expect(withoutLibrary.beatsOverflow).toBeLessThanOrEqual(0);
+  expect(spread(withoutLibrary.widths)).toBeLessThan(1);
 });
 
 /* --- a silent Slot recedes (AC-3.1.17) ------------------------------------ */
@@ -1099,19 +1110,22 @@ test('AC-15.2.7/4 — Where every Beat fits one line at the preferred size, the 
     const beatsEl = document.querySelector('.measure .beats');
     const beats = [...beatsEl.querySelectorAll('.beat')].map((b) => b.getBoundingClientRect());
     const container = beatsEl.getBoundingClientRect();
-    const measure = document.querySelector('.measure').getBoundingClientRect();
+    // The line is the grid's content box, not the Measure box: under
+    // AC-15.2.8/2 the box hugs its Beats, so the spare room sits outside it.
+    const grid = document.querySelector('.grid');
+    const line = grid.getBoundingClientRect().right - parseFloat(getComputedStyle(grid).paddingRight);
     return {
       firstBeatLeft: beats[0].left,
       containerLeft: container.left,
       lastBeatRight: beats[beats.length - 1].right,
-      measureRight: measure.right,
+      lineRight: line,
       cellWidths: [...document.querySelectorAll('.slot')].map((s) => s.getBoundingClientRect().width),
     };
   });
   // Against the start of the line...
   expect(Math.abs(geometry.firstBeatLeft - geometry.containerLeft)).toBeLessThanOrEqual(1);
   // ...with the line's spare room left spare rather than spent on the cells.
-  expect(geometry.measureRight - geometry.lastBeatRight).toBeGreaterThan(100);
+  expect(geometry.lineRight - geometry.lastBeatRight).toBeGreaterThan(100);
   for (const w of geometry.cellWidths) expect(w).toBeLessThanOrEqual(45);
 });
 
@@ -1288,4 +1302,100 @@ test('AC-1.3.5 — Recipes applicable to an eighth-note Beat', async ({ page }) 
   for (const id of ['triplet-8ths', 'straight-triplet-split', 'triplet-straight-split']) {
     await expect(page.locator(`.recipe-chip[data-recipe="${id}"]`)).toBeDisabled();
   }
+});
+
+/* --- the panel is a column, and a Measure box hugs its Beats (AC-15.2.8) --- */
+
+test('AC-15.2.8/1 — On a wide desktop viewport no section of the main panel is wider than the content column, and every section shares one left edge', async ({ page }) => {
+  await page.setViewportSize({ width: 2000, height: 1000 });
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.library-toggle').click();
+
+  const { column, sections } = await page.evaluate(() => {
+    const panel = document.querySelector('.main-panel');
+    const column = parseFloat(getComputedStyle(panel).getPropertyValue('--content-max'));
+    const sections = [...panel.children]
+      .filter((e) => !e.hidden && !e.classList.contains('library-toggle'))
+      .map((e) => {
+        const r = e.getBoundingClientRect();
+        return { tag: e.dataset.section ?? e.className, left: r.left, right: r.right };
+      });
+    return { column, sections };
+  });
+  expect(column).toBeGreaterThan(800);
+  expect(column).toBeLessThan(2000 - 400);
+  expect(sections.length).toBeGreaterThan(5);
+  const left = sections[0].left;
+  for (const s of sections) {
+    expect(s.right - s.left, s.tag).toBeLessThanOrEqual(column + 1);
+    expect(Math.abs(s.left - left), s.tag).toBeLessThanOrEqual(1);
+  }
+});
+
+test('AC-15.2.8/2 — A Measure box is as wide as its Beats and label: a 3/4 Measure’s box is narrower than a 4/4 Measure’s, and neither reaches the column’s edge', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '3/4']);
+  await page.locator('.library-toggle').click();
+
+  const geometry = await page.evaluate(() => {
+    const grid = document.querySelector('.grid').getBoundingClientRect();
+    const boxes = [...document.querySelectorAll('.measure')].map((m) => m.getBoundingClientRect());
+    return {
+      gridRight: grid.right,
+      widths: boxes.map((b) => b.width),
+      rights: boxes.map((b) => b.right),
+      lefts: boxes.map((b) => b.left),
+    };
+  });
+  // Both boxes hug: 4/4 wider than 3/4, by about a Beat.
+  expect(geometry.widths[0]).toBeGreaterThan(geometry.widths[1] + 150);
+  // Neither reaches the column's edge; both start on the same left.
+  for (const r of geometry.rights) expect(geometry.gridRight - r).toBeGreaterThan(100);
+  expect(Math.abs(geometry.lefts[0] - geometry.lefts[1])).toBeLessThanOrEqual(1);
+});
+
+test('AC-15.2.8/3 — On a 390px viewport the densest supported Pattern’s boxes take the width available and nothing scrolls sideways', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
+  await expect(page.locator('.slot')).toHaveCount(192);
+
+  const geometry = await page.evaluate(() => {
+    const grid = document.querySelector('.grid');
+    const g = grid.getBoundingClientRect();
+    const pad = parseFloat(getComputedStyle(grid).paddingLeft);
+    const available = g.width - 2 * pad;
+    return {
+      available,
+      widths: [...document.querySelectorAll('.measure')].map((m) => m.getBoundingClientRect().width),
+      body: document.body.scrollWidth - document.body.clientWidth,
+      grid: grid.scrollWidth - grid.clientWidth,
+      beats: Math.max(
+        ...[...document.querySelectorAll('.beats')].map((b) => b.scrollWidth - b.clientWidth)
+      ),
+    };
+  });
+  for (const w of geometry.widths) expect(Math.abs(w - geometry.available)).toBeLessThanOrEqual(1);
+  expect(geometry.body).toBeLessThanOrEqual(0);
+  expect(geometry.grid).toBeLessThanOrEqual(0);
+  expect(geometry.beats).toBeLessThanOrEqual(0);
+});
+
+test('AC-15.2.8/4 — The Subdivision strip sits on the panel’s left edge with the sections around it, not centred in the panel', async ({ page }) => {
+  await page.setViewportSize({ width: 2000, height: 1000 });
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.library-toggle').click();
+
+  const { chips, play, panelMid } = await page.evaluate(() => ({
+    chips: document.querySelector('.recipe-chips').getBoundingClientRect().left,
+    play: document.querySelector('[data-section="play"] button').getBoundingClientRect().left,
+    panelMid: document.querySelector('.main-panel').getBoundingClientRect().width / 2,
+  }));
+  // On the same left edge as the transport's first control, and nowhere near
+  // the middle of the panel.
+  expect(Math.abs(chips - play)).toBeLessThanOrEqual(2);
+  expect(chips).toBeLessThan(panelMid / 4);
 });

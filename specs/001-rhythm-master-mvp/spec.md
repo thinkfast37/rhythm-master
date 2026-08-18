@@ -2044,6 +2044,19 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
     - **AC-15.2.7/5** — Where the Beats do not fit at the preferred size, cells shrink and Beats wrap as before, and the grid still never scrolls sideways
   - *(Added 2026-08-17. Reported by the maintainer: "the size of the cells varies wildly based on when the pattern is loaded — for a 1 beat pattern the cells are ridiculously huge; if I add a measure the second measure is also huge; overall they are too big." The Beat tracks shared the line's width, so a cell's size was whatever its share of the line came to, and a square cell then took that width as its height too. This pins the size the predecessor app used and lets the line's spare room go spare. AC-15.1.14/4's "still share the width" means the Beats keep one shared width on that line, which they still do; it never required them to fill it.)*
 
+- **AC-15.2.8** — The main panel is a column, and a Measure box hugs its Beats
+  - **Given** a desktop viewport wider than the panel's content column
+  - **When** the Practicing Musician looks down the main panel
+  - **Then** every section — header, grid, transport, Subdivision strip, settings, edit, actions — sits in one left-aligned column of bounded width, so the panel reads as a document rather than as a stack of full-width bands each holding its content in one corner
+  - **And** each Measure's box is as wide as its meter label and Beats need, not as wide as the column, so a bar with more in it is a wider bar and the box is never a frame around empty panel
+  - **And** where the column is narrower than a Measure's Beats want, the box takes the column and the Beats wrap inside it exactly as AC-15.1.10 and AC-15.1.14 provide, so nothing about a phone or a dense bar changes
+  - **Cases**:
+    - **AC-15.2.8/1** — On a wide desktop viewport no section of the main panel is wider than the content column, and every section shares one left edge
+    - **AC-15.2.8/2** — A Measure box is as wide as its Beats and label: a 3/4 Measure's box is narrower than a 4/4 Measure's, and neither reaches the column's edge
+    - **AC-15.2.8/3** — On a 390px viewport the densest supported Pattern's boxes take the width available and nothing scrolls sideways
+    - **AC-15.2.8/4** — The Subdivision strip sits on the panel's left edge with the sections around it, not centred in the panel
+  - *(Added 2026-08-17, the same day as AC-15.2.7 and because of it: once the cells stopped filling the line, the maintainer reported that "each section including the pattern cells has a very wide box it's in that looks awkward." The panel was as wide as the window and every section a band across it; the Measure box drew a border around the emptiness. Left-aligned rather than centred so that nothing moves when the library takes or gives back its column.)*
+
 - **AC-15.2.3** — The boundaries form a hierarchy, so nesting is readable
   - **Given** a Measure containing Beats containing Slots
   - **When** their borders are compared
