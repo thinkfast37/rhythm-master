@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { balancedColumns } from '../../../src/ui/beat-layout.js';
+import { balancedColumns, beatsMaxWidth } from '../../../src/ui/beat-layout.js';
 
 /**
  * The arithmetic behind AC-15.1.14/3, on its own.
@@ -62,5 +62,31 @@ describe('ui/beat-layout — how many Beats go on a line', () => {
     // A zero minimum means the probe found nothing — a Measure with no Beats
     // rendered yet. One line is the same fallback the CSS carries.
     expect(balancedColumns(4, 341, 0, GAP)).toBe(4);
+  });
+});
+
+/**
+ * The arithmetic behind AC-15.2.7's cap, on its own — the same standing as the
+ * column tests above: the criterion is proved on a screen in
+ * `tests/e2e/grid.spec.js`, and these pin the edges.
+ */
+describe('ui/beat-layout — the most width a Measure’s Beat lines may take', () => {
+  it('AC-15.2.7/4 — Where every Beat fits one line at the preferred size, the Beats occupy the start of the line and no cell is wider than the preferred size: the cap is the columns at the preferred Beat width, plus the gaps between them', () => {
+    // A 4/4 Measure at Straight 16ths on desktop: four 191px Beats, 22px apart.
+    expect(beatsMaxWidth(4, 191, 22)).toBe(830);
+    // One Beat: its own preferred width, and no gap at all.
+    expect(beatsMaxWidth(1, 191, 22)).toBe(191);
+    // Two lines of two: the cap is the LINE, not the Measure.
+    expect(beatsMaxWidth(2, 191, 12)).toBe(394);
+  });
+
+  it('AC-15.2.7/5 — Where the Beats do not fit at the preferred size, cells shrink and Beats wrap as before, and the grid still never scrolls sideways: an unknown preferred width means no cap, never a zero one', () => {
+    // A zero measurement is a Measure with no Beats rendered yet; a cap of 0px
+    // would collapse the grid, where `null` leaves the fill-the-line fallback.
+    expect(beatsMaxWidth(4, 0, 22)).toBeNull();
+    expect(beatsMaxWidth(0, 191, 22)).toBeNull();
+    expect(beatsMaxWidth(4, NaN, 22)).toBeNull();
+    // A missing gap is no gap, not NaN.
+    expect(beatsMaxWidth(4, 191, NaN)).toBe(764);
   });
 });

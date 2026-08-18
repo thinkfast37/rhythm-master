@@ -978,3 +978,21 @@ record is complete rather than starting mid-stream.
   **AC-15.1.8 had to be revised too**, and that was not foreseen: it pins the main panel's section order, and adding a section broke its test. The strip sits below the play controls and above the pitch strip — a palette belongs with the other palette, and the always-present one precedes the Melodic-only one, so nothing above it moves.
 
   **The mode has a real cost, and the tests found it the way a user would.** While a Recipe is armed, a tap in the grid paints a Beat instead of cycling a Slot's accent — so three existing tests broke by clicking a Slot while still armed. That is the interaction working as designed, not a defect, but it is why the strip states in words what a tap will do and why tapping the armed chip disarms it (AC-1.3.11/4).
+
+- [X] T184 **[new capability]** One cell size across Patterns — `specs/001-rhythm-master-mvp/spec.md`, `specs/001-rhythm-master-mvp/plan.md`, `src/styles/tokens.css`, `src/ui/beat-layout.js`. Implements AC-15.2.7/1–/5; also fixes AC-15.2.6/1 in a mixed-Recipe Measure. Extends P-038.
+
+- [X] T185 **[new capability]** Tests for T184 — `tests/e2e/grid.spec.js`, `tests/unit/ui/beat-layout.test.js`. Covers AC-15.2.7/1–/5, and AC-15.2.6/1 in a mixed-Recipe Measure.
+
+  Asked for directly: *"the size of the cells varies wildly based on when the pattern is loaded — for a 1 beat pattern the cells are ridiculously huge; if I add a measure the second measure is also huge; overall they are too big. In takadimi_app the size of the cells was good and it was consistent."*
+
+  **Why they varied.** The Beat tracks were `1fr` — they shared the line — and a cell then took its share of the line as its width, and (AC-15.2.6) that width as its height. At 1400px with the library collapsed a 4/4 Straight-16ths cell was 73×73 in Percussive and 73×100 in Melodic; a one-Beat Pattern's cell was 330px square. Takadimi's cells were a fixed 44px and never grew.
+
+  **The fix keeps the equal-width tracks and caps their container.** `beat-layout.js` already probed each Measure's *minimum* Beat width to choose a column count; it now runs a second probe at the *preferred* width — every Slot pinned to `--slot-size` (44px), or its own content where that is wider — and writes `columns × preferred + gaps` to `--beats-max`, which `.beats` takes as `max-width`. The `1fr` tracks share the capped width, so AC-15.1.14/1's one-Beat-width holds; where the line is narrower than the cap the cap does nothing, so the dense case (AC-15.1.10, AC-15.1.14/2, AC-15.2.6/2) is byte-for-byte what it was. A short line's spare room now stays spare, and the Beats sit at its start.
+
+  **A twelve-Beat 8ths Measure at 1400px is 41px, not 44.** Twelve 93px Beats need 1358px and the line offers 1290, so the cells shrink rather than wrap — the AC's third clause, and the better reading of a 12/8 bar. Case /1 says "wide enough to hold all three at that size" for that reason and its test runs at 1600.
+
+  **AC-15.2.6/1 was not true in a mixed-Recipe Measure.** An 8th-note cell beside 16ths is twice their width and so twice their height, and flex's default stretch pulled every 16th-note cell on the row up to it: 44×93. `.beat` and `.group` now top-align, and a qualifier test proves it — the old giant sizes had hidden it, not fixed it.
+
+  **Two existing tests changed, both because they encoded fill-the-line, not because they were failing on a defect (§2a).** *AC-3.1.17/4* built its "wide cell" from a uniform 8ths Measure, which was wide only because cells filled the line; the wide cell the criterion is about now arises in a mixed-Recipe Measure (AC-15.1.14), so that is what it builds — the assertions are unchanged. *AC-15.1.14/5* read the re-balanced widths after polling the overflow, which is satisfied before the ResizeObserver runs as well as after; it passed only because fill-the-line tracks changed width the moment the container did. It now polls for the width change, as its own two resize cases already did.
+
+  **AC-15.1.14/4 clarified in place**: "still share the width" means one shared width on the line, which they still have; it never required filling it. Case titles unchanged, so T5 is undisturbed.

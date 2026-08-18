@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 276 across 35 User Stories
+**Criteria**: 281 across 35 User Stories
 
-**Coverage**: 79 of 276 criteria proven (28.6%)
+**Coverage**: 84 of 281 criteria proven (29.9%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 79 | 28.6% |
-| 🔴 Gap — HIGH | 74 | 26.8% |
-| 🟠 Gap — MEDIUM | 45 | 16.3% |
-| 🟡 Gap — LOW | 78 | 28.3% |
+| 🟢 Proven | 84 | 29.9% |
+| 🔴 Gap — HIGH | 74 | 26.3% |
+| 🟠 Gap — MEDIUM | 45 | 16.0% |
+| 🟡 Gap — LOW | 78 | 27.8% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -92,7 +92,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-15.1 | 18 | 5 | · | · | 1 | 9 | 3 |
 | 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
-| 🟢 US-15.2 | 10 | **10** | · | · | · | · | · |
+| 🟢 US-15.2 | 15 | **15** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -364,13 +364,18 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-16.2 | `AC-16.2.2` | Adding a Pattern requires no code change | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.2 | `AC-16.2.3` | Malformed entries fail loudly, not silently | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.2 | `AC-16.2.4` | The data file is versioned | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.1/4` 🖵 | A Melodic Slot's accent-to-note divider, against the Slot's unfilled background | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.2` 🖵 | A Beat boundary is drawn, not left to spacing alone | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.6/1` 🖵 | Each counting cell is as tall as it is wide, within a pixel, in both Sound Modes and at every Recipe | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.6/2` 🖵 | The square never costs a tap target: where a Slot is at its minimum width the cell is that wide and that tall, which still clears the 24 CSS pixels AC-2.2.12 requires | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
-| US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160, T169 (2/2 done) | T161, T169 (2/2 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.1/4` 🖵 | A Melodic Slot's accent-to-note divider, against the Slot's unfilled background | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.2` 🖵 | A Beat boundary is drawn, not left to spacing alone | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.6/1` 🖵 | Each counting cell is as tall as it is wide, within a pixel, in both Sound Modes and at every Recipe | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.6/2` 🖵 | The square never costs a tap target: where a Slot is at its minimum width the cell is that wide and that tall, which still clears the 24 CSS pixels AC-2.2.12 requires | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.7/1` 🖵 | A one-Beat Pattern, a four-Beat Pattern and a twelve-Beat Pattern render their counting cells at the same width and height on a desktop viewport wide enough to hold all three at that size | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.7/2` 🖵 | Adding a Measure to a Pattern leaves every cell, old and new, at the size the cells were before | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.7/3` 🖵 | At the preferred size a cell is 44 CSS pixels wide, within a pixel, in both Sound Modes | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.7/4` 🖵 | Where every Beat fits one line at the preferred size, the Beats occupy the start of the line and no cell is wider than the preferred size | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `beat-layout.test.js`, `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.7/5` 🖵 | Where the Beats do not fit at the preferred size, cells shrink and Beats wrap as before, and the grid still never scrolls sideways | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `beat-layout.test.js`, `grid.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160, T169, T184 (3/3 done) | T161, T169, T185 (3/3 done) | `grid-boundaries.spec.js` | 🟢 OK |

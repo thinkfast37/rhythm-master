@@ -1833,6 +1833,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-15.1.14/4** — Where every Beat fits one line, they occupy that one line and still share the width
     - **AC-15.1.14/5** — The layout re-balances when the width available to the grid changes
   - *(Added 2026-08-17. Reported against a 4/4 Pattern on a phone: three Beats sat on the first line and the fourth spread across the whole of the second. AC-15.1.10 required the wrap and forbade a Beat splitting across it, but said nothing about the widths that come out, and the flexbox implementing it grew whatever landed on a line to fill that line. This states the widths, which AC-15.1.10 leaves open, and does not change what it requires.)*
+  - *(Clarified 2026-08-17, with AC-15.2.7. "Share the width" in /4 means the Beats on a line have ONE width between them, the same as on every other line. It does not mean they fill the line: AC-15.2.7 caps a cell at its preferred size and lets a short line's spare room stay empty, and every Case here still holds under that cap.)*
 
 ---
 ### User Story 33 - Ship with a seeded Pattern library
@@ -2027,6 +2028,21 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
   - *(Added 2026-08-17. A counting cell is the unit the eye counts, and a square reads as one unit
     where a wide rectangle reads as a span of time — which is what an undivided Beat's cell had
     become. Carried over from the maintainer's predecessor app.)*
+
+- **AC-15.2.7** — A counting cell is one size, whatever Pattern it is in
+  - **Given** any two Patterns, or any two Measures of one Pattern, viewed at the same viewport width
+  - **When** the Practicing Musician compares their counting cells
+  - **Then** a cell renders at one preferred size — 44 CSS pixels, the size of the predecessor app's cells — regardless of how many Beats or Measures the Pattern holds, so a one-Beat Pattern's cell is the same cell as a four-Beat Pattern's, and adding a Measure adds cells of that same size
+  - **And** the Beats of a Measure sit against the Measure's start rather than being stretched to fill the line, so a short Measure leaves room empty rather than inflating its cells to occupy it
+  - **And** the preferred size is a ceiling, not a floor: where a Measure cannot fit its Beats at that size, cells shrink towards the 24 CSS pixel minimum and Beats wrap exactly as AC-15.1.10 and AC-15.1.14 already provide, so nothing about the dense case changes
+  - **And** a cell whose own content needs more room than the preferred size — a wide note name in the Melodic band, or a longer Slot in a Measure whose Beats are subdivided differently (AC-15.1.14) — is still allowed it; the ceiling is on what the *line's* spare room can do to a cell, not on what its content or its duration can
+  - **Cases**:
+    - **AC-15.2.7/1** — A one-Beat Pattern, a four-Beat Pattern and a twelve-Beat Pattern render their counting cells at the same width and height on a desktop viewport wide enough to hold all three at that size
+    - **AC-15.2.7/2** — Adding a Measure to a Pattern leaves every cell, old and new, at the size the cells were before
+    - **AC-15.2.7/3** — At the preferred size a cell is 44 CSS pixels wide, within a pixel, in both Sound Modes
+    - **AC-15.2.7/4** — Where every Beat fits one line at the preferred size, the Beats occupy the start of the line and no cell is wider than the preferred size
+    - **AC-15.2.7/5** — Where the Beats do not fit at the preferred size, cells shrink and Beats wrap as before, and the grid still never scrolls sideways
+  - *(Added 2026-08-17. Reported by the maintainer: "the size of the cells varies wildly based on when the pattern is loaded — for a 1 beat pattern the cells are ridiculously huge; if I add a measure the second measure is also huge; overall they are too big." The Beat tracks shared the line's width, so a cell's size was whatever its share of the line came to, and a square cell then took that width as its height too. This pins the size the predecessor app used and lets the line's spare room go spare. AC-15.1.14/4's "still share the width" means the Beats keep one shared width on that line, which they still do; it never required them to fill it.)*
 
 - **AC-15.2.3** — The boundaries form a hierarchy, so nesting is readable
   - **Given** a Measure containing Beats containing Slots
