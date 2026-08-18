@@ -71,6 +71,23 @@ async function loadMeasures(page, meters) {
   await expect(page.locator('.measure')).toHaveCount(meters.length);
 }
 
+
+/**
+ * Give a Beat a Recipe through the strip: arm the chip, tap the Beat. Replaces
+ * the single `.recipe-picker` dropdown, which only ever reached Measure 1 Beat 1.
+ */
+async function applyRecipe(page, recipeId, measure = 0, beat = 0) {
+  const chip = page.locator(`.recipe-chip[data-recipe="${recipeId}"]`);
+  await chip.click();
+  await page.locator(`.measure[data-measure="${measure}"] .beat[data-beat="${beat}"]`).click();
+  // Disarm before returning, unless a clear-confirmation is waiting (AC-1.3.7,
+  // AC-1.3.8) — that dialog is the caller's to answer. An armed Recipe otherwise
+  // hijacks a tap in the grid (AC-1.3.11/2), so a caller that goes on to click a
+  // Slot would paint a Recipe instead of cycling an accent. That the arming
+  // *persists* until dismissed is proved separately, by AC-1.3.11/4.
+  if (!(await page.locator('.dialog').isVisible().catch(() => false))) await chip.click();
+}
+
 test('AC-1.4.1 — Time Signature label is itself the picker control: every Measure shows its own current Time Signature', async ({
   page,
 }) => {
@@ -226,11 +243,11 @@ test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number",
   }
 });
 
-test('AC-1.3.4 — a mixed-feel Recipe renders two groups with different feels', async ({ page }) => {
+test('AC-1.3.4 — Recipes applicable to a quarter-note Beat: a mixed-feel Recipe renders its two groups with different feels', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
-  await page.locator('.recipe-picker').selectOption('straight-triplet-split');
+  await applyRecipe(page, 'straight-triplet-split');
 
   const beat = page.locator('.beat[data-measure]').first().or(page.locator('.beat').first());
   await expect(page.locator('.beat[data-recipe="straight-triplet-split"]')).toHaveCount(1);
@@ -246,7 +263,7 @@ test('AC-5.6.2 — a mixed-feel Pattern counts by number whatever the preference
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
   await page.locator('.counting-picker').selectOption('takadimi');
-  await page.locator('.recipe-picker').selectOption('triplet-straight-split');
+  await applyRecipe(page, 'triplet-straight-split');
 
   const labels = page.locator('.beat[data-recipe="triplet-straight-split"] .slot-label');
   await expect(labels.nth(0)).toHaveAttribute('data-syllable', '1');
@@ -261,7 +278,7 @@ test('AC-1.3.7 — changing a Recipe on a Beat with notes asks first', async ({ 
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
   await page.locator('.slot[data-measure="0"][data-beat="0"][data-slot="0"]').click();
-  await page.locator('.recipe-picker').selectOption('triplet-8ths');
+  await applyRecipe(page, 'triplet-8ths');
 
   await expect(page.locator('.dialog-message')).toContainText('will clear 1 note');
   await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
@@ -276,9 +293,9 @@ test('AC-1.3.8 — growing a Recipe asks too, because it also clears the Beat', 
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
-  await page.locator('.recipe-picker').selectOption('straight-8ths');
+  await applyRecipe(page, 'straight-8ths');
   await page.locator('.slot[data-measure="0"][data-beat="0"][data-slot="0"]').click();
-  await page.locator('.recipe-picker').selectOption('straight-16ths');
+  await applyRecipe(page, 'straight-16ths');
 
   await expect(page.locator('.dialog-message')).toContainText('will clear 1 note');
 });
@@ -287,7 +304,7 @@ test('AC-1.3.10 — changing a Recipe on an empty Beat does not ask', async ({ p
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
-  await page.locator('.recipe-picker').selectOption('triplet-8ths');
+  await applyRecipe(page, 'triplet-8ths');
   await expect(page.locator('.dialog-message')).toHaveCount(0);
   await expect(page.locator('.beat[data-beat="0"]').first()).toHaveAttribute(
     'data-recipe',
@@ -969,4 +986,115 @@ test('AC-1.1.5/2 — A Measure other than the first changes alone, with no promp
   expect(
     await page.locator('.measure').evaluateAll((els) => els.map((e) => e.dataset.timeSignature))
   ).toEqual(['4/4', '6/8', '4/4']);
+});
+
+/* --- the Recipe strip: arm a Recipe, paint it onto a Beat (AC-1.3.11) ------ */
+
+/** Arm a Recipe by its chip label, and confirm the grid entered brush mode. */
+async function armRecipe(page, label) {
+  await page.locator('.recipe-chip', { hasText: label }).click();
+  await expect(page.locator('.grid')).toHaveClass(/recipe-armed/);
+}
+
+const recipeOf = (page, measure, beat) =>
+  page.locator(`.measure[data-measure="${measure}"] .beat[data-beat="${beat}"]`).getAttribute('data-recipe');
+
+test('AC-1.3.11/1 — With no Recipe armed, tapping within a Beat cycles Slot accents exactly as before', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  await expect(page.locator('.grid')).not.toHaveClass(/recipe-armed/);
+  const slot = page.locator('.slot[data-measure="0"][data-beat="0"][data-slot="0"]');
+  const before = await recipeOf(page, 0, 0);
+
+  await slot.click();
+  await expect(slot).toHaveAttribute('data-accent', '3');
+  // The Beat's subdivision is untouched: unarmed, a tap is still an accent.
+  expect(await recipeOf(page, 0, 0)).toBe(before);
+});
+
+test('AC-1.3.11/2 — With a Recipe armed, tapping any Beat of any Measure applies it to that Beat alone', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '4/4']);
+  await armRecipe(page, 'Triplet 8ths');
+
+  // Beat 3 of Measure 2 — neither the first Beat nor the first Measure, which is
+  // the whole point: the old dropdown could only ever reach Measure 1, Beat 1.
+  await page.locator('.measure[data-measure="1"] .beat[data-beat="2"]').click();
+  expect(await recipeOf(page, 1, 2)).toBe('triplet-8ths');
+  await expect(
+    page.locator('.measure[data-measure="1"] .beat[data-beat="2"] .slot')
+  ).toHaveCount(3);
+
+  // Every other Beat is untouched.
+  expect(await recipeOf(page, 1, 1)).toBe('straight-16ths');
+  expect(await recipeOf(page, 0, 2)).toBe('straight-16ths');
+});
+
+test('AC-1.3.11/3 — A Recipe inapplicable to the tapped Beat’s note value leaves that Beat unchanged', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '6/8']);
+  await armRecipe(page, 'Triplet 8ths');
+
+  // Triplet feel is offered on a quarter-note Beat and not on an eighth-note one,
+  // so the same armed Recipe lands on Measure 1 and is inert on Measure 2.
+  const before = await recipeOf(page, 1, 0);
+  await page.locator('.measure[data-measure="1"] .beat[data-beat="0"]').click();
+  expect(await recipeOf(page, 1, 0)).toBe(before);
+
+  await page.locator('.measure[data-measure="0"] .beat[data-beat="0"]').click();
+  expect(await recipeOf(page, 0, 0)).toBe('triplet-8ths');
+});
+
+test('AC-1.3.11/4 — The armed Recipe stays armed across taps, and tapping the armed chip disarms it', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '4/4']);
+  await armRecipe(page, 'Straight 8ths');
+
+  await page.locator('.measure[data-measure="0"] .beat[data-beat="0"]').click();
+  await page.locator('.measure[data-measure="1"] .beat[data-beat="3"]').click();
+  // Still armed after painting: a brush you must re-arm every stroke is not one.
+  await expect(page.locator('.grid')).toHaveClass(/recipe-armed/);
+  expect(await recipeOf(page, 0, 0)).toBe('straight-8ths');
+  expect(await recipeOf(page, 1, 3)).toBe('straight-8ths');
+
+  await page.locator('.recipe-chip.armed').click();
+  await expect(page.locator('.grid')).not.toHaveClass(/recipe-armed/);
+  await expect(page.locator('.recipe-chip.armed')).toHaveCount(0);
+});
+
+test('AC-1.3.4 — Recipes applicable to a quarter-note Beat', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  const enabled = await page
+    .locator('.recipe-chip:not(:disabled)')
+    .evaluateAll((els) => els.map((e) => e.dataset.recipe));
+  expect(enabled).toEqual([
+    'straight-8ths', 'straight-16ths', 'triplet-8ths', 'straight-triplet-split', 'triplet-straight-split',
+  ]);
+  // Undivided belongs to an eighth-note Beat, so it is shown and inert, not offered.
+  await expect(page.locator('.recipe-chip[data-recipe="undivided"]')).toBeDisabled();
+});
+
+test('AC-1.3.5 — Recipes applicable to an eighth-note Beat', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('6/8'));
+
+  const enabled = await page
+    .locator('.recipe-chip:not(:disabled)')
+    .evaluateAll((els) => els.map((e) => e.dataset.recipe));
+  expect(enabled).toEqual(['straight-16ths', 'undivided']);
+  // No triplet or mixed-feel option is live on an eighth-note Beat.
+  for (const id of ['triplet-8ths', 'straight-triplet-split', 'triplet-straight-split']) {
+    await expect(page.locator(`.recipe-chip[data-recipe="${id}"]`)).toBeDisabled();
+  }
 });

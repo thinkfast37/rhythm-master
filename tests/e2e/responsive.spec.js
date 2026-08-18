@@ -136,6 +136,7 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
     'HEADER.pattern-header',
     'DIV.grid',
     'SECTION[play]',
+    'SECTION[recipe]',
     'SECTION[pitch]',
     'DETAILS[playback-settings]',
     'DETAILS[edit]',
