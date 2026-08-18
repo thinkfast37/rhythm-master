@@ -42,6 +42,7 @@ npm run build        # static build into dist/
 | `npm run trace:matrix` | Regenerates the traceability matrix; commit the result |
 | `npm run validate:seed` | The shipped Pattern library against data-model §7 |
 | `npm run check:cvd` | The accent palette under simulated colour vision deficiencies |
+| `npm run check:unwired` | Every export in `src/` is reachable from `src/` — code built, tested and never wired |
 | `npm run lint` | Includes the `core/` purity boundary (Constitution Principle I) |
 
 Playwright uses its own installed browsers by default, so `npm run test:e2e` needs no
@@ -104,6 +105,7 @@ because the obvious gate — "every AC has a test" — turned out to prove almos
 | `npm run trace:matrix` | Regenerates `specs/traceability-matrix.md`; commit the result |
 | `npm run validate:seed` | The shipped Pattern library against data-model §7 |
 | `npm run check:cvd` | The accent palette under simulated colour vision deficiencies |
+| `npm run check:unwired` | Every export in `src/` is reachable from `src/` — code built, tested and never wired |
 
 ### The nine chain checks
 
@@ -167,11 +169,21 @@ checked-in file, which shows up in a diff and has to be argued for. Fixing a bas
 finding *fails the gate until you prune* — deliberately, so the list cannot quietly
 re-excuse a regression later.
 
-**2. Nothing detects code that is built but never wired.** `removeMeasure` was written,
-exported from `core/pattern.js`, unit-tested, and called by nothing outside `core/` — for
-the entire life of the project. ESLint guards the direction `core/` must not import; no
-check asks whether `ui/` ever reaches back. The same gap hides the Recipe and Swing
-controls being wired only to Measure 1, Beat 1.
+**2. Code built but never wired — now caught, as of 2026-08-17.** `removeMeasure` was
+written, exported from `core/pattern.js`, unit-tested, and called by nothing outside
+`core/` for the entire life of the project. ESLint guards the direction `core/` must not
+import; nothing asked whether `ui/` ever reaches back.
+
+`npm run check:unwired` now does. An export is a finding when **nothing anywhere in
+`src/` mentions it** — deliberately narrow, because a noisy gate gets switched off, and
+because that one shape is exactly "code the application cannot reach". Tests are not
+uses: an export whose only consumer is a test is the shape being hunted, so genuine test
+seams go in `tools/unwired-baseline.json` with a written reason.
+
+It found `removeMeasure`, and independently found `familyGroups` — US-11.2's Family
+panel, specified and never built. **What it still cannot see** is a capability that is
+wired but only partly reachable: the Recipe and Swing controls are wired to Measure 1,
+Beat 1 only, and every export involved is used, so nothing flags them.
 
 **3. `coverage:ac` at 100% means very little on its own.** It asks whether an AC ID appears
 in a test name. It cannot tell `AC-1.1.9 — Measure removal is always from the end` from

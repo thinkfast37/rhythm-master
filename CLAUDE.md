@@ -223,6 +223,37 @@ Two consequences when you touch this file's neighbourhood:
 
 ---
 
+## 2c. Reachability: code the application cannot reach
+
+`npm run check:unwired` fails when an export in `src/` is mentioned by nothing anywhere
+in `src/`.
+
+It exists because `removeMeasure` was specified (AC-1.1.8, AC-1.1.9), written, exported
+from `core/pattern.js`, unit-tested, and called by nothing outside `core/` for the entire
+life of the project — while every gate stayed green. `coverage:ac` saw an AC ID in a test
+name. `lint` guards the direction `core/` must not import, never whether anything imports
+back. `check:trace` T6 did flag it, and the finding went into the baseline.
+
+Three things follow:
+
+- **The rule is deliberately narrow.** A helper used by its own module, or by one other
+  module, is wired. This is not a dead-code detector and does not care how deep the call
+  sits — a noisy gate gets switched off, and the one shape worth failing on is code the
+  application literally cannot reach.
+- **Tests are not uses.** An export whose only consumer is a test is exactly the shape
+  being hunted, so `tests/` is not scanned. Genuine test seams go in
+  `tools/unwired-baseline.json` **with a written reason** — the checker's own tests fail a
+  reason too short to be one.
+- **It cannot see partial reachability.** The Recipe and Swing controls are wired to
+  Measure 1, Beat 1 only; every export involved is used, so nothing flags them. A
+  capability reachable for one Beat and no other is still a gap this gate will not find.
+
+Same baseline rules as §2b: reported but not build-failing, may only shrink
+(`npm run check:unwired -- --prune`), and an entry is outstanding work, never a settled
+decision.
+
+---
+
 ## 3. Every change gets a task
 
 `specs/001-rhythm-master-mvp/tasks.md` carries a **Post-MVP** section. Every
@@ -247,6 +278,7 @@ npm run trace:matrix  # regenerate the matrix, and commit it (§2b)
 npm run check:trace   # the AC → plan → task → test chain (§2b)
 npm run validate:seed # the shipped library against data-model §7
 npm run check:cvd     # accent palette under simulated colour blindness
+npm run check:unwired # every export in src/ is reachable from src/ (§2c)
 ```
 
 `npm run check:trace --silent -- --summary` prints one line per check when you only
