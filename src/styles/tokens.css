@@ -1398,3 +1398,68 @@ body {
   outline-offset: 2px;
 }
 .grid.recipe-armed .beat:hover { outline: 2px solid var(--brand); }
+
+/* --- the store build: paywall and Purchases (US-17.1) ---------------------- */
+
+/*
+ * Above the dialogs (z 100): while the paywall is up nothing else in the app is
+ * a question worth answering. The app root is also `inert` (main.js), which is
+ * what actually makes it unreachable — the cover is for the eye.
+ */
+.paywall-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+.paywall {
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px 20px;
+}
+.paywall-title { margin: 0; font: 700 22px/1.2 var(--font-ui); color: var(--brand); }
+.paywall-lede { margin: 0 0 8px; font: 400 14px/1.5 var(--font-ui); color: var(--ink-dim); }
+.paywall-product {
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+  width: 100%; padding: 12px 14px; text-align: left;
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
+.paywall-product.primary { background: var(--brand); color: #0b0c15; border-color: var(--brand); }
+.paywall-product:disabled { opacity: .5; cursor: not-allowed; }
+.paywall-product-lead { font: 700 15px/1.2 var(--font-ui); }
+.paywall-product-detail { font: 400 12px/1.4 var(--font-ui); opacity: .85; }
+.paywall-fineprint { margin: 0; font: 400 12px/1.5 var(--font-ui); color: var(--ink-dim); }
+.paywall-status { margin: 0; font: 500 13px/1.4 var(--font-ui); color: var(--ink); }
+.paywall-notice { color: var(--brand); }
+.paywall-restore {
+  align-self: flex-start; margin-top: 4px; padding: 8px 12px;
+  font: 500 13px/1 var(--font-ui); color: var(--ink);
+  background: transparent; border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
+.paywall-restore:disabled { opacity: .5; cursor: not-allowed; }
+.paywall-legal { margin: 4px 0 0; font: 400 12px/1.5 var(--font-ui); color: var(--ink-dim); }
+.paywall-link { color: var(--ink-dim); text-decoration: underline; }
+.pattern-header .purchases {
+  margin: 6px 0 0 8px; padding: 6px 10px;
+  font: 500 12px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
+.purchases-line { font-weight: 600; }
+
+/*
+ * Inside the native shell (D-009) the WebView runs edge to edge, so the notch and
+ * the home indicator would otherwise sit on the header and the transport. Both
+ * insets are 0 on the web, where this is a no-op.
+ */
+.shell {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}

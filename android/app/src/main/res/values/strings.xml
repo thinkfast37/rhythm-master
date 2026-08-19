@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rhythm Master</string>
+    <string name="title_activity_main">Rhythm Master</string>
+    <string name="package_name">com.thinkfast37.rhythmmaster</string>
+    <string name="custom_url_scheme">com.thinkfast37.rhythmmaster</string>
+</resources>

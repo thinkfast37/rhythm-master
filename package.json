@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:native": "VITE_BASE=/ vite build",
+    "cap:sync": "npm run build:native && cap sync",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -22,11 +24,18 @@
     "trace:prune": "node .claude/skills/spec-trace/spec-trace.mjs prune-baseline"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@playwright/test": "^1.62.1",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capgo/native-purchases": "^8.6.5"
   }
 }

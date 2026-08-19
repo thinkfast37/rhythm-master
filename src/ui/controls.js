@@ -96,6 +96,17 @@ export function renderHeader(root, pattern, state, handlers = {}) {
     root.appendChild(undoButton);
   }
 
+  // Store build only (US-17.1): where the Musician stands, and the way to buy
+  // outright once they have decided to keep it. The web build is free and has
+  // no such control (AC-17.1.9/1).
+  if (state.store?.hasStore) {
+    const purchases = el('button', 'purchases', { type: 'button', textContent: 'Purchases' });
+    purchases.dataset.action = 'purchases';
+    purchases.dataset.entitlement = state.store.entitlement?.level ?? 'none';
+    purchases.addEventListener('click', () => handlers.onPurchases?.());
+    root.appendChild(purchases);
+  }
+
   return root;
 }
 

@@ -86,6 +86,13 @@ in `tasks.md` and burn down from there. The two that matter most:
   `library.test.js`, `storage.test.js`, `similarity.test.js`. The old gate's orphan check
   was a warning, so an ID that slid onto a *different real* AC was invisible.
 
+**Principle V, re-checked 2026-08-18 against constitution v4.0.0 (US-17.1, P-039).** The
+store build is a Capacitor shell around the unchanged `dist/` (research.md D-009); the one
+native SDK is the store billing plugin (D-010). Entitlement is a pure function in
+`core/entitlement.js`; the store adapters live in `src/billing/`; the web build takes the
+always-entitled adapter and never statically imports the plugin (AC-17.1.9/2). No backend,
+no account, no secret. PASS.
+
 No other Constitution Check violations. Complexity Tracking is empty.
 
 ## Project Structure
@@ -221,6 +228,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.14 | T114–T116, T160, T167 | T117, T161, T168 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
+| **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

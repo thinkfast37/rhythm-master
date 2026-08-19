@@ -45,6 +45,8 @@ jobs:
         run: npm run check:trace
       - name: Reachability — every export something in src/ can reach
         run: npm run check:unwired
+      - name: Native shell still assembles (D-009; store builds themselves are made and uploaded by hand)
+        run: npm run cap:sync
 
   build:
     needs: verify

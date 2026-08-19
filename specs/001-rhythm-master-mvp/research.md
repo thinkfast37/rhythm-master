@@ -9,6 +9,13 @@ later reader can see what was weighed rather than assuming the choice was arbitr
 
 **Decision**: Vanilla JavaScript ES modules, built with Vite.
 
+**Amended 2026-08-18** (Constitution 4.0.0): the Vite build is unchanged and remains the *only*
+build of the application. What is new is that its output, `dist/`, is also the payload of a native
+shell for the App Store and Google Play (D-009). Nothing here reverses: the shell was chosen
+precisely because it wraps the existing bundle rather than requiring a second toolchain, a
+framework, or a fork of `src/`. The one addition to `src/` is `src/billing/`, an impure adapter
+layer that is a no-op on the web (D-010).
+
 **Rationale**: The predecessor was plain `<script>` tags and its problems were not framework-shaped
 — they were that musical arithmetic was duplicated across views and that shared mutable `var`
 globals made state hard to reason about. ES modules plus a pure `core/` layer fix both without
@@ -204,6 +211,17 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
+**Amended 2026-08-18** (Constitution 4.0.0): GitHub Pages becomes *one* distribution channel of
+three, and an optional one. The maintainer: *"I want the web version to keep working, so I can
+test locally and optionally on github pages at times. but i may not host always on github pages."*
+So the web build MUST keep working stand-alone (local `vite preview` or any static host) — it is
+the free version and the test bed — and the Pages workflow stays as-is but is no longer the
+definition of "delivered". The other two channels are the App Store and Google Play builds
+produced from the same `dist/` (D-009). Those cannot run inside the CI gate without signing
+secrets, so CI additionally runs `npx cap sync` to prove the shell still assembles, and the
+maintainer archives and uploads from Xcode / Android Studio by hand following
+`docs/app-store-setup.md`. The verify → build → deploy contract of the Pages job is unchanged.
+
 **Rationale**: Same zero-cost static hosting as the predecessor, and gating the deploy on the suite
 is what gives FR-014 teeth — a failing AC cannot reach the live site. The workflow is
 test → build → publish, on push to `main`.
@@ -211,6 +229,93 @@ test → build → publish, on push to `main`.
 **Alternatives considered**: publishing without a CI gate (faster, but nothing enforces the suite);
 deferring deployment entirely (no live URL during the build, and the deploy path stays untested
 until it matters most).
+
+---
+
+## D-009 — Native shell for the App Store and Google Play
+
+**Decision (2026-08-18)**: Capacitor 8 (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`,
+`@capacitor/android`), wrapping the unchanged Vite `dist/` in generated `ios/` and `android/`
+projects at the repository root, configured by `capacitor.config.json` (`webDir: "dist"`).
+
+**Rationale**: the app is one grid, a list and Web Audio; every line of it already runs in a
+mobile WebView. Capacitor is the smallest step from "static site" to "store listing": it copies
+`dist/` into a native container, adds a JS bridge only where a plugin is imported, and needs no
+change to the source. It is maintained by Ionic, SPM-ready for iOS, and its plugin ecosystem
+covers the one native capability this needs (billing, D-010). Distribution mechanics — App
+Store Connect, Play Console, signing, screenshots, review — belong to the maintainer and are
+written up step by step in `docs/app-store-setup.md`; neither Xcode nor Android Studio was
+present on the development machine when this decision was made, and the scaffolding
+deliberately does not require them.
+
+**Consequences accepted**:
+- The WebView's `localStorage` is the same store the web app uses, so saved Patterns carry
+  over conceptually — but iOS may evict WKWebView storage under pressure. Backing
+  `storage/keyValue.js` with the native Preferences plugin inside the shell is logged as a
+  follow-up task, not folded in here.
+- Web Audio needs a user gesture to start on iOS; the app already begins playback from a tap.
+- Safe areas: `viewport-fit=cover` and `env(safe-area-inset-*)` padding are added to the shell's
+  layout so the notch and home indicator do not cover controls.
+
+**Alternatives considered**:
+- *Progressive Web App only* — no store presence, no store billing. Rejected: the request was
+  for the stores and for a subscription.
+- *React Native / Flutter rewrite* — throws away a tested application for no musical gain.
+  Rejected on Principle V.
+- *Cordova* — the same idea, older tooling, weaker maintenance. Rejected.
+- *Tauri Mobile* — Rust toolchain, younger mobile story, no billing plugin of note. Rejected.
+
+---
+
+## D-010 — Selling the app: store billing, a trial, a subscription and an outright purchase
+
+**Decision (2026-08-18)**: `@capgo/native-purchases` (StoreKit 2 on iOS, Play Billing 7 on
+Android; MIT; no hosted service; the JS API is `getProducts`, `purchaseProduct`,
+`getPurchases({ onlyCurrentEntitlements })`, `restorePurchases`, `manageSubscriptions`). Two
+products, identical ids on both stores:
+
+| Product id | Kind | What it is |
+|---|---|---|
+| `rm.monthly` | Auto-renewable subscription, monthly | Carries the **3-day free trial** as its introductory offer (Apple: introductory offer, Free Trial, 3 days; Google: base plan `monthly` with a 3-day free-trial offer). |
+| `rm.lifetime` | Non-consumable | **Buy outright.** Permanent entitlement. |
+
+Prices are set in App Store Connect and Play Console, never in code, and the paywall shows the
+store's own `title` and `priceString` (an App Review requirement).
+
+**The trial is the store's introductory offer on the subscription, not an app-side clock.** The
+maintainer's own description was the flow: *"a person may use the app for 3 days, subscribe for a
+few months and then decide to buy it."* "Start your free 3-day trial" begins the subscription; the
+musician can cancel inside the three days and pay nothing; the store enforces one trial per Apple
+ID / Google account; a reinstall cannot reset it; Restore Purchases recovers it. An app-side timer
+was considered and rejected: on Android it is reset by reinstall, on iOS App Review guideline
+3.1.1 requires a trial for a non-subscription app to be a $0 non-consumable named "*N*-day
+Trial" anyway, and either variant means the app rather than the store keeps a clock.
+
+**Entitlement is pure.** `core/entitlement.js` takes the store's list of current purchases and
+`now` and returns one of `trial | subscribed | lifetime | none` plus the date that matters
+(trial end, renewal, or nothing). It has no idea where the purchases came from. Three adapters
+in `src/billing/` supply them: `native.js` (the plugin, used only inside the shell), `web.js`
+(always entitled: `lifetime`, no products, no paywall — the free web version), and `fake.js`
+(scripted, for Playwright, selected by `?billing=fake` and driven from `window.__rmFakeStore`).
+`main.js` picks the adapter by `Capacitor.isNativePlatform()`, and the web bundle never loads
+the plugin.
+
+**Gating**: with entitlement `none` the shell shows the paywall and nothing else. Trial,
+subscribed and lifetime are all "full app". The paywall offers the two products, **Restore
+Purchases**, **Manage subscription** (when subscribed), and links to Terms and Privacy Policy
+(`terms.html`, `privacy.html`, shipped in `dist/` and also on the site). Purchase state is
+never trusted from `localStorage`: the store is queried on every launch and after every purchase.
+
+**Alternatives considered**:
+- *RevenueCat / Adapty / Glassfy* — nicest dashboards, but a hosted entitlement service with an
+  API key in the client. Rejected: it is the "sync service" Principle V forbids and needs a
+  secret the no-secrets clause forbids.
+- *cordova-plugin-purchase* — long-lived and capable, but its receipt validation path pushes
+  toward a hosted validator and its iOS side is StoreKit 1. Rejected.
+- *A separate paid app and a free app* — two listings, no trial, no subscription. Rejected:
+  does not meet the request.
+- *Gate the web build too* — needs a payment provider and a backend. Rejected by the
+  maintainer: the web version stays free.
 
 ---
 

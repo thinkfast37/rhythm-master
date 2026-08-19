@@ -1,0 +1,15 @@
+/* The store build's legal pages (AC-17.1.7). Plain, readable, no app chrome. */
+:root { --bg: #0b0c15; --panel: #14161f; --ink: #e8eaf2; --ink-dim: #a5aabc; --brand: #f0a020; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+}
+.legal { max-width: 680px; margin: 0 auto; padding: 24px 20px 48px; font-size: 15px; line-height: 1.55; }
+.legal h1 { font-size: 24px; margin: 16px 0 4px; color: var(--brand); }
+.legal h2 { font-size: 16px; margin: 24px 0 6px; }
+.legal p, .legal li { color: var(--ink); }
+.legal-date { color: var(--ink-dim); font-size: 13px; }
+.legal a { color: var(--brand); }
+.legal-back { display: inline-block; margin-bottom: 8px; font-size: 14px; }

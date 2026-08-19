@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 // Every deployed build carries a legible version stamp (CLAUDE.md §6): a
@@ -29,9 +30,23 @@ function buildStamp() {
 }
 
 // base is set for GitHub Pages project-site hosting (D-008): the app is served
-// from /<repo>/ rather than the domain root.
+// from /<repo>/ rather than the domain root. The native shell serves the same
+// build from its own root, so `npm run build:native` sets VITE_BASE=/ (D-009).
+//
+// terms.html and privacy.html are the store build's legal pages (AC-17.1.7);
+// they are plain pages, built alongside the app so they ship inside `dist/`.
 export default defineConfig({
   base: process.env.VITE_BASE ?? '/rhythm-master/',
-  build: { outDir: 'dist', emptyOutDir: true },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(import.meta.dirname, 'index.html'),
+        terms: resolve(import.meta.dirname, 'terms.html'),
+        privacy: resolve(import.meta.dirname, 'privacy.html'),
+      },
+    },
+  },
   plugins: [buildStamp()],
 });

@@ -38,7 +38,7 @@ in the evening — but separating them keeps each story honest about whose probl
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
 | **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-3.1, US-4.4, US-7.1–7.5, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
-| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-15.2, US-16.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
@@ -2122,6 +2122,123 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
 - **Editing a Pattern the user does not own.** Any edit to a shipped Pattern triggers a naming prompt
   before the edit applies; cancelling discards the edit and leaves the shipped Pattern untouched
   (US-7.3). Shipped Patterns are never mutated and never deletable.
+
+---
+
+### User Story 36 - Buy the app on the App Store and Google Play
+
+*Traceability: `US-17.1` — Buy the app on the App Store and Google Play*
+
+*(Added 2026-08-18 under Constitution 4.0.0 and research.md D-009/D-010. Asked for directly:
+"I want to create a version of this app that can be hosted on the apple and android app stores.
+i would also like to allow for monthly subscription pricing and outright purchase, along with a 3
+day free trial. so a person may use the app for 3 days, subscribe for a few months and then
+decide to buy it.")*
+
+**As** the Practicing Musician who found Rhythm Master in an app store, **I want** to try it free
+for three days, then pay monthly for as long as I am using it, and buy it outright once I know I
+will keep it, **so that** I never pay for something I have not tried and never keep paying for
+something I have decided to own.
+
+**Independent Test**: Run the store build against a scripted fake store (`?billing=fake`) and
+assert what appears with no purchase, after starting the trial, after buying outright, after
+restoring, and on a launch where local storage lies about a purchase; run the web build with no
+store at all and assert nothing about buying appears.
+
+**Vocabulary**: the *store build* is the same web build wrapped in a native shell and installed
+from the App Store or Google Play (D-009); the *web build* is the free version served as a page.
+The *store* is Apple's or Google's billing service, the only authority on what has been bought.
+There are two products, `rm.monthly` (a monthly subscription whose introductory offer is a 3-day
+free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `none`, `trial`,
+`subscribed`, `lifetime`, derived from the store's current purchases and the clock.
+
+**Acceptance Scenarios**:
+
+- **AC-17.1.1** — Entitlement is derived from the store's current purchases and the clock, and from nothing else
+  - **Given** the list of current purchases the store reports, and the time now
+  - **When** entitlement is derived
+  - **Then** the answer depends on that list and that time only — never on anything the app stored itself
+  - **Cases**:
+    - **AC-17.1.1/1** — No current purchase derives `none`
+    - **AC-17.1.1/2** — A current `rm.monthly` inside its free-trial period derives `trial`, with the trial's end
+    - **AC-17.1.1/3** — A current `rm.monthly` past its free-trial period derives `subscribed`, with its next renewal
+    - **AC-17.1.1/4** — A current `rm.lifetime` derives `lifetime`, whatever else is present
+    - **AC-17.1.1/5** — An `rm.monthly` whose expiry has passed derives `none`
+
+- **AC-17.1.2** — With no entitlement the store build shows the paywall and nothing else
+  - **Given** the store build launched with entitlement `none`
+  - **When** it finishes loading
+  - **Then** a paywall covers the app; no grid, control or library is reachable behind it
+  - **And** it offers exactly the two products, each named and priced in the store's own words — the title and price string the store returns — never a value written into the app
+  - **And** the subscription is presented as the free trial it begins with: "Start your free 3-day trial", then the store's monthly price
+  - **Cases**:
+    - **AC-17.1.2/1** — The paywall covers the app and nothing behind it is reachable
+    - **AC-17.1.2/2** — Both products appear with the store's own title and price string
+    - **AC-17.1.2/3** — The subscription is offered as a 3-day free trial that continues at the store's monthly price
+
+- **AC-17.1.3** — Starting the free trial begins the monthly subscription and opens the app
+  - **Given** the paywall
+  - **When** the Musician chooses "Start your free 3-day trial" and the store completes the purchase of `rm.monthly`
+  - **Then** the paywall closes and the full app is available, with entitlement `trial`
+  - **And**, given the store reports the purchase cancelled or failed
+  - **Then** the paywall stays, says so in one line, and nothing is unlocked
+  - **Cases**:
+    - **AC-17.1.3/1** — A completed `rm.monthly` purchase closes the paywall and opens the app
+    - **AC-17.1.3/2** — After the trial purchase the entitlement is `trial`
+    - **AC-17.1.3/3** — A cancelled or failed purchase leaves the paywall up, with a one-line notice
+
+- **AC-17.1.4** — Buying outright grants a permanent entitlement
+  - **Given** the paywall, or a Musician on the trial or subscribed
+  - **When** the Musician chooses to buy outright and the store completes the purchase of `rm.lifetime`
+  - **Then** the app is available with entitlement `lifetime`
+  - **And** it stays available on a later launch on which the store reports no subscription at all — only the `rm.lifetime` purchase
+  - **Cases**:
+    - **AC-17.1.4/1** — A completed `rm.lifetime` purchase from the paywall opens the app as `lifetime`
+    - **AC-17.1.4/2** — On a later launch with only `rm.lifetime` current, the app opens without a paywall
+
+- **AC-17.1.5** — Restore Purchases recovers an entitlement bought on another device
+  - **Given** the paywall on a fresh install, and a store account that already holds `rm.lifetime`
+  - **When** the Musician chooses "Restore purchases"
+  - **Then** the paywall closes and the app is available as `lifetime`
+  - **And**, given the store account holds nothing
+  - **Then** the paywall stays and says nothing was found to restore
+  - **Cases**:
+    - **AC-17.1.5/1** — Restoring with a purchase on the account closes the paywall and opens the app
+    - **AC-17.1.5/2** — After restoring `rm.lifetime` the entitlement is `lifetime`
+    - **AC-17.1.5/3** — Restoring with nothing on the account leaves the paywall up, and says so
+
+- **AC-17.1.6** — Entitlement is asked of the store on every launch, never trusted from local storage
+  - **Given** local storage carrying any claim of a purchase, and a store reporting no current purchase
+  - **When** the store build launches
+  - **Then** the paywall is shown — the local claim is ignored
+
+- **AC-17.1.7** — The paywall carries the legal and account controls the stores require
+  - **Given** the paywall
+  - **When** it is shown
+  - **Then** it links to the Terms of Use and the Privacy Policy, both shipped with the app and opening in-app, and offers "Restore purchases"
+  - **Cases**:
+    - **AC-17.1.7/1** — Terms of Use and Privacy Policy links are present and each opens the shipped page
+    - **AC-17.1.7/2** — "Restore purchases" is present on the paywall
+
+- **AC-17.1.8** — A Musician on the trial or subscribed can see where they stand and buy outright from inside the app
+  - **Given** the store build with entitlement `trial`, `subscribed` or `lifetime`
+  - **When** the Musician opens "Purchases" from the app's header
+  - **Then** it states the entitlement in one line — "Free trial, ends <date>", "Subscribed, renews <date>", or "Purchased — yours to keep"
+  - **And**, unless already `lifetime`, offers "Buy outright" at the store's price, which on completion changes the line to "Purchased — yours to keep"
+  - **And**, while `trial` or `subscribed`, offers "Manage subscription", which opens the store's own subscription management
+  - **Cases**:
+    - **AC-17.1.8/1** — The Purchases dialog states the current entitlement in one line, with its date where there is one
+    - **AC-17.1.8/2** — Buy outright is offered until `lifetime`, and completing it updates the line
+    - **AC-17.1.8/3** — Manage subscription is offered while on the trial or subscribed, and opens the store's own management
+
+- **AC-17.1.9** — The web build is free and unchanged
+  - **Given** the web build, served as a page with no store
+  - **When** it loads
+  - **Then** the app opens at once — no paywall, no "Purchases" control, nothing about buying anywhere in it
+  - **And** the web build's source does not statically import the billing plugin, so the page never loads it
+  - **Cases**:
+    - **AC-17.1.9/1** — The web build opens the app with no paywall and no Purchases control
+    - **AC-17.1.9/2** — The web build never statically imports the billing plugin
 
 ## Requirements *(mandatory)*
 

@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 285 across 35 User Stories
+**Criteria**: 309 across 36 User Stories
 
-**Coverage**: 88 of 285 criteria proven (30.9%)
+**Coverage**: 112 of 309 criteria proven (36.2%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 88 | 30.9% |
-| 🔴 Gap — HIGH | 74 | 26.0% |
-| 🟠 Gap — MEDIUM | 45 | 15.8% |
-| 🟡 Gap — LOW | 78 | 27.4% |
+| 🟢 Proven | 112 | 36.2% |
+| 🔴 Gap — HIGH | 74 | 23.9% |
+| 🟠 Gap — MEDIUM | 45 | 14.6% |
+| 🟡 Gap — LOW | 78 | 25.2% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -93,6 +93,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
 | 🟢 US-15.2 | 19 | **19** | · | · | · | · | · |
+| 🟢 US-17.1 | 24 | **24** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -383,3 +384,27 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-15.2 | `AC-15.2.3` | The boundaries form a hierarchy, so nesting is readable | P-038 | T160, T169, T184, T186 (4/4 done) | T161, T169, T185, T187 (4/4 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.4` 🖵 | The grid's boundary colours belong to the grid alone | P-038 | T160, T169, T184, T186 (4/4 done) | T161, T169, T185, T187 (4/4 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.5` | Raising boundary contrast leaves the Accent and feel encodings intact | P-038 | T160, T169, T184, T186 (4/4 done) | T161, T169, T185, T187 (4/4 done) | `grid-boundaries.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.1/1` | No current purchase derives `none` | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `entitlement.test.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.1/2` | A current `rm.monthly` inside its free-trial period derives `trial`, with the trial's end | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `entitlement.test.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.1/3` | A current `rm.monthly` past its free-trial period derives `subscribed`, with its next renewal | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `entitlement.test.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.1/4` | A current `rm.lifetime` derives `lifetime`, whatever else is present | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `entitlement.test.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.1/5` | An `rm.monthly` whose expiry has passed derives `none` | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `entitlement.test.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.2/1` 🖵 | The paywall covers the app and nothing behind it is reachable | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.2/2` 🖵 | Both products appear with the store's own title and price string | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.2/3` 🖵 | The subscription is offered as a 3-day free trial that continues at the store's monthly price | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.3/1` | A completed `rm.monthly` purchase closes the paywall and opens the app | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.3/2` | After the trial purchase the entitlement is `trial` | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.3/3` | A cancelled or failed purchase leaves the paywall up, with a one-line notice | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.4/1` | A completed `rm.lifetime` purchase from the paywall opens the app as `lifetime` | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.4/2` | On a later launch with only `rm.lifetime` current, the app opens without a paywall | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.5/1` | Restoring with a purchase on the account closes the paywall and opens the app | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.5/2` | After restoring `rm.lifetime` the entitlement is `lifetime` | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.5/3` | Restoring with nothing on the account leaves the paywall up, and says so | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.6` 🖵 | Entitlement is asked of the store on every launch, never trusted from local storage | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.7/1` 🖵 | Terms of Use and Privacy Policy links are present and each opens the shipped page | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.7/2` 🖵 | "Restore purchases" is present on the paywall | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.8/1` 🖵 | The Purchases dialog states the current entitlement in one line, with its date where there is one | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.8/2` | Buy outright is offered until `lifetime`, and completing it updates the line | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.8/3` | Manage subscription is offered while on the trial or subscribed, and opens the store's own management | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.9/1` 🖵 | The web build opens the app with no paywall and no Purchases control | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `paywall.spec.js` | 🟢 OK |
+| US-17.1 | `AC-17.1.9/2` 🖵 | The web build never statically imports the billing plugin | P-039 | T190, T191, T192, T193 (4/4 done) | T194, T195 (2/2 done) | `entitlement.test.js`, `paywall.spec.js` | 🟢 OK |
