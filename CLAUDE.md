@@ -390,7 +390,7 @@ following change.
   (`core/entitlement.js`); the store adapters live in `src/billing/`; the web
   build takes the always-entitled adapter and **never statically imports the
   billing plugin** — a unit test fails if it does. There is no backend and no
-  account: the store is the entitlement authority (Constitution 4.0.0,
+  account: the store is the entitlement authority (Constitution 3.5.0,
   research.md D-009/D-010). `docs/app-store-setup.md` is the maintainer's
   console and upload checklist.
 - **Every deployed build is stamped.** `vite.config.js` injects a

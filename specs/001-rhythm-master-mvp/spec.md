@@ -2129,7 +2129,7 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
 
 *Traceability: `US-17.1` — Buy the app on the App Store and Google Play*
 
-*(Added 2026-08-18 under Constitution 4.0.0 and research.md D-009/D-010. Asked for directly:
+*(Added 2026-08-18 under Constitution 3.5.0 and research.md D-009/D-010. Asked for directly:
 "I want to create a version of this app that can be hosted on the apple and android app stores.
 i would also like to allow for monthly subscription pricing and outright purchase, along with a 3
 day free trial. so a person may use the app for 3 days, subscribe for a few months and then

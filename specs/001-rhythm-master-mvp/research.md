@@ -9,7 +9,7 @@ later reader can see what was weighed rather than assuming the choice was arbitr
 
 **Decision**: Vanilla JavaScript ES modules, built with Vite.
 
-**Amended 2026-08-18** (Constitution 4.0.0): the Vite build is unchanged and remains the *only*
+**Amended 2026-08-18** (Constitution 3.5.0): the Vite build is unchanged and remains the *only*
 build of the application. What is new is that its output, `dist/`, is also the payload of a native
 shell for the App Store and Google Play (D-009). Nothing here reverses: the shell was chosen
 precisely because it wraps the existing bundle rather than requiring a second toolchain, a
@@ -211,7 +211,7 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
-**Amended 2026-08-18** (Constitution 4.0.0): GitHub Pages becomes *one* distribution channel of
+**Amended 2026-08-18** (Constitution 3.5.0): GitHub Pages becomes *one* distribution channel of
 three, and an optional one. The maintainer: *"I want the web version to keep working, so I can
 test locally and optionally on github pages at times. but i may not host always on github pages."*
 So the web build MUST keep working stand-alone (local `vite preview` or any static host) — it is

@@ -1,32 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 3.4.0 → 4.0.0
+Version change: 3.4.0 → 3.5.0
 
-4.0.0 — Principle V redefined: the app may also ship as a store-distributed native
-  shell around the identical web build, and platform store billing (StoreKit / Google
-  Play Billing) is admitted as the one permitted native SDK, so the app can be sold with
-  a subscription, an outright purchase and a free trial. "No backend, no accounts, no
-  authentication" survives unchanged.
+3.5.0 — Principle V gains a section: the app may also ship as a store-distributed native
+  shell around the identical web build, with platform store billing (StoreKit / Google
+  Play Billing) as the one permitted native SDK, so it can be sold with a subscription,
+  an outright purchase and a free trial. "No backend, no accounts, no authentication"
+  survives unchanged.
 
   Asked for on 2026-08-18: *"I want to create a version of this app that can be hosted on
   the apple and android app stores. i would also like to allow for monthly subscription
   pricing and outright purchase, along with a 3 day free trial."*
 
-  Principle V said the client-side constraints were "permanent constraints, not deferred
-  features", and that "the app is a static artifact served to anyone". A store build
-  contradicts the second and looks like it contradicts the first. Examined, it does not:
-  the store IS the entitlement authority — StoreKit 2 and Play Billing verify purchases
-  on-device — so no backend, no account and no secret is required. What changes is that
-  the artifact may also be a native shell (research.md D-009) and that one native SDK,
-  the store billing plugin, is admitted (D-010). RevenueCat-style hosted entitlement
-  services remain forbidden as the "sync service" the principle already names.
-
-  MAJOR because a clause the principle called permanent is being narrowed, and because
-  "a static artifact served to anyone" is no longer the whole truth. Per the versioning
-  policy a backward-incompatible redefinition of a principle is MAJOR, however small the
-  edit. Nothing in the NON-NEGOTIABLE list changes: no-secrets-in-client-code stands and
-  is restated for the shell.
+  This was first drafted as MAJOR 4.0.0, reading "permanent constraints, not deferred
+  features" and "a static artifact served to anyone" as forbidding a native shell. The
+  maintainer corrected that the same day: **a native store version was always intended
+  for this app** — agreed at the outset, outside this repository — and the client-side
+  constraints were only ever about a backend, accounts and secrets, none of which change.
+  The sibling project `ear-trainer` carries the same intent in its constitution from line
+  one ("packaged for app stores with Capacitor"). So this is an ADDITION, and MINOR: the
+  store IS the entitlement authority (StoreKit 2 and Play Billing verify on-device), no
+  rule is removed or weakened, and the rules below only say how the shell must behave.
+  RevenueCat-style hosted entitlement services remain forbidden as the "sync service" the
+  principle already names. Nothing in the NON-NEGOTIABLE list changes.
 
   Rules added under Principle V:
     - the web build MUST remain fully functional and free, and MUST NOT depend on the
@@ -42,7 +39,7 @@ Version change: 3.4.0 → 4.0.0
 
   Templates reviewed: plan-template ✅ (Constitution Check unchanged), spec-template ✅,
   tasks-template ✅. Follow-up: research.md D-001, D-008 amended and D-009, D-010 added;
-  spec.md gains US-14 (T190–T19x). CLAUDE.md §6 gains the shell rule.
+  spec.md gains US-17.1 (T190–T195). CLAUDE.md §6 gains the shell rule.
 
 Earlier:
 Version change: 3.3.0 → 3.4.0
@@ -397,8 +394,10 @@ not deferred features.
 
 The same client-side build MAY additionally ship as a **store-distributed native shell**
 (App Store, Google Play) that wraps the web build unchanged and sells access through the
-platform's own billing (amended 2026-08-18, v4.0.0; research.md D-009, D-010). The store
-is the entitlement authority — purchases are verified on-device by StoreKit / Play
+platform's own billing (added 2026-08-18, v3.5.0; research.md D-009, D-010 — a native
+store version was intended for this app from the outset; the constraints above were
+always about a backend, accounts and secrets, not about how the client is packaged). The
+store is the entitlement authority — purchases are verified on-device by StoreKit / Play
 Billing — so this adds no backend, no account and no secret. The rules for that shell:
 
 - The **web build MUST remain fully functional and free**, and MUST NOT depend on the
@@ -530,4 +529,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 4.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-18
+**Version**: 3.5.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-18

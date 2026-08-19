@@ -86,7 +86,7 @@ in `tasks.md` and burn down from there. The two that matter most:
   `library.test.js`, `storage.test.js`, `similarity.test.js`. The old gate's orphan check
   was a warning, so an ID that slid onto a *different real* AC was invisible.
 
-**Principle V, re-checked 2026-08-18 against constitution v4.0.0 (US-17.1, P-039).** The
+**Principle V, re-checked 2026-08-18 against constitution v3.5.0 (US-17.1, P-039).** The
 store build is a Capacitor shell around the unchanged `dist/` (research.md D-009); the one
 native SDK is the store billing plugin (D-010). Entitlement is a pure function in
 `core/entitlement.js`; the store adapters live in `src/billing/`; the web build takes the
