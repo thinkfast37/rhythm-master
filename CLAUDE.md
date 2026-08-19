@@ -384,6 +384,11 @@ following change.
   tags) and is a different store for that reason.
 - **No audio assets.** Both Sound Modes are Web Audio synthesis; the reverb
   impulse is generated at runtime.
+- **Every deployed build is stamped.** `vite.config.js` injects a
+  `<meta name="build-version">` tag — UTC build time to the second, plus the
+  commit — into `index.html` at build time. View-source on the live site
+  answers "which version is running?"; nothing is rendered on screen. Do not
+  remove the stamp, and any replacement build pipeline must keep it.
 
 ---
 
