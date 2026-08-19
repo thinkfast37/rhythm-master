@@ -1,6 +1,47 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.4.0 → 3.5.0
+
+3.5.0 — Principle V gains a section: the app may also ship as a store-distributed native
+  shell around the identical web build, with platform store billing (StoreKit / Google
+  Play Billing) as the one permitted native SDK, so it can be sold with a subscription,
+  an outright purchase and a free trial. "No backend, no accounts, no authentication"
+  survives unchanged.
+
+  Asked for on 2026-08-18: *"I want to create a version of this app that can be hosted on
+  the apple and android app stores. i would also like to allow for monthly subscription
+  pricing and outright purchase, along with a 3 day free trial."*
+
+  This was first drafted as MAJOR 4.0.0, reading "permanent constraints, not deferred
+  features" and "a static artifact served to anyone" as forbidding a native shell. The
+  maintainer corrected that the same day: **a native store version was always intended
+  for this app** — agreed at the outset, outside this repository — and the client-side
+  constraints were only ever about a backend, accounts and secrets, none of which change.
+  The sibling project `ear-trainer` carries the same intent in its constitution from line
+  one ("packaged for app stores with Capacitor"). So this is an ADDITION, and MINOR: the
+  store IS the entitlement authority (StoreKit 2 and Play Billing verify on-device), no
+  rule is removed or weakened, and the rules below only say how the shell must behave.
+  RevenueCat-style hosted entitlement services remain forbidden as the "sync service" the
+  principle already names. Nothing in the NON-NEGOTIABLE list changes.
+
+  Rules added under Principle V:
+    - the web build MUST remain fully functional and free, and MUST NOT depend on the
+      shell or the billing SDK (it uses an always-entitled adapter);
+    - entitlement logic MUST be pure and live in `src/core/`; only the adapter that talks
+      to the store may be impure, in its own module outside `core/`;
+    - the paywall MUST offer Restore Purchases and links to Terms and Privacy Policy;
+    - product names and prices shown MUST come from the store, never be hard-coded;
+    - no purchase state may be trusted from `localStorage`; the store is re-queried.
+
+  Client-Side Architecture Constraints: "MUST NOT require a build-time backend" retained;
+  a note added that the shell wraps `dist/` unchanged.
+
+  Templates reviewed: plan-template ✅ (Constitution Check unchanged), spec-template ✅,
+  tasks-template ✅. Follow-up: research.md D-001, D-008 amended and D-009, D-010 added;
+  spec.md gains US-17.1 (T190–T195). CLAUDE.md §6 gains the shell rule.
+
+Earlier:
 Version change: 3.3.0 → 3.4.0
 
 3.4.0 — The traceability matrix must report coverage as well as gaps, gaps carry a
@@ -351,6 +392,28 @@ This is a **single-page, client-side** application. There is no backend, no serv
 persistence, no user accounts, and no authentication. These are permanent constraints,
 not deferred features.
 
+The same client-side build MAY additionally ship as a **store-distributed native shell**
+(App Store, Google Play) that wraps the web build unchanged and sells access through the
+platform's own billing (added 2026-08-18, v3.5.0; research.md D-009, D-010 — a native
+store version was intended for this app from the outset; the constraints above were
+always about a backend, accounts and secrets, not about how the client is packaged). The
+store is the entitlement authority — purchases are verified on-device by StoreKit / Play
+Billing — so this adds no backend, no account and no secret. The rules for that shell:
+
+- The **web build MUST remain fully functional and free**, and MUST NOT depend on the
+  shell or on the billing SDK. It uses an always-entitled adapter; the musician can run
+  it locally, and host it statically anywhere, exactly as before.
+- **Entitlement logic MUST be pure and live in `src/core/`** — a function of the store's
+  reported purchases and the clock. Only the adapter that talks to the store may be
+  impure, and it lives in its own module outside `core/`.
+- The **store billing plugin is the one permitted native SDK.** Hosted entitlement or
+  "purchases-as-a-service" providers are the sync service the next bullet forbids.
+- The paywall MUST offer **Restore Purchases**, a way to **manage the subscription**,
+  and links to **Terms** and **Privacy Policy**. Product names and prices shown MUST come
+  from the store at run time, never be hard-coded.
+- **No purchase state is trusted from `localStorage`.** Entitlement is re-derived from the
+  store on every launch; anything cached is a display hint only.
+
 - User-created data (Patterns, Ratings, Tags, preferences) MAY be persisted in
   `localStorage` only. No remote storage, sync service, or third-party analytics SDK may
   be introduced.
@@ -358,7 +421,8 @@ not deferred features.
   Any future format change MUST include a migration path that reads and upgrades
   prior-version data rather than silently discarding it.
 - **No API keys, tokens, or secrets may appear in client code**, ever. The app is a
-  static artifact served to anyone; anything embedded in it is public. Features requiring
+  static artifact served to anyone — and the native shell is that same artifact,
+  unpacked by anyone who cares to; anything embedded in either is public. Features requiring
   third-party write access MUST be designed around user-authenticated flows (e.g.
   handing the user a pre-filled form on the third party's own domain) rather than the app
   acting as an authenticated client.
@@ -424,7 +488,8 @@ These constraints govern how state, data, and rendering are wired together:
 - **No framework mandate**: This constitution deliberately does not name a rendering
   framework. That decision belongs in the plan document. Any framework chosen MUST
   support the pure-state-→-render contract above and MUST NOT require a build-time
-  backend.
+  backend. The native shell (Principle V) wraps the built `dist/` as-is; it MUST NOT
+  require a second build of the application or a fork of its source.
 - **Dependency vetting**: Before adding any dependency, confirm (a) it is actively
   maintained, (b) its size contribution is justified against the app's fast-load goal,
   and (c) no standard Web API achieves the same result.
@@ -464,4 +529,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.4.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17
+**Version**: 3.5.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-18

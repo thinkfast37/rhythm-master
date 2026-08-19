@@ -71,6 +71,9 @@ import {
 } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
+import { deriveEntitlement, isEntitled } from './core/entitlement.js';
+import { hasStoreSync, selectBillingAdapter } from './billing/index.js';
+import { showPaywall, hidePaywall, showPurchases } from './ui/paywall.js';
 
 const state = {
   pattern: create(),
@@ -100,6 +103,13 @@ const state = {
   /** Library view state: search text, Tag and rating filters, and what is open. */
   view: { query: '', tags: [], minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
+  /**
+   * The store build's entitlement (US-17.1). `hasStore` is false on the web, where
+   * the app is free and none of this exists. Entitlement is re-derived from the
+   * store's own answer on every launch and after every purchase, never read back
+   * from anything this app stored (AC-17.1.6).
+   */
+  store: { hasStore: false, entitlement: { level: 'lifetime', until: null } },
 };
 
 const listeners = new Set();
@@ -484,6 +494,25 @@ const handlers = {
 
   onUndo() {
     undo();
+  },
+
+  /** The Purchases dialog, store build only (AC-17.1.8). */
+  onPurchases() {
+    if (!billing.adapter?.hasStore) return;
+    showPurchases({
+      getEntitlement: () => state.store.entitlement,
+      products: billing.products ?? { monthly: null, lifetime: null },
+      onBuyLifetime: async () => {
+        const result = await billing.adapter.purchase('lifetime');
+        await refreshEntitlement();
+        return result;
+      },
+      onManage: () => billing.adapter.manageSubscriptions(),
+      onRestore: async () => {
+        await billing.adapter.restore();
+        return refreshEntitlement();
+      },
+    });
   },
 
   /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6). */
@@ -1132,7 +1161,85 @@ async function promptLibraryDuplicates() {
   render();
 }
 
+/* --- the store build (US-17.1) ---------------------------------------------- */
+
+const billing = { adapter: null, products: null, root: null };
+
+/** Ask the store what is current, derive entitlement, re-render (AC-17.1.1, AC-17.1.6). */
+async function refreshEntitlement() {
+  const purchases = await billing.adapter.currentPurchases();
+  state.store = {
+    hasStore: true,
+    entitlement: deriveEntitlement(purchases, Date.now()),
+  };
+  render();
+  return state.store.entitlement;
+}
+
+/**
+ * Cover the app until the Musician is entitled (AC-17.1.2). The app root is made
+ * inert as well as covered, so nothing behind the paywall is reachable by touch,
+ * pointer or keyboard.
+ */
+function presentPaywall(notice = '', busy = false) {
+  if (billing.root) billing.root.inert = true;
+  showPaywall({
+    products: billing.products,
+    notice,
+    busy,
+    onStartTrial: () => buyFromPaywall('monthly'),
+    onBuyLifetime: () => buyFromPaywall('lifetime'),
+    onRestore: async () => {
+      presentPaywall('Restoring…', true);
+      await billing.adapter.restore();
+      const entitlement = await refreshEntitlement();
+      if (isEntitled(entitlement)) admit();
+      else presentPaywall('Nothing to restore was found on your store account.');
+    },
+  });
+}
+
+async function buyFromPaywall(productKey) {
+  presentPaywall('Talking to the store…', true);
+  const result = await billing.adapter.purchase(productKey);
+  if (result.status !== 'ok') {
+    presentPaywall(result.message ?? 'Purchase cancelled.');
+    return;
+  }
+  const entitlement = await refreshEntitlement();
+  if (isEntitled(entitlement)) admit();
+  else presentPaywall('The store has not confirmed that purchase yet. Try Restore purchases in a moment.');
+}
+
+function admit() {
+  hidePaywall();
+  if (billing.root) billing.root.inert = false;
+}
+
+/**
+ * Select the store adapter and gate on it. On the web this resolves to "no store"
+ * and changes nothing (AC-17.1.9). Inside the shell it shows the paywall until the
+ * store confirms an entitlement.
+ */
+async function startBilling(root) {
+  billing.root = root;
+  billing.adapter = await selectBillingAdapter();
+  if (!billing.adapter.hasStore) return;
+
+  const [products, entitlement] = await Promise.all([billing.adapter.getProducts(), refreshEntitlement()]);
+  billing.products = products;
+  if (isEntitled(entitlement)) admit();
+  else presentPaywall();
+}
+
 export function init(root = document.getElementById('app')) {
+  // Store build: cover the app before it is even mounted, so a paying question is
+  // never preceded by a flash of the thing it gates.
+  if (hasStoreSync()) {
+    root.inert = true;
+    showPaywall({ products: null });
+  }
+
   state.settings = settingsStore.load();
 
   // Open with music in it rather than an empty grid (US-16.1).
@@ -1144,6 +1251,7 @@ export function init(root = document.getElementById('app')) {
   mount(root);
   render();
   promptLibraryDuplicates();
+  startBilling(root);
 }
 
 /** Test seam: lets e2e drive state directly rather than through the DOM. */

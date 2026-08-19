@@ -1,0 +1,11 @@
+{
+  "appId": "com.thinkfast37.rhythmmaster",
+  "appName": "Rhythm Master",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

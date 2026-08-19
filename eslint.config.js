@@ -2,7 +2,7 @@ import prettier from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ['node_modules/**', 'dist/**', 'coverage/**', 'test-results/**', 'playwright-report/**'],
+    ignores: ['node_modules/**', 'dist/**', 'coverage/**', 'test-results/**', 'playwright-report/**', 'ios/**', 'android/**'],
   },
   {
     // `.mjs` too — the spec-trace skill is written in it, and a gate's own source going
