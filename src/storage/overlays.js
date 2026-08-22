@@ -18,7 +18,7 @@
  * Owned Patterns need no overlay — their rating and tags live on the Pattern.
  */
 import { readStore, writeStore } from './keyValue.js';
-import { setGroupSwing } from '../core/pattern.js';
+import { setGroupSwing, setSwingFeel as applySwingFeel } from '../core/pattern.js';
 
 export const KEY = 'rm.overlays.v1';
 
@@ -70,17 +70,25 @@ export function setSwing(patternId, measureIndex, beatIndex, groupIndex, amount)
   return update(patternId, { swing });
 }
 
+/** Remembered playback swing feel — the pulse level swing pairs at (AC-4.4.10). */
+export function setSwingFeel(patternId, swingFeel) {
+  return update(patternId, { swingFeel });
+}
+
 /**
- * Apply the remembered playback settings — tempo and swing — onto a loaded
- * copy (AC-4.2.4, AC-4.4.6). Load-time only, deliberately separate from
- * `applyTo`: the library derives its Tags from the shipped data, and playback
- * swing must not make a built-in filterable under `swing`.
+ * Apply the remembered playback settings — tempo, swing, and swing feel — onto
+ * a loaded copy (AC-4.2.4, AC-4.4.6, AC-4.4.10). Load-time only, deliberately
+ * separate from `applyTo`: the library derives its Tags from the shipped data,
+ * and playback swing must not make a built-in filterable under `swing`.
  *
- * A swing entry whose key no longer resolves (a reshaped seed) is skipped.
+ * A swing entry whose key no longer resolves (a reshaped seed) is skipped, as
+ * is a feel that is not one of the three levels.
  */
 export function applyPlaybackTo(pattern) {
   const overlay = forPattern(pattern.id);
-  if (overlay.tempo === undefined && overlay.swing === undefined) return pattern;
+  if (overlay.tempo === undefined && overlay.swing === undefined && overlay.swingFeel === undefined) {
+    return pattern;
+  }
 
   let next = structuredClone(pattern);
   if (overlay.tempo !== undefined) next = { ...next, tempo: overlay.tempo };
@@ -90,6 +98,13 @@ export function applyPlaybackTo(pattern) {
       next = setGroupSwing(next, m, b, g, amount);
     } catch {
       // Stale entry against a reshaped Pattern: skip rather than fail the load.
+    }
+  }
+  if (overlay.swingFeel !== undefined) {
+    try {
+      next = applySwingFeel(next, overlay.swingFeel);
+    } catch {
+      // A feel this build does not know: skip rather than fail the load.
     }
   }
   return next;

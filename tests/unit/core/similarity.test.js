@@ -8,7 +8,14 @@ import {
   familyGroups,
   duplicateGroups,
 } from '../../../src/core/similarity.js';
-import { create, cycleAccent, setRecipe, setTimeSignature } from '../../../src/core/pattern.js';
+import {
+  create,
+  cycleAccent,
+  setRecipe,
+  setTimeSignature,
+  setGroupSwing,
+  setSwingFeel,
+} from '../../../src/core/pattern.js';
 
 const withNote = (p, b = 0, s = 0) => cycleAccent(p, 0, b, s);
 
@@ -91,6 +98,30 @@ describe('core/similarity', () => {
     b.measures[0].beats[0].swing = { 0: 60 };
     expect(rhythmFingerprint(a)).not.toBe(rhythmFingerprint(b));
     expect(isDuplicate(a, b)).toBe(false);
+  });
+
+  // --- AC-4.4.11 — swing feel in duplicate identity ------------------------
+
+  it('AC-4.4.11/1 — Patterns differing only in swing feel are not duplicates when any swing amount is above 0', () => {
+    let a = { ...withNote(create('A')), id: 'a' };
+    a = setGroupSwing(a, 0, 0, 0, 40);
+    const b = setSwingFeel(structuredClone(a), 'sixteenth');
+    b.id = 'b';
+    expect(rhythmFingerprint(a)).not.toBe(rhythmFingerprint(b));
+    expect(isDuplicate(a, b)).toBe(false);
+  });
+
+  it('AC-4.4.11/2 — Patterns differing only in swing feel remain duplicates when every swing amount is 0', () => {
+    const a = { ...withNote(create('A')), id: 'a' };
+    const b = setSwingFeel(structuredClone(a), 'sixteenth');
+    b.id = 'b';
+    // With no amount to retime, the feel is inaudible — the two sound identical.
+    expect(rhythmFingerprint(a)).toBe(rhythmFingerprint(b));
+    expect(isDuplicate(a, b)).toBe(true);
+    // And a Pattern from before the field existed matches one spelling out the default.
+    const explicit = setSwingFeel(structuredClone(a), 'eighth');
+    explicit.id = 'c';
+    expect(rhythmFingerprint(a)).toBe(rhythmFingerprint(explicit));
   });
 
   // --- AC-11.1.4 — the view's data, library-wide ---------------------------

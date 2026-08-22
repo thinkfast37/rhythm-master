@@ -14,7 +14,7 @@ import { TIME_SIGNATURES, beatCount, beatNoteValue, isSupported } from './meter.
 import { defaultRecipeFor, isOffered, slotCount } from './recipes.js';
 import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey } from './pitch.js';
-import { isValidSwing } from './swing.js';
+import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
 
 export const MAX_MEASURES = 8;
 export const MIN_TEMPO = 18;
@@ -183,6 +183,14 @@ export function setGroupSwing(pattern, measureIndex, beatIndex, groupIndex, swin
   return { ...clone(pattern), measures };
 }
 
+/** The pulse level swing pairs at — one value for the whole Pattern. AC-4.4.7 */
+export function setSwingFeel(pattern, feel) {
+  if (!isValidSwingFeel(feel)) {
+    throw new Error(`Swing feel must be one of ${SWING_FEELS.join(', ')}, got ${feel}`);
+  }
+  return { ...clone(pattern), swingFeel: feel };
+}
+
 // --- whole-Pattern operations -----------------------------------------------
 
 /** Append another Pattern's Measures after this one's. US-8.1 */
@@ -238,6 +246,9 @@ export function validate(pattern) {
   }
   if (!Number.isInteger(pattern?.rating) || pattern.rating < 0 || pattern.rating > 5) {
     fail(`rating ${pattern?.rating} outside 0–5`);
+  }
+  if ('swingFeel' in (pattern ?? {}) && !isValidSwingFeel(pattern.swingFeel)) {
+    fail(`swingFeel "${pattern.swingFeel}" is not one of ${SWING_FEELS.join(', ')}`);
   }
   if (!Array.isArray(pattern?.tags)) fail('tags must be an array');
   else

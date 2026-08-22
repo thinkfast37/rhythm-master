@@ -147,4 +147,21 @@ describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)
     const seed = { ...create('Shipped'), id: 's_3' };
     expect(overlays.applyPlaybackTo(seed)).toBe(seed);
   });
+
+  it('applies a remembered swing feel onto a loaded copy, leaving the original untouched', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    const seed = { ...create('Shipped'), id: 's_4' };
+    overlays.setSwingFeel('s_4', 'sixteenth');
+
+    const applied = overlays.applyPlaybackTo(seed);
+    expect(applied.swingFeel).toBe('sixteenth');
+    expect(seed.swingFeel).toBeUndefined();
+  });
+
+  it('skips a remembered swing feel this build does not know', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    overlays.setSwingFeel('s_5', 'shuffle');
+    const applied = overlays.applyPlaybackTo({ ...create('Shipped'), id: 's_5' });
+    expect(applied.swingFeel).toBeUndefined();
+  });
 });

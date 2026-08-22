@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 319 across 36 User Stories
+**Criteria**: 335 across 36 User Stories
 
-**Coverage**: 123 of 319 criteria proven (38.6%)
+**Coverage**: 139 of 335 criteria proven (41.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 123 | 38.6% |
-| 🔴 Gap — HIGH | 73 | 22.9% |
-| 🟠 Gap — MEDIUM | 45 | 14.1% |
-| 🟡 Gap — LOW | 78 | 24.5% |
+| 🟢 Proven | 139 | 41.5% |
+| 🔴 Gap — HIGH | 73 | 21.8% |
+| 🟠 Gap — MEDIUM | 45 | 13.4% |
+| 🟡 Gap — LOW | 78 | 23.3% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -70,7 +70,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-4.1 | 10 | 4 | · | · | 3 | 1 | 2 |
 | 🟠 US-4.2 | 5 | 3 | · | · | · | 2 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
-| 🔴 US-4.4 | 9 | 4 | · | · | 5 | · | · |
+| 🔴 US-4.4 | 25 | 20 | · | · | 5 | · | · |
 | 🔴 US-5.1 | 6 | 0 | · | · | 5 | · | 1 |
 | 🔴 US-5.2 | 3 | 0 | · | · | 1 | · | 2 |
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
@@ -222,15 +222,31 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.3 | `AC-4.3.4` 🖵 | Metronome setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.5` 🖵 | Count-in setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.6` | Metronome/count-in have no per-Pattern override, unlike tempo | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.6/1` 🖵 | Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.6/2` 🖵 | The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.6/3` 🖵 | The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.6/4` 🖵 | A playback swing does not give a shipped Pattern the `swing` Tag in the library | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.6/1` 🖵 | Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/2` 🖵 | The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/3` 🖵 | The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/4` 🖵 | A playback swing does not give a shipped Pattern the `swing` Tag in the library | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.7/1` 🖵 | The Swing feel control offers Quarters, 8ths, and 16ths, with 8ths selected by default | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.7/2` 🖵 | The feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.7/3` 🖵 | Selecting a feel takes effect immediately, with no confirmation step | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.8/1` | In a 4-Slot straight group, the Slots at positions 2 and 4 each onset later by min(S / 100 × d, 0.95 × d) seconds, while positions 1 and 3 keep their nominal onsets | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.8/2` | A 2-Slot straight group keeps every nominal onset at the 16ths feel | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `swing.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.8/3` | Triplet-feel groups keep their unshifted timing at the 16ths feel | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.9/1` | Every sounding Slot in the second Beat of a pair onsets later by min(S / 100 × D, 0.95 × D) seconds, with the Beat's internal spacing unchanged | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.9/2` | The first Beat of each pair, and the unpaired final Beat of an odd-numerator Measure, keep their nominal onsets | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.9/3` | Pairing restarts at each Measure's first Beat | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/1` 🖵 | Changing the swing feel on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/2` 🖵 | The feel set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/3` 🖵 | The remembered feel lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/4` 🖵 | A swing feel alone never grants or removes the `swing` Tag | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/5` 🖵 | On an owned Pattern the swing feel saves into the Pattern itself | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.11/1` | Patterns differing only in swing feel are not duplicates when any swing amount is above 0 | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `similarity.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.11/2` | Patterns differing only in swing feel remain duplicates when every swing amount is 0 | P-013 | T063, T204, T206 (3/3 done) | T064, T205, T207 (3/3 done) | `similarity.test.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.1` | Shipped and custom Patterns appear in one unified list | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-5.1 | `AC-5.1.2` 🖵 | Library entry shows name, meter, and Measure/Beat count | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.1 | `AC-5.1.3` 🖵 | Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |

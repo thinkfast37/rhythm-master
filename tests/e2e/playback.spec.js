@@ -513,6 +513,127 @@ test('AC-4.4.6/4 — A playback swing does not give a shipped Pattern the `swing
   }
 });
 
+test('AC-4.4.7/1 — The Swing feel control offers Quarters, 8ths, and 16ths, with 8ths selected by default', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const feel = page.locator('.swing-feel').first();
+  await expect(feel).toHaveValue('eighth');
+  expect(await feel.locator('option').allTextContents()).toEqual(['Quarters', '8ths', '16ths']);
+  expect(await feel.locator('option').evaluateAll((os) => os.map((o) => o.value))).toEqual([
+    'quarter',
+    'eighth',
+    'sixteenth',
+  ]);
+});
+
+test('AC-4.4.7/2 — The feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await setSwingSlider(page, 30);
+  await page.locator('.swing-feel').first().selectOption('sixteenth');
+
+  const seen = await page.evaluate(() => {
+    const p = window.__rm.getState().pattern;
+    return { feel: p.swingFeel, groupSwing: p.measures[0].beats[0].swing };
+  });
+  // The feel lands on the Pattern itself; the amount stays keyed by group on the Beat.
+  expect(seen.feel).toBe('sixteenth');
+  expect(seen.groupSwing).toEqual({ 0: 30 });
+  await expect(page.locator('.swing-slider').first()).toHaveValue('30');
+});
+
+test('AC-4.4.7/3 — Selecting a feel takes effect immediately, with no confirmation step', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.swing-feel').first().selectOption('quarter');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(page.locator('.swing-feel').first()).toHaveValue('quarter');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingFeel)).toBe('quarter');
+});
+
+test('AC-4.4.10/1 — Changing the swing feel on a shipped Pattern shows no naming prompt and creates no new Pattern', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const before = await page.evaluate(() => window.__rm.patternStore.loadAll().length);
+
+  await page.locator('.swing-feel').first().selectOption('sixteenth');
+
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+  expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(before);
+  await expect(page.locator('.swing-feel').first()).toHaveValue('sixteenth');
+});
+
+test('AC-4.4.10/2 — The feel set on a shipped Pattern is applied again when it is next loaded, surviving a reload', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.swing-feel').first().selectOption('quarter');
+  await page.reload();
+  await expect(page.locator('.swing-feel').first()).toHaveValue('quarter');
+});
+
+test("AC-4.4.10/3 — The remembered feel lives in the overlay store and the shipped Pattern's own data is unchanged", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.swing-feel').first().selectOption('sixteenth');
+
+  const stored = await page.evaluate(() => {
+    const id = window.__rm.getState().pattern.id;
+    return {
+      overlay: window.__rm.overlayStore.forPattern(id).swingFeel,
+      seedFeel: window.__rm.seedStore.findById(id).swingFeel ?? null,
+    };
+  });
+  expect(stored.overlay).toBe('sixteenth');
+  expect(stored.seedFeel).toBeNull();
+});
+
+test('AC-4.4.10/4 — A swing feel alone never grants or removes the `swing` Tag', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const name = await page.evaluate(() => window.__rm.getState().pattern.name);
+  await page.locator('.swing-feel').first().selectOption('sixteenth');
+
+  const chip = page.locator('.tag-filter[data-tag="swing"]');
+  if ((await chip.count()) > 0) {
+    await chip.click();
+    expect(await page.locator('.pattern-name').allTextContents()).not.toContain(name);
+  } else {
+    // No Pattern carries the Tag at all — the feel added it nowhere.
+    await expect(chip).toHaveCount(0);
+  }
+});
+
+test('AC-4.4.10/5 — On an owned Pattern the swing feel saves into the Pattern itself', async ({
+  page,
+}) => {
+  await page.goto('/');
+  // Own a copy first: edit the shipped Pattern and name the fork.
+  await page.locator('.slot').first().click();
+  await page.locator('.dialog-input').fill('My Feel');
+  await page.locator('.dialog-button', { hasText: 'Create' }).click();
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(true);
+
+  await page.locator('.swing-feel').first().selectOption('sixteenth');
+
+  const stored = await page.evaluate(() => {
+    const id = window.__rm.getState().pattern.id;
+    return {
+      pattern: window.__rm.patternStore.loadAll().find((p) => p.id === id)?.swingFeel ?? null,
+      overlay: window.__rm.overlayStore.forPattern(id).swingFeel ?? null,
+    };
+  });
+  expect(stored.pattern).toBe('sixteenth');
+  expect(stored.overlay).toBeNull();
+});
+
 test("AC-4.2.4/1 — A shipped Pattern's tempo change is applied again when the Pattern is next loaded, surviving a reload", async ({
   page,
 }) => {
