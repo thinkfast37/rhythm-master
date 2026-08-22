@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 313 across 36 User Stories
+**Criteria**: 319 across 36 User Stories
 
-**Coverage**: 117 of 313 criteria proven (37.4%)
+**Coverage**: 123 of 319 criteria proven (38.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 117 | 37.4% |
-| 🔴 Gap — HIGH | 73 | 23.3% |
-| 🟠 Gap — MEDIUM | 45 | 14.4% |
-| 🟡 Gap — LOW | 78 | 24.9% |
+| 🟢 Proven | 123 | 38.6% |
+| 🔴 Gap — HIGH | 73 | 22.9% |
+| 🟠 Gap — MEDIUM | 45 | 14.1% |
+| 🟡 Gap — LOW | 78 | 24.5% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -68,9 +68,9 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-3.1 | 24 | 8 | · | · | 3 | 1 | 12 |
 | 🔴 US-4.1 | 10 | 4 | · | · | 3 | 1 | 2 |
-| 🟠 US-4.2 | 3 | 1 | · | · | · | 2 | · |
+| 🟠 US-4.2 | 5 | 3 | · | · | · | 2 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
-| 🔴 US-4.4 | 5 | 0 | · | · | 5 | · | · |
+| 🔴 US-4.4 | 9 | 4 | · | · | 5 | · | · |
 | 🔴 US-5.1 | 6 | 0 | · | · | 5 | · | 1 |
 | 🔴 US-5.2 | 3 | 0 | · | · | 1 | · | 2 |
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
@@ -211,20 +211,26 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.1 | `AC-4.1.4` | Mixed-meter Pattern plays each Measure by its own Time Signature | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.1 | `AC-4.1.5` | Audio suspended by the device stops the transport and resets it | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.1 | `AC-4.1.6` 🖵 | Returning after a suspension requires a deliberate Play | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.2 | `AC-4.2.1` | Default tempo and range | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🟢 OK |
-| US-4.2 | `AC-4.2.2` | Tempo change restarts playback immediately | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-4.2 | `AC-4.2.3` | Tempo default: global last-used, overridden by a per-Pattern save | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `storage.test.js`, `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-4.2 | `AC-4.2.1` | Default tempo and range | P-011 | T057, T058, T204 (3/3 done) | T059, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.2 | `AC-4.2.2` | Tempo change restarts playback immediately | P-011 | T057, T058, T204 (3/3 done) | T059, T205 (2/2 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-4.2 | `AC-4.2.3` | Tempo default: global last-used, overridden by a per-Pattern save | P-011 | T057, T058, T204 (3/3 done) | T059, T205 (2/2 done) | `storage.test.js`, `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-4.2 | `AC-4.2.4/1` | A shipped Pattern's tempo change is applied again when the Pattern is next loaded, surviving a reload | P-011 | T057, T058, T204 (3/3 done) | T059, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.2 | `AC-4.2.4/2` | The remembered tempo lives in the overlay store and the shipped Pattern's own data is unchanged | P-011 | T057, T058, T204 (3/3 done) | T059, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
 | US-4.3 | `AC-4.3.1` 🖵 | Metronome/count-in defaults | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.2` 🖵 | Click tone is identical across Sound Modes | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.3` 🖵 | Count-in length matches the first Measure's Beat count | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.3 | `AC-4.3.4` 🖵 | Metronome setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.5` 🖵 | Count-in setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.6` | Metronome/count-in have no per-Pattern override, unlike tempo | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063 (1/1 done) | T064 (1/1 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063 (1/1 done) | T064 (1/1 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063 (1/1 done) | T064 (1/1 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063 (1/1 done) | T064 (1/1 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063 (1/1 done) | T064 (1/1 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.6/1` 🖵 | Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/2` 🖵 | The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/3` 🖵 | The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/4` 🖵 | A playback swing does not give a shipped Pattern the `swing` Tag in the library | P-013 | T063, T204 (2/2 done) | T064, T205 (2/2 done) | `playback.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.1` | Shipped and custom Patterns appear in one unified list | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-5.1 | `AC-5.1.2` 🖵 | Library entry shows name, meter, and Measure/Beat count | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.1 | `AC-5.1.3` 🖵 | Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |

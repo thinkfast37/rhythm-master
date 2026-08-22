@@ -120,3 +120,31 @@ describe('storage/migrate — FR-005', () => {
     expect(() => migrate({ patterns: [] })).toThrow(/no schemaVersion/);
   });
 });
+
+describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)', () => {
+  it('applies a remembered tempo and swing onto a loaded copy, leaving the original untouched', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    const seed = { ...create('Shipped'), id: 's_1' };
+    overlays.setTempo('s_1', 150);
+    overlays.setSwing('s_1', 0, 0, 0, 30);
+
+    const applied = overlays.applyPlaybackTo(seed);
+    expect(applied.tempo).toBe(150);
+    expect(applied.measures[0].beats[0].swing).toEqual({ 0: 30 });
+    expect(seed.tempo).not.toBe(150);
+    expect(seed.measures[0].beats[0].swing).toBeUndefined();
+  });
+
+  it('skips a stale swing entry that no longer resolves against the Pattern', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    overlays.setSwing('s_2', 5, 0, 0, 30); // measure 5 does not exist
+    const applied = overlays.applyPlaybackTo({ ...create('Shipped'), id: 's_2' });
+    expect(applied.measures[0].beats[0].swing).toBeUndefined();
+  });
+
+  it('returns the Pattern as-is when nothing is remembered', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    const seed = { ...create('Shipped'), id: 's_3' };
+    expect(overlays.applyPlaybackTo(seed)).toBe(seed);
+  });
+});

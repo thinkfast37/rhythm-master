@@ -444,3 +444,108 @@ test('AC-4.1.7/4 — A Slot that does not sound still shows the cursor as it pas
   expect(seen.againstResting).toBeGreaterThanOrEqual(1.6);
   expect(seen.syllable).toBeGreaterThanOrEqual(4.5);
 });
+
+/** Drive the first swing slider like a user dragging it. */
+async function setSwingSlider(page, value) {
+  await page
+    .locator('.swing-slider')
+    .first()
+    .evaluate((el, v) => {
+      el.value = String(v);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }, value);
+}
+
+test('AC-4.4.6/1 — Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const before = await page.evaluate(() => window.__rm.patternStore.loadAll().length);
+
+  await setSwingSlider(page, 30);
+
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+  expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(before);
+  await expect(page.locator('.swing-slider').first()).toHaveValue('30');
+});
+
+test('AC-4.4.6/2 — The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await setSwingSlider(page, 40);
+  await page.reload();
+  await expect(page.locator('.swing-slider').first()).toHaveValue('40');
+});
+
+test("AC-4.4.6/3 — The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await setSwingSlider(page, 25);
+
+  const stored = await page.evaluate(() => {
+    const id = window.__rm.getState().pattern.id;
+    return {
+      overlay: window.__rm.overlayStore.forPattern(id).swing,
+      seedSwing: window.__rm.seedStore.findById(id).measures[0].beats[0].swing ?? null,
+    };
+  });
+  expect(stored.overlay).toEqual({ '0.0.0': 25 });
+  expect(stored.seedSwing).toBeNull();
+});
+
+test('AC-4.4.6/4 — A playback swing does not give a shipped Pattern the `swing` Tag in the library', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const name = await page.evaluate(() => window.__rm.getState().pattern.name);
+  await setSwingSlider(page, 35);
+
+  const chip = page.locator('.tag-filter[data-tag="swing"]');
+  if ((await chip.count()) > 0) {
+    await chip.click();
+    expect(await page.locator('.pattern-name').allTextContents()).not.toContain(name);
+  } else {
+    // No Pattern carries the Tag at all — the playback swing added it nowhere.
+    await expect(chip).toHaveCount(0);
+  }
+});
+
+test("AC-4.2.4/1 — A shipped Pattern's tempo change is applied again when the Pattern is next loaded, surviving a reload", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.tempo-slider').first().evaluate((el) => {
+    el.value = '150';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await page.reload();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(150);
+});
+
+test("AC-4.2.4/2 — The remembered tempo lives in the overlay store and the shipped Pattern's own data is unchanged", async ({
+  page,
+}) => {
+  await page.goto('/');
+  const seedTempoBefore = await page.evaluate(
+    () => window.__rm.seedStore.findById(window.__rm.getState().pattern.id).tempo
+  );
+  await page.locator('.tempo-slider').first().evaluate((el) => {
+    el.value = '150';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  const after = await page.evaluate(() => {
+    const id = window.__rm.getState().pattern.id;
+    return {
+      overlay: window.__rm.overlayStore.forPattern(id).tempo,
+      seedTempo: window.__rm.seedStore.findById(id).tempo,
+    };
+  });
+  expect(after.overlay).toBe(150);
+  expect(after.seedTempo).toBe(seedTempoBefore);
+});
