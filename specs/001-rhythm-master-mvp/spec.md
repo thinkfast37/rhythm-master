@@ -896,6 +896,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Given** a Beat on the Straight → Triplet split Recipe (2 straight Slots + 3 triplet Slots, per AC-1.3.4), with the straight group's swing set to 40
   - **When** the Composer looks at the triplet group's swing setting
   - **Then** it is unaffected and remains at its own independent value — each straight-feel Subdivision Group in a Beat has its own swing amount, not one value shared across the Beat or the Pattern
+  - *(Clarified 2026-08-22: the swing **amount** stays per Subdivision Group. The swing **feel** — the pulse level the amount pairs at, AC-4.4.7 — is one value for the whole Pattern; a Pattern swings at one metric level however many groups carry amounts.)*
 
 - **AC-4.4.3** — Triplet-feel groups have no swing control
   - **Given** the 3-Slot triplet group within a Beat on the Straight → Triplet split Recipe
@@ -911,7 +912,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Given** a straight Subdivision Group of *N* Slots (2 or 4, per US-1.3's Recipes) with swing amount *S* (0–100) and a per-Slot duration *d* seconds at the current tempo
   - **When** the group plays
   - **Then** every Slot keeps its nominal onset time **except** the Slot at position (*N*/2 + 1) — the first Slot of the group's second half — whose onset is delayed by `min(S / 100 × d, 0.95 × d)` seconds, and no other Slot's timing changes
-  - **And**, worked example: Beat 1 of a 4/4 Measure at 120 BPM (quarter note = 0.5s) on the Straight 16ths Recipe (*N*=4, *d*=0.125s per 16th note) with swing 67 — Slot 3 (the "&", position *N*/2+1 = 3) nominally onsets at 0.250s after the beat starts, and instead onsets at 0.250s + min(0.67 × 0.125s, 0.95 × 0.125s) = 0.250s + 0.084s = 0.334s; Slots 1, 2, and 4 are unaffected *(Assumption: this formula, including the 0.95×d cap, is carried over from the original app's design and hasn't been explicitly re-confirmed for this rebuild.)*
+  - **And**, worked example: Beat 1 of a 4/4 Measure at 120 BPM (quarter note = 0.5s) on the Straight 16ths Recipe (*N*=4, *d*=0.125s per 16th note) with swing 67 — Slot 3 (the "&", position *N*/2+1 = 3) nominally onsets at 0.250s after the beat starts, and instead onsets at 0.250s + min(0.67 × 0.125s, 0.95 × 0.125s) = 0.250s + 0.084s = 0.334s; Slots 1, 2, and 4 are unaffected *(Assumption: this formula, including the 0.95×d cap, is carried over from the original app's design and hasn't been explicitly re-confirmed for this rebuild.)* *(Clarified 2026-08-22: this formula is the timing of the default **8ths** swing feel. At the 16ths and Quarters feels the same long–short principle pairs a different pulse — AC-4.4.8 and AC-4.4.9; the maintainer found that a pattern sounding no "&" — quarters on 1 and 2, say — could never swing, because the one delayed pulse was never played.)*
 
 - **AC-4.4.6** — Swing is a playback setting: it never forks a shipped Pattern, and is remembered per Pattern
   - **Given** a shipped Pattern is loaded
@@ -926,6 +927,63 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.4.6/3** — The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged
     - **AC-4.4.6/4** — A playback swing does not give a shipped Pattern the `swing` Tag in the library
   - *(Added 2026-08-22 at the maintainer's request: changing swing on a built-in forced "create a new rhythm", where tempo did not. Playback, the cursor and MIDI export all consume the one timeline built from the loaded Pattern, so an export of a loaded shipped Pattern carries the playback tempo and swing you hear — accepted knowingly. Duplicate detection compares the stores, not the loaded Pattern, and is unaffected.)*
+
+- **AC-4.4.7** — Swing feel: the Pattern chooses which pulse swing pairs at
+  - **Given** a loaded Pattern
+  - **When** the Practicing Musician looks at the playback settings
+  - **Then** a Swing feel control offers exactly three levels — Quarters, 8ths, and 16ths — with 8ths, the AC-4.4.5 timing, selected by default
+  - **And** the feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group (AC-4.4.2)
+  - **And** selecting a feel takes effect immediately, with no confirmation step
+  - **Cases**:
+    - **AC-4.4.7/1** — The Swing feel control offers Quarters, 8ths, and 16ths, with 8ths selected by default
+    - **AC-4.4.7/2** — The feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group
+    - **AC-4.4.7/3** — Selecting a feel takes effect immediately, with no confirmation step
+  - *(Added 2026-08-22 at the maintainer's request: swing delays the "&" of a beat, but a pattern that never sounds that "&" — quarters on 1 and 2, or a 16th figure whose long–short lives inside each half-beat — could never swing. The feel names the pulse the long–short pair sits on; no Slot moves and no subdivision is created or destroyed, so a 4-Slot group at the Quarters feel never produces 32nd notes.)*
+
+- **AC-4.4.8** — 16ths feel: swing pairs the Slots within each half of a straight group
+  - **Given** the Pattern's swing feel is 16ths, and a straight Subdivision Group of *N* Slots with swing amount *S* (0–100) and a per-Slot duration *d* seconds at the current tempo
+  - **When** the group plays
+  - **Then** in a 4-Slot group the Slots at positions 2 and 4 each onset later by `min(S / 100 × d, 0.95 × d)` seconds, while positions 1 and 3 keep their nominal onsets
+  - **And** a 2-Slot group keeps every nominal onset — its Slots land on the first half of each 16th pair, where there is nothing to delay
+  - **And** triplet-feel groups keep their unshifted timing, exactly as at the default feel (AC-4.4.4)
+  - **Cases**:
+    - **AC-4.4.8/1** — In a 4-Slot straight group, the Slots at positions 2 and 4 each onset later by min(S / 100 × d, 0.95 × d) seconds, while positions 1 and 3 keep their nominal onsets
+    - **AC-4.4.8/2** — A 2-Slot straight group keeps every nominal onset at the 16ths feel
+    - **AC-4.4.8/3** — Triplet-feel groups keep their unshifted timing at the 16ths feel
+
+- **AC-4.4.9** — Quarters feel: swing pairs the Beats within a Measure
+  - **Given** the Pattern's swing feel is Quarters, a Measure whose Beats pair off in order — first with second, third with fourth, and so on — a Beat duration *D* seconds at the current tempo, and *S* the swing amount of the first straight Subdivision Group of each pair's first Beat (0 when that Beat has none)
+  - **When** the Measure plays
+  - **Then** every sounding Slot in the second Beat of a pair onsets later by `min(S / 100 × D, 0.95 × D)` seconds, with the Beat's internal spacing unchanged
+  - **And** the first Beat of each pair, and the unpaired final Beat of an odd-numerator Measure, keep their nominal onsets
+  - **And** pairing restarts at each Measure's first Beat
+  - **Cases**:
+    - **AC-4.4.9/1** — Every sounding Slot in the second Beat of a pair onsets later by min(S / 100 × D, 0.95 × D) seconds, with the Beat's internal spacing unchanged
+    - **AC-4.4.9/2** — The first Beat of each pair, and the unpaired final Beat of an odd-numerator Measure, keep their nominal onsets
+    - **AC-4.4.9/3** — Pairing restarts at each Measure's first Beat
+
+- **AC-4.4.10** — Swing feel is a playback setting: remembered per Pattern, never forking
+  - **Given** a shipped Pattern is loaded
+  - **When** the Practicing Musician changes the swing feel
+  - **Then** the change applies with no naming prompt and no new Pattern created — a playback setting like tempo and the swing amount (AC-4.4.6)
+  - **And** the feel is remembered per Pattern in the overlay store (`rm.overlays.v1`) and applied again on load; the shipped Pattern's own data is unchanged
+  - **And** the feel alone never grants or removes the `swing` Tag — that Tag keeps tracking swing amounts (AC-5.3.4)
+  - **And** on an owned Pattern the feel saves into the Pattern itself
+  - **Cases**:
+    - **AC-4.4.10/1** — Changing the swing feel on a shipped Pattern shows no naming prompt and creates no new Pattern
+    - **AC-4.4.10/2** — The feel set on a shipped Pattern is applied again when it is next loaded, surviving a reload
+    - **AC-4.4.10/3** — The remembered feel lives in the overlay store and the shipped Pattern's own data is unchanged
+    - **AC-4.4.10/4** — A swing feel alone never grants or removes the `swing` Tag
+    - **AC-4.4.10/5** — On an owned Pattern the swing feel saves into the Pattern itself
+
+- **AC-4.4.11** — Swing feel participates in duplicate identity only when audible
+  - **Given** two Patterns identical in every musical aspect except their swing feel
+  - **When** duplicates are detected (AC-11.1.1)
+  - **Then** they are not duplicates when any Subdivision Group's swing amount is above 0 — differing feels time the same notes differently
+  - **And** they remain duplicates when every swing amount is 0, where the feel is inaudible
+  - **Cases**:
+    - **AC-4.4.11/1** — Patterns differing only in swing feel are not duplicates when any swing amount is above 0
+    - **AC-4.4.11/2** — Patterns differing only in swing feel remain duplicates when every swing amount is 0
 
 ---
 

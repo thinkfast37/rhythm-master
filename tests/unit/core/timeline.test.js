@@ -7,6 +7,7 @@ import {
   setRecipe,
   cycleAccent,
   setGroupSwing,
+  setSwingFeel,
 } from '../../../src/core/pattern.js';
 import { MEDIUM, STRONG, WEAK } from '../../../src/core/accents.js';
 
@@ -108,6 +109,100 @@ describe('core/timeline', () => {
     expect(swung[2]).toBeCloseTo(plain[2], 10); // triplet untouched
     expect(swung[3]).toBeCloseTo(plain[3], 10);
     expect(swung[4]).toBeCloseTo(plain[4], 10);
+  });
+
+  it('AC-4.4.8/3 — Triplet-feel groups keep their unshifted timing at the 16ths feel', () => {
+    let p = { ...create(), tempo: 120 };
+    p = setRecipe(p, 0, 0, 'straight-triplet-split');
+    p = fillBeat(p, 0, 0);
+    const plain = buildTimeline(p).map((e) => e.timeSeconds);
+
+    p = setSwingFeel(p, 'sixteenth');
+    p = setGroupSwing(p, 0, 0, 0, 80); // the straight pair
+    const swung = buildTimeline(p).map((e) => e.timeSeconds);
+
+    // The straight pair is 2 Slots, which the 16ths feel leaves unshifted too
+    // (AC-4.4.8/2) — and the triplet half never moves under any feel.
+    expect(swung[2]).toBeCloseTo(plain[2], 10);
+    expect(swung[3]).toBeCloseTo(plain[3], 10);
+    expect(swung[4]).toBeCloseTo(plain[4], 10);
+
+    // A full 4-Slot straight Beat under the same feel, for contrast: the "e"
+    // and the "a" swing while the triplet Beat above did not.
+    let q = { ...create(), tempo: 120 };
+    q = fillBeat(q, 0, 0);
+    q = setSwingFeel(q, 'sixteenth');
+    q = setGroupSwing(q, 0, 0, 0, 80);
+    const sixteenths = buildTimeline(q).map((e) => e.timeSeconds);
+    expect(sixteenths[1]).toBeCloseTo(0.125 + 0.8 * 0.125, 10);
+    expect(sixteenths[3]).toBeCloseTo(0.375 + 0.8 * 0.125, 10);
+    expect(sixteenths[0]).toBeCloseTo(0.0, 10);
+    expect(sixteenths[2]).toBeCloseTo(0.25, 10);
+  });
+
+  it("AC-4.4.9/1 — Every sounding Slot in the second Beat of a pair onsets later by min(S / 100 × D, 0.95 × D) seconds, with the Beat's internal spacing unchanged", () => {
+    let p = { ...create(), tempo: 120 }; // D = 0.5s
+    p = fillBeat(p, 0, 0);
+    p = fillBeat(p, 0, 1);
+    p = setSwingFeel(p, 'quarter');
+    p = setGroupSwing(p, 0, 0, 0, 50); // the pair's first Beat carries the amount
+
+    const times = buildTimeline(p).map((e) => e.timeSeconds);
+    const delay = 0.5 * 0.5; // min(50/100 × D, 0.95 × D)
+
+    // Beat 1's four 16ths keep their nominal onsets — Quarters never swings within a group.
+    [0, 0.125, 0.25, 0.375].forEach((t, i) => expect(times[i]).toBeCloseTo(t, 10));
+    // Beat 2's four 16ths all shift by the same delay, spacing intact.
+    [0.5, 0.625, 0.75, 0.875].forEach((t, i) => expect(times[4 + i]).toBeCloseTo(t + delay, 10));
+
+    // The cap: at swing 100 the whole Beat delays by 0.95 × D, never a full Beat.
+    let capped = setGroupSwing(p, 0, 0, 0, 100);
+    capped = buildTimeline(capped).map((e) => e.timeSeconds);
+    expect(capped[4]).toBeCloseTo(0.5 + 0.95 * 0.5, 10);
+  });
+
+  it('AC-4.4.9/2 — The first Beat of each pair, and the unpaired final Beat of an odd-numerator Measure, keep their nominal onsets', () => {
+    let p = { ...create(), tempo: 120 };
+    p = setTimeSignature(p, 0, '3/4'); // Beats pair (1,2); Beat 3 is unpaired
+    p = fillBeat(p, 0, 0);
+    p = fillBeat(p, 0, 1);
+    p = fillBeat(p, 0, 2);
+    // Events by identity, not list position — the delayed Beat 2 interleaves
+    // with Beat 3 in the sorted timeline.
+    const onsets = (pattern) =>
+      new Map(buildTimeline(pattern).map((e) => [`${e.beatIndex}.${e.slotIndex}`, e.timeSeconds]));
+    const plain = onsets(p);
+
+    p = setSwingFeel(p, 'quarter');
+    p = setGroupSwing(p, 0, 0, 0, 60);
+    p = setGroupSwing(p, 0, 2, 0, 60); // an amount on the unpaired Beat changes nothing at this feel
+    const swung = onsets(p);
+
+    // Beat 1 (the pair's first) and Beat 3 (unpaired) at nominal onsets; Beat 2 delayed.
+    for (const [key, time] of swung) {
+      const [beat] = key.split('.').map(Number);
+      const shift = beat === 1 ? 0.6 * 0.5 : 0;
+      expect(time).toBeCloseTo(plain.get(key) + shift, 10);
+    }
+  });
+
+  it("AC-4.4.9/3 — Pairing restarts at each Measure's first Beat", () => {
+    let p = { ...create(), tempo: 120 };
+    p = setTimeSignature(p, 0, '3/4');
+    p = addMeasure(p); // inherits 3/4 — continuous pairing would pair M1's Beat 3 with M2's Beat 1
+    p = fillBeat(p, 0, 0);
+    p = fillBeat(p, 1, 0);
+    p = fillBeat(p, 1, 1);
+    const plain = buildTimeline(p).map((e) => e.timeSeconds);
+
+    p = setSwingFeel(p, 'quarter');
+    p = setGroupSwing(p, 0, 2, 0, 80); // M1's last Beat leads no pair once pairing restarts
+    p = setGroupSwing(p, 1, 0, 0, 40); // M2's own first Beat leads its second
+
+    const swung = buildTimeline(p).map((e) => e.timeSeconds);
+    // M1 Beat 1 and M2 Beat 1 at nominal onsets; M2 Beat 2 delayed by M2 Beat 1's amount.
+    for (let i = 0; i < 8; i++) expect(swung[i]).toBeCloseTo(plain[i], 10);
+    for (let i = 8; i < 12; i++) expect(swung[i]).toBeCloseTo(plain[i] + 0.4 * 0.5, 10);
   });
 
   it('AC-4.4.3 — swing set on a triplet group has no effect', () => {

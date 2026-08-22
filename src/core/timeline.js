@@ -14,7 +14,7 @@ import { beatCount, beatDurationSeconds, beatNoteValue } from './meter.js';
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
 import { resolve } from './pitch.js';
-import { swungOffsets } from './swing.js';
+import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
 
 /**
  * @typedef {object} TimelineEvent
@@ -35,6 +35,7 @@ import { swungOffsets } from './swing.js';
 export function buildTimeline(pattern) {
   const events = [];
   let measureStart = 0;
+  const feel = pattern.swingFeel ?? DEFAULT_SWING_FEEL;
 
   pattern.measures.forEach((measure, measureIndex) => {
     const { timeSignature } = measure;
@@ -45,6 +46,22 @@ export function buildTimeline(pattern) {
       const beatStart = measureStart + beatIndex * beatDuration;
       const n = slotCount(beat.recipe, noteValue);
       const groups = subdivisionGroups(beat.recipe, noteValue);
+
+      /*
+       * The Quarters feel pairs Beats within the Measure — (1,2), (3,4), … —
+       * and delays the whole second Beat of each pair, its internal spacing
+       * intact, by the swing of the pair's first Beat's first straight group
+       * (AC-4.4.9). An unpaired final Beat in an odd meter stays put, the same
+       * rule that leaves an odd Slot group unswung.
+       */
+      let beatDelay = 0;
+      if (feel === 'quarter' && beatIndex % 2 === 1) {
+        const leader = measure.beats[beatIndex - 1];
+        const leaderGroups = subdivisionGroups(leader.recipe, noteValue);
+        const straight = leaderGroups.findIndex((g) => g.feel === 'straight');
+        const amount = straight >= 0 ? (leader.swing?.[straight] ?? 0) : 0;
+        beatDelay = swungDelay(amount, beatDuration);
+      }
 
       /*
        * Slot duration is uniform across the Beat: a 5-Slot mixed Recipe divides
@@ -59,8 +76,10 @@ export function buildTimeline(pattern) {
         const groupStart = beatStart + groupIndex * halfBeat;
         const slotDuration = halfBeat / group.slotIndices.length;
 
-        const swing = group.feel === 'straight' ? (beat.swing?.[groupIndex] ?? 0) : 0;
-        const offsets = swungOffsets(group.slotIndices.length, swing, slotDuration);
+        // Group-level offsets are zero at Quarters — that feel delays whole
+        // Beats above, never Slots within a group.
+        const swing = group.feel === 'straight' && feel !== 'quarter' ? (beat.swing?.[groupIndex] ?? 0) : 0;
+        const offsets = swungOffsets(group.slotIndices.length, swing, slotDuration, feel);
 
         group.slotIndices.forEach((slotIndex, withinGroup) => {
           const slot = beat.slots[slotIndex];
@@ -73,7 +92,7 @@ export function buildTimeline(pattern) {
               : null;
 
           events.push({
-            timeSeconds: groupStart + withinGroup * slotDuration + offsets[withinGroup],
+            timeSeconds: groupStart + withinGroup * slotDuration + offsets[withinGroup] + beatDelay,
             measureIndex,
             beatIndex,
             slotIndex,

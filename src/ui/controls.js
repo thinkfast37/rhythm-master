@@ -21,7 +21,7 @@ import {
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
-import { MIN_SWING, MAX_SWING } from '../core/swing.js';
+import { MIN_SWING, MAX_SWING, DEFAULT_SWING_FEEL } from '../core/swing.js';
 import { renderStars } from './library.js';
 
 /** Preset tempos, carried over from the predecessor. */
@@ -288,6 +288,17 @@ export function renderFamilyMembers(root, family, handlers) {
 }
 
 /**
+ * The pulse level the amount pairs at: Quarters, 8ths, or 16ths (AC-4.4.7).
+ * One value for the whole Pattern — the Quarters feel pairs whole Beats, which
+ * no single Subdivision Group could own.
+ */
+const SWING_FEEL_LABELS = [
+  ['quarter', 'Quarters'],
+  ['eighth', '8ths'],
+  ['sixteenth', '16ths'],
+];
+
+/**
  * Swing, per straight-feel Subdivision Group of Beat 1.
  *
  * Triplet groups get no control at all — swing is inapplicable to triplet feel,
@@ -299,6 +310,15 @@ function renderSwing(pattern, handlers) {
   const measure = pattern.measures[0];
   const beat = measure.beats[0];
   const noteValue = beatNoteValue(measure.timeSignature);
+
+  const feel = el('select', 'swing-feel');
+  feel.dataset.action = 'set-swing-feel';
+  for (const [value, label] of SWING_FEEL_LABELS) {
+    feel.appendChild(el('option', null, { value, textContent: label }));
+  }
+  feel.value = pattern.swingFeel ?? DEFAULT_SWING_FEEL;
+  feel.addEventListener('change', (e) => handlers.onSwingFeel(e.target.value));
+  group.appendChild(labelled('Swing feel', feel));
 
   subdivisionGroups(beat.recipe, noteValue).forEach((g, groupIndex) => {
     if (g.feel !== 'straight') return;

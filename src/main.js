@@ -15,6 +15,7 @@ import {
   cycleAccent,
   countActiveSlots,
   setGroupSwing,
+  setSwingFeel,
   setPitch,
   append,
   duplicate,
@@ -364,6 +365,18 @@ const handlers = {
     } else {
       state.pattern = setGroupSwing(state.pattern, measureIndex, beatIndex, groupIndex, amount);
       overlayStore.setSwing(state.pattern.id, measureIndex, beatIndex, groupIndex, amount);
+      render();
+    }
+    if (state.isPlaying) transport.restart(state.pattern, state.settings);
+  },
+
+  /** The pulse level swing pairs at — a playback setting exactly like the amount (AC-4.4.10). */
+  onSwingFeel(feel) {
+    if (state.isOwned) {
+      apply(setSwingFeel, feel);
+    } else {
+      state.pattern = setSwingFeel(state.pattern, feel);
+      overlayStore.setSwingFeel(state.pattern.id, feel);
       render();
     }
     if (state.isPlaying) transport.restart(state.pattern, state.settings);

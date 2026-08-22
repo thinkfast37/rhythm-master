@@ -17,7 +17,16 @@ import { effectiveAccent } from './accents.js';
  * defaults explicitly fingerprints the same as one that leaves them computed.
  */
 export function rhythmFingerprint(pattern) {
-  return pattern.measures
+  // The swing feel retimes every swung note, so it is part of the rhythm — but
+  // only when some amount is above 0. With every amount at 0 the feel is
+  // inaudible, and two Patterns differing only there sound identical
+  // (AC-4.4.11). Absent normalises to the default so Patterns saved before the
+  // field existed fingerprint the same as ones that spell it out.
+  const audible = pattern.measures.some((m) =>
+    m.beats.some((b) => Object.values(b.swing ?? {}).some((v) => v > 0))
+  );
+  const feel = audible ? `feel=${pattern.swingFeel ?? 'eighth'} ` : '';
+  return feel + pattern.measures
     .map((measure) =>
       [
         measure.timeSignature,

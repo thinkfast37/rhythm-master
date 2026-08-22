@@ -17,6 +17,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
   "soundMode": "percussive",     // "percussive" | "melodic"
   "key": "C",                    // present only when soundMode === "melodic"
   "tempo": 80,                   // integer BPM, 18–300
+  "swingFeel": "eighth",         // "quarter" | "eighth" | "sixteenth"; optional, absent means "eighth"
   "tags": ["Latin", "warmup"],   // user Tags only; automatic Tags are derived, never stored
   "rating": 0,                   // integer 0–5
   "measures": [ /* Measure[] */ ]
@@ -31,6 +32,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `name` | Required. Duplicate names are permitted — identity is `id`, not name. | US-7.1 |
 | `key` | Present iff `soundMode === "melodic"`. One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
+| `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern — the swing *amount* stays per Subdivision Group on each Beat. | AC-4.4.7 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
 | `measures` | 1–8 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
@@ -257,18 +259,20 @@ cannot live on the Pattern, so they live here, keyed by Pattern id:
       "rating": 4,
       "addedTags": ["warmup"],
       "tempo": 150,                 // remembered playback tempo (AC-4.2.4), 18–300
-      "swing": { "0.0.0": 30 }      // remembered playback swing (AC-4.4.6),
+      "swing": { "0.0.0": 30 },     // remembered playback swing (AC-4.4.6),
                                     // keyed "measure.beat.group", 0–100
+      "swingFeel": "sixteenth"      // remembered playback swing feel (AC-4.4.10)
     }
   }
 }
 ```
 
-`tempo` and `swing` are **playback settings** remembered per shipped Pattern (AC-4.2.4,
-AC-4.4.6): applied onto the loaded copy on open, saved when changed, never written to the
-frozen Pattern. They are applied only at load — the library's Tag computation reads the
-shipped data, so a playback swing does not add the `swing` Tag there. A `swing` entry whose
-key no longer resolves against the Pattern (a reshaped seed) is skipped on apply.
+`tempo`, `swing`, and `swingFeel` are **playback settings** remembered per shipped Pattern
+(AC-4.2.4, AC-4.4.6, AC-4.4.10): applied onto the loaded copy on open, saved when changed,
+never written to the frozen Pattern. They are applied only at load — the library's Tag
+computation reads the shipped data, so a playback swing does not add the `swing` Tag there.
+A `swing` entry whose key no longer resolves against the Pattern (a reshaped seed) is
+skipped on apply, as is a `swingFeel` that is not one of the three levels.
 
 `addedTags` sits **alongside** the Pattern's own tags rather than replacing them. A built-in
 Pattern's own tags describe what it is and are not the musician's to remove; the ones they
@@ -327,6 +331,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 8. `tempo` an integer within 18–300.
 9. `rating` an integer within 0–5.
 10. `tags` contains no automatic Tag name.
+11. `swingFeel`, where present, is `quarter`, `eighth`, or `sixteenth`.
 
 A shipped Pattern failing validation is a build-breaking error — the seed file is checked in CI.
 A user-owned Pattern failing validation is repaired where unambiguously possible (clamping tempo,
