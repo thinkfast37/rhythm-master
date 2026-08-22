@@ -1205,6 +1205,20 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the Practicing Musician also selects the "4★+" Rating filter
   - **Then** the list shows only "Bossa Groove" and "Simple Fill" — the Rating filter narrows the already-Tag-filtered list rather than replacing it
 
+- **AC-6.1.7** — The open Pattern's Rating is set and shown from its header
+  - **Given** any Pattern open on the main panel — being played back or composed, built-in or custom alike
+  - **When** the Practicing Musician looks at the Pattern header
+  - **Then** the header shows the Pattern's current Rating as the same five-star control the library rows carry
+  - **And** tapping a star there sets the Rating with the same set / change / clear semantics as AC-6.1.3–AC-6.1.5, and the Pattern's library row shows the new value
+  - **And**, on a built-in Pattern, the Rating persists exactly as it does when set from the library — the header is a second door onto the same Rating, never a second Rating
+  - **And**, given a 390px viewport with the drawer closed, the Rating can be set without opening the drawer at all
+  - **Cases**:
+    - **AC-6.1.7/1** — The header shows the open Pattern's current Rating, and rating that Pattern from its library row updates the header's stars
+    - **AC-6.1.7/2** — Tapping a star in the header sets the open Pattern's Rating, and its library row shows the same value
+    - **AC-6.1.7/3** — Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it
+    - **AC-6.1.7/4** — On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload
+  - *(Added 2026-08-22. Requested by the maintainer: the Rating should be settable and visible on the playback/composer panel, not only in the library review. Mirrors AC-5.3.10, which moved Tags onto the header for the same reason: rating is something you do while looking at — and playing — the Pattern.)*
+
 ---
 
 ### User Story 20 - Build a Pattern from scratch

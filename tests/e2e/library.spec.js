@@ -399,3 +399,68 @@ test('AC-5.3.10 — on mobile, tagging needs no trip to the drawer', async ({ pa
   await expect(page.locator('.header-tags .tag-chip.user', { hasText: 'practice' })).toHaveCount(0);
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
 });
+
+test("AC-6.1.7/1 — The header shows the open Pattern's current Rating, and rating that Pattern from its library row updates the header's stars", async ({
+  page,
+}) => {
+  await page.goto('/');
+  const header = page.locator('.pattern-header .rating');
+  await expect(header).toHaveAttribute('data-rating', '0');
+
+  // Open the first library row, then rate that same row: the header follows.
+  await page.locator('.pattern-item').first().locator('.pattern-name').click();
+  await page.locator('.library-toggle').click(); // selection collapsed the library
+  await page.locator('.pattern-item').first().locator('.star').nth(3).click();
+  await expect(header).toHaveAttribute('data-rating', '4');
+});
+
+test("AC-6.1.7/2 — Tapping a star in the header sets the open Pattern's Rating, and its library row shows the same value", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.pattern-item').first().locator('.pattern-name').click();
+
+  await page.locator('.pattern-header .star').nth(2).click();
+  await expect(page.locator('.pattern-header .rating')).toHaveAttribute('data-rating', '3');
+
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('.pattern-item').first().locator('.rating')).toHaveAttribute(
+    'data-rating',
+    '3'
+  );
+});
+
+test('AC-6.1.7/3 — Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const header = page.locator('.pattern-header .rating');
+  const stars = page.locator('.pattern-header .star');
+
+  await stars.nth(3).click();
+  await expect(header).toHaveAttribute('data-rating', '4');
+  await stars.nth(3).click(); // the current Rating: clears
+  await expect(header).toHaveAttribute('data-rating', '0');
+
+  await stars.nth(3).click();
+  await stars.nth(1).click(); // a different star: changes, not clears
+  await expect(header).toHaveAttribute('data-rating', '2');
+});
+
+test('AC-6.1.7/4 — On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  // Close the auto-opened drawer; the open Pattern is the shipped default.
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
+
+  await page.locator('.pattern-header .star').nth(4).click();
+  await expect(page.locator('.pattern-header .rating')).toHaveAttribute('data-rating', '5');
+  await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
+
+  await page.reload();
+  await expect(page.locator('.pattern-header .rating')).toHaveAttribute('data-rating', '5');
+});

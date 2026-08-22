@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 309 across 36 User Stories
+**Criteria**: 313 across 36 User Stories
 
-**Coverage**: 112 of 309 criteria proven (36.2%)
+**Coverage**: 116 of 313 criteria proven (37.1%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 112 | 36.2% |
-| 🔴 Gap — HIGH | 74 | 23.9% |
-| 🟠 Gap — MEDIUM | 45 | 14.6% |
-| 🟡 Gap — LOW | 78 | 25.2% |
+| 🟢 Proven | 116 | 37.1% |
+| 🔴 Gap — HIGH | 74 | 23.6% |
+| 🟠 Gap — MEDIUM | 45 | 14.4% |
+| 🟡 Gap — LOW | 78 | 24.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -76,7 +76,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
 | 🟠 US-5.5 | 2 | 0 | · | · | · | 1 | 1 |
 | 🔴 US-5.6 | 13 | 2 | · | · | 10 | 1 | · |
-| 🔴 US-6.1 | 6 | 0 | · | · | 3 | · | 3 |
+| 🔴 US-6.1 | 10 | 4 | · | · | 3 | · | 3 |
 | 🟠 US-7.1 | 2 | 0 | · | · | · | 1 | 1 |
 | 🔴 US-7.2 | 3 | 0 | · | · | 2 | · | 1 |
 | 🔴 US-7.3 | 5 | 0 | · | · | 1 | · | 4 |
@@ -259,12 +259,16 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.6 | `AC-5.6.11` 🖵 | Numbered scheme handles mixed-feel Recipes by position | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.6 | `AC-5.6.12` | 1-e-&-a scheme, the leading digit is the Beat's own number | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.13` | 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096 (1/1 done) | T097 (1/1 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096 (1/1 done) | T097 (1/1 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.3` 🖵 | Tapping a star sets Rating from zero | P-028 | T096 (1/1 done) | T097 (1/1 done) | `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-6.1 | `AC-6.1.4` 🖵 | Tapping the current star clears Rating | P-028 | T096 (1/1 done) | T097 (1/1 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.5` 🖵 | Tapping a different star changes Rating rather than clearing it | P-028 | T096 (1/1 done) | T097 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-6.1 | `AC-6.1.6` 🖵 | Rating filter narrows an already-filtered list | P-028 | T096 (1/1 done) | T097 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.3` 🖵 | Tapping a star sets Rating from zero | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.4` 🖵 | Tapping the current star clears Rating | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.5` 🖵 | Tapping a different star changes Rating rather than clearing it | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.6` 🖵 | Rating filter narrows an already-filtered list | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.7/1` 🖵 | The header shows the open Pattern's current Rating, and rating that Pattern from its library row updates the header's stars | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.7/2` 🖵 | Tapping a star in the header sets the open Pattern's Rating, and its library row shows the same value | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.7/3` 🖵 | Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.7/4` 🖵 | On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-7.1 | `AC-7.1.1` 🖵 | New Pattern name default and validation | P-019 | T077 (1/1 done) | T078 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-7.1 | `AC-7.1.2` | A newly created Pattern is immediately in the library | P-019 | T077 (1/1 done) | T078 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.2 | `AC-7.2.1` 🖵 | Edits to an owned Pattern save immediately, no Save action | P-020 | T079 (1/1 done) | T080 (1/1 done) | `storage.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |

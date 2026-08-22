@@ -1246,7 +1246,10 @@ export function init(root = document.getElementById('app')) {
   const owned = patternStore.loadAll();
   const shipped = seedStore.loadAll();
   if (owned.length > 0) loadPattern(owned[0], { owned: true });
-  else if (shipped.length > 0) loadPattern(structuredClone(shipped[0]), { owned: false });
+  // Overlays applied, as onOpen does: the header shows this Pattern's Rating
+  // (AC-6.1.7), which for a built-in lives in the overlay store.
+  else if (shipped.length > 0)
+    loadPattern(structuredClone(overlayStore.applyTo(shipped[0])), { owned: false });
 
   mount(root);
   render();
