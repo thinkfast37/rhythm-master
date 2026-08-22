@@ -253,10 +253,22 @@ cannot live on the Pattern, so they live here, keyed by Pattern id:
 {
   "schemaVersion": 1,
   "byPatternId": {
-    "s_12": { "rating": 4, "addedTags": ["warmup"] }
+    "s_12": {
+      "rating": 4,
+      "addedTags": ["warmup"],
+      "tempo": 150,                 // remembered playback tempo (AC-4.2.4), 18–300
+      "swing": { "0.0.0": 30 }      // remembered playback swing (AC-4.4.6),
+                                    // keyed "measure.beat.group", 0–100
+    }
   }
 }
 ```
+
+`tempo` and `swing` are **playback settings** remembered per shipped Pattern (AC-4.2.4,
+AC-4.4.6): applied onto the loaded copy on open, saved when changed, never written to the
+frozen Pattern. They are applied only at load — the library's Tag computation reads the
+shipped data, so a playback swing does not add the `swing` Tag there. A `swing` entry whose
+key no longer resolves against the Pattern (a reshaped seed) is skipped on apply.
 
 `addedTags` sits **alongside** the Pattern's own tags rather than replacing them. A built-in
 Pattern's own tags describe what it is and are not the musician's to remove; the ones they

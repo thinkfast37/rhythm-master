@@ -351,9 +351,21 @@ const handlers = {
     apply(setPitch, measureIndex, beatIndex, slotIndex, state.armedPitch);
   },
 
-  async onSwing(groupIndex, amount, measureIndex = 0, beatIndex = 0) {
-    if (!(await guardShipped())) return;
-    apply(setGroupSwing, measureIndex, beatIndex, groupIndex, amount);
+  /**
+   * Swing is a playback setting, not an edit (AC-4.4.6): on a shipped Pattern
+   * it never triggers the naming prompt. It applies to the loaded copy — so
+   * playback, the cursor and MIDI export all hear it through the one
+   * timeline — and is remembered per Pattern in the overlay store, like
+   * tempo. Owned Patterns keep saving it into the Pattern, as before.
+   */
+  onSwing(groupIndex, amount, measureIndex = 0, beatIndex = 0) {
+    if (state.isOwned) {
+      apply(setGroupSwing, measureIndex, beatIndex, groupIndex, amount);
+    } else {
+      state.pattern = setGroupSwing(state.pattern, measureIndex, beatIndex, groupIndex, amount);
+      overlayStore.setSwing(state.pattern.id, measureIndex, beatIndex, groupIndex, amount);
+      render();
+    }
     if (state.isPlaying) transport.restart(state.pattern, state.settings);
   },
 
@@ -390,6 +402,9 @@ const handlers = {
   onTempo(bpm) {
     state.pattern = { ...state.pattern, tempo: bpm };
     if (state.isOwned) patternStore.upsert(state.pattern);
+    // A shipped Pattern's tempo is remembered per Pattern as a playback
+    // setting (AC-4.2.4) — the frozen Pattern itself never changes.
+    else overlayStore.setTempo(state.pattern.id, bpm);
     state.settings = settingsStore.save({ lastTempo: bpm });
     // Restart from the top at the new tempo, resetting the loop counter, rather
     // than retiming the running loop in place (AC-4.2.2).
@@ -540,7 +555,7 @@ const handlers = {
   onOpen(id, owned) {
     const pattern = owned
       ? patternStore.findById(id)
-      : overlayStore.applyTo(seedStore.findById(id));
+      : overlayStore.applyPlaybackTo(overlayStore.applyTo(seedStore.findById(id)));
     if (pattern) loadPattern(owned ? pattern : structuredClone(pattern), { owned });
   },
 
@@ -1247,9 +1262,13 @@ export function init(root = document.getElementById('app')) {
   const shipped = seedStore.loadAll();
   if (owned.length > 0) loadPattern(owned[0], { owned: true });
   // Overlays applied, as onOpen does: the header shows this Pattern's Rating
-  // (AC-6.1.7), which for a built-in lives in the overlay store.
+  // (AC-6.1.7), and its remembered playback tempo and swing come back with it
+  // (AC-4.2.4, AC-4.4.6).
   else if (shipped.length > 0)
-    loadPattern(structuredClone(overlayStore.applyTo(shipped[0])), { owned: false });
+    loadPattern(
+      structuredClone(overlayStore.applyPlaybackTo(overlayStore.applyTo(shipped[0]))),
+      { owned: false }
+    );
 
   mount(root);
   render();

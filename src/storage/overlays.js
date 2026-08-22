@@ -18,6 +18,7 @@
  * Owned Patterns need no overlay — their rating and tags live on the Pattern.
  */
 import { readStore, writeStore } from './keyValue.js';
+import { setGroupSwing } from '../core/pattern.js';
 
 export const KEY = 'rm.overlays.v1';
 
@@ -56,4 +57,40 @@ export function applyTo(pattern) {
   const overlay = forPattern(pattern.id);
   if (overlay.rating === undefined) return pattern;
   return { ...structuredClone(pattern), rating: overlay.rating };
+}
+
+export function setTempo(patternId, tempo) {
+  return update(patternId, { tempo });
+}
+
+/** Remembered playback swing, keyed "measure.beat.group" (AC-4.4.6). */
+export function setSwing(patternId, measureIndex, beatIndex, groupIndex, amount) {
+  const swing = { ...(forPattern(patternId).swing ?? {}) };
+  swing[`${measureIndex}.${beatIndex}.${groupIndex}`] = amount;
+  return update(patternId, { swing });
+}
+
+/**
+ * Apply the remembered playback settings — tempo and swing — onto a loaded
+ * copy (AC-4.2.4, AC-4.4.6). Load-time only, deliberately separate from
+ * `applyTo`: the library derives its Tags from the shipped data, and playback
+ * swing must not make a built-in filterable under `swing`.
+ *
+ * A swing entry whose key no longer resolves (a reshaped seed) is skipped.
+ */
+export function applyPlaybackTo(pattern) {
+  const overlay = forPattern(pattern.id);
+  if (overlay.tempo === undefined && overlay.swing === undefined) return pattern;
+
+  let next = structuredClone(pattern);
+  if (overlay.tempo !== undefined) next = { ...next, tempo: overlay.tempo };
+  for (const [key, amount] of Object.entries(overlay.swing ?? {})) {
+    const [m, b, g] = key.split('.').map(Number);
+    try {
+      next = setGroupSwing(next, m, b, g, amount);
+    } catch {
+      // Stale entry against a reshaped Pattern: skip rather than fail the load.
+    }
+  }
+  return next;
 }

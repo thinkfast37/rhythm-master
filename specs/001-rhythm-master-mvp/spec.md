@@ -819,6 +819,18 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** that Pattern loads
   - **Then** its tempo defaults to 100 BPM
   - **And**, given instead that Pattern has its own saved tempo of 140 BPM, it loads at 140 BPM regardless of the 100 BPM most recently used elsewhere
+  - **And** a shipped Pattern the Practicing Musician has previously adjusted counts as having a tempo of its own: its remembered tempo (AC-4.2.4) outranks the global last-used default the same way an owned Pattern's saved tempo does
+  - *(Revised 2026-08-22: shipped Patterns gain a per-Pattern remembered tempo, stored as a playback setting rather than on the frozen Pattern — see AC-4.2.4.)*
+
+- **AC-4.2.4** — Tempo is remembered per Pattern, shipped Patterns included
+  - **Given** a shipped Pattern the Practicing Musician set to 150 BPM
+  - **When** that Pattern is next loaded — later in the session or after a reload
+  - **Then** it loads at 150 BPM: the tempo set on any Pattern is stored as a playback setting when it changes and applied again on load
+  - **And** the shipped Pattern itself is unchanged — the remembered tempo lives in the overlay store (`rm.overlays.v1`), never on the frozen Pattern
+  - **Cases**:
+    - **AC-4.2.4/1** — A shipped Pattern's tempo change is applied again when the Pattern is next loaded, surviving a reload
+    - **AC-4.2.4/2** — The remembered tempo lives in the overlay store and the shipped Pattern's own data is unchanged
+  - *(Added 2026-08-22 at the maintainer's request: "I would like the app to remember what tempo and swing percentage I've set for any rhythm that I've played … not stored as part of the rhythm, but more of a playback setting … applied when you load the rhythm and saved when it changes." Owned Patterns already behave this way via their own saved tempo; this extends the same memory to shipped Patterns without thawing them.)*
 
 ---
 
@@ -900,6 +912,20 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the group plays
   - **Then** every Slot keeps its nominal onset time **except** the Slot at position (*N*/2 + 1) — the first Slot of the group's second half — whose onset is delayed by `min(S / 100 × d, 0.95 × d)` seconds, and no other Slot's timing changes
   - **And**, worked example: Beat 1 of a 4/4 Measure at 120 BPM (quarter note = 0.5s) on the Straight 16ths Recipe (*N*=4, *d*=0.125s per 16th note) with swing 67 — Slot 3 (the "&", position *N*/2+1 = 3) nominally onsets at 0.250s after the beat starts, and instead onsets at 0.250s + min(0.67 × 0.125s, 0.95 × 0.125s) = 0.250s + 0.084s = 0.334s; Slots 1, 2, and 4 are unaffected *(Assumption: this formula, including the 0.95×d cap, is carried over from the original app's design and hasn't been explicitly re-confirmed for this rebuild.)*
+
+- **AC-4.4.6** — Swing is a playback setting: it never forks a shipped Pattern, and is remembered per Pattern
+  - **Given** a shipped Pattern is loaded
+  - **When** the Practicing Musician changes a Subdivision Group's swing
+  - **Then** the change applies to playback immediately with no naming prompt and no new Pattern created — unlike the content mutations of AC-7.3.1, swing is a playback setting like tempo
+  - **And** the value is remembered per Pattern in the overlay store (`rm.overlays.v1`) and applied again on load; the shipped Pattern's own data is unchanged
+  - **And** the library's `swing` Tag still derives from the shipped Pattern's own data — a playback swing does not make it filterable under `swing`, while the open Pattern's header reflects what is actually heard
+  - **And** on an owned Pattern swing keeps saving into the Pattern itself, exactly as before
+  - **Cases**:
+    - **AC-4.4.6/1** — Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern
+    - **AC-4.4.6/2** — The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload
+    - **AC-4.4.6/3** — The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged
+    - **AC-4.4.6/4** — A playback swing does not give a shipped Pattern the `swing` Tag in the library
+  - *(Added 2026-08-22 at the maintainer's request: changing swing on a built-in forced "create a new rhythm", where tempo did not. Playback, the cursor and MIDI export all consume the one timeline built from the loaded Pattern, so an export of a loaded shipped Pattern carries the playback tempo and swing you hear — accepted knowingly. Duplicate detection compares the stores, not the loaded Pattern, and is unaffected.)*
 
 ---
 
@@ -1284,8 +1310,9 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 
 - **AC-7.3.1** — Editing a shipped Pattern triggers a naming prompt before the edit applies
   - **Given** "Bossa Groove" (shipped, no `custom` Tag, currently Percussive) is loaded
-  - **When** the Composer makes any edit to it — toggling a Slot, changing its Sound Mode to Melodic, changing a Time Signature, or any other mutation
+  - **When** the Composer makes any edit to it — toggling a Slot, changing its Sound Mode to Melodic, changing a Time Signature, or any other mutation of the Pattern's content (tempo and swing are playback settings, not edits — AC-4.2.4, AC-4.4.6 — and never trigger this prompt)
   - **Then** before that edit is applied, the Composer is prompted to name a new Pattern to hold it, with no pre-filled default name
+  - *(Revised 2026-08-22: swing counted as an edit and forked a shipped Pattern into a copy. The maintainer wants it to behave like tempo — a tweak to the Pattern you are hearing, remembered per Pattern rather than a reason to own a copy. The carve-out is proven by AC-4.4.6/1.)*
 
 - **AC-7.3.2** — Confirming the naming prompt creates a new owned Pattern
   - **Given** the prompt from AC-7.3.1, and the Composer types "Bossa Groove (Melodic)"
