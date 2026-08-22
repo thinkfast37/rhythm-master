@@ -22,6 +22,7 @@ import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/cou
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
 import { MIN_SWING, MAX_SWING } from '../core/swing.js';
+import { renderStars } from './library.js';
 
 /** Preset tempos, carried over from the predecessor. */
 export const TEMPO_PRESETS = [57, 67, 80, 90, 104, 120, 150, 180, 200, 220];
@@ -76,6 +77,12 @@ export function renderHeader(root, pattern, state, handlers = {}) {
   name.addEventListener('change', (e) => handlers.onRename?.(e.target.value));
   name.addEventListener('blur', (e) => handlers.onRename?.(e.target.value));
   root.appendChild(name);
+
+  // The Rating lives here as well as on the library row (AC-6.1.7): rating is
+  // something you do while looking at — and playing — the Pattern, and on a
+  // phone it should not require opening the drawer. Same control, same
+  // `onRate`, so there is one Rating however it is reached.
+  if (handlers.onRate) root.appendChild(renderStars(pattern, handlers));
 
   // Provenance reads as a Tag below, not as a sentence here.
   root.appendChild(

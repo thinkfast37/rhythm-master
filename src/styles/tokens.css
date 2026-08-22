@@ -1140,6 +1140,9 @@ body {
 .pattern-header { padding: 12px 12px 0; }
 .pattern-title { margin: 0; font: 700 20px/1.2 var(--font-ui); color: var(--ink); }
 .pattern-meta { margin: 4px 0 0; font-size: 11px; color: var(--ink-dim); }
+/* The header's Rating: the library's star control, sized up for a thumb. */
+.pattern-header .rating { margin-top: 2px; }
+.pattern-header .star { font-size: 18px; padding: 2px 3px; }
 
 .main-panel > details {
   border-top: 1px solid var(--line);

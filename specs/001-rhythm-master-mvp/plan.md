@@ -217,7 +217,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-025** | US-5.2 — Search by text | AC-5.2.1–AC-5.2.3 | T089 | T090 |
 | **P-026** | US-5.3 — Organise by Tag, including automatic Tags | AC-5.3.1–AC-5.3.10 | T091–T092 | T093 |
 | **P-027** | US-5.5 — Navigate sequentially | AC-5.5.1–AC-5.5.2 | T094 | T095 |
-| **P-028** | US-6.1 — Rate a Pattern | AC-6.1.1–AC-6.1.6 | T096 | T097 |
+| **P-028** | US-6.1 — Rate a Pattern | AC-6.1.1–AC-6.1.7 | T096, T200 | T097, T201 |
 | **P-029** | US-8.1 — Append a second Pattern | AC-8.1.1–AC-8.1.6 | T098 | T099 |
 | **P-030** | US-10.1 — Duplicate a Pattern to build a variation | AC-10.1.1–AC-10.1.6 | T100 | T101 |
 | **P-031** | US-11.1 — Detect true duplicates | AC-11.1.1–AC-11.1.6 | T102–T103, T148 | T104, T155 |

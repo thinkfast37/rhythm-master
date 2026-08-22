@@ -222,7 +222,12 @@ function renderEntry(entry, viewState, handlers) {
   return item;
 }
 
-function renderStars(pattern, handlers) {
+/**
+ * The five-star Rating control. Shared with the Pattern header (AC-6.1.7):
+ * both doors dispatch the same `onRate`, so there is one Rating however it
+ * is reached.
+ */
+export function renderStars(pattern, handlers) {
   const wrap = el('div', 'rating');
   wrap.dataset.rating = String(pattern.rating ?? 0);
   for (let n = 1; n <= 5; n++) {
