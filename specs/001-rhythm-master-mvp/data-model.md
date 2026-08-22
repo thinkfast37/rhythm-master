@@ -16,7 +16,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
   "name": "Bossa Groove",        // required, non-empty, trimmed
   "soundMode": "percussive",     // "percussive" | "melodic"
   "key": "C",                    // present only when soundMode === "melodic"
-  "tempo": 80,                   // integer BPM, 18–220
+  "tempo": 80,                   // integer BPM, 18–300
   "tags": ["Latin", "warmup"],   // user Tags only; automatic Tags are derived, never stored
   "rating": 0,                   // integer 0–5
   "measures": [ /* Measure[] */ ]
@@ -30,7 +30,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `id` | Assigned at creation. Shipped Patterns get a deterministic id derived from their seed-file position, so Local Metadata keyed to one survives a library update. | FR-006 |
 | `name` | Required. Duplicate names are permitted — identity is `id`, not name. | US-7.1 |
 | `key` | Present iff `soundMode === "melodic"`. One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
-| `tempo` | Clamped 18–220 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
+| `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
 | `measures` | 1–8 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
@@ -312,7 +312,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 5. `accent`, where present, is 1, 2, or 3 — and only on a Slot with `on: true`.
 6. `pitch`, where present, only on a Slot with `on: true`, and only when `soundMode` is `melodic`.
 7. `key` present iff `soundMode` is `melodic`.
-8. `tempo` an integer within 18–220.
+8. `tempo` an integer within 18–300.
 9. `rating` an integer within 0–5.
 10. `tags` contains no automatic Tag name.
 

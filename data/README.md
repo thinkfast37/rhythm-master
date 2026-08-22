@@ -20,7 +20,7 @@ npm run validate:seed
       "name": "Bossa Groove",        // required, non-empty
       "soundMode": "percussive",     // "percussive" | "melodic"
       "key": "C",                    // melodic Patterns only; one of C Db D Eb E F Gb G Ab A Bb B
-      "tempo": 90,                   // integer, 18–220
+      "tempo": 90,                   // integer, 18–300
       "tags": ["Latin"],             // your own tags only — see below
       "rating": 0,                   // integer, 0–5
       "measures": [

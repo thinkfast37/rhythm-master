@@ -256,7 +256,8 @@ describe('core/pattern — validation', () => {
   });
 
   it('AC-16.2.3 — out-of-range tempo, rating, and stored automatic Tags are rejected', () => {
-    expect(validate({ ...create(), tempo: 300 }).errors.join(' ')).toMatch(/tempo 300/);
+    // 301: one past the AC-4.2.1 ceiling (18–300 since its 2026-08-22 revision).
+    expect(validate({ ...create(), tempo: 301 }).errors.join(' ')).toMatch(/tempo 301/);
     expect(validate({ ...create(), rating: 9 }).errors.join(' ')).toMatch(/rating 9/);
     expect(validate({ ...create(), tags: ['custom'] }).errors.join(' ')).toMatch(/automatic/);
   });

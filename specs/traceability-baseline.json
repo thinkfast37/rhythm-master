@@ -1,6 +1,6 @@
 {
   "note": "Traceability findings that pre-date the gate. Reported, but not build-failing. This list may only shrink: `prune-baseline` removes entries that are fixed, and nothing writes new ones. Adding an entry by hand is taking on debt deliberately and needs to be justified in review.",
-  "generated": "2026-08-18",
+  "generated": "2026-08-22",
   "accepted": [
     "T3 T030 names `core/pattern.js`, which does not exist",
     "T3 T035 names `tests/unit/storage/seed-format.test.js`, which does not exist",
@@ -208,7 +208,6 @@
     "T5 AC-4.1.4 reworded",
     "T5 AC-4.1.5 reworded",
     "T5 AC-4.1.6 mismatched",
-    "T5 AC-4.2.1 mismatched",
     "T5 AC-4.2.2 reworded",
     "T5 AC-4.2.3 reworded",
     "T5 AC-4.3.1 reworded",

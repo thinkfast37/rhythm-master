@@ -16,12 +16,12 @@
 **Feature**: specs/001-rhythm-master-mvp/spec.md
 **Criteria**: 313 across 36 User Stories
 
-**Coverage**: 116 of 313 criteria proven (37.1%)
+**Coverage**: 117 of 313 criteria proven (37.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 116 | 37.1% |
-| 🔴 Gap — HIGH | 74 | 23.6% |
+| 🟢 Proven | 117 | 37.4% |
+| 🔴 Gap — HIGH | 73 | 23.3% |
 | 🟠 Gap — MEDIUM | 45 | 14.4% |
 | 🟡 Gap — LOW | 78 | 24.9% |
 
@@ -51,7 +51,7 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (197 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (196 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
@@ -68,7 +68,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-3.1 | 24 | 8 | · | · | 3 | 1 | 12 |
 | 🔴 US-4.1 | 10 | 4 | · | · | 3 | 1 | 2 |
-| 🔴 US-4.2 | 3 | 0 | · | · | 1 | 2 | · |
+| 🟠 US-4.2 | 3 | 1 | · | · | · | 2 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
 | 🔴 US-4.4 | 5 | 0 | · | · | 5 | · | · |
 | 🔴 US-5.1 | 6 | 0 | · | · | 5 | · | 1 |
@@ -211,7 +211,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.1 | `AC-4.1.4` | Mixed-meter Pattern plays each Measure by its own Time Signature | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.1 | `AC-4.1.5` | Audio suspended by the device stops the transport and resets it | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.1 | `AC-4.1.6` 🖵 | Returning after a suspension requires a deliberate Play | P-010 | T051, T052, T053, T054, T055, T165 (6/6 done) | T056, T165 (2/2 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.2 | `AC-4.2.1` | Default tempo and range | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.2 | `AC-4.2.1` | Default tempo and range | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🟢 OK |
 | US-4.2 | `AC-4.2.2` | Tempo change restarts playback immediately | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.2 | `AC-4.2.3` | Tempo default: global last-used, overridden by a per-Pattern save | P-011 | T057, T058 (2/2 done) | T059 (1/1 done) | `storage.test.js`, `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.3 | `AC-4.3.1` 🖵 | Metronome/count-in defaults | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
