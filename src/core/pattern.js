@@ -18,7 +18,7 @@ import { isValidSwing } from './swing.js';
 
 export const MAX_MEASURES = 8;
 export const MIN_TEMPO = 18;
-export const MAX_TEMPO = 220;
+export const MAX_TEMPO = 300;
 export const DEFAULT_TEMPO = 80;
 export const DEFAULT_TIME_SIGNATURE = '4/4';
 

@@ -186,11 +186,11 @@ test('AC-4.1.6 — returning to the app does not resume playback by itself', asy
   await expect(page.locator('[data-action="play"]')).toBeVisible();
 });
 
-test('AC-4.2.1 — tempo is clamped to 18–220 in the control', async ({ page }) => {
+test('AC-4.2.1 — Default tempo and range: the control clamps to 18–300', async ({ page }) => {
   await page.goto('/');
   const slider = page.locator('.tempo-slider');
   await expect(slider).toHaveAttribute('min', '18');
-  await expect(slider).toHaveAttribute('max', '220');
+  await expect(slider).toHaveAttribute('max', '300');
 });
 
 test('AC-4.2.2 — changing tempo restarts playback and resets the loop counter', async ({ page }) => {

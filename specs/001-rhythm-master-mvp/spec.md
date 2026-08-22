@@ -805,7 +805,8 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-4.2.1** — Default tempo and range
   - **Given** a new Pattern
   - **When** it is created
-  - **Then** its tempo defaults to 80 BPM, adjustable within a clamped range of 18–220 BPM
+  - **Then** its tempo defaults to 80 BPM, adjustable within a clamped range of 18–300 BPM
+  - *(Revised 2026-08-22: ceiling raised from 220 to 300 BPM at the maintainer's request. The floor, the default, and the preset list are unchanged; 300 is reached via the slider.)*
 
 - **AC-4.2.2** — Tempo change restarts playback immediately
   - **Given** a Pattern is playing at 80 BPM, partway through Beat 2 of its 4/4 Measure
