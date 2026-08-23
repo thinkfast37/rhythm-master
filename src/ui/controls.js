@@ -9,15 +9,13 @@ import { TIME_SIGNATURES, beatNoteValue } from '../core/meter.js';
 import { recipesFor, isOffered } from '../core/recipes.js';
 import {
   KEYS,
-  DEFAULT_DEGREES,
-  EXTENDED_DEGREES,
-  splitDegree,
-  degreeToken,
+  degreeLabel,
   octaveNumber,
   octaveOffsetFor,
   clampOctave,
   noteName,
 } from '../core/pitch.js';
+import { SCALES, DEFAULT_SCALE, chromaticStrip } from '../core/scales.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -355,7 +353,7 @@ function renderSwing(pattern, handlers) {
 /**
  * The pitch strip: the palette a Melodic grid is stamped from (US-2.2).
  *
- * It holds one armed pitch — a degree, an accidental and an octave — and does
+ * It holds one armed pitch — a chromatic degree and an octave — and does
  * not itself touch the Pattern. Tapping a Slot's note band stamps whatever is
  * armed here onto that Slot (AC-2.2.6); changing what is armed alters nothing
  * already stamped (AC-2.2.9).
@@ -371,7 +369,8 @@ export function renderPitchStrip(root, pattern, state, handlers) {
   if (root.hidden) return root;
 
   const armed = state.armedPitch ?? { degree: '1', octaveOffset: 0 };
-  const [accidental, number] = splitDegree(armed.degree);
+  const key = pattern.key ?? 'C';
+  const scaleId = pattern.scale ?? DEFAULT_SCALE;
 
   root.appendChild(
     el('span', 'pitch-strip-label', {
@@ -380,66 +379,55 @@ export function renderPitchStrip(root, pattern, state, handlers) {
     })
   );
 
-  // Accidental first, because it modifies the degree chosen next to it. Without
-  // it the strip could not reach b3, #4 or b7, which the Degree dropdown it
-  // replaces could — the strip's vocabulary must not be narrower (AC-2.2.4).
-  const accidentals = el('div', 'accidental-group', { role: 'group' });
-  accidentals.setAttribute('aria-label', 'Accidental');
-  for (const [value, glyph, name] of [['b', '♭', 'Flat'], ['', '♮', 'Natural'], ['#', '♯', 'Sharp']]) {
-    const b = el('button', 'accidental', { type: 'button', textContent: glyph });
-    b.dataset.action = 'set-accidental';
-    b.dataset.accidental = value;
-    b.setAttribute('aria-label', name);
-    b.setAttribute('aria-pressed', String(value === accidental));
-    b.addEventListener('click', () => handlers.onArmDegree(degreeToken(number, value)));
-    accidentals.appendChild(b);
+  // The scale drives the strip's in-scale marking and spelling, nothing else —
+  // resolution to a sounding note never sees it (AC-2.5.5).
+  const scale = el('select', 'scale-picker');
+  scale.dataset.action = 'set-scale';
+  scale.setAttribute('aria-label', 'Scale');
+  let group = null;
+  for (const s of SCALES) {
+    if (group?.label !== s.category) {
+      group = el('optgroup', null, { label: s.category });
+      scale.appendChild(group);
+    }
+    group.appendChild(el('option', null, { value: s.id, textContent: s.label }));
   }
-  root.appendChild(accidentals);
+  scale.value = scaleId;
+  scale.addEventListener('change', (e) => handlers.onScale(e.target.value));
+  root.appendChild(scale);
 
-  // Degrees 1-8 always; 9-15 behind the extend control, so the common octave is
-  // not buried in a fifteen-wide row on a phone (AC-2.2.4).
+  // One chip per chromatic degree, each the token it stamps (AC-2.2.4). The
+  // scale's own degrees are marked in-scale — by class for colour and by a
+  // visible marker for everyone else (AC-2.5.2) — and its spelling decides
+  // whether the tritone chip reads b5 or #4 (AC-2.5.3).
   const degrees = el('div', 'degree-group', { role: 'group' });
   degrees.setAttribute('aria-label', 'Scale degree');
-  const shown = state.degreesExtended
-    ? [...DEFAULT_DEGREES, ...EXTENDED_DEGREES]
-    : DEFAULT_DEGREES;
-  const key = pattern.key ?? 'C';
-  for (const d of shown) {
-    const token = degreeToken(d, accidental);
-    const b = el('button', 'degree');
+  for (const { token, inScale } of chromaticStrip(scaleId)) {
+    const b = el('button', `degree${inScale ? ' in-scale' : ''}`);
     b.type = 'button';
     b.dataset.action = 'set-degree';
-    b.dataset.degree = d;
-    b.setAttribute('aria-pressed', String(d === number));
+    b.dataset.degree = token;
+    b.dataset.inScale = String(inScale);
+    b.setAttribute('aria-pressed', String(token === armed.degree));
 
-    b.appendChild(el('span', 'degree-number', { textContent: d }));
+    b.appendChild(el('span', 'degree-number', { textContent: degreeLabel(token) }));
 
-    // What this button will actually stamp, at the accidental and octave armed
-    // right now — so the palette reads the same way the grid does (AC-2.2.16).
-    // It describes the button's effect, so it moves when the Key, the
-    // accidental or the octave moves.
+    // What this chip will actually stamp, at the octave armed right now — so
+    // the palette reads the same way the grid does (AC-2.2.16). It describes
+    // the chip's effect, so it moves when the Key or the octave moves.
     const named = spell({ degree: token, octaveOffset: armed.octaveOffset ?? 0 }, key);
     if (named) {
       const name = el('span', 'degree-name', { textContent: named });
       b.appendChild(name);
       b.dataset.noteName = named;
     }
-    b.setAttribute('aria-label', named ? `Degree ${token} — ${named}` : `Degree ${token}`);
+    const nameBit = named ? ` — ${named}` : '';
+    b.setAttribute('aria-label', `Degree ${token}${nameBit}${inScale ? ' (in scale)' : ''}`);
 
     b.addEventListener('click', () => handlers.onArmDegree(token));
     degrees.appendChild(b);
   }
   root.appendChild(degrees);
-
-  const extend = el('button', 'degree-extend', {
-    type: 'button',
-    textContent: state.degreesExtended ? '– 9–15' : '+ 9–15',
-  });
-  extend.dataset.action = 'toggle-extended-degrees';
-  extend.setAttribute('aria-expanded', String(Boolean(state.degreesExtended)));
-  extend.setAttribute('title', 'Show degrees 9 to 15');
-  extend.addEventListener('click', () => handlers.onExtendDegrees());
-  root.appendChild(extend);
 
   root.appendChild(renderOctaveStepper(armed, handlers));
   return root;

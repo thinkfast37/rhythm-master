@@ -8014,7 +8014,8 @@
           ]
         }
       ],
-      "key": "F"
+      "key": "F",
+      "scale": "ionian"
     },
     {
       "name": "Offbeat Landing W Downbeat",
@@ -12174,7 +12175,8 @@
           ]
         }
       ],
-      "key": "Bb"
+      "key": "Bb",
+      "scale": "ionian"
     },
     {
       "name": "The Caterpillar",
@@ -13049,7 +13051,8 @@
           ]
         }
       ],
-      "key": "Bb"
+      "key": "Bb",
+      "scale": "ionian"
     },
     {
       "name": "Pictures Of You - Intro",
@@ -13327,7 +13330,8 @@
           ]
         }
       ],
-      "key": "A"
+      "key": "A",
+      "scale": "ionian"
     },
     {
       "name": "This Charming Man",
@@ -32412,7 +32416,8 @@
           ]
         }
       ],
-      "key": "G"
+      "key": "G",
+      "scale": "ionian"
     }
   ]
 }

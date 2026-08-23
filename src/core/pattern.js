@@ -14,6 +14,7 @@ import { TIME_SIGNATURES, beatCount, beatNoteValue, isSupported } from './meter.
 import { defaultRecipeFor, isOffered, slotCount } from './recipes.js';
 import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey } from './pitch.js';
+import { isValidScale } from './scales.js';
 import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
 
 export const MAX_MEASURES = 8;
@@ -259,6 +260,12 @@ export function validate(pattern) {
   const melodic = pattern?.soundMode === 'melodic';
   if (melodic !== ('key' in (pattern ?? {}))) fail('key must be present iff soundMode is melodic');
   if (melodic && !isSupportedKey(pattern.key)) fail(`Key "${pattern.key}" unsupported`);
+  // Optional even on a melodic Pattern — absent reads as ionian, so Patterns
+  // saved before the field existed need no migration (data-model §7 rule 13).
+  if ('scale' in (pattern ?? {})) {
+    if (!melodic) fail('scale is only valid when soundMode is melodic');
+    else if (!isValidScale(pattern.scale)) fail(`scale "${pattern.scale}" unsupported`);
+  }
 
   if (!Number.isInteger(pattern?.tempo) || pattern.tempo < MIN_TEMPO || pattern.tempo > MAX_TEMPO) {
     fail(`tempo ${pattern?.tempo} outside ${MIN_TEMPO}–${MAX_TEMPO}`);

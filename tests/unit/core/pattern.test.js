@@ -290,4 +290,15 @@ describe('core/pattern — validation', () => {
       /key must be present iff/
     );
   });
+
+  it('scale, where present, must be a catalogue id on a melodic Pattern — and may be absent (rule 13)', () => {
+    const melodic = { ...create(), soundMode: 'melodic', key: 'C' };
+    expect(validate(melodic).valid).toBe(true); // absent reads as ionian (AC-2.5.4/2)
+    expect(validate({ ...melodic, scale: 'ionian' }).valid).toBe(true);
+    expect(validate({ ...melodic, scale: 'blues-major-pentatonic' }).valid).toBe(true);
+    expect(validate({ ...melodic, scale: 'major' }).errors.join(' ')).toMatch(/scale "major" unsupported/);
+    expect(validate({ ...create(), scale: 'ionian' }).errors.join(' ')).toMatch(
+      /scale is only valid when soundMode is melodic/
+    );
+  });
 });

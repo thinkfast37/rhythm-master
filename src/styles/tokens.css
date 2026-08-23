@@ -945,6 +945,27 @@ body {
    elsewhere would drop below readable against it. */
 .pitch-strip .degree[aria-pressed='true'] .degree-name { color: #3d2c05; }
 
+/*
+ * The chosen scale's own degrees are marked in-scale (AC-2.5.2): a thick brand
+ * shelf under the chip, so the marking is a shape difference as well as a hue —
+ * and an out-of-scale chip dims its degree, staying fully armable. The armed
+ * fill overrides both, which is the point: armed is the stronger state.
+ */
+.pitch-strip .degree.in-scale { border-bottom: 3px solid var(--brand); }
+.pitch-strip .degree:not(.in-scale):not([aria-pressed='true']) .degree-number { color: var(--ink-dim); }
+
+/* The scale picker sits on the strip, styled as the app's other selects are. */
+.scale-picker {
+  max-width: 100%;
+  font: 500 13px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
 /* What is armed is marked by more than colour — a filled chip with a border
    change — so the strip does not rely on hue alone (Principle II). */
 .pitch-strip button[aria-pressed='true'] {

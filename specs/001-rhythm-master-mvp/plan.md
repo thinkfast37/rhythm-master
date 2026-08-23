@@ -205,7 +205,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.13 | T063, T204, T206, T210 | T064, T205, T207, T211 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.5 | T065 | T066 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
-| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.18 | T069, T160, T162, T163, T164, T165, T212 | T070, T161, T162, T163, T164, T165, T213 |
+| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.18 | T069, T160, T162, T163, T164, T165, T212, T214 | T070, T161, T162, T163, T164, T165, T213, T215 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.13 | T074–T075, T162 | T076, T163 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
@@ -229,6 +229,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
+| **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of
