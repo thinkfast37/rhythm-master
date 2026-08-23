@@ -39,6 +39,108 @@ function labelled(labelText, control) {
   return wrap;
 }
 
+/*
+ * Focus-preserving panel rebuild (AC-15.1.16/1).
+ *
+ * Every panel here is a pure function of state, rebuilt on every change — which
+ * means the control that CAUSED the change is destroyed mid-use: the swing
+ * slider under a drag, the Sound select under the open picker. Focus falls to
+ * the body and the next adjustment has to re-find the control.
+ *
+ * So a rebuild goes through `rebuild(root, build)`:
+ *
+ *  - When the focused element is an input/select/textarea inside `root`, the
+ *    live node is kept in the document and everything around it is swapped for
+ *    the fresh content, walking the old and new trees in step. Keeping the node
+ *    itself alive is the only way a pointer drag survives — a removed element
+ *    loses both focus and pointer capture, and re-focusing a replacement cannot
+ *    restore either. Its listeners stay valid because these controls close over
+ *    `handlers` alone, never over a render-time snapshot.
+ *
+ *  - Any other focused control (a button) is rebuilt normally and focus is
+ *    handed to its replacement, found by the data-* identity it carries.
+ *    Buttons need no live continuity, and some close over render-time state, so
+ *    swapping the node is the safer path.
+ */
+const KEEP_ALIVE_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
+const IDENTITY_KEYS = ['action', 'degree', 'bpm', 'recipe', 'tag', 'patternId'];
+
+function rebuild(root, build) {
+  const active = document.activeElement;
+  const inside = active && active !== root && root.contains(active);
+  const keepAlive = inside && KEEP_ALIVE_TAGS.has(active.tagName);
+  const identity = inside && !keepAlive && active.dataset?.action ? focusIdentity(active) : null;
+
+  const fresh = document.createElement('div');
+  build(fresh);
+
+  if (keepAlive) {
+    patchChildren(root, fresh, active);
+  } else {
+    root.replaceChildren(...fresh.childNodes);
+    // preventScroll: restoring focus must not itself move the view (AC-15.1.16).
+    if (identity) root.querySelector(identity)?.focus({ preventScroll: true });
+  }
+  return root;
+}
+
+function focusIdentity(control) {
+  return IDENTITY_KEYS.filter((key) => control.dataset[key] !== undefined)
+    .map((key) => `[data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}="${control.dataset[key]}"]`)
+    .join('');
+}
+
+/**
+ * Swap `oldParent`'s children for `newParent`'s, preserving the subtree that
+ * holds the focused control: ancestors on the path are patched in place, and
+ * the control itself keeps its node, taking the fresh render's attributes and
+ * value. If the fresh render no longer has a matching node where the control
+ * sits — the control genuinely went away — it is replaced like anything else.
+ */
+function patchChildren(oldParent, newParent, active) {
+  const oldKids = [...oldParent.childNodes];
+  const newKids = [...newParent.childNodes];
+  for (let i = 0; i < Math.max(oldKids.length, newKids.length); i++) {
+    const o = oldKids[i];
+    const n = newKids[i];
+    if (!o) {
+      oldParent.appendChild(n);
+      continue;
+    }
+    if (!n) {
+      o.remove();
+      continue;
+    }
+    const onPath = o.nodeType === Node.ELEMENT_NODE && (o === active || o.contains(active));
+    if (!onPath || n.nodeType !== Node.ELEMENT_NODE || n.tagName !== o.tagName) {
+      oldParent.replaceChild(n, o);
+      continue;
+    }
+    syncAttributes(o, n);
+    if (o === active) {
+      // A select's options still come wholly from the fresh render; only the
+      // element itself is preserved. Read the value before the move empties
+      // the fresh select, and set it after the options are in place.
+      const value = 'value' in n ? n.value : undefined;
+      if (o.tagName === 'SELECT') o.replaceChildren(...n.childNodes);
+      if (value !== undefined) o.value = value;
+      if ('checked' in o) o.checked = n.checked;
+      o.disabled = n.disabled ?? false;
+    } else {
+      patchChildren(o, n, active);
+    }
+  }
+}
+
+function syncAttributes(o, n) {
+  for (const { name } of [...o.attributes]) {
+    if (!n.hasAttribute(name)) o.removeAttribute(name);
+  }
+  for (const { name, value } of [...n.attributes]) {
+    if (o.getAttribute(name) !== value) o.setAttribute(name, value);
+  }
+}
+
 /**
  * Render the control bar.
  *
@@ -64,10 +166,12 @@ export function renderControls(root, pattern, state, handlers) {
 
 /** The Pattern header: name, provenance, and Measure count. */
 export function renderHeader(root, pattern, state, handlers = {}) {
-  root.innerHTML = '';
   root.className = 'pattern-header';
   root.dataset.owned = String(state.isOwned);
+  return rebuild(root, (fresh) => renderHeaderInto(fresh, pattern, state, handlers));
+}
 
+function renderHeaderInto(root, pattern, state, handlers) {
   // The name is editable in place rather than behind a rename dialog: it is the
   // first thing a Composer wants to change about a new Pattern (AC-7.1.1).
   const name = el('input', 'pattern-title', { type: 'text', value: pattern.name });
@@ -162,20 +266,18 @@ function renderHeaderTags(pattern, state, handlers) {
 
 /** Play controls only — the primary transport, never collapsible. */
 export function renderPlayControls(root, pattern, state, handlers) {
-  root.innerHTML = '';
   root.className = 'controls play-controls';
-  root.appendChild(renderTransport(state, handlers));
-  return root;
+  return rebuild(root, (fresh) => fresh.appendChild(renderTransport(state, handlers)));
 }
 
 /** Playback settings: tempo, swing, counting system. */
 export function renderPlaybackSettings(root, pattern, state, handlers) {
-  root.innerHTML = '';
   root.className = 'controls playback-settings';
-  root.appendChild(renderTempo(pattern, handlers));
-  root.appendChild(renderSwing(pattern, handlers));
-  root.appendChild(renderCounting(pattern, state, handlers));
-  return root;
+  return rebuild(root, (fresh) => {
+    fresh.appendChild(renderTempo(pattern, handlers));
+    fresh.appendChild(renderSwing(pattern, handlers));
+    fresh.appendChild(renderCounting(pattern, state, handlers));
+  });
 }
 
 /**
@@ -186,19 +288,17 @@ export function renderPlaybackSettings(root, pattern, state, handlers) {
  * aimed at while stamping (AC-2.2.13).
  */
 export function renderEditControls(root, pattern, state, handlers) {
-  root.innerHTML = '';
   root.className = 'controls edit-controls';
-  root.appendChild(renderStructure(pattern, handlers));
-  root.appendChild(renderSound(pattern, handlers));
-  return root;
+  return rebuild(root, (fresh) => {
+    fresh.appendChild(renderStructure(pattern, handlers));
+    fresh.appendChild(renderSound(pattern, handlers));
+  });
 }
 
 /** MIDI export and other whole-Pattern actions. */
 export function renderActionControls(root, pattern, state, handlers) {
-  root.innerHTML = '';
   root.className = 'controls action-controls';
-  root.appendChild(renderActions(pattern, state, handlers));
-  return root;
+  return rebuild(root, (fresh) => fresh.appendChild(renderActions(pattern, state, handlers)));
 }
 
 /** Whole-Pattern operations: copy, delete, append, duplicate, export, submit. */
@@ -363,11 +463,14 @@ function renderSwing(pattern, handlers) {
  * (AC-2.2.13). In Percussive mode it renders nothing at all.
  */
 export function renderPitchStrip(root, pattern, state, handlers) {
-  root.innerHTML = '';
   root.className = 'pitch-strip';
   root.hidden = pattern.soundMode !== 'melodic';
-  if (root.hidden) return root;
+  return rebuild(root, (fresh) => {
+    if (!root.hidden) renderPitchStripInto(fresh, pattern, state, handlers);
+  });
+}
 
+function renderPitchStripInto(root, pattern, state, handlers) {
   const armed = state.armedPitch ?? { degree: '1', octaveOffset: 0 };
   const key = pattern.key ?? 'C';
   const scaleId = pattern.scale ?? DEFAULT_SCALE;
@@ -430,7 +533,6 @@ export function renderPitchStrip(root, pattern, state, handlers) {
   root.appendChild(degrees);
 
   root.appendChild(renderOctaveStepper(armed, handlers));
-  return root;
 }
 
 /**
@@ -575,7 +677,10 @@ function renderStructure(pattern, handlers) {
  * Pattern's meters change (AC-1.3.4, AC-1.3.5).
  */
 export function renderRecipeStrip(root, pattern, state, handlers) {
-  root.textContent = '';
+  return rebuild(root, (fresh) => renderRecipeStripInto(fresh, pattern, state, handlers));
+}
+
+function renderRecipeStripInto(root, pattern, state, handlers) {
   const group = el('div', 'control-group recipe-strip');
 
   const noteValues = [...new Set(pattern.measures.map((m) => beatNoteValue(m.timeSignature)))];

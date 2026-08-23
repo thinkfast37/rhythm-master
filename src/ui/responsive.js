@@ -75,6 +75,14 @@ export function isLibraryOpen(shell) {
  * starts at its top, so the two agree, and `scrollIntoView` walks up to whatever
  * ancestor actually scrolls.
  */
+/**
+ * How long the autoscroll stands down after the musician touches the main
+ * panel (AC-15.1.16/2). Playback re-renders on every position tick, so the
+ * scroll above would otherwise fire on renders the musician caused — yanking
+ * the view back to the sounding Measure in the middle of adjusting a control.
+ */
+export const AUTOSCROLL_GRACE_MS = 2000;
+
 export function scrollMeasureIntoView(gridEl, measureIndex) {
   const measure = gridEl.querySelector(`.measure[data-measure="${measureIndex}"]`);
   if (!measure) return false;
