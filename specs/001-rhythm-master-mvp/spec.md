@@ -536,6 +536,12 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-2.2.16/1** — Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree
     - **AC-2.2.16/2** — Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called
 
+- **AC-2.2.18** — The armed control stays marked while the pointer is on it
+  - **Given** an armed control on the pitch strip — a degree button or an accidental
+  - **When** the pointer hovers it — including the hover state a touchscreen leaves stuck on a control after tapping it
+  - **Then** the armed marking — the filled chip and the dark text sized to that fill — still applies, rather than the hover ground replacing the fill and leaving dark text on a dark chip
+  - *(Added 2026-08-23. Reported by the maintainer: tapping a degree turned it black-on-black. The hover rule outranked the armed rule in specificity, so the armed chip kept its dark ink but swapped its bright fill for the hover ground — permanently, on a touchscreen, where hover sticks after a tap.)*
+
 ---
 
 ### User Story 7 - Transpose to a Key
