@@ -401,13 +401,38 @@ const SWING_FEEL_LABELS = [
  *
  * The amount lands on the Pattern itself and every straight group inherits it
  * (AC-4.4.13) — the earlier per-Beat sliders only ever reached Measure 1
- * Beat 1, so every other Measure played straight. Absent entirely when no Beat
- * in the Pattern has a swingable straight group: swing is inapplicable to
- * triplet feel, not merely unavailable, so a disabled slider would misdescribe
- * it (AC-4.4.3).
+ * Beat 1, so every other Measure played straight.
+ *
+ * Both controls are absent — replaced by one explanatory note — when the
+ * Pattern has no straight-feel group at all: swing is inapplicable to triplet
+ * feel, not merely unavailable, so a disabled control would misdescribe it
+ * (AC-4.4.3, AC-4.4.14). Any straight group is enough, odd-slot ones included:
+ * an all-Undivided Pattern swings at the Quarters feel (AC-4.4.9).
  */
 function renderSwing(pattern, handlers) {
   const group = el('div', 'control-group');
+
+  let swingable = false;
+  let firstOverride;
+  for (const measure of pattern.measures) {
+    const noteValue = beatNoteValue(measure.timeSignature);
+    for (const beat of measure.beats) {
+      subdivisionGroups(beat.recipe, noteValue).forEach((g, groupIndex) => {
+        if (g.feel !== 'straight') return;
+        swingable = true;
+        firstOverride ??= beat.swing?.[groupIndex];
+      });
+    }
+  }
+
+  if (!swingable) {
+    group.appendChild(
+      el('p', 'swing-note', {
+        textContent: "Swing doesn't apply — this Pattern is all triplet feel.",
+      })
+    );
+    return group;
+  }
 
   const feel = el('select', 'swing-feel');
   feel.dataset.action = 'set-swing-feel';
@@ -418,34 +443,19 @@ function renderSwing(pattern, handlers) {
   feel.addEventListener('change', (e) => handlers.onSwingFeel(e.target.value));
   group.appendChild(labelled('Swing feel', feel));
 
-  let swingable = false;
-  let firstOverride;
-  for (const measure of pattern.measures) {
-    const noteValue = beatNoteValue(measure.timeSignature);
-    for (const beat of measure.beats) {
-      subdivisionGroups(beat.recipe, noteValue).forEach((g, groupIndex) => {
-        if (g.feel !== 'straight' || g.slotIndices.length % 2 !== 0) return;
-        swingable = true;
-        firstOverride ??= beat.swing?.[groupIndex];
-      });
-    }
-  }
-
-  if (swingable) {
-    // A Pattern authored with per-group overrides and no Pattern-wide amount
-    // still shows what it plays; moving the slider replaces the overrides.
-    const value = pattern.swingAmount ?? firstOverride ?? 0;
-    const slider = el('input', 'swing-slider', {
-      type: 'range',
-      min: String(MIN_SWING),
-      max: String(MAX_SWING),
-      step: '1',
-      value: String(value),
-    });
-    slider.dataset.action = 'set-swing';
-    slider.addEventListener('input', (e) => handlers.onSwing(Number(e.target.value)));
-    group.appendChild(labelled(`Swing ${value}`, slider));
-  }
+  // A Pattern authored with per-group overrides and no Pattern-wide amount
+  // still shows what it plays; moving the slider replaces the overrides.
+  const value = pattern.swingAmount ?? firstOverride ?? 0;
+  const slider = el('input', 'swing-slider', {
+    type: 'range',
+    min: String(MIN_SWING),
+    max: String(MAX_SWING),
+    step: '1',
+    value: String(value),
+  });
+  slider.dataset.action = 'set-swing';
+  slider.addEventListener('input', (e) => handlers.onSwing(Number(e.target.value)));
+  group.appendChild(labelled(`Swing ${value}`, slider));
 
   return group;
 }

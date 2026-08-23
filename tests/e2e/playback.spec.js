@@ -736,3 +736,136 @@ test("AC-4.2.4/2 — The remembered tempo lives in the overlay store and the shi
   expect(after.overlay).toBe(150);
   expect(after.seedTempo).toBe(seedTempoBefore);
 });
+
+/** Click the named Pattern's library entry, opening the panel first if it is collapsed. */
+async function openFromLibrary(page, name) {
+  const entry = page.locator('.pattern-name', { hasText: name }).first();
+  if (!(await entry.isVisible())) await page.locator('.library-toggle').click();
+  await entry.click();
+}
+
+test('AC-4.1.8/1 — Opening a Pattern during playback keeps the transport running and switches the audible Pattern to the one opened', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadSimple(page, 240);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  await openFromLibrary(page, 'Afrobeat Triplet Clave');
+
+  // The transport keeps running, and the one timeline it consumes is now the
+  // opened Pattern's — the previous Pattern has nothing left scheduled.
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        running: window.__rm.transport.isRunning,
+        playing: window.__rm.getState().isPlaying,
+        name: window.__rm.getState().pattern.name,
+      }))
+    )
+    .toEqual({ running: true, playing: true, name: 'Afrobeat Triplet Clave' });
+});
+
+test('AC-4.1.8/2 — The Pattern opened during playback starts from its beginning, with the loop counter at 0', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadSimple(page, 300);
+  await page.locator('[data-action="play"]').click();
+  // One pass is 4 Beats at 300 BPM = 0.8s; let at least one complete.
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 5000 })
+    .toBeGreaterThanOrEqual(1);
+
+  // The opened Pattern loops at its own remembered tempo (80 BPM — one pass
+  // takes 3s), so a freshly started run still reads loop 0 when we look.
+  await openFromLibrary(page, 'Afrobeat Triplet Clave');
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        playing: window.__rm.getState().isPlaying,
+        loop: window.__rm.getState().loop,
+        name: window.__rm.getState().pattern.name,
+      }))
+    )
+    .toEqual({ playing: true, loop: 0, name: 'Afrobeat Triplet Clave' });
+});
+
+test('AC-4.1.8/3 — Opening a Pattern while stopped starts no audio', async ({ page }) => {
+  await page.goto('/');
+  await openFromLibrary(page, 'Afrobeat Triplet Clave');
+
+  expect(await page.evaluate(() => Boolean(window.__rm.transport.isRunning))).toBe(false);
+  expect(await page.evaluate(() => window.__rm.getState().isPlaying)).toBe(false);
+  await expect(page.locator('.slot.playing')).toHaveCount(0);
+});
+
+/** An owned one-Measure Pattern whose every Beat uses the given recipe and slots. */
+async function loadUniform(page, { recipe, slots, timeSignature = '4/4' }) {
+  await page.evaluate(({ recipe, slots, timeSignature }) => {
+    window.__rm.loadPattern(
+      {
+        id: 'p_uniform',
+        name: 'Uniform Feel',
+        soundMode: 'percussive',
+        tempo: 120,
+        tags: [],
+        rating: 0,
+        measures: [
+          {
+            timeSignature,
+            beats: Array.from({ length: Number(timeSignature.split('/')[0]) }, () => ({
+              recipe,
+              slots: slots.map((on) => ({ on })),
+            })),
+          },
+        ],
+      },
+      { owned: true }
+    );
+  }, { recipe, slots, timeSignature });
+}
+
+test('AC-4.4.14/1 — An all-triplet Pattern shows no swing amount control and no Swing feel control', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadUniform(page, { recipe: 'triplet-8ths', slots: [true, false, true] });
+  await expect(page.locator('.swing-slider')).toHaveCount(0);
+  await expect(page.locator('.swing-feel')).toHaveCount(0);
+});
+
+test("AC-4.4.14/2 — An all-triplet Pattern shows one note explaining swing doesn't apply to triplet feel", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await loadUniform(page, { recipe: 'triplet-8ths', slots: [true, false, true] });
+  const note = page.locator('.swing-note');
+  await expect(note).toHaveCount(1);
+  await expect(note).toContainText('triplet feel');
+});
+
+test('AC-4.4.14/3 — A Pattern with a straight-feel group shows both swing controls and no note, all-Undivided Patterns included', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  // A mixed Recipe: the straight half is enough to bring the controls back.
+  await loadUniform(page, {
+    recipe: 'straight-triplet-split',
+    slots: [true, false, true, false, true],
+  });
+  await expect(page.locator('.swing-slider')).toHaveCount(1);
+  await expect(page.locator('.swing-feel')).toHaveCount(1);
+  await expect(page.locator('.swing-note')).toHaveCount(0);
+
+  // All-Undivided: 1-Slot straight groups, which the Quarters feel can swing —
+  // the old even-slot test wrongly hid the controls on exactly this shape.
+  // (Undivided is only offered on eighth-note Beats, hence 6/8.)
+  await loadUniform(page, { recipe: 'undivided', slots: [true], timeSignature: '6/8' });
+  await expect(page.locator('.swing-slider')).toHaveCount(1);
+  await expect(page.locator('.swing-feel')).toHaveCount(1);
+  await expect(page.locator('.swing-note')).toHaveCount(0);
+});

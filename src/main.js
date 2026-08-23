@@ -253,6 +253,10 @@ export function loadPattern(pattern, { owned }) {
   state.isOwned = owned;
   state.transportPosition = null;
   state.view = { ...state.view, currentId: pattern.id ?? null };
+  // Loading while playing switches the running transport to the new Pattern,
+  // from its top (AC-4.1.8) — the same restart path a tempo change takes, so a
+  // stopped transport stays stopped (FR-010).
+  if (state.isPlaying) void transport.restart(pattern, state.settings);
   render();
 }
 
