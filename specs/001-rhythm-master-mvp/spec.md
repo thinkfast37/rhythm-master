@@ -801,6 +801,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** nothing plays, and the transport still reads stopped at the top of the Pattern
   - **And** pressing Play starts a fresh run from Measure 1 with the loop counter at 0 — honouring FR-010, since regaining focus is not interaction with a transport control
 
+- **AC-4.1.8** — Opening another Pattern during playback switches playback to it
+  - **Given** a Pattern is playing
+  - **When** the Practicing Musician opens a different Pattern — from the library list, or via Prev/Next (US-5.5)
+  - **Then** the previous Pattern stops sounding and the newly opened Pattern plays from its beginning — Measure 1, loop counter at 0 — with its own remembered playback settings applied (AC-4.2.4, AC-4.4.6, AC-4.4.10)
+  - **And** when nothing is playing, opening a Pattern starts no audio — playback still begins only at a transport control (FR-010)
+  - **Cases**:
+    - **AC-4.1.8/1** — Opening a Pattern during playback keeps the transport running and switches the audible Pattern to the one opened
+    - **AC-4.1.8/2** — The Pattern opened during playback starts from its beginning, with the loop counter at 0
+    - **AC-4.1.8/3** — Opening a Pattern while stopped starts no audio
+  - *(Added 2026-08-23 at the maintainer's request: opening a Pattern from the library mid-playback left the previous Pattern sounding, so the panel showed one rhythm while the transport played another. Switching the running transport honours FR-010 — opening a Pattern is a user gesture.)*
+
 ---
 
 ### User Story 11 - Adjust tempo
@@ -952,6 +963,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.4.7/2** — The feel is one value for the whole Pattern
     - **AC-4.4.7/3** — Selecting a feel takes effect immediately, with no confirmation step
   - *(Revised 2026-08-22 with AC-4.4.12: /2 originally contrasted the Pattern-level feel against a per-group amount control. The amount control is now Pattern-wide too, so the contrast came out of the case title; per-group amounts live on as data overrides under AC-4.4.2 and AC-4.4.13.)*
+  - *(Clarified 2026-08-23 with AC-4.4.14: "a loaded Pattern" here means one with at least one straight-feel Subdivision Group. On an all-triplet Pattern the feel control is absent along with the amount control, replaced by AC-4.4.14's note — a feel picker with no group to govern reads as a loading failure, which is how the maintainer reported it.)*
   - *(Added 2026-08-22 at the maintainer's request: swing delays the "&" of a beat, but a pattern that never sounds that "&" — quarters on 1 and 2, or a 16th figure whose long–short lives inside each half-beat — could never swing. The feel names the pulse the long–short pair sits on; no Slot moves and no subdivision is created or destroyed, so a 4-Slot group at the Quarters feel never produces 32nd notes.)*
 
 - **AC-4.4.8** — 16ths feel: swing pairs the Slots within each half of a straight group
@@ -1023,6 +1035,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.4.13/4** — A per-group amount takes precedence over the Pattern-wide amount for its own group
     - **AC-4.4.13/5** — A Pattern-wide amount above 0 carries the `swing` Tag, and 0 with no per-group amounts removes it
     - **AC-4.4.13/6** — A Pattern-wide amount and per-group amounts spelling out the same values fingerprint as the same rhythm
+
+- **AC-4.4.14** — A Pattern with no straight-feel group says swing doesn't apply
+  - **Given** a loaded Pattern in which every Subdivision Group is triplet feel
+  - **When** the Practicing Musician looks at the playback settings
+  - **Then** no swing amount control and no Swing feel control is shown; in their place one short note explains that swing doesn't apply because the Pattern is all triplet feel — absent with a reason, in AC-4.4.3's spirit, never present-but-disabled
+  - **And** a Pattern with at least one straight-feel Subdivision Group shows the swing amount and Swing feel controls and no note — mixed Recipes and all-Undivided Patterns included, since an Undivided Beat is a 1-Slot straight group and the Quarters feel (AC-4.4.9) exists precisely so such Patterns can swing
+  - **Cases**:
+    - **AC-4.4.14/1** — An all-triplet Pattern shows no swing amount control and no Swing feel control
+    - **AC-4.4.14/2** — An all-triplet Pattern shows one note explaining swing doesn't apply to triplet feel
+    - **AC-4.4.14/3** — A Pattern with a straight-feel group shows both swing controls and no note, all-Undivided Patterns included
+  - *(Added 2026-08-23. The maintainer read the slider's absence on an all-triplet Pattern as a loading failure — the Swing feel picker stood alone with nothing to govern. Two changes: the absence now explains itself, and presence is decided by "any straight-feel group" rather than the old "any even-slot straight group", which wrongly hid the control on all-Undivided Patterns that the Quarters feel can swing.)*
 
 ---
 
