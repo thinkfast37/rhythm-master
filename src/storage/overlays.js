@@ -18,7 +18,11 @@
  * Owned Patterns need no overlay — their rating and tags live on the Pattern.
  */
 import { readStore, writeStore } from './keyValue.js';
-import { setGroupSwing, setSwingFeel as applySwingFeel } from '../core/pattern.js';
+import {
+  setGroupSwing,
+  setSwingAmount as applySwingAmount,
+  setSwingFeel as applySwingFeel,
+} from '../core/pattern.js';
 
 export const KEY = 'rm.overlays.v1';
 
@@ -63,11 +67,14 @@ export function setTempo(patternId, tempo) {
   return update(patternId, { tempo });
 }
 
-/** Remembered playback swing, keyed "measure.beat.group" (AC-4.4.6). */
-export function setSwing(patternId, measureIndex, beatIndex, groupIndex, amount) {
-  const swing = { ...(forPattern(patternId).swing ?? {}) };
-  swing[`${measureIndex}.${beatIndex}.${groupIndex}`] = amount;
-  return update(patternId, { swing });
+/**
+ * Remembered Pattern-wide playback swing (AC-4.4.12). The control that writes
+ * it clears per-group overrides on the loaded copy, so any legacy per-group
+ * `swing` entries (written before the control went Pattern-wide) are dropped
+ * here too — leaving them would resurrect overrides the musician just cleared.
+ */
+export function setSwingAmount(patternId, swingAmount) {
+  return update(patternId, { swingAmount, swing: undefined });
 }
 
 /** Remembered playback swing feel — the pulse level swing pairs at (AC-4.4.10). */
@@ -77,21 +84,36 @@ export function setSwingFeel(patternId, swingFeel) {
 
 /**
  * Apply the remembered playback settings — tempo, swing, and swing feel — onto
- * a loaded copy (AC-4.2.4, AC-4.4.6, AC-4.4.10). Load-time only, deliberately
- * separate from `applyTo`: the library derives its Tags from the shipped data,
- * and playback swing must not make a built-in filterable under `swing`.
+ * a loaded copy (AC-4.2.4, AC-4.4.6, AC-4.4.12, AC-4.4.10). Load-time only,
+ * deliberately separate from `applyTo`: the library derives its Tags from the
+ * shipped data, and playback swing must not make a built-in filterable under
+ * `swing`.
  *
- * A swing entry whose key no longer resolves (a reshaped seed) is skipped, as
- * is a feel that is not one of the three levels.
+ * The Pattern-wide amount is applied before any legacy per-group entries, so
+ * those keep their override precedence (AC-4.4.13). A swing entry whose key no
+ * longer resolves (a reshaped seed) is skipped, as is a feel that is not one
+ * of the three levels or an out-of-range amount.
  */
 export function applyPlaybackTo(pattern) {
   const overlay = forPattern(pattern.id);
-  if (overlay.tempo === undefined && overlay.swing === undefined && overlay.swingFeel === undefined) {
+  if (
+    overlay.tempo === undefined &&
+    overlay.swing === undefined &&
+    overlay.swingAmount === undefined &&
+    overlay.swingFeel === undefined
+  ) {
     return pattern;
   }
 
   let next = structuredClone(pattern);
   if (overlay.tempo !== undefined) next = { ...next, tempo: overlay.tempo };
+  if (overlay.swingAmount !== undefined) {
+    try {
+      next = applySwingAmount(next, overlay.swingAmount);
+    } catch {
+      // An amount this build does not accept: skip rather than fail the load.
+    }
+  }
   for (const [key, amount] of Object.entries(overlay.swing ?? {})) {
     const [m, b, g] = key.split('.').map(Number);
     try {

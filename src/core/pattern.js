@@ -183,6 +183,25 @@ export function setGroupSwing(pattern, measureIndex, beatIndex, groupIndex, swin
   return { ...clone(pattern), measures };
 }
 
+/**
+ * The Pattern-wide swing amount every straight group inherits (AC-4.4.12,
+ * AC-4.4.13). Inheritance, not propagation: the value lives on the Pattern, so
+ * a Measure added later or a re-subdivided Beat swings with no copying step.
+ *
+ * Setting it clears every per-group amount — those are data overrides
+ * (AC-4.4.2), and a control that leaves stale overrides behind would misreport
+ * what is heard.
+ */
+export function setSwingAmount(pattern, amount) {
+  if (!isValidSwing(amount)) throw new Error(`Swing must be an integer 0–100, got ${amount}`);
+  const next = clone(pattern);
+  for (const measure of next.measures) {
+    for (const beat of measure.beats) delete beat.swing;
+  }
+  next.swingAmount = amount;
+  return next;
+}
+
 /** The pulse level swing pairs at — one value for the whole Pattern. AC-4.4.7 */
 export function setSwingFeel(pattern, feel) {
   if (!isValidSwingFeel(feel)) {
@@ -220,9 +239,9 @@ export function duplicate(pattern) {
  */
 export function automaticTags(pattern, isOwned) {
   const tags = [isOwned ? 'custom' : 'built-in', pattern.soundMode];
-  const swung = pattern.measures.some((m) =>
-    m.beats.some((b) => Object.values(b.swing ?? {}).some((s) => s > 0))
-  );
+  const swung =
+    (pattern.swingAmount ?? 0) > 0 ||
+    pattern.measures.some((m) => m.beats.some((b) => Object.values(b.swing ?? {}).some((s) => s > 0)));
   if (swung) tags.push('swing');
   return tags;
 }
@@ -249,6 +268,9 @@ export function validate(pattern) {
   }
   if ('swingFeel' in (pattern ?? {}) && !isValidSwingFeel(pattern.swingFeel)) {
     fail(`swingFeel "${pattern.swingFeel}" is not one of ${SWING_FEELS.join(', ')}`);
+  }
+  if ('swingAmount' in (pattern ?? {}) && !isValidSwing(pattern.swingAmount)) {
+    fail(`swingAmount ${pattern.swingAmount} outside 0–100`);
   }
   if (!Array.isArray(pattern?.tags)) fail('tags must be an array');
   else

@@ -897,6 +897,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the Composer looks at the triplet group's swing setting
   - **Then** it is unaffected and remains at its own independent value — each straight-feel Subdivision Group in a Beat has its own swing amount, not one value shared across the Beat or the Pattern
   - *(Clarified 2026-08-22: the swing **amount** stays per Subdivision Group. The swing **feel** — the pulse level the amount pairs at, AC-4.4.7 — is one value for the whole Pattern; a Pattern swings at one metric level however many groups carry amounts.)*
+  - *(Clarified again 2026-08-22, later the same day: per-group independence is a property of the **data** — a shipped or imported Pattern may carry differing per-group amounts, which play as authored — while the swing **control** is Pattern-wide (AC-4.4.12). The maintainer found the control only ever reached Measure 1 Beat 1, so every other Measure played straight; a slider that silently governs one Beat is a defect, not independence. Per-group values act as overrides over the Pattern-wide amount (AC-4.4.13), and moving the control clears them so what is heard is what it shows.)*
 
 - **AC-4.4.3** — Triplet-feel groups have no swing control
   - **Given** the 3-Slot triplet group within a Beat on the Straight → Triplet split Recipe
@@ -927,17 +928,19 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.4.6/3** — The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged
     - **AC-4.4.6/4** — A playback swing does not give a shipped Pattern the `swing` Tag in the library
   - *(Added 2026-08-22 at the maintainer's request: changing swing on a built-in forced "create a new rhythm", where tempo did not. Playback, the cursor and MIDI export all consume the one timeline built from the loaded Pattern, so an export of a loaded shipped Pattern carries the playback tempo and swing you hear — accepted knowingly. Duplicate detection compares the stores, not the loaded Pattern, and is unaffected.)*
+  - *(Clarified 2026-08-22 with AC-4.4.12: since the control became Pattern-wide, the overlay remembers the one Pattern-wide amount rather than per-group entries. Per-group entries already stored keep applying on load, as overrides.)*
 
 - **AC-4.4.7** — Swing feel: the Pattern chooses which pulse swing pairs at
   - **Given** a loaded Pattern
   - **When** the Practicing Musician looks at the playback settings
   - **Then** a Swing feel control offers exactly three levels — Quarters, 8ths, and 16ths — with 8ths, the AC-4.4.5 timing, selected by default
-  - **And** the feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group (AC-4.4.2)
+  - **And** the feel is one value for the whole Pattern
   - **And** selecting a feel takes effect immediately, with no confirmation step
   - **Cases**:
     - **AC-4.4.7/1** — The Swing feel control offers Quarters, 8ths, and 16ths, with 8ths selected by default
-    - **AC-4.4.7/2** — The feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group
+    - **AC-4.4.7/2** — The feel is one value for the whole Pattern
     - **AC-4.4.7/3** — Selecting a feel takes effect immediately, with no confirmation step
+  - *(Revised 2026-08-22 with AC-4.4.12: /2 originally contrasted the Pattern-level feel against a per-group amount control. The amount control is now Pattern-wide too, so the contrast came out of the case title; per-group amounts live on as data overrides under AC-4.4.2 and AC-4.4.13.)*
   - *(Added 2026-08-22 at the maintainer's request: swing delays the "&" of a beat, but a pattern that never sounds that "&" — quarters on 1 and 2, or a 16th figure whose long–short lives inside each half-beat — could never swing. The feel names the pulse the long–short pair sits on; no Slot moves and no subdivision is created or destroyed, so a 4-Slot group at the Quarters feel never produces 32nd notes.)*
 
 - **AC-4.4.8** — 16ths feel: swing pairs the Slots within each half of a straight group
@@ -984,6 +987,31 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Cases**:
     - **AC-4.4.11/1** — Patterns differing only in swing feel are not duplicates when any swing amount is above 0
     - **AC-4.4.11/2** — Patterns differing only in swing feel remain duplicates when every swing amount is 0
+
+- **AC-4.4.12** — The swing control is Pattern-wide
+  - **Given** a loaded Pattern of several Measures
+  - **When** the Practicing Musician moves the swing control
+  - **Then** the amount applies to every straight Subdivision Group in every Measure and Beat — not to Measure 1 Beat 1 alone — and what the control shows is what every Measure plays
+  - **And** the amount is remembered per Pattern and applied again on load, exactly as AC-4.4.6 remembers it: the overlay store for a shipped Pattern, the Pattern itself for an owned one
+  - **Cases**:
+    - **AC-4.4.12/1** — The swing control's amount reaches every Measure and Beat of the Pattern
+    - **AC-4.4.12/2** — A Measure added after swing is set inherits the amount with no further action
+    - **AC-4.4.12/3** — The Pattern-wide amount set on a shipped Pattern is applied again when it is next loaded, surviving a reload
+  - *(Added 2026-08-22, from the maintainer's report: "the first measure works fine … the second measure seems to ignore the swing feel." The slider only ever wrote to Measure 1 Beat 1 — the partial-reachability gap CLAUDE.md §2c names — so with an 8th pair on beat 1 of each Measure, only Measure 1 swung. The maintainer also asked outright that a Measure added later inherit the swing, with a test for that case.)*
+
+- **AC-4.4.13** — Pattern-wide swing amount: the default every straight group inherits
+  - **Given** a Pattern carrying a Pattern-wide swing amount *S*, alongside zero or more per-group amounts (AC-4.4.2's data capability)
+  - **When** the Pattern plays
+  - **Then** every straight Subdivision Group without its own per-group amount swings by *S* under the current feel (AC-4.4.5, AC-4.4.8, AC-4.4.9) — including groups in a Measure added, or a Beat re-subdivided, after *S* was set, since they inherit rather than copy
+  - **And** a per-group amount, where present, takes precedence over *S* for its own group
+  - **And** an *S* above 0 carries the `swing` Tag exactly as a per-group amount does (AC-5.3.4), and duplicate identity reads the amounts each group actually plays, however they are expressed
+  - **Cases**:
+    - **AC-4.4.13/1** — Every straight Subdivision Group in every Measure and Beat swings by the Pattern-wide amount
+    - **AC-4.4.13/2** — A Measure added after the Pattern-wide amount is set inherits it
+    - **AC-4.4.13/3** — A Beat whose Recipe changes after the Pattern-wide amount is set inherits it
+    - **AC-4.4.13/4** — A per-group amount takes precedence over the Pattern-wide amount for its own group
+    - **AC-4.4.13/5** — A Pattern-wide amount above 0 carries the `swing` Tag, and 0 with no per-group amounts removes it
+    - **AC-4.4.13/6** — A Pattern-wide amount and per-group amounts spelling out the same values fingerprint as the same rhythm
 
 ---
 

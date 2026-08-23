@@ -37,6 +37,11 @@ export function buildTimeline(pattern) {
   let measureStart = 0;
   const feel = pattern.swingFeel ?? DEFAULT_SWING_FEEL;
 
+  // A per-group amount is a data override (AC-4.4.2); everything else inherits
+  // the Pattern-wide amount (AC-4.4.13) — which is why a Measure added after
+  // the amount was set swings without any copying step.
+  const groupSwing = (beat, groupIndex) => beat.swing?.[groupIndex] ?? pattern.swingAmount ?? 0;
+
   pattern.measures.forEach((measure, measureIndex) => {
     const { timeSignature } = measure;
     const beatDuration = beatDurationSeconds(timeSignature, pattern.tempo);
@@ -59,7 +64,7 @@ export function buildTimeline(pattern) {
         const leader = measure.beats[beatIndex - 1];
         const leaderGroups = subdivisionGroups(leader.recipe, noteValue);
         const straight = leaderGroups.findIndex((g) => g.feel === 'straight');
-        const amount = straight >= 0 ? (leader.swing?.[straight] ?? 0) : 0;
+        const amount = straight >= 0 ? groupSwing(leader, straight) : 0;
         beatDelay = swungDelay(amount, beatDuration);
       }
 
@@ -78,7 +83,7 @@ export function buildTimeline(pattern) {
 
         // Group-level offsets are zero at Quarters — that feel delays whole
         // Beats above, never Slots within a group.
-        const swing = group.feel === 'straight' && feel !== 'quarter' ? (beat.swing?.[groupIndex] ?? 0) : 0;
+        const swing = group.feel === 'straight' && feel !== 'quarter' ? groupSwing(beat, groupIndex) : 0;
         const offsets = swungOffsets(group.slotIndices.length, swing, slotDuration, feel);
 
         group.slotIndices.forEach((slotIndex, withinGroup) => {

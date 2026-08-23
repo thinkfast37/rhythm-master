@@ -299,17 +299,17 @@ const SWING_FEEL_LABELS = [
 ];
 
 /**
- * Swing, per straight-feel Subdivision Group of Beat 1.
+ * Swing: one Pattern-wide slider (AC-4.4.12) beside the feel picker.
  *
- * Triplet groups get no control at all — swing is inapplicable to triplet feel,
- * not merely unavailable, so showing a disabled slider would misdescribe it
- * (AC-4.4.3).
+ * The amount lands on the Pattern itself and every straight group inherits it
+ * (AC-4.4.13) — the earlier per-Beat sliders only ever reached Measure 1
+ * Beat 1, so every other Measure played straight. Absent entirely when no Beat
+ * in the Pattern has a swingable straight group: swing is inapplicable to
+ * triplet feel, not merely unavailable, so a disabled slider would misdescribe
+ * it (AC-4.4.3).
  */
 function renderSwing(pattern, handlers) {
   const group = el('div', 'control-group');
-  const measure = pattern.measures[0];
-  const beat = measure.beats[0];
-  const noteValue = beatNoteValue(measure.timeSignature);
 
   const feel = el('select', 'swing-feel');
   feel.dataset.action = 'set-swing-feel';
@@ -320,11 +320,23 @@ function renderSwing(pattern, handlers) {
   feel.addEventListener('change', (e) => handlers.onSwingFeel(e.target.value));
   group.appendChild(labelled('Swing feel', feel));
 
-  subdivisionGroups(beat.recipe, noteValue).forEach((g, groupIndex) => {
-    if (g.feel !== 'straight') return;
-    if (g.slotIndices.length % 2 !== 0) return; // odd groups have no midpoint to swing
+  let swingable = false;
+  let firstOverride;
+  for (const measure of pattern.measures) {
+    const noteValue = beatNoteValue(measure.timeSignature);
+    for (const beat of measure.beats) {
+      subdivisionGroups(beat.recipe, noteValue).forEach((g, groupIndex) => {
+        if (g.feel !== 'straight' || g.slotIndices.length % 2 !== 0) return;
+        swingable = true;
+        firstOverride ??= beat.swing?.[groupIndex];
+      });
+    }
+  }
 
-    const value = beat.swing?.[groupIndex] ?? 0;
+  if (swingable) {
+    // A Pattern authored with per-group overrides and no Pattern-wide amount
+    // still shows what it plays; moving the slider replaces the overrides.
+    const value = pattern.swingAmount ?? firstOverride ?? 0;
     const slider = el('input', 'swing-slider', {
       type: 'range',
       min: String(MIN_SWING),
@@ -333,10 +345,9 @@ function renderSwing(pattern, handlers) {
       value: String(value),
     });
     slider.dataset.action = 'set-swing';
-    slider.dataset.group = String(groupIndex);
-    slider.addEventListener('input', (e) => handlers.onSwing(groupIndex, Number(e.target.value)));
+    slider.addEventListener('input', (e) => handlers.onSwing(Number(e.target.value)));
     group.appendChild(labelled(`Swing ${value}`, slider));
-  });
+  }
 
   return group;
 }

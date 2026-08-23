@@ -488,11 +488,15 @@ test("AC-4.4.6/3 — The remembered swing lives in the overlay store and the shi
   const stored = await page.evaluate(() => {
     const id = window.__rm.getState().pattern.id;
     return {
-      overlay: window.__rm.overlayStore.forPattern(id).swing,
+      // Since AC-4.4.12 the control is Pattern-wide, so the overlay remembers
+      // the one Pattern-wide amount rather than per-group entries.
+      overlay: window.__rm.overlayStore.forPattern(id).swingAmount,
+      seedAmount: window.__rm.seedStore.findById(id).swingAmount ?? null,
       seedSwing: window.__rm.seedStore.findById(id).measures[0].beats[0].swing ?? null,
     };
   });
-  expect(stored.overlay).toEqual({ '0.0.0': 25 });
+  expect(stored.overlay).toBe(25);
+  expect(stored.seedAmount).toBeNull();
   expect(stored.seedSwing).toBeNull();
 });
 
@@ -527,20 +531,18 @@ test('AC-4.4.7/1 — The Swing feel control offers Quarters, 8ths, and 16ths, wi
   ]);
 });
 
-test('AC-4.4.7/2 — The feel is one value for the whole Pattern, while the swing amount stays per Subdivision Group', async ({
-  page,
-}) => {
+test('AC-4.4.7/2 — The feel is one value for the whole Pattern', async ({ page }) => {
   await page.goto('/');
   await setSwingSlider(page, 30);
   await page.locator('.swing-feel').first().selectOption('sixteenth');
 
   const seen = await page.evaluate(() => {
     const p = window.__rm.getState().pattern;
-    return { feel: p.swingFeel, groupSwing: p.measures[0].beats[0].swing };
+    return { feel: p.swingFeel, amount: p.swingAmount };
   });
-  // The feel lands on the Pattern itself; the amount stays keyed by group on the Beat.
+  // Both playback settings land on the Pattern itself (AC-4.4.12).
   expect(seen.feel).toBe('sixteenth');
-  expect(seen.groupSwing).toEqual({ 0: 30 });
+  expect(seen.amount).toBe(30);
   await expect(page.locator('.swing-slider').first()).toHaveValue('30');
 });
 
@@ -632,6 +634,70 @@ test('AC-4.4.10/5 — On an owned Pattern the swing feel saves into the Pattern 
   });
   expect(stored.pattern).toBe('sixteenth');
   expect(stored.overlay).toBeNull();
+});
+
+test("AC-4.4.12/1 — The swing control's amount reaches every Measure and Beat of the Pattern", async ({
+  page,
+}) => {
+  await page.goto('/');
+  // A known shape: an owned 4/4 Pattern grown to three Measures of straight 16ths.
+  await page.evaluate(() => window.__rm.loadBlank('4/4', 'Swing Everywhere'));
+  await page.locator('[data-action="add-measure"]').click();
+  await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(3);
+
+  await setSwingSlider(page, 34);
+
+  // The amount lands on the Pattern, with no stale per-group values left behind…
+  const seen = await page.evaluate(() => {
+    const p = window.__rm.getState().pattern;
+    return {
+      amount: p.swingAmount,
+      overrides: p.measures.flatMap((m) => m.beats.map((b) => b.swing)).filter(Boolean),
+    };
+  });
+  expect(seen.amount).toBe(34);
+  expect(seen.overrides).toEqual([]);
+
+  // …and every straight group in every Measure shows it — the reported bug was
+  // Measures 2 and 3 playing straight while Measure 1 swung.
+  const groups = await page
+    .locator('.group[data-feel="straight"]')
+    .evaluateAll((els) => els.map((el) => el.dataset.swing));
+  expect(groups.length).toBeGreaterThan(4); // spans all three Measures
+  expect(new Set(groups)).toEqual(new Set(['34']));
+});
+
+test('AC-4.4.12/2 — A Measure added after swing is set inherits the amount with no further action', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.slot').first().click();
+  await page.locator('.dialog-input').fill('Swing Then Grow');
+  await page.locator('.dialog-button', { hasText: 'Create' }).click();
+
+  await setSwingSlider(page, 40);
+  await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(2);
+
+  // The Measure created after the amount was set: its groups play it too.
+  const newMeasure = await page
+    .locator('.measure').nth(1)
+    .locator('.group[data-feel="straight"]')
+    .evaluateAll((els) => els.map((el) => el.dataset.swing));
+  expect(newMeasure.length).toBeGreaterThan(0);
+  expect(new Set(newMeasure)).toEqual(new Set(['40']));
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(40);
+});
+
+test('AC-4.4.12/3 — The Pattern-wide amount set on a shipped Pattern is applied again when it is next loaded, surviving a reload', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await setSwingSlider(page, 45);
+  await page.reload();
+  await expect(page.locator('.swing-slider').first()).toHaveValue('45');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(45);
 });
 
 test("AC-4.2.4/1 — A shipped Pattern's tempo change is applied again when the Pattern is next loaded, surviving a reload", async ({

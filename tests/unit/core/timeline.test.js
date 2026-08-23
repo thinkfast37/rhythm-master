@@ -7,6 +7,7 @@ import {
   setRecipe,
   cycleAccent,
   setGroupSwing,
+  setSwingAmount,
   setSwingFeel,
 } from '../../../src/core/pattern.js';
 import { MEDIUM, STRONG, WEAK } from '../../../src/core/accents.js';
@@ -203,6 +204,75 @@ describe('core/timeline', () => {
     // M1 Beat 1 and M2 Beat 1 at nominal onsets; M2 Beat 2 delayed by M2 Beat 1's amount.
     for (let i = 0; i < 8; i++) expect(swung[i]).toBeCloseTo(plain[i], 10);
     for (let i = 8; i < 12; i++) expect(swung[i]).toBeCloseTo(plain[i] + 0.4 * 0.5, 10);
+  });
+
+  it('AC-4.4.13/1 — Every straight Subdivision Group in every Measure and Beat swings by the Pattern-wide amount', () => {
+    // The reported bug: only Measure 1 Beat 1 ever received swing, so an 8th
+    // pair on beat 1 of each Measure swung in Measure 1 and played straight in
+    // Measures 2 and 3.
+    let p = { ...create(), tempo: 120 };
+    p = addMeasure(p);
+    p = addMeasure(p);
+    p = fillBeat(p, 0, 0);
+    p = fillBeat(p, 1, 0);
+    p = fillBeat(p, 2, 3);
+    const plain = buildTimeline(p).map((e) => e.timeSeconds);
+
+    p = setSwingAmount(p, 40);
+    const swung = buildTimeline(p).map((e) => e.timeSeconds);
+    const delay = 0.4 * 0.125;
+
+    // Each filled Beat is a 4-Slot straight group: its "e" and midpoint "&" and
+    // "a" pattern under the default 8ths feel delays only index 2 within the
+    // group — in every Measure, not just the first.
+    for (let beat = 0; beat < 3; beat++) {
+      const base = beat * 4;
+      expect(swung[base + 0]).toBeCloseTo(plain[base + 0], 10);
+      expect(swung[base + 1]).toBeCloseTo(plain[base + 1], 10);
+      expect(swung[base + 2]).toBeCloseTo(plain[base + 2] + delay, 10);
+      expect(swung[base + 3]).toBeCloseTo(plain[base + 3], 10);
+    }
+  });
+
+  it('AC-4.4.13/2 — A Measure added after the Pattern-wide amount is set inherits it', () => {
+    let p = { ...create(), tempo: 120 };
+    p = fillBeat(p, 0, 0);
+    p = setSwingAmount(p, 60);
+    p = addMeasure(p); // created AFTER the amount was set — nothing copies it
+    p = fillBeat(p, 1, 0);
+
+    const times = buildTimeline(p).map((e) => e.timeSeconds);
+    const delay = 0.6 * 0.125;
+    // Measure 2 Beat 1 starts at 2.0s; its "&" (slot 3 of 4) swings too.
+    expect(times[4]).toBeCloseTo(2.0, 10);
+    expect(times[6]).toBeCloseTo(2.25 + delay, 10);
+  });
+
+  it('AC-4.4.13/3 — A Beat whose Recipe changes after the Pattern-wide amount is set inherits it', () => {
+    let p = { ...create(), tempo: 120 };
+    p = setSwingAmount(p, 60);
+    // Re-subdividing replaces the Beat wholesale; inheritance means the fresh
+    // Beat still swings.
+    p = setRecipe(p, 0, 1, 'straight-8ths');
+    p = fillBeat(p, 0, 1);
+
+    const times = buildTimeline(p).map((e) => e.timeSeconds);
+    // Beat 2 is a 2-Slot group: its "&" at 0.75s nominal delays by 60% of 0.25s.
+    expect(times[0]).toBeCloseTo(0.5, 10);
+    expect(times[1]).toBeCloseTo(0.75 + 0.6 * 0.25, 10);
+  });
+
+  it('AC-4.4.13/4 — A per-group amount takes precedence over the Pattern-wide amount for its own group', () => {
+    let p = { ...create(), tempo: 120 };
+    p = addMeasure(p);
+    p = fillBeat(p, 0, 0);
+    p = fillBeat(p, 1, 0);
+    p = setSwingAmount(p, 40);
+    p = setGroupSwing(p, 0, 0, 0, 80); // an authored override on M1 B1
+
+    const times = buildTimeline(p).map((e) => e.timeSeconds);
+    expect(times[2]).toBeCloseTo(0.25 + 0.8 * 0.125, 10); // the override
+    expect(times[6]).toBeCloseTo(2.25 + 0.4 * 0.125, 10); // the inherited amount
   });
 
   it('AC-4.4.3 — swing set on a triplet group has no effect', () => {

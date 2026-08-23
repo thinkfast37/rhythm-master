@@ -14,6 +14,7 @@ import {
   setRecipe,
   setTimeSignature,
   setGroupSwing,
+  setSwingAmount,
   setSwingFeel,
 } from '../../../src/core/pattern.js';
 
@@ -122,6 +123,23 @@ describe('core/similarity', () => {
     const explicit = setSwingFeel(structuredClone(a), 'eighth');
     explicit.id = 'c';
     expect(rhythmFingerprint(a)).toBe(rhythmFingerprint(explicit));
+  });
+
+  it('AC-4.4.13/6 — A Pattern-wide amount and per-group amounts spelling out the same values fingerprint as the same rhythm', () => {
+    // One Pattern inherits 40 everywhere from the Pattern-wide amount; the
+    // other spells 40 out on its (only) straight group. They sound identical,
+    // so they fingerprint identically — and differing audible amounts do not.
+    let wide = { ...withNote(create('A')), id: 'a' };
+    wide = setSwingAmount(wide, 40);
+    let spelled = { ...withNote(create('B')), id: 'b' };
+    for (let beat = 0; beat < 4; beat++) spelled = setGroupSwing(spelled, 0, beat, 0, 40);
+    expect(rhythmFingerprint(wide)).toBe(rhythmFingerprint(spelled));
+    expect(isDuplicate(wide, spelled)).toBe(true);
+
+    const other = setSwingAmount(structuredClone(wide), 60);
+    other.id = 'c';
+    expect(rhythmFingerprint(wide)).not.toBe(rhythmFingerprint(other));
+    expect(isDuplicate(wide, other)).toBe(false);
   });
 
   // --- AC-11.1.4 — the view's data, library-wide ---------------------------
