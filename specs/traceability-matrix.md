@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 344 across 36 User Stories
+**Criteria**: 346 across 36 User Stories
 
-**Coverage**: 148 of 344 criteria proven (43.0%)
+**Coverage**: 150 of 346 criteria proven (43.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 148 | 43.0% |
-| 🔴 Gap — HIGH | 73 | 21.2% |
-| 🟠 Gap — MEDIUM | 45 | 13.1% |
-| 🟡 Gap — LOW | 78 | 22.7% |
+| 🟢 Proven | 150 | 43.4% |
+| 🔴 Gap — HIGH | 73 | 21.1% |
+| 🟠 Gap — MEDIUM | 45 | 13.0% |
+| 🟡 Gap — LOW | 78 | 22.5% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -89,7 +89,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-11.3 | 5 | 0 | · | · | 4 | · | 1 |
 | 🔴 US-12.1 | 4 | 0 | · | · | 4 | · | · |
 | 🟢 US-13.1 | 11 | **11** | · | · | · | · | · |
-| 🔴 US-15.1 | 18 | 5 | · | · | 1 | 9 | 3 |
+| 🔴 US-15.1 | 20 | 7 | · | · | 1 | 9 | 3 |
 | 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
 | 🟢 US-15.2 | 19 | **19** | · | · | · | · | · |
@@ -222,40 +222,40 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.3 | `AC-4.3.4` 🖵 | Metronome setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.5` 🖵 | Count-in setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.6` | Metronome/count-in have no per-Pattern override, unlike tempo | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.6/1` 🖵 | Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.6/2` 🖵 | The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.6/3` 🖵 | The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.6/4` 🖵 | A playback swing does not give a shipped Pattern the `swing` Tag in the library | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.7/1` 🖵 | The Swing feel control offers Quarters, 8ths, and 16ths, with 8ths selected by default | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js`, `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.7/2` 🖵 | The feel is one value for the whole Pattern | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.7/3` 🖵 | Selecting a feel takes effect immediately, with no confirmation step | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.8/1` | In a 4-Slot straight group, the Slots at positions 2 and 4 each onset later by min(S / 100 × d, 0.95 × d) seconds, while positions 1 and 3 keep their nominal onsets | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.8/2` | A 2-Slot straight group keeps every nominal onset at the 16ths feel | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `swing.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.8/3` | Triplet-feel groups keep their unshifted timing at the 16ths feel | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.9/1` | Every sounding Slot in the second Beat of a pair onsets later by min(S / 100 × D, 0.95 × D) seconds, with the Beat's internal spacing unchanged | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.9/2` | The first Beat of each pair, and the unpaired final Beat of an odd-numerator Measure, keep their nominal onsets | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.9/3` | Pairing restarts at each Measure's first Beat | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.10/1` 🖵 | Changing the swing feel on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.10/2` 🖵 | The feel set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.10/3` 🖵 | The remembered feel lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.10/4` 🖵 | A swing feel alone never grants or removes the `swing` Tag | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.10/5` 🖵 | On an owned Pattern the swing feel saves into the Pattern itself | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.11/1` | Patterns differing only in swing feel are not duplicates when any swing amount is above 0 | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `similarity.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.11/2` | Patterns differing only in swing feel remain duplicates when every swing amount is 0 | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `similarity.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.12/1` 🖵 | The swing control's amount reaches every Measure and Beat of the Pattern | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.12/2` 🖵 | A Measure added after swing is set inherits the amount with no further action | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.12/3` 🖵 | The Pattern-wide amount set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `playback.spec.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.13/1` | Every straight Subdivision Group in every Measure and Beat swings by the Pattern-wide amount | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.13/2` | A Measure added after the Pattern-wide amount is set inherits it | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.13/3` | A Beat whose Recipe changes after the Pattern-wide amount is set inherits it | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.13/4` | A per-group amount takes precedence over the Pattern-wide amount for its own group | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `timeline.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.13/5` | A Pattern-wide amount above 0 carries the `swing` Tag, and 0 with no per-group amounts removes it | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `pattern.test.js` | 🟢 OK |
-| US-4.4 | `AC-4.4.13/6` | A Pattern-wide amount and per-group amounts spelling out the same values fingerprint as the same rhythm | P-013 | T063, T204, T206, T208 (4/4 done) | T064, T205, T207, T209 (4/4 done) | `similarity.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.6/1` 🖵 | Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/2` 🖵 | The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/3` 🖵 | The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.6/4` 🖵 | A playback swing does not give a shipped Pattern the `swing` Tag in the library | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.7/1` 🖵 | The Swing feel control offers Quarters, 8ths, and 16ths, with 8ths selected by default | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.7/2` 🖵 | The feel is one value for the whole Pattern | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.7/3` 🖵 | Selecting a feel takes effect immediately, with no confirmation step | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.8/1` | In a 4-Slot straight group, the Slots at positions 2 and 4 each onset later by min(S / 100 × d, 0.95 × d) seconds, while positions 1 and 3 keep their nominal onsets | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.8/2` | A 2-Slot straight group keeps every nominal onset at the 16ths feel | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `swing.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.8/3` | Triplet-feel groups keep their unshifted timing at the 16ths feel | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.9/1` | Every sounding Slot in the second Beat of a pair onsets later by min(S / 100 × D, 0.95 × D) seconds, with the Beat's internal spacing unchanged | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.9/2` | The first Beat of each pair, and the unpaired final Beat of an odd-numerator Measure, keep their nominal onsets | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.9/3` | Pairing restarts at each Measure's first Beat | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/1` 🖵 | Changing the swing feel on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/2` 🖵 | The feel set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/3` 🖵 | The remembered feel lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/4` 🖵 | A swing feel alone never grants or removes the `swing` Tag | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.10/5` 🖵 | On an owned Pattern the swing feel saves into the Pattern itself | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.11/1` | Patterns differing only in swing feel are not duplicates when any swing amount is above 0 | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `similarity.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.11/2` | Patterns differing only in swing feel remain duplicates when every swing amount is 0 | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `similarity.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.12/1` 🖵 | The swing control's amount reaches every Measure and Beat of the Pattern | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.12/2` 🖵 | A Measure added after swing is set inherits the amount with no further action | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.12/3` 🖵 | The Pattern-wide amount set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.13/1` | Every straight Subdivision Group in every Measure and Beat swings by the Pattern-wide amount | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.13/2` | A Measure added after the Pattern-wide amount is set inherits it | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.13/3` | A Beat whose Recipe changes after the Pattern-wide amount is set inherits it | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.13/4` | A per-group amount takes precedence over the Pattern-wide amount for its own group | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `timeline.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.13/5` | A Pattern-wide amount above 0 carries the `swing` Tag, and 0 with no per-group amounts removes it | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `pattern.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.13/6` | A Pattern-wide amount and per-group amounts spelling out the same values fingerprint as the same rhythm | P-013 | T063, T204, T206, T210 (4/4 done) | T064, T205, T207, T211 (4/4 done) | `similarity.test.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.1` | Shipped and custom Patterns appear in one unified list | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-5.1 | `AC-5.1.2` 🖵 | Library entry shows name, meter, and Measure/Beat count | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.1 | `AC-5.1.3` 🖵 | Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
@@ -367,24 +367,26 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-13.1 | `AC-13.1.4/2` | A Pattern edited since it was submitted is included again | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.4/3` | A Pattern never submitted is included | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.5` | Submission-tracking is Local Metadata, never part of the export payload | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `storage.test.js`, `operations.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.5` 🖵 | Mobile drawer auto-opens on every page load | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.6` 🖵 | The library collapses whenever a Pattern is loaded, at every width | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.14/1` | Every Beat in a Measure is the same width as every other Beat in it, on its own line and across lines | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/2` 🖵 | No Beat is narrower than its own Slots need at the 24px minimum, so the grid still never scrolls sideways | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/3` | Beats divide evenly between lines: four Beats where three fit lay out two and two, never three and one | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/4` | Where every Beat fits one line, they occupy that one line and still share the width | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/5` | The layout re-balances when the width available to the grid changes | P-036 | T114, T115, T116, T160, T167 (5/5 done) | T117, T161, T168 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.5` 🖵 | Mobile drawer auto-opens on every page load | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.6` 🖵 | The library collapses whenever a Pattern is loaded, at every width | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.14/1` | Every Beat in a Measure is the same width as every other Beat in it, on its own line and across lines | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/2` 🖵 | No Beat is narrower than its own Slots need at the 24px minimum, so the grid still never scrolls sideways | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/3` | Beats divide evenly between lines: four Beats where three fit lay out two and two, never three and one | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/4` | Where every Beat fits one line, they occupy that one line and still share the width | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/5` | The layout re-balances when the width available to the grid changes | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.15/1` 🖵 | `index.html` declares the Home-Screen web-app metas: `apple-mobile-web-app-capable` yes, `apple-mobile-web-app-status-bar-style` black-translucent, `apple-mobile-web-app-title` Rhythm Master, and a viewport with `viewport-fit=cover` so the existing safe-area padding keeps the top controls clear of the status bar | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `webapp-meta.test.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.15/2` 🖵 | `index.html` links an `apple-touch-icon`, and the image it names ships with the build, so the saved icon is the app's own rather than a page screenshot | P-036 | T114, T115, T116, T160, T167, T208 (6/6 done) | T117, T161, T168, T209 (4/4 done) | `webapp-meta.test.js` | 🟢 OK |
 | US-16.1 | `AC-16.1.1` | Shipped library present on first run | P-003 | T032 (1/1 done) | T033 (1/1 done) | `timeline.test.js`, `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.2` 🖵 | Shipped Patterns are not marked as user-authored | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
 | US-16.1 | `AC-16.1.3` | Legacy category becomes a Tag | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |

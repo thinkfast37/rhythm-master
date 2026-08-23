@@ -202,7 +202,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.7 | T051–T055, T165 | T056, T165 |
 | **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.4 | T057–T058, T204 | T059, T205 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |
-| **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.13 | T063, T204, T206, T208 | T064, T205, T207, T209 |
+| **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.13 | T063, T204, T206, T210 | T064, T205, T207, T211 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.5 | T065 | T066 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
 | **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.17 | T069, T160, T162, T163, T164, T165 | T070, T161, T162, T163, T164, T165 |
@@ -225,7 +225,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.14 | T114–T116, T160, T167 | T117, T161, T168 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.15 | T114–T116, T160, T167, T208 | T117, T161, T168, T209 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |

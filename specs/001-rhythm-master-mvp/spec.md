@@ -1963,6 +1963,16 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - *(Added 2026-08-17. Reported against a 4/4 Pattern on a phone: three Beats sat on the first line and the fourth spread across the whole of the second. AC-15.1.10 required the wrap and forbade a Beat splitting across it, but said nothing about the widths that come out, and the flexbox implementing it grew whatever landed on a line to fill that line. This states the widths, which AC-15.1.10 leaves open, and does not change what it requires.)*
   - *(Clarified 2026-08-17, with AC-15.2.7. "Share the width" in /4 means the Beats on a line have ONE width between them, the same as on every other line. It does not mean they fill the line: AC-15.2.7 caps a cell at its preferred size and lets a short line's spare room stay empty, and every Case here still holds under that cap.)*
 
+- **AC-15.1.15** — Added to the Home Screen, the app opens standalone
+  - **Given** the deployed site opened in a phone browser
+  - **When** the Practicing Musician adds it to their Home Screen and opens the saved icon
+  - **Then** the app opens as a standalone web app — full screen, no browser address bar, in
+    the icon's own container rather than whichever browser is the device default
+  - **Cases**:
+    - **AC-15.1.15/1** — `index.html` declares the Home-Screen web-app metas: `apple-mobile-web-app-capable` yes, `apple-mobile-web-app-status-bar-style` black-translucent, `apple-mobile-web-app-title` Rhythm Master, and a viewport with `viewport-fit=cover` so the existing safe-area padding keeps the top controls clear of the status bar
+    - **AC-15.1.15/2** — `index.html` links an `apple-touch-icon`, and the image it names ships with the build, so the saved icon is the app's own rather than a page screenshot
+  - *(Added 2026-08-23. Without these metas the Home-Screen entry is a plain bookmark: it opens in the device's default browser with full browser chrome — reported as Rhythm Master opening in Chrome with an address bar while Ear Trainer, which declares them, opens standalone.)*
+
 ---
 ### User Story 33 - Ship with a seeded Pattern library
 

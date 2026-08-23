@@ -247,7 +247,7 @@ Three things follow:
 - **It cannot see partial reachability.** The Recipe control is wired to Measure 1,
   Beat 1 only; every export involved is used, so nothing flags it. A capability
   reachable for one Beat and no other is still a gap this gate will not find — the
-  Swing slider had exactly this shape until the maintainer heard it (T208): only
+  Swing slider had exactly this shape until the maintainer heard it (T210): only
   Measure 1 swung, and every gate was green.
 
 Same baseline rules as §2b: reported but not build-failing, may only shrink
