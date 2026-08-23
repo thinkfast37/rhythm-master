@@ -428,3 +428,102 @@ test('AC-15.1.13 — a reload opens the library again, at every width', async ({
     await expect(page.locator('.shell'), `${size.width}px`).toHaveAttribute('data-library', 'open');
   }
 });
+
+test('AC-15.1.16/1 — The control being operated keeps focus across the update it causes', async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4', 'Keeps Focus'));
+
+  // The swing slider: two keyboard adjustments in a row, each re-rendering the
+  // panel, without ever re-selecting the control.
+  const slider = page.locator('.swing-slider').first();
+  await slider.focus();
+  const before = Number(await slider.inputValue());
+  await page.keyboard.press('ArrowRight');
+  await expect(slider).toHaveValue(String(before + 1));
+  await expect(slider).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(slider).toHaveValue(String(before + 2));
+  await expect(slider).toBeFocused();
+
+  // The Sound select: the mode switch rebuilds the panel around it and brings
+  // in the pitch strip, and the select stays under the musician's hands.
+  const sound = page.locator('.sound-mode').first();
+  await sound.focus();
+  await sound.selectOption('melodic');
+  await expect(sound).toHaveValue('melodic');
+  await expect(sound).toBeFocused();
+  await sound.selectOption('percussive');
+  await expect(sound).toHaveValue('percussive');
+  await expect(sound).toBeFocused();
+});
+
+test('AC-15.1.16/2 — During playback the autoscroll stands down while controls are in use and for two seconds after', async ({
+  page,
+}) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+  await loadTallPattern(page);
+
+  // The swing slider lives in the Playback settings accordion, collapsed at
+  // mobile width (AC-15.1.7).
+  await page.locator('[data-section="playback-settings"] summary').click();
+  await page.locator('[data-action="play"]').click();
+
+  // Scroll the panel down to the slider, leaving the sounding Measure far
+  // above the viewport — exactly where the autoscroll would fetch it back from.
+  const slider = page.locator('.swing-slider').first();
+  await slider.scrollIntoViewIfNeeded();
+  await slider.focus();
+
+  // Hands on: a nudge every 300ms for ~2.4s. Playback renders on every tick
+  // throughout, and through all of it the slider stays on screen.
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press(i % 2 ? 'ArrowLeft' : 'ArrowRight');
+    await page.waitForTimeout(300);
+    const visible = await slider.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= window.innerHeight;
+    });
+    expect(visible, `slider stays in view while hands are on (nudge ${i + 1})`).toBe(true);
+  }
+
+  // Hands off: once the grace window passes, the autoscroll resumes and takes
+  // the view back to the sounding Measure, leaving the slider behind.
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector('.swing-slider');
+      const r = el.getBoundingClientRect();
+      return r.top >= window.innerHeight || r.bottom <= 0;
+    },
+    null,
+    { timeout: 10000 }
+  );
+});
+
+test('AC-15.1.16/3 — A control keeps its place on screen when an update changes the height of the content above it', async ({
+  page,
+}) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+  await loadTallPattern(page);
+
+  // The Sound select, inside the Edit accordion, scrolled to mid-panel.
+  await page.locator('[data-section="edit"] summary').click();
+  const sound = page.locator('.sound-mode').first();
+  await sound.scrollIntoViewIfNeeded();
+  await sound.focus();
+  const before = await sound.evaluate((el) => el.getBoundingClientRect().top);
+
+  // Switching to Melodic inserts the pitch strip above the editing controls —
+  // and the select neither moves on screen nor loses focus.
+  await sound.selectOption('melodic');
+  await expect(page.locator('.pitch-strip')).toBeVisible();
+  const after = await sound.evaluate((el) => el.getBoundingClientRect().top);
+  expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
+  await expect(sound).toBeFocused();
+});

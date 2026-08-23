@@ -48,6 +48,7 @@ import {
   openLibrary,
   isLibraryOpen,
   scrollMeasureIntoView,
+  AUTOSCROLL_GRACE_MS,
 } from './ui/responsive.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
@@ -1083,7 +1084,25 @@ export function mount(root) {
   // event, so the element is watched rather than the window (AC-15.1.14/5).
   observeGridWidth(gridEl);
 
+  // Hands on the main panel mean the view belongs to the musician, not to the
+  // playback autoscroll (AC-15.1.16/2). Captured, so it sees the interaction
+  // whatever the control does with the event.
+  let lastInteractionAt = -Infinity;
+  const noteInteraction = () => {
+    lastInteractionAt = Date.now();
+  };
+  for (const type of ['pointerdown', 'input', 'keydown']) {
+    main.addEventListener(type, noteInteraction, true);
+  }
+
   subscribe((pattern, position, s) => {
+    // Where the focused control sits on screen, so the view can be put back if
+    // this render changes the height of what is above it (AC-15.1.16/3).
+    const focused = document.activeElement;
+    const anchor =
+      focused && focused !== document.body && main.contains(focused)
+        ? { el: focused, top: focused.getBoundingClientRect().top }
+        : null;
     // The header needs the same Tag breakdown the library computes, so the two
     // cannot disagree about what is removable.
     const entry = libraryEntries().find((e) => e.pattern.id === pattern.id);
@@ -1108,8 +1127,19 @@ export function mount(root) {
     renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
     renderFamilyMembers(familyEl, familyMembers(), handlers);
 
-    // Keep what is sounding on screen (AC-15.1.11).
-    if (position) scrollMeasureIntoView(gridEl, position.measureIndex);
+    // The render moved the focused control — the pitch strip appearing above
+    // it, say — so move the panel's scroll with it, as far as it can go, and
+    // the control stays put on screen (AC-15.1.16/3).
+    if (anchor && anchor.el.isConnected) {
+      const delta = anchor.el.getBoundingClientRect().top - anchor.top;
+      if (delta !== 0) main.scrollTop += delta;
+    }
+
+    // Keep what is sounding on screen (AC-15.1.11) — unless the musician's
+    // hands are on the panel, or were within the grace window (AC-15.1.16/2).
+    if (position && Date.now() - lastInteractionAt > AUTOSCROLL_GRACE_MS) {
+      scrollMeasureIntoView(gridEl, position.measureIndex);
+    }
   });
 
   return {

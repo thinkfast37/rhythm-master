@@ -1984,6 +1984,18 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-15.1.15/2** — `index.html` links an `apple-touch-icon`, and the image it names ships with the build, so the saved icon is the app's own rather than a page screenshot
   - *(Added 2026-08-23. Without these metas the Home-Screen entry is a plain bookmark: it opens in the device's default browser with full browser chrome — reported as Rhythm Master opening in Chrome with an address bar while Ear Trainer, which declares them, opens standalone.)*
 
+- **AC-15.1.16** — Operating a control neither steals focus nor moves the view
+  - **Given** any Pattern open, with a control that dispatches a change — the swing slider, the Sound select, a tempo preset — under the Practicing Musician's hands
+  - **When** operating it changes the Pattern or a setting and the UI updates to show the result
+  - **Then** the control stays focused, and the next adjustment lands on it without re-selecting it — a setting that takes several adjustments to get right, swing being the reported one, is adjusted repeatedly without re-finding the control each time
+  - **And** the sounding-Measure autoscroll (AC-15.1.11) does not move the view while the musician is interacting with the main panel or within two seconds of their last interaction, resuming on its own afterwards — hands-off playback is unchanged
+  - **And** when an update changes the height of the content above the focused control — switching Percussive to Melodic inserts the pitch strip above the editing controls — the main panel's scroll offset compensates, as far as the panel can scroll, so the control stays where it was on screen
+  - **Cases**:
+    - **AC-15.1.16/1** — The control being operated keeps focus across the update it causes
+    - **AC-15.1.16/2** — During playback the autoscroll stands down while controls are in use and for two seconds after
+    - **AC-15.1.16/3** — A control keeps its place on screen when an update changes the height of the content above it
+  - *(Added 2026-08-23. Reported by the maintainer: every tap on the swing control or the Sound select rebuilt the panel and dropped focus, and — during playback — the sounding-Measure autoscroll fired on the re-render each adjustment caused, yanking the view back to the Pattern mid-adjustment. AC-15.1.11's hands-off tracking is untouched; this pins what happens while hands are on the controls.)*
+
 ---
 ### User Story 33 - Ship with a seeded Pattern library
 
