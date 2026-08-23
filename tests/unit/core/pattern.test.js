@@ -12,6 +12,8 @@ import {
   append,
   duplicate,
   automaticTags,
+  setGroupSwing,
+  setSwingAmount,
   validate,
   MAX_MEASURES,
 } from '../../../src/core/pattern.js';
@@ -239,6 +241,26 @@ describe('core/pattern — derived Tags', () => {
     expect(automaticTags(p, true)).toContain('swing');
     p.measures[0].beats[0].swing = { 0: 0 };
     expect(automaticTags(p, true)).not.toContain('swing');
+  });
+
+  it('AC-4.4.13/5 — A Pattern-wide amount above 0 carries the `swing` Tag, and 0 with no per-group amounts removes it', () => {
+    let p = create();
+    p = setSwingAmount(p, 30);
+    expect(automaticTags(p, true)).toContain('swing');
+    p = setSwingAmount(p, 0);
+    expect(automaticTags(p, true)).not.toContain('swing');
+  });
+
+  it('setSwingAmount clears per-group overrides, validates its range, and validates as data', () => {
+    let p = create();
+    p = setGroupSwing(p, 0, 0, 0, 25);
+    p = setSwingAmount(p, 50);
+    expect(p.swingAmount).toBe(50);
+    // The control never leaves a stale override behind to contradict it.
+    expect(p.measures[0].beats[0].swing).toBeUndefined();
+    expect(() => setSwingAmount(p, 101)).toThrow(/0–100/);
+    expect(validate(p).valid).toBe(true);
+    expect(validate({ ...p, swingAmount: 101 }).errors.join()).toMatch(/swingAmount/);
   });
 });
 

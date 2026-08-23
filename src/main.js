@@ -14,7 +14,7 @@ import {
   setRecipe,
   cycleAccent,
   countActiveSlots,
-  setGroupSwing,
+  setSwingAmount,
   setSwingFeel,
   setPitch,
   append,
@@ -358,13 +358,18 @@ const handlers = {
    * playback, the cursor and MIDI export all hear it through the one
    * timeline — and is remembered per Pattern in the overlay store, like
    * tempo. Owned Patterns keep saving it into the Pattern, as before.
+   *
+   * Pattern-wide (AC-4.4.12): the amount lands on the Pattern itself and every
+   * straight group inherits it, so a Measure added later swings too. The old
+   * per-Beat form only ever reached Measure 1 Beat 1 — the bug the maintainer
+   * heard as "the second measure ignores the swing feel".
    */
-  onSwing(groupIndex, amount, measureIndex = 0, beatIndex = 0) {
+  onSwing(amount) {
     if (state.isOwned) {
-      apply(setGroupSwing, measureIndex, beatIndex, groupIndex, amount);
+      apply(setSwingAmount, amount);
     } else {
-      state.pattern = setGroupSwing(state.pattern, measureIndex, beatIndex, groupIndex, amount);
-      overlayStore.setSwing(state.pattern.id, measureIndex, beatIndex, groupIndex, amount);
+      state.pattern = setSwingAmount(state.pattern, amount);
+      overlayStore.setSwingAmount(state.pattern.id, amount);
       render();
     }
     if (state.isPlaying) transport.restart(state.pattern, state.settings);

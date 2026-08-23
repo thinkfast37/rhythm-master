@@ -126,7 +126,8 @@ describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)
     const overlays = await import('../../../src/storage/overlays.js');
     const seed = { ...create('Shipped'), id: 's_1' };
     overlays.setTempo('s_1', 150);
-    overlays.setSwing('s_1', 0, 0, 0, 30);
+    // Legacy per-group entries, as the pre-AC-4.4.12 control wrote them.
+    overlays.update('s_1', { swing: { '0.0.0': 30 } });
 
     const applied = overlays.applyPlaybackTo(seed);
     expect(applied.tempo).toBe(150);
@@ -137,9 +138,30 @@ describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)
 
   it('skips a stale swing entry that no longer resolves against the Pattern', async () => {
     const overlays = await import('../../../src/storage/overlays.js');
-    overlays.setSwing('s_2', 5, 0, 0, 30); // measure 5 does not exist
+    overlays.update('s_2', { swing: { '5.0.0': 30 } }); // measure 5 does not exist
     const applied = overlays.applyPlaybackTo({ ...create('Shipped'), id: 's_2' });
     expect(applied.measures[0].beats[0].swing).toBeUndefined();
+  });
+
+  it('applies a remembered Pattern-wide swing amount, with legacy per-group entries still winning as overrides', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    const seed = { ...create('Shipped'), id: 's_6' };
+    overlays.setSwingAmount('s_6', 35);
+    overlays.update('s_6', { swing: { '0.1.0': 70 } }); // a legacy entry left from before
+
+    const applied = overlays.applyPlaybackTo(seed);
+    expect(applied.swingAmount).toBe(35);
+    expect(applied.measures[0].beats[1].swing).toEqual({ 0: 70 });
+    expect(seed.swingAmount).toBeUndefined();
+  });
+
+  it('setSwingAmount drops legacy per-group entries — the control just cleared those overrides', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    overlays.update('s_7', { swing: { '0.0.0': 30 } });
+    overlays.setSwingAmount('s_7', 50);
+    const overlay = overlays.forPattern('s_7');
+    expect(overlay.swingAmount).toBe(50);
+    expect(overlay.swing).toBeUndefined();
   });
 
   it('returns the Pattern as-is when nothing is remembered', async () => {

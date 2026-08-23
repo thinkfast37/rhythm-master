@@ -244,9 +244,11 @@ Three things follow:
   being hunted, so `tests/` is not scanned. Genuine test seams go in
   `tools/unwired-baseline.json` **with a written reason** — the checker's own tests fail a
   reason too short to be one.
-- **It cannot see partial reachability.** The Recipe and Swing controls are wired to
-  Measure 1, Beat 1 only; every export involved is used, so nothing flags them. A
-  capability reachable for one Beat and no other is still a gap this gate will not find.
+- **It cannot see partial reachability.** The Recipe control is wired to Measure 1,
+  Beat 1 only; every export involved is used, so nothing flags it. A capability
+  reachable for one Beat and no other is still a gap this gate will not find — the
+  Swing slider had exactly this shape until the maintainer heard it (T210): only
+  Measure 1 swung, and every gate was green.
 
 Same baseline rules as §2b: reported but not build-failing, may only shrink
 (`npm run check:unwired -- --prune`), and an entry is outstanding work, never a settled

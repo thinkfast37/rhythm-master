@@ -127,7 +127,9 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
     // Swing is inapplicable to triplet feel, so a triplet group carries no
     // swing data at all rather than a disabled zero (AC-4.4.3).
     if (group.feel === 'straight') {
-      groupEl.dataset.swing = String(beat.swing?.[groupIndex] ?? 0);
+      // The amount the group actually plays: its own override, else the
+      // Pattern-wide amount (AC-4.4.13).
+      groupEl.dataset.swing = String(beat.swing?.[groupIndex] ?? pattern.swingAmount ?? 0);
     }
 
     group.slotIndices.forEach((slotIndex) => {

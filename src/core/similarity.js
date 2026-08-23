@@ -10,6 +10,8 @@
  * how fast you happen to be practising them.
  */
 import { effectiveAccent } from './accents.js';
+import { subdivisionGroups } from './recipes.js';
+import { beatNoteValue } from './meter.js';
 
 /**
  * A stable string over meter, Recipes, Slot on/off and effective accents.
@@ -17,34 +19,42 @@ import { effectiveAccent } from './accents.js';
  * defaults explicitly fingerprints the same as one that leaves them computed.
  */
 export function rhythmFingerprint(pattern) {
-  // The swing feel retimes every swung note, so it is part of the rhythm — but
-  // only when some amount is above 0. With every amount at 0 the feel is
-  // inaudible, and two Patterns differing only there sound identical
-  // (AC-4.4.11). Absent normalises to the default so Patterns saved before the
-  // field existed fingerprint the same as ones that spell it out.
-  const audible = pattern.measures.some((m) =>
-    m.beats.some((b) => Object.values(b.swing ?? {}).some((v) => v > 0))
-  );
-  const feel = audible ? `feel=${pattern.swingFeel ?? 'eighth'} ` : '';
-  return feel + pattern.measures
-    .map((measure) =>
-      [
+  // Swing enters the fingerprint as the amount each straight group actually
+  // plays — a per-group override where present, the Pattern-wide amount
+  // otherwise (AC-4.4.13/6) — so two Patterns that sound the same fingerprint
+  // the same however their swing is spelled.
+  const groupAmount = (beat, groupIndex) => beat.swing?.[groupIndex] ?? pattern.swingAmount ?? 0;
+  let audible = false;
+
+  const body = pattern.measures
+    .map((measure) => {
+      const noteValue = beatNoteValue(measure.timeSignature);
+      return [
         measure.timeSignature,
         measure.beats
           .map((beat, beatIndex) => {
-            const swing = Object.entries(beat.swing ?? {})
-              .filter(([, v]) => v > 0)
-              .map(([k, v]) => `${k}:${v}`)
+            const swing = subdivisionGroups(beat.recipe, noteValue)
+              .map((g, gi) => (g.feel === 'straight' ? groupAmount(beat, gi) : 0))
+              .map((v, gi) => (v > 0 ? `${gi}:${v}` : null))
+              .filter(Boolean)
               .join(',');
+            if (swing) audible = true;
             const slots = beat.slots
               .map((_, slotIndex) => effectiveAccent(measure, beatIndex, slotIndex))
               .join('');
             return `${beat.recipe}[${slots}]${swing ? `{${swing}}` : ''}`;
           })
           .join('|'),
-      ].join(' ')
-    )
+      ].join(' ');
+    })
     .join(' // ');
+
+  // The swing feel retimes every swung note, so it is part of the rhythm — but
+  // only when some amount is audible (AC-4.4.11). Absent normalises to the
+  // default so Patterns saved before the field existed fingerprint the same as
+  // ones that spell it out.
+  const feel = audible ? `feel=${pattern.swingFeel ?? 'eighth'} ` : '';
+  return feel + body;
 }
 
 /** Pitch content, or null for a Percussive Pattern. */
