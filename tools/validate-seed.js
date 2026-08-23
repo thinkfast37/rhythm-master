@@ -37,6 +37,13 @@ const SLOT_COUNT = {
 
 const KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 const AUTOMATIC_TAGS = ['custom', 'swing', 'percussive', 'melodic'];
+// Mirrors core/scales.js's catalogue ids, duplicated for standalone-ness like KEYS.
+const SCALES = [
+  'ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian',
+  'major-pentatonic', 'suspended-pentatonic', 'blues-minor-pentatonic',
+  'blues-major-pentatonic', 'minor-pentatonic',
+  'minor-blues', 'major-blues', 'harmonic-minor', 'melodic-minor',
+];
 const DEGREE = /^[b#]?[1-9]\d*$/;
 
 const errors = [];
@@ -64,6 +71,10 @@ for (const p of raw.patterns) {
   const melodic = p.soundMode === 'melodic';
   if (melodic !== ('key' in p)) fail(name, 'key must be present iff soundMode is melodic');
   if (melodic && !KEYS.includes(p.key)) fail(name, `key "${p.key}" unsupported`);
+  // Every shipped Melodic Pattern carries its scale explicitly (AC-2.5.4/4);
+  // the absent-reads-as-ionian default is for user data, not the seed.
+  if (melodic !== ('scale' in p)) fail(name, 'scale must be present iff soundMode is melodic (AC-2.5.4/4)');
+  if (melodic && !SCALES.includes(p.scale)) fail(name, `scale "${p.scale}" unsupported (data-model §7 rule 13)`);
 
   if (!Number.isInteger(p.tempo) || p.tempo < 18 || p.tempo > 220) fail(name, `tempo ${p.tempo} outside 18–220`);
   if (!Number.isInteger(p.rating) || p.rating < 0 || p.rating > 5) fail(name, `rating ${p.rating} outside 0–5`);

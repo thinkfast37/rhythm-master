@@ -16,6 +16,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
   "name": "Bossa Groove",        // required, non-empty, trimmed
   "soundMode": "percussive",     // "percussive" | "melodic"
   "key": "C",                    // present only when soundMode === "melodic"
+  "scale": "ionian",             // optional; only when soundMode === "melodic". Absent reads as "ionian"
   "tempo": 80,                   // integer BPM, 18–300
   "swingFeel": "eighth",         // "quarter" | "eighth" | "sixteenth"; optional, absent means "eighth"
   "swingAmount": 30,             // integer 0–100; optional, absent means 0. The Pattern-wide default (AC-4.4.13)
@@ -32,6 +33,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `id` | Assigned at creation. Shipped Patterns get a deterministic id derived from their seed-file position, so Local Metadata keyed to one survives a library update. | FR-006 |
 | `name` | Required. Duplicate names are permitted — identity is `id`, not name. | US-7.1 |
 | `key` | Present iff `soundMode === "melodic"`. One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
+| `scale` | Optional, and only when `soundMode === "melodic"`. One of the ids in `core/scales.js`'s catalogue (church modes, the five pentatonic modes, both blues scales, harmonic and melodic minor). Absent reads as `ionian`, so Patterns saved before the field existed need no migration; every shipped Melodic Pattern carries it explicitly. Drives the strip's in-scale marking and spelling only — never resolution to a sounding note, which stays `(degree, octaveOffset, key)`. | US-2.5 |
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern. | AC-4.4.7 |
 | `swingAmount` | The Pattern-wide swing amount, 0–100; optional, absent reads as 0. Every straight Subdivision Group without a per-group amount inherits it — which is why a Measure added later swings without any copying. Per-group amounts on a Beat (`beat.swing`, keyed by group index) act as overrides and play as authored. | AC-4.4.12, AC-4.4.13 |
@@ -144,7 +146,8 @@ Slot content is carried across, in either direction.
 `degree` is a scale-degree token: a positive integer with an optional flat or sharp prefix, resolved
 against the Pattern's `key`. Degrees above 7 continue upward by octave, so `"9"` is a ninth above the
 tonic — the same note as `"2"` an octave up, written the way a musician writes it. The pitch strip
-(US-2.2) offers `"1"`–`"8"` by default and extends to `"15"`; the shipped library uses up to `"10"`.
+(US-2.2) offers the twelve chromatic degrees of one octave and reaches everything else through the
+octave stepper; tokens above `"7"` remain valid stored data — the shipped library uses up to `"10"`.
 `octaveOffset` is an integer, 0 being the base octave — octave 4, whose degree 1 in C is middle C.
 The strip spans `octaveOffset` −3 to +3, shown to the musician as absolute octaves 1 to 7
 (AC-2.2.3). Resolution to a frequency or MIDI note number is `core/pitch.js`'s job and depends on
@@ -338,6 +341,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 10. `tags` contains no automatic Tag name.
 11. `swingFeel`, where present, is `quarter`, `eighth`, or `sixteenth`.
 12. `swingAmount`, where present, is an integer within 0–100.
+13. `scale`, where present, is a catalogue id from `core/scales.js` — and only when `soundMode` is `melodic`.
 
 A shipped Pattern failing validation is a build-breaking error — the seed file is checked in CI.
 A user-owned Pattern failing validation is repaired where unambiguously possible (clamping tempo,

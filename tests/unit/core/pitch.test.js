@@ -8,10 +8,7 @@ import {
   BASE_OCTAVE,
   MIN_OCTAVE,
   MAX_OCTAVE,
-  DEFAULT_DEGREES,
-  EXTENDED_DEGREES,
   splitDegree,
-  degreeToken,
   octaveNumber,
   octaveOffsetFor,
   clampOctave,
@@ -128,32 +125,30 @@ describe('core/pitch — the pitch strip’s vocabulary (US-2.2)', () => {
     expect(resolve({ degree: '1', octaveOffset: octaveOffsetFor(4) }, 'C').midiNote).toBe(60);
   });
 
-  it('AC-2.2.4 — the strip spans degrees 1-8 by default and 9-15 extended', () => {
-    expect(DEFAULT_DEGREES).toEqual(['1', '2', '3', '4', '5', '6', '7', '8']);
-    expect(EXTENDED_DEGREES).toEqual(['9', '10', '11', '12', '13', '14', '15']);
-    // Every degree the strip offers must resolve, at every octave it offers.
-    for (const degree of [...DEFAULT_DEGREES, ...EXTENDED_DEGREES]) {
+  it('every degree token the data model allows resolves, at every octave the strip offers', () => {
+    // The strip now offers the twelve chromatic tokens (AC-2.2.4, proven in
+    // e2e); stored data may still carry any token up to 15, altered either way.
+    for (let n = 1; n <= 15; n++) {
       for (const accidental of ['b', '', '#']) {
         for (let offset = -3; offset <= 3; offset++) {
-          const { midiNote } = resolve({ degree: degreeToken(degree, accidental), octaveOffset: offset }, 'B');
-          expect(Number.isInteger(midiNote), `${accidental}${degree} at ${offset}`).toBe(true);
+          const { midiNote } = resolve({ degree: `${accidental}${n}`, octaveOffset: offset }, 'B');
+          expect(Number.isInteger(midiNote), `${accidental}${n} at ${offset}`).toBe(true);
         }
       }
     }
   });
 
-  it('AC-2.2.4 — a degree token splits into accidental and number, and rebuilds', () => {
+  it('a degree token splits into accidental and number', () => {
     expect(splitDegree('b3')).toEqual(['b', '3']);
     expect(splitDegree('#4')).toEqual(['#', '4']);
     expect(splitDegree('10')).toEqual(['', '10']);
     for (const token of ['1', 'b3', '#4', 'b7', '9', '15']) {
       const [accidental, number] = splitDegree(token);
-      expect(degreeToken(number, accidental)).toBe(token);
+      expect(`${accidental}${number}`).toBe(token);
     }
-    // The strip can only ever build tokens from these parts, so a bad pair has
-    // to fail here rather than reach a Pattern.
-    expect(() => degreeToken('0')).toThrow(/Invalid scale degree/);
-    expect(() => degreeToken('3', 'x')).toThrow(/Invalid scale degree/);
+    // A malformed token has to fail here rather than reach a Pattern.
+    expect(() => splitDegree('0')).toThrow(/Invalid scale degree/);
+    expect(() => splitDegree('x3')).toThrow(/Invalid scale degree/);
   });
 
   it('AC-2.2.15/5 — The note name is spelled diatonically against the Key: each degree takes its own letter, so degree 3 in D♭ is `F` and `b3` is `Fb` rather than `E`, which is how the interval is written on a stave: the major scale of every Key', () => {
@@ -225,10 +220,10 @@ describe('core/pitch — the pitch strip’s vocabulary (US-2.2)', () => {
     const SHIFT = { bb: -2, b: -1, '': 0, '#': 1, '##': 2 };
 
     for (const key of KEYS) {
-      for (const degree of [...DEFAULT_DEGREES, ...EXTENDED_DEGREES]) {
+      for (let n = 1; n <= 15; n++) {
         for (const accidental of ['', 'b', '#']) {
           for (const octaveOffset of [-3, 0, 3]) {
-            const pitch = { degree: degreeToken(degree, accidental), octaveOffset };
+            const pitch = { degree: `${accidental}${n}`, octaveOffset };
             let named;
             try {
               named = noteName(pitch, key);
@@ -246,13 +241,13 @@ describe('core/pitch — the pitch strip’s vocabulary (US-2.2)', () => {
     }
   });
 
-  it('AC-2.2.4 — the strip reaches every degree the shipped library uses', () => {
-    // The dropdown it replaces offered neither 8 nor 10, which four shipped
-    // Patterns use — it could not reproduce the library's own pitches.
+  it('every degree the shipped library uses still splits and resolves', () => {
+    // Four shipped Patterns use 8, 9 and 10; tokens above the strip's chromatic
+    // octave remain valid stored data (AC-2.2.4/3).
     for (const degree of ['1', '3', '4', '5', '6', '7', '8', '9', '10', 'b7']) {
       const [accidental, number] = splitDegree(degree);
-      expect([...DEFAULT_DEGREES, ...EXTENDED_DEGREES]).toContain(number);
-      expect(degreeToken(number, accidental)).toBe(degree);
+      expect(`${accidental}${number}`).toBe(degree);
+      expect(Number.isInteger(resolve({ degree, octaveOffset: 0 }, 'C').midiNote)).toBe(true);
     }
   });
 });

@@ -81,8 +81,7 @@ test('AC-2.2.1 — a stamped pitch replaces the previous one and is shown in the
   await melodicBlank(page);
   await accentZone(page, 0, 0).click();
 
-  await page.locator('.degree[data-degree="3"]').click();
-  await page.locator('.accidental[data-accidental="b"]').click();
+  await page.locator('.degree[data-degree="b3"]').click();
   await page.locator('[data-action="octave-down"]').click();
   await noteBand(page, 0, 0).click();
 
@@ -98,7 +97,6 @@ test('AC-2.2.1 — a stamped pitch replaces the previous one and is shown in the
 
   // A second stamp fully replaces the first — never two pitches on one Slot.
   await page.locator('.degree[data-degree="5"]').click();
-  await page.locator('.accidental[data-accidental=""]').click();
   await noteBand(page, 0, 0).click();
   expect(await pitchOf(page, 0, 0)).toEqual({ degree: '5', octaveOffset: -1 });
 });
@@ -106,7 +104,6 @@ test('AC-2.2.1 — a stamped pitch replaces the previous one and is shown in the
 test('AC-2.2.2 — the armed pitch starts at degree 1 octave 4 and stays armed', async ({ page }) => {
   await melodicBlank(page);
   await expect(page.locator('.degree[data-degree="1"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.accidental[data-accidental=""]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.octave-readout')).toHaveAttribute('data-octave', '4');
 
   // Arming once and stamping three Slots gives all three that pitch: the strip
@@ -154,28 +151,52 @@ test('AC-2.2.3 — the octave stepper clamps at 1 and 7 rather than wrapping', a
   expect((await pitchOf(page, 0, 0)).octaveOffset).toBe(3);
 });
 
-test('AC-2.2.4 — degrees 1–8 show by default, 9–15 behind the extend control', async ({ page }) => {
+test('AC-2.2.4/1 — All twelve chromatic degrees are shown at once, each armed by a single tap', async ({ page }) => {
   await melodicBlank(page);
-  await expect(page.locator('.degree')).toHaveCount(8);
-  await expect(page.locator('.degree[data-degree="8"]')).toBeVisible();
-  await expect(page.locator('.degree[data-degree="9"]')).toHaveCount(0);
-
-  await page.locator('[data-action="toggle-extended-degrees"]').click();
-  await expect(page.locator('.degree')).toHaveCount(15);
-  await expect(page.locator('.degree[data-degree="15"]')).toBeVisible();
-
-  // The accidental control is what keeps the strip's vocabulary as wide as the
-  // dropdown it replaces: b3, #4 and b7 are all reachable.
+  await expect(page.locator('.degree')).toHaveCount(12);
+  const CHROMATIC = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7'];
   await accentZone(page, 0, 0).click();
-  for (const [accidental, degree, expected] of [['b', '3', 'b3'], ['#', '4', '#4'], ['b', '7', 'b7']]) {
-    await page.locator(`.accidental[data-accidental="${accidental}"]`).click();
-    await page.locator(`.degree[data-degree="${degree}"]`).click();
+  for (const token of CHROMATIC) {
+    const chip = page.locator(`.degree[data-degree="${token}"]`);
+    await expect(chip).toBeVisible();
+    await chip.click(); // one tap arms it — no accidental mode to set first
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
     await noteBand(page, 0, 0).click();
-    expect((await pitchOf(page, 0, 0)).degree).toBe(expected);
+    expect((await pitchOf(page, 0, 0)).degree).toBe(token);
   }
+});
 
-  await page.locator('[data-action="toggle-extended-degrees"]').click();
-  await expect(page.locator('.degree')).toHaveCount(8);
+test('AC-2.2.4/2 — There is no flat/natural/sharp mode: a chip is the degree it names, so arming `b3` never relabels or re-pitches any other chip', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('[data-action="set-accidental"]')).toHaveCount(0);
+
+  const tokensBefore = await page.locator('.degree').evaluateAll((els) => els.map((e) => e.dataset.degree));
+  const namesBefore = await page.locator('.degree').evaluateAll((els) => els.map((e) => e.dataset.noteName));
+  await page.locator('.degree[data-degree="b3"]').click();
+  expect(await page.locator('.degree').evaluateAll((els) => els.map((e) => e.dataset.degree))).toEqual(tokensBefore);
+  expect(await page.locator('.degree').evaluateAll((els) => els.map((e) => e.dataset.noteName))).toEqual(namesBefore);
+});
+
+test('AC-2.2.4/3 — Degrees above the octave are reached with the octave stepper — a ninth is stamped as degree `2` an octave up — while a stored Pattern whose tokens use `8`–`15` still displays and plays unchanged', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('[data-action="toggle-extended-degrees"]')).toHaveCount(0);
+
+  // A ninth: degree 2, one octave up.
+  await accentZone(page, 0, 0).click();
+  await page.locator('.degree[data-degree="2"]').click();
+  await page.locator('[data-action="octave-up"]').click();
+  await noteBand(page, 0, 0).click();
+  expect(await pitchOf(page, 0, 0)).toEqual({ degree: '2', octaveOffset: 1 });
+
+  // A stored token above the strip's span still displays and resolves: "9" in
+  // C is D5, exactly what core/pitch.js has always said it is.
+  await page.evaluate(() => {
+    const state = window.__rm.getState();
+    const pattern = structuredClone(state.pattern);
+    pattern.measures[0].beats[1].slots[0] = { on: true, pitch: { degree: '9', octaveOffset: 0 } };
+    window.__rm.loadPattern(pattern, { owned: true });
+  });
+  await expect(page.locator('.slot[data-beat="1"][data-slot="0"] .slot-pitch')).toHaveAttribute('data-note-name', 'D5');
 });
 
 test('AC-2.2.5 — a Slot that is not sounding cannot be stamped', async ({ page }) => {
@@ -253,7 +274,7 @@ test('AC-2.2.9 — re-arming the strip does not change already-stamped Slots', a
   await noteBand(page, 0, 0).click();
 
   await page.locator('.degree[data-degree="2"]').click();
-  await page.locator('.accidental[data-accidental="#"]').click();
+  await page.locator('.degree[data-degree="#4"]').click();
   await page.locator('[data-action="octave-up"]').click();
 
   expect(await pitchOf(page, 0, 0)).toEqual({ degree: '4', octaveOffset: 0 });
@@ -355,8 +376,7 @@ test("AC-2.2.14/3 — The note band's text is rendered at least a third smaller 
 test('AC-2.2.14/5 — Neither line of the note band is clipped on any axis: the band gives its two lines enough leading that ascenders and descenders are not shaved: under a substituted typeface and an enforced minimum size', async ({ page }) => {
   await melodicBlank(page);
   await page.locator('.key-picker').selectOption('Gb');
-  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
-  await page.locator('.degree[data-degree="2"]').click();
+  await page.locator('.degree[data-degree="b2"]').click();
   for (let s = 0; s < 4; s++) await accentZone(page, 0, s).click();
 
   // The grid names its faces explicitly so a system-font setting cannot reach
@@ -413,8 +433,7 @@ test("AC-2.2.14/5 — Neither line of the note band is clipped on any axis: the 
 
   // Glyphs with the tallest ascenders and deepest descenders this can produce,
   // plus the widest name any Key spells (Abb4, the flattened second of Gb).
-  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
-  await page.locator('.degree[data-degree="2"]').click();
+  await page.locator('.degree[data-degree="b2"]').click();
   await accentZone(page, 0, 0).click();
   await expect(slotAt(page, 0, 0).locator('.slot-note-name')).toHaveText('Abb4');
 
@@ -490,8 +509,7 @@ test("AC-2.2.14/6 — The counting syllable is the brightest text in the Slot, t
 
 test("AC-2.2.15/1 — The band shows the Slot's scale degree, including any accidental", async ({ page }) => {
   await melodicBlank(page);
-  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
-  await page.locator('.degree[data-degree="3"]').click();
+  await page.locator('.degree[data-degree="b3"]').click();
   await accentZone(page, 0, 0).click();
 
   await expect(slotAt(page, 0, 0).locator('.slot-degree')).toHaveText('b3');
@@ -500,8 +518,7 @@ test("AC-2.2.15/1 — The band shows the Slot's scale degree, including any acci
 test("AC-2.2.15/2 — The band shows the note name that degree resolves to in the Pattern's Key — letter, accidental where the spelling has one, and absolute octave number", async ({ page }) => {
   await melodicBlank(page);
   await page.locator('.key-picker').selectOption('Db');
-  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
-  await page.locator('.degree[data-degree="3"]').click();
+  await page.locator('.degree[data-degree="b3"]').click();
   await accentZone(page, 0, 0).click();
 
   // b3 in Db is Fb — the flattened third, spelled on the third's own letter.
@@ -589,14 +606,15 @@ const degreesNamed = (page) =>
     els.map((e) => `${e.querySelector('.degree-number').textContent}:${e.dataset.noteName}`)
   );
 
-test('AC-2.2.16/1 — Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree', async ({ page }) => {
+test('AC-2.2.16/1 — Each degree chip shows the note name it would stamp at the currently armed octave, alongside the degree', async ({ page }) => {
   await melodicBlank(page);
   await page.locator('.key-picker').selectOption('Db');
 
-  // Db major, degrees 1-8, at the armed octave — the scale as its key
-  // signature writes it, each degree on its own letter.
+  // The chromatic octave in Db, at the armed octave — every chip diatonically
+  // spelled from its own degree letter, chromatic alterations included.
   expect(await degreesNamed(page)).toEqual([
-    '1:Db4', '2:Eb4', '3:F4', '4:Gb4', '5:Ab4', '6:Bb4', '7:C5', '8:Db5',
+    '1:Db4', '♭2:Ebb4', '2:Eb4', '♭3:Fb4', '3:F4', '4:Gb4',
+    '♯4:G4', '5:Ab4', '♭6:Bbb4', '6:Bb4', '♭7:Cb5', '7:C5',
   ]);
 
   // The degree itself is still there beside the name, not replaced by it.
@@ -604,20 +622,17 @@ test('AC-2.2.16/1 — Each degree button shows the note name it would stamp at t
   await expect(page.locator('.degree[data-degree="3"] .degree-name')).toHaveText('F4');
 });
 
-test('AC-2.2.16/2 — Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called', async ({ page }) => {
+test('AC-2.2.16/2 — Changing the Key or the octave updates those names, since they describe what the chip will do rather than what it is called', async ({ page }) => {
   await melodicBlank(page);
   await page.locator('.key-picker').selectOption('Db');
   expect((await degreesNamed(page))[0]).toBe('1:Db4');
 
   await page.locator('.key-picker').selectOption('C');
   expect(await degreesNamed(page)).toEqual([
-    '1:C4', '2:D4', '3:E4', '4:F4', '5:G4', '6:A4', '7:B4', '8:C5',
+    '1:C4', '♭2:Db4', '2:D4', '♭3:Eb4', '3:E4', '4:F4',
+    '♯4:F#4', '5:G4', '♭6:Ab4', '6:A4', '♭7:Bb4', '7:B4',
   ]);
 
-  await page.locator('[data-action="set-accidental"][data-accidental="b"]').click();
-  expect((await degreesNamed(page))[2]).toBe('3:Eb4'); // b3 in C
-
-  await page.locator('[data-action="set-accidental"][data-accidental=""]').click();
   await page.locator('[data-action="octave-up"]').click();
   expect((await degreesNamed(page))[0]).toBe('1:C5');
 });
@@ -629,9 +644,12 @@ test('AC-2.2.15/5 — The note name is spelled diatonically against the Key: eac
   // Gb major's fourth is Cb, not B: a fourth must sit on the fourth's letter.
   await expect(page.locator('.degree[data-degree="4"] .degree-name')).toHaveText('Cb5');
 
-  // And the seven degrees use seven different letters, which is the property
-  // that makes a scale readable at all.
-  const letters = (await degreesNamed(page)).slice(0, 7).map((s) => s.split(':')[1][0]);
+  // And the seven in-scale degrees use seven different letters, which is the
+  // property that makes a scale readable at all.
+  const letters = await page.locator('.degree[data-in-scale="true"]').evaluateAll((els) =>
+    els.map((e) => e.dataset.noteName[0])
+  );
+  expect(letters).toHaveLength(7);
   expect(new Set(letters).size).toBe(7);
 });
 
@@ -1015,9 +1033,190 @@ test('AC-2.2.18 — The armed control stays marked while the pointer is on it', 
   expect(hovered.fill).toBe('rgb(240, 160, 32)'); // --brand, not the hover ground
   expect(brand).toBe('#f0a020'); // the literal above tracks the token
 
-  // The accidental group arms the same way and had the same collision.
-  const accidental = page.locator('[data-action="set-accidental"][data-accidental="b"]');
-  await accidental.click();
-  await expect(accidental).toHaveAttribute('aria-pressed', 'true');
-  expect((await armedFill(accidental)).fill).toBe('rgb(240, 160, 32)');
+  // A second chip arms the same way — the rule is the strip's, not one button's.
+  const flatThree = page.locator('.degree[data-degree="b3"]');
+  await flatThree.click();
+  await expect(flatThree).toHaveAttribute('aria-pressed', 'true');
+  expect((await armedFill(flatThree)).fill).toBe('rgb(240, 160, 32)');
+});
+
+/* --- US-2.5 — Choose a scale --------------------------------------------- */
+
+/** The scale picker's option values, grouped by their optgroup label. */
+const scaleGroups = (page) =>
+  page.locator('.scale-picker optgroup').evaluateAll((groups) =>
+    Object.fromEntries(
+      groups.map((g) => [g.label, [...g.querySelectorAll('option')].map((o) => o.value)])
+    )
+  );
+
+/** The strip's in-scale chip tokens, in order. */
+const inScaleTokens = (page) =>
+  page.locator('.degree').evaluateAll((els) =>
+    els.filter((e) => e.dataset.inScale === 'true').map((e) => e.dataset.degree)
+  );
+
+test('AC-2.5.1/1 — The seven church modes are offered', async ({ page }) => {
+  await melodicBlank(page);
+  expect((await scaleGroups(page))['Church Modes']).toEqual([
+    'ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian',
+  ]);
+});
+
+test('AC-2.5.1/2 — All five pentatonic modes are offered — Major, Suspended, Blues Minor, Blues Major, and Minor Pentatonic', async ({ page }) => {
+  await melodicBlank(page);
+  expect((await scaleGroups(page))['Pentatonic']).toEqual([
+    'major-pentatonic', 'suspended-pentatonic', 'blues-minor-pentatonic',
+    'blues-major-pentatonic', 'minor-pentatonic',
+  ]);
+});
+
+test('AC-2.5.1/3 — Minor Blues and Major Blues (six-note) are offered', async ({ page }) => {
+  await melodicBlank(page);
+  expect((await scaleGroups(page))['Blues']).toEqual(['minor-blues', 'major-blues']);
+});
+
+test('AC-2.5.1/4 — Harmonic Minor and Melodic Minor are offered', async ({ page }) => {
+  await melodicBlank(page);
+  expect((await scaleGroups(page))['Other']).toEqual(['harmonic-minor', 'melodic-minor']);
+});
+
+test("AC-2.5.2/1 — Exactly the scale's own degrees are marked in-scale, and changing the scale re-marks the strip", async ({ page }) => {
+  await melodicBlank(page);
+  // Ionian by default: the major scale and nothing else.
+  expect(await inScaleTokens(page)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
+
+  await page.locator('.scale-picker').selectOption('minor-pentatonic');
+  expect(await inScaleTokens(page)).toEqual(['1', 'b3', '4', '5', 'b7']);
+
+  await page.locator('.scale-picker').selectOption('lydian');
+  expect(await inScaleTokens(page)).toEqual(['1', '2', '3', '#4', '5', '6', '7']);
+});
+
+test('AC-2.5.2/2 — An out-of-scale chip can still be armed and stamped', async ({ page }) => {
+  await melodicBlank(page); // ionian: b6 is out of scale
+  await accentZone(page, 0, 0).click();
+  const chip = page.locator('.degree[data-degree="b6"]');
+  await expect(chip).toHaveAttribute('data-in-scale', 'false');
+  await chip.click();
+  await expect(chip).toHaveAttribute('aria-pressed', 'true');
+  await noteBand(page, 0, 0).click();
+  expect((await pitchOf(page, 0, 0)).degree).toBe('b6');
+});
+
+test('AC-2.5.2/3 — In-scale is legible by more than colour alone', async ({ page }) => {
+  await melodicBlank(page);
+  // The marking is a shape difference — a thicker bottom edge — not only a hue.
+  const widthOf = (sel) =>
+    page.locator(sel).evaluate((el) => parseFloat(getComputedStyle(el).borderBottomWidth));
+  const inScale = await widthOf('.degree[data-degree="2"]');
+  const outOfScale = await widthOf('.degree[data-degree="b2"]');
+  expect(inScale).toBeGreaterThan(outOfScale);
+});
+
+test("AC-2.5.3 — Chip labels follow the scale's own spelling", async ({ page }) => {
+  await melodicBlank(page);
+  // Ionian spells the tritone #4…
+  await expect(page.locator('.degree[data-degree="#4"]')).toBeVisible();
+  await expect(page.locator('.degree[data-degree="b5"]')).toHaveCount(0);
+
+  // …Locrian and the Blues scales spell it b5, and the chip stamps what it says.
+  for (const scale of ['locrian', 'minor-blues']) {
+    await page.locator('.scale-picker').selectOption(scale);
+    await expect(page.locator('.degree[data-degree="b5"]')).toBeVisible();
+    await expect(page.locator('.degree[data-degree="#4"]')).toHaveCount(0);
+  }
+  await accentZone(page, 0, 0).click();
+  await page.locator('.degree[data-degree="b5"]').click();
+  await noteBand(page, 0, 0).click();
+  expect((await pitchOf(page, 0, 0)).degree).toBe('b5');
+});
+
+test('AC-2.5.4/1 — A changed scale survives a close and reopen of the Pattern', async ({ page }) => {
+  await melodicBlank(page); // owned Pattern p_test
+  await page.locator('.scale-picker').selectOption('dorian');
+
+  await page.evaluate(() => window.__rm.loadBlank('3/4', 'Elsewhere'));
+  await page.evaluate(() => window.__rm.handlers.onOpen('p_test', true));
+  await expect(page.locator('.scale-picker')).toHaveValue('dorian');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('dorian');
+});
+
+test('AC-2.5.4/2 — A Melodic Pattern that carries no stored scale reads as Ionian (Major), so Patterns saved before the field existed need no migration', async ({ page }) => {
+  await melodicBlank(page);
+  await page.evaluate(() => {
+    const pattern = structuredClone(window.__rm.getState().pattern);
+    delete pattern.scale;
+    window.__rm.loadPattern(pattern, { owned: true });
+  });
+  await expect(page.locator('.scale-picker')).toHaveValue('ionian');
+  expect(await inScaleTokens(page)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
+  // Reading it as Ionian writes nothing: the Pattern still carries no scale.
+  expect(await page.evaluate(() => 'scale' in window.__rm.getState().pattern)).toBe(false);
+});
+
+test('AC-2.5.4/3 — `scale` is present only on Melodic Patterns: switching to Percussive removes it, switching to Melodic restores one (the stored value if present, else Ionian)', async ({ page }) => {
+  await melodicBlank(page);
+  expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
+
+  await page.locator('.sound-mode').selectOption('percussive');
+  expect(await page.evaluate(() => 'scale' in window.__rm.getState().pattern)).toBe(false);
+
+  await page.locator('.sound-mode').selectOption('melodic');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
+});
+
+test('AC-2.5.4/4 — Every shipped Melodic Pattern carries `scale: "ionian"` explicitly', async ({ page }) => {
+  await melodicBlank(page);
+  const scales = await page.evaluate(() =>
+    window.__rm.seedStore.loadAll().filter((p) => p.soundMode === 'melodic').map((p) => p.scale)
+  );
+  expect(scales.length).toBeGreaterThan(0);
+  for (const s of scales) expect(s).toBe('ionian');
+});
+
+test('AC-2.5.4/5 — On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern', async ({ page }) => {
+  await page.goto('/');
+  const id = await page.evaluate(() => {
+    const shipped = window.__rm.seedStore.loadAll().find((p) => p.soundMode === 'melodic');
+    window.__rm.handlers.onOpen(shipped.id, false);
+    return shipped.id;
+  });
+
+  // Changing the scale on the shipped Pattern asks for a new name first.
+  await page.locator('.scale-picker').selectOption('aeolian');
+  await expect(page.locator('.dialog-input')).toBeVisible();
+
+  // Cancelling leaves the shipped Pattern exactly as shipped, still not owned.
+  await page.locator('.dialog-button:not(.primary)', { hasText: 'Cancel' }).click();
+  const after = await page.evaluate(
+    (pid) => ({
+      scale: window.__rm.seedStore.loadAll().find((p) => p.id === pid).scale,
+      isOwned: window.__rm.getState().isOwned,
+    }),
+    id
+  );
+  expect(after.scale).toBe('ionian');
+  expect(after.isOwned).toBe(false);
+});
+
+test('AC-2.5.5 — The scale never changes what is stamped or heard', async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+  await page.locator('.degree[data-degree="3"]').click();
+  await noteBand(page, 0, 0).click();
+  await accentZone(page, 1, 0).click();
+  await page.locator('.degree[data-degree="b7"]').click();
+  await noteBand(page, 1, 0).click();
+
+  const before = await page.evaluate(() =>
+    JSON.stringify(window.__rm.getState().pattern.measures)
+  );
+  for (const scale of ['minor-pentatonic', 'harmonic-minor', 'ionian']) {
+    await page.locator('.scale-picker').selectOption(scale);
+    const after = await page.evaluate(() =>
+      JSON.stringify(window.__rm.getState().pattern.measures)
+    );
+    expect(after, scale).toBe(before);
+  }
 });

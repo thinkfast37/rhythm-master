@@ -428,11 +428,15 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** the value clamps at that bound rather than wrapping
   - **And** the stepper reads as an absolute octave number, 1 to 7, while the Pattern stores `octaveOffset` −3 to +3 against the base octave of 4 — the stored representation is unchanged by this control (data-model §4)
 
-- **AC-2.2.4** — Degree strip default span
+- **AC-2.2.4** — Degree strip chromatic span
   - **Given** a Melodic Pattern with an active Key
   - **When** the Composer views the degree strip
-  - **Then** degrees 1–8 (one octave of the Key's scale) are shown by default, extendable to reach degrees 9–15 without touching the octave stepper
-  - **And** a flat/natural/sharp control alters the armed degree, so `b3`, `#4` and `b7` are reachable at any degree — the strip's vocabulary is the full token set of data-model §4, not the diatonic degrees alone
+  - **Then** it shows one chip per chromatic degree of the octave — `1`, `b2`, `2`, `b3`, `3`, `4`, `#4`, `5`, `b6`, `6`, `b7`, `7` — each armed by a single tap, with no separate accidental control and nothing hidden behind an extend control
+  - **Cases**:
+    - **AC-2.2.4/1** — All twelve chromatic degrees are shown at once, each armed by a single tap
+    - **AC-2.2.4/2** — There is no flat/natural/sharp mode: a chip is the degree it names, so arming `b3` never relabels or re-pitches any other chip
+    - **AC-2.2.4/3** — Degrees above the octave are reached with the octave stepper — a ninth is stamped as degree `2` an octave up — while a stored Pattern whose tokens use `8`–`15` still displays and plays unchanged
+  - *(Revised 2026-08-23. This previously specified diatonic buttons `1`–`8` (extendable to `15`) modified by a flat/natural/sharp mode control. The maintainer reported the mode control unreadable in practice: armed degree 4 in F named `Bb4` while the control showed ♮ pressed — the ♮ described the unaltered *degree*, not the note — and pressing ♯ relabelled the entire strip. One chip per chromatic degree removes the mode entirely; the stored token vocabulary of data-model §4 is unchanged.)*
 
 - **AC-2.2.5** — A Slot that is not sounding cannot be stamped
   - **Given** an off Slot and a currently armed pitch on the strip
@@ -533,11 +537,12 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** the Composer looks at the degree buttons
   - **Then** each shows both the scale degree and the note name it would stamp — the same pairing AC-2.2.15 puts in the grid, so the palette and the thing it stamps read alike
   - **Cases**:
-    - **AC-2.2.16/1** — Each degree button shows the note name it would stamp at the currently armed accidental and octave, alongside the degree
-    - **AC-2.2.16/2** — Changing the Key, the accidental or the octave updates those names, since they describe what the button will do rather than what it is called
+    - **AC-2.2.16/1** — Each degree chip shows the note name it would stamp at the currently armed octave, alongside the degree
+    - **AC-2.2.16/2** — Changing the Key or the octave updates those names, since they describe what the chip will do rather than what it is called
+  - *(Revised 2026-08-23 with AC-2.2.4: the armed accidental no longer exists as an input to a chip's name — each chromatic chip carries its own accidental.)*
 
 - **AC-2.2.18** — The armed control stays marked while the pointer is on it
-  - **Given** an armed control on the pitch strip — a degree button or an accidental
+  - **Given** an armed control on the pitch strip — any degree chip *(the accidental group this also named retired with AC-2.2.4's 2026-08-23 revision)*
   - **When** the pointer hovers it — including the hover state a touchscreen leaves stuck on a control after tapping it
   - **Then** the armed marking — the filled chip and the dark text sized to that fill — still applies, rather than the hover ground replacing the fill and leaving dark text on a dark chip
   - *(Added 2026-08-23. Reported by the maintainer: tapping a degree turned it black-on-black. The hover rule outranked the armed rule in specificity, so the armed chip kept its dark ink but swapped its bright fill for the hover ground — permanently, on a touchscreen, where hover sticks after a tap.)*
@@ -2383,6 +2388,54 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-17.1.9/1** — The web build opens the app with no paywall and no Purchases control
     - **AC-17.1.9/2** — The web build never statically imports the billing plugin
+
+### User Story 37 - Choose a scale
+
+*Traceability: `US-2.5` — Choose a scale*
+
+**As** the Composer, **I want** to pick the scale I am working in and see, on the chromatic degree strip, which degrees belong to it, **so that** I can compose inside a scale — or step outside it deliberately — without keeping the scale's formula in my head.
+
+*(Added 2026-08-23. Asked for by the maintainer alongside AC-2.2.4's chromatic revision: with all twelve degrees always visible, the strip needs to say which of them are "in". The scale catalogue is adopted from the maintainer's fret-navigator project so the two tools agree on names and formulas, extended with the three pentatonic modes it lacked.)*
+
+- **AC-2.5.1** — The scale picker offers the full catalogue
+  - **Given** the pitch strip in a Melodic Pattern
+  - **When** the Composer opens the scale picker
+  - **Then** it offers exactly these scales, grouped: the seven church modes — Ionian (Major), Dorian, Phrygian, Lydian, Mixolydian, Aeolian (Natural Minor), Locrian; the five pentatonic modes — Major Pentatonic, Suspended Pentatonic, Blues Minor Pentatonic, Blues Major Pentatonic, Minor Pentatonic; the two six-note blues scales — Minor Blues, Major Blues; and Harmonic Minor and Melodic Minor
+  - **Cases**:
+    - **AC-2.5.1/1** — The seven church modes are offered
+    - **AC-2.5.1/2** — All five pentatonic modes are offered — Major, Suspended, Blues Minor, Blues Major, and Minor Pentatonic
+    - **AC-2.5.1/3** — Minor Blues and Major Blues (six-note) are offered
+    - **AC-2.5.1/4** — Harmonic Minor and Melodic Minor are offered
+
+- **AC-2.5.2** — In-scale degrees are marked; every degree stays armable
+  - **Given** a chosen scale
+  - **When** the Composer views the chromatic degree strip
+  - **Then** the chips whose degrees belong to the scale are visibly marked as in-scale, by more than colour alone, and every chip — in scale or out — can still be armed and stamped
+  - **Cases**:
+    - **AC-2.5.2/1** — Exactly the scale's own degrees are marked in-scale, and changing the scale re-marks the strip
+    - **AC-2.5.2/2** — An out-of-scale chip can still be armed and stamped
+    - **AC-2.5.2/3** — In-scale is legible by more than colour alone
+
+- **AC-2.5.3** — Chip labels follow the scale's own spelling
+  - **Given** a chosen scale whose formula spells the tritone as `b5` — Locrian, or either Blues scale
+  - **When** the Composer views the strip
+  - **Then** that chip reads `b5` and stamps `b5`; under every other scale it reads and stamps `#4` — the label, the token stamped, and the scale's formula always agree
+
+- **AC-2.5.4** — The scale is saved with the Pattern, defaulting to Major
+  - **Given** a Melodic Pattern
+  - **When** the Composer changes its scale, closes it, and reopens it
+  - **Then** the scale they chose is restored with the Pattern
+  - **Cases**:
+    - **AC-2.5.4/1** — A changed scale survives a close and reopen of the Pattern
+    - **AC-2.5.4/2** — A Melodic Pattern that carries no stored scale reads as Ionian (Major), so Patterns saved before the field existed need no migration
+    - **AC-2.5.4/3** — `scale` is present only on Melodic Patterns: switching to Percussive removes it, switching to Melodic restores one (the stored value if present, else Ionian)
+    - **AC-2.5.4/4** — Every shipped Melodic Pattern carries `scale: "ionian"` explicitly
+    - **AC-2.5.4/5** — On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern
+
+- **AC-2.5.5** — The scale never changes what is stamped or heard
+  - **Given** any Pattern with stamped Pitches
+  - **When** the Composer changes the scale
+  - **Then** no stored degree, octave, or Slot changes, and playback is identical — the scale drives the strip's marking and labels only
 
 ## Requirements *(mandatory)*
 

@@ -192,10 +192,9 @@ test('AC-15.1.9 — wide controls never push the page sideways on mobile', async
   }
   await page.locator('.sound-mode').selectOption('melodic');
   await expect(page.locator('.pitch-strip')).toBeVisible();
-  // The pitch strip at its widest: all fifteen degrees, not just the default
-  // eight. It wraps within the panel rather than scrolling the page (US-2.2).
-  await page.locator('[data-action="toggle-extended-degrees"]').click();
-  await expect(page.locator('.degree')).toHaveCount(15);
+  // The pitch strip at its widest: all twelve chromatic degrees. It wraps
+  // within the panel rather than scrolling the page (US-2.2).
+  await expect(page.locator('.degree')).toHaveCount(12);
 
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth

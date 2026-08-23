@@ -98,8 +98,6 @@ const state = {
    * unarmed, so the grid never comes back in a state the musician did not choose.
    */
   armedRecipe: null,
-  /** Whether the strip is showing degrees 9-15 as well as 1-8 (AC-2.2.4). */
-  degreesExtended: false,
   soundStatus: melodic.getStatus(),
   /** Library view state: search text, Tag and rating filters, and what is open. */
   view: { query: '', tags: [], minRating: 0, currentId: null },
@@ -412,8 +410,14 @@ const handlers = {
     render();
   },
 
-  onExtendDegrees() {
-    state.degreesExtended = !state.degreesExtended;
+  /**
+   * The scale is Pattern content like the Key — guarded on shipped Patterns
+   * (AC-2.5.4/5) — but it never touches what is stamped or heard (AC-2.5.5).
+   */
+  async onScale(scale) {
+    if (!(await guardShipped())) return;
+    state.pattern = { ...state.pattern, scale };
+    if (state.isOwned) patternStore.upsert(state.pattern);
     render();
   },
 
@@ -437,6 +441,7 @@ const handlers = {
 
     if (mode === 'melodic') {
       next.key = next.key ?? 'C';
+      next.scale = next.scale ?? 'ionian';
       // Every sounding Slot needs a pitch for the Pattern to be valid and
       // playable; default them to the tonic rather than producing silence.
       for (const measure of next.measures) {
@@ -448,6 +453,7 @@ const handlers = {
       }
     } else {
       delete next.key;
+      delete next.scale;
       // Pitch is meaningless in Percussive mode and would fail validation.
       for (const measure of next.measures) {
         for (const beat of measure.beats) {
