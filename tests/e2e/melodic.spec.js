@@ -989,3 +989,35 @@ async function bandOn(browser, deviceOptions, viewport = { width: 1280, height: 
   await context.close();
   return { band: band.height, strip: strip.height, slot: slot.height };
 }
+
+test('AC-2.2.18 — The armed control stays marked while the pointer is on it', async ({ page }) => {
+  await melodicBlank(page);
+
+  // Tap a degree; on a touchscreen the hover state then sticks to it, so the
+  // hovered rendering *is* the resting rendering there. The armed fill must
+  // survive it — before the fix, hover outranked armed and left the chip's
+  // near-black ink on the hover ground.
+  const armedFill = async (locator) => {
+    await locator.hover();
+    return locator.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { fill: cs.backgroundColor, ink: cs.color };
+    });
+  };
+
+  const degree = page.locator('.degree[data-degree="4"]');
+  await degree.click();
+  await expect(degree).toHaveAttribute('aria-pressed', 'true');
+  const brand = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()
+  );
+  const hovered = await armedFill(degree);
+  expect(hovered.fill).toBe('rgb(240, 160, 32)'); // --brand, not the hover ground
+  expect(brand).toBe('#f0a020'); // the literal above tracks the token
+
+  // The accidental group arms the same way and had the same collision.
+  const accidental = page.locator('[data-action="set-accidental"][data-accidental="b"]');
+  await accidental.click();
+  await expect(accidental).toHaveAttribute('aria-pressed', 'true');
+  expect((await armedFill(accidental)).fill).toBe('rgb(240, 160, 32)');
+});

@@ -917,7 +917,10 @@ body {
   border-radius: var(--radius);
   cursor: pointer;
 }
-.pitch-strip button:hover:not(:disabled) { background: #262b3a; }
+/* Hover never applies to an armed control: this rule outranks the armed one in
+   specificity, and on a touchscreen hover sticks after the tap — so without the
+   exclusion the armed chip keeps its dark ink on the hover ground (AC-2.2.18). */
+.pitch-strip button:hover:not(:disabled):not([aria-pressed='true']) { background: #262b3a; }
 .pitch-strip button:disabled { color: var(--ink-dim); cursor: default; }
 
 /*
