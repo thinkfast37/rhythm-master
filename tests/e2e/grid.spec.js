@@ -1399,3 +1399,70 @@ test('AC-15.2.8/4 — The Subdivision strip sits on the panel’s left edge with
   expect(Math.abs(chips - play)).toBeLessThanOrEqual(2);
   expect(chips).toBeLessThan(panelMid / 4);
 });
+
+/* --- the brush indicator: the grid always states its active brush (AC-1.3.12) --- */
+
+test('AC-1.3.12/1 — With a Recipe armed, the indicator names the Subdivision brush and the armed Recipe', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
+  const hint = page.locator('.recipe-hint');
+  await expect(hint).toHaveAttribute('data-brush', 'subdivision');
+  await expect(hint).toContainText('Subdivision');
+  await expect(hint).toContainText('Straight 8ths');
+});
+
+test('AC-1.3.12/2 — In Melodic mode with no Recipe armed, the indicator names the Note brush and the armed pitch', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.sound-mode').selectOption('melodic');
+
+  const hint = page.locator('.recipe-hint');
+  await expect(hint).toHaveAttribute('data-brush', 'note');
+  // The default armed pitch: degree 1 at the base octave, named in the Key (C).
+  await expect(hint).toContainText('Note — 1 (C4)');
+
+  // The indicator states the pitch armed now, not the one armed at render.
+  await page.locator('.degree[data-degree="b3"]').click();
+  await page.locator('[data-action="octave-down"]').click();
+  await expect(hint).toContainText('Note — b3 (Eb3)');
+});
+
+test('AC-1.3.12/3 — In Percussive mode with no Recipe armed, the indicator states the accent default', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  const hint = page.locator('.recipe-hint');
+  await expect(hint).toHaveAttribute('data-brush', 'accent');
+  await expect(hint).toContainText('Accent');
+});
+
+test('AC-1.3.12/4 — The indicator follows a brush switch in either direction, the moment a strip is tapped', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.sound-mode').selectOption('melodic');
+  const hint = page.locator('.recipe-hint');
+
+  // Note → Subdivision, by tapping the Recipe strip.
+  await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
+  await expect(hint).toHaveAttribute('data-brush', 'subdivision');
+
+  // Subdivision → Note, by tapping the pitch strip (AC-1.3.11/5).
+  await page.locator('.degree[data-degree="5"]').click();
+  await expect(hint).toHaveAttribute('data-brush', 'note');
+
+  // And back again: the switch works both ways, as many times as tapped.
+  await page.locator('.recipe-chip[data-recipe="straight-16ths"]').click();
+  await expect(hint).toHaveAttribute('data-brush', 'subdivision');
+  await page.locator('[data-action="octave-up"]').click();
+  await expect(hint).toHaveAttribute('data-brush', 'note');
+});

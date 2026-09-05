@@ -295,6 +295,23 @@ exist).
     and the grid goes back to stamping. Arming a Recipe does not touch the armed pitch, because the
     armed pitch has no disarmed state to go to — the asymmetry is in the state, not the rule.)*
 
+- **AC-1.3.12** — The grid always states its active brush
+  - **Given** the hint line under the Subdivision strip
+  - **When** the Composer works the grid in any Sound Mode
+  - **Then** it names the brush a grid tap will use right now — never only how to enter a mode —
+    and follows a brush switch the moment a strip is tapped
+  - **Cases**:
+    - **AC-1.3.12/1** — With a Recipe armed, the indicator names the Subdivision brush and the armed Recipe
+    - **AC-1.3.12/2** — In Melodic mode with no Recipe armed, the indicator names the Note brush and the armed pitch
+    - **AC-1.3.12/3** — In Percussive mode with no Recipe armed, the indicator states the accent default
+    - **AC-1.3.12/4** — The indicator follows a brush switch in either direction, the moment a strip is tapped
+  - *(Added 2026-09-05, alongside AC-1.3.11/5. The maintainer, having been trapped by an armed
+    Recipe they could not see: the armed chip's fill and the Recipe strip's hint marked subdivision
+    mode, but nothing ever said the grid was in note mode, so the two states did not read as two
+    modes of one grid. The strips are exclusive brushes now — tapping one switches the tool — and a
+    tool you switch by tapping needs a label that always says which is in hand. One line, in the
+    hint's existing place, restating itself on every switch.)*
+
 ---
 
 ### User Story 4 - Display and change a Measure's Time Signature in the grid

@@ -721,13 +721,25 @@ function renderRecipeStripInto(root, pattern, state, handlers) {
   }
   group.appendChild(labelled('Subdivision', chips));
 
-  // Says what a tap will do now, because arming changes what the grid does with
-  // one — the only mode in the app, so it states itself rather than being learned.
-  const hint = el('p', 'recipe-hint', {
-    textContent: state.armedRecipe
-      ? 'Tap any Beat to give it this subdivision. Tap the chip again to stop.'
-      : 'Pick a subdivision, then tap the Beats to apply it to.',
-  });
+  // The brush indicator (AC-1.3.12): always names the brush a grid tap will use
+  // right now, not merely how to enter a mode. The strips are exclusive brushes
+  // switched by tapping (AC-1.3.11/5), so this line restates itself on every
+  // switch — a tool changed by a tap needs a label that always says which is in
+  // hand, because an armed chip's fill alone did not read as a mode in practice.
+  const armedRecipeLabel = offered.find((r) => r.id === state.armedRecipe)?.label;
+  let brush = 'accent';
+  let text = 'Brush: Accent — tap a Slot to cycle its accent. Arm a subdivision to switch brushes.';
+  if (armedRecipeLabel) {
+    brush = 'subdivision';
+    text = `Brush: Subdivision — ${armedRecipeLabel}. Tap any Beat to apply it. Tap the chip again, or arm a note, to switch back.`;
+  } else if (pattern.soundMode === 'melodic') {
+    const armed = state.armedPitch ?? { degree: '1', octaveOffset: 0 };
+    const named = pattern.key ? spell(armed, pattern.key) : null;
+    brush = 'note';
+    text = `Brush: Note — ${armed.degree}${named ? ` (${named})` : ''}. Tap a note to stamp it. Arm a subdivision to switch brushes.`;
+  }
+  const hint = el('p', 'recipe-hint', { textContent: text });
+  hint.dataset.brush = brush;
   hint.dataset.armed = String(Boolean(state.armedRecipe));
   group.appendChild(hint);
 
