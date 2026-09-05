@@ -278,6 +278,7 @@ exist).
     - **AC-1.3.11/2** — With a Recipe armed, tapping any Beat of any Measure applies it to that Beat alone
     - **AC-1.3.11/3** — A Recipe inapplicable to the tapped Beat's note value leaves that Beat unchanged
     - **AC-1.3.11/4** — The armed Recipe stays armed across taps, and tapping the armed chip disarms it
+    - **AC-1.3.11/5** — Arming a pitch on the pitch strip disarms the armed Recipe
   - *(Added 2026-08-17. The Recipe control was one dropdown hardwired to Measure 1, Beat 1, so
     US-1.3's whole subject — mixed subdivision across a Pattern — was unreachable for every other
     Beat. Arming and painting is chosen over a control on each Beat because the grid has no
@@ -286,6 +287,30 @@ exist).
     nothing, works identically on every Beat, and reuses the pitch strip's idiom (US-2.2). A
     Recipe is not shown as a label on each Beat because the Slots already say it: four cells is
     Straight 16ths, three is Triplet 8ths, and a mixed Recipe draws its two groups apart.)*
+  - *(Case /5 added 2026-09-05. Reported by the maintainer: in a Melodic Pattern, changing the
+    octave and arming a degree, then tapping a Slot's note band, changed the Beat's subdivision
+    instead of stamping the pitch — a Recipe armed earlier was still intercepting every grid tap,
+    and nothing on the pitch strip ended that state. The two strips are brushes for the same grid,
+    so operating one is choosing a tool: arming a degree or stepping the octave disarms the Recipe,
+    and the grid goes back to stamping. Arming a Recipe does not touch the armed pitch, because the
+    armed pitch has no disarmed state to go to — the asymmetry is in the state, not the rule.)*
+
+- **AC-1.3.12** — The grid always states its active brush
+  - **Given** the hint line under the Subdivision strip
+  - **When** the Composer works the grid in any Sound Mode
+  - **Then** it names the brush a grid tap will use right now — never only how to enter a mode —
+    and follows a brush switch the moment a strip is tapped
+  - **Cases**:
+    - **AC-1.3.12/1** — With a Recipe armed, the indicator names the Subdivision brush and the armed Recipe
+    - **AC-1.3.12/2** — In Melodic mode with no Recipe armed, the indicator names the Note brush and the armed pitch
+    - **AC-1.3.12/3** — In Percussive mode with no Recipe armed, the indicator states the accent default
+    - **AC-1.3.12/4** — The indicator follows a brush switch in either direction, the moment a strip is tapped
+  - *(Added 2026-09-05, alongside AC-1.3.11/5. The maintainer, having been trapped by an armed
+    Recipe they could not see: the armed chip's fill and the Recipe strip's hint marked subdivision
+    mode, but nothing ever said the grid was in note mode, so the two states did not read as two
+    modes of one grid. The strips are exclusive brushes now — tapping one switches the tool — and a
+    tool you switch by tapping needs a label that always says which is in hand. One line, in the
+    hint's existing place, restating itself on every switch.)*
 
 ---
 

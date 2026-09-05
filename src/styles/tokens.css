@@ -1414,7 +1414,11 @@ body {
 }
 
 .recipe-hint { margin: 0; font: 500 11px/1.4 var(--font-ui); color: var(--ink-dim); }
-.recipe-hint[data-armed='true'] { color: var(--brand); }
+/* The brush indicator names the tool in hand (AC-1.3.12); an active brush —
+   subdivision or note — reads in the brand ink, the accent resting state stays
+   dim. Keyed off data-brush, which carries the words the colour repeats. */
+.recipe-hint[data-brush='subdivision'],
+.recipe-hint[data-brush='note'] { color: var(--brand); }
 
 /* While a Recipe is armed the grid is a brush, so every Beat reads as a target
    rather than the Slots reading as individually tappable. */
