@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 372 across 37 User Stories
+**Criteria**: 373 across 37 User Stories
 
-**Coverage**: 177 of 372 criteria proven (47.6%)
+**Coverage**: 178 of 373 criteria proven (47.7%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 177 | 47.6% |
+| 🟢 Proven | 178 | 47.7% |
 | 🔴 Gap — HIGH | 73 | 19.6% |
 | 🟠 Gap — MEDIUM | 44 | 11.8% |
-| 🟡 Gap — LOW | 78 | 21.0% |
+| 🟡 Gap — LOW | 78 | 20.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -60,7 +60,7 @@ fail the build, and it is outstanding work — never a settled decision.
 |---|---|---|---|---|---|---|---|
 | 🔴 US-1.1 | 10 | 3 | · | · | 4 | · | 3 |
 | 🟠 US-1.2 | 4 | 0 | · | · | · | 4 | · |
-| 🟠 US-1.3 | 14 | 4 | · | · | · | 4 | 6 |
+| 🟠 US-1.3 | 15 | 5 | · | · | · | 4 | 6 |
 | 🟠 US-1.4 | 8 | 0 | · | · | · | 6 | 2 |
 | 🔴 US-2.1 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-2.2 | 32 | 20 | · | · | 1 | 6 | 5 |
@@ -114,20 +114,21 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-1.2 | `AC-1.2.2` | Beat count/note-value table for all 10 Time Signatures | P-006 | T039 (1/1 done) | T040 (1/1 done) | `meter.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.2 | `AC-1.2.3` | 7/8 is 7 ungrouped Beats | P-006 | T039 (1/1 done) | T040 (1/1 done) | `meter.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.2 | `AC-1.2.4` | 6/8 is 6 ungrouped Beats | P-006 | T039 (1/1 done) | T040 (1/1 done) | `meter.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-1.3 | `AC-1.3.1` | Default Recipe for a quarter-note Beat | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `recipes.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.3 | `AC-1.3.2` | Default Recipe for an eighth-note Beat | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `recipes.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.3 | `AC-1.3.3` | New Recipe Slots start off | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.3 | `AC-1.3.4` 🖵 | Recipes applicable to a quarter-note Beat | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `recipes.test.js`, `timeline.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-1.3 | `AC-1.3.5` 🖵 | Recipes applicable to an eighth-note Beat | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `pattern.test.js`, `recipes.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-1.3 | `AC-1.3.6` | Recipe change resets only that Beat | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `pattern.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-1.3 | `AC-1.3.7` | Recipe change on a Beat that has notes requires confirmation | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-1.3 | `AC-1.3.8` | Confirmation is required in both directions, since any Recipe change clears the Beat | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.3 | `AC-1.3.9` 🖵 | Accent works identically on a triplet-feel Slot | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.3 | `AC-1.3.10` 🖵 | Recipe change on an empty Beat applies with no confirmation | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.3 | `AC-1.3.11/1` 🖵 | With no Recipe armed, tapping within a Beat cycles Slot accents exactly as before | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-1.3 | `AC-1.3.11/2` 🖵 | With a Recipe armed, tapping any Beat of any Measure applies it to that Beat alone | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-1.3 | `AC-1.3.11/3` 🖵 | A Recipe inapplicable to the tapped Beat's note value leaves that Beat unchanged | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-1.3 | `AC-1.3.11/4` 🖵 | The armed Recipe stays armed across taps, and tapping the armed chip disarms it | P-007 | T041, T042, T043, T182 (4/4 done) | T044, T183 (2/2 done) | `grid.spec.js` | 🟢 OK |
+| US-1.3 | `AC-1.3.1` | Default Recipe for a quarter-note Beat | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `recipes.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.3 | `AC-1.3.2` | Default Recipe for an eighth-note Beat | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `recipes.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.3 | `AC-1.3.3` | New Recipe Slots start off | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.3 | `AC-1.3.4` 🖵 | Recipes applicable to a quarter-note Beat | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `recipes.test.js`, `timeline.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-1.3 | `AC-1.3.5` 🖵 | Recipes applicable to an eighth-note Beat | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `pattern.test.js`, `recipes.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-1.3 | `AC-1.3.6` | Recipe change resets only that Beat | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `pattern.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-1.3 | `AC-1.3.7` | Recipe change on a Beat that has notes requires confirmation | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-1.3 | `AC-1.3.8` | Confirmation is required in both directions, since any Recipe change clears the Beat | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.3 | `AC-1.3.9` 🖵 | Accent works identically on a triplet-feel Slot | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.3 | `AC-1.3.10` 🖵 | Recipe change on an empty Beat applies with no confirmation | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.3 | `AC-1.3.11/1` 🖵 | With no Recipe armed, tapping within a Beat cycles Slot accents exactly as before | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.3 | `AC-1.3.11/2` 🖵 | With a Recipe armed, tapping any Beat of any Measure applies it to that Beat alone | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.3 | `AC-1.3.11/3` 🖵 | A Recipe inapplicable to the tapped Beat's note value leaves that Beat unchanged | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.3 | `AC-1.3.11/4` 🖵 | The armed Recipe stays armed across taps, and tapping the armed chip disarms it | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.3 | `AC-1.3.11/5` 🖵 | Arming a pitch on the pitch strip disarms the armed Recipe | P-007 | T041, T042, T043, T182, T224 (5/5 done) | T044, T183, T225 (3/3 done) | `melodic.spec.js` | 🟢 OK |
 | US-1.4 | `AC-1.4.1` 🖵 | Time Signature label is itself the picker control | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.2` 🖵 | Picker offers exactly the 11 supported values | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.3` 🖵 | Each Measure's label reflects only its own Time Signature | P-008 | T045 (1/1 done) | T046 (1/1 done) | `grid.test.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |

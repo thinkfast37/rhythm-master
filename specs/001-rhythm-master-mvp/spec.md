@@ -278,6 +278,7 @@ exist).
     - **AC-1.3.11/2** — With a Recipe armed, tapping any Beat of any Measure applies it to that Beat alone
     - **AC-1.3.11/3** — A Recipe inapplicable to the tapped Beat's note value leaves that Beat unchanged
     - **AC-1.3.11/4** — The armed Recipe stays armed across taps, and tapping the armed chip disarms it
+    - **AC-1.3.11/5** — Arming a pitch on the pitch strip disarms the armed Recipe
   - *(Added 2026-08-17. The Recipe control was one dropdown hardwired to Measure 1, Beat 1, so
     US-1.3's whole subject — mixed subdivision across a Pattern — was unreachable for every other
     Beat. Arming and painting is chosen over a control on each Beat because the grid has no
@@ -286,6 +287,13 @@ exist).
     nothing, works identically on every Beat, and reuses the pitch strip's idiom (US-2.2). A
     Recipe is not shown as a label on each Beat because the Slots already say it: four cells is
     Straight 16ths, three is Triplet 8ths, and a mixed Recipe draws its two groups apart.)*
+  - *(Case /5 added 2026-09-05. Reported by the maintainer: in a Melodic Pattern, changing the
+    octave and arming a degree, then tapping a Slot's note band, changed the Beat's subdivision
+    instead of stamping the pitch — a Recipe armed earlier was still intercepting every grid tap,
+    and nothing on the pitch strip ended that state. The two strips are brushes for the same grid,
+    so operating one is choosing a tool: arming a degree or stepping the octave disarms the Recipe,
+    and the grid goes back to stamping. Arming a Recipe does not touch the armed pitch, because the
+    armed pitch has no disarmed state to go to — the asymmetry is in the state, not the rule.)*
 
 ---
 

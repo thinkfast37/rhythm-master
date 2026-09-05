@@ -405,13 +405,21 @@ const handlers = {
     render();
   },
 
+  /*
+   * Arming a pitch — a degree or an octave — also disarms any armed Recipe
+   * (AC-1.3.11/5): both strips are brushes for the same grid, so operating one
+   * is choosing a tool, and an armed Recipe would otherwise intercept the very
+   * tap the pitch was armed for.
+   */
   onArmDegree(degree) {
     state.armedPitch = { ...state.armedPitch, degree };
+    state.armedRecipe = null;
     render();
   },
 
   onArmOctave(octaveOffset) {
     state.armedPitch = { ...state.armedPitch, octaveOffset };
+    state.armedRecipe = null;
     render();
   },
 

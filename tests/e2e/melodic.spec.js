@@ -1220,3 +1220,33 @@ test('AC-2.5.5 — The scale never changes what is stamped or heard', async ({ p
     expect(after, scale).toBe(before);
   }
 });
+
+/* --- the two strips are tools for the same grid (AC-1.3.11/5) -------------- */
+
+test('AC-1.3.11/5 — Arming a pitch on the pitch strip disarms the armed Recipe', async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+
+  // Stepping the octave is arming a pitch: the Recipe brush stands down.
+  await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
+  await expect(page.locator('.grid')).toHaveClass(/recipe-armed/);
+  await page.locator('[data-action="octave-down"]').click();
+  await expect(page.locator('.grid')).not.toHaveClass(/recipe-armed/);
+  await expect(page.locator('.recipe-chip.armed')).toHaveCount(0);
+
+  // So is arming a degree.
+  await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
+  await expect(page.locator('.grid')).toHaveClass(/recipe-armed/);
+  await page.locator('.degree[data-degree="b3"]').click();
+  await expect(page.locator('.grid')).not.toHaveClass(/recipe-armed/);
+
+  // The maintainer's exact gesture now stamps: octave changed, degree armed,
+  // note band tapped — the Slot takes the pitch and the Beat keeps its Recipe.
+  await noteBand(page, 0, 0).click();
+  expect(await pitchOf(page, 0, 0)).toEqual({ degree: 'b3', octaveOffset: -1 });
+  expect(
+    await page
+      .locator('.measure[data-measure="0"] .beat[data-beat="0"]')
+      .getAttribute('data-recipe')
+  ).toBe('straight-16ths');
+});
