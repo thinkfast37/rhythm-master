@@ -9,6 +9,11 @@ This is the map. The binding rules live in [`CLAUDE.md`](../CLAUDE.md) (the work
 agreement) and [`.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 (the principles); where this document and those disagree, they win.
 
+Throughout, concepts are illustrated with **excerpts from the actual files** — chosen
+for stability, but they are snapshots (taken 2026-09-07), not the source: when an
+excerpt and its file disagree, the file is right. A few deliberately show live status
+(a gap severity, a baseline entry) and are marked as such.
+
 ---
 
 ## 1. What Spec Kit is, in one paragraph
@@ -33,11 +38,27 @@ Claude Code skill under `.claude/skills/`.
 
 | Path | What it is |
 |---|---|
-| `.specify/memory/constitution.md` | The project constitution: five principles (I Rhythmic & Metric Correctness, II Grid Consistency & Accent Legibility, III Audio Timing & Playback Behavior, IV Traceability & Testing Standards, V Simplicity & Scope Discipline), currently at version 3.5.0. Semantic-versioned; every amendment prepends a Sync Impact Report explaining the bump. |
+| `.specify/memory/constitution.md` | The project constitution: five principles (I Rhythmic & Metric Correctness, II Grid Consistency & Accent Legibility, III Audio Timing & Playback Behavior, IV Traceability & Testing Standards, V Simplicity & Scope Discipline), currently at version 3.5.0. Semantic-versioned; every amendment prepends a Sync Impact Report explaining the bump. See the excerpts below. |
 | `.specify/templates/` | The Markdown skeletons the commands fill in: `spec-template.md`, `plan-template.md`, `tasks-template.md`, `checklist-template.md`, `constitution-template.md`. |
 | `.specify/scripts/bash/` | Helper scripts the skills call: `create-new-feature.sh` (numbers and scaffolds a new `specs/NNN-…/` folder and branch), `setup-plan.sh`, `setup-tasks.sh`, `check-prerequisites.sh` (verifies the artifacts a stage depends on exist), `resolve-template.sh`, `common.sh`. |
 | `.specify/workflows/speckit/workflow.yml` | A bundled "Full SDD Cycle" workflow (specify → plan → tasks → implement with approve/reject gates between stages). Registered in `workflow-registry.json`; in practice this project runs the commands individually rather than through the workflow. |
 | `.specify/integration.json`, `init-options.json`, `integrations/` | Bookkeeping: which Spec Kit version, which integration (claude), sequential feature numbering, `sh` scripts. |
+
+What a constitution principle looks like — a behavioural quality bar, testable and
+stack-agnostic, never a tech choice (from Principle I):
+
+> **Beat count always equals the time signature's numerator**, for every supported
+> meter, with no assumed sub-grouping. 7/8 is seven eighth-note Beats — never three
+> Beats grouped 2+2+3. 6/8 is six eighth-note Beats — never two dotted-quarter Beats.
+> No view, export, or playback path may reinterpret a meter into an implied grouping
+> the user did not author.
+
+And the amendment rules it lives under (from the Governance section):
+
+> - **MAJOR**: Removal or backward-incompatible redefinition of a principle.
+> - **MINOR**: Addition of a new principle or section, or material expansion of guidance
+>   that imposes new requirements.
+> - **PATCH**: Clarifications, rewording, or typo fixes that do not change intent.
 
 ### 2.2 `.claude/skills/` — the commands
 
@@ -60,7 +81,63 @@ Everything for the MVP feature lives in `specs/001-rhythm-master-mvp/`
 | `contracts/` | `/speckit-plan` (Phase 1) | `core-api.md` (the pure core's function signatures) and `file-formats.md` (MIDI export, portable Pattern JSON). |
 | `quickstart.md` | `/speckit-plan` | How to run and validate the app end to end, including the manual checks (e.g. the 30-minute continuous-playback scenario V7) that automation only approximates. |
 | `checklists/requirements.md` | `/speckit-checklist` | A spec-quality checklist (no implementation details, no ambiguity, measurable criteria), ticked off during spec review. |
-| `tasks.md` | `/speckit-tasks` | **The build plan and the log.** T001–T124 are the MVP phases, ordered by User Story priority, each task naming its exact files — that section is a historical record and is never renumbered. Everything since lands in the **Post-MVP task log** (T125 onward, currently through T240): one numbered entry per change, whatever its kind. |
+| `tasks.md` | `/speckit-tasks` | **The build plan and the log.** T001–T124 are the MVP phases, ordered by User Story priority, each task naming its exact files — that section is a historical record and is never renumbered. Everything since lands in the **Post-MVP task log** (T125 onward): one numbered entry per change, whatever its kind. |
+
+**What an Acceptance Criterion looks like.** Given/When/Then, concrete enough to test,
+with a stable ID (from spec.md, US-1.1):
+
+> - **AC-1.1.9** — Measure removal is always from the end
+>   - **Given** a Pattern with more than one Measure
+>   - **When** the Composer taps −Measure
+>   - **Then** the last Measure is removed, and every remaining Measure keeps its own
+>     Time Signature and content unchanged — removal is always from the end, never
+>     from the middle
+
+A **compound** AC — one asserting more than one thing — declares numbered Cases, one
+test each (`check:trace` T4 enforces this):
+
+> - **AC-1.1.5/1** — The first Measure's Time Signature change offers Apply to all,
+>   This measure only, and Cancel
+> - **AC-1.1.5/2** — A Measure other than the first changes alone, with no prompt
+
+And when an AC is revised, the revision carries a **dated parenthetical** explaining
+what changed and why — the reasoning stays in the spec (AC-1.1.5 again, revised as a
+spec defect):
+
+> *(Revised 2026-08-17. This previously read "Multi-Measure change" and prompted on any
+> Measure. Only the first Measure meaningfully stands for the whole Pattern — a meter
+> change there reads as "this Pattern is in 6/8", whereas a change to Measure 3 reads as
+> a local event […] The implementation has always gated the prompt on the first Measure;
+> this AC was describing something that was never built.)*
+
+**What a plan item looks like.** One row of plan.md's Traceability Matrix — the middle
+link between an AC and the tasks that build and prove it. Note that implementation and
+test tasks are separate columns, because "who builds it" and "who proves it" are
+different questions:
+
+> | Plan item | Covers | Acceptance Criteria | Implementation tasks | Test tasks |
+> |---|---|---|---|---|
+> | **P-005** | US-1.1 — Measure sequence & per-Measure Time Signature | AC-1.1.1–AC-1.1.9 | T036–T037 | T038 |
+> | **P-007** | US-1.3 — Mixed subdivision within a Beat, via Recipes | AC-1.3.1–AC-1.3.12 | T041–T043, T182, T224, T226 | T044, T183, T225, T227 |
+
+P-007's growing task list shows how post-MVP work attaches: a later bug fix (T224) or
+capability (T226) *extends* the plan item its ACs belong to rather than getting a new
+one.
+
+**What a research decision looks like.** Decision, rationale, and — the part that pays
+off later — the rejected alternatives (from research.md, D-001, abridged):
+
+> **Decision**: Vanilla JavaScript ES modules, built with Vite.
+>
+> **Rationale**: The predecessor was plain `<script>` tags and its problems were not
+> framework-shaped — they were that musical arithmetic was duplicated across views and
+> that shared mutable `var` globals made state hard to reason about. ES modules plus a
+> pure `core/` layer fix both without taking on a framework. […]
+>
+> **Alternatives considered**:
+> - *Svelte* — would make the pure-state-to-render contract nearly free […] Rejected as
+>   a maintenance and learning cost not justified for a single-maintainer project whose
+>   rendering needs are one grid and a list.
 
 Three files sit at `specs/` top level because they span the whole application, not one
 feature:
@@ -70,6 +147,36 @@ feature:
 | `traceability-matrix.md` | **Generated — never hand-edited.** One row per criterion: its User Story, its own words, plan item, implementation tasks, test tasks (listed separately), the test that proves it, and a colour-marked status (🟢 proven, 🔵 waived, 🟡/🟠/🔴 by gap severity). Regenerated by `npm run trace:matrix` and committed; `check:trace` T8 fails when it is stale. |
 | `traceability-baseline.json` | The traceability debt that existed the day the gate landed (333 findings). Baselined findings are reported but don't fail the build. **It may only shrink** (`npm run trace:prune`); taking on new debt means hand-editing it, visibly, in a diff. |
 | `traceability-waivers.json` | Signed-off LOW/MEDIUM gaps, each with a written reason that shows in its matrix row. CRITICAL and HIGH gaps can never be waived. |
+
+The matrix announces its own rules in a header comment:
+
+> GENERATED FILE — do not edit by hand.
+>
+> Regenerate with: `npm run trace:matrix`. It is checked by `npm run check:trace`
+> (check T8), so an out-of-date matrix fails the build rather than sitting quietly out
+> of step with the spec.
+>
+> The decisions live elsewhere. Which AC belongs to which plan item, and which tasks
+> build and prove it, are authored in the plan's own Traceability Matrix. This file is
+> that expanded one row per criterion, cross-referenced against the test suite, and
+> marked with what is true right now.
+
+And one row — a **live-status snapshot** (this row will change when the gap is fixed;
+that is the point of it). AC-1.1.9 is fully specified, planned, tasked, and every task
+is done — and it is still a 🔴 HIGH finding, because the test naming it proves something
+else (see §4.2):
+
+> | US-1.1 | `AC-1.1.9` 🖵 | Measure removal is always from the end | P-005 | T036, T037 (2/2 done) | T038 (1/1 done) | `pattern.test.js` | 🔴 **HIGH** · WRONG TEST |
+
+The self-describing `note` fields in the JSON files are worth reading in full; they are
+the policy. From `traceability-waivers.json`:
+
+> Gaps deliberately left open, each with a written reason (CLAUDE.md §2b). This is NOT
+> the baseline: the baseline is debt still owed and expected to shrink, a waiver is a
+> decision that a gap will not be closed. Only LOW and MEDIUM gaps may be waived —
+> CRITICAL (no test at all) and HIGH (the test proves something else, or a UI criterion
+> has only a pure unit test) are the states that let unbuilt work report as complete,
+> and no reason clears them (Constitution Principle IV).
 
 ### 2.4 Everything the workflow touches outside `specs/`
 
@@ -170,9 +277,24 @@ AC → Case → plan item (P-0xx) → implementation task + test task → a test
 
 through nine checks (T1–T9, tabulated in CLAUDE.md §2b and the skill's own README), and
 generates `specs/traceability-matrix.md`. The key inversion: **a test's name is not a
-claim about the criterion, it *is* the criterion** — `it('AC-1.1.9 — Measure removal is
-always from the end', …)`, title copied verbatim, so a reworded AC fails T5 until someone
-confirms the test still proves the new wording.
+claim about the criterion, it *is* the criterion** — the title copied verbatim, so a
+reworded AC fails T5 until someone confirms the test still proves the new wording.
+
+Both shapes exist in the suite right now, which makes the contrast concrete. The wrong
+shape — a real test in `tests/unit/core/pattern.test.js`, and the reason AC-1.1.9's
+matrix row above reads HIGH · WRONG TEST:
+
+```js
+it('AC-1.1.9 — no mutator touches its argument', () => { … });
+```
+
+The ID is present, so `coverage:ac` counts it — but the name is a *different claim* from
+"Measure removal is always from the end", so nothing here proves the criterion. And the
+right shape — from `tests/e2e/melodic.spec.js`, name identical to the Case it proves:
+
+```js
+test('AC-1.3.11/5 — Arming a pitch on the pitch strip disarms the armed Recipe', …);
+```
 
 Gap severity is *derived from the kind of gap* (no test names the criterion → CRITICAL;
 named but proving something else, or UI-level with only a pure unit test → HIGH; compound
@@ -193,6 +315,18 @@ Spec Kit prescribes none of these; each was added after a specific failure:
 |---|---|
 | `npm run coverage:ac` (`tests/ac-coverage.js`) | An AC with no test naming it at all. Necessary, nowhere near sufficient — it cannot tell a right test from a wrong one, which is why spec-trace exists. |
 | `npm run check:unwired` (`tools/check-unwired.mjs`) | Code specified, written, exported, unit-tested — and reachable by nothing in `src/` (`removeMeasure` had this shape for the project's whole life). Tests are not uses; genuine test seams go in `tools/unwired-baseline.json` with a written reason. |
+
+The unwired baseline shows what a *reasoned* baseline entry looks like — each one argues
+its case, and the two kinds (permanent seam vs outstanding work) are explicit (from
+`tools/unwired-baseline.json`; the OUTSTANDING entries are live snapshots and disappear
+when the work is done):
+
+> `"src/storage/keyValue.js useBackingStore"`: Test seam. Swaps localStorage for an
+> in-memory store so storage tests do not depend on a browser. Permanent.
+>
+> `"src/core/pattern.js removeMeasure"`: OUTSTANDING, and the finding this gate was
+> built for. AC-1.1.8 and AC-1.1.9 specify a −Measure control; no such control exists,
+> so the mutator behind it has never been called. Scheduled to be built.
 | `npm run lint` | The `core/` purity boundary (Principle I): no DOM, audio, storage, `Date.now`, `Math.random`, or imports from the impure layers. |
 | `npm run validate:seed` | The shipped library drifting from data-model §7. |
 | `npm run check:cvd` | The accent palette collapsing under simulated colour-vision deficiency (Principle II). |
@@ -247,10 +381,30 @@ task entry, with the DOM-proven e2e tests in its test task.
 ### 5.2 A bug (code doesn't do what an AC already says)
 
 Write the failing test first — named for the AC it proves — then fix the code, then
-verify. **No spec edit.** Example: **T224/T225** (an armed Recipe swallowing pitch taps).
-In practice a maintainer bug report often exposes an unstated criterion, which makes it
-"bug + spec addition": the new AC, its Cases, its plan-item extension and both tasks land
-together (T218, T230, T238 all have this shape).
+verify. **No spec edit.** In practice a maintainer bug report often exposes an unstated
+criterion, which makes it "bug + spec addition": the new AC, its plan-item extension and
+both tasks land together. Here is a complete worked example — the actual T224/T225
+entries from the Post-MVP log (historical record, so stable), showing everything one
+change carries: its kind, the files, the IDs, the plan item it extends, and the
+maintainer's report verbatim with its date (file paths abridged):
+
+> - [X] **T224 [bug + spec addition]** Arming a pitch disarms the armed Recipe —
+>   `spec.md` (AC-1.3.11/5 added, with a dated parenthetical), `plan.md` (P-007),
+>   `src/main.js` (`onArmDegree` and `onArmOctave` clear `armedRecipe`, so the Recipe
+>   brush yields to the pitch strip). Implements AC-1.3.11/5. Extends P-007. Reported by
+>   the maintainer 2026-09-05: in a Melodic Pattern, changing the octave and picking a
+>   note, then tapping a Slot, changed the Beat's subdivision instead of stamping the
+>   pitch — a Recipe armed earlier still owned every grid tap, and nothing on the pitch
+>   strip ended that state.
+>
+> - [X] **T225 [test]** Test for T224 — `tests/e2e/melodic.spec.js` (AC-1.3.11/5 named
+>   test: arm a Recipe, step the octave and arm a degree, then tap a note band and
+>   assert the pitch stamps and the Beat's Recipe is unchanged).
+
+Follow the thread and you touch every layer of the scaffolding at once: the maintainer's
+words became AC-1.3.11/5 in spec.md, P-007's row in plan.md grew T224/T225, and the e2e
+test's name is the Case's title verbatim (it appears as the "right shape" example in
+§4.2). That thread is what `check:trace` walks mechanically.
 
 ### 5.3 A failing test
 
@@ -274,7 +428,16 @@ reversed AC-2.2.4 outright; the spill was approved before the rebuild).
   reversal and reasoning first, then proceed as whatever kind remains.
 - **Governance** (contradicts a principle): `/speckit-constitution` amendment with a
   version bump and Sync Impact Report first. The 3.5.0 native-shell amendment is the
-  model.
+  model — its report records not just the change but a *corrected classification*, which
+  is exactly what the report format is for (from the top of constitution.md, abridged):
+
+  > Version change: 3.4.0 → 3.5.0
+  >
+  > This was first drafted as MAJOR 4.0.0, reading "permanent constraints, not deferred
+  > features" […] as forbidding a native shell. The maintainer corrected that the same
+  > day: **a native store version was always intended for this app** […] So this is an
+  > ADDITION, and MINOR: […] no rule is removed or weakened, and the rules below only
+  > say how the shell must behave.
 - **Data** (seed Patterns, tags, content): edit `data/seed-patterns.json`,
   `npm run validate:seed`, test. No spec pass; the file is the source of truth
   (CLAUDE.md §7 — no maintainer mode in the UI, on purpose).
