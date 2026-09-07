@@ -79,6 +79,7 @@ CHROMIUM_PATH=/path/to/chrome npm run test:e2e
 
 | Document | Purpose |
 |---|---|
+| [`docs/speckit-guide.md`](docs/speckit-guide.md) | How this project uses GitHub Spec Kit: the artifact map, the command lifecycle, the local scaffolding, and how every kind of change is made |
 | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project principles — correctness, visual and audio clarity, traceability, and scope constraints that all work is held to |
 | [`specs/001-rhythm-master-mvp/spec.md`](specs/001-rhythm-master-mvp/spec.md) | Feature specification: 35 User Stories and their Acceptance Criteria in Given/When/Then form |
 | [`data/seed-patterns.json`](data/seed-patterns.json) | The Patterns the app ships with. Plain JSON — add or edit Patterns here directly, no code change needed (US-16.2) |
@@ -225,6 +226,10 @@ constitution.
 
 This project uses [GitHub Spec Kit](https://github.com/github/spec-kit). The scaffold is
 already initialized; the skills live in `.claude/skills/`.
+**[`docs/speckit-guide.md`](docs/speckit-guide.md) is the full walkthrough** — every
+artifact and what it contains, the command lifecycle step by step, how this project has
+extended and scaffolded Spec Kit, and how features, bugs and every other kind of change
+are made and landed.
 
 ```
 speckit-constitution → specify → plan → tasks → implement → converge
