@@ -18,12 +18,30 @@ import { playPercussive, playClick } from './voices.js';
 const LOOKAHEAD_SECONDS = 0.2;
 const POLL_MS = 25;
 
+/*
+ * TV and set-top browsers (the Hisense/VIDAA browser, notably) clamp timers
+ * far past POLL_MS. LOOKAHEAD_SECONDS is therefore a floor, not the size: a
+ * tick that arrives after a gap the current lookahead could not have covered
+ * widens it to STALL_MARGIN times that gap, so the starve-and-lurch happens at
+ * most once per throttle level rather than every second. On a device whose
+ * timer keeps up, no gap ever exceeds the floor and nothing changes.
+ *
+ * The cap bounds how much already-scheduled audio can trail a Stop on a
+ * throttled device; timely devices keep today's ≤0.2s trail.
+ */
+const MAX_LOOKAHEAD_SECONDS = 1.5;
+const STALL_MARGIN = 2.5;
+
+/** The same safety offset start() uses, reused when a stall re-anchors. */
+const START_OFFSET_SECONDS = 0.06;
+
 export function createTransport({ onPosition, onLoop, onStop, playMelodic = null } = {}) {
   let ctx = null;
   let master = null;
   let timer = null;
 
-  /** Absolute audio-clock time of loop 0, Slot 0. Never mutated once set. */
+  /** Absolute audio-clock time of loop 0, Slot 0. Moves only at a pass-boundary
+   *  re-anchor (AC-4.1.9) or a stall recovery — never by per-tick accumulation. */
   let origin = 0;
   let loopDuration = 0;
   let timeline = [];
@@ -42,6 +60,12 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
   let pending = null;
   let running = false;
   const pendingVisuals = [];
+
+  /** Adaptive horizon (see MAX_LOOKAHEAD_SECONDS above). Kept across starts:
+   *  a browser that throttled once will throttle the next run too. */
+  let lookahead = LOOKAHEAD_SECONDS;
+  /** Audio-clock time of the previous tick, for measuring timer gaps. */
+  let lastTick = 0;
 
   function eventTime(loop, offset) {
     return origin + countInSeconds + loop * loopDuration + offset;
@@ -116,9 +140,45 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
     }
   }
 
+  /**
+   * The absolute time of the next event not yet handed to Web Audio — the
+   * upcoming Slot, metronome Beat, or failing both, the next pass boundary.
+   */
+  function nextUnscheduledTime() {
+    let next = eventTime(nextLoop + 1, 0);
+    if (nextIndex < timeline.length) {
+      next = Math.min(next, eventTime(nextLoop, timeline[nextIndex].timeSeconds));
+    }
+    if (settings.metronomeEnabled && nextBeatIndex < beatGrid.length) {
+      next = Math.min(next, eventTime(nextLoop, beatGrid[nextBeatIndex].timeSeconds));
+    }
+    return next;
+  }
+
+  /*
+   * A tick that arrives after the scheduled horizon has passed leaves events
+   * in the past, and Web Audio sounds a past-scheduled event immediately —
+   * every starved event at once, heard as a lurch. Shift the origin forward by
+   * the deficit instead: the stall stays a pause, and everything after it
+   * sounds on the tempo grid. The shift is measured against the audio clock,
+   * never accumulated per tick (FR-009).
+   */
+  function recoverFromStall(now) {
+    const next = nextUnscheduledTime();
+    if (next >= now) return;
+    origin += now + START_OFFSET_SECONDS - next;
+  }
+
   function tick() {
     if (!running) return;
-    scheduleUntil(ctx.currentTime + LOOKAHEAD_SECONDS);
+    const now = ctx.currentTime;
+    const gap = now - lastTick;
+    lastTick = now;
+    if (gap * STALL_MARGIN > lookahead) {
+      lookahead = Math.min(gap * STALL_MARGIN, MAX_LOOKAHEAD_SECONDS);
+    }
+    recoverFromStall(now);
+    scheduleUntil(now + lookahead);
     flushVisuals();
   }
 
@@ -195,6 +255,7 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       // on return (AC-4.1.5, AC-4.1.6).
       this._unwatch = onSuspended(() => this.stop());
 
+      lastTick = ctx.currentTime;
       tick();
       timer = setInterval(tick, POLL_MS);
     },
@@ -244,6 +305,7 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       loopDuration,
       timelineLength: timeline.length,
       pendingEdit: Boolean(pending),
+      lookaheadSeconds: lookahead,
     }),
   };
 }
