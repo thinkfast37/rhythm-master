@@ -765,6 +765,21 @@ body {
 .controls button:disabled { opacity: .4; cursor: not-allowed; }
 .presets { display: flex; gap: 4px; flex-wrap: wrap; }
 .preset { padding: 6px 8px !important; font-size: 11px !important; }
+
+/* An entry field and its slider on one line (AC-4.2.5, AC-4.4.16). */
+.slider-row { display: flex; align-items: center; gap: 8px; }
+.slider-row input[type='range'] { flex: 1; min-width: 120px; }
+.value-entry { width: 64px; text-align: center; cursor: text; }
+
+/*
+ * Tempo, swing feel, swing amount and counting each read as their own line of
+ * the playback settings — the maintainer asked for swing on a separate line,
+ * and a wrapped jumble of sliders was part of why the controls were hard to
+ * aim at on the iPad.
+ */
+.playback-settings .control-group { flex-basis: 100%; flex-direction: column; align-items: flex-start; }
+.playback-settings .control-group > .control { width: 100%; }
+.playback-settings .control-group .slider-row { width: 100%; max-width: 420px; }
 .counting-note { flex-basis: 100%; margin: 0; font-size: 11px; color: var(--ink-dim); }
 /* Where the swing controls would sit, when the Pattern has nothing to swing (AC-4.4.14). */
 .swing-note { margin: 0; align-self: center; font-size: 11px; color: var(--ink-dim); }
@@ -955,6 +970,17 @@ body {
  */
 .pitch-strip .degree.in-scale { border-bottom: 3px solid var(--brand); }
 .pitch-strip .degree:not(.in-scale):not([aria-pressed='true']) .degree-number { color: var(--ink-dim); }
+
+/* The Key picker sits on the strip with the palette it governs (AC-2.2.19). */
+.key-picker {
+  font: 500 13px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+}
 
 /* The scale picker sits on the strip, styled as the app's other selects are. */
 .scale-picker {

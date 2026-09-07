@@ -11,7 +11,7 @@
  * animation loop, so the highlighted Slot cannot disagree with what is heard.
  */
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
-import { getContext, resume, onSuspended } from './context.js';
+import { resume, onSuspended } from './context.js';
 import { playPercussive, playClick } from './voices.js';
 
 /** How far ahead events are scheduled, and how often we top up. */
@@ -34,9 +34,12 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
   /** Index of the next event to schedule, as a running (loop, index) cursor. */
   let nextLoop = 0;
   let nextIndex = 0;
-  let nextBeatLoop = 0;
   let nextBeatIndex = 0;
   let countInSeconds = 0;
+  /** Full passes completed before the current origin — the re-anchors' carry. */
+  let loopOffset = 0;
+  /** An edited Pattern waiting for the next pass boundary (AC-4.1.9). */
+  let pending = null;
   let running = false;
   const pendingVisuals = [];
 
@@ -44,38 +47,71 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
     return origin + countInSeconds + loop * loopDuration + offset;
   }
 
+  /*
+   * Both cursors — Slots and metronome Beats — walk one pass at a time and only
+   * advance to the next pass together, so a Pattern edit can swap the timeline,
+   * beat grid and loop duration at a pass boundary without the two disagreeing
+   * about which Pattern the current pass belongs to (AC-4.1.9).
+   */
   function scheduleUntil(horizon) {
-    // Pattern events
-    while (timeline.length > 0) {
-      const event = timeline[nextIndex];
-      const when = eventTime(nextLoop, event.timeSeconds);
-      if (when > horizon) break;
+    for (;;) {
+      let blocked = false;
 
-      if (event.pitch && playMelodic) playMelodic(ctx, master, event, when);
-      else playPercussive(ctx, master, event.accent, when);
-
-      pendingVisuals.push({ when, position: { ...event, loop: nextLoop } });
-
-      nextIndex += 1;
-      if (nextIndex >= timeline.length) {
-        nextIndex = 0;
-        nextLoop += 1;
-        onLoop?.(nextLoop);
-      }
-    }
-
-    // Metronome, on Beats rather than Slots
-    if (settings.metronomeEnabled) {
-      while (beatGrid.length > 0) {
-        const beat = beatGrid[nextBeatIndex];
-        const when = eventTime(nextBeatLoop, beat.timeSeconds);
-        if (when > horizon) break;
-        playClick(ctx, master, { downbeat: beat.isDownbeat, when });
-        nextBeatIndex += 1;
-        if (nextBeatIndex >= beatGrid.length) {
-          nextBeatIndex = 0;
-          nextBeatLoop += 1;
+      // Pattern events of the current pass
+      while (nextIndex < timeline.length) {
+        const event = timeline[nextIndex];
+        const when = eventTime(nextLoop, event.timeSeconds);
+        if (when > horizon) {
+          blocked = true;
+          break;
         }
+
+        if (event.pitch && playMelodic) playMelodic(ctx, master, event, when);
+        else playPercussive(ctx, master, event.accent, when);
+
+        pendingVisuals.push({ when, position: { ...event, loop: loopOffset + nextLoop } });
+        nextIndex += 1;
+      }
+
+      // Metronome, on Beats rather than Slots
+      if (settings.metronomeEnabled) {
+        while (nextBeatIndex < beatGrid.length) {
+          const beat = beatGrid[nextBeatIndex];
+          const when = eventTime(nextLoop, beat.timeSeconds);
+          if (when > horizon) {
+            blocked = true;
+            break;
+          }
+          playClick(ctx, master, { downbeat: beat.isDownbeat, when });
+          nextBeatIndex += 1;
+        }
+      }
+
+      if (blocked) return;
+
+      // The pass is fully scheduled. Cross into the next one only once its
+      // start is within the horizon, so an eventless pass cannot spin here.
+      if (eventTime(nextLoop + 1, 0) > horizon) return;
+      nextLoop += 1;
+      nextIndex = 0;
+      nextBeatIndex = 0;
+      onLoop?.(loopOffset + nextLoop);
+
+      if (pending) {
+        // Re-anchor the origin at this boundary — still a product of the old
+        // origin, never a per-pass accumulation (FR-009) — then swap in the
+        // edited Pattern for the pass that starts here. The display counter
+        // carries on across the re-anchor (AC-4.1.9/4).
+        origin = eventTime(nextLoop, 0);
+        countInSeconds = 0;
+        loopOffset += nextLoop;
+        nextLoop = 0;
+        pattern = pending.pattern;
+        settings = pending.settings ?? settings;
+        pending = null;
+        timeline = buildTimeline(pattern);
+        beatGrid = buildBeatGrid(pattern);
+        loopDuration = loopDurationSeconds(pattern);
       }
     }
   }
@@ -122,10 +158,12 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       pattern = nextPattern;
       settings = nextSettings;
 
-      ctx = getContext();
-      await resume();
+      // resume() may hand back a REPLACEMENT context when the old one was left
+      // dead by an OS suspension (AC-4.1.10/2) — so take what it returns, and
+      // rebuild the master gain when it no longer belongs to this context.
+      ctx = await resume();
 
-      if (!master) {
+      if (!master || master.context !== ctx) {
         master = ctx.createGain();
         master.gain.value = 0.9;
         master.connect(ctx.destination);
@@ -142,8 +180,9 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
 
       nextLoop = 0;
       nextIndex = 0;
-      nextBeatLoop = 0;
       nextBeatIndex = 0;
+      loopOffset = 0;
+      pending = null;
       pendingVisuals.length = 0;
       running = true;
 
@@ -185,7 +224,26 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       if (wasRunning) await this.start(nextPattern, nextSettings);
     },
 
+    /**
+     * A content edit made while playing: the current pass finishes under the
+     * Pattern as it sounded, and the next pass plays the edit (AC-4.1.9).
+     * Only the latest edit matters — a newer one simply replaces the pending
+     * one. A stopped transport ignores this; the next start() reads state.
+     */
+    update(nextPattern, nextSettings) {
+      if (!running) return;
+      pending = { pattern: nextPattern, settings: nextSettings };
+    },
+
     /** Test seam: the absolute time an event would sound at. */
     _eventTime: (loop, offset) => eventTime(loop, offset),
+
+    /** Test seam: what the transport is actually sounding right now. */
+    _snapshot: () => ({
+      pattern,
+      loopDuration,
+      timelineLength: timeline.length,
+      pendingEdit: Boolean(pending),
+    }),
   };
 }

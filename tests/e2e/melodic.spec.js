@@ -1250,3 +1250,42 @@ test('AC-1.3.11/5 — Arming a pitch on the pitch strip disarms the armed Recipe
       .getAttribute('data-recipe')
   ).toBe('straight-16ths');
 });
+
+// --- AC-2.2.19: the Key is chosen on the pitch strip ------------------------
+
+test('AC-2.2.19/1 — The Key picker renders on the pitch strip beside the scale picker', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.sound-mode').selectOption('melodic');
+
+  await expect(page.locator('.pitch-strip .key-picker')).toBeVisible();
+  await expect(page.locator('.pitch-strip .scale-picker')).toBeVisible();
+
+  // Beside: both sit on the strip, the Key first — with the palette it governs.
+  const order = await page.evaluate(() => {
+    const key = document.querySelector('.pitch-strip .key-picker');
+    const scale = document.querySelector('.pitch-strip .scale-picker');
+    return Boolean(key.compareDocumentPosition(scale) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(order).toBe(true);
+
+  // And it is the working Key control: changing it renames the degree chips.
+  await page.locator('.pitch-strip .key-picker').selectOption('D');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.key)).toBe('D');
+});
+
+test('AC-2.2.19/2 — The Edit section holds no Key picker', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.sound-mode').selectOption('melodic');
+
+  await expect(page.locator('.pitch-strip .key-picker')).toBeVisible();
+  await expect(page.locator('[data-section="edit"] .key-picker')).toHaveCount(0);
+});
+
+test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)", async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await expect(page.locator('.sound-mode')).toHaveValue('percussive');
+  await expect(page.locator('.key-picker')).toHaveCount(0);
+});

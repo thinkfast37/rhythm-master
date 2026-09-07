@@ -527,3 +527,68 @@ test('AC-15.1.16/3 — A control keeps its place on screen when an update change
   expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
   await expect(sound).toBeFocused();
 });
+
+test('AC-15.1.16/4 — A slider under a pointer drag keeps its DOM node across the updates it causes even when it never received focus, so a touch drag is not severed mid-gesture', async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4', 'Touch Drag'));
+
+  // iPadOS Safari moves no focus onto a range input on touch: hold the slider
+  // by pointer only, and drive it with input events, never focusing it.
+  await page.evaluate(() => {
+    const slider = document.querySelector('.swing-slider');
+    window.__heldSlider = slider;
+    slider.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  });
+
+  for (const value of ['10', '20', '30']) {
+    await page.evaluate((v) => {
+      window.__heldSlider.value = v;
+      window.__heldSlider.dispatchEvent(new Event('input', { bubbles: true }));
+    }, value);
+    const alive = await page.evaluate(() => ({
+      sameNode: document.querySelector('.swing-slider') === window.__heldSlider,
+      connected: window.__heldSlider.isConnected,
+      focusedElsewhere: document.activeElement === document.body,
+    }));
+    expect(alive.sameNode, `value ${value}`).toBe(true);
+    expect(alive.connected, `value ${value}`).toBe(true);
+    expect(alive.focusedElsewhere, `value ${value}`).toBe(true);
+  }
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(30);
+
+  // Released: the next rebuild may replace the node again.
+  await page.evaluate(() => {
+    window.__heldSlider.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+  });
+});
+
+test('AC-15.1.16/5 — The height compensation anchors on the control under the pointer when nothing holds focus', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+  await loadTallPattern(page);
+
+  // The swing slider, inside the collapsed Playback settings accordion,
+  // scrolled to mid-panel and held by pointer — never focused.
+  await page.locator('[data-section="playback-settings"] summary').click();
+  const slider = page.locator('.swing-slider').first();
+  await slider.scrollIntoViewIfNeeded();
+  await page.evaluate(() => {
+    // The summary click above left focus behind; shed it, so the anchor can
+    // only come from the pointer-held control — the case under test.
+    document.activeElement?.blur?.();
+    const el = document.querySelector('.swing-slider');
+    window.__heldSlider = el;
+    el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  });
+  const before = await slider.evaluate((el) => el.getBoundingClientRect().top);
+
+  // Switching to Melodic inserts the pitch strip above the playback settings —
+  // and the held slider neither moves on screen nor was ever focused.
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
+  await expect(page.locator('.pitch-strip')).toBeVisible();
+  const after = await slider.evaluate((el) => el.getBoundingClientRect().top);
+  expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
+  expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+});

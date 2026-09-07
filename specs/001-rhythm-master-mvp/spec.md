@@ -572,6 +572,17 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** the armed marking — the filled chip and the dark text sized to that fill — still applies, rather than the hover ground replacing the fill and leaving dark text on a dark chip
   - *(Added 2026-08-23. Reported by the maintainer: tapping a degree turned it black-on-black. The hover rule outranked the armed rule in specificity, so the armed chip kept its dark ink but swapped its bright fill for the hover ground — permanently, on a touchscreen, where hover sticks after a tap.)*
 
+- **AC-2.2.19** — The Key is chosen on the pitch strip
+  - **Given** a Melodic Pattern open
+  - **When** the Composer looks for the Key
+  - **Then** the Key picker is on the pitch strip, beside the scale picker — with the note palette it governs — and not in the Edit accordion among structural controls
+  - **And** changing it there behaves exactly as before: guarded on a shipped Pattern (the AC-2.5.4 flow), renaming every note shown (AC-2.2.15/4, AC-2.2.16/2), never altering a stored degree (AC-2.3.2)
+  - **Cases**:
+    - **AC-2.2.19/1** — The Key picker renders on the pitch strip beside the scale picker
+    - **AC-2.2.19/2** — The Edit section holds no Key picker
+    - **AC-2.2.19/3** — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)
+  - *(Added 2026-09-07 at the maintainer's request: "the key, when I'm in Melodic — I really think that should be in the notes section, because I'm up and hunting around trying to find it." The Key sat in the Edit accordion beside Sound and + Measure; everything else about a note — the scale, the degrees, the octave — already lives on the pitch strip.)*
+
 ---
 
 ### User Story 7 - Transpose to a Key
@@ -837,6 +848,30 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.1.8/3** — Opening a Pattern while stopped starts no audio
   - *(Added 2026-08-23 at the maintainer's request: opening a Pattern from the library mid-playback left the previous Pattern sounding, so the panel showed one rhythm while the transport played another. Switching the running transport honours FR-010 — opening a Pattern is a user gesture.)*
 
+- **AC-4.1.9** — Edits during playback are heard from the next pass
+  - **Given** a Pattern playing on loop
+  - **When** the Practicing Musician edits its content — toggling or accenting a Slot, changing a Beat's Recipe, stamping a pitch, or changing the Key, scale or Sound Mode
+  - **Then** the current pass finishes under the Pattern as it sounded, and the next pass plays the edited Pattern — playback never stops, restarts, or jumps mid-pass
+  - **And** the loop counter keeps counting: an edit never resets the run
+  - **And** tempo, swing, the swing feel, and opening another Pattern keep their own behaviour — an immediate restart from the top (AC-4.2.2, AC-4.4.7/3, AC-4.1.8) — since they retime or replace the whole run rather than editing its content
+  - **Cases**:
+    - **AC-4.1.9/1** — An accent or Slot edit during playback sounds from the start of the next pass, with the transport running throughout
+    - **AC-4.1.9/2** — A Recipe change during playback sounds from the start of the next pass
+    - **AC-4.1.9/3** — A pitch, Key, scale or Sound Mode change during playback sounds from the start of the next pass
+    - **AC-4.1.9/4** — The loop counter keeps counting across an edit rather than resetting
+    - **AC-4.1.9/5** — A structural edit — adding a Measure, or a Time Signature change — takes effect at the next pass, with the pass length re-derived
+  - *(Added 2026-09-07 at the maintainer's request: "if I'm editing the notes while I'm playing, it doesn't actually pick up the edits until I hit stop and restart … the next time the cycle plays through, it should reflect the new pattern." The transport froze its timeline at Play, and no content edit reached it. Next-pass pickup was chosen over an immediate restart deliberately — every existing "takes effect" AC restarts from the top, which under a hand that is editing while listening would reset the groove on every tap.)*
+
+- **AC-4.1.10** — Play recovers audio the device took away
+  - **Given** the device took audio away while the app was backgrounded — iPadOS Safari leaves the audio context reporting `interrupted`, other platforms `suspended` — and the transport stopped and reset (AC-4.1.5)
+  - **When** the Practicing Musician returns to the app and presses Play
+  - **Then** audio sounds again: the Play gesture resumes the context whichever suspended state it reports, and a context that stays dead after a resume is replaced with a fresh one — never requiring the app to be closed and reopened (FR-011)
+  - **Cases**:
+    - **AC-4.1.10/1** — The gesture-time resume recovers a context reporting `interrupted`, not only `suspended`
+    - **AC-4.1.10/2** — A context still not running after a resume attempt is replaced, and the shared audio graph is rebuilt against the replacement rather than reused
+    - **AC-4.1.10/3** — After the tab is backgrounded and returns, pressing Play sounds the Pattern again without a reload
+  - *(Added 2026-09-07 from the maintainer's iPad report: "if I minimize the app and go to a different app and I come back, the sound is gone … I have to close the app down and restart it." FR-011 always required recovery on the next user gesture, but no AC decomposed that clause, so nothing tested it — and the resume path only handled `'suspended'`, silently skipping the `'interrupted'` state iPadOS actually reports. The suspension *detector* knew about `'interrupted'`; the recovery half did not.)*
+
 ---
 
 ### User Story 11 - Adjust tempo
@@ -854,6 +889,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** it is created
   - **Then** its tempo defaults to 80 BPM, adjustable within a clamped range of 18–300 BPM
   - *(Revised 2026-08-22: ceiling raised from 220 to 300 BPM at the maintainer's request. The floor, the default, and the preset list are unchanged; 300 is reached via the slider.)*
+  - *(Revised again 2026-09-07: the preset row now reaches the ceiling — AC-4.2.6 — and the tempo can be typed exactly — AC-4.2.5 — so "300 is reached via the slider" no longer describes the only route. The range, floor and default are unchanged.)*
 
 - **AC-4.2.2** — Tempo change restarts playback immediately
   - **Given** a Pattern is playing at 80 BPM, partway through Beat 2 of its 4/4 Measure
@@ -878,6 +914,25 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.2.4/1** — A shipped Pattern's tempo change is applied again when the Pattern is next loaded, surviving a reload
     - **AC-4.2.4/2** — The remembered tempo lives in the overlay store and the shipped Pattern's own data is unchanged
   - *(Added 2026-08-22 at the maintainer's request: "I would like the app to remember what tempo and swing percentage I've set for any rhythm that I've played … not stored as part of the rhythm, but more of a playback setting … applied when you load the rhythm and saved when it changes." Owned Patterns already behave this way via their own saved tempo; this extends the same memory to shipped Patterns without thawing them.)*
+
+- **AC-4.2.5** — Tempo can be typed exactly
+  - **Given** the playback settings
+  - **When** the Practicing Musician types a BPM into the tempo entry field and commits it
+  - **Then** exactly that tempo applies, clamped to 18–300 — with the same effect as the slider reaching the value: the restart of AC-4.2.2, the memory of AC-4.2.3–AC-4.2.4
+  - **Cases**:
+    - **AC-4.2.5/1** — A typed BPM applies exactly, and the slider follows it
+    - **AC-4.2.5/2** — A typed value outside 18–300 clamps to the nearer bound, and a non-numeric entry leaves the tempo unchanged
+    - **AC-4.2.5/3** — The field always shows the current tempo, however it was last set — slider, preset, or typing
+  - *(Added 2026-09-07 at the maintainer's request: "I also don't have a way of just setting the tempo … to enter it exactly." The slider spans 283 integer values across a phone-width track, so any specific BPM was a hunt.)*
+
+- **AC-4.2.6** — The tempo presets reach the ceiling
+  - **Given** the playback settings
+  - **When** the Practicing Musician looks at the tempo preset row
+  - **Then** it offers 57, 67, 80, 90, 104, 120, 150, 180, 200, 220, 240, 260, 280 and 300, and tapping one sets exactly that tempo
+  - **Cases**:
+    - **AC-4.2.6/1** — The preset row offers exactly those fourteen values, in ascending order
+    - **AC-4.2.6/2** — Tapping the 300 preset sets the tempo to the ceiling
+  - *(Added 2026-09-07: T202 raised the ceiling from 220 to 300 but left the preset row at 220, so the top of the range was slider-only — and the maintainer asked for "more preselector buttons". The four additions continue the 20 BPM spacing the top of the old row already used.)*
 
 ---
 
@@ -1071,6 +1126,26 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
     - **AC-4.4.14/2** — An all-triplet Pattern shows one note explaining swing doesn't apply to triplet feel
     - **AC-4.4.14/3** — A Pattern with a straight-feel group shows both swing controls and no note, all-Undivided Patterns included
   - *(Added 2026-08-23. The maintainer read the slider's absence on an all-triplet Pattern as a loading failure — the Swing feel picker stood alone with nothing to govern. Two changes: the absence now explains itself, and presence is decided by "any straight-feel group" rather than the old "any even-slot straight group", which wrongly hid the control on all-Undivided Patterns that the Quarters feel can swing.)*
+
+- **AC-4.4.15** — Swing presets
+  - **Given** the playback settings on a Pattern with at least one straight-feel Subdivision Group
+  - **When** the Practicing Musician looks at the swing amount control
+  - **Then** a preset row offers 0, 15, 25, 33 and 50 — straight, light, moderate, the amount that lands an 8th pair's "&" exactly a triplet late at the 8ths feel, and hard — and tapping one sets the Pattern-wide amount exactly as moving the slider does (AC-4.4.12), clearing per-group overrides included
+  - **Cases**:
+    - **AC-4.4.15/1** — The swing preset row offers exactly 0, 15, 25, 33 and 50, in ascending order
+    - **AC-4.4.15/2** — Tapping a swing preset sets the Pattern-wide amount and clears per-group overrides, exactly as the slider does
+    - **AC-4.4.15/3** — On an all-triplet Pattern the preset row is absent along with the other swing controls (AC-4.4.14)
+  - *(Added 2026-09-07 at the maintainer's request, with AC-4.4.16: the slider was the only way to set an amount, and on the iPad it was the hardest control in the app to operate — tempo at least had presets to fall back on. The values chosen with the maintainer 2026-09-07.)*
+
+- **AC-4.4.16** — Swing can be typed exactly
+  - **Given** the playback settings on a Pattern with at least one straight-feel Subdivision Group
+  - **When** the Practicing Musician types an amount into the swing entry field and commits it
+  - **Then** exactly that Pattern-wide amount applies, clamped to 0–100, with the same effect as the slider reaching the value — override clearing (AC-4.4.12), memory (AC-4.4.6) and the `swing` Tag (AC-4.4.13/5) included
+  - **Cases**:
+    - **AC-4.4.16/1** — A typed amount applies exactly, and the slider follows it
+    - **AC-4.4.16/2** — A typed value outside 0–100 clamps to the nearer bound, and a non-numeric entry leaves the amount unchanged
+    - **AC-4.4.16/3** — The field always shows the current amount, however it was last set — slider, preset, or typing
+  - *(Added 2026-09-07 at the maintainer's request: "with both the tempo and the swing, I wanna be able to enter the value." Mirrors AC-4.2.5 for tempo.)*
 
 ---
 
@@ -2038,11 +2113,15 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Then** the control stays focused, and the next adjustment lands on it without re-selecting it — a setting that takes several adjustments to get right, swing being the reported one, is adjusted repeatedly without re-finding the control each time
   - **And** the sounding-Measure autoscroll (AC-15.1.11) does not move the view while the musician is interacting with the main panel or within two seconds of their last interaction, resuming on its own afterwards — hands-off playback is unchanged
   - **And** when an update changes the height of the content above the focused control — switching Percussive to Melodic inserts the pitch strip above the editing controls — the main panel's scroll offset compensates, as far as the panel can scroll, so the control stays where it was on screen
+  - **And** none of this depends on the control holding focus: a touchscreen moves no focus onto a slider, and the slider under the finger is still kept alive across the updates it causes and still anchors the compensation
   - **Cases**:
     - **AC-15.1.16/1** — The control being operated keeps focus across the update it causes
     - **AC-15.1.16/2** — During playback the autoscroll stands down while controls are in use and for two seconds after
     - **AC-15.1.16/3** — A control keeps its place on screen when an update changes the height of the content above it
+    - **AC-15.1.16/4** — A slider under a pointer drag keeps its DOM node across the updates it causes even when it never received focus, so a touch drag is not severed mid-gesture
+    - **AC-15.1.16/5** — The height compensation anchors on the control under the pointer when nothing holds focus
   - *(Added 2026-08-23. Reported by the maintainer: every tap on the swing control or the Sound select rebuilt the panel and dropped focus, and — during playback — the sounding-Measure autoscroll fired on the re-render each adjustment caused, yanking the view back to the Pattern mid-adjustment. AC-15.1.11's hands-off tracking is untouched; this pins what happens while hands are on the controls.)*
+  - *(Revised 2026-09-07, adding /4 and /5. The maintainer re-reported the symptom from the iPad: "as soon as I touch the swing thing, it refocuses the entire screen." The /1–/3 protections all keyed off `document.activeElement`, and iPadOS Safari does not focus a range input on touch — so on the reported device every protection silently stood down. The operated control is now tracked by pointer as well as by focus. Swing suffered more than tempo for a second reason: crossing amount 0 adds or removes the automatic `swing` Tag chip in the header (AC-4.4.13/5), changing the height above the slider — the /3 case exactly, previously uncompensated under touch.)*
 
 ---
 ### User Story 33 - Ship with a seeded Pattern library
