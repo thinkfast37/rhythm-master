@@ -150,8 +150,16 @@ if (typeof document !== 'undefined') {
     'pointerdown',
     (event) => {
       const target = event.target;
+      // Buttons too, not only the KEEP_ALIVE_TAGS: a tap becomes a click only
+      // if the element survives from finger-down to finger-up, and playback
+      // re-renders on every sounding event — at 200 BPM a rebuild would
+      // otherwise replace the Stop button inside nearly every tap window and
+      // eat the tap (AC-15.1.16/6). closest(), because the tap may land on a
+      // span inside the button.
       pointerHeld =
-        target instanceof Element && KEEP_ALIVE_TAGS.has(target.tagName) ? target : null;
+        target instanceof Element
+          ? (target.closest('button, input, select, textarea') ?? null)
+          : null;
     },
     true
   );
@@ -171,8 +179,11 @@ function rebuild(root, build) {
   const focused = document.activeElement;
   const inside = focused && focused !== root && root.contains(focused);
   const held = heldControl();
-  // Keep alive whichever input the musician is operating: the focused one, or —
-  // when touch moved no focus — the one under the pointer (AC-15.1.16/4).
+  // Keep alive whichever control the musician is operating: the focused input,
+  // or — since touch moves no focus — whatever the pointer holds, buttons
+  // included (AC-15.1.16/4, /6). A held button's click then runs the listener
+  // from the render its tap began on, which is exactly the state the tap
+  // aimed at.
   const keepAlive =
     inside && KEEP_ALIVE_TAGS.has(focused.tagName)
       ? focused
@@ -232,7 +243,10 @@ function patchChildren(oldParent, newParent, active) {
       // element itself is preserved. Read the value before the move empties
       // the fresh select, and set it after the options are in place.
       const value = 'value' in n ? n.value : undefined;
-      if (o.tagName === 'SELECT') o.replaceChildren(...n.childNodes);
+      // A kept-alive button's label still follows the fresh render — only the
+      // node under the finger is preserved, never a stale caption
+      // (AC-15.1.16/6).
+      if (o.tagName === 'SELECT' || o.tagName === 'BUTTON') o.replaceChildren(...n.childNodes);
       if (value !== undefined) o.value = value;
       if ('checked' in o) o.checked = n.checked;
       o.disabled = n.disabled ?? false;

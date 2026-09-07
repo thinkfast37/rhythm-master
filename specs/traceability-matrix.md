@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 401 across 37 User Stories
+**Criteria**: 402 across 37 User Stories
 
-**Coverage**: 206 of 401 criteria proven (51.4%)
+**Coverage**: 207 of 402 criteria proven (51.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 206 | 51.4% |
+| 🟢 Proven | 207 | 51.5% |
 | 🔴 Gap — HIGH | 73 | 18.2% |
-| 🟠 Gap — MEDIUM | 44 | 11.0% |
-| 🟡 Gap — LOW | 78 | 19.5% |
+| 🟠 Gap — MEDIUM | 44 | 10.9% |
+| 🟡 Gap — LOW | 78 | 19.4% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -89,7 +89,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-11.3 | 5 | 0 | · | · | 4 | · | 1 |
 | 🔴 US-12.1 | 4 | 0 | · | · | 4 | · | · |
 | 🟢 US-13.1 | 11 | **11** | · | · | · | · | · |
-| 🔴 US-15.1 | 25 | 12 | · | · | 1 | 9 | 3 |
+| 🔴 US-15.1 | 26 | 13 | · | · | 1 | 9 | 3 |
 | 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
 | 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
 | 🟢 US-15.2 | 19 | **19** | · | · | · | · | · |
@@ -404,31 +404,32 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-13.1 | `AC-13.1.4/2` | A Pattern edited since it was submitted is included again | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.4/3` | A Pattern never submitted is included | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.5` | Submission-tracking is Local Metadata, never part of the export payload | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `storage.test.js`, `operations.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.5` 🖵 | Mobile drawer auto-opens on every page load | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.6` 🖵 | The library collapses whenever a Pattern is loaded, at every width | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-15.1 | `AC-15.1.14/1` | Every Beat in a Measure is the same width as every other Beat in it, on its own line and across lines | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/2` 🖵 | No Beat is narrower than its own Slots need at the 24px minimum, so the grid still never scrolls sideways | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/3` | Beats divide evenly between lines: four Beats where three fit lay out two and two, never three and one | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/4` | Where every Beat fits one line, they occupy that one line and still share the width | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.14/5` | The layout re-balances when the width available to the grid changes | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `grid.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.15/1` 🖵 | `index.html` declares the Home-Screen web-app metas: `apple-mobile-web-app-capable` yes, `apple-mobile-web-app-status-bar-style` black-translucent, `apple-mobile-web-app-title` Rhythm Master, and a viewport with `viewport-fit=cover` so the existing safe-area padding keeps the top controls clear of the status bar | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `webapp-meta.test.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.15/2` 🖵 | `index.html` links an `apple-touch-icon`, and the image it names ships with the build, so the saved icon is the app's own rather than a page screenshot | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `webapp-meta.test.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.16/1` 🖵 | The control being operated keeps focus across the update it causes | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.16/2` 🖵 | During playback the autoscroll stands down while controls are in use and for two seconds after | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.16/3` 🖵 | A control keeps its place on screen when an update changes the height of the content above it | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.16/4` 🖵 | A slider under a pointer drag keeps its DOM node across the updates it causes even when it never received focus, so a touch drag is not severed mid-gesture | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.16/5` 🖵 | The height compensation anchors on the control under the pointer when nothing holds focus | P-036 | T114, T115, T116, T160, T167, T208, T218, T236 (8/8 done) | T117, T161, T168, T209, T219, T237 (6/6 done) | `responsive.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.5` 🖵 | Mobile drawer auto-opens on every page load | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.6` 🖵 | The library collapses whenever a Pattern is loaded, at every width | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.7` 🖵 | Secondary control sections collapse to accordions on mobile | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.8` 🖵 | Fixed main-panel section order | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.9` 🖵 | Wide controls never force horizontal page scrolling | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-15.1 | `AC-15.1.10` 🖵 | Grid remains usable for the largest supported Pattern on mobile | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.11` 🖵 | Playback keeps the sounding Measure in view on mobile | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.12` 🖵 | The library and the main panel scroll independently | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.13` 🖵 | The collapsed library is one control away, and every load starts it open | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-15.1 | `AC-15.1.14/1` | Every Beat in a Measure is the same width as every other Beat in it, on its own line and across lines | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/2` 🖵 | No Beat is narrower than its own Slots need at the 24px minimum, so the grid still never scrolls sideways | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/3` | Beats divide evenly between lines: four Beats where three fit lay out two and two, never three and one | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/4` | Where every Beat fits one line, they occupy that one line and still share the width | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.14/5` | The layout re-balances when the width available to the grid changes | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `grid.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.15/1` 🖵 | `index.html` declares the Home-Screen web-app metas: `apple-mobile-web-app-capable` yes, `apple-mobile-web-app-status-bar-style` black-translucent, `apple-mobile-web-app-title` Rhythm Master, and a viewport with `viewport-fit=cover` so the existing safe-area padding keeps the top controls clear of the status bar | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `webapp-meta.test.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.15/2` 🖵 | `index.html` links an `apple-touch-icon`, and the image it names ships with the build, so the saved icon is the app's own rather than a page screenshot | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `webapp-meta.test.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.16/1` 🖵 | The control being operated keeps focus across the update it causes | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.16/2` 🖵 | During playback the autoscroll stands down while controls are in use and for two seconds after | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.16/3` 🖵 | A control keeps its place on screen when an update changes the height of the content above it | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.16/4` 🖵 | A slider under a pointer drag keeps its DOM node across the updates it causes even when it never received focus, so a touch drag is not severed mid-gesture | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.16/5` 🖵 | The height compensation anchors on the control under the pointer when nothing holds focus | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟢 OK |
+| US-15.1 | `AC-15.1.16/6` 🖵 | A button held mid-tap keeps its DOM node across the renders playback streams, so a tap on Stop lands at any tempo | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238 (9/9 done) | T117, T161, T168, T209, T219, T237, T239 (7/7 done) | `responsive.spec.js` | 🟢 OK |
 | US-16.1 | `AC-16.1.1` | Shipped library present on first run | P-003 | T032 (1/1 done) | T033 (1/1 done) | `timeline.test.js`, `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-16.1 | `AC-16.1.2` 🖵 | Shipped Patterns are not marked as user-authored | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
 | US-16.1 | `AC-16.1.3` | Legacy category becomes a Tag | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |

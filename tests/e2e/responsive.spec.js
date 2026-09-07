@@ -592,3 +592,48 @@ test('AC-15.1.16/5 — The height compensation anchors on the control under the 
   expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
   expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
 });
+
+test('AC-15.1.16/6 — A button held mid-tap keeps its DOM node across the renders playback streams, so a tap on Stop lands at any tempo', async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.handlers.onSetting({ countInEnabled: false });
+    window.__rm.loadBlank('4/4', 'Fast Stop');
+    window.__rm.handlers.onTempo(300);
+    // Sound every Slot, so playback streams a render on every subdivision —
+    // denser than the reported 200 BPM, the worst tap-eating rate on offer.
+    const beats = window.__rm.getState().pattern.measures[0].beats;
+    for (let b = 0; b < beats.length; b++) {
+      for (let s = 0; s < beats[b].slots.length; s++) {
+        if (!window.__rm.getState().pattern.measures[0].beats[b].slots[s].on) {
+          await window.__rm.handlers.onSlotTap(0, b, s);
+        }
+      }
+    }
+  });
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  // Finger down on Stop, held across several playback renders. The browser
+  // dispatches the click only if this exact node survives to finger-up.
+  await page.evaluate(() => {
+    const stop = document.querySelector('[data-action="stop"]');
+    window.__heldStop = stop;
+    stop.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  });
+  await page.waitForTimeout(500);
+  const survived = await page.evaluate(() => ({
+    sameNode: document.querySelector('[data-action="stop"]') === window.__heldStop,
+    connected: window.__heldStop.isConnected,
+  }));
+  expect(survived.sameNode).toBe(true);
+  expect(survived.connected).toBe(true);
+
+  // Finger up: the tap completes on the surviving node and playback stops.
+  await page.evaluate(() => {
+    window.__heldStop.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    window.__heldStop.click();
+  });
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(false);
+  await expect(page.locator('[data-action="play"]')).toBeVisible();
+});
