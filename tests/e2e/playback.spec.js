@@ -869,3 +869,334 @@ test('AC-4.4.14/3 — A Pattern with a straight-feel group shows both swing cont
   await expect(page.locator('.swing-feel')).toHaveCount(1);
   await expect(page.locator('.swing-note')).toHaveCount(0);
 });
+
+// --- AC-4.1.9: edits during playback are heard from the next pass -----------
+
+/** A one-Measure 4/4 Pattern, first Slot of each Beat on, at a chosen tempo. */
+async function loadEditable(page, tempo, { silentBeatOne = false } = {}) {
+  await page.evaluate(({ bpm, silentBeatOne }) => {
+    // No count-in: these tests reason about pass boundaries from Play onward.
+    window.__rm.handlers.onSetting({ countInEnabled: false });
+    const measure = {
+      timeSignature: '4/4',
+      beats: Array.from({ length: 4 }, (_, i) => ({
+        recipe: 'straight-16ths',
+        slots: [
+          { on: !(silentBeatOne && i === 1) },
+          { on: false },
+          { on: false },
+          { on: false },
+        ],
+      })),
+    };
+    window.__rm.loadPattern(
+      { id: 'p_live_edit', name: 'Live Edit', soundMode: 'percussive', tempo: bpm, tags: [], rating: 0, measures: [measure] },
+      { owned: true }
+    );
+  }, { bpm: tempo, silentBeatOne });
+}
+
+const snapshot = (page) => page.evaluate(() => {
+  const s = window.__rm.transport._snapshot();
+  return {
+    timelineLength: s.timelineLength,
+    loopDuration: s.loopDuration,
+    soundMode: s.pattern?.soundMode,
+    beatOneRecipe: s.pattern?.measures[0].beats[1].recipe,
+    measureCount: s.pattern?.measures.length,
+    pendingEdit: s.pendingEdit,
+  };
+});
+
+test('AC-4.1.9/1 — An accent or Slot edit during playback sounds from the start of the next pass, with the transport running throughout', async ({ page }) => {
+  await page.goto('/');
+  await loadEditable(page, 60); // one pass = 4s: room to assert mid-pass state
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  await page.evaluate(() => window.__rm.handlers.onSlotTap(0, 1, 1));
+
+  // The current pass still sounds the Pattern as it was — the edit is pending,
+  // not applied, and the transport never stopped.
+  const mid = await snapshot(page);
+  expect(mid.timelineLength).toBe(4);
+  expect(mid.pendingEdit).toBe(true);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+
+  // From the next pass, the edited Pattern is what the transport sounds.
+  await page.waitForFunction(() => window.__rm.transport._snapshot().timelineLength === 5, null, { timeout: 10000 });
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
+test('AC-4.1.9/2 — A Recipe change during playback sounds from the start of the next pass', async ({ page }) => {
+  await page.goto('/');
+  // Beat 2 is silent, so the Recipe change needs no clearing confirmation.
+  await loadEditable(page, 240, { silentBeatOne: true });
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  await page.evaluate(() => window.__rm.handlers.onRecipe('straight-8ths', 0, 1));
+
+  await page.waitForFunction(
+    () => window.__rm.transport._snapshot().pattern.measures[0].beats[1].recipe === 'straight-8ths',
+    null,
+    { timeout: 10000 }
+  );
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
+test('AC-4.1.9/3 — A pitch, Key, scale or Sound Mode change during playback sounds from the start of the next pass', async ({ page }) => {
+  await page.goto('/');
+  await loadEditable(page, 240);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
+  await page.waitForFunction(
+    () => window.__rm.transport._snapshot().pattern.soundMode === 'melodic',
+    null,
+    { timeout: 10000 }
+  );
+
+  // And a Key change reaches the same running transport the same way.
+  await page.evaluate(() => window.__rm.handlers.onKey('F'));
+  await page.waitForFunction(
+    () => window.__rm.transport._snapshot().pattern.key === 'F',
+    null,
+    { timeout: 10000 }
+  );
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
+test('AC-4.1.9/4 — The loop counter keeps counting across an edit rather than resetting', async ({ page }) => {
+  await page.goto('/');
+  await loadEditable(page, 240); // one pass = 1s
+  await page.locator('[data-action="play"]').click();
+  await page.waitForFunction(() => window.__rm.getState().loop >= 1, null, { timeout: 8000 });
+  const before = await page.evaluate(() => window.__rm.getState().loop);
+
+  await page.evaluate(() => window.__rm.handlers.onSlotTap(0, 2, 2));
+  await page.waitForFunction(() => window.__rm.transport._snapshot().timelineLength === 5, null, { timeout: 10000 });
+
+  const after = await page.evaluate(() => window.__rm.getState().loop);
+  expect(after).toBeGreaterThanOrEqual(before);
+
+  // And it keeps climbing on the edited Pattern rather than starting over.
+  await page.waitForFunction(
+    (n) => window.__rm.getState().loop >= n + 1,
+    after,
+    { timeout: 10000 }
+  );
+});
+
+test('AC-4.1.9/5 — A structural edit — adding a Measure, or a Time Signature change — takes effect at the next pass, with the pass length re-derived', async ({ page }) => {
+  await page.goto('/');
+  await loadEditable(page, 240);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  const before = await snapshot(page);
+
+  await page.evaluate(() => window.__rm.handlers.onAddMeasure());
+  await page.waitForFunction(
+    () => window.__rm.transport._snapshot().pattern.measures.length === 2,
+    null,
+    { timeout: 10000 }
+  );
+
+  const after = await snapshot(page);
+  expect(after.measureCount).toBe(2);
+  expect(after.loopDuration).toBeGreaterThan(before.loopDuration * 1.9);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
+// --- AC-4.1.10: Play recovers audio the device took away --------------------
+
+test('AC-4.1.10/3 — After the tab is backgrounded and returns, pressing Play sounds the Pattern again without a reload', async ({ page }) => {
+  // Wrap the context so the test can put it into the truly-stuck state iPadOS
+  // leaves behind: natively suspended, reporting the non-standard 'interrupted'.
+  await page.addInitScript(() => {
+    const Real = window.AudioContext;
+    window.__audioContexts = [];
+    window.AudioContext = class extends Real {
+      constructor(...args) {
+        super(...args);
+        window.__audioContexts.push(this);
+      }
+      get state() {
+        return window.__forcedAudioState ?? super.state;
+      }
+      async resume() {
+        window.__forcedAudioState = null;
+        return super.resume();
+      }
+    };
+  });
+
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  // Backgrounded: the transport stops and resets (AC-4.1.5)…
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
+
+  // …and the OS leaves the context genuinely suspended while reporting
+  // 'interrupted', which the old resume() ignored.
+  await page.evaluate(async () => {
+    await window.__audioContexts[0].suspend();
+    window.__forcedAudioState = 'interrupted';
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
+// --- AC-4.2.5 / AC-4.2.6: exact tempo entry, presets to the ceiling ---------
+
+const commitEntry = async (page, selector, text) => {
+  const entry = page.locator(selector);
+  await entry.fill(text);
+  await entry.dispatchEvent('change');
+};
+
+test('AC-4.2.5/1 — A typed BPM applies exactly, and the slider follows it', async ({ page }) => {
+  await page.goto('/');
+  await commitEntry(page, '.tempo-entry', '137');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(137);
+  await expect(page.locator('.tempo-slider')).toHaveValue('137');
+});
+
+test('AC-4.2.5/2 — A typed value outside 18–300 clamps to the nearer bound, and a non-numeric entry leaves the tempo unchanged', async ({ page }) => {
+  await page.goto('/');
+  await commitEntry(page, '.tempo-entry', '999');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(300);
+
+  await commitEntry(page, '.tempo-entry', '2');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(18);
+
+  await commitEntry(page, '.tempo-entry', '');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(18);
+  await expect(page.locator('.tempo-entry')).toHaveValue('18');
+});
+
+test('AC-4.2.5/3 — The field always shows the current tempo, however it was last set — slider, preset, or typing', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.preset', { hasText: /^120$/ }).click();
+  await expect(page.locator('.tempo-entry')).toHaveValue('120');
+
+  await page.evaluate(() => {
+    const slider = document.querySelector('.tempo-slider');
+    slider.value = '90';
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect(page.locator('.tempo-entry')).toHaveValue('90');
+
+  await commitEntry(page, '.tempo-entry', '204');
+  await expect(page.locator('.tempo-entry')).toHaveValue('204');
+});
+
+test('AC-4.2.6/1 — The preset row offers exactly those fourteen values, in ascending order', async ({ page }) => {
+  await page.goto('/');
+  const values = await page.$$eval('[data-action="preset-tempo"]', (els) => els.map((el) => el.textContent));
+  expect(values).toEqual(['57', '67', '80', '90', '104', '120', '150', '180', '200', '220', '240', '260', '280', '300']);
+});
+
+test('AC-4.2.6/2 — Tapping the 300 preset sets the tempo to the ceiling', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(300);
+});
+
+// --- AC-4.4.15 / AC-4.4.16: swing presets and exact swing entry -------------
+
+test('AC-4.4.15/1 — The swing preset row offers exactly 0, 15, 25, 33 and 50, in ascending order', async ({ page }) => {
+  await page.goto('/');
+  const values = await page.$$eval('[data-action="preset-swing"]', (els) => els.map((el) => el.textContent));
+  expect(values).toEqual(['0', '15', '25', '33', '50']);
+});
+
+test('AC-4.4.15/2 — Tapping a swing preset sets the Pattern-wide amount and clears per-group overrides, exactly as the slider does', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__rm.loadPattern(
+      {
+        id: 'p_preset_swing',
+        name: 'Preset Swing',
+        soundMode: 'percussive',
+        tempo: 120,
+        tags: [],
+        rating: 0,
+        measures: [
+          {
+            timeSignature: '4/4',
+            beats: Array.from({ length: 4 }, () => ({
+              recipe: 'straight-8ths',
+              slots: [{ on: true }, { on: true }],
+              swing: { 0: 40 },
+            })),
+          },
+        ],
+      },
+      { owned: true }
+    );
+  });
+
+  await page.locator('[data-action="preset-swing"][data-amount="25"]').click();
+  const after = await page.evaluate(() => ({
+    amount: window.__rm.getState().pattern.swingAmount,
+    overrides: window.__rm.getState().pattern.measures[0].beats.map((b) => b.swing ?? null),
+  }));
+  expect(after.amount).toBe(25);
+  expect(after.overrides).toEqual([null, null, null, null]);
+});
+
+test('AC-4.4.15/3 — On an all-triplet Pattern the preset row is absent along with the other swing controls (AC-4.4.14)', async ({ page }) => {
+  await page.goto('/');
+  await loadUniform(page, { recipe: 'triplet-8ths', slots: [true, false, true] });
+  await expect(page.locator('[data-action="preset-swing"]')).toHaveCount(0);
+  await expect(page.locator('.swing-entry')).toHaveCount(0);
+  await expect(page.locator('.swing-note')).toBeVisible();
+});
+
+test('AC-4.4.16/1 — A typed amount applies exactly, and the slider follows it', async ({ page }) => {
+  await page.goto('/');
+  await commitEntry(page, '.swing-entry', '42');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(42);
+  await expect(page.locator('.swing-slider')).toHaveValue('42');
+});
+
+test('AC-4.4.16/2 — A typed value outside 0–100 clamps to the nearer bound, and a non-numeric entry leaves the amount unchanged', async ({ page }) => {
+  await page.goto('/');
+  await commitEntry(page, '.swing-entry', '150');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(100);
+
+  await commitEntry(page, '.swing-entry', '-4');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(0);
+
+  await commitEntry(page, '.swing-entry', '');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(0);
+  await expect(page.locator('.swing-entry')).toHaveValue('0');
+});
+
+test('AC-4.4.16/3 — The field always shows the current amount, however it was last set — slider, preset, or typing', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+  await expect(page.locator('.swing-entry')).toHaveValue('33');
+
+  await page.evaluate(() => {
+    const slider = document.querySelector('.swing-slider');
+    slider.value = '60';
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect(page.locator('.swing-entry')).toHaveValue('60');
+
+  await commitEntry(page, '.swing-entry', '12');
+  await expect(page.locator('.swing-entry')).toHaveValue('12');
+});

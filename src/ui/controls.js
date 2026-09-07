@@ -22,8 +22,17 @@ import { subdivisionGroups } from '../core/recipes.js';
 import { MIN_SWING, MAX_SWING, DEFAULT_SWING_FEEL } from '../core/swing.js';
 import { renderStars } from './library.js';
 
-/** Preset tempos, carried over from the predecessor. */
-export const TEMPO_PRESETS = [57, 67, 80, 90, 104, 120, 150, 180, 200, 220];
+/**
+ * Preset tempos: the predecessor's ten, extended to the 300 BPM ceiling at the
+ * 20 BPM spacing the top of the old row already used (AC-4.2.6).
+ */
+export const TEMPO_PRESETS = [57, 67, 80, 90, 104, 120, 150, 180, 200, 220, 240, 260, 280, 300];
+
+/**
+ * Swing presets (AC-4.4.15): straight, light, moderate, the amount that lands
+ * an 8th pair's "&" exactly a triplet late at the 8ths feel, and hard.
+ */
+export const SWING_PRESETS = [0, 15, 25, 33, 50];
 
 function el(tag, className, props = {}) {
   const node = document.createElement(tag);
@@ -37,6 +46,69 @@ function labelled(labelText, control) {
   wrap.appendChild(el('span', 'control-label', { textContent: labelText }));
   wrap.appendChild(control);
   return wrap;
+}
+
+/**
+ * Like `labelled`, for a row holding more than one control — a `<label>` may
+ * govern only one, so this is a div carrying the same classes.
+ */
+function labelledRow(labelText, ...controls) {
+  const wrap = el('div', 'control');
+  wrap.appendChild(el('span', 'control-label', { textContent: labelText }));
+  const row = el('div', 'slider-row');
+  for (const control of controls) row.appendChild(control);
+  wrap.appendChild(row);
+  return wrap;
+}
+
+/**
+ * Exact numeric entry beside a slider (AC-4.2.5, AC-4.4.16). Commits on change
+ * — Enter, or leaving the field — clamped to the bounds; a non-numeric entry
+ * puts the current value back rather than applying anything.
+ */
+function valueEntry(className, { min, max, value, label, action, onCommit }) {
+  const entry = el('input', `value-entry ${className}`, {
+    type: 'number',
+    inputMode: 'numeric',
+    min: String(min),
+    max: String(max),
+    step: '1',
+    value: String(value),
+  });
+  entry.dataset.action = action;
+  // The current value rides on the element as data, not in a closure: the
+  // keep-alive rebuild (AC-15.1.16/1) preserves this node and its listeners
+  // across renders, so a listener may close over `handlers` alone — a captured
+  // `value` would be the value at first render forever.
+  entry.dataset.current = String(value);
+  entry.setAttribute('aria-label', label);
+  entry.addEventListener('change', (e) => {
+    const typed = Number.parseFloat(e.target.value);
+    if (!Number.isFinite(typed)) {
+      e.target.value = e.target.dataset.current;
+      return;
+    }
+    const lo = Number(e.target.min);
+    const hi = Number(e.target.max);
+    onCommit(Math.min(hi, Math.max(lo, Math.round(typed))));
+  });
+  return entry;
+}
+
+/** A row of preset buttons, the current value marked (AC-4.2.6, AC-4.4.15). */
+function presetRow(values, { action, dataKey, current, onPick }) {
+  const presets = el('div', 'presets');
+  for (const value of values) {
+    const b = el('button', `preset${value === current ? ' on' : ''}`, {
+      type: 'button',
+      textContent: String(value),
+    });
+    b.dataset.action = action;
+    b.dataset[dataKey] = String(value);
+    b.addEventListener('click', () => onPick(value));
+    presets.appendChild(b);
+  }
+  return presets;
 }
 
 /*
@@ -63,19 +135,57 @@ function labelled(labelText, control) {
  *    swapping the node is the safer path.
  */
 const KEEP_ALIVE_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
-const IDENTITY_KEYS = ['action', 'degree', 'bpm', 'recipe', 'tag', 'patternId'];
+const IDENTITY_KEYS = ['action', 'degree', 'bpm', 'amount', 'recipe', 'tag', 'patternId'];
+
+/*
+ * The control under an active pointer drag. iPadOS Safari moves NO focus onto a
+ * range input on touch, so `document.activeElement` — which every AC-15.1.16
+ * protection originally keyed off — stays on the body for the whole gesture and
+ * the protections silently stand down (AC-15.1.16/4, /5). Tracked at the
+ * document so one listener covers every panel, however many are mounted.
+ */
+let pointerHeld = null;
+if (typeof document !== 'undefined') {
+  document.addEventListener(
+    'pointerdown',
+    (event) => {
+      const target = event.target;
+      pointerHeld =
+        target instanceof Element && KEEP_ALIVE_TAGS.has(target.tagName) ? target : null;
+    },
+    true
+  );
+  for (const type of ['pointerup', 'pointercancel']) {
+    document.addEventListener(type, () => {
+      pointerHeld = null;
+    }, true);
+  }
+}
+
+/** The control a pointer drag currently holds, if any — for the scroll anchor. */
+export function heldControl() {
+  return pointerHeld?.isConnected ? pointerHeld : null;
+}
 
 function rebuild(root, build) {
-  const active = document.activeElement;
-  const inside = active && active !== root && root.contains(active);
-  const keepAlive = inside && KEEP_ALIVE_TAGS.has(active.tagName);
-  const identity = inside && !keepAlive && active.dataset?.action ? focusIdentity(active) : null;
+  const focused = document.activeElement;
+  const inside = focused && focused !== root && root.contains(focused);
+  const held = heldControl();
+  // Keep alive whichever input the musician is operating: the focused one, or —
+  // when touch moved no focus — the one under the pointer (AC-15.1.16/4).
+  const keepAlive =
+    inside && KEEP_ALIVE_TAGS.has(focused.tagName)
+      ? focused
+      : held && held !== root && root.contains(held)
+        ? held
+        : null;
+  const identity = inside && !keepAlive && focused.dataset?.action ? focusIdentity(focused) : null;
 
   const fresh = document.createElement('div');
   build(fresh);
 
   if (keepAlive) {
-    patchChildren(root, fresh, active);
+    patchChildren(root, fresh, keepAlive);
   } else {
     root.replaceChildren(...fresh.childNodes);
     // preventScroll: restoring focus must not itself move the view (AC-15.1.16).
@@ -446,6 +556,16 @@ function renderSwing(pattern, handlers) {
   // A Pattern authored with per-group overrides and no Pattern-wide amount
   // still shows what it plays; moving the slider replaces the overrides.
   const value = pattern.swingAmount ?? firstOverride ?? 0;
+
+  const entry = valueEntry('swing-entry', {
+    min: MIN_SWING,
+    max: MAX_SWING,
+    value,
+    label: 'Swing amount',
+    action: 'set-swing-exact',
+    onCommit: (amount) => handlers.onSwing(amount),
+  });
+
   const slider = el('input', 'swing-slider', {
     type: 'range',
     min: String(MIN_SWING),
@@ -455,7 +575,18 @@ function renderSwing(pattern, handlers) {
   });
   slider.dataset.action = 'set-swing';
   slider.addEventListener('input', (e) => handlers.onSwing(Number(e.target.value)));
-  group.appendChild(labelled(`Swing ${value}`, slider));
+  group.appendChild(labelledRow(`Swing ${value}`, entry, slider));
+
+  // Presets ride the one onSwing path, so a tap behaves exactly as the slider
+  // reaching the value — override clearing included (AC-4.4.15/2).
+  group.appendChild(
+    presetRow(SWING_PRESETS, {
+      action: 'preset-swing',
+      dataKey: 'amount',
+      current: value,
+      onPick: handlers.onSwing,
+    })
+  );
 
   return group;
 }
@@ -491,6 +622,18 @@ function renderPitchStripInto(root, pattern, state, handlers) {
       title: 'Tap a note’s upper band in the grid to give it this pitch',
     })
   );
+
+  // The Key sits with the note palette it governs — the maintainer hunted for
+  // it in the Edit accordion (AC-2.2.19). Key is meaningless in Percussive
+  // mode, so it is absent with the whole strip rather than present-but-disabled
+  // (AC-2.1.2, AC-2.2.19/3).
+  const keyPicker = el('select', 'key-picker');
+  keyPicker.dataset.action = 'set-key';
+  keyPicker.setAttribute('aria-label', 'Key');
+  for (const k of KEYS) keyPicker.appendChild(el('option', null, { value: k, textContent: k }));
+  keyPicker.value = key;
+  keyPicker.addEventListener('change', (e) => handlers.onKey(e.target.value));
+  root.appendChild(keyPicker);
 
   // The scale drives the strip's in-scale marking and spelling, nothing else —
   // resolution to a sounding note never sees it (AC-2.5.5).
@@ -627,6 +770,15 @@ function renderTransport(state, handlers) {
 function renderTempo(pattern, handlers) {
   const group = el('div', 'control-group');
 
+  const entry = valueEntry('tempo-entry', {
+    min: MIN_TEMPO,
+    max: MAX_TEMPO,
+    value: pattern.tempo,
+    label: 'Tempo in BPM',
+    action: 'set-tempo-exact',
+    onCommit: (bpm) => handlers.onTempo(bpm),
+  });
+
   const slider = el('input', 'tempo-slider', {
     type: 'range',
     min: String(MIN_TEMPO),
@@ -638,20 +790,16 @@ function renderTempo(pattern, handlers) {
   // Changing tempo restarts playback at the new tempo (AC-4.2.2); the handler
   // owns that, not this control.
   slider.addEventListener('input', (e) => handlers.onTempo(Number(e.target.value)));
-  group.appendChild(labelled(`Tempo ${pattern.tempo}`, slider));
+  group.appendChild(labelledRow(`Tempo ${pattern.tempo}`, entry, slider));
 
-  const presets = el('div', 'presets');
-  for (const bpm of TEMPO_PRESETS) {
-    const b = el('button', `preset${bpm === pattern.tempo ? ' on' : ''}`, {
-      type: 'button',
-      textContent: String(bpm),
-    });
-    b.dataset.action = 'preset-tempo';
-    b.dataset.bpm = String(bpm);
-    b.addEventListener('click', () => handlers.onTempo(bpm));
-    presets.appendChild(b);
-  }
-  group.appendChild(presets);
+  group.appendChild(
+    presetRow(TEMPO_PRESETS, {
+      action: 'preset-tempo',
+      dataKey: 'bpm',
+      current: pattern.tempo,
+      onPick: handlers.onTempo,
+    })
+  );
 
   return group;
 }
@@ -759,16 +907,8 @@ function renderSound(pattern, handlers) {
   mode.addEventListener('change', (e) => handlers.onSoundMode(e.target.value));
   group.appendChild(labelled('Sound', mode));
 
-  // Key is meaningless in Percussive mode, so it is absent rather than
-  // present-but-disabled (AC-2.1.x).
-  if (pattern.soundMode === 'melodic') {
-    const key = el('select', 'key-picker');
-    key.dataset.action = 'set-key';
-    for (const k of KEYS) key.appendChild(el('option', null, { value: k, textContent: k }));
-    key.value = pattern.key ?? 'C';
-    key.addEventListener('change', (e) => handlers.onKey(e.target.value));
-    group.appendChild(labelled('Key', key));
-  }
+  // The Key is NOT here: it lives on the pitch strip with the rest of the note
+  // palette (AC-2.2.19), and is absent in Percussive mode with the strip.
 
   return group;
 }

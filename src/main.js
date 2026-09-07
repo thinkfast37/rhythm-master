@@ -40,6 +40,7 @@ import {
   renderActionControls,
   renderPitchStrip,
   renderRecipeStrip,
+  heldControl,
 } from './ui/controls.js';
 import {
   applyViewport,
@@ -139,8 +140,18 @@ export function undo() {
   if (!previous) return false;
   state.pattern = previous;
   if (state.isOwned) patternStore.upsert(state.pattern);
+  syncTransport();
   render();
   return true;
+}
+
+/**
+ * A content edit made while playing reaches the transport at the next pass
+ * boundary (AC-4.1.9) — unlike tempo, swing and settings changes, which restart
+ * from the top (AC-4.2.2). A stopped transport reads state at the next Play.
+ */
+function syncTransport() {
+  if (state.isPlaying) transport.update(state.pattern, state.settings);
 }
 
 export const getState = () => state;
@@ -164,6 +175,7 @@ export function apply(mutator, ...args) {
   pushHistory(state.pattern);
   state.pattern = mutator(state.pattern, ...args);
   if (state.isOwned) patternStore.upsert(state.pattern);
+  syncTransport();
   render();
   return state.pattern;
 }
@@ -431,6 +443,7 @@ const handlers = {
     if (!(await guardShipped())) return;
     state.pattern = { ...state.pattern, scale };
     if (state.isOwned) patternStore.upsert(state.pattern);
+    syncTransport();
     render();
   },
 
@@ -477,6 +490,7 @@ const handlers = {
 
     state.pattern = next;
     if (state.isOwned) patternStore.upsert(next);
+    syncTransport();
     render();
   },
 
@@ -484,6 +498,7 @@ const handlers = {
     if (!(await guardShipped())) return;
     state.pattern = { ...state.pattern, key };
     if (state.isOwned) patternStore.upsert(state.pattern);
+    syncTransport();
     render();
   },
 
@@ -1108,13 +1123,19 @@ export function mount(root) {
   }
 
   subscribe((pattern, position, s) => {
-    // Where the focused control sits on screen, so the view can be put back if
-    // this render changes the height of what is above it (AC-15.1.16/3).
+    // Where the operated control sits on screen, so the view can be put back if
+    // this render changes the height of what is above it (AC-15.1.16/3). Touch
+    // moves no focus onto a slider, so the pointer-held control is the anchor
+    // when nothing in the panel holds focus (AC-15.1.16/5).
     const focused = document.activeElement;
-    const anchor =
+    const held = heldControl();
+    const anchorEl =
       focused && focused !== document.body && main.contains(focused)
-        ? { el: focused, top: focused.getBoundingClientRect().top }
-        : null;
+        ? focused
+        : held && main.contains(held)
+          ? held
+          : null;
+    const anchor = anchorEl ? { el: anchorEl, top: anchorEl.getBoundingClientRect().top } : null;
     // The header needs the same Tag breakdown the library computes, so the two
     // cannot disagree about what is removable.
     const entry = libraryEntries().find((e) => e.pattern.id === pattern.id);
