@@ -125,6 +125,7 @@ src/
 │   ├── swing.js            # Per-group swing offsets
 │   ├── pitch.js            # Scale degree + octave + Key → frequency / MIDI note
 │   ├── harmony.js          # Chord qualities, progression catalogue, chord-tone resolution (US-2.6)
+│   ├── notation.js         # Pattern → score: values, rests, beams, tuplets, staff positions, key signatures (US-12.2)
 │   ├── timeline.js         # Pattern → flat ordered list of scheduled events
 │   ├── pattern.js          # Pattern construction and mutation
 │   ├── similarity.js       # Duplicate and Pattern Family detection
@@ -136,6 +137,7 @@ src/
 │   └── piano.js            # Soundfont loading and Melodic note playback
 ├── ui/
 │   ├── grid.js             # The one grid view
+│   ├── score.js            # The sheet music view: SVG engraving of core/notation's score, and printing (US-12.2)
 │   ├── controls.js         # Meter, Recipe, pitch, tempo, swing, counting controls
 │   ├── library.js          # Browse, search, Tag filter, rating, navigation
 │   ├── dialogs.js          # Naming, confirmation, duplicate prompts
@@ -232,6 +234,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
 | **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.10 | T249, T250, T253, T255, T257 | T251, T252, T254, T256, T258 |
+| **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260 | T261, T262 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

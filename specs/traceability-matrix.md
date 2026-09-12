@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 473 across 38 User Stories
+**Criteria**: 518 across 39 User Stories
 
-**Coverage**: 279 of 473 criteria proven (59.0%)
+**Coverage**: 324 of 518 criteria proven (62.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 279 | 59.0% |
-| 🔴 Gap — HIGH | 73 | 15.4% |
-| 🟠 Gap — MEDIUM | 43 | 9.1% |
-| 🟡 Gap — LOW | 78 | 16.5% |
+| 🟢 Proven | 324 | 62.5% |
+| 🔴 Gap — HIGH | 73 | 14.1% |
+| 🟠 Gap — MEDIUM | 43 | 8.3% |
+| 🟡 Gap — LOW | 78 | 15.1% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -96,6 +96,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-17.1 | 24 | **24** | · | · | · | · | · |
 | 🟢 US-2.5 | 14 | **14** | · | · | · | · | · |
 | 🟢 US-2.6 | 59 | **59** | · | · | · | · | · |
+| 🟢 US-12.2 | 45 | **45** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -574,3 +575,48 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.6 | `AC-2.6.10/1` | The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure | P-041 | T249, T250, T253, T255, T257 (5/5 done) | T251, T252, T254, T256, T258 (5/5 done) | `export.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.10/2` | Each pass's notes are the notes playback sounds in that pass, from the one timeline | P-041 | T249, T250, T253, T255, T257 (5/5 done) | T251, T252, T254, T256, T258 (5/5 done) | `export.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.10/3` | A Pattern with no progression exports one pass, as before | P-041 | T249, T250, T253, T255, T257 (5/5 done) | T251, T252, T254, T256, T258 (5/5 done) | `export.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.1/1` 🖵 | A Grid \| Sheet toggle sits at the head of the grid section; the choice is remembered as an app preference across loads, and a first load shows Grid | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.1/2` 🖵 | Choosing Sheet replaces the grid with the score in the same place in the main panel; every other section keeps its position | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.1/3` 🖵 | Choosing Grid brings the grid back, with the Pattern exactly as it was | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.1/4` 🖵 | The score is read-only: it offers no way to change a Slot, an accent, a Recipe or a Pitch, and tapping a note changes nothing | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.1/5` 🖵 | The score always shows the current Pattern: an edit made in the grid is written in the score the next time Sheet is chosen, and a Pattern opened from the library while Sheet is showing is written at once | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.2/1` 🖵 | The Pattern's name is the title | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.2/2` 🖵 | The tempo mark is ♩ = tempo when the first Measure has a quarter-note Beat and ♪ = tempo when it has an eighth-note Beat, since tempo is Beats per minute and the Beat is what the denominator names | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.2/3` 🖵 | The Time Signature is written at the start of the first Measure and again at the start of any Measure whose meter differs from the one before, never on a Measure that repeats it | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.2/4` 🖵 | A Melodic Pattern's head says its Key and scale by name, E♭ Aeolian (Natural Minor); a Percussive Pattern's head says neither | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.2/5` 🖵 | When any swing amount is above zero the head says "Swing" beneath the tempo mark, and the notes are still written straight, as swing is a feel and not a rhythm | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.3` 🖵 | A Percussive Pattern is written on a single-line rhythm staff | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/1` 🖵 | A Beat occupies a quarter note in a /4 Measure and an eighth note in a /8 Measure, and its Recipe divides it as written: Straight 8ths into two eighths, Straight 16ths into four sixteenths, Triplet 8ths into three eighths under a 3, Undivided into one eighth, and Straight 16ths on an eighth-note Beat into two sixteenths | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/2` 🖵 | A mixed Recipe is written as its two halves: two sixteenths and three sixteenths under a 3, in the order the Recipe names | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/3` 🖵 | A sounding Slot's value runs to the next sounding Slot in the Beat or the Beat's end: the first Slot alone of Straight 8ths is a quarter note; Straight 16ths on–off–off–on is a dotted eighth then a sixteenth; Triplet 8ths on–off–on is a quarter then an eighth under the 3 | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/4` 🖵 | A value that would cross the boundary between a mixed Recipe's two halves is written as two notes tied together, one in each half, never as one note spanning a tuplet boundary | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/5` 🖵 | Off Slots before the first sounding Slot are rests written largest first and never dotted: three leading sixteenths are an eighth rest then a sixteenth rest; a leading triplet eighth is an eighth rest under the 3 | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/6` 🖵 | A Beat with no sounding Slot is one rest of the Beat's value, and a Measure with no sounding Slot is a single whole-measure rest | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/7` 🖵 | The notes of one Beat shorter than a quarter are beamed together, a rest breaks the beam, and a tuplet carries its 3 above or below the group | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/8` 🖵 | Within a Measure, horizontal position is proportional to time: the three notes of a triplet are equally spaced, a sixteenth sits a quarter of the way through its Beat, and the two halves of a mixed Beat are the same width | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.4/9` 🖵 | Measures are written in order with a bar line between each and a final bar line after the last, and a Measure's notes and rests always total its meter exactly | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/1` 🖵 | The key signature is the one whose notes are the scale's: C Ionian none, C Aeolian three flats, D Dorian none, E♭ Ionian three flats, D Lydian three sharps; a pentatonic, blues or minor scale takes the parallel Ionian's, or Aeolian's when the scale has ♭3 and no 3, as the chords are spelled; a mode whose signature would need more than seven accidentals takes the Key's Ionian signature instead | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/2` 🖵 | Every notehead sits at the staff position of its letter and octave, as the pitch strip names it: middle C — degree 1, Key C, octave 4 — on the first ledger line below the staff; E4 on the bottom line; B4 on the middle line; F5 on the top line; A5 on the first ledger line above; ledger lines drawn for every position outside the staff | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/3` 🖵 | A note's spelling is the pitch strip's: ♭3 in C is E♭, never D♯; 3 in D♭ is F and ♭3 in D♭ is F♭, so every degree keeps its own letter | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/4` 🖵 | An accidental is written before a note when its letter is not already at that alteration — by the key signature or by an earlier accidental in the same Measure on the same letter and octave — and a natural is written when the note undoes one; an accidental holds to the end of its Measure and no further | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/5` 🖵 | A chord-tone Pitch is written at the note it sounds in that pass through the chord in force: the Root under I–IV–V in C is C in pass 1, F in pass 2 and G in pass 3 | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/6` 🖵 | Under an arpeggio, every sounding Slot is written at the step it is dealt in that pass, so the score is the melody the Pattern plays | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.5/7` 🖵 | A note below the middle line has its stem up and a note on or above it has its stem down; a beamed group takes the direction of its note farthest from the middle line | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.6` 🖵 | A Strong accent is written as an accent mark | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.7/1` 🖵 | Every Slot position is labelled, in the active counting system's vocabulary for that Recipe, exactly as the grid labels it | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.7/2` 🖵 | A sounding Slot's label is written plainly; the label of an off Slot, or of one absorbed into a held note, is written in parentheses, so the count is complete and the attacks stand out | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.7/3` 🖵 | A Pattern containing a mixed Recipe is labelled Numbered whatever the preference, as the grid is, and the preference is not changed by it | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.7/4` 🖵 | Changing the counting system while Sheet is showing relabels the score at once | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.8/1` 🖵 | The score holds as many passes as the MIDI file does, each beginning a new line, labelled "Pass 1", "Pass 2", … at its left when there is more than one | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.8/2` 🖵 | The chord in force is named above the first note of Measure 1 of every pass and above the first note of every Measure where it changes, by the name the chord strip gives it; under a progression changing every Measure that is every Measure, and under one changing every pass it is Measure 1 alone | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.8/3` 🖵 | A Pattern without a progression is one pass, with no pass label and no chord names | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `notation.test.js`, `score.test.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.9/1` 🖵 | While playing, exactly one note or rest is marked as current, and it is the one at the transport position's Measure, Beat and Slot, in the line of the pass being played | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.9/2` 🖵 | When playback stops no note or rest is marked | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.10/1` 🖵 | A line holds as many whole Measures as fit; the next Measure starts the next line, and a pass always starts a new line | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.10/2` 🖵 | A single Measure wider than the line is scaled down to fit it rather than cut or scrolled, so a 7/4 Measure of Straight 16ths is legible in full at 390px | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.10/3` 🖵 | A line carries its own clef and key signature, and a line beginning with a Measure whose meter is the previous Measure's repeats no Time Signature | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.11/1` 🖵 | A Print / PDF control sits with the Grid \| Sheet toggle, present only while Sheet is showing, and choosing it opens the browser's print dialog | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.11/2` 🖵 | The printed page carries the score alone — head, staves, chord names, pass labels and counting labels — and none of the grid, controls, library, pinned bar or navigation | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.11/3` 🖵 | The printed notation is identical to the screen's: the same notes, values, staff positions, accidentals, accents and labels; only the line breaks may differ, laid out to the page's width | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.11/4` 🖵 | A line is never split across two pages | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-12.2 | `AC-12.2.11/5` 🖵 | The document's title while printing is the Pattern's name, so a PDF saved from the dialog is named after the Pattern by default | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |

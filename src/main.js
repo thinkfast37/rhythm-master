@@ -67,6 +67,8 @@ import {
 } from './ui/responsive.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
+import { buildScore } from './core/notation.js';
+import { renderScore, printScore } from './ui/score.js';
 import {
   buildSubmission,
   selectForBulk,
@@ -659,6 +661,18 @@ const handlers = {
     render();
   },
 
+  /** Grid or Sheet: the same Pattern, in the grid's place (AC-12.2.1). */
+  onPatternView(view) {
+    if (view !== 'grid' && view !== 'sheet') throw new Error(`Unknown Pattern view: ${view}`);
+    state.settings = settingsStore.save({ patternView: view });
+    render();
+  },
+
+  /** The score through the browser's print dialog, for paper or a PDF (AC-12.2.11). */
+  onPrintScore() {
+    return printScore(buildScore(state.pattern, { countingSystem: state.settings.countingSystem }));
+  },
+
   onSetting(partial) {
     state.settings = settingsStore.save(partial);
     if (state.isPlaying) transport.restart(state.pattern, state.settings);
@@ -1126,7 +1140,41 @@ export function mount(root) {
   const chordStripEl = document.createElement('section');
   chordStripEl.dataset.section = 'chords';
   chordStripEl.dataset.primary = 'true';
+  /*
+   * The grid section holds the grid or the sheet music in its place, chosen by
+   * the toggle at its head (AC-12.2.1). One section, so the fixed order of
+   * AC-15.1.8 is unchanged by which of the two it shows.
+   */
+  const viewEl = document.createElement('div');
+  viewEl.className = 'pattern-view';
+  const viewBar = document.createElement('div');
+  viewBar.className = 'view-toggle';
+  viewBar.setAttribute('role', 'group');
+  viewBar.setAttribute('aria-label', 'Pattern view');
+  for (const [view, label] of [
+    ['grid', 'Grid'],
+    ['sheet', 'Sheet'],
+  ]) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'view-button';
+    b.dataset.action = `view-${view}`;
+    b.dataset.view = view;
+    b.textContent = label;
+    b.addEventListener('click', () => handlers.onPatternView(view));
+    viewBar.appendChild(b);
+  }
+  const printButton = document.createElement('button');
+  printButton.type = 'button';
+  printButton.className = 'print-button';
+  printButton.dataset.action = 'print-score';
+  printButton.textContent = 'Print / PDF';
+  printButton.addEventListener('click', () => handlers.onPrintScore());
+  viewBar.appendChild(printButton);
   const gridEl = document.createElement('div');
+  const scoreEl = document.createElement('div');
+  scoreEl.className = 'score';
+  viewEl.append(viewBar, gridEl, scoreEl);
   const playEl = document.createElement('section');
   playEl.dataset.primary = 'true';
   playEl.dataset.section = 'play';
@@ -1206,7 +1254,7 @@ export function mount(root) {
   topBarEl.append(libraryToggle, navEl);
 
   main.append(
-    topBarEl, headerEl, chordStripEl, gridEl, playEl, recipeEl, pitchEl, harmonyEl,
+    topBarEl, headerEl, chordStripEl, viewEl, playEl, recipeEl, pitchEl, harmonyEl,
     settingsEl, editEl, actionsEl, familyEl
   );
   shell.append(sidebar, scrim, main);
@@ -1287,6 +1335,15 @@ export function mount(root) {
   // The library opening or collapsing changes the grid's width without a resize
   // event, so the element is watched rather than the window (AC-15.1.14/5).
   observeGridWidth(gridEl);
+  // The score is laid out to its width, so it follows the same changes (AC-12.2.10).
+  if (typeof ResizeObserver !== 'undefined') {
+    let lastWidth = 0;
+    new ResizeObserver(() => {
+      if (scoreEl.hidden || scoreEl.clientWidth === lastWidth) return;
+      lastWidth = scoreEl.clientWidth;
+      render();
+    }).observe(scoreEl);
+  }
 
   // Hands on the main panel mean the view belongs to the musician, not to the
   // playback autoscroll (AC-15.1.16/2). Captured, so it sees the interaction
@@ -1322,13 +1379,30 @@ export function mount(root) {
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
     renderChordStrip(chordStripEl, pattern, position);
-    renderGrid(gridEl, pattern, position, {
-      countingSystem: s.settings.countingSystem,
-      recipeArmed: Boolean(s.armedRecipe),
-    });
-    // Immediately after the render that built the Beats, and before this task
-    // yields to paint, so the one-line fallback is never seen (AC-15.1.14).
-    balanceBeatLines(gridEl);
+    const sheet = s.settings.patternView === 'sheet';
+    for (const b of viewBar.querySelectorAll('.view-button')) {
+      b.setAttribute('aria-pressed', String((b.dataset.view === 'sheet') === sheet));
+      b.classList.toggle('on', (b.dataset.view === 'sheet') === sheet);
+    }
+    printButton.hidden = !sheet;
+    gridEl.hidden = sheet;
+    scoreEl.hidden = !sheet;
+    if (sheet) {
+      // Read-only, from the same Pattern and position the grid renders from
+      // (AC-12.2.1/4, AC-12.2.9); laid out to the width it has (AC-12.2.10).
+      renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem }), {
+        width: scoreEl.clientWidth || main.clientWidth || 680,
+        transportPosition: position,
+      });
+    } else {
+      renderGrid(gridEl, pattern, position, {
+        countingSystem: s.settings.countingSystem,
+        recipeArmed: Boolean(s.armedRecipe),
+      });
+      // Immediately after the render that built the Beats, and before this task
+      // yields to paint, so the one-line fallback is never seen (AC-15.1.14).
+      balanceBeatLines(gridEl);
+    }
     renderPitchStrip(pitchEl, pattern, s, handlers);
     renderHarmony(harmonyEl, pattern, s, handlers);
     renderRecipeStrip(recipeEl, pattern, s, handlers);
@@ -1349,7 +1423,7 @@ export function mount(root) {
 
     // Keep what is sounding on screen (AC-15.1.11) — unless the musician's
     // hands are on the panel, or were within the grace window (AC-15.1.16/2).
-    if (position && Date.now() - lastInteractionAt > AUTOSCROLL_GRACE_MS) {
+    if (position && !gridEl.hidden && Date.now() - lastInteractionAt > AUTOSCROLL_GRACE_MS) {
       scrollMeasureIntoView(gridEl, position.measureIndex);
     }
   });
@@ -1362,6 +1436,8 @@ export function mount(root) {
     main,
     headerEl,
     gridEl,
+    scoreEl,
+    viewEl,
     chordStripEl,
     pitchEl,
     harmonyEl,

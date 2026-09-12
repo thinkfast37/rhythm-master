@@ -1723,3 +1723,95 @@ body {
   font: 500 12px/1.4 var(--font-ui);
   color: var(--ink-dim);
 }
+
+/* --- sheet music (US-12.2) ------------------------------------------------ */
+
+/*
+ * The grid section's head: Grid | Sheet, and Print / PDF while Sheet is
+ * showing (AC-12.2.1/1, AC-12.2.11/1). The two views swap inside this one
+ * section, so the main panel's fixed order is untouched (AC-15.1.8).
+ */
+.pattern-view { display: flex; flex-direction: column; }
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+.view-button, .print-button {
+  padding: 8px 14px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.view-button.on { border-color: var(--brand); color: var(--brand); }
+.print-button { margin-left: auto; }
+.print-button[hidden] { display: none; }
+.grid[hidden] { display: none; }
+
+/*
+ * The score: light paper, always. Notation is read by its black-on-white
+ * contrast, and the printed page is white whatever the app's theme.
+ */
+.score {
+  margin: 8px 12px 12px;
+  padding: 12px 8px 4px;
+  background: #fbfaf6;
+  color: #141414;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.score[hidden] { display: none; }
+.score-head { padding: 0 8px 4px; }
+.score-title {
+  margin: 0;
+  font: 700 18px/1.2 Georgia, 'Times New Roman', serif;
+  color: #141414;
+}
+.score-meta { margin-top: 4px; font: 500 13px/1.3 Georgia, 'Times New Roman', serif; }
+.score-sep { margin: 0 8px; opacity: .5; }
+.score-swing { font: italic 500 13px/1.3 Georgia, 'Times New Roman', serif; }
+.score-row { line-height: 0; }
+.score-pass-label { padding: 6px 8px 0; font: italic 500 12px/1.2 Georgia, 'Times New Roman', serif; color: #555; }
+.score-line { display: block; max-width: 100%; }
+
+.score-line .staff-line, .score-line .ledger, .score-line .barline { stroke: #141414; stroke-width: 1; }
+.score-line .barline.final, .score-line .notehead, .score-line .rest, .score-line .beam, .score-line .flag,
+.score-line .clef rect, .score-line .accidental path, .score-line .dot { fill: #141414; }
+.score-line .stem, .score-line .tie, .score-line .accent, .score-line .tuplet-bracket,
+.score-line .clef, .score-line .accidental path[fill='none'], .score-line .rest path[fill='none'] { stroke: #141414; }
+.score-line .accidental path[fill='none'], .score-line .rest path[fill='none'] { fill: none; }
+.score-line text { font-family: Georgia, 'Times New Roman', serif; fill: #141414; }
+.score-line .meter { font-weight: 700; }
+.score-line .chord-name { font-weight: 700; }
+.score-line .pass-label { font-style: italic; fill: #555; }
+.score-line .count { font-family: var(--font-ui); font-weight: 600; }
+.score-line .count.muted { fill: #8a8a8a; font-weight: 500; }
+
+/* The note being played (AC-12.2.9): the app's brand colour, on paper. */
+.score-line .item.playing .notehead, .score-line .item.playing .rest, .score-line .item.playing .flag { fill: #d4880c; }
+.score-line .item.playing .stem, .score-line .item.playing .accent { stroke: #d4880c; }
+
+/*
+ * Printing (AC-12.2.11): the page carries the score alone, laid out again to
+ * the page's width into `.score-print`, which nothing but the print stylesheet
+ * shows. A line is never split across pages.
+ */
+.score-print { display: none; }
+@media print {
+  @page { margin: 12mm; }
+  html, body { height: auto; overflow: visible; background: #fff; }
+  body > *:not(.score-print) { display: none !important; }
+  .score-print {
+    display: block;
+    background: #fff;
+    color: #141414;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .score-print .score-head { padding: 0 0 8px; }
+  .score-print .score-title { font-size: 20px; }
+  .score-print .score-row { break-inside: avoid; page-break-inside: avoid; line-height: 0; }
+  .score-print .score-pass-label { break-after: avoid; page-break-after: avoid; }
+  .score-print .score-line { width: 100%; height: auto; }
+}

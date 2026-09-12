@@ -137,7 +137,8 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
   const expected = [
     'HEADER.pattern-header',
     'SECTION[chords]',
-    'DIV.grid',
+    // The grid section: the grid, or the sheet music in its place (US-12.2).
+    'DIV.pattern-view',
     'SECTION[play]',
     'SECTION[recipe]',
     'SECTION[pitch]',
