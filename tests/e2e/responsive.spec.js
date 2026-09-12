@@ -476,9 +476,16 @@ test('AC-15.1.16/2 — During playback the autoscroll stands down while controls
 
   // Scroll the panel down to the slider, leaving the sounding Measure far
   // above the viewport — exactly where the autoscroll would fetch it back from.
+  //
+  // Focus first, THEN scroll: playback re-renders the panel on every sounding
+  // event, and the app preserves the node of the control being operated, never
+  // one merely being reached for (AC-15.1.16/1). Scrolling to an unfocused
+  // slider races those renders — under CI load the handle went stale between
+  // resolving the element and scrolling it. Ordering only; nothing asserted
+  // here changes, and the hands-on loop below is untouched.
   const slider = page.locator('.swing-slider').first();
-  await slider.scrollIntoViewIfNeeded();
   await slider.focus();
+  await slider.scrollIntoViewIfNeeded();
 
   // Hands on: a nudge every 300ms for ~2.4s. Playback renders on every tick
   // throughout, and through all of it the slider stays on screen.
