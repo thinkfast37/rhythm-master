@@ -141,14 +141,15 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
     'DETAILS[playback-settings]',
     'DETAILS[edit]',
     'DETAILS[actions]',
-    'NAV.pattern-nav',
     'SECTION[family]',
   ];
 
   const orderNow = () =>
     page.locator('.main-panel > *').evaluateAll((els) =>
       els
-        .filter((e) => !e.classList.contains('library-toggle'))
+        // The pinned bar — the library toggle and quick navigation — sits above
+        // the ordered sections rather than among them (AC-5.5.3).
+        .filter((e) => !e.classList.contains('main-top-bar'))
         .map((e) => {
           if (e.tagName === 'DETAILS') return `DETAILS[${e.dataset.section}]`;
           if (e.tagName === 'SECTION') return `SECTION[${e.dataset.section}]`;

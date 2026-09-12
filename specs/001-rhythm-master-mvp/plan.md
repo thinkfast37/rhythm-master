@@ -200,9 +200,9 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045 | T046 |
 | **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.18 | T047–T048, T050, T166, T169 | T049, T166, T169 |
 | **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.10 | T051–T055, T165, T220, T228, T230 | T056, T165, T221, T229, T231 |
-| **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.6 | T057–T058, T204, T234 | T059, T205, T235 |
+| **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.6 | T057–T058, T204, T234, T244 | T059, T205, T235, T245 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |
-| **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.16 | T063, T204, T206, T210, T222, T236 | T064, T205, T207, T211, T223, T237 |
+| **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.17 | T063, T204, T206, T210, T222, T236, T244 | T064, T205, T207, T211, T223, T237, T245 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.5 | T065 | T066 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
 | **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232 | T070, T161, T162, T163, T164, T165, T213, T215, T233 |
@@ -216,7 +216,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-024** | US-5.1 — Browse the library | AC-5.1.1–AC-5.1.6 | T087 | T088 |
 | **P-025** | US-5.2 — Search by text | AC-5.2.1–AC-5.2.3 | T089 | T090 |
 | **P-026** | US-5.3 — Organise by Tag, including automatic Tags | AC-5.3.1–AC-5.3.10 | T091–T092 | T093 |
-| **P-027** | US-5.5 — Navigate sequentially | AC-5.5.1–AC-5.5.2 | T094 | T095 |
+| **P-027** | US-5.5 — Navigate sequentially | AC-5.5.1–AC-5.5.3 | T094, T246 | T095, T247 |
 | **P-028** | US-6.1 — Rate a Pattern | AC-6.1.1–AC-6.1.7 | T096, T200 | T097, T201 |
 | **P-029** | US-8.1 — Append a second Pattern | AC-8.1.1–AC-8.1.6 | T098 | T099 |
 | **P-030** | US-10.1 — Duplicate a Pattern to build a variation | AC-10.1.1–AC-10.1.6 | T100 | T101 |
@@ -225,7 +225,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.16 | T114–T116, T160, T167, T208, T218, T236, T238 | T117, T161, T168, T209, T219, T237, T239 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.16 | T114–T116, T160, T167, T208, T218, T236, T238, T246 | T117, T161, T168, T209, T219, T237, T239, T247 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
