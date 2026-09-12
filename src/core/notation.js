@@ -254,9 +254,9 @@ function spell(slot, deal, chord, pattern, m, b, s) {
  * as Measures of Beats of written items (AC-12.2.8/1).
  *
  * @param {object} pattern
- * @param {{countingSystem?: string}} [options]
+ * @param {{countingSystem?: string, fill?: string|null}} [options]  `fill` names the fill in force under cycle mode (US-2.7)
  */
-export function buildScore(pattern, { countingSystem = 'takadimi' } = {}) {
+export function buildScore(pattern, { countingSystem = 'takadimi', fill = null } = {}) {
   const melodic = pattern.soundMode === 'melodic';
   const system = effectiveSystem(pattern, countingSystem);
   const signature = melodic ? keySignature(pattern.key, pattern.scale ?? DEFAULT_SCALE) : null;
@@ -272,6 +272,8 @@ export function buildScore(pattern, { countingSystem = 'takadimi' } = {}) {
     tempo: { bpm: pattern.tempo, beatValue: beatNoteValue(pattern.measures[0].timeSignature) },
     swing,
     keyLabel: melodic ? `${prettyName(pattern.key)} ${scale.label}` : null,
+    // Named only while cycle mode has a fill in force (AC-2.7.3/1).
+    fillLabel: fill,
     staff: melodic ? 'treble' : 'single',
     keySignature: signature,
     system,

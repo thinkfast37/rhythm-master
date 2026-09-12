@@ -560,6 +560,38 @@ export function setArpeggio(pattern, id) {
   });
 }
 
+/* --- cycle mode: the fill in force (US-2.7) -------------------------------- */
+
+/** The catalogue index of a Pattern's own fill, or 0 — the first — when it has none (AC-2.7.1/3). */
+export function fillIndexOf(pattern) {
+  const i = ARPEGGIOS.findIndex((a) => a.id === pattern?.harmony?.arpeggio);
+  return i < 0 ? 0 : i;
+}
+
+/**
+ * The catalogue index of the fill in force under cycle mode for the pass `loop`
+ * (AC-2.7.2/1, /3): the starting fill, stepped forward once for every `repeats`
+ * harmonic cycles played since `baseLoop`, wrapping round the catalogue. None
+ * is never in the cycle. Pure, so the grid, the score and the transport agree
+ * about which fill a pass is under by construction.
+ */
+export function fillIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4 } = {}, loop = 0) {
+  const period = Math.max(1, Math.floor(repeats)) * cyclePasses(pattern);
+  const steps = Math.floor(Math.max(0, loop - baseLoop) / period);
+  const n = ARPEGGIOS.length;
+  return (((start + steps) % n) + n) % n;
+}
+
+/**
+ * The Pattern as played with the fill `id` in force — a playback overlay handed
+ * to whoever renders or sounds it, never stored (AC-2.7.1/4). The Pattern
+ * itself is returned when it has no progression or already carries that fill.
+ */
+export function withArpeggio(pattern, id) {
+  if (!hasHarmony(pattern) || (pattern.harmony.arpeggio ?? null) === id) return pattern;
+  return { ...pattern, harmony: { ...pattern.harmony, arpeggio: id } };
+}
+
 /** The roles an arpeggio deals: the members of the progression's fullest chord (AC-2.6.6/5). */
 export function arpeggioRoles(pattern) {
   const chords = pattern.harmony?.chords ?? [];

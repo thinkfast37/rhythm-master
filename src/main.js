@@ -68,6 +68,7 @@ import {
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
+import { ARPEGGIOS, fillIndexOf, fillIndexFor, withArpeggio } from './core/harmony.js';
 import { renderScore, printScore } from './ui/score.js';
 import {
   buildSubmission,
@@ -101,6 +102,15 @@ const state = {
   isOwned: false,
   isPlaying: false,
   loop: 0,
+  /**
+   * Cycle mode (US-2.7): step through the fill catalogue while practising. A
+   * practice setting, never Pattern data — the fill in force is derived from
+   * the loop count and substituted into the Pattern handed to the transport
+   * and the views (`playing`), so the stored Pattern, its auto-save and the
+   * MIDI file never see it (AC-2.7.1/4, AC-2.7.3/2). `start` is the catalogue
+   * index the cycle counts from, `baseLoop` the pass it counts from.
+   */
+  fillCycle: { on: false, start: 0, baseLoop: 0 },
   /**
    * The pitch strip's armed value, stamped onto a Slot by tapping its note band
    * (US-2.2). Strip state, not Pattern data: it outlives a stamp and a Pattern
@@ -166,8 +176,59 @@ export function undo() {
  * boundary (AC-4.1.9) — unlike tempo, swing and settings changes, which restart
  * from the top (AC-4.2.2). A stopped transport reads state at the next Play.
  */
+/** Whether cycle mode has a fill in force: on, and a progression to deal through. */
+function cycling() {
+  return state.fillCycle.on && state.pattern.soundMode === 'melodic' && hasHarmony(state.pattern);
+}
+
+/** The catalogue index of the fill in force for a pass, or null outside cycle mode. */
+function fillIndexAt(loop) {
+  if (!cycling()) return null;
+  return fillIndexFor(state.pattern, { ...state.fillCycle, repeats: state.settings.fillCycleRepeats }, loop);
+}
+
+/** The Pattern as it plays in pass `loop`: the fill in force substituted (US-2.7). */
+function playingAt(loop) {
+  const index = fillIndexAt(loop);
+  return index === null ? state.pattern : withArpeggio(state.pattern, ARPEGGIOS[index].id);
+}
+
+/** The Pattern the views render: the pass on screen, or the top when stopped. */
+function playing() {
+  return playingAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
+}
+
+/** The Pattern the transport schedules next: the pass it is on. */
+function scheduled() {
+  return playingAt(state.isPlaying ? state.loop : 0);
+}
+
+/** The label of the fill in force, for the score's head (AC-2.7.3/1), or null. */
+function fillLabel() {
+  const index = fillIndexAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
+  return index === null ? null : ARPEGGIOS[index].label;
+}
+
+/**
+ * Count the cycle afresh from the fill in force now, so a restart or a
+ * changed count continues from where the musician is rather than jumping.
+ */
+function rebaseCycle() {
+  const index = fillIndexAt(state.isPlaying ? state.loop : 0);
+  state.fillCycle.start = index ?? fillIndexOf(state.pattern);
+  state.fillCycle.baseLoop = state.isPlaying ? state.loop : 0;
+}
+
 function syncTransport() {
-  if (state.isPlaying) transport.update(state.pattern, state.settings);
+  if (state.isPlaying) transport.update(scheduled(), state.settings);
+}
+
+function restartTransport() {
+  if (!state.isPlaying) return;
+  // A restart resets the loop counter (AC-4.2.2); the fill in force carries on.
+  rebaseCycle();
+  state.fillCycle.baseLoop = 0;
+  return transport.restart(scheduled(), state.settings);
 }
 
 export const getState = () => state;
@@ -178,7 +239,10 @@ export function subscribe(fn) {
 }
 
 function render() {
-  for (const fn of listeners) fn(state.pattern, state.transportPosition, state);
+  // The views see the Pattern as it plays — under cycle mode, with the fill in
+  // force in place of its own (AC-2.7.2/4). State still carries the real one.
+  const shown = playing();
+  for (const fn of listeners) fn(shown, state.transportPosition, state);
 }
 
 /**
@@ -347,7 +411,7 @@ export function loadPattern(pattern, { owned }) {
   // Loading while playing switches the running transport to the new Pattern,
   // from its top (AC-4.1.8) — the same restart path a tempo change takes, so a
   // stopped transport stays stopped (FR-010).
-  if (state.isPlaying) void transport.restart(state.pattern, state.settings);
+  void restartTransport();
   render();
 }
 
@@ -468,7 +532,7 @@ const handlers = {
     }
     // Carried to the next Pattern that has no swing of its own (AC-4.4.17).
     state.settings = settingsStore.save({ lastSwingAmount: amount });
-    if (state.isPlaying) transport.restart(state.pattern, state.settings);
+    restartTransport();
   },
 
   /** The pulse level swing pairs at — a playback setting exactly like the amount (AC-4.4.10). */
@@ -481,7 +545,7 @@ const handlers = {
       render();
     }
     state.settings = settingsStore.save({ lastSwingFeel: feel });
-    if (state.isPlaying) transport.restart(state.pattern, state.settings);
+    restartTransport();
   },
 
   /*
@@ -578,7 +642,33 @@ const handlers = {
   /** Which arpeggio the notes follow, or None to sound the stamped Pitches (AC-2.6.6). */
   async onArpeggio(id) {
     if (!(await guardShipped())) return;
+    // Under cycle mode the chosen fill is where the cycle begins again, with
+    // its repeats counted afresh; None hands the notes back to the stamped
+    // Pitches, which is cycle mode off (AC-2.7.2/7).
+    if (state.fillCycle.on) {
+      const index = ARPEGGIOS.findIndex((a) => a.id === id);
+      if (index < 0) state.fillCycle = { on: false, start: 0, baseLoop: 0 };
+      else state.fillCycle = { on: true, start: index, baseLoop: state.isPlaying ? state.loop : 0 };
+    }
     apply(setArpeggio, id);
+  },
+
+  /** Cycle mode on or off (AC-2.7.1): from the Pattern's own fill, or the first when it has none. */
+  onFillCycle(on) {
+    state.fillCycle = on
+      ? { on: true, start: fillIndexOf(state.pattern), baseLoop: state.isPlaying ? state.loop : 0 }
+      : { on: false, start: 0, baseLoop: 0 };
+    syncTransport();
+    render();
+  },
+
+  /** Harmonic cycles each fill plays for; the fill in force keeps its place and plays the new count (AC-2.7.2/5). */
+  onFillCycleRepeats(count) {
+    const repeats = Math.min(16, Math.max(1, Math.round(Number(count) || 4)));
+    if (state.fillCycle.on) rebaseCycle();
+    state.settings = settingsStore.save({ fillCycleRepeats: repeats });
+    syncTransport();
+    render();
   },
 
   onArmOctave(octaveOffset) {
@@ -608,7 +698,7 @@ const handlers = {
     state.settings = settingsStore.save({ lastTempo: bpm });
     // Restart from the top at the new tempo, resetting the loop counter, rather
     // than retiming the running loop in place (AC-4.2.2).
-    if (state.isPlaying) transport.restart(state.pattern, state.settings);
+    restartTransport();
     render();
   },
 
@@ -670,12 +760,12 @@ const handlers = {
 
   /** The score through the browser's print dialog, for paper or a PDF (AC-12.2.11). */
   onPrintScore() {
-    return printScore(buildScore(state.pattern, { countingSystem: state.settings.countingSystem }));
+    return printScore(buildScore(playing(), { countingSystem: state.settings.countingSystem, fill: fillLabel() }));
   },
 
   onSetting(partial) {
     state.settings = settingsStore.save(partial);
-    if (state.isPlaying) transport.restart(state.pattern, state.settings);
+    restartTransport();
     render();
   },
 
@@ -683,12 +773,14 @@ const handlers = {
   async onPlay() {
     state.isPlaying = true;
     state.loop = 0;
+    // Every Play begins the cycle from the same place (AC-2.7.2/6).
+    state.fillCycle = { ...state.fillCycle, start: fillIndexOf(state.pattern), baseLoop: 0 };
     render();
 
     // Both Sound Modes are pure Web Audio synthesis, so neither waits on an
     // asset — nothing to load, nothing to block on (AC-2.4.3).
     state.soundStatus = melodic.getStatus();
-    await transport.start(state.pattern, state.settings);
+    await transport.start(scheduled(), state.settings);
   },
 
   onStop() {
@@ -1064,7 +1156,14 @@ const transport = createTransport({
     render();
   },
   onLoop(loop) {
+    const previous = fillIndexAt(state.loop);
     state.loop = loop;
+    // The pass starting here is under the next fill: hand the transport the
+    // Pattern with it in force. This callback fires at the boundary before the
+    // transport swaps in a pending Pattern, so the fill changes for exactly
+    // this pass, with no restart and the counter still counting (AC-2.7.2/2).
+    const index = fillIndexAt(loop);
+    if (index !== null && index !== previous) transport.update(playingAt(loop), state.settings);
     render();
   },
   onStop() {
@@ -1073,6 +1172,8 @@ const transport = createTransport({
     state.isPlaying = false;
     state.transportPosition = null;
     state.loop = 0;
+    // Back to the starting fill (AC-2.7.2/6).
+    state.fillCycle = { ...state.fillCycle, start: fillIndexOf(state.pattern), baseLoop: 0 };
     render();
   },
 });
@@ -1390,7 +1491,7 @@ export function mount(root) {
     if (sheet) {
       // Read-only, from the same Pattern and position the grid renders from
       // (AC-12.2.1/4, AC-12.2.9); laid out to the width it has (AC-12.2.10).
-      renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem }), {
+      renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem, fill: fillLabel() }), {
         width: scoreEl.clientWidth || main.clientWidth || 680,
         transportPosition: position,
       });
@@ -1639,6 +1740,8 @@ if (typeof window !== 'undefined') {
     currentFamily,
     unresolvedLibraryDuplicates,
     melodic,
+    /** The fill cycle mode has in force, as its catalogue id, or null (US-2.7). */
+    fillInForce: () => playing().harmony?.arpeggio ?? null,
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {
       let p = create(name);

@@ -2717,6 +2717,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.6/10** — Drone above alternates rising chord tones with the Key's tonic an octave up whatever the chord — C C′ E C′ G C′ then F C′ A C′ C C′ — Drone below uses the tonic an octave down, and Chord root drone uses the chord's own root an octave up
     - **AC-2.6.6/11** — A scale walk steps up the chosen scale from the chord's root, one octave and round again: Scale up in major under F sounds F G A B♭ C D E then F; Scale up and down turns without repeating the turn; the Pattern's scale walks the scale the Pattern carries
     - **AC-2.6.6/12** — The note band names a dealt step by what it is — a chord tone with its octave mark, the tonic drone, or a scale step — beside the note it sounds
+  - *(Clarified 2026-09-12 with US-2.7 on /8: cycling through the fills in cycle mode is not a change to the Pattern's arpeggio — the fill in force is a playback setting — so it never prompts. Choosing a fill by hand still does, AC-2.7.2/7.)*
   - *(/9–/12 added and /1–/2 revised 2026-09-12, the same day: "there's all kinds of cool fill patterns I wanna try" — the maintainer described a drone against the Key's tonic and scale walks from the chord root, neither of which is a chord-tone order. A pattern is now a sequence of steps of three kinds, and the deal restarts on every chord change so each chord starts on its own root, chosen by the maintainer.)*
   - *(Rewritten 2026-09-12. As first built this was a one-shot **Fill** action that stamped roles into the Slots. The maintainer, on trying it: "[it seems] I have to paint every individual note that I want … what I wanted was arpeggios … c e g c e g over and over." A stamped deal is easy to miss and stops at the Slots that existed when it ran; an arpeggio is a setting the notes follow. The deal was also per-Measure; it is now continuous through the pass, chosen by the maintainer the same day.)*
 
@@ -2732,6 +2733,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.7/5** — A chord-tone Slot's note band shows its role and the note it sounds under the chord governing it in the current pass, updating as the chord changes
     - **AC-2.6.7/6** — The chord strip is absent on a Pattern with no progression, and on a Percussive Pattern
     - **AC-2.6.7/7** — With an arpeggio set, each sounding Slot's note band shows the role dealt to it and the note it sounds under the chord in force
+  - *(Clarified 2026-09-12 with US-2.7 on /7: under cycle mode the arpeggio the bands show the deal of is the fill in force, AC-2.7.2/4.)*
 
 - **AC-2.6.8** — The progression is saved with the Pattern
   - **Given** a Pattern with a progression
@@ -2760,6 +2762,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.10/1** — The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure
     - **AC-2.6.10/2** — Each pass's notes are the notes playback sounds in that pass, from the one timeline
     - **AC-2.6.10/3** — A Pattern with no progression exports one pass, as before
+  - *(Clarified 2026-09-12 with US-2.7: the file carries the Pattern's own arpeggio, never the fill cycle mode has in force, AC-2.7.3/2.)*
 
 ---
 
@@ -2790,6 +2793,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Given** a Pattern shown as Sheet
   - **When** the score is read from the top
   - **Then** it carries the Pattern's name, its tempo, its meter and, for Melodic, its Key and scale
+  - *(Clarified 2026-09-12 with US-2.7: while cycle mode is on the head also names the fill in force, AC-2.7.3/1. Off, nothing here changes.)*
   - **Cases**:
     - **AC-12.2.2/1** — The Pattern's name is the title
     - **AC-12.2.2/2** — The tempo mark is ♩ = tempo when the first Measure has a quarter-note Beat and ♪ = tempo when it has an eighth-note Beat, since tempo is Beats per minute and the Beat is what the denominator names
@@ -2881,6 +2885,52 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-12.2.11/3** — The printed notation is identical to the screen's: the same notes, values, staff positions, accidentals, accents and labels; only the line breaks may differ, laid out to the page's width
     - **AC-12.2.11/4** — A line is never split across two pages
     - **AC-12.2.11/5** — The document's title while printing is the Pattern's name, so a PDF saved from the dialog is named after the Pattern by default
+
+---
+
+### User Story 40 - Cycle through the fill patterns while practising
+
+*Traceability: `US-2.7` — Cycle through the fill patterns while practising*
+
+**As** the Practicing Musician, **I want** playback to step through the fill patterns one by one — each one repeated a number of times, four by default, before the next takes over — **so that** I can practise a progression through every arpeggio, drone and scale walk without stopping to pick each one.
+
+*(Added 2026-09-12 at the maintainer's request: "I love how now we have all these fill patterns. What I wanna be able to do is cycle through the fill patterns one by one … have the fill pattern repeat a certain number of times … default it to four times, and then have it cycle to the next one … a toggle switch that lets you do that." Decisions taken with the maintainer the same day: one repeat is one harmonic cycle, the number of passes the MIDI file holds; the cycle runs through all twenty-three fills in catalogue order; the fill in force is a playback setting that is never written into the Pattern; Print / PDF stays available and prints the fill in force. Cycle mode is a practice setting like the metronome, not Pattern data: what the Pattern says its arpeggio is does not change while the musician cycles through the others.)*
+
+**Independent Test**: Turn cycle mode on over a progression with the repeat count at 1, press Play, and assert that the fill in force advances through the catalogue at every harmonic cycle without a restart, that the picker, the note bands and the score follow it, and that the Pattern's own arpeggio, its auto-save and the MIDI file are untouched.
+
+**Acceptance Scenarios**:
+
+- **AC-2.7.1** — Cycle mode is a playback setting beside the arpeggio
+  - **Given** a Melodic Pattern with a progression
+  - **When** the Practicing Musician looks at the harmony section
+  - **Then** a Cycle toggle and a repeat count sit beside the Arpeggio picker, and turning the toggle on puts a fill in force without changing the Pattern
+  - **Cases**:
+    - **AC-2.7.1/1** — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the harmony section beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression
+    - **AC-2.7.1/2** — The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load
+    - **AC-2.7.1/3** — Turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it
+    - **AC-2.7.1/4** — The fill in force is a playback setting: the Pattern's own arpeggio is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling
+    - **AC-2.7.1/5** — Turning cycle mode off returns the Pattern's own arpeggio, from the next pass while playing and at once otherwise
+
+- **AC-2.7.2** — Playback steps through the catalogue
+  - **Given** cycle mode on and a Pattern playing
+  - **When** the fill in force has played its repeats
+  - **Then** the next fill in the catalogue is in force from the next pass, and playback never stops, restarts or jumps
+  - **Cases**:
+    - **AC-2.7.2/1** — One repeat is one harmonic cycle — the passes the progression needs to return to its first chord at Measure 1 — so with the count at 4 under I–IV–V a fill is in force for twelve passes, and under the twelve-bar blues over eight Measures for twelve passes of eight Measures
+    - **AC-2.7.2/2** — At the boundary the next fill is in force from the very next pass, the loop counter keeps counting, and nothing stops or restarts
+    - **AC-2.7.2/3** — The order is the catalogue's, through all three groups, wrapping from the last fill to the first; None is never in the cycle
+    - **AC-2.7.2/4** — The picker shows the fill in force, the note bands show its deal and the pitch strip says the notes follow it, and the score shows it — every view follows the fill in force, not the Pattern's own arpeggio
+    - **AC-2.7.2/5** — Changing the Repeats count while playing applies without a restart: the fill in force keeps its place and plays the new count from the pass it is on before the cycle moves on
+    - **AC-2.7.2/6** — Stopping returns the fill in force to the starting fill — the Pattern's own, or the first of the catalogue when it has none — so every Play begins the cycle from the same place
+    - **AC-2.7.2/7** — Choosing a fill in the picker while cycling is the ordinary edit of the Pattern's arpeggio, and the cycle begins again from that fill with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches, which turns cycle mode off
+
+- **AC-2.7.3** — The score names the fill in force and the MIDI file keeps the Pattern's own
+  - **Given** cycle mode on
+  - **When** the Pattern is shown as Sheet or exported as MIDI
+  - **Then** the score is the fill in force, named in its head, and the MIDI file is the Pattern as saved
+  - **Cases**:
+    - **AC-2.7.3/1** — While cycle mode is on the score's head carries a Fill line naming the fill in force, and the notes are that fill's; Print / PDF prints the same score
+    - **AC-2.7.3/2** — MIDI export carries the Pattern's own arpeggio, never the fill in force: the file is the Pattern's data, and cycling is practice
 
 ---
 

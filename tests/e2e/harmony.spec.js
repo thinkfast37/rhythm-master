@@ -4,6 +4,7 @@
  * these prove what the Composer sees and taps.
  */
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 test.use({
   launchOptions: {
@@ -480,4 +481,262 @@ test('AC-2.6.8/3 — Switching to Percussive removes the progression along with 
   await page.locator('.sound-mode').selectOption('melodic');
   await expect(page.locator('.progression-picker')).toHaveValue('none');
   expect((await slotState(page, 0, 0)).pitch).toEqual({ degree: '1', octaveOffset: 0 });
+});
+
+// --- US-2.7 — Cycle through the fill patterns while practising ---
+
+const fillInForce = (page) => page.evaluate(() => window.__rm.fillInForce());
+const cycleState = (page) => page.evaluate(() => window.__rm.getState().fillCycle);
+
+/** A harmonic blank with three sounding Slots and the tempo up, so a harmonic cycle passes in seconds. */
+async function cyclingBlank(page) {
+  await harmonicBlank(page);
+  for (const s of [0, 1, 2]) await accentZone(page, 0, s).click();
+  await page.evaluate(() => window.__rm.handlers.onTempo(300));
+}
+
+/** Wait until the fill in force is `id`, polling the real transport. */
+async function untilFill(page, id, timeout = 9000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    if ((await fillInForce(page)) === id) return true;
+    await page.waitForTimeout(80);
+  }
+  return false;
+}
+
+test('AC-2.7.1/1 — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the harmony section beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('.harmony .fill-cycle')).toHaveCount(0);
+  await expect(page.locator('.harmony .arpeggio-picker')).toHaveCount(0);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  const row = page.locator('.harmony .fill-cycle-row');
+  await expect(row).toBeVisible();
+  await expect(row.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
+  const repeats = row.locator('.fill-cycle-repeats');
+  await expect(repeats).toHaveValue('4');
+  await expect(repeats).toHaveAttribute('min', '1');
+  await expect(repeats).toHaveAttribute('max', '16');
+  // Beside the picker: the same section, the row right after it.
+  const order = await page.locator('.harmony .arpeggio-row, .harmony .fill-cycle-row').evaluateAll((els) => els.map((e) => e.className));
+  expect(order).toEqual(['arpeggio-row', 'fill-cycle-row']);
+});
+
+test('AC-2.7.1/2 — The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load', async ({ page }) => {
+  await harmonicBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('6');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).fillCycleRepeats)).toBe(6);
+
+  await page.reload();
+  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await expect(page.locator('.fill-cycle-repeats')).toHaveValue('6');
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
+  expect((await cycleState(page)).on).toBe(false);
+  // Out-of-range counts are held to 1–16.
+  await page.locator('.fill-cycle-repeats').fill('40');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await expect(page.locator('.fill-cycle-repeats')).toHaveValue('16');
+});
+
+test("AC-2.7.1/3 — Turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it", async ({ page }) => {
+  await harmonicBlank(page);
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('up');
+  expect(await fillInForce(page)).toBe('up');
+  expect(await cycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+
+  await page.locator('.fill-cycle').click();
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('alberti');
+  expect(await fillInForce(page)).toBe('alberti');
+  const alberti = await page.evaluate(() => window.__rm.getState().fillCycle.start);
+  expect(alberti).toBeGreaterThan(0);
+});
+
+test("AC-2.7.1/4 — The fill in force is a playback setting: the Pattern's own arpeggio is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling", async ({ page }) => {
+  await harmonicBlank(page);
+  const savedBefore = await page.evaluate(() => JSON.stringify(window.__rm.patternStore.findById('p_test')));
+  await page.locator('.fill-cycle').click();
+  expect(await fillInForce(page)).toBe('up');
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
+  expect(await page.evaluate(() => JSON.stringify(window.__rm.patternStore.findById('p_test')))).toBe(savedBefore);
+
+  // A shipped Pattern: cycling shows no naming prompt and stays unowned.
+  await page.locator('.fill-cycle').click();
+  await accentZone(page, 0, 0).click();
+  await loadAsShipped(page);
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.dialog-input')).toHaveCount(0);
+  expect(await fillInForce(page)).toBe('up');
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
+});
+
+test("AC-2.7.1/5 — Turning cycle mode off returns the Pattern's own arpeggio, from the next pass while playing and at once otherwise", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle').click();
+  expect(await fillInForce(page)).toBe('up');
+  await page.locator('.fill-cycle').click();
+  expect(await fillInForce(page)).toBeNull();
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
+
+  // While playing: the transport is handed the Pattern for its next pass, and the run keeps going.
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.locator('.fill-cycle').click();
+  const pending = await page.evaluate(() => window.__rm.transport._snapshot().pendingEdit);
+  expect(pending).toBe(true);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+  await page.waitForTimeout(1200);
+  expect(await page.evaluate(() => window.__rm.transport._snapshot().pattern.harmony.arpeggio ?? null)).toBeNull();
+  await page.locator('[data-action="stop"]').click();
+});
+
+test('AC-2.7.2/2 — At the boundary the next fill is in force from the very next pass, the loop counter keeps counting, and nothing stops or restarts', async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await fillInForce(page)).toBe('up');
+
+  // One repeat is one harmonic cycle: three passes of I–IV–V, then Descending.
+  expect(await untilFill(page, 'down')).toBe(true);
+  const at = await page.evaluate(() => ({ loop: window.__rm.getState().loop, running: window.__rm.transport.isRunning, sounding: window.__rm.transport._snapshot().pattern.harmony.arpeggio }));
+  expect(at.running).toBe(true);
+  expect(at.loop).toBeGreaterThanOrEqual(3);
+  expect(at.sounding).toBe('down');
+  // And on to the third without a reset of the counter.
+  expect(await untilFill(page, 'up-down')).toBe(true);
+  const later = await page.evaluate(() => window.__rm.getState().loop);
+  expect(later).toBeGreaterThan(at.loop);
+  await expect(page.locator('[data-action="stop"]')).toBeVisible();
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.7.2/4 — The picker shows the fill in force, the note bands show its deal and the pitch strip says the notes follow it, and the score shows it — every view follows the fill in force, not the Pattern's own arpeggio", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('up');
+  expect(await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents()).toEqual(['C4', 'E4', 'G4']);
+  await expect(page.locator('.pitch-strip-note')).toContainText('Ascending');
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
+
+  await page.locator('[data-action="view-sheet"]').click();
+  await expect(page.locator('.score .score-fill')).toHaveText('Fill: Ascending');
+  const steps = await page.locator('.score .note-item[data-pass="0"]').evaluateAll((els) => els.map((e) => e.dataset.step));
+  expect(steps).toEqual(['-2', '0', '2']); // C4 E4 G4
+});
+
+test('AC-2.7.2/5 — Changing the Repeats count while playing applies without a restart: the fill in force keeps its place and plays the new count from the pass it is on before the cycle moves on', async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  expect(await untilFill(page, 'down')).toBe(true);
+  const before = await page.evaluate(() => ({ loop: window.__rm.getState().loop, running: window.__rm.transport.isRunning }));
+
+  await page.locator('.fill-cycle-repeats').fill('4');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  // Still Descending, counted afresh from here, and the run untouched.
+  expect(await fillInForce(page)).toBe('down');
+  const cycle = await cycleState(page);
+  expect(cycle.on).toBe(true);
+  expect(cycle.baseLoop).toBeGreaterThanOrEqual(before.loop);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+  expect(await page.evaluate(() => window.__rm.getState().loop)).toBeGreaterThanOrEqual(before.loop);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.7.2/6 — Stopping returns the fill in force to the starting fill — the Pattern's own, or the first of the catalogue when it has none — so every Play begins the cycle from the same place", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  expect(await untilFill(page, 'down')).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await fillInForce(page)).toBe('up');
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('up');
+  expect(await cycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+
+  // With a fill of its own, the Pattern's own fill is the starting place.
+  await page.locator('.fill-cycle').click();
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  expect(await untilFill(page, 'root')).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await fillInForce(page)).toBe('alberti');
+});
+
+test("AC-2.7.2/7 — Choosing a fill in the picker while cycling is the ordinary edit of the Pattern's arpeggio, and the cycle begins again from that fill with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches, which turns cycle mode off", async ({ page }) => {
+  await harmonicBlank(page);
+  await page.locator('.fill-cycle').click();
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  expect((await pattern(page)).harmony.arpeggio).toBe('alberti');
+  expect(await fillInForce(page)).toBe('alberti');
+  const cycle = await cycleState(page);
+  expect(cycle.on).toBe(true);
+  expect(cycle.start).toBe(await page.evaluate(() => window.__rm.getState().fillCycle.start));
+  expect(cycle.start).toBeGreaterThan(0);
+
+  await page.locator('.arpeggio-picker').selectOption('none');
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
+  expect(await fillInForce(page)).toBeNull();
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
+});
+
+test("AC-2.7.3/1 — While cycle mode is on the score's head carries a Fill line naming the fill in force, and the notes are that fill's; Print / PDF prints the same score", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('[data-action="view-sheet"]').click();
+  await expect(page.locator('.score .score-fill')).toHaveCount(0);
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.score .score-fill')).toHaveText('Fill: Ascending');
+  await page.evaluate(() => {
+    window.print = () => {};
+    window.__rm.handlers.onPrintScore();
+  });
+  await expect(page.locator('.score-print .score-fill')).toHaveText('Fill: Ascending');
+  const onScreen = await page.locator('.score .note-item').evaluateAll((els) => els.map((e) => e.dataset.step));
+  const onPaper = await page.locator('.score-print .note-item').evaluateAll((els) => els.map((e) => e.dataset.step));
+  expect(onPaper).toEqual(onScreen);
+});
+
+/** The note-on pitches of a Format 0 .mid, in order — enough to read what a file sounds. */
+function midiNoteOns(bytes) {
+  const ons = [];
+  let i = 14 + 8; // past MThd and the MTrk header
+  while (i < bytes.length) {
+    while (bytes[i] & 0x80) i += 1; // variable-length delta time
+    i += 1;
+    const status = bytes[i];
+    if (status === 0xff) i += 3 + bytes[i + 2];
+    else {
+      if ((status & 0xf0) === 0x90 && bytes[i + 2] > 0) ons.push(bytes[i + 1]);
+      i += 3;
+    }
+  }
+  return ons;
+}
+
+test("AC-2.7.3/2 — MIDI export carries the Pattern's own arpeggio, never the fill in force: the file is the Pattern's data, and cycling is practice", async ({ page }) => {
+  await cyclingBlank(page); // three Roots under the I, no arpeggio of its own
+  await page.locator('.fill-cycle').click();
+  expect(await fillInForce(page)).toBe('up');
+  // The views follow Ascending: C E G. The file does not.
+  expect(await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents()).toEqual(['C4', 'E4', 'G4']);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export-midi"]').click()]);
+  const ons = midiNoteOns(readFileSync(await download.path()));
+  expect(ons.slice(0, 3)).toEqual([60, 60, 60]);
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
 });

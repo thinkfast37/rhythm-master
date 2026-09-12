@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { renderScore } from '../../../src/ui/score.js';
 import { buildScore } from '../../../src/core/notation.js';
 import { create, addMeasure, setTimeSignature, setRecipe, cycleAccent, setPitch, setSwingAmount } from '../../../src/core/pattern.js';
-import { setProgression, setChange, setArpeggio } from '../../../src/core/harmony.js';
+import { setProgression, setChange, setArpeggio, withArpeggio } from '../../../src/core/harmony.js';
 import { labelsFor } from '../../../src/core/counting.js';
 import { STRONG, MEDIUM } from '../../../src/core/accents.js';
 
@@ -453,5 +453,24 @@ describe('ui/score — the count and the progression, as drawn (AC-12.2.7, AC-12
     expect(markup).not.toContain('score-pass-label');
     expect((markup.match(/class="score-row"/g) ?? []).length).toBe(1);
     expect(items(markup).every((i) => i['data-pass'] === '0')).toBe(true);
+  });
+});
+
+describe('ui/score — cycle mode, as drawn (AC-2.7.3)', () => {
+  it("AC-2.7.3/1 — While cycle mode is on the score's head carries a Fill line naming the fill in force, and the notes are that fill's; Print / PDF prints the same score: as drawn", () => {
+    let p = pattern([[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0]], { melodic: true });
+    p = setProgression(p, 'I-IV-V');
+    // Off: no Fill line.
+    expect(head(draw(p), 'score-fill')).toBeNull();
+    // On, with Alberti in force: the head names it and the notes are Alberti's — Root, 5th, 3rd, 5th.
+    const inForce = withArpeggio(p, 'alberti');
+    const markup = draw(inForce, { fill: 'Alberti' });
+    expect(head(markup, 'score-fill')).toBe('Fill: Alberti');
+    const steps = items(markup).filter((i) => i.kind === 'note' && i['data-pass'] === '0').map((i) => i['data-step']);
+    expect(steps).toEqual(['-2', '2', '0', '2']); // C4 G4 E4 G4
+    // Ascending in force reads differently, so the score is the fill's, not the Pattern's.
+    const up = draw(withArpeggio(p, 'up'), { fill: 'Ascending' });
+    expect(head(up, 'score-fill')).toBe('Fill: Ascending');
+    expect(items(up).filter((i) => i.kind === 'note' && i['data-pass'] === '0').map((i) => i['data-step'])).toEqual(['-2', '0', '2', '-2']);
   });
 });

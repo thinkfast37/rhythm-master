@@ -13,7 +13,7 @@ import {
 } from '../../../src/export/submit.js';
 import { create, cycleAccent, setTimeSignature, addMeasure, setPitch } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
-import { setProgression, setChange, addChord, setChordDegree, cyclePasses } from '../../../src/core/harmony.js';
+import { setProgression, setChange, addChord, setChordDegree, cyclePasses, setArpeggio, withArpeggio } from '../../../src/core/harmony.js';
 import { useBackingStore } from '../../../src/storage/keyValue.js';
 import * as localMeta from '../../../src/storage/localMeta.js';
 
@@ -393,5 +393,22 @@ describe('export/midi under a progression (US-2.6)', () => {
     expect(shape.measures[0].beats[0].slots[0].pitch).toEqual({ tone: 1, octaveOffset: 0 });
     // A Pattern without one submits without one.
     expect('harmony' in toSubmissionShape(create('Plain'))).toBe(false);
+  });
+});
+
+describe('export/midi under cycle mode (US-2.7)', () => {
+  it("AC-2.7.3/2 — MIDI export carries the Pattern's own arpeggio, never the fill in force: the file is the Pattern's data, and cycling is practice", () => {
+    let p = harmonicPattern('I-IV-V');
+    p = cycleAccent(p, 0, 1, 0);
+    p = setPitch(p, 0, 1, 0, { tone: 1, octaveOffset: 0 });
+    p = setArpeggio(p, 'up');
+    const own = buildMidi(p);
+    // Cycle mode hands the views and the transport an overlay; the file is
+    // built from the Pattern, which the overlay leaves exactly as it was.
+    const inForce = withArpeggio(p, 'down');
+    expect(noteOns(buildMidi(inForce)).map((e) => e.data[0])).not.toEqual(noteOns(own).map((e) => e.data[0]));
+    expect(p.harmony.arpeggio).toBe('up');
+    expect(buildMidi(p)).toEqual(own);
+    expect(noteOns(own).slice(0, 2).map((e) => e.data[0])).toEqual([60, 64]); // Ascending: Root, 3rd
   });
 });

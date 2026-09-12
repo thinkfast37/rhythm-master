@@ -358,6 +358,19 @@ changes every pass and `lcm(n, M) / M` when it changes every Measure.
 
 **Amended again 2026-09-12: a pattern is a step sequence.** Chord-tone orders could not say "the Key's tonic an octave up between every note" or "walk the major scale from the chord's root", both of which the maintainer plays. A step is now one of three kinds — a chord tone at an octave, a drone (the Key's tonic or the chord's root, at an octave), or the n-th step of a named scale rooted on the chord — and every catalogue entry is a sequence of them, built from the progression's roles and the walk's scale. The deal restarts on every chord change so each chord opens on its own root. The same engine is what a future "type your own sequence" would parse into.
 
+**Amended 2026-09-12: cycle mode puts a fill in force without touching the Pattern (US-2.7).** The
+maintainer wants playback to step through the whole fill catalogue, each fill for a few harmonic
+cycles. Writing each step into `harmony.arpeggio` would auto-save every advance on an owned Pattern
+and prompt for a name on a shipped one at the first — so the fill in force is a playback setting held
+by the app, and every consumer (the transport, the grid's note bands, the picker, the score) is
+handed the Pattern *with that fill substituted*, derived at render and at each pass boundary from the
+loop count: `(start + ⌊(loop − base) / (repeats × cyclePasses)⌋) mod 23`. The stored Pattern, its
+auto-save and the MIDI file never see it. The transport already swaps in a pending Pattern at the
+boundary its loop callback fires on (AC-4.1.9), so the fill changes for exactly the pass the count
+says, with no restart. Chosen over a Pattern-level `cycle` field (which would make a practice setting
+into content that Duplicate detection and submission would have to reason about) and over restarting
+the transport at each boundary (which resets the loop counter, AC-4.2.2).
+
 **Not a longer grid.** The maintainer floated raising the 8-Measure cap for long progressions. Kept
 at 8: the chord strip carries the progression across passes, and the cap is what every phone-layout
 criterion (AC-15.1.10, AC-2.2.12) is measured against.

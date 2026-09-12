@@ -28,6 +28,8 @@ export const DEFAULTS = {
   countInEnabled: false,
   /** The view the main panel shows the Pattern in: the grid, or the sheet music (AC-12.2.1/1). */
   patternView: 'grid',
+  /** Harmonic cycles each fill plays for in cycle mode (AC-2.7.1/2). Cycle mode itself is not stored. */
+  fillCycleRepeats: 4,
 };
 
 export function load() {
