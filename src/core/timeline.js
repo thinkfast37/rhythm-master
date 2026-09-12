@@ -14,7 +14,7 @@ import { beatCount, beatDurationSeconds, beatNoteValue } from './meter.js';
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
 import { resolve } from './pitch.js';
-import { chordAt, resolveChordTone, arpeggioDeal, soundingPitch } from './harmony.js';
+import { chordAt, resolveChordTone, resolveStep, arpeggioDeal, soundingPitch } from './harmony.js';
 import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
 
 /**
@@ -51,8 +51,9 @@ export function buildTimeline(pattern, pass = 0) {
   // the Pattern-wide amount (AC-4.4.13) — which is why a Measure added after
   // the amount was set swings without any copying step.
   const groupSwing = (beat, groupIndex) => beat.swing?.[groupIndex] ?? pattern.swingAmount ?? 0;
-  // Under an arpeggio the roles are dealt across the sounding Slots (AC-2.6.6).
-  const deal = arpeggioDeal(pattern);
+  // Under an arpeggio the steps are dealt across the sounding Slots, and the
+  // deal restarts on each chord change, so it belongs to this pass (AC-2.6.6).
+  const deal = arpeggioDeal(pattern, pass);
 
   pattern.measures.forEach((measure, measureIndex) => {
     const { timeSignature } = measure;
@@ -109,9 +110,11 @@ export function buildTimeline(pattern, pass = 0) {
           const sounding = pattern.soundMode === 'melodic' ? soundingPitch(slot, deal, measureIndex, beatIndex, slotIndex) : null;
           if (sounding) {
             pitch =
-              sounding.tone !== undefined
-                ? resolveChordTone(sounding, chord, pattern.key)
-                : resolve(sounding, pattern.key);
+              sounding.step !== undefined
+                ? resolveStep(sounding.step, chord, pattern.key, pattern, sounding.octaveOffset)
+                : sounding.tone !== undefined
+                  ? resolveChordTone(sounding, chord, pattern.key)
+                  : resolve(sounding, pattern.key);
           }
 
           events.push({

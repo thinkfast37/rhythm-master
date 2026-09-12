@@ -14,6 +14,8 @@ import {
   arpeggioDeal,
   soundingPitch,
   dealKey,
+  ARPEGGIOS,
+  stepLabel,
   chordAt,
   cyclePasses,
   chordName,
@@ -284,29 +286,48 @@ describe('core/harmony', () => {
 
   // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-  /** The roles every sounding Slot sounds, in time order. */
-  const dealt = (p) => {
-    const deal = arpeggioDeal(p);
+  /** The roles every sounding Slot sounds, in time order (chord-tone steps only). */
+  const dealt = (p, pass = 0) => {
+    const deal = arpeggioDeal(p, pass);
     const out = [];
     p.measures.forEach((m, mi) =>
       m.beats.forEach((b, bi) =>
         b.slots.forEach((s, si) => {
-          if (s.on) out.push(soundingPitch(s, deal, mi, bi, si).tone);
+          if (s.on) out.push(soundingPitch(s, deal, mi, bi, si).step.tone);
         })
       )
     );
     return out;
   };
+  /** The note numbers a pass sounds. */
+  const notesOf = (p, pass = 0) => buildTimeline(p, pass).map((e) => e.pitch.midiNote);
+  /** `count` Slots on in each of the Pattern's Measures, Beat by Beat. */
+  const sounding = (p, count) => {
+    p.measures.forEach((m, mi) => {
+      for (let i = 0; i < count; i++) p = cycleAccent(p, mi, Math.floor(i / m.beats[0].slots.length), i % m.beats[0].slots.length);
+    });
+    return p;
+  };
 
-  it('AC-2.6.6/2 — The deal runs continuously through the pass over every sounding Slot and restarts at the top of each pass: four Slots a Measure under Ascending triads sound Root 3rd 5th Root, then 3rd 5th Root 3rd', () => {
+  it('AC-2.6.6/2 — The deal runs continuously through the pass over every sounding Slot, restarting at the top of each pass and whenever the chord changes: four Slots a Measure under Ascending triads sound Root 3rd 5th Root, then 3rd 5th Root 3rd; under every-Measure changes each new chord starts on its Root', () => {
     let p = setProgression(melodic({ measures: 2 }), 'I-IV-V');
     for (const m of [0, 1]) for (const b of [0, 1, 2, 3]) p = cycleAccent(p, m, b, 0);
     p = setArpeggio(p, 'up');
     expect(dealt(p)).toEqual([1, 3, 5, 1, 3, 5, 1, 3]);
     // Every pass deals the same line: pass 2 starts on the Root again, under the IV.
-    const notes = (pass) => buildTimeline(p, pass).map((e) => e.pitch.midiNote);
-    expect(notes(0)).toEqual([60, 64, 67, 60, 64, 67, 60, 64]);
-    expect(notes(1)).toEqual([65, 69, 72, 65, 69, 72, 65, 69]);
+    expect(notesOf(p, 0)).toEqual([60, 64, 67, 60, 64, 67, 60, 64]);
+    expect(notesOf(p, 1)).toEqual([65, 69, 72, 65, 69, 72, 65, 69]);
+
+    // Every Measure: the chord changes at the bar line and the deal restarts on its Root.
+    const perMeasure = setChange(p, 'measure');
+    expect(dealt(perMeasure)).toEqual([1, 3, 5, 1, 1, 3, 5, 1]);
+    expect(notesOf(perMeasure, 0)).toEqual([60, 64, 67, 60, 65, 69, 72, 65]);
+    // A chord that repeats itself (I I under the blues) is no change, so no restart.
+    const blues = setChange(setArpeggio(setProgression(p, 'twelve-bar-blues'), 'up'), 'measure');
+    expect(dealt(blues)).toEqual([1, 3, 5, 7, 1, 3, 5, 7]);
+    // Pass 1 of the blues opens on chord 3 (I7), then chord 4 (IV7): a restart at the bar line.
+    expect(dealt(blues, 1)).toEqual([1, 3, 5, 7, 1, 3, 5, 7]);
+    expect(notesOf(blues, 2)).toEqual([65, 69, 72, 75, 65, 69, 72, 75]); // IV7 IV7
   });
 
   it('AC-2.6.6/3 — Ascending deals the roles in order and repeats: over four roles, five sounding Slots take Root, 3rd, 5th, 7th, Root', () => {
@@ -362,6 +383,68 @@ describe('core/harmony', () => {
     expect(fewer.measures[0].beats[0].slots[0].on).toBe(false);
     expect(dealt(fewer)).toEqual([1]);
     expect(dealKey(0, 1, 0)).toBe('0:1:0');
+  });
+
+  it('AC-2.6.6/9 — A step is a chord tone at an octave, a drone, or a scale step rooted on the chord: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root', () => {
+    let p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats
+    const under = (id) => notesOf(setArpeggio(p, id));
+    expect(under('up-octave')).toEqual([60, 64, 67, 72, 60, 64, 67, 72, 60, 64, 67, 72]);
+    expect(under('down-octave')).toEqual([72, 67, 64, 60, 72, 67, 64, 60, 72, 67, 64, 60]);
+    expect(under('up-over-down')).toEqual([60, 64, 67, 72, 67, 64, 60, 64, 67, 72, 67, 64]);
+    expect(under('up-down-turn')).toEqual([60, 64, 67, 67, 64, 60, 60, 64, 67, 67, 64, 60]);
+    // Over a seventh chord the octave shapes reach through the 7th.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 5); // Dm7
+    expect(notesOf(setArpeggio(sevenths, 'up-octave'))).toEqual([62, 65, 69, 72, 74]);
+    // The step's own octave rides on the Slot's octave.
+    let low = setArpeggio(setProgression(melodic(), 'I-IV-V'), 'up-octave');
+    low = note(low, 0, 0, 0, { tone: 1, octaveOffset: -1 });
+    for (let s = 1; s < 4; s++) low = note(low, 0, 0, s, { tone: 1, octaveOffset: -1 });
+    expect(notesOf(low)).toEqual([48, 52, 55, 60]);
+    // The band names them with an octave mark.
+    expect(stepLabel({ tone: 1, octave: 1 })).toBe('R↑');
+    expect(stepLabel({ tone: 3 })).toBe('3');
+    expect(ARPEGGIOS.map((a) => a.id)).toEqual([
+      'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave', 'up-over-down',
+      'drone-above', 'drone-below', 'root-drone',
+      'scale-up-major', 'scale-up-minor', 'scale-up-major-pentatonic', 'scale-up-minor-pentatonic', 'scale-up-pattern',
+      'scale-up-down-major', 'scale-up-down-minor', 'scale-up-down-major-pentatonic', 'scale-up-down-minor-pentatonic', 'scale-up-down-pattern',
+    ]);
+  });
+
+  it("AC-2.6.6/10 — Drone above alternates rising chord tones with the Key's tonic an octave up whatever the chord — C C′ E C′ G C′ then F C′ A C′ C C′ — Drone below uses the tonic an octave down, and Chord root drone uses the chord's own root an octave up", () => {
+    // Three Measures, six sounding Slots each, one chord per Measure: C, F, G.
+    let p = setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure');
+    p = sounding(p, 6);
+    expect(notesOf(setArpeggio(p, 'drone-above'))).toEqual([
+      60, 72, 64, 72, 67, 72,
+      65, 72, 69, 72, 72, 72,
+      67, 72, 71, 72, 74, 72,
+    ]);
+    expect(notesOf(setArpeggio(p, 'drone-below')).slice(0, 6)).toEqual([60, 48, 64, 48, 67, 48]);
+    expect(notesOf(setArpeggio(p, 'root-drone')).slice(6, 12)).toEqual([65, 77, 69, 77, 72, 77]);
+    // The drone follows the Key, not the chord: in G the tonic drone is G5.
+    expect(notesOf({ ...setArpeggio(p, 'drone-above'), key: 'G' }).slice(0, 2)).toEqual([67, 79]);
+    expect(stepLabel({ drone: 'tonic', octave: 1 })).toBe('T↑');
+    expect(stepLabel({ drone: 'tonic', octave: -1 })).toBe('T↓');
+    expect(stepLabel({ drone: 'root', octave: 1 })).toBe('R↑');
+  });
+
+  it("AC-2.6.6/11 — A scale walk steps up the chosen scale from the chord's root, one octave and round again: Scale up in major under F sounds F G A B♭ C D E then F; Scale up and down turns without repeating the turn; the Pattern's scale walks the scale the Pattern carries", () => {
+    let p = sounding(setProgression(melodic(), 'I-IV-V'), 12);
+    // Under the IV (pass 1): F major from F.
+    expect(notesOf(setArpeggio(p, 'scale-up-major'), 1)).toEqual([65, 67, 69, 70, 72, 74, 76, 65, 67, 69, 70, 72]);
+    // Natural minor and the pentatonics, from the chord root.
+    expect(notesOf(setArpeggio(p, 'scale-up-minor')).slice(0, 7)).toEqual([60, 62, 63, 65, 67, 68, 70]);
+    expect(notesOf(setArpeggio(p, 'scale-up-major-pentatonic')).slice(0, 6)).toEqual([60, 62, 64, 67, 69, 60]);
+    expect(notesOf(setArpeggio(p, 'scale-up-minor-pentatonic')).slice(0, 6)).toEqual([60, 63, 65, 67, 70, 60]);
+    // Up and down: C D E F G A B A G F E D, then C again.
+    expect(notesOf(setArpeggio(p, 'scale-up-down-major'))).toEqual([60, 62, 64, 65, 67, 69, 71, 69, 67, 65, 64, 62]);
+    // The Pattern's own scale: Dorian from C is C D E♭ F G A B♭.
+    expect(notesOf(setArpeggio({ ...p, scale: 'dorian' }, 'scale-up-pattern')).slice(0, 7)).toEqual([60, 62, 63, 65, 67, 69, 70]);
+    expect(stepLabel({ scale: 'major', step: 3 })).toBe('s3');
+    // And every walk bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    const walked = setArpeggio(p, 'scale-up-major');
+    expect(notesOf(clearHarmony(walked))).toEqual(notesOf(walked));
   });
 
   it('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio: the Pitches come back', () => {

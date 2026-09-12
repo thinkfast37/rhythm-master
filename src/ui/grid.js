@@ -28,6 +28,8 @@ import {
   toneLabel,
   arpeggioDeal,
   soundingPitch,
+  stepLabel,
+  stepName,
 } from '../core/harmony.js';
 
 const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
@@ -57,7 +59,7 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
   // (AC-2.6.3): the one the cursor is in, or the first at rest (AC-2.6.7/4).
   const pass = transportPosition?.loop ?? 0;
   // Under an arpeggio the roles are dealt, and the band shows the deal (AC-2.6.7/7).
-  const deal = pattern.soundMode === 'melodic' ? arpeggioDeal(pattern) : null;
+  const deal = pattern.soundMode === 'melodic' ? arpeggioDeal(pattern, pass) : null;
 
   pattern.measures.forEach((measure, measureIndex) => {
     root.appendChild(
@@ -240,7 +242,7 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
     group.slotIndices.forEach((slotIndex) => {
       groupEl.appendChild(
         renderSlot(
-          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic, readOnly, key, chord, deal
+          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic, readOnly, key, chord, deal, pattern
         )
       );
     });
@@ -271,13 +273,40 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
  * Absent on a Slot that does not sound, because such a Slot holds no Pitch to
  * show (AC-2.2.8).
  */
-function renderPitchBadge(slot, key, chord = null, sounding = slot.pitch, dealt = false) {
+function renderPitchBadge(slot, key, chord = null, sounding = slot.pitch, dealt = false, pattern = null) {
   if (!slot.on || !sounding) return null;
 
   const pitch = document.createElement('span');
   pitch.className = 'slot-pitch';
   pitch.dataset.octave = String(sounding.octaveOffset ?? 0);
   if (dealt) pitch.dataset.dealt = 'true';
+
+  // A dealt step is named by what it is — a chord tone with its octave mark,
+  // the tonic drone, or a scale step — beside the note it sounds (AC-2.6.6/12).
+  if (sounding.step !== undefined) {
+    const label = stepLabel(sounding.step);
+    pitch.dataset.step = label;
+    if (sounding.step.tone !== undefined) pitch.dataset.tone = String(sounding.step.tone);
+    const degree = document.createElement('span');
+    degree.className = 'slot-degree';
+    degree.textContent = label;
+    pitch.appendChild(degree);
+    let named = null;
+    try {
+      named = key && chord ? stepName(sounding.step, chord, key, pattern, sounding.octaveOffset) : null;
+    } catch {
+      named = null;
+    }
+    if (named) {
+      const name = document.createElement('span');
+      name.className = 'slot-note-name';
+      name.textContent = named.text;
+      name.dataset.noteName = named.text;
+      pitch.appendChild(name);
+      pitch.dataset.noteName = named.text;
+    }
+    return pitch;
+  }
 
   // A chord-tone Pitch shows its role, and the note it sounds under the chord
   // governing this Measure in the current pass (AC-2.6.7/5). The band is the
@@ -345,7 +374,7 @@ function tryChordToneName(pitch, chord, key) {
  * and its `playing` class in both shapes, so nothing downstream has to know
  * which one it is looking at.
  */
-function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic, readOnly, key, chord = null, deal = null) {
+function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic, readOnly, key, chord = null, deal = null, pattern = null) {
   const accent = effectiveAccent(measure, beatIndex, slotIndex);
   const slot = measure.beats[beatIndex].slots[slotIndex];
   const split = melodic && !readOnly;
@@ -413,7 +442,7 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
     // In Melodic mode the Slot shows its scale degree and the note it names,
     // since that is the musical content there.
     if (melodic) {
-      const badge = renderPitchBadge(slot, key, chord, sounding, dealt);
+      const badge = renderPitchBadge(slot, key, chord, sounding, dealt, pattern);
       if (badge) el.appendChild(badge);
     }
     return el;
@@ -441,7 +470,7 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
   // Under an arpeggio the band is inert too: the deal decides the note, and a
   // stamp would change nothing heard (AC-2.6.6/7).
   note.disabled = !slot.on || dealt;
-  const badge = renderPitchBadge(slot, key, chord, sounding, dealt);
+  const badge = renderPitchBadge(slot, key, chord, sounding, dealt, pattern);
   if (badge) note.appendChild(badge);
   note.setAttribute(
     'title',

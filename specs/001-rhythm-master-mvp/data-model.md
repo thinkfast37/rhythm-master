@@ -27,7 +27,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
       { "degree": "4", "quality": "maj7" },
       { "degree": "5", "quality": "7" }
     ],
-    "arpeggio": "up"              //   optional; absent means None — the notes are as stamped
+    "arpeggio": "drone-above"     //   optional; absent means None — the notes are as stamped
   },
   "tags": ["Latin", "warmup"],   // user Tags only; automatic Tags are derived, never stored
   "rating": 0,                   // integer 0–5
@@ -46,7 +46,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern. | AC-4.4.7 |
 | `swingAmount` | The Pattern-wide swing amount, 0–100; optional, absent reads as 0. Every straight Subdivision Group without a per-group amount inherits it — which is why a Measure added later swings without any copying. Per-group amounts on a Beat (`beat.swing`, keyed by group index) act as overrides and play as authored. | AC-4.4.12, AC-4.4.13 |
-| `harmony` | Optional, and only when `soundMode === "melodic"`. A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure, and an optional `arpeggio` (an id from `core/harmony.js`'s `ARPEGGIOS`; absent means None) under which every sounding Slot's role is dealt from the arpeggio at play time rather than read from its stored Pitch (AC-2.6.6). Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. | US-2.6 |
+| `harmony` | Optional, and only when `soundMode === "melodic"`. A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure, and an optional `arpeggio` (an id from `core/harmony.js`'s `ARPEGGIOS`; absent means None) under which every sounding Slot's note is dealt from the arpeggio's step sequence at play time rather than read from its stored Pitch (AC-2.6.6). A step is a chord tone at an octave, a drone on the Key's tonic or the chord's root, or a step of a scale rooted on the chord — never stored, always derived. Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. | US-2.6 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
 | `measures` | 1–8 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
@@ -230,7 +230,7 @@ produces a Medium Slot (odd *N* has no midpoint), and a 2-Slot Recipe never does
 | Chord name and numeral | `harmony.chords[i]` and `key` | AC-2.6.7/1 |
 | Harmonic cycle length, in passes | `harmony.change`, chord count, Measure count | AC-2.6.10/1 |
 | A chord tone's sounding note | `(tone, octaveOffset)`, the chord in force, `key` | AC-2.6.4 |
-| The role a Slot sounds under an arpeggio | `harmony.arpeggio`, the sounding Slots in time order, the progression's fullest chord | AC-2.6.6 |
+| The step a Slot sounds under an arpeggio | `harmony.arpeggio`, the sounding Slots in time order, the chord in force (the deal restarts on each change), the progression's fullest chord, the walk's scale | AC-2.6.6 |
 
 Persisting any of these would let it drift from the Pattern it describes. They are recomputed on
 read.
