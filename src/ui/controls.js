@@ -804,6 +804,21 @@ function renderHarmonyInto(root, pattern, state, handlers) {
 
   if (!harmonic) return;
 
+  // A progression only moves chord tones. Until a Slot holds one, say so —
+  // the first thing the maintainer heard was the strip changing and the notes
+  // not (AC-2.6.5/7).
+  const holdsRole = pattern.measures.some((m) =>
+    m.beats.some((b) => b.slots.some((s) => s.on && s.pitch?.tone !== undefined))
+  );
+  if (!holdsRole) {
+    root.appendChild(
+      el('p', 'harmony-hint', {
+        textContent:
+          'No chord tones yet, so the notes stay fixed while the chords change. Arm a chord tone (R, 3, 5, 7, 9) on the pitch strip and tap a note, or press Fill.',
+      })
+    );
+  }
+
   // When the chord moves on (AC-2.6.3): two buttons, the current one pressed.
   const change = el('div', 'chord-change-group', { role: 'group' });
   change.setAttribute('aria-label', 'Chord changes');
