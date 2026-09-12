@@ -334,7 +334,8 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "lastSwingAmount": 33,          // AC-4.4.17 — carried with it
   "lastSwingFeel": "eighth",      // AC-4.4.17 — "quarter" | "eighth" | "sixteenth"
   "metronomeEnabled": false,
-  "countInEnabled": false
+  "countInEnabled": false,
+  "patternView": "grid"           // AC-12.2.1/1 — "grid" | "sheet", the view the main panel shows the Pattern in
 }
 ```
 

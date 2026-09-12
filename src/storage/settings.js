@@ -26,6 +26,8 @@ export const DEFAULTS = {
   lastSwingFeel: NO_CARRY.swingFeel,
   metronomeEnabled: false,
   countInEnabled: false,
+  /** The view the main panel shows the Pattern in: the grid, or the sheet music (AC-12.2.1/1). */
+  patternView: 'grid',
 };
 
 export function load() {

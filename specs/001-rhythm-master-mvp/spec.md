@@ -2076,6 +2076,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **And** in Percussive mode the pitch strip, the chord strip and the harmony controls are absent rather than empty rows, so the order there is the same list with those entries removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
   - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
+  - *(Clarified 2026-09-12 with US-12.2: the grid entry is the grid **or the sheet music view shown in its place** — the Grid | Sheet toggle swaps what that one section holds and moves nothing else, so the order this AC fixes is unchanged.)*
   - *(Revised 2026-09-12 with US-2.6: two entries added. The chord strip sits between the header and the grid because Now and Next are read in the same glance as the Measure being played (AC-2.6.7/1); the harmony controls sit under the pitch strip because the chords are the other half of the palette the role chips resolve through. Both are conditional in exactly the way the pitch strip already is — absent, not empty, when they do not apply — so what this AC guarantees is unchanged. Layout approved by the maintainer 2026-09-12 as part of the US-2.6 spill.)*
   - *(Revised again 2026-08-17 for the family members area. As written, this AC said the order is identical at every width, which AC-11.2.5 directly contradicts: it requires that area at 768px and wider and nothing below it. Both cannot be true, so the conflict is resolved here rather than left for whoever hit it next. The entry is conditional in the same way the pitch strip already is — an absent entry rather than a reordered list — so what this AC guarantees is unchanged: the sections that are present are always in this order, and none ever swaps places with another. Family members go last because they are a way out of the current Pattern, not a control on it; putting them above quick navigation would separate the transport from the controls it drives.)*
 
@@ -2759,6 +2760,129 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.10/1** — The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure
     - **AC-2.6.10/2** — Each pass's notes are the notes playback sounds in that pass, from the one timeline
     - **AC-2.6.10/3** — A Pattern with no progression exports one pass, as before
+
+---
+
+### User Story 39 - View and print a Pattern as sheet music
+
+*Traceability: `US-12.2` — View and print a Pattern as sheet music*
+
+**As** the Composer, **I want** to switch the grid to standard notation of the same Pattern, with the count written under every note, and print it or save it as a PDF, **so that** I can read what I built the way it is written on a stand, hand it to another musician, and trust that every note sits where it belongs.
+
+*(Added 2026-09-12 at the maintainer's request: "take the grid that is displayed with the pattern and actually show me a sheet music version of it with annotations for the beat counting … it has to be really accurate because the notes have to be either on the lines or between the lines … a toggle view … download the sheet music as a PDF, but it needs to be accurate." The score is a second rendering of the one Pattern, never a second model: it is read-only, computed from the same Pattern and transport position the grid renders from (FR-013), and prints from the identical drawing. Decisions taken with the maintainer the same day: a single-line rhythm staff for Percussive, a treble staff with a key signature and inline accidentals for Melodic, the whole harmonic cycle written out one pass per line under a progression, and the browser's own print dialog as the PDF route.)*
+
+**Independent Test**: Build a Pattern in the grid, switch to Sheet, and assert that every sounding Slot is a note of the right value at the right staff position, every off Slot a rest, every Slot position labelled in the active counting system, and that printing shows the score and nothing else.
+
+**Acceptance Scenarios**:
+
+- **AC-12.2.1** — The grid and the score are two views of one Pattern
+  - **Given** any Pattern is loaded
+  - **When** the Composer switches between Grid and Sheet
+  - **Then** the same Pattern is shown either way, in the grid's place, and nothing about the Pattern changes by looking at it — the fixed section order of AC-15.1.8 is untouched
+  - **Cases**:
+    - **AC-12.2.1/1** — A Grid | Sheet toggle sits at the head of the grid section; the choice is remembered as an app preference across loads, and a first load shows Grid
+    - **AC-12.2.1/2** — Choosing Sheet replaces the grid with the score in the same place in the main panel; every other section keeps its position
+    - **AC-12.2.1/3** — Choosing Grid brings the grid back, with the Pattern exactly as it was
+    - **AC-12.2.1/4** — The score is read-only: it offers no way to change a Slot, an accent, a Recipe or a Pitch, and tapping a note changes nothing
+    - **AC-12.2.1/5** — The score always shows the current Pattern: an edit made in the grid is written in the score the next time Sheet is chosen, and a Pattern opened from the library while Sheet is showing is written at once
+
+- **AC-12.2.2** — The score's head names what the Pattern is
+  - **Given** a Pattern shown as Sheet
+  - **When** the score is read from the top
+  - **Then** it carries the Pattern's name, its tempo, its meter and, for Melodic, its Key and scale
+  - **Cases**:
+    - **AC-12.2.2/1** — The Pattern's name is the title
+    - **AC-12.2.2/2** — The tempo mark is ♩ = tempo when the first Measure has a quarter-note Beat and ♪ = tempo when it has an eighth-note Beat, since tempo is Beats per minute and the Beat is what the denominator names
+    - **AC-12.2.2/3** — The Time Signature is written at the start of the first Measure and again at the start of any Measure whose meter differs from the one before, never on a Measure that repeats it
+    - **AC-12.2.2/4** — A Melodic Pattern's head says its Key and scale by name, E♭ Aeolian (Natural Minor); a Percussive Pattern's head says neither
+    - **AC-12.2.2/5** — When any swing amount is above zero the head says "Swing" beneath the tempo mark, and the notes are still written straight, as swing is a feel and not a rhythm
+
+- **AC-12.2.3** — A Percussive Pattern is written on a single-line rhythm staff
+  - **Given** a Percussive Pattern shown as Sheet
+  - **When** its staff is drawn
+  - **Then** it is one line with a percussion clef, no key signature, and every notehead centred on the line with its stem up
+
+- **AC-12.2.4** — Every Slot is written at its exact time and value
+  - **Given** any Pattern shown as Sheet
+  - **When** a Beat's Slots are turned into notes and rests
+  - **Then** each sounding Slot is a note whose written value is the time until the next sounding Slot or the end of the Beat, each Slot before the first sounding one is a rest, and each lands at the horizontal position of its own time
+  - **Cases**:
+    - **AC-12.2.4/1** — A Beat occupies a quarter note in a /4 Measure and an eighth note in a /8 Measure, and its Recipe divides it as written: Straight 8ths into two eighths, Straight 16ths into four sixteenths, Triplet 8ths into three eighths under a 3, Undivided into one eighth, and Straight 16ths on an eighth-note Beat into two sixteenths
+    - **AC-12.2.4/2** — A mixed Recipe is written as its two halves: two sixteenths and three sixteenths under a 3, in the order the Recipe names
+    - **AC-12.2.4/3** — A sounding Slot's value runs to the next sounding Slot in the Beat or the Beat's end: the first Slot alone of Straight 8ths is a quarter note; Straight 16ths on–off–off–on is a dotted eighth then a sixteenth; Triplet 8ths on–off–on is a quarter then an eighth under the 3
+    - **AC-12.2.4/4** — A value that would cross the boundary between a mixed Recipe's two halves is written as two notes tied together, one in each half, never as one note spanning a tuplet boundary
+    - **AC-12.2.4/5** — Off Slots before the first sounding Slot are rests written largest first and never dotted: three leading sixteenths are an eighth rest then a sixteenth rest; a leading triplet eighth is an eighth rest under the 3
+    - **AC-12.2.4/6** — A Beat with no sounding Slot is one rest of the Beat's value, and a Measure with no sounding Slot is a single whole-measure rest
+    - **AC-12.2.4/7** — The notes of one Beat shorter than a quarter are beamed together, a rest breaks the beam, and a tuplet carries its 3 above or below the group
+    - **AC-12.2.4/8** — Within a Measure, horizontal position is proportional to time: the three notes of a triplet are equally spaced, a sixteenth sits a quarter of the way through its Beat, and the two halves of a mixed Beat are the same width
+    - **AC-12.2.4/9** — Measures are written in order with a bar line between each and a final bar line after the last, and a Measure's notes and rests always total its meter exactly
+
+- **AC-12.2.5** — A Melodic Pattern is written on a treble staff with a key signature
+  - **Given** a Melodic Pattern shown as Sheet
+  - **When** its staff is drawn
+  - **Then** it carries a treble clef and the key signature of its Key and scale (spelled by the rule AC-2.6.1/4 spells chords), every note sits on the line or space of its letter and octave as the pitch strip names it (AC-2.2.3), a chord tone or a dealt step is written at the note it sounds (AC-2.6.4, AC-2.6.6), and an accidental appears exactly where a musician would write one
+  - **Cases**:
+    - **AC-12.2.5/1** — The key signature is the one whose notes are the scale's: C Ionian none, C Aeolian three flats, D Dorian none, E♭ Ionian three flats, D Lydian three sharps; a pentatonic, blues or minor scale takes the parallel Ionian's, or Aeolian's when the scale has ♭3 and no 3, as the chords are spelled; a mode whose signature would need more than seven accidentals takes the Key's Ionian signature instead
+    - **AC-12.2.5/2** — Every notehead sits at the staff position of its letter and octave, as the pitch strip names it: middle C — degree 1, Key C, octave 4 — on the first ledger line below the staff; E4 on the bottom line; B4 on the middle line; F5 on the top line; A5 on the first ledger line above; ledger lines drawn for every position outside the staff
+    - **AC-12.2.5/3** — A note's spelling is the pitch strip's: ♭3 in C is E♭, never D♯; 3 in D♭ is F and ♭3 in D♭ is F♭, so every degree keeps its own letter
+    - **AC-12.2.5/4** — An accidental is written before a note when its letter is not already at that alteration — by the key signature or by an earlier accidental in the same Measure on the same letter and octave — and a natural is written when the note undoes one; an accidental holds to the end of its Measure and no further
+    - **AC-12.2.5/5** — A chord-tone Pitch is written at the note it sounds in that pass through the chord in force: the Root under I–IV–V in C is C in pass 1, F in pass 2 and G in pass 3
+    - **AC-12.2.5/6** — Under an arpeggio, every sounding Slot is written at the step it is dealt in that pass, so the score is the melody the Pattern plays
+    - **AC-12.2.5/7** — A note below the middle line has its stem up and a note on or above it has its stem down; a beamed group takes the direction of its note farthest from the middle line
+
+- **AC-12.2.6** — A Strong accent is written as an accent mark
+  - **Given** a Pattern shown as Sheet
+  - **When** its notes are drawn
+  - **Then** every note whose effective Accent Level is Strong (AC-3.1.1) carries an accent mark, and a Medium or Weak note carries none — so with default accents in 4/4 only the first note of each Measure is marked, and an override shows exactly where it was set
+
+- **AC-12.2.7** — The count is written under every Slot position
+  - **Given** a Pattern shown as Sheet and a counting system chosen (US-5.6)
+  - **When** the score is read below the staff
+  - **Then** each Slot position carries its label in that system (the grid's own labels, AC-5.6.1 and AC-5.6.2), under the horizontal position of its time
+  - **Cases**:
+    - **AC-12.2.7/1** — Every Slot position is labelled, in the active counting system's vocabulary for that Recipe, exactly as the grid labels it
+    - **AC-12.2.7/2** — A sounding Slot's label is written plainly; the label of an off Slot, or of one absorbed into a held note, is written in parentheses, so the count is complete and the attacks stand out
+    - **AC-12.2.7/3** — A Pattern containing a mixed Recipe is labelled Numbered whatever the preference, as the grid is, and the preference is not changed by it
+    - **AC-12.2.7/4** — Changing the counting system while Sheet is showing relabels the score at once
+
+- **AC-12.2.8** — A progression is written out as its whole harmonic cycle
+  - **Given** a Melodic Pattern with a progression shown as Sheet
+  - **When** the score is laid out
+  - **Then** it holds every pass of the harmonic cycle (as many as the MIDI file, AC-2.6.10/1), each starting its own line, with the chord in force named above the staff wherever it changes (named as the chord strip names it, AC-2.6.7/1)
+  - **Cases**:
+    - **AC-12.2.8/1** — The score holds as many passes as the MIDI file does, each beginning a new line, labelled "Pass 1", "Pass 2", … at its left when there is more than one
+    - **AC-12.2.8/2** — The chord in force is named above the first note of Measure 1 of every pass and above the first note of every Measure where it changes, by the name the chord strip gives it; under a progression changing every Measure that is every Measure, and under one changing every pass it is Measure 1 alone
+    - **AC-12.2.8/3** — A Pattern without a progression is one pass, with no pass label and no chord names
+
+- **AC-12.2.9** — The score follows playback
+  - **Given** a Pattern shown as Sheet
+  - **When** it is playing
+  - **Then** the note or rest at the transport position is marked, in the pass being played, and the mark leaves when playback stops
+  - **Cases**:
+    - **AC-12.2.9/1** — While playing, exactly one note or rest is marked as current, and it is the one at the transport position's Measure, Beat and Slot, in the line of the pass being played
+    - **AC-12.2.9/2** — When playback stops no note or rest is marked
+
+- **AC-12.2.10** — The score fits the width it is given
+  - **Given** a Pattern shown as Sheet at any viewport width (US-15.1)
+  - **When** its lines are laid out
+  - **Then** each line holds as many whole Measures as fit the width, lines break only at Measure boundaries, and nothing scrolls sideways
+  - **Cases**:
+    - **AC-12.2.10/1** — A line holds as many whole Measures as fit; the next Measure starts the next line, and a pass always starts a new line
+    - **AC-12.2.10/2** — A single Measure wider than the line is scaled down to fit it rather than cut or scrolled, so a 7/4 Measure of Straight 16ths is legible in full at 390px
+    - **AC-12.2.10/3** — A line carries its own clef and key signature, and a line beginning with a Measure whose meter is the previous Measure's repeats no Time Signature
+
+- **AC-12.2.11** — The score prints, and saves as PDF, exactly as written
+  - **Given** a Pattern shown as Sheet
+  - **When** the Composer chooses Print / PDF
+  - **Then** the browser's print dialog opens on a page holding only the score, from which it is printed or saved as a PDF
+  - **Cases**:
+    - **AC-12.2.11/1** — A Print / PDF control sits with the Grid | Sheet toggle, present only while Sheet is showing, and choosing it opens the browser's print dialog
+    - **AC-12.2.11/2** — The printed page carries the score alone — head, staves, chord names, pass labels and counting labels — and none of the grid, controls, library, pinned bar or navigation
+    - **AC-12.2.11/3** — The printed notation is identical to the screen's: the same notes, values, staff positions, accidentals, accents and labels; only the line breaks may differ, laid out to the page's width
+    - **AC-12.2.11/4** — A line is never split across two pages
+    - **AC-12.2.11/5** — The document's title while printing is the Pattern's name, so a PDF saved from the dialog is named after the Pattern by default
+
+---
 
 ## Requirements *(mandatory)*
 

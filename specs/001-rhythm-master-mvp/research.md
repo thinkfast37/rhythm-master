@@ -370,6 +370,59 @@ chord the Composer had set by hand).
 
 ---
 
+## D-012 — Sheet music: an engraver of our own over SVG, printed by the browser
+
+**Decision (2026-09-12)**: the score is drawn by the app itself — a pure `core/notation.js` that turns a
+Pattern into notes, rests, beams, tuplets, ties, staff positions, accidentals and key signatures, and a
+`ui/score.js` that draws that model as inline SVG. No notation library. The PDF is the browser's own
+print dialog over a print stylesheet that hides everything but the score.
+
+**Why our own engraver.** The maintainer's one hard requirement is accuracy: "the notes have to be
+either on the lines or between the lines". That is a property to *prove*, and a model the app
+computes can be tested to the staff step — middle C on the first ledger line, F5 on the top line —
+where a library's output can only be eyeballed. The vocabulary is also small enough that a library
+would be mostly unused: seven Recipes that all divide a Beat evenly, so every value is a quarter,
+eighth, sixteenth, dotted eighth or a tuplet member; no ties across Beats, no dotted rests, no
+cross-staff anything. VexFlow was the alternative considered (rejected: a large dependency for a
+few dozen glyphs, its layout is not unit-testable, and the Constitution's dependency rule asks
+exactly this question); abcjs was rejected for the same reasons plus a second notation language in
+the middle. The glyphs — clefs, noteheads, flags, rests, accidentals, the accent mark — are SVG paths
+drawn in staff-space units, so the score scales with the staff and prints as vectors.
+
+**What a Slot becomes.** A sounding Slot's written value runs to the next sounding Slot in its Beat
+or to the Beat's end, because that is how a rhythm is written and read: a lone first Slot of Straight
+8ths is a quarter note, not an eighth and an eighth rest. The MIDI file's fixed short note length is
+unaffected — it is a playback articulation, not a written value. Rests before the first sounding
+Slot are written largest-first and never dotted, which is the convention a reader expects. A held
+value never crosses a mixed Recipe's tuplet boundary; it is tied, because a single note cannot be
+half in a tuplet.
+
+**Spacing is proportional to time.** Engravers space notes non-linearly; this score spaces them by
+time within each Measure. It is a practice tool whose grid the musician has just been looking at,
+and a proportional score lines the count up under the notes exactly as the grid does. Chosen
+knowingly over engraving convention.
+
+**Key signatures follow the scale.** A mode's signature is its relative major's (D Dorian: none;
+C Aeolian: three flats), computed from the Key's Ionian signature and the mode's offset. Scales that
+are not modes borrow the parallel Ionian's, or Aeolian's when they have ♭3 and no 3 — the same rule
+D-011 uses to spell chords, so the two never disagree about what "C minor" means. A mode that would
+need more than seven accidentals (D♭ Locrian) falls back to the Key's Ionian signature; the
+alterations are then written inline, which is always correct if not always pretty.
+
+**Print, not a PDF writer.** The print dialog gives a vector PDF of the same SVG on every platform
+the app runs on, with no second rendering path to keep accurate and no dependency. A hand-written PDF
+writer was considered for a one-tap download and rejected for now: the accuracy requirement is met by
+having one drawing, and a second emitter is a second place for a note to land on the wrong line.
+Revisit only if the print dialog proves unusable on a phone in practice.
+
+**Not a second model.** The score is a rendering of the one Pattern and the one transport position
+(FR-013), read-only, with no data of its own: the Grid | Sheet choice is an app preference like the
+counting system (`rm.settings.v1`), and no Pattern field was added. A note's sounding pitch is still resolved by `core/pitch.js` and `core/harmony.js`; the
+engraver asks them for the spelled name and places the letter, so the score and the piano cannot
+disagree about which note a Slot is.
+
+---
+
 ## Open items deliberately left to implementation
 
 These are genuinely low-stakes and do not need a decision before tasks are written:
