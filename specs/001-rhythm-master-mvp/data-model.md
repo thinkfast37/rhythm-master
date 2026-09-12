@@ -335,7 +335,8 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "lastSwingFeel": "eighth",      // AC-4.4.17 — "quarter" | "eighth" | "sixteenth"
   "metronomeEnabled": false,
   "countInEnabled": false,
-  "patternView": "grid"           // AC-12.2.1/1 — "grid" | "sheet", the view the main panel shows the Pattern in
+  "patternView": "grid",          // AC-12.2.1/1 — "grid" | "sheet", the view the main panel shows the Pattern in
+  "fillCycleRepeats": 4           // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
 }
 ```
 

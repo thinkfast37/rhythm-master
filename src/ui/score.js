@@ -427,6 +427,7 @@ export function renderScore(root, score, { width, transportPosition = null, prin
   if (score.keyLabel) meta.push(`<span class="score-key">${esc(score.keyLabel)}</span>`);
   head.push(`<div class="score-meta">${meta.join('<span class="score-sep">·</span>')}</div>`);
   if (score.swing) head.push(`<div class="score-swing">Swing</div>`);
+  if (score.fillLabel) head.push(`<div class="score-fill">Fill: ${esc(score.fillLabel)}</div>`);
 
   const body = [];
   const available = (width - 2 * PAD_X * sp) / sp;

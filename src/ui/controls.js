@@ -843,6 +843,35 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   arpeggioRow.appendChild(arpeggio);
   root.appendChild(arpeggioRow);
 
+  // Cycle mode (US-2.7): play each fill for a number of harmonic cycles, then
+  // the next, through the whole catalogue. A playback setting — the fill in
+  // force arrives on `pattern` and the picker above shows it (AC-2.7.2/4); the
+  // Pattern's own arpeggio is untouched (AC-2.7.1/4).
+  const cycleRow = el('div', 'fill-cycle-row');
+  const cycling = Boolean(state.fillCycle?.on);
+  const cycle = el('button', `fill-cycle${cycling ? ' on' : ''}`, {
+    type: 'button',
+    textContent: cycling ? 'Cycling fills' : 'Cycle fills',
+    title: 'Play each fill for the number of harmonic cycles set here, then move on to the next',
+  });
+  cycle.dataset.action = 'toggle-fill-cycle';
+  cycle.setAttribute('aria-pressed', String(cycling));
+  cycle.addEventListener('click', () => handlers.onFillCycle(!cycling));
+  cycleRow.appendChild(cycle);
+  const repeats = el('input', 'fill-cycle-repeats', {
+    type: 'number',
+    min: '1',
+    max: '16',
+    step: '1',
+    value: String(state.settings.fillCycleRepeats ?? 4),
+  });
+  repeats.dataset.action = 'set-fill-cycle-repeats';
+  repeats.setAttribute('aria-label', 'Harmonic cycles each fill plays for');
+  repeats.addEventListener('change', (e) => handlers.onFillCycleRepeats(Number(e.target.value)));
+  cycleRow.appendChild(labelled('Repeats', repeats));
+  cycleRow.appendChild(el('span', 'fill-cycle-unit', { textContent: 'harmonic cycles each' }));
+  root.appendChild(cycleRow);
+
   // A progression only moves chord tones. With no arpeggio and no Slot holding
   // a role, say so — the first thing the maintainer heard was the chord names
   // changing and the notes not (AC-2.6.5/7).

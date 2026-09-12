@@ -26,6 +26,7 @@ import {
   MAX_CHORDS,
 } from '../../../src/core/harmony.js';
 import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
+import { fillIndexFor, fillIndexOf, withArpeggio } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 
 /** A Melodic Pattern in a Key and scale, `measures` Measures of 4/4. */
@@ -460,5 +461,61 @@ describe('core/harmony', () => {
     expect(arpeggioDeal(back)).toBeNull();
     expect(buildTimeline(back, 0).map((e) => e.pitch.midiNote)).toEqual(before);
     expect(back.measures).toEqual(p.measures);
+  });
+});
+
+describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
+  it('AC-2.7.2/1 — One repeat is one harmonic cycle — the passes the progression needs to return to its first chord at Measure 1 — so with the count at 4 under I–IV–V a fill is in force for twelve passes, and under the twelve-bar blues over eight Measures for twelve passes of eight Measures', () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    expect(cyclePasses(p)).toBe(3);
+    const four = { start: 0, baseLoop: 0, repeats: 4 };
+    for (let loop = 0; loop < 12; loop++) expect(fillIndexFor(p, four, loop), `pass ${loop}`).toBe(0);
+    expect(fillIndexFor(p, four, 12)).toBe(1);
+    expect(fillIndexFor(p, four, 23)).toBe(1);
+    expect(fillIndexFor(p, four, 24)).toBe(2);
+
+    let blues = melodic({ measures: 8 });
+    blues = setProgression(blues, 'twelve-bar-blues');
+    blues = setChange(blues, 'measure');
+    expect(cyclePasses(blues)).toBe(3);
+    expect(fillIndexFor(blues, four, 11)).toBe(0);
+    expect(fillIndexFor(blues, four, 12)).toBe(1);
+
+    // Counted from the base pass and the starting fill, with one repeat.
+    const one = { start: 5, baseLoop: 7, repeats: 1 };
+    expect(fillIndexFor(p, one, 7)).toBe(5);
+    expect(fillIndexFor(p, one, 9)).toBe(5);
+    expect(fillIndexFor(p, one, 10)).toBe(6);
+    // Before the base pass nothing has advanced.
+    expect(fillIndexFor(p, one, 2)).toBe(5);
+  });
+
+  it("AC-2.7.2/3 — The order is the catalogue's, through all three groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    const n = ARPEGGIOS.length;
+    expect(n).toBe(23);
+    const one = { start: 0, baseLoop: 0, repeats: 1 };
+    const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
+    expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
+    expect(sequence[n]).toBe(ARPEGGIOS[0].id);
+    expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
+    expect(sequence).not.toContain('none');
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Drones', 'Scale walks']);
+
+    // A Pattern's own fill is where the cycle starts; none means the first.
+    expect(fillIndexOf(p)).toBe(0);
+    const alberti = ARPEGGIOS.findIndex((a) => a.id === 'alberti');
+    expect(fillIndexOf(setArpeggio(p, 'alberti'))).toBe(alberti);
+    expect(ARPEGGIOS[fillIndexFor(setArpeggio(p, 'alberti'), { start: alberti, baseLoop: 0, repeats: 1 }, 3)].id).toBe(ARPEGGIOS[alberti + 1].id);
+
+    // The overlay: the fill in force substituted, the Pattern itself untouched.
+    const over = withArpeggio(p, 'alberti');
+    expect(over.harmony.arpeggio).toBe('alberti');
+    expect('arpeggio' in p.harmony).toBe(false);
+    expect(over.measures).toBe(p.measures);
+    const plain = melodic();
+    expect(withArpeggio(plain, 'alberti')).toBe(plain);
+    const already = setArpeggio(p, 'alberti');
+    expect(withArpeggio(already, 'alberti')).toBe(already);
   });
 });

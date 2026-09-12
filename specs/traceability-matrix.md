@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 518 across 39 User Stories
+**Criteria**: 532 across 40 User Stories
 
-**Coverage**: 324 of 518 criteria proven (62.5%)
+**Coverage**: 338 of 532 criteria proven (63.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 324 | 62.5% |
-| 🔴 Gap — HIGH | 73 | 14.1% |
-| 🟠 Gap — MEDIUM | 43 | 8.3% |
-| 🟡 Gap — LOW | 78 | 15.1% |
+| 🟢 Proven | 338 | 63.5% |
+| 🔴 Gap — HIGH | 73 | 13.7% |
+| 🟠 Gap — MEDIUM | 43 | 8.1% |
+| 🟡 Gap — LOW | 78 | 14.7% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -97,6 +97,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.5 | 14 | **14** | · | · | · | · | · |
 | 🟢 US-2.6 | 59 | **59** | · | · | · | · | · |
 | 🟢 US-12.2 | 45 | **45** | · | · | · | · | · |
+| 🟢 US-2.7 | 14 | **14** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -620,3 +621,17 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-12.2 | `AC-12.2.11/3` 🖵 | The printed notation is identical to the screen's: the same notes, values, staff positions, accidentals, accents and labels; only the line breaks may differ, laid out to the page's width | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
 | US-12.2 | `AC-12.2.11/4` 🖵 | A line is never split across two pages | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
 | US-12.2 | `AC-12.2.11/5` 🖵 | The document's title while printing is the Pattern's name, so a PDF saved from the dialog is named after the Pattern by default | P-042 | T259, T260 (2/2 done) | T261, T262 (2/2 done) | `score.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.1/1` 🖵 | A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the harmony section beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.1/2` 🖵 | The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.1/3` 🖵 | Turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.1/4` 🖵 | The fill in force is a playback setting: the Pattern's own arpeggio is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.1/5` 🖵 | Turning cycle mode off returns the Pattern's own arpeggio, from the next pass while playing and at once otherwise | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/1` | One repeat is one harmonic cycle — the passes the progression needs to return to its first chord at Measure 1 — so with the count at 4 under I–IV–V a fill is in force for twelve passes, and under the twelve-bar blues over eight Measures for twelve passes of eight Measures | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/2` | At the boundary the next fill is in force from the very next pass, the loop counter keeps counting, and nothing stops or restarts | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/3` | The order is the catalogue's, through all three groups, wrapping from the last fill to the first; None is never in the cycle | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/4` 🖵 | The picker shows the fill in force, the note bands show its deal and the pitch strip says the notes follow it, and the score shows it — every view follows the fill in force, not the Pattern's own arpeggio | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/5` | Changing the Repeats count while playing applies without a restart: the fill in force keeps its place and plays the new count from the pass it is on before the cycle moves on | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/6` | Stopping returns the fill in force to the starting fill — the Pattern's own, or the first of the catalogue when it has none — so every Play begins the cycle from the same place | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.2/7` 🖵 | Choosing a fill in the picker while cycling is the ordinary edit of the Pattern's arpeggio, and the cycle begins again from that fill with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches, which turns cycle mode off | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.3/1` 🖵 | While cycle mode is on the score's head carries a Fill line naming the fill in force, and the notes are that fill's; Print / PDF prints the same score | P-043 | T263 (1/1 done) | T264 (1/1 done) | `score.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.7 | `AC-2.7.3/2` 🖵 | MIDI export carries the Pattern's own arpeggio, never the fill in force: the file is the Pattern's data, and cycling is practice | P-043 | T263 (1/1 done) | T264 (1/1 done) | `export.test.js`, `harmony.spec.js` | 🟢 OK |
