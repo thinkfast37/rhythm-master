@@ -232,10 +232,22 @@ test('AC-2.6.5/7 — While a Pattern has a progression, no arpeggio, and no Slot
 
 // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-test('AC-2.6.6/1 — The arpeggio setting offers None, Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth, and is saved with the Pattern', async ({ page }) => {
+test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in three groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; drones: Drone above, Drone below, Chord root drone; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern", async ({ page }) => {
   await harmonicBlank(page); // owned Pattern p_test
-  expect(await page.locator('.arpeggio-picker option').allTextContents()).toEqual([
-    'None (as stamped)', 'Ascending', 'Descending', 'Up and down', 'Alberti', 'Root only', 'Root and fifth',
+  expect(await page.locator('.arpeggio-picker > option').allTextContents()).toEqual(['None (as stamped)']);
+  expect(await page.locator('.arpeggio-picker optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual([
+    'Chord tones', 'Drones', 'Scale walks',
+  ]);
+  expect(await page.locator('.arpeggio-picker optgroup[label="Chord tones"] option').allTextContents()).toEqual([
+    'Ascending', 'Descending', 'Up and down', 'Up and down, repeating the turn', 'Alberti', 'Root only', 'Root and fifth',
+    'Up to the octave', 'Down from the octave', 'Up over and down',
+  ]);
+  expect(await page.locator('.arpeggio-picker optgroup[label="Drones"] option').allTextContents()).toEqual([
+    'Drone above (tonic)', 'Drone below (tonic)', 'Chord root drone',
+  ]);
+  expect(await page.locator('.arpeggio-picker optgroup[label="Scale walks"] option').allTextContents()).toEqual([
+    'Scale up, major', 'Scale up, natural minor', 'Scale up, major pentatonic', 'Scale up, minor pentatonic', "Scale up, the Pattern's scale",
+    'Scale up and down, major', 'Scale up and down, natural minor', 'Scale up and down, major pentatonic', 'Scale up and down, minor pentatonic', "Scale up and down, the Pattern's scale",
   ]);
   await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
   for (const s of [0, 1, 2, 3]) await accentZone(page, 0, s).click();
@@ -277,6 +289,26 @@ test('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitc
   await expect(page.locator('.pitch-strip .tone')).toHaveCount(5);
   await expect(page.locator('.pitch-strip-note')).toHaveCount(0);
   await expect(noteBand(page, 1, 0)).toBeEnabled();
+});
+
+test('AC-2.6.6/12 — The note band names a dealt step by what it is — a chord tone with its octave mark, the tonic drone, or a scale step — beside the note it sounds', async ({ page }) => {
+  await harmonicBlank(page);
+  for (const s of [0, 1, 2, 3]) await accentZone(page, 0, s).click();
+  const labels = () => page.locator('.measure[data-measure="0"] .slot-degree').allTextContents();
+  const names = () => page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents();
+
+  await page.locator('.arpeggio-picker').selectOption('up-octave');
+  expect(await labels()).toEqual(['R', '3', '5', 'R↑']);
+  expect(await names()).toEqual(['C4', 'E4', 'G4', 'C5']);
+
+  await page.locator('.arpeggio-picker').selectOption('drone-above');
+  expect(await labels()).toEqual(['R', 'T↑', '3', 'T↑']);
+  expect(await names()).toEqual(['C4', 'C5', 'E4', 'C5']);
+  await expect(slotAt(page, 0, 1).locator('.slot-pitch')).toHaveAttribute('data-step', 'T↑');
+
+  await page.locator('.arpeggio-picker').selectOption('scale-up-minor-pentatonic');
+  expect(await labels()).toEqual(['s1', 's2', 's3', 's4']);
+  expect(await names()).toEqual(['C4', 'Eb4', 'F4', 'G4']);
 });
 
 test('AC-2.6.6/8 — Changing the arpeggio on a shipped Pattern goes through the naming prompt', async ({ page }) => {

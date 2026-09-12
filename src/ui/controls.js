@@ -830,7 +830,14 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   arpeggio.dataset.action = 'set-arpeggio';
   arpeggio.setAttribute('aria-label', 'Arpeggio');
   arpeggio.appendChild(el('option', null, { value: 'none', textContent: 'None (as stamped)' }));
-  for (const a of ARPEGGIOS) arpeggio.appendChild(el('option', null, { value: a.id, textContent: a.label }));
+  let arpeggioGroup = null;
+  for (const a of ARPEGGIOS) {
+    if (arpeggioGroup?.label !== a.group) {
+      arpeggioGroup = el('optgroup', null, { label: a.group });
+      arpeggio.appendChild(arpeggioGroup);
+    }
+    arpeggioGroup.appendChild(el('option', null, { value: a.id, textContent: a.label }));
+  }
   arpeggio.value = pattern.harmony.arpeggio ?? 'none';
   arpeggio.addEventListener('change', (e) => handlers.onArpeggio(e.target.value));
   arpeggioRow.appendChild(arpeggio);

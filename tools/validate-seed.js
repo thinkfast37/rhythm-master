@@ -52,7 +52,11 @@ const QUALITIES = [
 ];
 const TONES = [1, 3, 5, 7, 9];
 const CHANGES = ['pass', 'measure'];
-const ARPEGGIOS = ['up', 'down', 'up-down', 'alberti', 'root', 'root-fifth'];
+const ARPEGGIOS = [
+  'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave',
+  'up-over-down', 'drone-above', 'drone-below', 'root-drone',
+  ...['major', 'minor', 'major-pentatonic', 'minor-pentatonic', 'pattern'].flatMap((w) => [`scale-up-${w}`, `scale-up-down-${w}`]),
+];
 
 const errors = [];
 const fail = (name, msg) => errors.push(`${name}: ${msg}`);

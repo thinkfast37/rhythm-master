@@ -166,14 +166,81 @@ export const PROGRESSIONS = [
   { id: 'ii-V', label: 'ii–V', steps: [s('2', { seventh: true }), s('5', { seventh: true })] },
 ];
 
-/** The arpeggios a Pattern can follow (AC-2.6.6/1). Absent on the Pattern means None. */
+/*
+ * A fill pattern is a sequence of STEPS (AC-2.6.6/9), each one of:
+ *   { tone, octave? }            a chord tone at an octave (Root, 3rd, …, R↑)
+ *   { drone: 'tonic'|'root', octave }   the Key's tonic or the chord's root, fixed
+ *   { scale: kind, step, octave? }      the n-th step of a scale rooted on the chord
+ * Every catalogue entry builds its sequence from the progression's roles and,
+ * for a walk, the scale it names. Nothing here is stored: the deal is derived.
+ */
+const T = (tone, octave = 0) => (octave ? { tone, octave } : { tone });
+const DRONE_UP = { drone: 'tonic', octave: 1 };
+const DRONE_DOWN = { drone: 'tonic', octave: -1 };
+const ROOT_UP = { drone: 'root', octave: 1 };
+const tones = (roles) => roles.map((r) => T(r));
+const interleave = (roles, between) => roles.flatMap((r) => [T(r), between]);
+const upDown = (roles) => (roles.length < 3 ? roles : [...roles, ...roles.slice(1, -1).reverse()]);
+
+/** The scales a walk can take (AC-2.6.6/11); `pattern` walks the Pattern's own. */
+export const WALK_SCALES = [
+  { id: 'major', label: 'major', scale: 'ionian' },
+  { id: 'minor', label: 'natural minor', scale: 'aeolian' },
+  { id: 'major-pentatonic', label: 'major pentatonic', scale: 'major-pentatonic' },
+  { id: 'minor-pentatonic', label: 'minor pentatonic', scale: 'minor-pentatonic' },
+  { id: 'pattern', label: "the Pattern's scale", scale: null },
+];
+
+/** The degree tokens a walk steps through, rooted on the chord. */
+export function walkDegrees(kind, pattern) {
+  const walk = WALK_SCALES.find((w) => w.id === kind);
+  if (!walk) throw new Error(`Unknown scale walk: ${kind}`);
+  const id = walk.scale ?? pattern?.scale ?? DEFAULT_SCALE;
+  return SCALES.find((x) => x.id === id).degrees;
+}
+
+const walkUp = (kind) => (ctx) => ctx.walk(kind).map((_, i) => ({ scale: kind, step: i + 1 }));
+const walkUpDown = (kind) => (ctx) => {
+  const n = ctx.walk(kind).length;
+  const up = Array.from({ length: n }, (_, i) => ({ scale: kind, step: i + 1 }));
+  return [...up, ...up.slice(1, -1).reverse()];
+};
+
+/**
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in three groups. Absent on
+ * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`.
+ */
 export const ARPEGGIOS = [
-  { id: 'up', label: 'Ascending' },
-  { id: 'down', label: 'Descending' },
-  { id: 'up-down', label: 'Up and down' },
-  { id: 'alberti', label: 'Alberti' },
-  { id: 'root', label: 'Root only' },
-  { id: 'root-fifth', label: 'Root and fifth' },
+  { id: 'up', label: 'Ascending', group: 'Chord tones', steps: ({ roles }) => tones(roles) },
+  { id: 'down', label: 'Descending', group: 'Chord tones', steps: ({ roles }) => tones([...roles].reverse()) },
+  { id: 'up-down', label: 'Up and down', group: 'Chord tones', steps: ({ roles }) => tones(upDown(roles)) },
+  {
+    id: 'up-down-turn',
+    label: 'Up and down, repeating the turn',
+    group: 'Chord tones',
+    steps: ({ roles }) => tones([...roles, ...[...roles].reverse()]),
+  },
+  { id: 'alberti', label: 'Alberti', group: 'Chord tones', steps: ({ roles }) => tones([1, 5, 3, 5].filter((t) => roles.includes(t))) },
+  { id: 'root', label: 'Root only', group: 'Chord tones', steps: () => [T(1)] },
+  { id: 'root-fifth', label: 'Root and fifth', group: 'Chord tones', steps: ({ roles }) => tones(roles.includes(5) ? [1, 5] : [1]) },
+  { id: 'up-octave', label: 'Up to the octave', group: 'Chord tones', steps: ({ roles }) => [...tones(roles), T(1, 1)] },
+  { id: 'down-octave', label: 'Down from the octave', group: 'Chord tones', steps: ({ roles }) => [T(1, 1), ...tones([...roles].reverse())] },
+  {
+    id: 'up-over-down',
+    label: 'Up over and down',
+    group: 'Chord tones',
+    steps: ({ roles }) => [...tones(roles), T(1, 1), ...tones([...roles].reverse().slice(0, -1))],
+  },
+  { id: 'drone-above', label: 'Drone above (tonic)', group: 'Drones', steps: ({ roles }) => interleave(roles, DRONE_UP) },
+  { id: 'drone-below', label: 'Drone below (tonic)', group: 'Drones', steps: ({ roles }) => interleave(roles, DRONE_DOWN) },
+  { id: 'root-drone', label: 'Chord root drone', group: 'Drones', steps: ({ roles }) => interleave(roles, ROOT_UP) },
+  ...WALK_SCALES.map((w) => ({ id: `scale-up-${w.id}`, label: `Scale up, ${w.label}`, group: 'Scale walks', steps: walkUp(w.id) })),
+  ...WALK_SCALES.map((w) => ({
+    id: `scale-up-down-${w.id}`,
+    label: `Scale up and down, ${w.label}`,
+    group: 'Scale walks',
+    steps: walkUpDown(w.id),
+  })),
 ];
 
 export const CHANGES = ['pass', 'measure'];
@@ -409,13 +476,15 @@ export function setProgression(pattern, progressionId) {
 export function clearHarmony(pattern) {
   const next = clone(pattern);
   const first = next.harmony?.chords?.[0];
-  // Under an arpeggio what sounded was the dealt role, so that is what bakes.
-  const deal = arpeggioDeal(next);
+  // Under an arpeggio what sounded in the first pass was the dealt step under
+  // the chord in force, so that is what bakes.
+  const deal = arpeggioDeal(next, 0);
   next.measures.forEach((measure, m) => {
+    const chord = chordIn(next, 0, m);
     measure.beats.forEach((beat, b) => {
       beat.slots.forEach((slot, s) => {
-        const dealt = deal?.get(dealKey(m, b, s));
-        if (dealt !== undefined) slot.pitch = { tone: dealt, octaveOffset: slot.pitch?.octaveOffset ?? 0 };
+        const step = deal?.get(dealKey(m, b, s));
+        if (step !== undefined) slot.pitch = stepAsDegree(step, chord, next, slot.pitch?.octaveOffset ?? 0);
       });
     });
   });
@@ -497,24 +566,11 @@ export function arpeggioRoles(pattern) {
   return TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
 }
 
-/** The role sequence an arpeggio deals, given the roles available. */
-export function arpeggioSequence(order, roles) {
-  switch (order) {
-    case 'up':
-      return roles;
-    case 'down':
-      return [...roles].reverse();
-    case 'up-down':
-      return roles.length < 3 ? roles : [...roles, ...roles.slice(1, -1).reverse()];
-    case 'alberti':
-      return [1, 5, 3, 5].filter((t) => roles.includes(t));
-    case 'root':
-      return [1];
-    case 'root-fifth':
-      return roles.includes(5) ? [1, 5] : [1];
-    default:
-      throw new Error(`Unknown arpeggio: ${order}`);
-  }
+/** The step sequence an arpeggio deals for this Pattern. */
+export function arpeggioSequence(order, pattern) {
+  const entry = ARPEGGIOS.find((a) => a.id === order);
+  if (!entry) throw new Error(`Unknown arpeggio: ${order}`);
+  return entry.steps({ roles: arpeggioRoles(pattern), walk: (kind) => walkDegrees(kind, pattern) });
 }
 
 /** The key a dealt role is filed under: Measure, Beat and Slot index. */
@@ -523,20 +579,25 @@ export function dealKey(measureIndex, beatIndex, slotIndex) {
 }
 
 /**
- * The arpeggio's deal: which role each sounding Slot sounds, dealt in time
- * order continuously through the pass and restarting at its top (AC-2.6.6/2).
- * Derived on every read and never stored, so it follows the rhythm as it is
- * edited (AC-2.6.6/6); null when the Pattern has no arpeggio.
+ * The arpeggio's deal: which step each sounding Slot sounds, dealt in time
+ * order continuously through the pass, restarting at its top and whenever the
+ * chord in force changes so each chord opens on its own first step
+ * (AC-2.6.6/2). Derived on every read and never stored, so it follows the
+ * rhythm as it is edited (AC-2.6.6/6); null when the Pattern has no arpeggio.
  *
- * @returns {Map<string, number>|null} dealKey → tone
+ * @returns {Map<string, object>|null} dealKey → step
  */
-export function arpeggioDeal(pattern) {
+export function arpeggioDeal(pattern, pass = 0) {
   const order = pattern?.harmony?.arpeggio;
   if (!order || !hasHarmony(pattern)) return null;
-  const sequence = arpeggioSequence(order, arpeggioRoles(pattern));
+  const sequence = arpeggioSequence(order, pattern);
   const deal = new Map();
   let k = 0;
+  let previous = null;
   pattern.measures.forEach((measure, m) => {
+    const chord = chordAt(pattern, pass, m);
+    if (m === 0 || chord !== previous) k = 0;
+    previous = chord;
     measure.beats.forEach((beat, b) => {
       beat.slots.forEach((slot, s) => {
         if (!slot.on) return;
@@ -549,12 +610,64 @@ export function arpeggioDeal(pattern) {
 }
 
 /**
- * The Pitch a Slot actually sounds: the dealt role under an arpeggio, at the
- * Slot's own octave, else the Pitch it holds. The one place the two are
- * reconciled, so the timeline and the grid cannot disagree.
+ * What a Slot actually sounds: the dealt step under an arpeggio, at the Slot's
+ * own octave, else the Pitch it holds. The one place the two are reconciled,
+ * so the timeline and the grid cannot disagree.
+ *
+ * @returns {{step: object, octaveOffset: number}|{degree: string}|{tone: number}|null}
  */
 export function soundingPitch(slot, deal, measureIndex, beatIndex, slotIndex) {
-  const dealt = deal?.get(dealKey(measureIndex, beatIndex, slotIndex));
-  if (dealt === undefined) return slot.pitch ?? null;
-  return { tone: dealt, octaveOffset: slot.pitch?.octaveOffset ?? 0 };
+  const step = deal?.get(dealKey(measureIndex, beatIndex, slotIndex));
+  if (step === undefined) return slot.pitch ?? null;
+  return { step, octaveOffset: slot.pitch?.octaveOffset ?? 0 };
+}
+
+/* --- steps: resolving, naming, baking ------------------------------------ */
+
+/** Semitones above the Key's tonic a step sounds, before the Slot's own octave. */
+function stepSemitones(step, chord, pattern) {
+  const shift = 12 * (step.octave ?? 0);
+  if (step.tone !== undefined) return degreeSemitones(chord.degree) + memberFor(chord, step.tone).interval + shift;
+  if (step.drone !== undefined) return (step.drone === 'root' ? degreeSemitones(chord.degree) : 0) + shift;
+  if (step.scale !== undefined) {
+    const degrees = walkDegrees(step.scale, pattern);
+    const i = step.step - 1;
+    return (
+      degreeSemitones(chord.degree) +
+      degreeSemitones(degrees[i % degrees.length]) +
+      12 * Math.floor(i / degrees.length) +
+      shift
+    );
+  }
+  throw new Error('Unknown step kind');
+}
+
+/** A dealt step against the chord in force, the Key and the Slot's octave (AC-2.6.6/9–/11). */
+export function resolveStep(step, chord, key, pattern, octaveOffset = 0) {
+  if (!chord) throw new Error('A dealt step needs a chord to resolve against');
+  const midiNote = BASE_MIDI + keySemitones(key) + stepSemitones(step, chord, pattern) + 12 * octaveOffset;
+  return { midiNote, frequency: midiToFrequency(midiNote) };
+}
+
+/** The degree a step sounds as, for baking it into a fixed Pitch (AC-2.6.1/6). */
+export function stepAsDegree(step, chord, pattern, octaveOffset = 0) {
+  const semis = stepSemitones(step, chord, pattern);
+  return { degree: chromaticToken(semis), octaveOffset: octaveOffset + Math.floor(semis / 12) };
+}
+
+const OCTAVE_MARK = (octave) => (octave > 0 ? '↑'.repeat(octave) : octave < 0 ? '↓'.repeat(-octave) : '');
+
+/** How the band writes a step: `R↑`, `T↑` for the tonic drone, `s3` for a scale step (AC-2.6.6/12). */
+export function stepLabel(step) {
+  if (step.tone !== undefined) return `${toneLabel(step.tone)}${OCTAVE_MARK(step.octave ?? 0)}`;
+  if (step.drone !== undefined) return `${step.drone === 'root' ? 'R' : 'T'}${OCTAVE_MARK(step.octave ?? 0)}`;
+  return `s${step.step}`;
+}
+
+/** The note a step sounds, spelled against the Key. */
+export function stepName(step, chord, key, pattern, octaveOffset = 0) {
+  if (step.tone !== undefined) {
+    return chordToneName({ tone: step.tone, octaveOffset: octaveOffset + (step.octave ?? 0) }, chord, key);
+  }
+  return noteName(stepAsDegree(step, chord, pattern, octaveOffset), key);
 }

@@ -356,6 +356,8 @@ changes every pass and `lcm(n, M) / M` when it changes every Measure.
 
 **Amended 2026-09-12: the arpeggio is a derived deal, not stamped data.** The first build offered a one-shot Fill that wrote roles into the Slots. The maintainer expected an arpeggio to be a setting the notes follow ("c e g c e g over and over"), so `harmony.arpeggio` now names an order and the roles are dealt at play time across the sounding Slots, continuously through the pass, from the one timeline. Stored Pitches are kept underneath and return with None. Chosen over auto-stamping on every rhythm edit (which would silently rewrite hand-authored roles) and over making Fill re-run itself (which is the same thing with a worse name).
 
+**Amended again 2026-09-12: a pattern is a step sequence.** Chord-tone orders could not say "the Key's tonic an octave up between every note" or "walk the major scale from the chord's root", both of which the maintainer plays. A step is now one of three kinds — a chord tone at an octave, a drone (the Key's tonic or the chord's root, at an octave), or the n-th step of a named scale rooted on the chord — and every catalogue entry is a sequence of them, built from the progression's roles and the walk's scale. The deal restarts on every chord change so each chord opens on its own root. The same engine is what a future "type your own sequence" would parse into.
+
 **Not a longer grid.** The maintainer floated raising the 8-Measure cap for long progressions. Kept
 at 8: the chord strip carries the progression across passes, and the cap is what every phone-layout
 criterion (AC-15.1.10, AC-2.2.12) is measured against.
