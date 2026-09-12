@@ -29,7 +29,7 @@ import {
   QUALITIES,
   TONES,
   CHANGES,
-  FILL_ORDERS,
+  ARPEGGIOS,
   MAX_CHORDS,
 } from '../core/harmony.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
@@ -646,6 +646,10 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   const key = pattern.key ?? 'C';
   const scaleId = pattern.scale ?? DEFAULT_SCALE;
 
+  const arpeggio = pattern.harmony?.arpeggio
+    ? ARPEGGIOS.find((a) => a.id === pattern.harmony.arpeggio)
+    : null;
+
   root.appendChild(
     el('span', 'pitch-strip-label', {
       textContent: 'Note',
@@ -681,6 +685,19 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   scale.value = scaleId;
   scale.addEventListener('change', (e) => handlers.onScale(e.target.value));
   root.appendChild(scale);
+
+  // Under an arpeggio the notes are dealt, not stamped: the chips stand down
+  // and the strip says so, so nothing here looks tappable and does nothing
+  // (AC-2.6.6/7). Key, scale and octave still apply.
+  if (arpeggio) {
+    root.appendChild(
+      el('p', 'pitch-strip-note', {
+        textContent: `Notes follow the ${arpeggio.label} arpeggio. Set Arpeggio to None to stamp them by hand.`,
+      })
+    );
+    root.appendChild(renderOctaveStepper(armed, handlers));
+    return;
+  }
 
   // One chip per chromatic degree, each the token it stamps (AC-2.2.4). The
   // scale's own degrees are marked in-scale — by class for colour and by a
@@ -764,7 +781,7 @@ function spellTone(pitch, chord, key) {
 
 /**
  * The harmony section: the progression, when it changes, each chord's root and
- * quality, and Fill (US-2.6). It sits under the pitch strip because it is the
+ * quality, and the arpeggio (US-2.6). It sits under the pitch strip because it is the
  * other half of the same palette — the strip says which role, this says which
  * chords the role resolves through. Melodic only; Percussive renders nothing.
  */
@@ -804,17 +821,32 @@ function renderHarmonyInto(root, pattern, state, handlers) {
 
   if (!harmonic) return;
 
-  // A progression only moves chord tones. Until a Slot holds one, say so —
-  // the first thing the maintainer heard was the strip changing and the notes
-  // not (AC-2.6.5/7).
+  // The arpeggio the notes follow (AC-2.6.6): a setting, saved with the
+  // Pattern, right under the progression it plays through. None means the
+  // stamped Pitches sound.
+  const arpeggioRow = el('div', 'arpeggio-row');
+  arpeggioRow.appendChild(el('span', 'pitch-strip-label', { textContent: 'Arpeggio' }));
+  const arpeggio = el('select', 'arpeggio-picker');
+  arpeggio.dataset.action = 'set-arpeggio';
+  arpeggio.setAttribute('aria-label', 'Arpeggio');
+  arpeggio.appendChild(el('option', null, { value: 'none', textContent: 'None (as stamped)' }));
+  for (const a of ARPEGGIOS) arpeggio.appendChild(el('option', null, { value: a.id, textContent: a.label }));
+  arpeggio.value = pattern.harmony.arpeggio ?? 'none';
+  arpeggio.addEventListener('change', (e) => handlers.onArpeggio(e.target.value));
+  arpeggioRow.appendChild(arpeggio);
+  root.appendChild(arpeggioRow);
+
+  // A progression only moves chord tones. With no arpeggio and no Slot holding
+  // a role, say so — the first thing the maintainer heard was the chord names
+  // changing and the notes not (AC-2.6.5/7).
   const holdsRole = pattern.measures.some((m) =>
     m.beats.some((b) => b.slots.some((s) => s.on && s.pitch?.tone !== undefined))
   );
-  if (!holdsRole) {
+  if (!pattern.harmony.arpeggio && !holdsRole) {
     root.appendChild(
       el('p', 'harmony-hint', {
         textContent:
-          'No chord tones yet, so the notes stay fixed while the chords change. Arm a chord tone (R, 3, 5, 7, 9) on the pitch strip and tap a note, or press Fill.',
+          'No chord tones yet, so the notes stay fixed while the chords change. Choose an Arpeggio above, or arm a chord tone (R, 3, 5, 7, 9) on the pitch strip and tap a note.',
       })
     );
   }
@@ -897,23 +929,6 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   add.disabled = pattern.harmony.chords.length >= MAX_CHORDS;
   add.addEventListener('click', () => handlers.onAddChord());
   root.appendChild(add);
-
-  // Fill (AC-2.6.6): an order and a button. The order is read off the picker
-  // when the button is pressed, so it is not state anything else has to hold.
-  const fill = el('div', 'fill-row');
-  fill.appendChild(el('span', 'pitch-strip-label', { textContent: 'Fill' }));
-  const order = el('select', 'fill-order');
-  order.setAttribute('aria-label', 'Fill order');
-  for (const o of FILL_ORDERS) order.appendChild(el('option', null, { value: o.id, textContent: o.label }));
-  order.value = state.fillOrder ?? 'up';
-  order.addEventListener('change', (e) => handlers.onFillOrder(e.target.value));
-  fill.appendChild(order);
-  const go = el('button', 'fill-chord-tones', { type: 'button', textContent: 'Fill' });
-  go.dataset.action = 'fill-chord-tones';
-  go.setAttribute('title', 'Deal chord tones across every sounding Slot, Measure by Measure');
-  go.addEventListener('click', () => handlers.onFill(order.value));
-  fill.appendChild(go);
-  root.appendChild(fill);
 }
 
 /**

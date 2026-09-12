@@ -52,6 +52,7 @@ const QUALITIES = [
 ];
 const TONES = [1, 3, 5, 7, 9];
 const CHANGES = ['pass', 'measure'];
+const ARPEGGIOS = ['up', 'down', 'up-down', 'alberti', 'root', 'root-fifth'];
 
 const errors = [];
 const fail = (name, msg) => errors.push(`${name}: ${msg}`);
@@ -89,6 +90,7 @@ for (const p of raw.patterns) {
     const h = p.harmony;
     if (!melodic) fail(name, 'harmony on a percussive Pattern (data-model §7 rule 14)');
     if (!CHANGES.includes(h?.change)) fail(name, `harmony.change "${h?.change}" invalid`);
+    if ('arpeggio' in (h ?? {}) && !ARPEGGIOS.includes(h.arpeggio)) fail(name, `harmony.arpeggio "${h.arpeggio}" invalid`);
     if (!Array.isArray(h?.chords) || h.chords.length < 1 || h.chords.length > 16) {
       fail(name, `harmony has ${h?.chords?.length} chords, expected 1–16`);
     } else {

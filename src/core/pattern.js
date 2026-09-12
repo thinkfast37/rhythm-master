@@ -16,7 +16,7 @@ import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey } from './pitch.js';
 import { isValidScale } from './scales.js';
 import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
-import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, hasHarmony } from './harmony.js';
+import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, isValidArpeggio, hasHarmony } from './harmony.js';
 import { splitDegree } from './pitch.js';
 
 export const MAX_MEASURES = 8;
@@ -278,6 +278,7 @@ export function validate(pattern) {
     const h = pattern.harmony;
     if (!melodic) fail('harmony is only valid when soundMode is melodic');
     if (!CHANGES.includes(h?.change)) fail(`harmony.change "${h?.change}" is not one of ${CHANGES.join(', ')}`);
+    if ('arpeggio' in (h ?? {}) && !isValidArpeggio(h.arpeggio)) fail(`harmony.arpeggio "${h.arpeggio}" unsupported`);
     if (!Array.isArray(h?.chords) || h.chords.length < 1 || h.chords.length > MAX_CHORDS) {
       fail(`harmony has ${h?.chords?.length} chords, expected 1–${MAX_CHORDS}`);
     } else {

@@ -354,6 +354,8 @@ timeline at each pass boundary it already crosses, the cursor keeps its `loop` i
 concatenates the cycle's passes from the same function. The cycle is `n` passes when the chord
 changes every pass and `lcm(n, M) / M` when it changes every Measure.
 
+**Amended 2026-09-12: the arpeggio is a derived deal, not stamped data.** The first build offered a one-shot Fill that wrote roles into the Slots. The maintainer expected an arpeggio to be a setting the notes follow ("c e g c e g over and over"), so `harmony.arpeggio` now names an order and the roles are dealt at play time across the sounding Slots, continuously through the pass, from the one timeline. Stored Pitches are kept underneath and return with None. Chosen over auto-stamping on every rhythm edit (which would silently rewrite hand-authored roles) and over making Fill re-run itself (which is the same thing with a worse name).
+
 **Not a longer grid.** The maintainer floated raising the 8-Measure cap for long progressions. Kept
 at 8: the chord strip carries the progression across passes, and the cap is what every phone-layout
 criterion (AC-15.1.10, AC-2.2.12) is measured against.

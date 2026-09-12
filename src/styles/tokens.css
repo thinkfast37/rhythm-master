@@ -1652,13 +1652,13 @@ body {
   border-bottom: 1px solid var(--line);
 }
 .harmony[hidden] { display: none; }
-.harmony-head, .fill-row, .chord-change-group {
+.harmony-head, .arpeggio-row, .chord-change-group {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
-.progression-picker, .fill-order, .chord-root, .chord-quality {
+.progression-picker, .arpeggio-picker, .chord-root, .chord-quality {
   max-width: 100%;
   font: 500 13px/1 var(--font-ui);
   color: var(--ink);
@@ -1712,6 +1712,13 @@ body {
 
 /* The harmony section's one-line hint while no Slot holds a role (AC-2.6.5/7). */
 .harmony-hint {
+  margin: 0;
+  font: 500 12px/1.4 var(--font-ui);
+  color: var(--ink-dim);
+}
+
+/* The pitch strip standing down under an arpeggio (AC-2.6.6/7). */
+.pitch-strip-note {
   margin: 0;
   font: 500 12px/1.4 var(--font-ui);
   color: var(--ink-dim);

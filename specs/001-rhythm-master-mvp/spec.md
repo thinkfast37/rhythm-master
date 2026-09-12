@@ -2684,6 +2684,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.4/4** — A scale-degree Pitch is unaffected by the progression, so fixed notes and chord tones mix in one Pattern
     - **AC-2.6.4/5** — Changing the Key transposes every chord and chord tone with it, altering no stored role, degree or octave
     - **AC-2.6.4/6** — Playback and MIDI export resolve a chord tone through the one timeline, so the two cannot disagree
+  - *(Clarified 2026-09-12 with AC-2.6.6's rewrite: /4 describes a Pattern whose arpeggio is None. With an arpeggio set every sounding Slot follows the deal, fixed degrees included; the stored Pitches are kept and come back with None. Likewise AC-2.6.1/6 bakes what was sounding — the dealt roles, when an arpeggio is set — so the first pass is unchanged either way.)*
 
 - **AC-2.6.5** — The pitch strip offers chord-tone roles while a progression is active
   - **Given** a Melodic Pattern with a progression
@@ -2696,20 +2697,22 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.5/4** — Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch
     - **AC-2.6.5/5** — The octave stepper applies to a role exactly as to a degree
     - **AC-2.6.5/6** — Turning a Slot on while a role is armed gives it that role
-    - **AC-2.6.5/7** — While a Pattern has a progression but no Slot holds a role, the harmony section says so and points at the role chips and Fill
+    - **AC-2.6.5/7** — While a Pattern has a progression, no arpeggio, and no Slot holds a role, the harmony section says so and points at the arpeggio setting and the role chips
 
-- **AC-2.6.6** — Fill deals chord tones across the sounding Slots
+- **AC-2.6.6** — An arpeggio deals chord tones across the sounding Slots
   - **Given** a Pattern with a progression and some sounding Slots
-  - **When** the Composer picks an order and presses Fill
-  - **Then** every sounding Slot takes a chord-tone Pitch dealt in that order, Measure by Measure, and nothing else about the Pattern changes
+  - **When** the Composer sets an arpeggio
+  - **Then** every sounding Slot sounds the role the arpeggio deals to it, in time order through the pass, over whichever chord is in force — a line the Composer never stamps by hand, and one that re-deals itself as the rhythm changes
   - **Cases**:
-    - **AC-2.6.6/1** — The orders offered are Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth
-    - **AC-2.6.6/2** — The deal restarts at every Measure, so each Measure opens on the Root
+    - **AC-2.6.6/1** — The arpeggio setting offers None, Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth, and is saved with the Pattern
+    - **AC-2.6.6/2** — The deal runs continuously through the pass over every sounding Slot and restarts at the top of each pass: four Slots a Measure under Ascending triads sound Root 3rd 5th Root, then 3rd 5th Root 3rd
     - **AC-2.6.6/3** — Ascending deals the roles in order and repeats: over four roles, five sounding Slots take Root, 3rd, 5th, 7th, Root
     - **AC-2.6.6/4** — Alberti deals Root, 5th, 3rd, 5th; Descending deals from the highest role down; Up and down rises then falls without repeating the turn
     - **AC-2.6.6/5** — The roles dealt are the members of the progression's fullest chord, so a progression of triads deals Root, 3rd and 5th only
-    - **AC-2.6.6/6** — Fill replaces the Pitch of every sounding Slot at the armed octave and nothing else: no Slot turns on or off and no Accent Level changes
-    - **AC-2.6.6/7** — Fill on a shipped Pattern goes through the naming prompt
+    - **AC-2.6.6/6** — The deal follows the rhythm: a Slot turned on or off re-deals the line, and no stored Pitch, Slot or Accent Level changes — each Slot keeps its own octave
+    - **AC-2.6.6/7** — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio
+    - **AC-2.6.6/8** — Changing the arpeggio on a shipped Pattern goes through the naming prompt
+  - *(Rewritten 2026-09-12. As first built this was a one-shot **Fill** action that stamped roles into the Slots. The maintainer, on trying it: "[it seems] I have to paint every individual note that I want … what I wanted was arpeggios … c e g c e g over and over." A stamped deal is easy to miss and stops at the Slots that existed when it ran; an arpeggio is a setting the notes follow. The deal was also per-Measure; it is now continuous through the pass, chosen by the maintainer the same day.)*
 
 - **AC-2.6.7** — The progression is visible while playing
   - **Given** a Pattern with a progression, playing or at rest
@@ -2722,13 +2725,14 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.7/4** — At rest, the chord strip and the Measure headers show the first pass
     - **AC-2.6.7/5** — A chord-tone Slot's note band shows its role and the note it sounds under the chord governing it in the current pass, updating as the chord changes
     - **AC-2.6.7/6** — The chord strip is absent on a Pattern with no progression, and on a Percussive Pattern
+    - **AC-2.6.7/7** — With an arpeggio set, each sounding Slot's note band shows the role dealt to it and the note it sounds under the chord in force
 
 - **AC-2.6.8** — The progression is saved with the Pattern
   - **Given** a Pattern with a progression
   - **When** it is saved, copied, appended, submitted or reopened
   - **Then** the progression travels with the Pattern as its own data, and a Pattern without one is untouched by this story
   - **Cases**:
-    - **AC-2.6.8/1** — A progression, its chord edits and the change setting survive closing and reopening the Pattern
+    - **AC-2.6.8/1** — A progression, its chord edits, the change setting and the arpeggio survive closing and reopening the Pattern
     - **AC-2.6.8/2** — A Pattern with no progression behaves exactly as before, and stored Patterns need no migration
     - **AC-2.6.8/3** — Switching to Percussive removes the progression along with the Key, scale and Pitch data
     - **AC-2.6.8/4** — Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it
@@ -2739,7 +2743,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **When** they are compared for duplication
   - **Then** the comparison includes each Pattern's progression and change setting
   - **Cases**:
-    - **AC-2.6.9/1** — Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, or in the change setting are not duplicates
+    - **AC-2.6.9/1** — Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, in the change setting, or in the arpeggio are not duplicates
     - **AC-2.6.9/2** — Two Patterns identical in all of those are duplicates, and Family detection is unchanged: the same rhythm under different harmony is the same Family
 
 - **AC-2.6.10** — MIDI export carries the whole progression

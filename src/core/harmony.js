@@ -166,8 +166,8 @@ export const PROGRESSIONS = [
   { id: 'ii-V', label: 'ii–V', steps: [s('2', { seventh: true }), s('5', { seventh: true })] },
 ];
 
-/** The arpeggio orders Fill offers (AC-2.6.6/1). */
-export const FILL_ORDERS = [
+/** The arpeggios a Pattern can follow (AC-2.6.6/1). Absent on the Pattern means None. */
+export const ARPEGGIOS = [
   { id: 'up', label: 'Ascending' },
   { id: 'down', label: 'Descending' },
   { id: 'up-down', label: 'Up and down' },
@@ -245,6 +245,10 @@ export function matchProgression(pattern) {
 
 export function hasHarmony(pattern) {
   return Boolean(pattern?.harmony?.chords?.length);
+}
+
+export function isValidArpeggio(id) {
+  return ARPEGGIOS.some((a) => a.id === id);
 }
 
 const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
@@ -405,6 +409,16 @@ export function setProgression(pattern, progressionId) {
 export function clearHarmony(pattern) {
   const next = clone(pattern);
   const first = next.harmony?.chords?.[0];
+  // Under an arpeggio what sounded was the dealt role, so that is what bakes.
+  const deal = arpeggioDeal(next);
+  next.measures.forEach((measure, m) => {
+    measure.beats.forEach((beat, b) => {
+      beat.slots.forEach((slot, s) => {
+        const dealt = deal?.get(dealKey(m, b, s));
+        if (dealt !== undefined) slot.pitch = { tone: dealt, octaveOffset: slot.pitch?.octaveOffset ?? 0 };
+      });
+    });
+  });
   for (const measure of next.measures) {
     for (const beat of measure.beats) {
       for (const slot of beat.slots) {
@@ -468,14 +482,23 @@ export function removeChord(pattern, index) {
   });
 }
 
-/** The roles Fill deals: the members of the progression's fullest chord (AC-2.6.6/5). */
-export function fillRoles(pattern) {
+/** Set which arpeggio the notes follow; None removes it and the stored Pitches sound again. */
+export function setArpeggio(pattern, id) {
+  if (id !== null && id !== 'none' && !isValidArpeggio(id)) throw new Error(`Unknown arpeggio: ${id}`);
+  return withHarmony(pattern, (h) => {
+    if (id === null || id === 'none') delete h.arpeggio;
+    else h.arpeggio = id;
+  });
+}
+
+/** The roles an arpeggio deals: the members of the progression's fullest chord (AC-2.6.6/5). */
+export function arpeggioRoles(pattern) {
   const chords = pattern.harmony?.chords ?? [];
   return TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
 }
 
-/** The role sequence an order deals, given the roles available. */
-export function fillSequence(order, roles) {
+/** The role sequence an arpeggio deals, given the roles available. */
+export function arpeggioSequence(order, roles) {
   switch (order) {
     case 'up':
       return roles;
@@ -490,28 +513,48 @@ export function fillSequence(order, roles) {
     case 'root-fifth':
       return roles.includes(5) ? [1, 5] : [1];
     default:
-      throw new Error(`Unknown fill order: ${order}`);
+      throw new Error(`Unknown arpeggio: ${order}`);
   }
 }
 
+/** The key a dealt role is filed under: Measure, Beat and Slot index. */
+export function dealKey(measureIndex, beatIndex, slotIndex) {
+  return `${measureIndex}:${beatIndex}:${slotIndex}`;
+}
+
 /**
- * Deal chord tones across every sounding Slot, Measure by Measure, restarting
- * the sequence at each Measure so every Measure opens on the root (AC-2.6.6).
- * Nothing but Pitches change: no Slot turns on or off, no Accent moves.
+ * The arpeggio's deal: which role each sounding Slot sounds, dealt in time
+ * order continuously through the pass and restarting at its top (AC-2.6.6/2).
+ * Derived on every read and never stored, so it follows the rhythm as it is
+ * edited (AC-2.6.6/6); null when the Pattern has no arpeggio.
+ *
+ * @returns {Map<string, number>|null} dealKey → tone
  */
-export function fillChordTones(pattern, order, octaveOffset = 0) {
-  if (!hasHarmony(pattern)) throw new Error('The Pattern has no progression');
-  const sequence = fillSequence(order, fillRoles(pattern));
-  const next = clone(pattern);
-  for (const measure of next.measures) {
-    let k = 0;
-    for (const beat of measure.beats) {
-      for (const slot of beat.slots) {
-        if (!slot.on) continue;
-        slot.pitch = { tone: sequence[k % sequence.length], octaveOffset };
+export function arpeggioDeal(pattern) {
+  const order = pattern?.harmony?.arpeggio;
+  if (!order || !hasHarmony(pattern)) return null;
+  const sequence = arpeggioSequence(order, arpeggioRoles(pattern));
+  const deal = new Map();
+  let k = 0;
+  pattern.measures.forEach((measure, m) => {
+    measure.beats.forEach((beat, b) => {
+      beat.slots.forEach((slot, s) => {
+        if (!slot.on) return;
+        deal.set(dealKey(m, b, s), sequence[k % sequence.length]);
         k += 1;
-      }
-    }
-  }
-  return next;
+      });
+    });
+  });
+  return deal;
+}
+
+/**
+ * The Pitch a Slot actually sounds: the dealt role under an arpeggio, at the
+ * Slot's own octave, else the Pitch it holds. The one place the two are
+ * reconciled, so the timeline and the grid cannot disagree.
+ */
+export function soundingPitch(slot, deal, measureIndex, beatIndex, slotIndex) {
+  const dealt = deal?.get(dealKey(measureIndex, beatIndex, slotIndex));
+  if (dealt === undefined) return slot.pitch ?? null;
+  return { tone: dealt, octaveOffset: slot.pitch?.octaveOffset ?? 0 };
 }
