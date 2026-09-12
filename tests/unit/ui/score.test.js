@@ -244,7 +244,7 @@ describe('ui/score — every Slot at its exact time and value, as drawn (AC-12.2
     expect(trip[1] - trip[0]).toBeCloseTo(trip[2] - trip[1], 3);
 
     // Beat 1 all sixteenths, Beat 2 starts with a note: the second sixteenth is a quarter of the Beat in.
-    let p = pattern([[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 0, 3], [0, 1, 0]]);
+    const p = pattern([[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 0, 3], [0, 1, 0]]);
     const all = items(draw(p));
     const b1 = all.filter((i) => i['data-beat'] === '0').map(cx);
     const b2 = all.find((i) => i['data-beat'] === '1');
