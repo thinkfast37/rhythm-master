@@ -386,7 +386,7 @@ describe('core/harmony', () => {
   });
 
   it('AC-2.6.6/9 — A step is a chord tone at an octave, a drone, or a scale step rooted on the chord: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root', () => {
-    let p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats
     const under = (id) => notesOf(setArpeggio(p, id));
     expect(under('up-octave')).toEqual([60, 64, 67, 72, 60, 64, 67, 72, 60, 64, 67, 72]);
     expect(under('down-octave')).toEqual([72, 67, 64, 60, 72, 67, 64, 60, 72, 67, 64, 60]);
@@ -430,7 +430,7 @@ describe('core/harmony', () => {
   });
 
   it("AC-2.6.6/11 — A scale walk steps up the chosen scale from the chord's root, one octave and round again: Scale up in major under F sounds F G A B♭ C D E then F; Scale up and down turns without repeating the turn; the Pattern's scale walks the scale the Pattern carries", () => {
-    let p = sounding(setProgression(melodic(), 'I-IV-V'), 12);
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 12);
     // Under the IV (pass 1): F major from F.
     expect(notesOf(setArpeggio(p, 'scale-up-major'), 1)).toEqual([65, 67, 69, 70, 72, 74, 76, 65, 67, 69, 70, 72]);
     // Natural minor and the pentatonics, from the chord root.
