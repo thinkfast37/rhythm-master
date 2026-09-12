@@ -236,6 +236,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.10 | T249, T250, T253, T255, T257 | T251, T252, T254, T256, T258 |
 | **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260 | T261, T262 |
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263 | T264 |
+| **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

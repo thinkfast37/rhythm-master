@@ -2934,6 +2934,57 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
+### User Story 41 - Condense a Pattern to its simplest subdivision
+
+*Traceability: `US-10.2` — Condense a Pattern to its simplest subdivision*
+
+**As** the Composer, **I want** a Pattern written in more Measures than its rhythm needs — four Measures of quarter notes, say, or two of eighths — condensed into the fewest Measures that hold the same sequence of events at a finer subdivision, **so that** the library's Patterns are written at their lowest common denominator and I can practise the same figure as sixteenths without retyping it.
+
+*(Added 2026-09-12 at the maintainer's request: "a lowest common denominator type feature … a lot of the rhythms in my library are just using quarter notes, or quarter notes and eighth notes, and as a result they end up being four measures, but really they could be one measure with sixteenth notes … I want a button to do that, and that should detect if it's even possible." Decisions taken with the maintainer the same day: one press condenses as far as it can rather than one halving at a time; the result lands the way Double Length lands — in place on an owned Pattern, through the naming prompt on a shipped one; the Time Signature is kept, so a halving needs an even number of Measures; per-Group swing overrides are dropped and the Pattern-wide swing kept; Pitches and harmony travel across unchanged; tempo is unchanged, so the condensed Pattern plays the same events denser. The opposite direction — stretching every Slot to twice its length — is a follow-up, not part of this Story.)*
+
+**Independent Test**: Load four 4/4 Measures of Straight 8ths with only the first Slot of every Beat on, press Condense, and assert one Measure of Straight 16ths with every Slot on; then assert the control is disabled for an odd Measure count, a triplet Recipe, and a sixteenth that is on.
+
+**Acceptance Scenarios**:
+
+- **AC-10.2.1** — One halving packs each pair of Measures into one at twice the subdivision
+  - **Given** a Pattern whose Measure count is even and whose every Beat is halvable
+  - **When** one halving is applied
+  - **Then** consecutive Beats pack in pairs into one Beat holding both in order, and consecutive Measures pack in pairs into one Measure of the same Time Signature
+  - **Cases**:
+    - **AC-10.2.1/1** — Two 4/4 Measures of Straight 8ths become one 4/4 Measure of Straight 16ths: new Beat 1 holds old Beat 1 then old Beat 2, new Beat 2 holds old Beats 3 and 4, and so on through the eighth old Beat
+    - **AC-10.2.1/2** — A quarter-note Straight 16ths Beat whose second and fourth Slots are off is halvable, and contributes its first and third Slots
+    - **AC-10.2.1/3** — On an eighth-note Beat, Undivided Beats pack in pairs into Straight 16ths, and a Straight 16ths Beat whose second Slot is off counts as Undivided
+    - **AC-10.2.1/4** — Every Slot's on state, its stored Accent override and its Pitch travel with it to its new position; Accent defaults are computed for the new positions, as always
+    - **AC-10.2.1/5** — Per-Group swing overrides are dropped; the Pattern's name, id, tempo, Sound Mode, Key, scale, Pattern-wide swing amount and feel, harmony, Tags and rating are unchanged
+
+- **AC-10.2.2** — Condense halves as far as it can in one press
+  - **Given** four 4/4 Measures of Straight 8ths with only the first Slot of every Beat on
+  - **When** the Composer presses Condense
+  - **Then** the result is one 4/4 Measure of Straight 16ths with every Slot on — two halvings in one press — and a Pattern that cannot be halved is returned unchanged
+
+- **AC-10.2.3** — Condense is available only when a halving is possible
+  - **Given** a Pattern loaded in the editor
+  - **When** the Composer looks at the Condense control beside Double Length
+  - **Then** it is enabled exactly when one halving is possible
+  - **Cases**:
+    - **AC-10.2.3/1** — Enabled for two 4/4 Measures of Straight 8ths
+    - **AC-10.2.3/2** — Disabled for an odd number of Measures, a single Measure included
+    - **AC-10.2.3/3** — Disabled when any Beat carries a triplet or split Recipe
+    - **AC-10.2.3/4** — Disabled when any quarter-note Straight 16ths Beat has its second or fourth Slot on, or any eighth-note Straight 16ths Beat its second
+    - **AC-10.2.3/5** — Disabled when the two Measures of any pair differ in Time Signature
+
+- **AC-10.2.4** — Condense on an owned Pattern auto-saves
+  - **Given** an owned Pattern of two Measures of Straight 8ths is loaded
+  - **When** the Composer presses Condense
+  - **Then** the one-Measure result auto-saves into that Pattern immediately, per US-7.2, and the grid shows one Measure
+
+- **AC-10.2.5** — Condense on a shipped Pattern triggers the naming prompt first
+  - **Given** a shipped Pattern that can be condensed is loaded
+  - **When** the Composer presses Condense
+  - **Then** the naming prompt from US-7.3 appears before anything is applied, and cancelling it leaves the shipped Pattern untouched
+
+---
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements

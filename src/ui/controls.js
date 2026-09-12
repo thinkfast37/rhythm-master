@@ -7,6 +7,7 @@
  */
 import { TIME_SIGNATURES, beatNoteValue } from '../core/meter.js';
 import { recipesFor, isOffered } from '../core/recipes.js';
+import { canCondense } from '../core/condense.js';
 import {
   KEYS,
   degreeLabel,
@@ -466,6 +467,13 @@ function renderActions(pattern, state, handlers) {
   });
   button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), {
     disabled: pattern.measures.length * 2 > MAX_MEASURES,
+  });
+  // The opposite motion to Double Length in spirit — fewer Measures, not more —
+  // so it sits beside it. Disabled, not hidden, when no halving is possible:
+  // the Composer should see that the option exists and that this Pattern is
+  // already at its simplest (AC-10.2.3).
+  button('condense-pattern', 'Condense', () => handlers.onCondense(), {
+    disabled: !canCondense(pattern),
   });
   button('export-midi', 'Export MIDI', () => handlers.onExportMidi());
   // The standing possible-duplicates view (AC-11.1.4). It is library-wide, not about the
