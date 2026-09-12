@@ -24,6 +24,7 @@ import {
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
+import { carriedPlaybackFor, playbackInEffect } from './core/playback-defaults.js';
 import { playClick, accentVoice, playPercussive } from './audio/voices.js';
 import * as patternStore from './storage/patterns.js';
 import * as settingsStore from './storage/settings.js';
@@ -257,18 +258,64 @@ async function guardShipped() {
   }
 }
 
+/**
+ * The tempo and swing a Pattern with none of its own loads at: the ones in
+ * effect on the Pattern just left (AC-4.2.3, AC-4.4.17).
+ *
+ * Applied to the loaded copy only — neither store is written on load, so a
+ * carried amount never becomes a shipped Pattern's own data nor gives it the
+ * `swing` Tag, which the library derives from the stores.
+ *
+ * The overlay is read from its store rather than taken from `pattern`, which
+ * arrives with the overlay already applied: post-overlay, a remembered 80 BPM
+ * and an authored one are the same number, and only the former outranks a carry.
+ */
+function withCarriedPlayback(pattern) {
+  const overlay = pattern.id ? overlayStore.forPattern(pattern.id) : {};
+  const carried = {
+    tempo: state.settings.lastTempo,
+    swingAmount: state.settings.lastSwingAmount,
+    swingFeel: state.settings.lastSwingFeel,
+  };
+  const applied = carriedPlaybackFor({ pattern, overlay, carried });
+
+  let next = pattern;
+  if (applied.tempo !== undefined) next = { ...next, tempo: applied.tempo };
+  // A stored value this build does not accept is skipped rather than failing
+  // the load, exactly as the overlay store treats its own (AC-4.4.6).
+  try {
+    if (applied.swingAmount !== undefined) next = setSwingAmount(next, applied.swingAmount);
+  } catch {
+    /* an amount this build does not accept */
+  }
+  try {
+    if (applied.swingFeel !== undefined) next = setSwingFeel(next, applied.swingFeel);
+  } catch {
+    /* a feel this build does not know */
+  }
+  return next;
+}
+
 export function loadPattern(pattern, { owned }) {
   // History belongs to the Pattern being edited; carrying it across a load
   // would let undo resurrect a different Pattern's content.
   history.length = 0;
-  state.pattern = pattern;
+  state.pattern = withCarriedPlayback(pattern);
+  // What the next Pattern carries is what this one is sounding at, whether the
+  // Musician chose it or it came with the Pattern (AC-4.2.3/4).
+  const inEffect = playbackInEffect(state.pattern);
+  state.settings = settingsStore.save({
+    lastTempo: inEffect.tempo,
+    lastSwingAmount: inEffect.swingAmount,
+    lastSwingFeel: inEffect.swingFeel,
+  });
   state.isOwned = owned;
   state.transportPosition = null;
   state.view = { ...state.view, currentId: pattern.id ?? null };
   // Loading while playing switches the running transport to the new Pattern,
   // from its top (AC-4.1.8) — the same restart path a tempo change takes, so a
   // stopped transport stays stopped (FR-010).
-  if (state.isPlaying) void transport.restart(pattern, state.settings);
+  if (state.isPlaying) void transport.restart(state.pattern, state.settings);
   render();
 }
 
@@ -387,6 +434,8 @@ const handlers = {
       overlayStore.setSwingAmount(state.pattern.id, amount);
       render();
     }
+    // Carried to the next Pattern that has no swing of its own (AC-4.4.17).
+    state.settings = settingsStore.save({ lastSwingAmount: amount });
     if (state.isPlaying) transport.restart(state.pattern, state.settings);
   },
 
@@ -399,6 +448,7 @@ const handlers = {
       overlayStore.setSwingFeel(state.pattern.id, feel);
       render();
     }
+    state.settings = settingsStore.save({ lastSwingFeel: feel });
     if (state.isPlaying) transport.restart(state.pattern, state.settings);
   },
 
@@ -1017,6 +1067,15 @@ export function mount(root) {
   const familyEl = document.createElement('section');
   familyEl.dataset.section = 'family';
 
+  /*
+   * Prev/Next lives in the pinned bar at the top of the main panel, beside the
+   * library toggle, rather than at the panel's foot (AC-5.5.3). Stepping to the
+   * next rhythm is the gesture a practice run repeats most, and at the foot it
+   * cost a scroll past the whole grid and every accordion first.
+   *
+   * One control, not one at each end: two bars would have to agree about their
+   * state, and the toggle is already pinned here for the same reason.
+   */
   const navEl = document.createElement('nav');
   navEl.className = 'pattern-nav';
   for (const direction of ['previous', 'next']) {
@@ -1029,8 +1088,12 @@ export function mount(root) {
     navEl.appendChild(b);
   }
 
+  const topBarEl = document.createElement('div');
+  topBarEl.className = 'main-top-bar';
+  topBarEl.append(libraryToggle, navEl);
+
   main.append(
-    libraryToggle, headerEl, gridEl, playEl, recipeEl, pitchEl, settingsEl, editEl, actionsEl, navEl, familyEl
+    topBarEl, headerEl, gridEl, playEl, recipeEl, pitchEl, settingsEl, editEl, actionsEl, familyEl
   );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);

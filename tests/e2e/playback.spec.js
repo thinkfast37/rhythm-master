@@ -201,7 +201,7 @@ test('AC-4.2.2 — changing tempo restarts playback and resets the loop counter'
   await page.waitForTimeout(1400);
   expect(await page.evaluate(() => window.__rm.getState().loop)).toBeGreaterThanOrEqual(1);
 
-  await page.locator('.preset', { hasText: '120' }).click();
+  await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
   await page.waitForTimeout(120);
 
   const after = await page.evaluate(() => ({
@@ -214,12 +214,206 @@ test('AC-4.2.2 — changing tempo restarts playback and resets the loop counter'
   expect(after.running).toBe(true);
 });
 
-test('AC-4.2.3 — the last-used tempo persists across a reload', async ({ page }) => {
+/*
+ * AC-4.2.3 / AC-4.4.17 — tempo and swing carry from the Pattern just left to a
+ * Pattern that has none of its own.
+ *
+ * These drive the real open path, because what is being proven is what the
+ * Musician hears when they step through a practice run, not what a resolver
+ * returns. `plainSeed` finds a shipped Pattern carrying the 80 BPM default and
+ * no swing — the shape 172 of the 208 shipped Patterns have — and `authoredSeed`
+ * one shipped with a tempo of its own.
+ */
+const openSeed = async (page, which) =>
+  page.evaluate((w) => {
+    const seeds = window.__rm.seedStore.loadAll();
+    const plain = seeds.filter((p) => p.tempo === 80 && (p.swingAmount ?? 0) === 0);
+    const target =
+      w === 'authored'
+        ? seeds.find((p) => p.tempo !== 80)
+        : w === 'second'
+          ? plain[1]
+          : plain[0];
+    window.__rm.handlers.onOpen(target.id, false);
+    return { id: target.id, name: target.name, tempo: window.__rm.getState().pattern.tempo };
+  }, which);
+
+const effective = (page) =>
+  page.evaluate(() => ({
+    tempo: window.__rm.getState().pattern.tempo,
+    swingAmount: window.__rm.getState().pattern.swingAmount ?? 0,
+    swingFeel: window.__rm.getState().pattern.swingFeel ?? 'eighth',
+  }));
+
+test('AC-4.2.3/1 — A Pattern with no tempo of its own loads at the tempo in effect on the Pattern just left', async ({
+  page,
+}) => {
   await page.goto('/');
-  await page.locator('.preset', { hasText: '150' }).click();
+  await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
+
+  await openSeed(page, 'plain');
+  expect((await effective(page)).tempo).toBe(150);
+});
+
+test('AC-4.2.3/2 — A tempo the Musician has set on a Pattern outranks the carried tempo', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const first = await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
+
+  await openSeed(page, 'second');
+  await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
+
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
+  expect((await effective(page)).tempo).toBe(120);
+});
+
+test('AC-4.2.3/3 — An authored tempo differing from the 80 BPM default outranks the carried tempo', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
+
+  const authored = await openSeed(page, 'authored');
+  expect(authored.tempo).not.toBe(150);
+  expect(authored.tempo).not.toBe(80);
+});
+
+test('AC-4.2.3/4 — The tempo carries even when the Musician never touched the tempo control on the Pattern just left', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const authored = await openSeed(page, 'authored');
+
+  await openSeed(page, 'plain');
+  expect((await effective(page)).tempo).toBe(authored.tempo);
+});
+
+test('AC-4.2.3/5 — The carried tempo survives a reload, and is 80 BPM before any Pattern has been opened', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const fresh = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('rm.settings.v1')).lastTempo
+  );
+  expect(fresh).toBe(80);
+
+  await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
   await page.reload();
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).lastTempo);
+  const stored = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('rm.settings.v1')).lastTempo
+  );
   expect(stored).toBe(150);
+
+  await openSeed(page, 'plain');
+  expect((await effective(page)).tempo).toBe(150);
+});
+
+test('AC-4.4.17/1 — A Pattern with no swing of its own loads at the swing amount in effect on the Pattern just left', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+
+  await openSeed(page, 'second');
+  expect((await effective(page)).swingAmount).toBe(33);
+});
+
+test('AC-4.4.17/2 — The swing feel carries the same way', async ({ page }) => {
+  await page.goto('/');
+  await openSeed(page, 'plain');
+  await page.locator('select.swing-feel').selectOption('sixteenth');
+
+  await openSeed(page, 'second');
+  expect((await effective(page)).swingFeel).toBe('sixteenth');
+});
+
+test("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per-group — outranks the carried values", async ({
+  page,
+}) => {
+  await page.goto('/');
+  const first = await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-swing"][data-amount="15"]').click();
+
+  await openSeed(page, 'second');
+  await page.locator('[data-action="preset-swing"][data-amount="50"]').click();
+
+  // Remembered: the amount set on the first Pattern comes back, not the 50.
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
+  expect((await effective(page)).swingAmount).toBe(15);
+
+  // Per-group data: a Pattern carrying its own group override is not flattened
+  // by a carried Pattern-wide amount (AC-4.4.2, AC-4.4.13).
+  const grouped = await page.evaluate(() => {
+    window.__rm.loadPattern(
+      {
+        id: 'p_grouped',
+        name: 'Grouped Swing',
+        soundMode: 'percussive',
+        tempo: 80,
+        tags: [],
+        rating: 0,
+        measures: [
+          {
+            timeSignature: '4/4',
+            beats: Array.from({ length: 4 }, () => ({
+              recipe: 'straight-8ths',
+              slots: [{ on: true }, { on: false }],
+              swing: { 0: 40 },
+            })),
+          },
+        ],
+      },
+      { owned: false }
+    );
+    const p = window.__rm.getState().pattern;
+    return { groupSwing: p.measures[0].beats[0].swing?.[0], wide: p.swingAmount ?? 0 };
+  });
+  expect(grouped.groupSwing).toBe(40);
+  expect(grouped.wide).toBe(0);
+});
+
+test('AC-4.4.17/4 — The carried swing survives a reload, and is 0 on the 8ths feel before any Pattern has been opened', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const fresh = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')));
+  expect(fresh.lastSwingAmount).toBe(0);
+  expect(fresh.lastSwingFeel).toBe('eighth');
+
+  await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+  await page.reload();
+
+  await openSeed(page, 'second');
+  expect((await effective(page)).swingAmount).toBe(33);
+});
+
+test('AC-4.4.17/5 — A carried amount does not give a shipped Pattern the `swing` Tag in the library', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+
+  const second = await openSeed(page, 'second');
+  expect((await effective(page)).swingAmount).toBe(33);
+
+  const tags = await page.evaluate(() =>
+    [...document.querySelectorAll('.header-tags .tag-chip')].map((c) => c.textContent)
+  );
+  expect(tags).not.toContain('swing');
+
+  // And the library row agrees: the Tag derives from the stores, not the
+  // loaded copy, so a carried amount cannot make it filterable (AC-4.4.6).
+  if ((await page.locator('.shell').getAttribute('data-library')) !== 'open') {
+    await page.locator('.library-toggle').click();
+  }
+  await page.locator('.library-search').fill(second.name);
+  const rowTags = await page.locator('.pattern-item.current .tag-chip').allTextContents();
+  expect(rowTags).not.toContain('swing');
 });
 
 test('AC-4.3.1 — the metronome and count-in are off by default and toggleable', async ({ page }) => {

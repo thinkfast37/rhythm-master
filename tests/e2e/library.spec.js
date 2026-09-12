@@ -464,3 +464,64 @@ test('AC-6.1.7/4 — On a 390px viewport with the drawer closed, a built-in Patt
   await page.reload();
   await expect(page.locator('.pattern-header .rating')).toHaveAttribute('data-rating', '5');
 });
+
+/*
+ * AC-5.5.3 — the navigation bar is pinned to the top of the main panel, so
+ * stepping to the next rhythm never costs a scroll past the grid first.
+ */
+async function scrollMainToFoot(page) {
+  const scrolled = await page.locator('.main-panel').evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+    return el.scrollTop;
+  });
+  // Let the sticky bar settle at its pinned offset before it is measured.
+  await page.waitForTimeout(150);
+  return scrolled;
+}
+
+async function navIsOnScreen(page) {
+  return page.locator('[data-action="next-pattern"]').evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    return box.top >= 0 && box.bottom <= window.innerHeight && box.width > 0 && box.height > 0;
+  });
+}
+
+test('AC-5.5.3/1 — Prev/Next are on screen with the main panel scrolled to its foot', async ({
+  page,
+}) => {
+  // Short enough that the panel genuinely scrolls whatever Pattern is loaded.
+  await page.setViewportSize({ width: 1000, height: 500 });
+  await page.goto('/');
+  await page.locator('.pattern-item').nth(2).locator('.pattern-name').click();
+
+  expect(await scrollMainToFoot(page)).toBeGreaterThan(0);
+  expect(await navIsOnScreen(page)).toBe(true);
+  await expect(page.locator('[data-action="prev-pattern"]')).toBeVisible();
+
+  // And it still works from there: no scroll needed to use it.
+  const before = await page.evaluate(() => window.__rm.getState().pattern.name);
+  await page.locator('[data-action="next-pattern"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.name)).not.toBe(before);
+});
+
+test('AC-5.5.3/2 — The panel holds exactly one Prev/Next control', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.main-panel [data-action="next-pattern"]')).toHaveCount(1);
+  await expect(page.locator('.main-panel [data-action="prev-pattern"]')).toHaveCount(1);
+  await expect(page.locator('.main-panel .pattern-nav')).toHaveCount(1);
+  // In the pinned bar, not at the foot of the panel.
+  await expect(page.locator('.main-top-bar .pattern-nav')).toHaveCount(1);
+});
+
+test('AC-5.5.3/3 — Prev/Next stay reachable without scrolling at mobile width', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 640 });
+  await page.goto('/');
+  // The library opens at every width (AC-15.1.5); opening a Pattern collapses it.
+  await page.locator('.pattern-item').nth(2).locator('.pattern-name').click();
+  // Mobile collapses the panel's sections into accordions, so open one to give
+  // the panel something to scroll (AC-15.1.7).
+  await page.locator('[data-section="playback-settings"] > summary').click();
+
+  expect(await scrollMainToFoot(page)).toBeGreaterThan(0);
+  expect(await navIsOnScreen(page)).toBe(true);
+});
