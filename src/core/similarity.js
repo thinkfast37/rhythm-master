@@ -67,7 +67,7 @@ export function pitchFingerprint(pattern) {
   if (pattern.soundMode !== 'melodic') return null;
   const h = pattern.harmony;
   const harmony = h?.chords?.length
-    ? `harmony=${h.change}:${h.chords.map((c) => `${c.degree}${c.quality}`).join(',')}`
+    ? `harmony=${h.change}:${h.arpeggio ?? '-'}:${h.chords.map((c) => `${c.degree}${c.quality}`).join(',')}`
     : 'harmony=-';
   const pitchToken = (p) =>
     p.tone !== undefined ? `T${p.tone}@${p.octaveOffset ?? 0}` : `${p.degree}@${p.octaveOffset ?? 0}`;

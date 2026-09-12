@@ -17,7 +17,7 @@ import {
   setSwingAmount,
   setSwingFeel,
 } from '../../../src/core/pattern.js';
-import { setProgression, setChordQuality, setChange } from '../../../src/core/harmony.js';
+import { setProgression, setChordQuality, setChange, setArpeggio } from '../../../src/core/harmony.js';
 
 const withNote = (p, b = 0, s = 0) => cycleAccent(p, 0, b, s);
 
@@ -243,11 +243,13 @@ describe('core/similarity', () => {
     return p;
   }
 
-  it("AC-2.6.9/1 — Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, or in the change setting are not duplicates", () => {
+  it("AC-2.6.9/1 — Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, in the change setting, or in the arpeggio are not duplicates", () => {
     const a = harmonic('a');
     expect(isDuplicate(a, setProgression(harmonic('b'), 'I-V-vi-IV'))).toBe(false);
     expect(isDuplicate(a, setChordQuality(harmonic('c'), 0, 'maj7'))).toBe(false);
     expect(isDuplicate(a, setChange(harmonic('d'), 'measure'))).toBe(false);
+    expect(isDuplicate(a, setArpeggio(harmonic('f'), 'up'))).toBe(false);
+    expect(isDuplicate(setArpeggio(harmonic('g'), 'up'), setArpeggio(harmonic('h'), 'down'))).toBe(false);
     // A role against a degree is a different Pitch too.
     const fixed = harmonic('e');
     fixed.measures[0].beats[0].slots[0].pitch = { degree: '3', octaveOffset: 0 };

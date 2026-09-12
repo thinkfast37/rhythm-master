@@ -208,49 +208,88 @@ test('AC-2.6.5/6 — Turning a Slot on while a role is armed gives it that role'
   await expect(slotAt(page, 2, 0).locator('.slot-note-name')).toHaveText('G4');
 });
 
-test('AC-2.6.5/7 — While a Pattern has a progression but no Slot holds a role, the harmony section says so and points at the role chips and Fill', async ({ page }) => {
+test('AC-2.6.5/7 — While a Pattern has a progression, no arpeggio, and no Slot holds a role, the harmony section says so and points at the arpeggio setting and the role chips', async ({ page }) => {
   await melodicBlank(page);
   await expect(page.locator('.harmony-hint')).toHaveCount(0);
   await page.locator('.progression-picker').selectOption('I-IV-V');
   // Nothing sounds yet, so nothing holds a role: the hint is up.
   const hint = page.locator('.harmony-hint');
   await expect(hint).toBeVisible();
-  await expect(hint).toContainText('Fill');
+  await expect(hint).toContainText('Arpeggio');
   await expect(hint).toContainText('chord tone');
   // The armed pitch was re-read as the Root, so the first Slot turned on holds a role.
   await accentZone(page, 0, 0).click();
   expect((await slotState(page, 0, 0)).pitch).toEqual({ tone: 1, octaveOffset: 0 });
   await expect(page.locator('.harmony-hint')).toHaveCount(0);
-  // A fixed degree stamped over it brings the hint back.
+  // A fixed degree stamped over it brings the hint back …
   await page.locator('.degree[data-degree="2"]').click();
   await noteBand(page, 0, 0).click();
   await expect(page.locator('.harmony-hint')).toBeVisible();
+  // … and an arpeggio settles it.
+  await page.locator('.arpeggio-picker').selectOption('up');
+  await expect(page.locator('.harmony-hint')).toHaveCount(0);
 });
 
-// --- AC-2.6.6 — Fill deals chord tones across the sounding Slots ---
+// --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-test('AC-2.6.6/1 — The orders offered are Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth', async ({ page }) => {
-  await harmonicBlank(page);
-  expect(await page.locator('.fill-order option').allTextContents()).toEqual([
-    'Ascending', 'Descending', 'Up and down', 'Alberti', 'Root only', 'Root and fifth',
+test('AC-2.6.6/1 — The arpeggio setting offers None, Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth, and is saved with the Pattern', async ({ page }) => {
+  await harmonicBlank(page); // owned Pattern p_test
+  expect(await page.locator('.arpeggio-picker option').allTextContents()).toEqual([
+    'None (as stamped)', 'Ascending', 'Descending', 'Up and down', 'Alberti', 'Root only', 'Root and fifth',
   ]);
-  // Fill deals over the sounding Slots in the chosen order.
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
   for (const s of [0, 1, 2, 3]) await accentZone(page, 0, s).click();
-  await page.locator('.fill-order').selectOption('alberti');
-  await page.locator('.fill-chord-tones').click();
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  expect(await page.locator('.measure[data-measure="0"] .beat[data-beat="0"] .slot-degree').allTextContents()).toEqual(['R', '5', '3', '5']);
+  expect((await pattern(page)).harmony.arpeggio).toBe('alberti');
+
+  await page.evaluate(() => window.__rm.loadBlank('3/4', 'Elsewhere'));
+  await page.evaluate(() => window.__rm.handlers.onOpen('p_test', true));
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('alberti');
   expect(await page.locator('.measure[data-measure="0"] .beat[data-beat="0"] .slot-degree').allTextContents()).toEqual(['R', '5', '3', '5']);
 });
 
-test('AC-2.6.6/7 — Fill on a shipped Pattern goes through the naming prompt', async ({ page }) => {
+test('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio', async ({ page }) => {
+  await harmonicBlank(page);
+  await accentZone(page, 0, 0).click(); // Root, from the re-read armed pitch
+  await page.locator('.tone[data-tone="5"]').click();
+  await accentZone(page, 1, 0).click(); // 5th
+  await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('5');
+
+  await page.locator('.arpeggio-picker').selectOption('up');
+  // Dealt: Root then 3rd, whatever was stamped.
+  await expect(slotAt(page, 0, 0).locator('.slot-degree')).toHaveText('R');
+  await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('3');
+  await expect(slotAt(page, 1, 0).locator('.slot-pitch')).toHaveAttribute('data-dealt', 'true');
+  // The stored Pitch is untouched underneath.
+  expect((await slotState(page, 1, 0)).pitch).toEqual({ tone: 5, octaveOffset: 0 });
+  // The chips stand down, the bands are inert, and the strip says why.
+  await expect(page.locator('.pitch-strip .degree')).toHaveCount(0);
+  await expect(page.locator('.pitch-strip .tone')).toHaveCount(0);
+  await expect(page.locator('.pitch-strip-note')).toContainText('Ascending');
+  await expect(noteBand(page, 1, 0)).toBeDisabled();
+  await expect(page.locator('.key-picker')).toBeVisible();
+
+  await page.locator('.arpeggio-picker').selectOption('none');
+  await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('5');
+  await expect(slotAt(page, 1, 0).locator('.slot-pitch')).not.toHaveAttribute('data-dealt');
+  await expect(page.locator('.pitch-strip .degree')).toHaveCount(12);
+  await expect(page.locator('.pitch-strip .tone')).toHaveCount(5);
+  await expect(page.locator('.pitch-strip-note')).toHaveCount(0);
+  await expect(noteBand(page, 1, 0)).toBeEnabled();
+});
+
+test('AC-2.6.6/8 — Changing the arpeggio on a shipped Pattern goes through the naming prompt', async ({ page }) => {
   await harmonicBlank(page);
   await accentZone(page, 0, 0).click();
   await loadAsShipped(page);
-  await page.locator('.fill-chord-tones').click();
+  await page.locator('.arpeggio-picker').selectOption('up');
   await expect(page.locator('.dialog-input')).toBeVisible();
   await page.locator('.dialog-button:not(.primary)', { hasText: 'Cancel' }).click();
-  // Cancelled: the Slot keeps the Root it had (the re-read armed pitch), and nothing is owned.
-  expect((await slotState(page, 0, 0)).pitch).toEqual({ tone: 1, octaveOffset: 0 });
+  // Cancelled: no arpeggio, nothing owned, and the picker reads None again.
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
 });
 
 // --- AC-2.6.7 — The progression is visible while playing ---
@@ -353,12 +392,28 @@ test('AC-2.6.7/6 — The chord strip is absent on a Pattern with no progression,
   await expect(page.locator('.harmony')).toBeHidden();
 });
 
+test("AC-2.6.7/7 — With an arpeggio set, each sounding Slot's note band shows the role dealt to it and the note it sounds under the chord in force", async ({ page }) => {
+  await harmonicBlank(page);
+  await page.evaluate(() => window.__rm.handlers.onAddMeasure());
+  for (const s of [0, 1, 2]) await accentZone(page, 0, s).click();
+  await accentZone(page, 0, 0, 1).click();
+  await page.locator('.arpeggio-picker').selectOption('up');
+  // C E G | C — continuous through the pass, under the I at rest.
+  expect(await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents()).toEqual(['C4', 'E4', 'G4']);
+  expect(await page.locator('.measure[data-measure="1"] .slot-note-name').allTextContents()).toEqual(['C4']);
+  // Under "every Measure", Measure 2 is the IV: the same dealt Root reads F4.
+  await page.locator('.chord-change[data-change="measure"]').click();
+  expect(await page.locator('.measure[data-measure="1"] .slot-note-name').allTextContents()).toEqual(['F4']);
+  expect(await page.locator('.measure[data-measure="1"] .slot-degree').allTextContents()).toEqual(['R']);
+});
+
 // --- AC-2.6.8 — The progression is saved with the Pattern ---
 
-test('AC-2.6.8/1 — A progression, its chord edits and the change setting survive closing and reopening the Pattern', async ({ page }) => {
+test('AC-2.6.8/1 — A progression, its chord edits, the change setting and the arpeggio survive closing and reopening the Pattern', async ({ page }) => {
   await harmonicBlank(page); // owned Pattern p_test
   await page.locator('.chord-editor[data-chord="2"] .chord-quality').selectOption('7');
   await page.locator('.chord-change[data-change="measure"]').click();
+  await page.locator('.arpeggio-picker').selectOption('up-down');
   const saved = (await pattern(page)).harmony;
 
   await page.evaluate(() => window.__rm.loadBlank('3/4', 'Elsewhere'));
@@ -367,6 +422,7 @@ test('AC-2.6.8/1 — A progression, its chord edits and the change setting survi
   expect((await pattern(page)).harmony).toEqual(saved);
   expect(saved).toEqual({
     change: 'measure',
+    arpeggio: 'up-down',
     chords: [
       { degree: '1', quality: 'maj' },
       { degree: '4', quality: 'maj' },
@@ -375,6 +431,7 @@ test('AC-2.6.8/1 — A progression, its chord edits and the change setting survi
   });
   expect(await chordNames(page)).toEqual(['C', 'F', 'G7']);
   await expect(page.locator('.chord-change[data-change="measure"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('up-down');
   await expect(page.locator('.progression-picker')).toHaveValue('custom');
 });
 

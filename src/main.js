@@ -33,7 +33,7 @@ import {
   setChordDegree,
   addChord,
   removeChord,
-  fillChordTones,
+  setArpeggio,
   degreeAsTone,
 } from './core/harmony.js';
 import { carriedPlaybackFor, playbackInEffect } from './core/playback-defaults.js';
@@ -105,8 +105,6 @@ const state = {
    * switch, and a reload starts it back at the root (AC-2.2.2).
    */
   armedPitch: { degree: '1', octaveOffset: 0 },
-  /** The arpeggio order the Fill control last held (US-2.6). Session state, like the armed pitch. */
-  fillOrder: 'up',
   /**
    * The Recipe strip's armed value, painted onto a Beat by tapping it (AC-1.3.11).
    *
@@ -575,15 +573,10 @@ const handlers = {
     apply(removeChord, index);
   },
 
-  onFillOrder(order) {
-    state.fillOrder = order;
-  },
-
-  /** Deal chord tones across every sounding Slot at the armed octave (AC-2.6.6). */
-  async onFill(order = state.fillOrder) {
-    state.fillOrder = order;
+  /** Which arpeggio the notes follow, or None to sound the stamped Pitches (AC-2.6.6). */
+  async onArpeggio(id) {
     if (!(await guardShipped())) return;
-    apply(fillChordTones, order, state.armedPitch.octaveOffset ?? 0);
+    apply(setArpeggio, id);
   },
 
   onArmOctave(octaveOffset) {

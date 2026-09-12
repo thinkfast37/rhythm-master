@@ -10,7 +10,10 @@ import {
   setChordDegree,
   addChord,
   removeChord,
-  fillChordTones,
+  setArpeggio,
+  arpeggioDeal,
+  soundingPitch,
+  dealKey,
   chordAt,
   cyclePasses,
   chordName,
@@ -91,6 +94,17 @@ describe('core/harmony', () => {
       { degree: '3', octaveOffset: 1 },
     ]);
     expect(buildTimeline(cleared, 0).map((e) => e.pitch.midiNote)).toEqual(before);
+
+    // Under an arpeggio what sounded was the deal, so that is what bakes.
+    const arp = setArpeggio(p, 'up'); // Dm9: Root, 3rd, 5th, dealt over three Slots
+    const heard = buildTimeline(arp, 0).map((e) => e.pitch.midiNote);
+    const baked = clearHarmony(arp);
+    expect(pitches(baked)).toEqual([
+      { degree: '2', octaveOffset: 0 },
+      { degree: '4', octaveOffset: 0 },
+      { degree: '6', octaveOffset: 0 },
+    ]);
+    expect(buildTimeline(baked, 0).map((e) => e.pitch.midiNote)).toEqual(heard);
   });
 
   it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: tonics become Roots', () => {
@@ -268,58 +282,100 @@ describe('core/harmony', () => {
     }
   });
 
-  // --- AC-2.6.6 — Fill deals chord tones across the sounding Slots ---
+  // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-  /** Slot (b, s) of each of two Measures on: Measure 1 Beats 1–2, Measure 2 Beats 1–2. */
-  function twoMeasures(p) {
-    for (const m of [0, 1]) for (const b of [0, 1]) p = cycleAccent(p, m, b, 0);
-    return p;
-  }
+  /** The roles every sounding Slot sounds, in time order. */
+  const dealt = (p) => {
+    const deal = arpeggioDeal(p);
+    const out = [];
+    p.measures.forEach((m, mi) =>
+      m.beats.forEach((b, bi) =>
+        b.slots.forEach((s, si) => {
+          if (s.on) out.push(soundingPitch(s, deal, mi, bi, si).tone);
+        })
+      )
+    );
+    return out;
+  };
 
-  it('AC-2.6.6/2 — The deal restarts at every Measure, so each Measure opens on the Root', () => {
-    const p = fillChordTones(twoMeasures(setProgression(melodic({ measures: 2 }), 'ii-V-I')), 'up');
-    expect(pitches(p).map((x) => x.tone)).toEqual([1, 3, 1, 3]);
+  it('AC-2.6.6/2 — The deal runs continuously through the pass over every sounding Slot and restarts at the top of each pass: four Slots a Measure under Ascending triads sound Root 3rd 5th Root, then 3rd 5th Root 3rd', () => {
+    let p = setProgression(melodic({ measures: 2 }), 'I-IV-V');
+    for (const m of [0, 1]) for (const b of [0, 1, 2, 3]) p = cycleAccent(p, m, b, 0);
+    p = setArpeggio(p, 'up');
+    expect(dealt(p)).toEqual([1, 3, 5, 1, 3, 5, 1, 3]);
+    // Every pass deals the same line: pass 2 starts on the Root again, under the IV.
+    const notes = (pass) => buildTimeline(p, pass).map((e) => e.pitch.midiNote);
+    expect(notes(0)).toEqual([60, 64, 67, 60, 64, 67, 60, 64]);
+    expect(notes(1)).toEqual([65, 69, 72, 65, 69, 72, 65, 69]);
   });
 
   it('AC-2.6.6/3 — Ascending deals the roles in order and repeats: over four roles, five sounding Slots take Root, 3rd, 5th, 7th, Root', () => {
     let p = setProgression(melodic(), 'ii-V-I');
     for (let s = 0; s < 4; s++) p = cycleAccent(p, 0, 0, s);
     p = cycleAccent(p, 0, 1, 0);
-    expect(pitches(fillChordTones(p, 'up')).map((x) => x.tone)).toEqual([1, 3, 5, 7, 1]);
+    expect(dealt(setArpeggio(p, 'up'))).toEqual([1, 3, 5, 7, 1]);
   });
 
   it('AC-2.6.6/4 — Alberti deals Root, 5th, 3rd, 5th; Descending deals from the highest role down; Up and down rises then falls without repeating the turn', () => {
     let p = setProgression(melodic(), 'ii-V-I');
     for (let b = 0; b < 4; b++) for (let s = 0; s < 2; s++) p = cycleAccent(p, 0, b, s);
-    const dealt = (order) => pitches(fillChordTones(p, order)).map((x) => x.tone);
-    expect(dealt('alberti')).toEqual([1, 5, 3, 5, 1, 5, 3, 5]);
-    expect(dealt('down')).toEqual([7, 5, 3, 1, 7, 5, 3, 1]);
-    expect(dealt('up-down')).toEqual([1, 3, 5, 7, 5, 3, 1, 3]);
-    expect(dealt('root')).toEqual([1, 1, 1, 1, 1, 1, 1, 1]);
-    expect(dealt('root-fifth')).toEqual([1, 5, 1, 5, 1, 5, 1, 5]);
+    const under = (order) => dealt(setArpeggio(p, order));
+    expect(under('alberti')).toEqual([1, 5, 3, 5, 1, 5, 3, 5]);
+    expect(under('down')).toEqual([7, 5, 3, 1, 7, 5, 3, 1]);
+    expect(under('up-down')).toEqual([1, 3, 5, 7, 5, 3, 1, 3]);
+    expect(under('root')).toEqual([1, 1, 1, 1, 1, 1, 1, 1]);
+    expect(under('root-fifth')).toEqual([1, 5, 1, 5, 1, 5, 1, 5]);
+    // Up and down over a triad: c e g e c e g e.
+    let t = setProgression(melodic(), 'I-IV-V');
+    for (let b = 0; b < 4; b++) for (let s = 0; s < 2; s++) t = cycleAccent(t, 0, b, s);
+    expect(buildTimeline(setArpeggio(t, 'up-down'), 0).map((e) => e.pitch.midiNote)).toEqual([60, 64, 67, 64, 60, 64, 67, 64]);
+    expect(() => setArpeggio(p, 'sideways')).toThrow(/Unknown arpeggio/);
   });
 
   it("AC-2.6.6/5 — The roles dealt are the members of the progression's fullest chord, so a progression of triads deals Root, 3rd and 5th only", () => {
     let p = setProgression(melodic(), 'I-IV-V');
     for (let s = 0; s < 4; s++) p = cycleAccent(p, 0, 0, s);
-    expect(pitches(fillChordTones(p, 'up')).map((x) => x.tone)).toEqual([1, 3, 5, 1]);
+    expect(dealt(setArpeggio(p, 'up'))).toEqual([1, 3, 5, 1]);
     // One seventh chord in the progression brings the 7th into the deal.
-    expect(pitches(fillChordTones(setChordQuality(p, 2, '7'), 'up')).map((x) => x.tone)).toEqual([1, 3, 5, 7]);
+    expect(dealt(setArpeggio(setChordQuality(p, 2, '7'), 'up'))).toEqual([1, 3, 5, 7]);
   });
 
-  it('AC-2.6.6/6 — Fill replaces the Pitch of every sounding Slot at the armed octave and nothing else: no Slot turns on or off and no Accent Level changes', () => {
+  it('AC-2.6.6/6 — The deal follows the rhythm: a Slot turned on or off re-deals the line, and no stored Pitch, Slot or Accent Level changes — each Slot keeps its own octave', () => {
     let p = setProgression(melodic(), 'I-IV-V');
-    p = cycleAccent(p, 0, 0, 0);
-    p = cycleAccent(p, 0, 0, 0); // a second tap: an explicit override
-    p = note(p, 0, 2, 1, { degree: '5', octaveOffset: 0 });
-    const before = p.measures[0].beats.map((b) => b.slots.map(({ on, accent }) => ({ on, accent })));
+    p = note(p, 0, 0, 0, { degree: '5', octaveOffset: 0 }); // a fixed note, kept underneath
+    p = note(p, 0, 1, 0, { tone: 1, octaveOffset: 1 }); // a role an octave up
+    p = cycleAccent(p, 0, 1, 0); // a second tap: an explicit override
+    const stored = structuredClone(p.measures);
 
-    const filled = fillChordTones(p, 'up', 1);
-    expect(filled.measures[0].beats.map((b) => b.slots.map(({ on, accent }) => ({ on, accent })))).toEqual(before);
-    expect(pitches(filled)).toEqual([
-      { tone: 1, octaveOffset: 1 },
-      { tone: 3, octaveOffset: 1 },
-    ]);
-    expect(p.measures[0].beats[2].slots[1].pitch).toEqual({ degree: '5', octaveOffset: 0 }); // the input is untouched
+    const arp = setArpeggio(p, 'up');
+    expect(dealt(arp)).toEqual([1, 3]);
+    expect(arp.measures).toEqual(stored); // nothing stored changed
+    // The dealt role sounds at the Slot's own octave: the 3rd of C an octave up is E5.
+    expect(buildTimeline(arp, 0).map((e) => e.pitch.midiNote)).toEqual([60, 76]);
+
+    // Turning another Slot on re-deals the line from the top.
+    const more = cycleAccent(arp, 0, 0, 1);
+    expect(dealt(more)).toEqual([1, 3, 5]);
+    // Turning the first off re-deals it too.
+    let fewer = arp;
+    for (let i = 0; i < 3; i++) fewer = cycleAccent(fewer, 0, 0, 0);
+    expect(fewer.measures[0].beats[0].slots[0].on).toBe(false);
+    expect(dealt(fewer)).toEqual([1]);
+    expect(dealKey(0, 1, 0)).toBe('0:1:0');
+  });
+
+  it('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio: the Pitches come back', () => {
+    let p = setProgression(melodic(), 'I-IV-V');
+    p = note(p, 0, 0, 0, { degree: '5', octaveOffset: 0 });
+    p = note(p, 0, 1, 0, { tone: 3, octaveOffset: 0 });
+    const before = buildTimeline(p, 0).map((e) => e.pitch.midiNote);
+    const arp = setArpeggio(p, 'up'); // deals Root, 3rd over the two Slots: C4, E4 — not G4, E4
+    expect(arp.harmony.arpeggio).toBe('up');
+    expect(buildTimeline(arp, 0).map((e) => e.pitch.midiNote)).not.toEqual(before);
+    const back = setArpeggio(arp, 'none');
+    expect('arpeggio' in back.harmony).toBe(false);
+    expect(arpeggioDeal(back)).toBeNull();
+    expect(buildTimeline(back, 0).map((e) => e.pitch.midiNote)).toEqual(before);
+    expect(back.measures).toEqual(p.measures);
   });
 });
