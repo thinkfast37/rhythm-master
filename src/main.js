@@ -23,6 +23,7 @@ import {
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
+import { canCondense, condense } from './core/condense.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
 import {
   hasHarmony,
@@ -1074,6 +1075,13 @@ const handlers = {
     } catch (err) {
       await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
     }
+  },
+
+  /** Condense to the fewest Measures that hold the same events (US-10.2). Lands as Double Length does. */
+  async onCondense() {
+    if (!canCondense(state.pattern)) return;
+    if (!(await guardShipped())) return;
+    apply(condense);
   },
 
   onExportMidi() {

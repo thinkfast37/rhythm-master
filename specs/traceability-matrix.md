@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 532 across 40 User Stories
+**Criteria**: 545 across 41 User Stories
 
-**Coverage**: 338 of 532 criteria proven (63.5%)
+**Coverage**: 351 of 545 criteria proven (64.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 338 | 63.5% |
-| 🔴 Gap — HIGH | 73 | 13.7% |
-| 🟠 Gap — MEDIUM | 43 | 8.1% |
-| 🟡 Gap — LOW | 78 | 14.7% |
+| 🟢 Proven | 351 | 64.4% |
+| 🔴 Gap — HIGH | 73 | 13.4% |
+| 🟠 Gap — MEDIUM | 43 | 7.9% |
+| 🟡 Gap — LOW | 78 | 14.3% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -98,6 +98,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.6 | 59 | **59** | · | · | · | · | · |
 | 🟢 US-12.2 | 45 | **45** | · | · | · | · | · |
 | 🟢 US-2.7 | 14 | **14** | · | · | · | · | · |
+| 🟢 US-10.2 | 13 | **13** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -635,3 +636,16 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.7 | `AC-2.7.2/7` 🖵 | Choosing a fill in the picker while cycling is the ordinary edit of the Pattern's arpeggio, and the cycle begins again from that fill with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches, which turns cycle mode off | P-043 | T263 (1/1 done) | T264 (1/1 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.7 | `AC-2.7.3/1` 🖵 | While cycle mode is on the score's head carries a Fill line naming the fill in force, and the notes are that fill's; Print / PDF prints the same score | P-043 | T263 (1/1 done) | T264 (1/1 done) | `score.test.js`, `harmony.spec.js` | 🟢 OK |
 | US-2.7 | `AC-2.7.3/2` 🖵 | MIDI export carries the Pattern's own arpeggio, never the fill in force: the file is the Pattern's data, and cycling is practice | P-043 | T263 (1/1 done) | T264 (1/1 done) | `export.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.1/1` | Two 4/4 Measures of Straight 8ths become one 4/4 Measure of Straight 16ths: new Beat 1 holds old Beat 1 then old Beat 2, new Beat 2 holds old Beats 3 and 4, and so on through the eighth old Beat | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.1/2` | A quarter-note Straight 16ths Beat whose second and fourth Slots are off is halvable, and contributes its first and third Slots | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.1/3` | On an eighth-note Beat, Undivided Beats pack in pairs into Straight 16ths, and a Straight 16ths Beat whose second Slot is off counts as Undivided | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.1/4` | Every Slot's on state, its stored Accent override and its Pitch travel with it to its new position; Accent defaults are computed for the new positions, as always | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.1/5` | Per-Group swing overrides are dropped; the Pattern's name, id, tempo, Sound Mode, Key, scale, Pattern-wide swing amount and feel, harmony, Tags and rating are unchanged | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.2` | Condense halves as far as it can in one press | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.3/1` 🖵 | Enabled for two 4/4 Measures of Straight 8ths | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js`, `operations.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.3/2` 🖵 | Disabled for an odd number of Measures, a single Measure included | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js`, `operations.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.3/3` 🖵 | Disabled when any Beat carries a triplet or split Recipe | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js`, `operations.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.3/4` 🖵 | Disabled when any quarter-note Straight 16ths Beat has its second or fourth Slot on, or any eighth-note Straight 16ths Beat its second | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js`, `operations.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.3/5` 🖵 | Disabled when the two Measures of any pair differ in Time Signature | P-044 | T266 (1/1 done) | T267 (1/1 done) | `condense.test.js`, `operations.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.4` 🖵 | Condense on an owned Pattern auto-saves | P-044 | T266 (1/1 done) | T267 (1/1 done) | `operations.spec.js` | 🟢 OK |
+| US-10.2 | `AC-10.2.5` 🖵 | Condense on a shipped Pattern triggers the naming prompt first | P-044 | T266 (1/1 done) | T267 (1/1 done) | `operations.spec.js` | 🟢 OK |

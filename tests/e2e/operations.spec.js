@@ -238,3 +238,127 @@ test('AC-11.3.1 — a Pattern the library has since duplicated prompts once, the
   const stored = await page.evaluate(() => window.__rm.patternStore.findById('p_dupe'));
   expect(stored).not.toHaveProperty('duplicateResolved');
 });
+
+// --- US-10.2 Condense ---------------------------------------------------------
+
+/**
+ * Load a Pattern of the given Measures — each `[timeSignature, beats]`, a Beat being
+ * `[recipe, onFlags]` — as owned or shipped. Built in the page so the shape is exact
+ * rather than reached through a long sequence of clicks.
+ */
+async function loadShaped(page, measures, { owned = true } = {}) {
+  await page.evaluate(
+    ({ measures, owned }) => {
+      const p = window.__rm.loadBlank('4/4', owned ? 'Shaped' : 'Shipped Shape');
+      p.measures = measures.map(([timeSignature, beats]) => ({
+        timeSignature,
+        beats: beats.map(([recipe, flags]) => ({ recipe, slots: flags.map((on) => ({ on })) })),
+      }));
+      window.__rm.loadPattern({ ...p, id: owned ? 'p_test' : 'p_shipped_shape' }, { owned });
+    },
+    { measures, owned }
+  );
+}
+
+const Q = ['straight-8ths', [true, false]]; // a quarter note, as the library writes one
+const fourQ = ['4/4', [Q, Q, Q, Q]];
+
+test('AC-10.2.3/1 — Enabled for two 4/4 Measures of Straight 8ths', async ({ page }) => {
+  await page.goto('/');
+  await loadShaped(page, [fourQ, fourQ]);
+  const condense = page.locator('[data-action="condense-pattern"]');
+  await expect(condense).toBeEnabled();
+  // Beside Double Length (AC-10.2.3's When).
+  const actions = await page.locator('.control-group.actions button').evaluateAll((b) => b.map((x) => x.dataset.action));
+  expect(actions.indexOf('condense-pattern')).toBe(actions.indexOf('duplicate-pattern') + 1);
+});
+
+test('AC-10.2.3/2 — Disabled for an odd number of Measures, a single Measure included', async ({ page }) => {
+  await page.goto('/');
+  await loadShaped(page, [fourQ]);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+  await loadShaped(page, [fourQ, fourQ, fourQ]);
+  await expect(page.locator('.measure')).toHaveCount(3);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+});
+
+test('AC-10.2.3/3 — Disabled when any Beat carries a triplet or split Recipe', async ({ page }) => {
+  await page.goto('/');
+  const T = ['triplet-8ths', [false, false, false]];
+  await loadShaped(page, [fourQ, ['4/4', [Q, Q, T, Q]]]);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+  const S = ['straight-triplet-split', [false, false, false, false, false]];
+  await loadShaped(page, [['4/4', [S, Q, Q, Q]], fourQ]);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+});
+
+test('AC-10.2.3/4 — Disabled when any quarter-note Straight 16ths Beat has its second or fourth Slot on, or any eighth-note Straight 16ths Beat its second', async ({ page }) => {
+  await page.goto('/');
+  const offSixteenths = ['straight-16ths', [true, false, true, false]];
+  await loadShaped(page, [fourQ, ['4/4', [offSixteenths, Q, Q, Q]]]);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeEnabled();
+  // Turn the fourth Slot of that Beat on through the grid: the control follows the edit.
+  await page.locator('.slot[data-measure="1"][data-beat="0"][data-slot="3"]').click();
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+
+  const U = ['undivided', [true]];
+  const E = ['straight-16ths', [true, true]];
+  await loadShaped(page, [['6/8', [U, U, U, U, U, E]], ['6/8', [U, U, U, U, U, U]]]);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+});
+
+test('AC-10.2.3/5 — Disabled when the two Measures of any pair differ in Time Signature', async ({ page }) => {
+  await page.goto('/');
+  await loadShaped(page, [fourQ, ['3/4', [Q, Q, Q]]]);
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+});
+
+test('AC-10.2.4 — Condense on an owned Pattern auto-saves', async ({ page }) => {
+  await page.goto('/');
+  await loadShaped(page, [fourQ, fourQ]);
+  await page.locator('[data-action="condense-pattern"]').click();
+
+  await expect(page.locator('.measure')).toHaveCount(1);
+  const saved = await page.evaluate(() => {
+    const p = window.__rm.patternStore.loadAll().find((x) => x.id === 'p_test');
+    return {
+      measures: p.measures.length,
+      recipes: p.measures[0].beats.map((b) => b.recipe),
+      on: p.measures[0].beats.map((b) => b.slots.map((s) => s.on)),
+    };
+  });
+  expect(saved.measures).toBe(1);
+  expect(saved.recipes).toEqual(['straight-16ths', 'straight-16ths', 'straight-16ths', 'straight-16ths']);
+  expect(saved.on).toEqual([
+    [true, false, true, false],
+    [true, false, true, false],
+    [true, false, true, false],
+    [true, false, true, false],
+  ]);
+  // Nothing more to condense: the control now reports so.
+  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+});
+
+test('AC-10.2.5 — Condense on a shipped Pattern triggers the naming prompt first', async ({ page }) => {
+  await page.goto('/');
+  await loadShaped(page, [fourQ, fourQ], { owned: false });
+  await page.locator('[data-action="condense-pattern"]').click();
+
+  // Cancel: the shipped Pattern is untouched and nothing was created.
+  await expect(page.locator('.dialog-input')).toBeVisible();
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(0);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+
+  // Name it: the condensed result lands in the new owned Pattern.
+  await page.locator('[data-action="condense-pattern"]').click();
+  await page.locator('.dialog-input').fill('Condensed');
+  await page.locator('.dialog-button', { hasText: 'Create' }).click();
+  await expect(page.locator('.measure')).toHaveCount(1);
+  const owned = await page.evaluate(() => {
+    const all = window.__rm.patternStore.loadAll();
+    return { count: all.length, name: all[0]?.name, measures: all[0]?.measures.length };
+  });
+  expect(owned).toEqual({ count: 1, name: 'Condensed', measures: 1 });
+});
