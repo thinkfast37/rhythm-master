@@ -328,7 +328,9 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
 {
   "schemaVersion": 1,
   "countingSystem": "takadimi",   // "takadimi" | "one-e-and-a" | "numbered"
-  "lastTempo": 100,               // AC-4.2.3 global fallback
+  "lastTempo": 100,               // AC-4.2.3 — carried from the Pattern just left
+  "lastSwingAmount": 33,          // AC-4.4.17 — carried with it
+  "lastSwingFeel": "eighth",      // AC-4.4.17 — "quarter" | "eighth" | "sixteenth"
   "metronomeEnabled": false,
   "countInEnabled": false
 }

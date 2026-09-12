@@ -1012,7 +1012,9 @@ body {
 
 /* --- library ------------------------------------------------------------- */
 
-.pattern-nav { display: flex; gap: 8px; padding: 0 12px; }
+/* Sits in the pinned bar, pushed to its trailing edge so the library toggle
+   keeps the leading one (AC-5.5.3). */
+.pattern-nav { display: flex; gap: 8px; margin-left: auto; }
 .nav-button {
   font: 500 13px/1 var(--font-ui); color: var(--ink);
   background: #1c1f2b; border: 1px solid var(--line);
@@ -1129,15 +1131,28 @@ body {
 .shell .main-panel > * { max-width: min(var(--content-max), 100%); }
 .drawer-scrim { display: none; }
 
-/* The way back to a collapsed library, at every width (AC-15.1.13). Sticky
-   within the main panel's own scroll, so it is reachable from any offset rather
-   than only from the top. */
-.library-toggle {
+/*
+ * The pinned bar at the top of the main panel: the way back to a collapsed
+ * library (AC-15.1.13) and Prev/Next (AC-5.5.3), both reachable from any scroll
+ * offset rather than only from the top.
+ *
+ * Opaque, because the grid scrolls underneath it.
+ */
+.main-top-bar {
   position: sticky;
-  top: 8px;
+  top: 0;
   z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.library-toggle {
   display: block;
-  margin: 12px;
   padding: 10px 14px;
   font: 600 13px/1 var(--font-ui);
   color: var(--ink); background: #1c1f2b;
@@ -1179,6 +1194,14 @@ body {
     right: 8px;
     z-index: 45;
     margin: 0;
+  }
+  /* …which it can only do from outside a stacking context, and `position:
+     sticky` is one whatever its `z-index`. So the bar it normally sits in stops
+     being sticky for as long as the drawer is open — the panel behind the
+     drawer is under a scrim and not being scrolled anyway. */
+  .shell[data-library='open'] .main-top-bar {
+    position: static;
+    z-index: auto;
   }
   .shell[data-library='open'] .drawer-scrim {
     display: block;

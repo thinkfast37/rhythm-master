@@ -8,12 +8,22 @@
  * Pattern forced.
  */
 import { readStore, writeStore } from './keyValue.js';
+import { NO_CARRY } from '../core/playback-defaults.js';
 
 export const KEY = 'rm.settings.v1';
 
+/**
+ * `lastTempo`, `lastSwingAmount` and `lastSwingFeel` are the playback settings
+ * in effect on the Pattern most recently loaded — what the next Pattern carries
+ * when it has none of its own (AC-4.2.3, AC-4.4.17). They are written on every
+ * load as well as on every change, since what carries is the tempo and swing
+ * being heard, not only the ones set by hand.
+ */
 export const DEFAULTS = {
   countingSystem: 'takadimi',
-  lastTempo: 80,
+  lastTempo: NO_CARRY.tempo,
+  lastSwingAmount: NO_CARRY.swingAmount,
+  lastSwingFeel: NO_CARRY.swingFeel,
   metronomeEnabled: false,
   countInEnabled: false,
 };

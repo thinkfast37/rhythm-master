@@ -903,13 +903,20 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **Then** playback restarts from the top of the Pattern at 120 BPM immediately, rather than finishing the current loop at 80 BPM first
   - **And** the loop counter (AC-4.1.3) resets to 0, since the restart begins a new run
 
-- **AC-4.2.3** — Tempo default: global last-used, overridden by a per-Pattern save
-  - **Given** the Practicing Musician most recently played a Pattern at 100 BPM, and now opens a different, brand-new Pattern with no tempo of its own saved
+- **AC-4.2.3** — Tempo default: carried from the Pattern just left, overridden by a tempo of the Pattern's own
+  - **Given** the Practicing Musician has been playing a Pattern at 100 BPM, and now opens a Pattern with no tempo of its own — one that carries the 80 BPM default and that they have never set a tempo on
   - **When** that Pattern loads
-  - **Then** its tempo defaults to 100 BPM
-  - **And**, given instead that Pattern has its own saved tempo of 140 BPM, it loads at 140 BPM regardless of the 100 BPM most recently used elsewhere
-  - **And** a shipped Pattern the Practicing Musician has previously adjusted counts as having a tempo of its own: its remembered tempo (AC-4.2.4) outranks the global last-used default the same way an owned Pattern's saved tempo does
+  - **Then** it loads at 100 BPM: the tempo in effect on the Pattern just left carries over, whether the Musician set it by hand or it came with that Pattern
+  - **And**, given instead the Pattern being opened has a tempo of its own, it loads at that tempo regardless of what was carried — a tempo of its own being either a remembered tempo the Musician set on it (AC-4.2.4), or an authored tempo that differs from the 80 BPM default, shipped or saved
+  - **And** the carried tempo survives a reload, and before any Pattern has been opened on a fresh install it is 80 BPM (AC-4.2.1)
+  - **Cases**:
+    - **AC-4.2.3/1** — A Pattern with no tempo of its own loads at the tempo in effect on the Pattern just left
+    - **AC-4.2.3/2** — A tempo the Musician has set on a Pattern outranks the carried tempo
+    - **AC-4.2.3/3** — An authored tempo differing from the 80 BPM default outranks the carried tempo
+    - **AC-4.2.3/4** — The tempo carries even when the Musician never touched the tempo control on the Pattern just left
+    - **AC-4.2.3/5** — The carried tempo survives a reload, and is 80 BPM before any Pattern has been opened
   - *(Revised 2026-08-22: shipped Patterns gain a per-Pattern remembered tempo, stored as a playback setting rather than on the frozen Pattern — see AC-4.2.4.)*
+  - *(Revised 2026-09-12 at the maintainer's request: "a lot of rhythms I practice in a row need to be sped up, but I always end up starting at eighty and then changing it." The global last-used default was written to `rm.settings.v1` on every tempo change and never read back, and it could not have helped if it were: 172 of the 208 shipped Patterns carry the 80 BPM default as an authored tempo, so "no tempo of its own saved" never described any of them. Two changes: what carries is now the tempo **in effect** on the Pattern just left rather than the last one set by hand, and a shipped tempo counts as the Pattern's own only when it differs from the default. The consequence, accepted knowingly: a Pattern deliberately set to exactly 80 BPM is indistinguishable from one that never had a tempo chosen, so the carried tempo wins there.)*
 
 - **AC-4.2.4** — Tempo is remembered per Pattern, shipped Patterns included
   - **Given** a shipped Pattern the Practicing Musician set to 150 BPM
@@ -1153,6 +1160,21 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.4.16/3** — The field always shows the current amount, however it was last set — slider, preset, or typing
   - *(Added 2026-09-07 at the maintainer's request: "with both the tempo and the swing, I wanna be able to enter the value." Mirrors AC-4.2.5 for tempo.)*
 
+- **AC-4.4.17** — Swing and swing feel carry from the Pattern just left
+  - **Given** the Practicing Musician has been playing a Pattern at swing 33 on the 8ths feel, and now opens a Pattern with no swing of its own — no remembered swing (AC-4.4.6, AC-4.4.10), no Pattern-wide amount above 0, and no per-group amounts (AC-4.4.2)
+  - **When** that Pattern loads
+  - **Then** it plays at swing 33 on the 8ths feel: the swing amount and feel in effect on the Pattern just left carry over, exactly as the tempo does (AC-4.2.3)
+  - **And**, given instead the Pattern being opened has swing of its own, that outranks the carried values and loads unchanged
+  - **And** a carried amount is playback only: loading writes nothing back to either store, and a carried amount does not give a shipped Pattern the `swing` Tag in the library (AC-4.4.6) — though an owned Pattern edited afterwards saves what it is sounding at, exactly as it always has
+  - **And** an all-triplet Pattern is unaffected — it has no straight group for a carried amount to govern, and still shows AC-4.4.14's note in place of the controls
+  - **Cases**:
+    - **AC-4.4.17/1** — A Pattern with no swing of its own loads at the swing amount in effect on the Pattern just left
+    - **AC-4.4.17/2** — The swing feel carries the same way
+    - **AC-4.4.17/3** — A Pattern's own swing — remembered, Pattern-wide, or per-group — outranks the carried values
+    - **AC-4.4.17/4** — The carried swing survives a reload, and is 0 on the 8ths feel before any Pattern has been opened
+    - **AC-4.4.17/5** — A carried amount does not give a shipped Pattern the `swing` Tag in the library
+  - *(Added 2026-09-12 at the maintainer's request, with AC-4.2.3's revision: the Musician asked for tempo to carry across a practice run and chose to have swing carry with it, so a run of rhythms worked at one groove does not need the same two controls reset on every Pattern. The `swing` Tag clause is what keeps this from quietly re-opening AC-4.4.6's guarantee: a playback swing has never made a built-in filterable under `swing`, and a carried one must not either.)*
+
 ---
 
 ### User Story 14 - Browse the library
@@ -1334,6 +1356,17 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** the Practicing Musician looks at the Next control
   - **Then** it is disabled
   - **And**, given instead "Bossa Groove" (the first item) is loaded, the Prev control is disabled — neither control wraps to the other end of the list
+
+- **AC-5.5.3** — Prev/Next is reachable without scrolling
+  - **Given** a Pattern is loaded and the main panel is scrolled away from its top — down the grid, or to the foot of the panel
+  - **When** the Practicing Musician looks for Prev/Next
+  - **Then** both controls are on screen: the navigation bar is pinned to the top of the main panel and stays put as the panel scrolls, at every viewport (US-15.1)
+  - **And** there is exactly one Prev/Next control in the panel — the bar that used to sit at the foot of the panel is gone, so stepping through the library is always the same gesture in the same place
+  - **Cases**:
+    - **AC-5.5.3/1** — Prev/Next are on screen with the main panel scrolled to its foot
+    - **AC-5.5.3/2** — The panel holds exactly one Prev/Next control
+    - **AC-5.5.3/3** — Prev/Next stay reachable without scrolling at mobile width
+  - *(Added 2026-09-12 at the maintainer's request: "I wanna be able to more easily move to the next rhythm — right now it's always at the bottom, sometimes I just scroll to the bottom. Ideally that next and previous control is not requiring me to scroll." The maintainer chose a pinned bar over duplicating the control at the top and the bottom, so there is one navigation control rather than two that can disagree about their state.)*
 
 ---
 
@@ -2039,7 +2072,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom: Pattern header → chord strip (US-2.6, Melodic with a progression only) → grid → play controls → Recipe strip (US-1.3) → pitch strip (US-2.2, Melodic only) → harmony controls (US-2.6, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
+  - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle and quick navigation, AC-5.5.3): Pattern header → chord strip (US-2.6, Melodic with a progression only) → grid → play controls → Recipe strip (US-1.3) → pitch strip (US-2.2, Melodic only) → harmony controls (US-2.6, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the pitch strip, the chord strip and the harmony controls are absent rather than empty rows, so the order there is the same list with those entries removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
   - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
@@ -2052,6 +2085,8 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     sections — but unlike the pitch strip it applies to every Pattern in either Sound Mode, so
     the always-present palette comes first and the Melodic-only one follows. Nothing above it
     moves, so the transport keeps the position the previous revision was careful to give it.)*
+
+  - *(Revised 2026-09-12 for quick navigation, which leaves this list. It was the second-to-last entry, below every collapsed section; the maintainer practises by stepping through a filtered list and had to scroll the whole panel to reach it (AC-5.5.3). It now rides in the pinned bar at the top of the panel alongside the library toggle, which was already pinned there for the same reason. The ordered list is otherwise untouched — no section swaps places with another, and the transport keeps its position.)*
 
 - **AC-15.1.9** — Wide controls never force horizontal page scrolling
   - **Given** a 390px-wide (mobile) viewport
