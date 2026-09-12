@@ -2647,6 +2647,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.1/4** — A pentatonic or blues scale spells its chords from the parallel Ionian, or from Aeolian when the scale has ♭3 and no 3: I–IV–V under C Minor Pentatonic is Cm, Fm and Gm
     - **AC-2.6.1/5** — A step whose root lies outside the scale takes the quality the catalogue names for it, or a major triad: ♭VII in C Ionian is B♭
     - **AC-2.6.1/6** — Choosing None removes the progression, and every chord-tone Pitch becomes the scale degree it sounded under the first chord, so the first pass sounds exactly as before
+    - **AC-2.6.1/7** — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once
+  - *(/7 added 2026-09-12, a spec defect found by the maintainer on the first try: "it sounded like it was literally just playing C the entire time even though it was saying it was playing the one four five." A Pattern turned Melodic holds degree 1 on every sounding Slot, and a fixed degree ignores the progression by design (AC-2.6.4/4) — so choosing a progression changed the chord names and nothing audible. The AC never said what happens to the notes already there. Re-reading members of the first chord as roles is the reading a musician makes: a tonic under chord I is the root of that chord. Degrees that are not members stay fixed, so a written melody is not flattened. Reversal of /6's conversion, so None and a fresh choice round-trip.)*
   - *(Cross-references: a chord edit on a shipped Pattern is guarded as the scale is, AC-2.5.4/5; a later scale change alters no chord, in the spirit of AC-2.5.5; a change-setting edit mid-play lands at the next pass per AC-4.1.9; the Key transposes without touching stored data, AC-2.3.2; stamping and turning on follow AC-2.2.6 and AC-2.2.11; Percussive strips the progression as AC-2.5.4/3 strips the scale; one timeline is SC-003.)*
 
 - **AC-2.6.2** — Each chord's root and quality are adjusted individually
@@ -2694,6 +2696,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.5/4** — Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch
     - **AC-2.6.5/5** — The octave stepper applies to a role exactly as to a degree
     - **AC-2.6.5/6** — Turning a Slot on while a role is armed gives it that role
+    - **AC-2.6.5/7** — While a Pattern has a progression but no Slot holds a role, the harmony section says so and points at the role chips and Fill
 
 - **AC-2.6.6** — Fill deals chord tones across the sounding Slots
   - **Given** a Pattern with a progression and some sounding Slots

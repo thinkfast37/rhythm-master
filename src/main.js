@@ -34,6 +34,7 @@ import {
   addChord,
   removeChord,
   fillChordTones,
+  degreeAsTone,
 } from './core/harmony.js';
 import { carriedPlaybackFor, playbackInEffect } from './core/playback-defaults.js';
 import { playClick, accentVoice, playPercussive } from './audio/voices.js';
@@ -540,6 +541,13 @@ const handlers = {
       return;
     }
     apply(setProgression, id);
+    // The brush follows the notes: an armed tonic becomes the armed Root, so
+    // the next Slot turned on follows the progression too (AC-2.6.1/7).
+    const role = degreeAsTone(state.armedPitch, state.pattern.harmony.chords[0]);
+    if (role) {
+      state.armedPitch = role;
+      render();
+    }
   },
 
   async onChordChange(change) {

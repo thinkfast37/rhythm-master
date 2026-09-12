@@ -17,6 +17,7 @@ import {
   resolveChordTone,
   chordToneName,
   memberFor,
+  degreeAsTone,
   MAX_CHORDS,
 } from '../../../src/core/harmony.js';
 import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
@@ -90,6 +91,55 @@ describe('core/harmony', () => {
       { degree: '3', octaveOffset: 1 },
     ]);
     expect(buildTimeline(cleared, 0).map((e) => e.pitch.midiNote)).toEqual(before);
+  });
+
+  it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: tonics become Roots', () => {
+    // What a Pattern turned Melodic looks like: every sounding Slot on degree 1.
+    let p = melodic();
+    for (const b of [0, 1, 2, 3]) p = note(p, 0, b, 0, { degree: '1', octaveOffset: 0 });
+    p = setProgression(p, 'I-IV-V');
+    expect(pitches(p)).toEqual(Array(4).fill({ tone: 1, octaveOffset: 0 }));
+    // And so it is heard: C, then F, then G.
+    expect([0, 1, 2].map((pass) => buildTimeline(p, pass)[0].pitch.midiNote)).toEqual([60, 65, 67]);
+  });
+
+  it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: members become roles at their own octave, non-members stay fixed', () => {
+    let p = melodic();
+    p = note(p, 0, 0, 0, { degree: '3', octaveOffset: 0 }); // the 3rd of C
+    p = note(p, 0, 1, 0, { degree: '5', octaveOffset: -1 }); // the 5th of C, an octave down
+    p = note(p, 0, 2, 0, { degree: '2', octaveOffset: 0 }); // not in a C triad
+    p = note(p, 0, 3, 0, { degree: '7', octaveOffset: 0 }); // not in a C triad, is in Cmaj7
+    const before = buildTimeline(p, 0).map((e) => e.pitch.midiNote);
+
+    const triads = setProgression(p, 'I-IV-V');
+    expect(pitches(triads)).toEqual([
+      { tone: 3, octaveOffset: 0 },
+      { tone: 5, octaveOffset: -1 },
+      { degree: '2', octaveOffset: 0 },
+      { degree: '7', octaveOffset: 0 },
+    ]);
+    // The first pass sounds exactly as it did.
+    expect(buildTimeline(triads, 0).map((e) => e.pitch.midiNote)).toEqual(before);
+
+    // Under a progression whose first chord has a 7th, the 7 is a member too.
+    const sevenths = setProgression(p, 'I-vi-ii-V');
+    expect(pitches(sevenths)[3]).toEqual({ tone: 7, octaveOffset: 0 });
+
+    // Read against a chord on another root: degree 7 is the 3rd of G.
+    expect(degreeAsTone({ degree: '7', octaveOffset: 0 }, { degree: '5', quality: 'maj' })).toEqual({ tone: 3, octaveOffset: 0 });
+    // Degree 2 at octave 4 is the 5th of a G chord rooted an octave lower.
+    expect(degreeAsTone({ degree: '2', octaveOffset: 0 }, { degree: '5', quality: 'maj' })).toEqual({ tone: 5, octaveOffset: -1 });
+    expect(degreeAsTone({ degree: 'b2', octaveOffset: 0 }, { degree: '1', quality: 'maj' })).toBeNull();
+  });
+
+  it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: None and a fresh choice round-trip', () => {
+    let p = melodic();
+    for (const b of [0, 1]) p = note(p, 0, b, 0, { degree: '1', octaveOffset: 0 });
+    let chosen = setProgression(p, 'I-IV-V');
+    chosen = note(chosen, 0, 2, 0, { tone: 5, octaveOffset: 0 }); // stamped after choosing
+    const again = setProgression(clearHarmony(chosen), 'I-IV-V');
+    expect(pitches(again)).toEqual(pitches(chosen));
+    expect(again.harmony).toEqual(chosen.harmony);
   });
 
   // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---

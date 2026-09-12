@@ -169,7 +169,9 @@ test('AC-2.6.5/3 — Each role chip names the note it sounds under the chord in 
 
 test('AC-2.6.5/4 — Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch', async ({ page }) => {
   await harmonicBlank(page);
-  await expect(page.locator('.degree[aria-pressed="true"]')).toHaveCount(1);
+  // Choosing the progression re-read the armed tonic as the Root (AC-2.6.1/7).
+  await expect(page.locator('.tone[aria-pressed="true"]')).toHaveAttribute('data-tone', '1');
+  await expect(page.locator('.degree[aria-pressed="true"]')).toHaveCount(0);
   await page.locator('.tone[data-tone="5"]').click();
   await expect(page.locator('.tone[aria-pressed="true"]')).toHaveCount(1);
   await expect(page.locator('.degree[aria-pressed="true"]')).toHaveCount(0);
@@ -206,6 +208,25 @@ test('AC-2.6.5/6 — Turning a Slot on while a role is armed gives it that role'
   await expect(slotAt(page, 2, 0).locator('.slot-note-name')).toHaveText('G4');
 });
 
+test('AC-2.6.5/7 — While a Pattern has a progression but no Slot holds a role, the harmony section says so and points at the role chips and Fill', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('.harmony-hint')).toHaveCount(0);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  // Nothing sounds yet, so nothing holds a role: the hint is up.
+  const hint = page.locator('.harmony-hint');
+  await expect(hint).toBeVisible();
+  await expect(hint).toContainText('Fill');
+  await expect(hint).toContainText('chord tone');
+  // The armed pitch was re-read as the Root, so the first Slot turned on holds a role.
+  await accentZone(page, 0, 0).click();
+  expect((await slotState(page, 0, 0)).pitch).toEqual({ tone: 1, octaveOffset: 0 });
+  await expect(page.locator('.harmony-hint')).toHaveCount(0);
+  // A fixed degree stamped over it brings the hint back.
+  await page.locator('.degree[data-degree="2"]').click();
+  await noteBand(page, 0, 0).click();
+  await expect(page.locator('.harmony-hint')).toBeVisible();
+});
+
 // --- AC-2.6.6 — Fill deals chord tones across the sounding Slots ---
 
 test('AC-2.6.6/1 — The orders offered are Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth', async ({ page }) => {
@@ -227,8 +248,8 @@ test('AC-2.6.6/7 — Fill on a shipped Pattern goes through the naming prompt', 
   await page.locator('.fill-chord-tones').click();
   await expect(page.locator('.dialog-input')).toBeVisible();
   await page.locator('.dialog-button:not(.primary)', { hasText: 'Cancel' }).click();
-  // Cancelled: the Slot keeps the degree it had, and nothing is owned.
-  expect((await slotState(page, 0, 0)).pitch).toEqual({ degree: '1', octaveOffset: 0 });
+  // Cancelled: the Slot keeps the Root it had (the re-read armed pitch), and nothing is owned.
+  expect((await slotState(page, 0, 0)).pitch).toEqual({ tone: 1, octaveOffset: 0 });
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
 });
 

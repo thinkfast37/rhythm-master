@@ -1709,3 +1709,10 @@ body {
   color: var(--ink);
 }
 .remove-chord { min-width: 32px; }
+
+/* The harmony section's one-line hint while no Slot holds a role (AC-2.6.5/7). */
+.harmony-hint {
+  margin: 0;
+  font: 500 12px/1.4 var(--font-ui);
+  color: var(--ink-dim);
+}
