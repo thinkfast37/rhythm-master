@@ -1545,3 +1545,167 @@ body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+
+/* --- Chord progressions (US-2.6) ------------------------------------------ */
+
+/*
+ * The chord strip: the whole progression above the grid, the chord in force
+ * marked Now and the one after it Next (AC-2.6.7). Wraps rather than scrolls,
+ * like every other strip (AC-15.1.9).
+ */
+.chord-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 4px;
+}
+.chord-strip[hidden] { display: none; }
+.chord-strip-label {
+  font: 600 11px/1 var(--font-ui);
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.chord-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 100%;
+}
+.chord-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 56px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+}
+.chord-numeral { font: 600 13px/1 var(--font-mono); }
+.chord-name { font: 500 12px/1 var(--font-mono); color: var(--ink-dim); }
+.chord-mark {
+  font: 700 10px/1 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-dim);
+}
+/* Now is a filled chip, Next an outlined one — shape as well as hue, and the
+   word inside each says which is which (AC-2.6.7/2). */
+.chord-chip.now {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #0b0c15;
+}
+.chord-chip.now .chord-name,
+.chord-chip.now .chord-mark { color: #3d2c05; }
+.chord-chip.next { border: 2px solid var(--brand); padding: 5px 9px; }
+.chord-chip.next .chord-mark { color: var(--brand); }
+
+/* A Measure names its chord when the chord changes every Measure (AC-2.6.7/3). */
+.measure-chord {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding: 6px 8px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  font: 600 12px/1 var(--font-mono);
+  color: var(--brand);
+}
+
+/* Role chips on the pitch strip, styled as the degree chips are (AC-2.6.5). */
+.tone-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.tone-group-label {
+  font: 600 11px/1 var(--font-ui);
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-right: 2px;
+}
+.pitch-strip .tone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 40px;
+  padding: 4px 6px;
+}
+.pitch-strip .tone[aria-pressed='true'] .degree-name { color: #3d2c05; }
+/* A role the chord in force lacks stands in for a lower member; it says so in
+   its name, and dims its number so the chips that are real read first. */
+.pitch-strip .tone[data-stand-in]:not([aria-pressed='true']) .degree-number { color: var(--ink-dim); }
+
+/* The harmony section under the pitch strip (US-2.6). */
+.harmony {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.harmony[hidden] { display: none; }
+.harmony-head, .fill-row, .chord-change-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.progression-picker, .fill-order, .chord-root, .chord-quality {
+  max-width: 100%;
+  font: 500 13px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.harmony button {
+  min-height: 32px;
+  padding: 0 10px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.harmony button:disabled { color: var(--ink-dim); cursor: default; }
+.harmony button[aria-pressed='true'] {
+  color: #0b0c15;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.chord-editors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chord-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.chord-editor-numeral {
+  min-width: 44px;
+  font: 600 13px/1 var(--font-mono);
+  color: var(--brand);
+}
+.chord-editor-name {
+  min-width: 56px;
+  font: 600 13px/1 var(--font-mono);
+  color: var(--ink);
+}
+.remove-chord { min-width: 32px; }

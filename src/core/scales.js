@@ -56,6 +56,11 @@ export const SCALES = [
     degrees: ['1', '2', 'b3', '4', '5', '6', '7'] },
 ];
 
+/** The default degree token for a semitone 0–11 above the tonic (US-2.6 bakes chord tones with it). */
+export function chromaticToken(semitone) {
+  return CHROMATIC_TOKENS[((semitone % 12) + 12) % 12];
+}
+
 /** A Melodic Pattern that carries no `scale` reads as this (AC-2.5.4/2). */
 export const DEFAULT_SCALE = 'ionian';
 

@@ -17,6 +17,7 @@ import {
   setSwingAmount,
   setSwingFeel,
 } from '../../../src/core/pattern.js';
+import { setProgression, setChordQuality, setChange } from '../../../src/core/harmony.js';
 
 const withNote = (p, b = 0, s = 0) => cycleAccent(p, 0, b, s);
 
@@ -228,5 +229,34 @@ describe('core/similarity', () => {
 
     expect(rhythmFingerprint(b)).toBe(before);
     expect(isSameFamily(edited, b)).toBe(false);
+  });
+
+
+  // --- AC-2.6.9 — Duplicate detection sees the progression --------------------
+
+  /** A Melodic Pattern with one chord-tone Slot under I–IV–V. */
+  function harmonic(id) {
+    let p = { ...create('Harmonic'), id, soundMode: 'melodic', key: 'C', scale: 'ionian' };
+    p = setProgression(p, 'I-IV-V');
+    p = cycleAccent(p, 0, 0, 0);
+    p.measures[0].beats[0].slots[0].pitch = { tone: 3, octaveOffset: 0 };
+    return p;
+  }
+
+  it("AC-2.6.9/1 — Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, or in the change setting are not duplicates", () => {
+    const a = harmonic('a');
+    expect(isDuplicate(a, setProgression(harmonic('b'), 'I-V-vi-IV'))).toBe(false);
+    expect(isDuplicate(a, setChordQuality(harmonic('c'), 0, 'maj7'))).toBe(false);
+    expect(isDuplicate(a, setChange(harmonic('d'), 'measure'))).toBe(false);
+    // A role against a degree is a different Pitch too.
+    const fixed = harmonic('e');
+    fixed.measures[0].beats[0].slots[0].pitch = { degree: '3', octaveOffset: 0 };
+    expect(isDuplicate(a, fixed)).toBe(false);
+  });
+
+  it('AC-2.6.9/2 — Two Patterns identical in all of those are duplicates, and Family detection is unchanged: the same rhythm under different harmony is the same Family', () => {
+    expect(isDuplicate(harmonic('a'), harmonic('b'))).toBe(true);
+    expect(isSameFamily(harmonic('a'), setProgression(harmonic('b'), 'I-V-vi-IV'))).toBe(true);
+    expect(isSameFamily(harmonic('a'), harmonic('b'))).toBe(false);
   });
 });

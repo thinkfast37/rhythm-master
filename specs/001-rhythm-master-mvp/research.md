@@ -319,6 +319,53 @@ never trusted from `localStorage`: the store is queried on every launch and afte
 
 ---
 
+## D-011 — Chord progressions: roles resolved through the chord in force, one timeline per pass
+
+**Decision (2026-09-12)**: a progression is stored as concrete chords on the Pattern; a Slot may hold a
+chord-tone *role* instead of a degree; the one timeline takes the pass index and resolves each role
+through the chord in force for that pass and Measure.
+
+**Why roles, not notes.** The maintainer's ask is one rhythm played through a progression — one chord
+per pass, or one per Measure — and "one note per rhythmic syllable". A Slot therefore has to sound
+a different note under each chord while storing one thing. Storing the note would need a Pattern per
+chord; storing a degree would need re-stamping on every chord change. A role (Root, 3rd, 5th, 7th,
+9th) is what the musician thinks in, resolves against any chord, and keeps AC-2.2.1's one-Pitch-per-
+Slot invariant literally true: `{ tone, octaveOffset }` is the second shape a Pitch can take.
+
+**How a role resolves.** The chord's root sits at the Pitch's octave; members stack above it by the
+quality's intervals, so the 5th of G in C at octave 4 is D5 — the shape an arpeggio has when played.
+A role the chord lacks sounds the chord's next-lower member (7th on a triad → 5th). That rule was
+chosen over "silence" (a rest the Composer did not write), over "the diatonic 7th" (which reintroduces
+the scale into resolution, contradicting AC-2.5.5's structure), and over "refuse to stamp" (a
+progression can mix triads and sevenths, so any role can be right for one chord and absent on the next).
+
+**How chords are spelled.** Choosing a catalogue entry writes concrete chords once — degree tokens
+of the Key with qualities stacked in thirds from the scale's own degrees. Seven-note scales spell
+directly. Pentatonic and blues scales lack degrees to stack, so they borrow the parallel Ionian, or
+Aeolian when the scale has ♭3 and no 3. A step whose root is outside the scale (♭VII in Ionian) takes
+the catalogue's own quality or a major triad. After that the chords are the Composer's data: changing
+the scale never rewrites them (consistent with AC-2.5.5), and each is editable by root and quality.
+
+**One timeline, parameterised by pass.** `buildTimeline(pattern, pass)` is still the only place
+timing, accent and pitch compose (SC-003). The alternative — one timeline spanning the whole harmonic
+cycle — was rejected because it would move AC-4.1.9's edit pickup from the next pass to the next
+cycle (four passes under a four-chord progression). Instead the scheduler rebuilds the pass's
+timeline at each pass boundary it already crosses, the cursor keeps its `loop` index, and MIDI export
+concatenates the cycle's passes from the same function. The cycle is `n` passes when the chord
+changes every pass and `lcm(n, M) / M` when it changes every Measure.
+
+**Not a longer grid.** The maintainer floated raising the 8-Measure cap for long progressions. Kept
+at 8: the chord strip carries the progression across passes, and the cap is what every phone-layout
+criterion (AC-15.1.10, AC-2.2.12) is measured against.
+
+**Alternatives considered**: per-chord Pattern copies chained by Append (rejected — eight Measures
+cannot hold a twelve-bar blues, and the melody would be re-authored per chord); a global "chord
+mode" transposing whole Patterns (rejected — transposition is not chord quality); storing qualities
+as scale-relative and re-deriving on scale change (rejected — a scale change would silently rewrite a
+chord the Composer had set by hand).
+
+---
+
 ## Open items deliberately left to implementation
 
 These are genuinely low-stakes and do not need a decision before tasks are written:

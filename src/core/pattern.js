@@ -16,6 +16,8 @@ import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey } from './pitch.js';
 import { isValidScale } from './scales.js';
 import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
+import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, hasHarmony } from './harmony.js';
+import { splitDegree } from './pitch.js';
 
 export const MAX_MEASURES = 8;
 export const MIN_TEMPO = 18;
@@ -171,6 +173,10 @@ export function setPitch(pattern, measureIndex, beatIndex, slotIndex, pitch) {
   const measures = clone(pattern.measures);
   const slot = measures[measureIndex].beats[beatIndex].slots[slotIndex];
   if (!slot.on) throw new Error('Pitch may only be assigned to an active Slot');
+  // A role has nothing to resolve against without a progression (data-model §7 rule 16).
+  if (pitch?.tone !== undefined && !hasHarmony(pattern)) {
+    throw new Error('A chord-tone Pitch needs a progression on the Pattern');
+  }
   slot.pitch = clone(pitch);
   return { ...clone(pattern), measures };
 }
@@ -267,6 +273,25 @@ export function validate(pattern) {
     else if (!isValidScale(pattern.scale)) fail(`scale "${pattern.scale}" unsupported`);
   }
 
+  // A progression only on a Melodic Pattern, in shape (data-model §7 rule 14).
+  if ('harmony' in (pattern ?? {})) {
+    const h = pattern.harmony;
+    if (!melodic) fail('harmony is only valid when soundMode is melodic');
+    if (!CHANGES.includes(h?.change)) fail(`harmony.change "${h?.change}" is not one of ${CHANGES.join(', ')}`);
+    if (!Array.isArray(h?.chords) || h.chords.length < 1 || h.chords.length > MAX_CHORDS) {
+      fail(`harmony has ${h?.chords?.length} chords, expected 1–${MAX_CHORDS}`);
+    } else {
+      h.chords.forEach((c, i) => {
+        try {
+          splitDegree(c?.degree);
+        } catch {
+          fail(`chord ${i + 1}: degree "${c?.degree}" invalid`);
+        }
+        if (!isValidQuality(c?.quality)) fail(`chord ${i + 1}: quality "${c?.quality}" unsupported`);
+      });
+    }
+  }
+
   if (!Number.isInteger(pattern?.tempo) || pattern.tempo < MIN_TEMPO || pattern.tempo > MAX_TEMPO) {
     fail(`tempo ${pattern?.tempo} outside ${MIN_TEMPO}–${MAX_TEMPO}`);
   }
@@ -326,6 +351,15 @@ export function validate(pattern) {
         if ('pitch' in s) {
           if (!s.on) fail(`${slot}: pitch on an off Slot`);
           if (!melodic) fail(`${slot}: pitch on a percussive Pattern`);
+          // A Pitch is a degree or a role, never both, never neither (rules 15–16).
+          const hasDegree = s.pitch?.degree !== undefined;
+          const hasTone = s.pitch?.tone !== undefined;
+          if (hasDegree === hasTone) fail(`${slot}: pitch must carry exactly one of degree or tone`);
+          if (hasTone && !isValidTone(s.pitch.tone)) fail(`${slot}: tone ${s.pitch.tone} is not one of 1, 3, 5, 7, 9`);
+          if (hasTone && !hasHarmony(pattern)) fail(`${slot}: chord tone on a Pattern with no progression`);
+          if ('octaveOffset' in (s.pitch ?? {}) && !Number.isInteger(s.pitch.octaveOffset)) {
+            fail(`${slot}: octaveOffset must be an integer`);
+          }
         } else if (melodic && s.on) {
           fail(`${slot}: melodic Pattern has an on Slot with no pitch`);
         }

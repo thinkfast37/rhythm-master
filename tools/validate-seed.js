@@ -45,6 +45,13 @@ const SCALES = [
   'minor-blues', 'major-blues', 'harmonic-minor', 'melodic-minor',
 ];
 const DEGREE = /^[b#]?[1-9]\d*$/;
+// Mirrors core/harmony.js (US-2.6), duplicated for standalone-ness like KEYS.
+const QUALITIES = [
+  'maj', 'min', 'dim', 'aug', 'sus2', 'sus4', '6', 'm6', 'maj7', 'm7', '7', 'm7b5', 'dim7',
+  'mMaj7', '7sus4', 'add9', '9', 'maj9', 'm9',
+];
+const TONES = [1, 3, 5, 7, 9];
+const CHANGES = ['pass', 'measure'];
 
 const errors = [];
 const fail = (name, msg) => errors.push(`${name}: ${msg}`);
@@ -75,6 +82,22 @@ for (const p of raw.patterns) {
   // the absent-reads-as-ionian default is for user data, not the seed.
   if (melodic !== ('scale' in p)) fail(name, 'scale must be present iff soundMode is melodic (AC-2.5.4/4)');
   if (melodic && !SCALES.includes(p.scale)) fail(name, `scale "${p.scale}" unsupported (data-model §7 rule 13)`);
+
+  // A progression, where present, only on a Melodic Pattern (data-model §7 rule 14).
+  const harmonic = Boolean(p.harmony?.chords?.length);
+  if ('harmony' in p) {
+    const h = p.harmony;
+    if (!melodic) fail(name, 'harmony on a percussive Pattern (data-model §7 rule 14)');
+    if (!CHANGES.includes(h?.change)) fail(name, `harmony.change "${h?.change}" invalid`);
+    if (!Array.isArray(h?.chords) || h.chords.length < 1 || h.chords.length > 16) {
+      fail(name, `harmony has ${h?.chords?.length} chords, expected 1–16`);
+    } else {
+      for (const [ci, c] of h.chords.entries()) {
+        if (!DEGREE.test(String(c?.degree))) fail(name, `chord ${ci + 1}: degree "${c?.degree}" invalid`);
+        if (!QUALITIES.includes(c?.quality)) fail(name, `chord ${ci + 1}: quality "${c?.quality}" unsupported`);
+      }
+    }
+  }
 
   if (!Number.isInteger(p.tempo) || p.tempo < 18 || p.tempo > 220) fail(name, `tempo ${p.tempo} outside 18–220`);
   if (!Number.isInteger(p.rating) || p.rating < 0 || p.rating > 5) fail(name, `rating ${p.rating} outside 0–5`);
@@ -133,7 +156,13 @@ for (const p of raw.patterns) {
         if ('pitch' in s) {
           if (!s.on) fail(name, `${slot}: pitch on an off Slot`);
           if (!melodic) fail(name, `${slot}: pitch on a percussive Pattern`);
-          if (!DEGREE.test(String(s.pitch?.degree))) fail(name, `${slot}: degree "${s.pitch?.degree}" invalid`);
+          // A Pitch is a degree or a chord-tone role, never both (rules 15–16).
+          const hasDegree = s.pitch?.degree !== undefined;
+          const hasTone = s.pitch?.tone !== undefined;
+          if (hasDegree === hasTone) fail(name, `${slot}: pitch must carry exactly one of degree or tone`);
+          if (hasDegree && !DEGREE.test(String(s.pitch?.degree))) fail(name, `${slot}: degree "${s.pitch?.degree}" invalid`);
+          if (hasTone && !TONES.includes(s.pitch.tone)) fail(name, `${slot}: tone ${s.pitch.tone} is not one of 1, 3, 5, 7, 9`);
+          if (hasTone && !harmonic) fail(name, `${slot}: chord tone on a Pattern with no progression (rule 16)`);
           if (!Number.isInteger(s.pitch?.octaveOffset)) fail(name, `${slot}: octaveOffset must be an integer`);
         } else if (melodic && s.on) {
           fail(name, `${slot}: melodic Pattern has an on Slot with no pitch`);

@@ -12,7 +12,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTransport } from '../../../src/audio/scheduler.js';
 import { __reset as resetContext } from '../../../src/audio/context.js';
 import { __reset as resetNodes } from '../../../src/audio/nodes.js';
-import { create, cycleAccent } from '../../../src/core/pattern.js';
+import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
+import { setProgression, setChange } from '../../../src/core/harmony.js';
 
 /** Every osc.start() the transport causes: its `when`, and the clock at call time. */
 let starts = [];
@@ -151,5 +152,40 @@ describe('audio/scheduler under a throttled timer', () => {
     for (let i = 1; i <= 20; i++) await tickAt(i * 0.025);
 
     expect(transport._snapshot().lookaheadSeconds).toBeCloseTo(0.2, 10);
+  });
+});
+
+describe('audio/scheduler under a progression (US-2.6)', () => {
+  /** Two 4/4 Measures at 120 (a 4s pass), Slot 1 of each on as a Root, under I–IV–V. */
+  function harmonicPattern(change) {
+    let p = { ...create(), soundMode: 'melodic', key: 'C', tempo: 120 };
+    p = addMeasure(p);
+    p = setChange(setProgression(p, 'I-IV-V'), change);
+    for (const m of [0, 1]) {
+      p = cycleAccent(p, m, 0, 0);
+      p = setPitch(p, m, 0, 0, { tone: 1, octaveOffset: 0 });
+    }
+    return p;
+  }
+
+  it('AC-2.6.3/4 — Changing the setting while playing is heard from the next pass', async () => {
+    const notes = [];
+    transport = createTransport({
+      playMelodic: (c, master, event, when) => notes.push({ when, midi: event.pitch.midiNote }),
+    });
+    const startP = transport.start(harmonicPattern('pass'), { metronomeEnabled: false, countInEnabled: false });
+    await vi.runOnlyPendingTimersAsync?.();
+    await startP;
+    ctx = (await import('../../../src/audio/context.js')).getContext();
+
+    // Pass 0 under "every pass": both Measures on the I. The edit lands now,
+    // before the pass is over, and must not touch it.
+    transport.update(harmonicPattern('measure'), { metronomeEnabled: false, countInEnabled: false });
+    for (let t = 0.5; t <= 6.5; t += 0.5) await tickAt(t);
+
+    // Pass 1 under "every Measure": Measure 1 sounds chord (1 × 2 + 0) mod 3 = V,
+    // Measure 2 chord 3 mod 3 = I.
+    expect(notes.map((n) => n.midi).slice(0, 4)).toEqual([60, 60, 67, 60]);
+    expect(notes[2].when - notes[0].when).toBeCloseTo(4, 6);
   });
 });

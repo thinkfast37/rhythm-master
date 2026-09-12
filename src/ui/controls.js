@@ -16,6 +16,22 @@ import {
   noteName,
 } from '../core/pitch.js';
 import { SCALES, DEFAULT_SCALE, chromaticStrip } from '../core/scales.js';
+import {
+  hasHarmony,
+  chordIn,
+  chordName,
+  chordNumeral,
+  chordToneName,
+  memberFor,
+  toneLabel,
+  matchProgression,
+  PROGRESSIONS,
+  QUALITIES,
+  TONES,
+  CHANGES,
+  FILL_ORDERS,
+  MAX_CHORDS,
+} from '../core/harmony.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -699,7 +715,190 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   }
   root.appendChild(degrees);
 
+  // Chord-tone roles, only while the Pattern has a progression to resolve them
+  // (AC-2.6.5/1). Each names the note it sounds under the chord in force — the
+  // cursor's chord while playing, the first at rest — and a role that chord
+  // lacks says which member stands in for it (AC-2.6.5/3).
+  if (hasHarmony(pattern)) {
+    const position = state.transportPosition;
+    const chord = chordIn(pattern, position?.loop ?? 0, position?.measureIndex ?? 0);
+    const tones = el('div', 'tone-group', { role: 'group' });
+    tones.setAttribute('aria-label', 'Chord tone');
+    tones.appendChild(el('span', 'tone-group-label', { textContent: 'Chord tone' }));
+    for (const tone of TONES) {
+      const b = el('button', 'tone');
+      b.type = 'button';
+      b.dataset.action = 'set-tone';
+      b.dataset.tone = String(tone);
+      b.setAttribute('aria-pressed', String(tone === armed.tone));
+      b.appendChild(el('span', 'degree-number', { textContent: toneLabel(tone) }));
+
+      const member = memberFor(chord, tone);
+      const standIn = member.tone !== tone ? toneLabel(member.tone) : null;
+      if (standIn) b.dataset.standIn = standIn;
+      const named = spellTone({ tone, octaveOffset: armed.octaveOffset ?? 0 }, chord, key);
+      const text = [standIn ? `as ${standIn}` : null, named].filter(Boolean).join(' · ');
+      if (text) b.appendChild(el('span', 'degree-name', { textContent: text }));
+      if (named) b.dataset.noteName = named;
+      b.setAttribute(
+        'aria-label',
+        `Chord tone ${toneLabel(tone)}${standIn ? ` (this chord has none, sounds its ${standIn})` : ''}${named ? ` — ${named}` : ''}`
+      );
+      b.addEventListener('click', () => handlers.onArmTone(tone));
+      tones.appendChild(b);
+    }
+    root.appendChild(tones);
+  }
+
   root.appendChild(renderOctaveStepper(armed, handlers));
+}
+
+/** A chord tone's note name, or nothing if it cannot be spelled. */
+function spellTone(pitch, chord, key) {
+  try {
+    return chordToneName(pitch, chord, key).text;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The harmony section: the progression, when it changes, each chord's root and
+ * quality, and Fill (US-2.6). It sits under the pitch strip because it is the
+ * other half of the same palette — the strip says which role, this says which
+ * chords the role resolves through. Melodic only; Percussive renders nothing.
+ */
+export function renderHarmony(root, pattern, state, handlers) {
+  root.className = 'harmony';
+  root.hidden = pattern.soundMode !== 'melodic';
+  return rebuild(root, (fresh) => {
+    if (!root.hidden) renderHarmonyInto(fresh, pattern, state, handlers);
+  });
+}
+
+function renderHarmonyInto(root, pattern, state, handlers) {
+  const key = pattern.key ?? 'C';
+  const harmonic = hasHarmony(pattern);
+  const matched = matchProgression(pattern);
+
+  const head = el('div', 'harmony-head');
+  head.appendChild(
+    el('span', 'pitch-strip-label', {
+      textContent: 'Progression',
+      title: 'Lay a chord progression over the rhythm; chord tones on the strip follow it',
+    })
+  );
+
+  // The catalogue (AC-2.6.1/1). Once the chords are edited into something the
+  // catalogue does not hold, the picker says so rather than claiming an entry.
+  const picker = el('select', 'progression-picker');
+  picker.dataset.action = 'set-progression';
+  picker.setAttribute('aria-label', 'Chord progression');
+  picker.appendChild(el('option', null, { value: 'none', textContent: 'None' }));
+  for (const p of PROGRESSIONS) picker.appendChild(el('option', null, { value: p.id, textContent: p.label }));
+  if (harmonic && !matched) picker.appendChild(el('option', null, { value: 'custom', textContent: 'Custom' }));
+  picker.value = harmonic ? (matched ?? 'custom') : 'none';
+  picker.addEventListener('change', (e) => handlers.onProgression(e.target.value));
+  head.appendChild(picker);
+  root.appendChild(head);
+
+  if (!harmonic) return;
+
+  // When the chord moves on (AC-2.6.3): two buttons, the current one pressed.
+  const change = el('div', 'chord-change-group', { role: 'group' });
+  change.setAttribute('aria-label', 'Chord changes');
+  for (const value of CHANGES) {
+    const b = el('button', 'chord-change', {
+      type: 'button',
+      textContent: value === 'measure' ? 'Every Measure' : 'Every pass',
+    });
+    b.dataset.action = 'set-chord-change';
+    b.dataset.change = value;
+    b.setAttribute('aria-pressed', String(pattern.harmony.change === value));
+    b.addEventListener('click', () => handlers.onChordChange(value));
+    change.appendChild(b);
+  }
+  root.appendChild(change);
+
+  // One editor per chord (AC-2.6.2): root, quality, and the name they make.
+  const editors = el('ol', 'chord-editors');
+  pattern.harmony.chords.forEach((chord, index) => {
+    const row = el('li', 'chord-editor');
+    row.dataset.chord = String(index);
+
+    const numeral = el('span', 'chord-editor-numeral', { textContent: chordNumeral(chord) });
+    row.appendChild(numeral);
+
+    const rootPicker = el('select', 'chord-root');
+    rootPicker.dataset.action = 'set-chord-root';
+    rootPicker.dataset.chord = String(index);
+    rootPicker.setAttribute('aria-label', `Chord ${index + 1} root`);
+    for (const { token } of chromaticStrip(pattern.scale ?? DEFAULT_SCALE)) {
+      const named = spell({ degree: token, octaveOffset: 0 }, key);
+      const label = `${degreeLabel(token)}${named ? ` · ${named.replace(/\d+$/, '')}` : ''}`;
+      rootPicker.appendChild(el('option', null, { value: token, textContent: label }));
+    }
+    // A stored token spelled the other way (b5 for #4) is still this chord's root.
+    if (![...rootPicker.options].some((o) => o.value === chord.degree)) {
+      rootPicker.appendChild(el('option', null, { value: chord.degree, textContent: degreeLabel(chord.degree) }));
+    }
+    rootPicker.value = chord.degree;
+    rootPicker.addEventListener('change', (e) => handlers.onChordDegree(index, e.target.value));
+    row.appendChild(rootPicker);
+
+    const qualityPicker = el('select', 'chord-quality');
+    qualityPicker.dataset.action = 'set-chord-quality';
+    qualityPicker.dataset.chord = String(index);
+    qualityPicker.setAttribute('aria-label', `Chord ${index + 1} quality`);
+    for (const q of QUALITIES) qualityPicker.appendChild(el('option', null, { value: q.id, textContent: q.label }));
+    qualityPicker.value = chord.quality;
+    qualityPicker.addEventListener('change', (e) => handlers.onChordQuality(index, e.target.value));
+    row.appendChild(qualityPicker);
+
+    let name = chordNumeral(chord);
+    try {
+      name = chordName(chord, key);
+    } catch {
+      /* an unspellable root keeps its numeral */
+    }
+    const readout = el('output', 'chord-editor-name', { textContent: name });
+    readout.dataset.chordName = name;
+    row.appendChild(readout);
+
+    const remove = el('button', 'remove-chord', { type: 'button', textContent: '×' });
+    remove.dataset.action = 'remove-chord';
+    remove.dataset.chord = String(index);
+    remove.disabled = pattern.harmony.chords.length <= 1;
+    remove.setAttribute('aria-label', `Remove chord ${index + 1}`);
+    remove.addEventListener('click', () => handlers.onRemoveChord(index));
+    row.appendChild(remove);
+
+    editors.appendChild(row);
+  });
+  root.appendChild(editors);
+
+  const add = el('button', 'add-chord', { type: 'button', textContent: '+ Chord' });
+  add.dataset.action = 'add-chord';
+  add.disabled = pattern.harmony.chords.length >= MAX_CHORDS;
+  add.addEventListener('click', () => handlers.onAddChord());
+  root.appendChild(add);
+
+  // Fill (AC-2.6.6): an order and a button. The order is read off the picker
+  // when the button is pressed, so it is not state anything else has to hold.
+  const fill = el('div', 'fill-row');
+  fill.appendChild(el('span', 'pitch-strip-label', { textContent: 'Fill' }));
+  const order = el('select', 'fill-order');
+  order.setAttribute('aria-label', 'Fill order');
+  for (const o of FILL_ORDERS) order.appendChild(el('option', null, { value: o.id, textContent: o.label }));
+  order.value = state.fillOrder ?? 'up';
+  order.addEventListener('change', (e) => handlers.onFillOrder(e.target.value));
+  fill.appendChild(order);
+  const go = el('button', 'fill-chord-tones', { type: 'button', textContent: 'Fill' });
+  go.dataset.action = 'fill-chord-tones';
+  go.setAttribute('title', 'Deal chord tones across every sounding Slot, Measure by Measure');
+  go.addEventListener('click', () => handlers.onFill(order.value));
+  fill.appendChild(go);
+  root.appendChild(fill);
 }
 
 /**
