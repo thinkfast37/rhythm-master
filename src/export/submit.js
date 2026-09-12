@@ -31,6 +31,9 @@ export function toSubmissionShape(pattern) {
     measures: structuredClone(pattern.measures),
   };
   if (pattern.soundMode === 'melodic') out.key = pattern.key;
+  // The progression is the melody's harmony, so a submission without it would
+  // arrive as a different piece (AC-2.6.8/5).
+  if (pattern.soundMode === 'melodic' && pattern.harmony) out.harmony = structuredClone(pattern.harmony);
   return out;
 }
 

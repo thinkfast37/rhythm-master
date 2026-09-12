@@ -20,6 +20,14 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
   "tempo": 80,                   // integer BPM, 18–300
   "swingFeel": "eighth",         // "quarter" | "eighth" | "sixteenth"; optional, absent means "eighth"
   "swingAmount": 30,             // integer 0–100; optional, absent means 0. The Pattern-wide default (AC-4.4.13)
+  "harmony": {                   // optional; only when soundMode === "melodic" (US-2.6)
+    "change": "pass",            //   "pass" | "measure" — when the chord in force moves on
+    "chords": [                  //   1–16 concrete chords, in order
+      { "degree": "1", "quality": "maj7" },
+      { "degree": "4", "quality": "maj7" },
+      { "degree": "5", "quality": "7" }
+    ]
+  },
   "tags": ["Latin", "warmup"],   // user Tags only; automatic Tags are derived, never stored
   "rating": 0,                   // integer 0–5
   "measures": [ /* Measure[] */ ]
@@ -37,6 +45,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern. | AC-4.4.7 |
 | `swingAmount` | The Pattern-wide swing amount, 0–100; optional, absent reads as 0. Every straight Subdivision Group without a per-group amount inherits it — which is why a Measure added later swings without any copying. Per-group amounts on a Beat (`beat.swing`, keyed by group index) act as overrides and play as authored. | AC-4.4.12, AC-4.4.13 |
+| `harmony` | Optional, and only when `soundMode === "melodic"`. A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure. Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. | US-2.6 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
 | `measures` | 1–8 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
@@ -157,6 +166,22 @@ The strip spans `octaveOffset` −3 to +3, shown to the musician as absolute oct
 nor `tools/validate-seed.js` has ever enforced and which the shipped library already contradicts —
 four Patterns use `"8"`, `"9"` and `"10"`.)*
 
+**Chord-tone Pitch** (US-2.6)
+
+```jsonc
+{ "tone": 3, "octaveOffset": 0 }
+```
+
+The second form a Pitch can take, and only on a Pattern with `harmony`. `tone` is a role — `1`
+(Root), `3`, `5`, `7` or `9` — that resolves to a note through the chord in force for the Slot's
+Measure in the pass being played (AC-2.6.3), the Pattern's `key`, and `octaveOffset`: the chord's
+root sits at that octave and its members stack above it (AC-2.6.4/1). A role the chord lacks
+sounds the chord's next-lower member (AC-2.6.4/2). A Pitch carries `degree` or `tone`, never both;
+either satisfies AC-2.2.8's "non-null Pitch". Removing the progression converts every chord-tone
+Pitch to the degree it sounded under the first chord (AC-2.6.1/6), so no Pattern ever holds a
+`tone` it cannot resolve. Resolution stays `core/`'s job — `core/harmony.js`, called from the one
+timeline.
+
 ### Computed Accent defaults (never stored — FR-003)
 
 Both levels use the same formula, applied to a sequence of length *N* at 1-based index *i*:
@@ -200,6 +225,10 @@ produces a Medium Slot (odd *N* has no midpoint), and a 2-Slot Recipe never does
 | Counting-system labels | Recipe + Slot index + active system | US-5.6 |
 | Forced Numbered counting | Pattern contains a mixed-feel Recipe | AC-5.6.2 |
 | Duplicate / Pattern Family relations | structural comparison of Patterns | US-11.1, US-11.2 |
+| Chord in force for (pass, Measure) | `harmony.change`, `harmony.chords`, pass and Measure index | AC-2.6.3 |
+| Chord name and numeral | `harmony.chords[i]` and `key` | AC-2.6.7/1 |
+| Harmonic cycle length, in passes | `harmony.change`, chord count, Measure count | AC-2.6.10/1 |
+| A chord tone's sounding note | `(tone, octaveOffset)`, the chord in force, `key` | AC-2.6.4 |
 
 Persisting any of these would let it drift from the Pattern it describes. They are recomputed on
 read.
@@ -342,6 +371,9 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 11. `swingFeel`, where present, is `quarter`, `eighth`, or `sixteenth`.
 12. `swingAmount`, where present, is an integer within 0–100.
 13. `scale`, where present, is a catalogue id from `core/scales.js` — and only when `soundMode` is `melodic`.
+14. `harmony`, where present, only when `soundMode` is `melodic`; its `change` is `pass` or `measure`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`.
+15. A Pitch carries exactly one of `degree` (a degree token) or `tone` (1, 3, 5, 7 or 9), with an integer `octaveOffset`.
+16. A Pitch with `tone` only on a Pattern that has `harmony`.
 
 A shipped Pattern failing validation is a build-breaking error — the seed file is checked in CI.
 A user-owned Pattern failing validation is repaired where unambiguously possible (clamping tempo,

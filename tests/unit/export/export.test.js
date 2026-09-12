@@ -13,6 +13,7 @@ import {
 } from '../../../src/export/submit.js';
 import { create, cycleAccent, setTimeSignature, addMeasure, setPitch } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
+import { setProgression, setChange, addChord, setChordDegree, cyclePasses } from '../../../src/core/harmony.js';
 import { useBackingStore } from '../../../src/storage/keyValue.js';
 import * as localMeta from '../../../src/storage/localMeta.js';
 
@@ -289,5 +290,108 @@ describe('export/submit', () => {
       expect(midi, `midi/${field}`).not.toContain(field);
     }
     expect(submission).not.toContain('p_1');
+  });
+});
+
+/** Every event in a format-0 track: `{ tick, status, data }`, meta events included. */
+function trackEvents(bytes) {
+  const track = findChunk(bytes, 'MTrk');
+  const events = [];
+  let i = 0;
+  let tick = 0;
+  while (i < track.length) {
+    let delta = 0;
+    for (;;) {
+      const b = track[i++];
+      delta = (delta << 7) | (b & 0x7f);
+      if ((b & 0x80) === 0) break;
+    }
+    tick += delta;
+    const status = track[i++];
+    if (status === 0xff) {
+      const type = track[i++];
+      const len = track[i++];
+      events.push({ tick, status, type, data: [...track.slice(i, i + len)] });
+      i += len;
+    } else {
+      events.push({ tick, status, data: [track[i], track[i + 1]] });
+      i += 2;
+    }
+  }
+  return events;
+}
+
+const noteOns = (bytes) => trackEvents(bytes).filter((e) => e.status === 0x90);
+
+/** One Root-Slot Melodic Pattern under a progression, `measures` Measures of 4/4. */
+function harmonicPattern(progressionId, { measures = 1, change = 'pass' } = {}) {
+  let p = { ...create('Harmonic'), soundMode: 'melodic', key: 'C', tempo: 120 };
+  for (let i = 1; i < measures; i++) p = addMeasure(p);
+  p = setProgression(p, progressionId);
+  p = setChange(p, change);
+  for (let m = 0; m < measures; m++) {
+    p = cycleAccent(p, m, 0, 0);
+    p = setPitch(p, m, 0, 0, { tone: 1, octaveOffset: 0 });
+  }
+  return p;
+}
+
+describe('export/midi under a progression (US-2.6)', () => {
+  it('AC-2.6.10/1 — The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure', () => {
+    let four = harmonicPattern('I-IV-V');
+    four = setChordDegree(addChord(four), 3, '1');
+    expect(cyclePasses(four)).toBe(4);
+    const ons = noteOns(buildMidi(four));
+    expect(ons).toHaveLength(4);
+    expect(ons.map((e) => e.data[0])).toEqual([60, 65, 67, 60]);
+    // Each pass is one 4/4 Measure at 120: 4 quarters, 1920 ticks apart.
+    expect(ons.map((e) => e.tick)).toEqual([0, 1920, 3840, 5760]);
+
+    const blues = harmonicPattern('twelve-bar-blues', { measures: 8, change: 'measure' });
+    expect(cyclePasses(blues)).toBe(3);
+    expect(noteOns(buildMidi(blues))).toHaveLength(24);
+    // The end-of-track sits three passes after the start.
+    const end = trackEvents(buildMidi(blues)).find((e) => e.status === 0xff && e.type === 0x2f);
+    expect(end.tick).toBe(3 * 8 * 4 * TICKS_PER_QUARTER);
+  });
+
+  it("AC-2.6.10/2 — Each pass's notes are the notes playback sounds in that pass, from the one timeline", () => {
+    const blues = harmonicPattern('twelve-bar-blues', { measures: 8, change: 'measure' });
+    const ons = noteOns(buildMidi(blues));
+    for (let pass = 0; pass < 3; pass++) {
+      const expected = buildTimeline(blues, pass).map((e) => e.pitch.midiNote);
+      expect(ons.slice(pass * 8, pass * 8 + 8).map((e) => e.data[0])).toEqual(expected);
+    }
+    // Twelve chords of I7 I7 I7 I7 IV7 IV7 I7 I7 V7 IV7 I7 V7, dealt across 24 Measures.
+    expect(ons.slice(0, 12).map((e) => e.data[0])).toEqual([60, 60, 60, 60, 65, 65, 60, 60, 67, 65, 60, 67]);
+  });
+
+  it('AC-2.6.10/3 — A Pattern with no progression exports one pass, as before', () => {
+    let p = { ...create('Plain'), soundMode: 'melodic', key: 'C', tempo: 120 };
+    p = cycleAccent(p, 0, 0, 0);
+    p = setPitch(p, 0, 0, 0, { degree: '1', octaveOffset: 0 });
+    expect(cyclePasses(p)).toBe(1);
+    expect(noteOns(buildMidi(p))).toHaveLength(1);
+    const end = trackEvents(buildMidi(p)).find((e) => e.status === 0xff && e.type === 0x2f);
+    expect(end.tick).toBe(4 * TICKS_PER_QUARTER);
+  });
+
+  it('AC-2.6.4/6 — Playback and MIDI export resolve a chord tone through the one timeline, so the two cannot disagree', () => {
+    const p = harmonicPattern('ii-V-I');
+    // What the scheduler would sound in pass 1 is buildTimeline(p, 1); the file's
+    // second pass is the same call, so the two carry the same note number.
+    const played = buildTimeline(p, 1)[0].pitch.midiNote;
+    expect(played).toBe(67);
+    expect(noteOns(buildMidi(p))[1].data[0]).toBe(played);
+  });
+
+  it('AC-2.6.8/5 — A submission carries the progression, so the maintainer receives the melody as authored', () => {
+    const p = harmonicPattern('ii-V-I');
+    const shape = toSubmissionShape(p);
+    expect(shape.harmony).toEqual(p.harmony);
+    expect(JSON.parse(JSON.stringify(shape)).harmony).toEqual(p.harmony);
+    expect(shape.measures[0].beats[0].slots[0].pitch).toEqual({ tone: 1, octaveOffset: 0 });
+    // A Pattern without one submits without one.
+    expect('harmony' in toSubmissionShape(create('Plain'))).toBe(false);
   });
 });

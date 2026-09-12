@@ -124,6 +124,7 @@ src/
 │   ├── accents.js          # Metric accent defaults at Beat and Slot level
 │   ├── swing.js            # Per-group swing offsets
 │   ├── pitch.js            # Scale degree + octave + Key → frequency / MIDI note
+│   ├── harmony.js          # Chord qualities, progression catalogue, chord-tone resolution (US-2.6)
 │   ├── timeline.js         # Pattern → flat ordered list of scheduled events
 │   ├── pattern.js          # Pattern construction and mutation
 │   ├── similarity.js       # Duplicate and Pattern Family detection
@@ -230,6 +231,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
+| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.10 | T244, T245 | T246, T247 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

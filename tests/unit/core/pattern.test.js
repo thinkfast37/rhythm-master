@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  setPitch,
   create,
   createMeasure,
   addMeasure,
@@ -17,6 +18,8 @@ import {
   validate,
   MAX_MEASURES,
 } from '../../../src/core/pattern.js';
+import { setProgression, hasHarmony } from '../../../src/core/harmony.js';
+import { buildTimeline } from '../../../src/core/timeline.js';
 import { effectiveAccent, MEDIUM, STRONG, WEAK } from '../../../src/core/accents.js';
 
 describe('core/pattern — construction', () => {
@@ -300,5 +303,44 @@ describe('core/pattern — validation', () => {
     expect(validate({ ...create(), scale: 'ionian' }).errors.join(' ')).toMatch(
       /scale is only valid when soundMode is melodic/
     );
+  });
+
+
+  // --- AC-2.6.8 — The progression is saved with the Pattern ---------------------
+
+  it('AC-2.6.8/2 — A Pattern with no progression behaves exactly as before, and stored Patterns need no migration', () => {
+    let p = { ...create(), soundMode: 'melodic', key: 'C' };
+    p = cycleAccent(p, 0, 0, 0);
+    p = setPitch(p, 0, 0, 0, { degree: '3', octaveOffset: 0 });
+    expect(hasHarmony(p)).toBe(false);
+    expect(validate(p).valid).toBe(true);
+    // Passes are all the same pass without a progression, and no chord is in force.
+    const events = buildTimeline(p, 3);
+    expect(events[0].pitch.midiNote).toBe(64);
+    expect(events[0].chordIndex).toBeNull();
+    // A role on such a Pattern is refused, so no stored Pattern can hold one.
+    expect(() => setPitch(p, 0, 0, 0, { tone: 3, octaveOffset: 0 })).toThrow(/needs a progression/);
+    const stray = structuredClone(p);
+    stray.measures[0].beats[0].slots[0].pitch = { tone: 3, octaveOffset: 0 };
+    expect(validate(stray).errors.join(' ')).toMatch(/no progression/);
+  });
+
+  it("AC-2.6.8/4 — Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it", () => {
+    let a = setProgression({ ...create('A'), soundMode: 'melodic', key: 'C' }, 'I-IV-V');
+    a = cycleAccent(a, 0, 0, 0);
+    a = setPitch(a, 0, 0, 0, { tone: 1, octaveOffset: 0 });
+    let b = setProgression({ ...create('B'), soundMode: 'melodic', key: 'C' }, 'ii-V-I');
+    b = cycleAccent(b, 0, 0, 0);
+    b = setPitch(b, 0, 0, 0, { tone: 3, octaveOffset: 0 });
+
+    expect(duplicate(a).harmony).toEqual(a.harmony);
+    expect(structuredClone(a).harmony).toEqual(a.harmony);
+
+    const joined = append(a, b);
+    expect(joined.harmony).toEqual(a.harmony);
+    expect(validate(joined).valid).toBe(true);
+    // B's 3rd now sounds the 3rd of C (pass 0, chord I), not of Dm7.
+    const notes = buildTimeline(joined, 0).map((e) => e.pitch.midiNote);
+    expect(notes).toEqual([60, 64]);
   });
 });

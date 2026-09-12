@@ -434,6 +434,11 @@ also cycling its Accent. The strip is now built as specified, with two changes t
 the original: a Slot's tap area is split so pitch and Accent are separate gestures
 (AC-2.2.10), and stamping is confined to Slots that already sound (AC-2.2.5).)*
 
+*(2026-09-12: US-2.6 adds a second kind of Pitch the strip can arm — a chord-tone role that
+resolves through a progression. It is a starting point the Composer re-stamps at will, so the
+"automatic pitch-cycling behavior I can't fully control" this story was written against is
+still absent: nothing here ever changes a Slot the Composer did not stamp or fill.)*
+
 - **AC-2.2.1** — One Pitch per Slot, no chords
   - **Given** a Slot that already has a Pitch assigned
   - **When** the Composer assigns it a different Pitch
@@ -485,6 +490,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Given** any Slot in a Melodic Pattern, at any point
   - **When** its state is inspected
   - **Then** it always holds either (Accent 0, null Pitch) or (Accent > 0, non-null Pitch) — no UI path can produce any other combination
+  - *(Clarified 2026-09-12 with US-2.6: a chord-tone Pitch — a role such as the 3rd, resolved through the chord in force — is a Pitch for the purposes of this invariant. A Slot holds a scale degree or a role, never both and never neither while it sounds.)*
 
 - **AC-2.2.9** — Changing the armed pitch doesn't retroactively affect stamped Slots
   - **Given** Slots that have already been stamped with a pitch
@@ -1750,6 +1756,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **When** they are compared
   - **Then** they are never flagged as duplicates
   - **And**, given instead two Melodic Patterns identical except for one Slot's Pitch, or two Patterns identical except for one Subdivision Group's swing value, both pairs are likewise never flagged as duplicates
+  - *(Clarified 2026-09-12 with US-2.6: a progression is Pitch content for this purpose — two Patterns differing only in progression, chord quality or change setting are not duplicates, AC-2.6.9.)*
 
 - **AC-11.1.3** — Duplicate warning fires only at Pattern-creation moments
   - **Given** the Composer, prompted to name a new Pattern (US-7.3's forced-naming flow, or US-7.4's Make Copy), types a name that would make the new Pattern a true duplicate of "Samba Break"
@@ -1886,6 +1893,7 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
   - **Given** "Samba Break" (Percussive) and "Samba Break (Melodic)" (Melodic, Key C)
   - **When** each is exported
   - **Then** "Samba Break" maps to a fixed drum-channel note mapping, and "Samba Break (Melodic)" exports pitched notes exactly matching each Slot's authored degree+octave, resolved through Key C, on a melodic channel
+  - *(Clarified 2026-09-12 with US-2.6: a Pattern carrying a progression exports every pass of its harmonic cycle, each chord tone resolved through the chord in force for that pass — AC-2.6.10. A Pattern with no progression still exports one pass.)*
 
 - **AC-12.1.3** — Accent Level maps to a fixed MIDI velocity table
   - **Given** a Slot at Accent Level 1 (Weak), a Slot at Accent Level 2 (Medium), a Slot at Accent Level 3 (Strong), and an off Slot (Accent Level 0)
@@ -2031,10 +2039,11 @@ the original: a Slot's tap area is split so pitch and Accent are separate gestur
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom: Pattern header → grid → play controls → Recipe strip (US-1.3) → pitch strip (US-2.2, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
-  - **And** in Percussive mode the pitch strip is absent rather than an empty row, so the order there is the same list with that entry removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
+  - **Then** the order is fixed top to bottom: Pattern header → chord strip (US-2.6, Melodic with a progression only) → grid → play controls → Recipe strip (US-1.3) → pitch strip (US-2.2, Melodic only) → harmony controls (US-2.6, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → quick navigation → family members (US-11.2, ≥768px only)
+  - **And** in Percussive mode the pitch strip, the chord strip and the harmony controls are absent rather than empty rows, so the order there is the same list with those entries removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
   - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
+  - *(Revised 2026-09-12 with US-2.6: two entries added. The chord strip sits between the header and the grid because Now and Next are read in the same glance as the Measure being played (AC-2.6.7/1); the harmony controls sit under the pitch strip because the chords are the other half of the palette the role chips resolve through. Both are conditional in exactly the way the pitch strip already is — absent, not empty, when they do not apply — so what this AC guarantees is unchanged. Layout approved by the maintainer 2026-09-12 as part of the US-2.6 spill.)*
   - *(Revised again 2026-08-17 for the family members area. As written, this AC said the order is identical at every width, which AC-11.2.5 directly contradicts: it requires that area at 768px and wider and nothing below it. Both cannot be true, so the conflict is resolved here rather than left for whoever hit it next. The entry is conditional in the same way the pitch strip already is — an absent entry rather than a reordered list — so what this AC guarantees is unchanged: the sections that are present are always in this order, and none ever swaps places with another. Family members go last because they are a way out of the current Pattern, not a control on it; putting them above quick navigation would separate the transport from the controls it drives.)*
 
   - *(Revised again 2026-08-17 for the Recipe strip. It sits directly below the play controls
@@ -2577,6 +2586,132 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Given** any Pattern with stamped Pitches
   - **When** the Composer changes the scale
   - **Then** no stored degree, octave, or Slot changes, and playback is identical — the scale drives the strip's marking and labels only
+
+---
+
+### User Story 38 - Build a melody from a chord progression
+
+*Traceability: `US-2.6` — Build a melody from a chord progression*
+
+**As** the Composer, **I want** to lay a chord progression over a rhythm Pattern so that each sounding Slot plays one chord tone of whichever chord is in force, **so that** I can practise a rhythm through a progression — one chord per pass, or one per Measure — read what is coming next off the screen, and save the result as a melody of my own.
+
+*(Added 2026-09-12 at the maintainer's request: "when I have a rhythm, I want to be able to use chord tones to layer on top of the rhythm … I could play one chord for four measures, then switch to another chord … or each measure I switch the chord … I want to be able to pick chord progressions easily … see the name of each chord based on the key I'm in … modify the chord quality for that progression … visualize what's actually playing … and save these full-on melodies." A Slot still holds exactly one Pitch (AC-2.2.1): a chord-tone Pitch is a role — Root, 3rd, 5th, 7th or 9th — that resolves to a note through the chord in force, the Key, and its octave, instead of through a fixed degree. The 8-Measure cap stands: a progression longer than the Pattern is carried across passes rather than by a longer grid, so every phone-layout criterion holds unchanged.)*
+
+**Independent Test**: Give a Melodic Pattern a progression, stamp roles onto its Slots, and assert that each pass sounds the members of the chord in force, that the chord strip marks Now and Next as playback moves, and that the progression survives a reload and reaches the MIDI file.
+
+**Acceptance Scenarios**:
+
+- **AC-2.6.1** — A progression is chosen from a catalogue of named progressions
+  - **Given** a Melodic Pattern in a Key with a chosen scale
+  - **When** the Composer chooses an entry from the catalogue
+  - **Then** the Pattern takes that progression as concrete chords — one per step, each a chromatic degree of the Key with a quality — spelled from the Key and scale at the moment of choosing
+  - **Cases**:
+    - **AC-2.6.1/1** — The picker offers None and the catalogue: I–IV–V, I–V–vi–IV, vi–IV–I–V, I–vi–IV–V, ii–V–I, I–vi–ii–V, the twelve-bar blues, the Andalusian i–♭VII–♭VI–V, i–iv–v, i–♭VI–♭III–♭VII, I–IV–vi–V, Pachelbel's I–V–vi–iii–IV–I–IV–V, I–♭VII–IV, I–IV, and ii–V
+    - **AC-2.6.1/2** — Choosing a progression gives the Pattern one chord per step, each named in the Pattern's Key: I–IV–V in C is C, F and G
+    - **AC-2.6.1/3** — Qualities are diatonic to the scale at the moment of choosing: i–iv–v in C Aeolian is Cm, Fm and Gm, and ii–V–I in C Ionian is Dm7, G7 and Cmaj7
+    - **AC-2.6.1/4** — A pentatonic or blues scale spells its chords from the parallel Ionian, or from Aeolian when the scale has ♭3 and no 3: I–IV–V under C Minor Pentatonic is Cm, Fm and Gm
+    - **AC-2.6.1/5** — A step whose root lies outside the scale takes the quality the catalogue names for it, or a major triad: ♭VII in C Ionian is B♭
+    - **AC-2.6.1/6** — Choosing None removes the progression, and every chord-tone Pitch becomes the scale degree it sounded under the first chord, so the first pass sounds exactly as before
+  - *(Cross-references: a chord edit on a shipped Pattern is guarded as the scale is, AC-2.5.4/5; a later scale change alters no chord, in the spirit of AC-2.5.5; a change-setting edit mid-play lands at the next pass per AC-4.1.9; the Key transposes without touching stored data, AC-2.3.2; stamping and turning on follow AC-2.2.6 and AC-2.2.11; Percussive strips the progression as AC-2.5.4/3 strips the scale; one timeline is SC-003.)*
+
+- **AC-2.6.2** — Each chord's root and quality are adjusted individually
+  - **Given** a Pattern with a progression
+  - **When** the Composer edits one chord in the chord editor
+  - **Then** that chord alone changes, and its name in the Key follows
+  - **Cases**:
+    - **AC-2.6.2/1** — The quality picker offers major, minor, diminished, augmented, sus2, sus4, 6, m6, maj7, m7, 7, m7♭5, dim7, mMaj7, 7sus4, add9, 9, maj9 and m9
+    - **AC-2.6.2/2** — Changing one chord's quality changes that chord alone: I–IV–V in C with the I set to maj7 reads Cmaj7, F, G
+    - **AC-2.6.2/3** — A chord's root can be changed to any of the twelve chromatic degrees, and it is renamed accordingly
+    - **AC-2.6.2/4** — A chord can be added, up to sixteen, and removed, down to one
+    - **AC-2.6.2/5** — Changing the scale afterwards changes no chord: a quality is the Composer's data once chosen
+    - **AC-2.6.2/6** — Editing a chord on a shipped Pattern goes through the naming prompt, as the Key does
+
+- **AC-2.6.3** — The chord changes every pass or every Measure
+  - **Given** a Pattern of M Measures with a progression of n chords
+  - **When** it plays on loop
+  - **Then** the chord in force for any Measure of any pass is decided by the Pattern's change setting alone
+  - **Cases**:
+    - **AC-2.6.3/1** — Every pass: pass p sounds chord p mod n throughout, so a four-chord progression over a four-Measure Pattern takes four passes to come round
+    - **AC-2.6.3/2** — Every Measure: Measure m of pass p sounds chord (p × M + m) mod n, continuing across passes rather than restarting each one — the twelve-bar blues over eight Measures comes round after three passes
+    - **AC-2.6.3/3** — Every pass is the setting a newly chosen progression starts with
+    - **AC-2.6.3/4** — Changing the setting while playing is heard from the next pass
+
+- **AC-2.6.4** — A chord-tone Pitch sounds the member of the chord in force
+  - **Given** a Slot holding a chord-tone Pitch
+  - **When** it sounds
+  - **Then** the note is the member of the chord in force that its role names, an octave above the chord's root when the role reaches past it, resolved through the Key
+  - **Cases**:
+    - **AC-2.6.4/1** — Root, 3rd, 5th, 7th and 9th resolve to the chord's members above its root, which sits at the armed octave: in C at octave 4 the 3rd of G is B4 and its 5th is D5
+    - **AC-2.6.4/2** — A role the chord lacks sounds the chord's next-lower member: the 7th of a C major triad sounds its 5th, and the 9th of Cmaj7 sounds its 7th
+    - **AC-2.6.4/3** — The same Slot sounds a different note under each chord: a Root under I–IV–V in C sounds C, then F, then G
+    - **AC-2.6.4/4** — A scale-degree Pitch is unaffected by the progression, so fixed notes and chord tones mix in one Pattern
+    - **AC-2.6.4/5** — Changing the Key transposes every chord and chord tone with it, altering no stored role, degree or octave
+    - **AC-2.6.4/6** — Playback and MIDI export resolve a chord tone through the one timeline, so the two cannot disagree
+
+- **AC-2.6.5** — The pitch strip offers chord-tone roles while a progression is active
+  - **Given** a Melodic Pattern with a progression
+  - **When** the Composer looks at the pitch strip
+  - **Then** it carries a role chip for each of Root, 3rd, 5th, 7th and 9th beside the degree chips, armed and stamped exactly as a degree is
+  - **Cases**:
+    - **AC-2.6.5/1** — The role chips are on the pitch strip when the Pattern has a progression, and absent when it does not
+    - **AC-2.6.5/2** — Arming a role and tapping a sounding Slot's note band stores a chord-tone Pitch, leaving its Accent Level as it was
+    - **AC-2.6.5/3** — Each role chip names the note it sounds under the chord in force, and a role that chord lacks says which member stands in
+    - **AC-2.6.5/4** — Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch
+    - **AC-2.6.5/5** — The octave stepper applies to a role exactly as to a degree
+    - **AC-2.6.5/6** — Turning a Slot on while a role is armed gives it that role
+
+- **AC-2.6.6** — Fill deals chord tones across the sounding Slots
+  - **Given** a Pattern with a progression and some sounding Slots
+  - **When** the Composer picks an order and presses Fill
+  - **Then** every sounding Slot takes a chord-tone Pitch dealt in that order, Measure by Measure, and nothing else about the Pattern changes
+  - **Cases**:
+    - **AC-2.6.6/1** — The orders offered are Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth
+    - **AC-2.6.6/2** — The deal restarts at every Measure, so each Measure opens on the Root
+    - **AC-2.6.6/3** — Ascending deals the roles in order and repeats: over four roles, five sounding Slots take Root, 3rd, 5th, 7th, Root
+    - **AC-2.6.6/4** — Alberti deals Root, 5th, 3rd, 5th; Descending deals from the highest role down; Up and down rises then falls without repeating the turn
+    - **AC-2.6.6/5** — The roles dealt are the members of the progression's fullest chord, so a progression of triads deals Root, 3rd and 5th only
+    - **AC-2.6.6/6** — Fill replaces the Pitch of every sounding Slot at the armed octave and nothing else: no Slot turns on or off and no Accent Level changes
+    - **AC-2.6.6/7** — Fill on a shipped Pattern goes through the naming prompt
+
+- **AC-2.6.7** — The progression is visible while playing
+  - **Given** a Pattern with a progression, playing or at rest
+  - **When** the Composer looks at the screen
+  - **Then** the whole progression is on view above the grid with the chord in force and the one after it marked, so what to play next is never a matter of memory
+  - **Cases**:
+    - **AC-2.6.7/1** — A chord strip above the grid lists every chord of the progression in order, each with its numeral and its name in the Key
+    - **AC-2.6.7/2** — The chord in force is marked Now and the chord that follows it Next, by a word as well as a colour, and the marks move as playback reaches each chord
+    - **AC-2.6.7/3** — With the chord changing every Measure, each Measure's header names the chord it sounds in the pass being played
+    - **AC-2.6.7/4** — At rest, the chord strip and the Measure headers show the first pass
+    - **AC-2.6.7/5** — A chord-tone Slot's note band shows its role and the note it sounds under the chord governing it in the current pass, updating as the chord changes
+    - **AC-2.6.7/6** — The chord strip is absent on a Pattern with no progression, and on a Percussive Pattern
+
+- **AC-2.6.8** — The progression is saved with the Pattern
+  - **Given** a Pattern with a progression
+  - **When** it is saved, copied, appended, submitted or reopened
+  - **Then** the progression travels with the Pattern as its own data, and a Pattern without one is untouched by this story
+  - **Cases**:
+    - **AC-2.6.8/1** — A progression, its chord edits and the change setting survive closing and reopening the Pattern
+    - **AC-2.6.8/2** — A Pattern with no progression behaves exactly as before, and stored Patterns need no migration
+    - **AC-2.6.8/3** — Switching to Percussive removes the progression along with the Key, scale and Pitch data
+    - **AC-2.6.8/4** — Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it
+    - **AC-2.6.8/5** — A submission carries the progression, so the maintainer receives the melody as authored
+
+- **AC-2.6.9** — Duplicate detection sees the progression
+  - **Given** two Melodic Patterns identical in rhythm and in every Slot's Pitch
+  - **When** they are compared for duplication
+  - **Then** the comparison includes each Pattern's progression and change setting
+  - **Cases**:
+    - **AC-2.6.9/1** — Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, or in the change setting are not duplicates
+    - **AC-2.6.9/2** — Two Patterns identical in all of those are duplicates, and Family detection is unchanged: the same rhythm under different harmony is the same Family
+
+- **AC-2.6.10** — MIDI export carries the whole progression
+  - **Given** a Pattern with a progression
+  - **When** it is exported as MIDI
+  - **Then** the file spans the harmonic cycle rather than one pass
+  - **Cases**:
+    - **AC-2.6.10/1** — The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure
+    - **AC-2.6.10/2** — Each pass's notes are the notes playback sounds in that pass, from the one timeline
+    - **AC-2.6.10/3** — A Pattern with no progression exports one pass, as before
 
 ## Requirements *(mandatory)*
 

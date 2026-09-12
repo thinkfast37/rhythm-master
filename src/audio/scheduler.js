@@ -11,6 +11,7 @@
  * animation loop, so the highlighted Slot cannot disagree with what is heard.
  */
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
+import { hasHarmony } from '../core/harmony.js';
 import { resume, onSuspended } from './context.js';
 import { playPercussive, playClick } from './voices.js';
 
@@ -71,6 +72,9 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
     return origin + countInSeconds + loop * loopDuration + offset;
   }
 
+  /** The pass about to be scheduled, counted from Play across every re-anchor. */
+  const currentPass = () => loopOffset + nextLoop;
+
   /*
    * Both cursors — Slots and metronome Beats — walk one pass at a time and only
    * advance to the next pass together, so a Pattern edit can swap the timeline,
@@ -121,6 +125,11 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       nextBeatIndex = 0;
       onLoop?.(loopOffset + nextLoop);
 
+      // Under a progression the next pass may be a different chord, so its
+      // timeline is this pass's rebuilt for that pass — the same function, the
+      // same timing, only the chord tones resolved anew (US-2.6, D-011).
+      if (!pending && hasHarmony(pattern)) timeline = buildTimeline(pattern, currentPass());
+
       if (pending) {
         // Re-anchor the origin at this boundary — still a product of the old
         // origin, never a per-pass accumulation (FR-009) — then swap in the
@@ -133,7 +142,7 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
         pattern = pending.pattern;
         settings = pending.settings ?? settings;
         pending = null;
-        timeline = buildTimeline(pattern);
+        timeline = buildTimeline(pattern, currentPass());
         beatGrid = buildBeatGrid(pattern);
         loopDuration = loopDurationSeconds(pattern);
       }
@@ -229,7 +238,7 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
         master.connect(ctx.destination);
       }
 
-      timeline = buildTimeline(pattern);
+      timeline = buildTimeline(pattern, 0);
       beatGrid = buildBeatGrid(pattern);
       loopDuration = loopDurationSeconds(pattern);
 

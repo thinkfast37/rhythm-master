@@ -132,12 +132,16 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
   // and follows the same convention: always in the DOM, shown only at 768px and
   // wider and only when there are members (AC-11.2.5, which is where its
   // visibility is proved).
+  // The chord strip and the harmony controls follow the same convention as the
+  // pitch strip: always in the DOM, hidden unless they apply (US-2.6).
   const expected = [
     'HEADER.pattern-header',
+    'SECTION[chords]',
     'DIV.grid',
     'SECTION[play]',
     'SECTION[recipe]',
     'SECTION[pitch]',
+    'SECTION[harmony]',
     'DETAILS[playback-settings]',
     'DETAILS[edit]',
     'DETAILS[actions]',

@@ -10,6 +10,7 @@
  */
 import { buildTimeline, loopDurationSeconds } from '../core/timeline.js';
 import { beatDurationSeconds, beatCount } from '../core/meter.js';
+import { cyclePasses } from '../core/harmony.js';
 
 export const TICKS_PER_QUARTER = 480;
 
@@ -39,12 +40,22 @@ function chunk(id, data) {
 }
 
 /**
- * Build a .mid for one loop pass of a Pattern.
+ * Build a .mid for a Pattern: one loop pass, or under a progression every pass
+ * of its harmonic cycle, so the file carries the whole progression rather than
+ * its first chord (AC-2.6.10). Each pass comes from the same `buildTimeline`
+ * playback uses, offset by whole passes.
  *
  * @returns {Uint8Array}
  */
 export function buildMidi(pattern) {
-  const events = buildTimeline(pattern);
+  const passes = cyclePasses(pattern);
+  const passSeconds = loopDurationSeconds(pattern);
+  const events = [];
+  for (let pass = 0; pass < passes; pass++) {
+    for (const event of buildTimeline(pattern, pass)) {
+      events.push({ ...event, timeSeconds: event.timeSeconds + pass * passSeconds });
+    }
+  }
 
   // Seconds are converted to ticks against the Pattern's own tempo, so swing
   // offsets survive the conversion rather than being quantised away.
@@ -62,16 +73,18 @@ export function buildMidi(pattern) {
   });
 
   // A Time Signature meta event at every Measure boundary, since meter is
-  // per-Measure in this app (US-1.1).
+  // per-Measure in this app (US-1.1) — in every pass the file holds.
   let measureStart = 0;
-  for (const measure of pattern.measures) {
-    const [numerator, denominator] = measure.timeSignature.split('/').map(Number);
-    timed.push({
-      tick: toTicks(measureStart),
-      bytes: [0xff, 0x58, 0x04, numerator, Math.log2(denominator), 24, 8],
-    });
-    measureStart +=
-      beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo);
+  for (let pass = 0; pass < passes; pass++) {
+    for (const measure of pattern.measures) {
+      const [numerator, denominator] = measure.timeSignature.split('/').map(Number);
+      timed.push({
+        tick: toTicks(measureStart),
+        bytes: [0xff, 0x58, 0x04, numerator, Math.log2(denominator), 24, 8],
+      });
+      measureStart +=
+        beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo);
+    }
   }
 
   for (const event of events) {
@@ -90,9 +103,9 @@ export function buildMidi(pattern) {
     track.push(...variableLength(item.tick - previous), ...item.bytes);
     previous = item.tick;
   }
-  // End of track, one loop length after the start so the file's duration is the
+  // End of track, one cycle after the start so the file's duration is the
   // Pattern's, not merely the last note's.
-  const endTick = Math.max(previous, toTicks(loopDurationSeconds(pattern)));
+  const endTick = Math.max(previous, toTicks(passes * passSeconds));
   track.push(...variableLength(endTick - previous), 0xff, 0x2f, 0x00);
 
   const header = chunk('MThd', [0, 0, 0, 1, (TICKS_PER_QUARTER >> 8) & 0xff, TICKS_PER_QUARTER & 0xff]);

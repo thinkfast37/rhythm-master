@@ -17,6 +17,16 @@ import { slotCount, subdivisionGroups } from '../core/recipes.js';
 import { effectiveAccent, defaultAccent } from '../core/accents.js';
 import { labelsFor, effectiveSystem } from '../core/counting.js';
 import { noteName } from '../core/pitch.js';
+import {
+  hasHarmony,
+  chordAt,
+  chordIn,
+  nextChordAt,
+  chordName,
+  chordNumeral,
+  chordToneName,
+  toneLabel,
+} from '../core/harmony.js';
 
 const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
 
@@ -41,13 +51,89 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
   if (options.recipeArmed) classes.push('recipe-armed');
   root.className = classes.join(' ');
 
+  // Under a progression the chord in force depends on the pass being played
+  // (AC-2.6.3): the one the cursor is in, or the first at rest (AC-2.6.7/4).
+  const pass = transportPosition?.loop ?? 0;
+
   pattern.measures.forEach((measure, measureIndex) => {
     root.appendChild(
-      renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly, pattern.key)
+      renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly, pattern.key, pass)
     );
   });
 
   return root;
+}
+
+/**
+ * The chord strip: the whole progression above the grid, the chord in force
+ * marked Now and the one after it Next — by a word, not only a colour — so what
+ * to play next is read off the screen rather than remembered (AC-2.6.7).
+ *
+ * At rest it shows the first pass; while playing the marks follow the cursor's
+ * pass and Measure. Rendered empty and hidden on a Pattern with no progression
+ * and on a Percussive one (AC-2.6.7/6).
+ */
+export function renderChordStrip(root, pattern, transportPosition = null) {
+  root.innerHTML = '';
+  root.className = 'chord-strip';
+  const active = pattern.soundMode === 'melodic' && hasHarmony(pattern);
+  root.hidden = !active;
+  if (!active) return root;
+
+  const pass = transportPosition?.loop ?? 0;
+  const measureIndex = transportPosition?.measureIndex ?? 0;
+  const now = chordAt(pattern, pass, measureIndex);
+  const next = nextChordAt(pattern, pass, measureIndex);
+  root.dataset.pass = String(pass);
+  root.dataset.change = pattern.harmony.change;
+
+  const label = document.createElement('span');
+  label.className = 'chord-strip-label';
+  label.textContent = pattern.harmony.change === 'measure' ? 'Chords · every Measure' : 'Chords · every pass';
+  root.appendChild(label);
+
+  const list = document.createElement('ol');
+  list.className = 'chord-list';
+  pattern.harmony.chords.forEach((chord, index) => {
+    const chip = document.createElement('li');
+    chip.className = 'chord-chip';
+    chip.dataset.chord = String(index);
+    if (index === now) chip.classList.add('now');
+    if (index === next) chip.classList.add('next');
+
+    const numeral = document.createElement('span');
+    numeral.className = 'chord-numeral';
+    numeral.textContent = chordNumeral(chord);
+    const name = document.createElement('span');
+    name.className = 'chord-name';
+    name.textContent = tryChordName(chord, pattern.key);
+    chip.dataset.chordName = name.textContent;
+    chip.append(numeral, name);
+
+    // The word is the mark (AC-2.6.7/2): a colour alone is invisible to a
+    // colour-blind reader and to a glance from across a music stand.
+    const marks = [];
+    if (index === now) marks.push('Now');
+    if (index === next) marks.push('Next');
+    if (marks.length > 0) {
+      const mark = document.createElement('span');
+      mark.className = 'chord-mark';
+      mark.textContent = marks.join(' · ');
+      chip.appendChild(mark);
+    }
+    list.appendChild(chip);
+  });
+  root.appendChild(list);
+  return root;
+}
+
+/** A chord's name, or the numeral alone if this Key cannot spell it. */
+function tryChordName(chord, key) {
+  try {
+    return chordName(chord, key);
+  } catch {
+    return chordNumeral(chord);
+  }
 }
 
 /**
@@ -63,7 +149,7 @@ export function meterProminence(measures, index) {
     : 'prominent';
 }
 
-function renderMeasure(measure, measureIndex, pattern, position, system, readOnly, key) {
+function renderMeasure(measure, measureIndex, pattern, position, system, readOnly, key, pass = 0) {
   const row = document.createElement('section');
   row.className = 'measure';
   row.dataset.measure = String(measureIndex);
@@ -88,6 +174,20 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   meter.setAttribute('title', `Measure ${measureIndex + 1} — ${measure.timeSignature}`);
   row.appendChild(meter);
 
+  // With the chord changing every Measure, each Measure names the chord it
+  // sounds in the pass being played (AC-2.6.7/3) — the strip above says which
+  // chord is in force, this says where it lands.
+  const chordIndex = pattern.harmony?.change === 'measure' ? chordAt(pattern, pass, measureIndex) : null;
+  if (chordIndex !== null) {
+    const chord = pattern.harmony.chords[chordIndex];
+    const label = document.createElement('span');
+    label.className = 'measure-chord';
+    label.dataset.chord = String(chordIndex);
+    label.textContent = tryChordName(chord, key);
+    label.setAttribute('title', `${chordNumeral(chord)} — the chord this Measure sounds in pass ${pass + 1}`);
+    row.appendChild(label);
+  }
+
   const beats = document.createElement('div');
   beats.className = 'beats';
   // Every Beat on one line is the layout until something measures otherwise —
@@ -97,9 +197,10 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   beats.style.setProperty('--beat-count', String(measure.beats.length));
   const noteValue = beatNoteValue(measure.timeSignature);
 
+  const chord = pattern.soundMode === 'melodic' ? chordIn(pattern, pass, measureIndex) : null;
   measure.beats.forEach((beat, beatIndex) => {
     beats.appendChild(
-      renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly, key)
+      renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly, key, chord)
     );
   });
 
@@ -107,7 +208,7 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   return row;
 }
 
-function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly, key) {
+function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly, key, chord = null) {
   const melodic = pattern.soundMode === 'melodic';
   const el = document.createElement('div');
   el.className = 'beat';
@@ -135,7 +236,7 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
     group.slotIndices.forEach((slotIndex) => {
       groupEl.appendChild(
         renderSlot(
-          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic, readOnly, key
+          measure, measureIndex, beatIndex, slotIndex, labels[slotIndex], position, melodic, readOnly, key, chord
         )
       );
     });
@@ -166,23 +267,29 @@ function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, 
  * Absent on a Slot that does not sound, because such a Slot holds no Pitch to
  * show (AC-2.2.8).
  */
-function renderPitchBadge(slot, key) {
+function renderPitchBadge(slot, key, chord = null) {
   if (!slot.on || !slot.pitch) return null;
 
   const pitch = document.createElement('span');
   pitch.className = 'slot-pitch';
-  pitch.dataset.degree = slot.pitch.degree;
   pitch.dataset.octave = String(slot.pitch.octaveOffset ?? 0);
+
+  // A chord-tone Pitch shows its role, and the note it sounds under the chord
+  // governing this Measure in the current pass (AC-2.6.7/5). The band is the
+  // same shape either way: what the Composer stamped, then what it sounds as.
+  const isTone = slot.pitch.tone !== undefined;
+  if (isTone) pitch.dataset.tone = String(slot.pitch.tone);
+  else pitch.dataset.degree = slot.pitch.degree;
 
   const degree = document.createElement('span');
   degree.className = 'slot-degree';
-  degree.textContent = slot.pitch.degree;
+  degree.textContent = isTone ? toneLabel(slot.pitch.tone) : slot.pitch.degree;
   pitch.appendChild(degree);
 
   // A Pattern mid-conversion to Melodic can hold a Pitch before a Key is set,
   // and an unspellable degree throws rather than guessing. Neither is a reason
   // to lose the degree the Composer authored, so the name is what goes missing.
-  const named = key ? tryNoteName(slot.pitch, key) : null;
+  const named = key ? (isTone ? tryChordToneName(slot.pitch, chord, key) : tryNoteName(slot.pitch, key)) : null;
   if (named) {
     const name = document.createElement('span');
     name.className = 'slot-note-name';
@@ -199,6 +306,16 @@ function renderPitchBadge(slot, key) {
 function tryNoteName(pitch, key) {
   try {
     return noteName(pitch, key);
+  } catch {
+    return null;
+  }
+}
+
+/** The note a role sounds under a chord, or nothing when there is no chord to sound it. */
+function tryChordToneName(pitch, chord, key) {
+  if (!chord) return null;
+  try {
+    return chordToneName(pitch, chord, key);
   } catch {
     return null;
   }
@@ -222,7 +339,7 @@ function tryNoteName(pitch, key) {
  * and its `playing` class in both shapes, so nothing downstream has to know
  * which one it is looking at.
  */
-function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic, readOnly, key) {
+function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position, melodic, readOnly, key, chord = null) {
   const accent = effectiveAccent(measure, beatIndex, slotIndex);
   const slot = measure.beats[beatIndex].slots[slotIndex];
   const split = melodic && !readOnly;
@@ -287,7 +404,7 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
     // In Melodic mode the Slot shows its scale degree and the note it names,
     // since that is the musical content there.
     if (melodic) {
-      const badge = renderPitchBadge(slot, key);
+      const badge = renderPitchBadge(slot, key, chord);
       if (badge) el.appendChild(badge);
     }
     return el;
@@ -313,12 +430,12 @@ function renderSlot(measure, measureIndex, beatIndex, slotIndex, label, position
   note.dataset.beat = String(beatIndex);
   note.dataset.slot = String(slotIndex);
   note.disabled = !slot.on;
-  const badge = renderPitchBadge(slot, key);
+  const badge = renderPitchBadge(slot, key, chord);
   if (badge) note.appendChild(badge);
   note.setAttribute(
     'title',
     slot.on
-      ? `Set this note's pitch to the armed pitch (currently ${badge?.dataset.noteName ?? slot.pitch?.degree ?? '—'})`
+      ? `Set this note's pitch to the armed pitch (currently ${badge?.dataset.noteName ?? badge?.textContent ?? '—'})`
       : 'Turn this Slot on above before giving it a pitch'
   );
 

@@ -57,15 +57,25 @@ export function rhythmFingerprint(pattern) {
   return feel + body;
 }
 
-/** Pitch content, or null for a Percussive Pattern. */
+/**
+ * Pitch content, or null for a Percussive Pattern. A chord-tone Pitch is its
+ * role, and the progression it resolves through is Pitch content too — two
+ * Patterns with the same roles under different chords sound different
+ * (AC-2.6.9).
+ */
 export function pitchFingerprint(pattern) {
   if (pattern.soundMode !== 'melodic') return null;
+  const h = pattern.harmony;
+  const harmony = h?.chords?.length
+    ? `harmony=${h.change}:${h.chords.map((c) => `${c.degree}${c.quality}`).join(',')}`
+    : 'harmony=-';
+  const pitchToken = (p) =>
+    p.tone !== undefined ? `T${p.tone}@${p.octaveOffset ?? 0}` : `${p.degree}@${p.octaveOffset ?? 0}`;
   return [
     pattern.key,
+    harmony,
     ...pattern.measures.flatMap((m) =>
-      m.beats.flatMap((b) =>
-        b.slots.map((s) => (s.on && s.pitch ? `${s.pitch.degree}@${s.pitch.octaveOffset ?? 0}` : '-'))
-      )
+      m.beats.flatMap((b) => b.slots.map((s) => (s.on && s.pitch ? pitchToken(s.pitch) : '-')))
     ),
   ].join(' ');
 }

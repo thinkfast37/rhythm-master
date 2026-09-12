@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 402 across 37 User Stories
+**Criteria**: 453 across 38 User Stories
 
-**Coverage**: 207 of 402 criteria proven (51.5%)
+**Coverage**: 258 of 453 criteria proven (57.0%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 207 | 51.5% |
-| 🔴 Gap — HIGH | 73 | 18.2% |
-| 🟠 Gap — MEDIUM | 44 | 10.9% |
-| 🟡 Gap — LOW | 78 | 19.4% |
+| 🟢 Proven | 258 | 57.0% |
+| 🔴 Gap — HIGH | 73 | 16.1% |
+| 🟠 Gap — MEDIUM | 44 | 9.7% |
+| 🟡 Gap — LOW | 78 | 17.2% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -95,6 +95,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-15.2 | 19 | **19** | · | · | · | · | · |
 | 🟢 US-17.1 | 24 | **24** | · | · | · | · | · |
 | 🟢 US-2.5 | 14 | **14** | · | · | · | · | · |
+| 🟢 US-2.6 | 51 | **51** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -502,3 +503,54 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.5 | `AC-2.5.4/4` | Every shipped Melodic Pattern carries `scale: "ionian"` explicitly | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.4/5` | On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.5` 🖵 | The scale never changes what is stamped or heard | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/1` 🖵 | The picker offers None and the catalogue: I–IV–V, I–V–vi–IV, vi–IV–I–V, I–vi–IV–V, ii–V–I, I–vi–ii–V, the twelve-bar blues, the Andalusian i–♭VII–♭VI–V, i–iv–v, i–♭VI–♭III–♭VII, I–IV–vi–V, Pachelbel's I–V–vi–iii–IV–I–IV–V, I–♭VII–IV, I–IV, and ii–V | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/2` | Choosing a progression gives the Pattern one chord per step, each named in the Pattern's Key: I–IV–V in C is C, F and G | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/3` | Qualities are diatonic to the scale at the moment of choosing: i–iv–v in C Aeolian is Cm, Fm and Gm, and ii–V–I in C Ionian is Dm7, G7 and Cmaj7 | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/4` | A pentatonic or blues scale spells its chords from the parallel Ionian, or from Aeolian when the scale has ♭3 and no 3: I–IV–V under C Minor Pentatonic is Cm, Fm and Gm | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/5` | A step whose root lies outside the scale takes the quality the catalogue names for it, or a major triad: ♭VII in C Ionian is B♭ | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/6` | Choosing None removes the progression, and every chord-tone Pitch becomes the scale degree it sounded under the first chord, so the first pass sounds exactly as before | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.2/1` 🖵 | The quality picker offers major, minor, diminished, augmented, sus2, sus4, 6, m6, maj7, m7, 7, m7♭5, dim7, mMaj7, 7sus4, add9, 9, maj9 and m9 | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.2/2` | Changing one chord's quality changes that chord alone: I–IV–V in C with the I set to maj7 reads Cmaj7, F, G | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.2/3` | A chord's root can be changed to any of the twelve chromatic degrees, and it is renamed accordingly | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.2/4` | A chord can be added, up to sixteen, and removed, down to one | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.2/5` | Changing the scale afterwards changes no chord: a quality is the Composer's data once chosen | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.2/6` 🖵 | Editing a chord on a shipped Pattern goes through the naming prompt, as the Key does | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.3/1` | Every pass: pass p sounds chord p mod n throughout, so a four-chord progression over a four-Measure Pattern takes four passes to come round | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.3/2` | Every Measure: Measure m of pass p sounds chord (p × M + m) mod n, continuing across passes rather than restarting each one — the twelve-bar blues over eight Measures comes round after three passes | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.3/3` | Every pass is the setting a newly chosen progression starts with | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.3/4` | Changing the setting while playing is heard from the next pass | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `scheduler.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.4/1` | Root, 3rd, 5th, 7th and 9th resolve to the chord's members above its root, which sits at the armed octave: in C at octave 4 the 3rd of G is B4 and its 5th is D5 | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.4/2` | A role the chord lacks sounds the chord's next-lower member: the 7th of a C major triad sounds its 5th, and the 9th of Cmaj7 sounds its 7th | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.4/3` | The same Slot sounds a different note under each chord: a Root under I–IV–V in C sounds C, then F, then G | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.4/4` | A scale-degree Pitch is unaffected by the progression, so fixed notes and chord tones mix in one Pattern | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.4/5` | Changing the Key transposes every chord and chord tone with it, altering no stored role, degree or octave | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.4/6` | Playback and MIDI export resolve a chord tone through the one timeline, so the two cannot disagree | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `export.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/1` 🖵 | The role chips are on the pitch strip when the Pattern has a progression, and absent when it does not | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/2` 🖵 | Arming a role and tapping a sounding Slot's note band stores a chord-tone Pitch, leaving its Accent Level as it was | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/3` 🖵 | Each role chip names the note it sounds under the chord in force, and a role that chord lacks says which member stands in | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/4` 🖵 | Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/5` 🖵 | The octave stepper applies to a role exactly as to a degree | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/6` 🖵 | Turning a Slot on while a role is armed gives it that role | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/1` | The orders offered are Ascending, Descending, Up and down, Alberti, Root only, and Root and fifth | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/2` | The deal restarts at every Measure, so each Measure opens on the Root | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/3` | Ascending deals the roles in order and repeats: over four roles, five sounding Slots take Root, 3rd, 5th, 7th, Root | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/4` | Alberti deals Root, 5th, 3rd, 5th; Descending deals from the highest role down; Up and down rises then falls without repeating the turn | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/5` | The roles dealt are the members of the progression's fullest chord, so a progression of triads deals Root, 3rd and 5th only | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/6` | Fill replaces the Pitch of every sounding Slot at the armed octave and nothing else: no Slot turns on or off and no Accent Level changes | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/7` 🖵 | Fill on a shipped Pattern goes through the naming prompt | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.7/1` 🖵 | A chord strip above the grid lists every chord of the progression in order, each with its numeral and its name in the Key | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.7/2` 🖵 | The chord in force is marked Now and the chord that follows it Next, by a word as well as a colour, and the marks move as playback reaches each chord | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.7/3` 🖵 | With the chord changing every Measure, each Measure's header names the chord it sounds in the pass being played | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.7/4` 🖵 | At rest, the chord strip and the Measure headers show the first pass | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.7/5` 🖵 | A chord-tone Slot's note band shows its role and the note it sounds under the chord governing it in the current pass, updating as the chord changes | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.7/6` 🖵 | The chord strip is absent on a Pattern with no progression, and on a Percussive Pattern | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.8/1` | A progression, its chord edits and the change setting survive closing and reopening the Pattern | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.8/2` | A Pattern with no progression behaves exactly as before, and stored Patterns need no migration | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `pattern.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.8/3` | Switching to Percussive removes the progression along with the Key, scale and Pitch data | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.8/4` | Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `pattern.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.8/5` | A submission carries the progression, so the maintainer receives the melody as authored | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `export.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.9/1` | Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, or in the change setting are not duplicates | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `similarity.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.9/2` | Two Patterns identical in all of those are duplicates, and Family detection is unchanged: the same rhythm under different harmony is the same Family | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `similarity.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.10/1` | The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `export.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.10/2` | Each pass's notes are the notes playback sounds in that pass, from the one timeline | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `export.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.10/3` | A Pattern with no progression exports one pass, as before | P-041 | T244, T245 (2/2 done) | T246, T247 (2/2 done) | `export.test.js` | 🟢 OK |

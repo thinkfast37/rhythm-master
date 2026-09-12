@@ -14,6 +14,7 @@ import { beatCount, beatDurationSeconds, beatNoteValue } from './meter.js';
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
 import { resolve } from './pitch.js';
+import { chordAt, resolveChordTone } from './harmony.js';
 import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
 
 /**
@@ -24,6 +25,8 @@ import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
  * @property {number} slotIndex
  * @property {1|2|3} accent
  * @property {{midiNote: number, frequency: number}|null} pitch
+ * @property {number} pass          which pass this timeline is for (US-2.6)
+ * @property {number|null} chordIndex  the chord in force, or null without a progression
  */
 
 /**
@@ -31,8 +34,15 @@ import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
  *
  * Off Slots produce no event at all — silence is the absence of an event, not
  * an event with zero amplitude.
+ *
+ * `pass` matters only under a progression (US-2.6): a chord-tone Pitch resolves
+ * through the chord in force for that pass and Measure, so pass 1 of I–IV–V
+ * sounds the IV. Everything else is pass-independent, which is why the timeline
+ * stays per pass rather than per harmonic cycle — an edit still lands at the
+ * next pass (AC-4.1.9), and MIDI export concatenates passes from this one
+ * function (AC-2.6.4/6, research.md D-011).
  */
-export function buildTimeline(pattern) {
+export function buildTimeline(pattern, pass = 0) {
   const events = [];
   let measureStart = 0;
   const feel = pattern.swingFeel ?? DEFAULT_SWING_FEEL;
@@ -46,6 +56,8 @@ export function buildTimeline(pattern) {
     const { timeSignature } = measure;
     const beatDuration = beatDurationSeconds(timeSignature, pattern.tempo);
     const noteValue = beatNoteValue(timeSignature);
+    const chordIndex = chordAt(pattern, pass, measureIndex);
+    const chord = chordIndex === null ? null : pattern.harmony.chords[chordIndex];
 
     measure.beats.forEach((beat, beatIndex) => {
       const beatStart = measureStart + beatIndex * beatDuration;
@@ -91,10 +103,13 @@ export function buildTimeline(pattern) {
           if (!slot?.on) return;
 
           const accent = effectiveAccent(measure, beatIndex, slotIndex);
-          const pitch =
-            pattern.soundMode === 'melodic' && slot.pitch
-              ? resolve(slot.pitch, pattern.key)
-              : null;
+          let pitch = null;
+          if (pattern.soundMode === 'melodic' && slot.pitch) {
+            pitch =
+              slot.pitch.tone !== undefined
+                ? resolveChordTone(slot.pitch, chord, pattern.key)
+                : resolve(slot.pitch, pattern.key);
+          }
 
           events.push({
             timeSeconds: groupStart + withinGroup * slotDuration + offsets[withinGroup] + beatDelay,
@@ -103,6 +118,8 @@ export function buildTimeline(pattern) {
             slotIndex,
             accent,
             pitch,
+            pass,
+            chordIndex,
           });
         });
       });

@@ -24,12 +24,23 @@ import {
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
+import {
+  hasHarmony,
+  setProgression,
+  clearHarmony,
+  setChange,
+  setChordQuality,
+  setChordDegree,
+  addChord,
+  removeChord,
+  fillChordTones,
+} from './core/harmony.js';
 import { playClick, accentVoice, playPercussive } from './audio/voices.js';
 import * as patternStore from './storage/patterns.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
-import { renderGrid } from './ui/grid.js';
+import { renderGrid, renderChordStrip } from './ui/grid.js';
 import { balanceBeatLines, forgetBeatWidths, observeGridWidth } from './ui/beat-layout.js';
 import {
   renderHeader,
@@ -40,6 +51,7 @@ import {
   renderActionControls,
   renderPitchStrip,
   renderRecipeStrip,
+  renderHarmony,
   heldControl,
 } from './ui/controls.js';
 import {
@@ -91,6 +103,8 @@ const state = {
    * switch, and a reload starts it back at the root (AC-2.2.2).
    */
   armedPitch: { degree: '1', octaveOffset: 0 },
+  /** The arpeggio order the Fill control last held (US-2.6). Session state, like the armed pitch. */
+  fillOrder: 'up',
   /**
    * The Recipe strip's armed value, painted onto a Beat by tapping it (AC-1.3.11).
    *
@@ -231,7 +245,12 @@ async function guardShipped() {
   let suggestion = `${state.pattern.name} (my version)`;
   for (;;) {
     const name = await askNewPatternName(suggestion, uniqueNameValidator());
-    if (name === null) return false;
+    if (name === null) {
+      // The control that asked — a select already showing the declined value —
+      // goes back to what the shipped Pattern actually holds.
+      render();
+      return false;
+    }
 
     const owned = {
       ...structuredClone(state.pattern),
@@ -255,6 +274,18 @@ async function guardShipped() {
     state.isOwned = true;
     return true;
   }
+}
+
+/**
+ * The armed pitch as it can be stamped on THIS Pattern: a role needs a
+ * progression to resolve against, so on a Pattern without one the brush falls
+ * back to the root rather than stamping something the Pattern cannot sound.
+ */
+function armedFor(pattern) {
+  if (state.armedPitch.tone !== undefined && !hasHarmony(pattern)) {
+    return { degree: '1', octaveOffset: state.armedPitch.octaveOffset ?? 0 };
+  }
+  return state.armedPitch;
 }
 
 export function loadPattern(pattern, { owned }) {
@@ -348,7 +379,7 @@ const handlers = {
 
     const slot = state.pattern.measures[measureIndex].beats[beatIndex].slots[slotIndex];
     if (state.pattern.soundMode === 'melodic' && slot.on && !slot.pitch) {
-      apply(setPitch, measureIndex, beatIndex, slotIndex, state.armedPitch);
+      apply(setPitch, measureIndex, beatIndex, slotIndex, armedFor(state.pattern));
     }
   },
 
@@ -364,7 +395,7 @@ const handlers = {
     const slot = state.pattern.measures[measureIndex].beats[beatIndex].slots[slotIndex];
     if (!slot.on) return;
     if (!(await guardShipped())) return;
-    apply(setPitch, measureIndex, beatIndex, slotIndex, state.armedPitch);
+    apply(setPitch, measureIndex, beatIndex, slotIndex, armedFor(state.pattern));
   },
 
   /**
@@ -424,9 +455,77 @@ const handlers = {
    * tap the pitch was armed for.
    */
   onArmDegree(degree) {
-    state.armedPitch = { ...state.armedPitch, degree };
+    // A degree and a role are the two shapes one armed pitch can take, never
+    // both at once (AC-2.6.5/4).
+    state.armedPitch = { degree, octaveOffset: state.armedPitch.octaveOffset ?? 0 };
     state.armedRecipe = null;
     render();
+  },
+
+  /** Arm a chord-tone role (US-2.6): the same brush, resolving through the chord in force. */
+  onArmTone(tone) {
+    state.armedPitch = { tone, octaveOffset: state.armedPitch.octaveOffset ?? 0 };
+    state.armedRecipe = null;
+    render();
+  },
+
+  // --- harmony (US-2.6) — every one is Pattern content, guarded on shipped Patterns ---
+
+  /**
+   * A catalogue entry, spelled under the Key and scale now (AC-2.6.1); None
+   * removes the progression and bakes every role into the degree it sounded
+   * under the first chord (AC-2.6.1/6). "Custom" is the picker naming what is
+   * already there, so it is a no-op.
+   */
+  async onProgression(id) {
+    if (id === 'custom') {
+      render();
+      return;
+    }
+    if (!(await guardShipped())) return;
+    if (id === 'none') {
+      apply(clearHarmony);
+      // A role has nothing left to resolve against, so the brush goes back to the root.
+      if (state.armedPitch.tone !== undefined) handlers.onArmDegree('1');
+      return;
+    }
+    apply(setProgression, id);
+  },
+
+  async onChordChange(change) {
+    if (!(await guardShipped())) return;
+    apply(setChange, change);
+  },
+
+  async onChordQuality(index, quality) {
+    if (!(await guardShipped())) return;
+    apply(setChordQuality, index, quality);
+  },
+
+  async onChordDegree(index, degree) {
+    if (!(await guardShipped())) return;
+    apply(setChordDegree, index, degree);
+  },
+
+  async onAddChord() {
+    if (!(await guardShipped())) return;
+    apply(addChord);
+  },
+
+  async onRemoveChord(index) {
+    if (!(await guardShipped())) return;
+    apply(removeChord, index);
+  },
+
+  onFillOrder(order) {
+    state.fillOrder = order;
+  },
+
+  /** Deal chord tones across every sounding Slot at the armed octave (AC-2.6.6). */
+  async onFill(order = state.fillOrder) {
+    state.fillOrder = order;
+    if (!(await guardShipped())) return;
+    apply(fillChordTones, order, state.armedPitch.octaveOffset ?? 0);
   },
 
   onArmOctave(octaveOffset) {
@@ -480,6 +579,8 @@ const handlers = {
     } else {
       delete next.key;
       delete next.scale;
+      // A progression goes with the Key and scale it is spelled from (AC-2.6.8/3).
+      delete next.harmony;
       // Pitch is meaningless in Percussive mode and would fail validation.
       for (const measure of next.measures) {
         for (const beat of measure.beats) {
@@ -968,6 +1069,12 @@ export function mount(root) {
   main.className = 'main-panel';
 
   const headerEl = document.createElement('header');
+  // The progression, above the grid it governs, so Now and Next are read in
+  // the same glance as the Measure being played (AC-2.6.7/1). Empty and hidden
+  // without a progression.
+  const chordStripEl = document.createElement('section');
+  chordStripEl.dataset.section = 'chords';
+  chordStripEl.dataset.primary = 'true';
   const gridEl = document.createElement('div');
   const playEl = document.createElement('section');
   playEl.dataset.primary = 'true';
@@ -981,6 +1088,11 @@ export function mount(root) {
   // render it empty and hidden.
   const pitchEl = document.createElement('section');
   pitchEl.dataset.section = 'pitch';
+
+  // The harmony controls sit under the pitch strip: the chords are the other
+  // half of the palette the role chips resolve through (US-2.6).
+  const harmonyEl = document.createElement('section');
+  harmonyEl.dataset.section = 'harmony';
 
   // The Recipe strip sits with the editing controls rather than beside the pitch
   // strip: it applies to every Pattern, where the pitch strip is Melodic-only.
@@ -1030,7 +1142,8 @@ export function mount(root) {
   }
 
   main.append(
-    libraryToggle, headerEl, gridEl, playEl, recipeEl, pitchEl, settingsEl, editEl, actionsEl, navEl, familyEl
+    libraryToggle, headerEl, chordStripEl, gridEl, playEl, recipeEl, pitchEl, harmonyEl,
+    settingsEl, editEl, actionsEl, navEl, familyEl
   );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
@@ -1144,6 +1257,7 @@ export function mount(root) {
       : { autoTags: automaticTags(pattern, s.isOwned), lockedTags: [], userTags: pattern.tags ?? [] };
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
+    renderChordStrip(chordStripEl, pattern, position);
     renderGrid(gridEl, pattern, position, {
       countingSystem: s.settings.countingSystem,
       recipeArmed: Boolean(s.armedRecipe),
@@ -1152,6 +1266,7 @@ export function mount(root) {
     // yields to paint, so the one-line fallback is never seen (AC-15.1.14).
     balanceBeatLines(gridEl);
     renderPitchStrip(pitchEl, pattern, s, handlers);
+    renderHarmony(harmonyEl, pattern, s, handlers);
     renderRecipeStrip(recipeEl, pattern, s, handlers);
     renderPlayControls(playEl, pattern, s, handlers);
     renderPlaybackSettings(settingsBody, pattern, s, handlers);
@@ -1183,7 +1298,9 @@ export function mount(root) {
     main,
     headerEl,
     gridEl,
+    chordStripEl,
     pitchEl,
+    harmonyEl,
     recipeEl,
     playEl,
     settingsEl,

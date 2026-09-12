@@ -27,7 +27,7 @@ const KEY_SEMITONES = {
 const DEGREE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 
 /** The octave a Slot with octaveOffset 0 sounds in. Middle C is MIDI 60. */
-const BASE_MIDI = 60;
+export const BASE_MIDI = 60;
 
 /**
  * Two ways of naming the same thing. A Pattern stores `octaveOffset`, an integer
@@ -71,6 +71,12 @@ export function clampOctave(octave) {
 
 export function isSupportedKey(key) {
   return Object.prototype.hasOwnProperty.call(KEY_SEMITONES, key);
+}
+
+/** Semitones above C of a Key's tonic — shared with chord resolution (US-2.6). */
+export function keySemitones(key) {
+  if (!isSupportedKey(key)) throw new Error(`Unsupported Key: ${key}`);
+  return KEY_SEMITONES[key];
 }
 
 /**
@@ -145,14 +151,27 @@ const ALTERATION_GLYPH = Object.fromEntries(
  */
 export function noteName(pitch, key) {
   const { midiNote } = resolve(pitch, key);
-
   const [, digits] = splitDegree(pitch.degree);
-  const keyLetter = key[0];
-
   // Count that many letters up from the Key's letter. Degree 1 is the Key's own
   // letter, degree 8 is it again an octave up, so the step is (n - 1) mod 7.
-  const letter = LETTERS[(LETTERS.indexOf(keyLetter) + (Number(digits) - 1)) % 7];
+  return spellFromLetter(midiNote, letterAbove(key[0], Number(digits) - 1), `Degree ${pitch.degree} in ${key}`);
+}
 
+/** The letter `steps` letters up the alphabet from `letter`, wrapping. */
+export function letterAbove(letter, steps) {
+  return LETTERS[(((LETTERS.indexOf(letter) + steps) % 7) + 7) % 7];
+}
+
+/**
+ * Spell a sounding note on a given letter — the diatonic half of `noteName`,
+ * shared with chord-tone naming (US-2.6), where the letter comes from counting
+ * up from the chord's root rather than from the Key.
+ *
+ * @param {number} midiNote
+ * @param {string} letter  one of C D E F G A B
+ * @param {string} [what]  for the error, when no accidental can reconcile them
+ */
+export function spellFromLetter(midiNote, letter, what = `MIDI ${midiNote}`) {
   // The accidental is the gap between what the letter names naturally and what
   // is actually sounding, centred so it comes out as a small +/- rather than a
   // number near 12.
@@ -160,9 +179,7 @@ export function noteName(pitch, key) {
     (((midiNote % 12) - LETTER_SEMITONES[letter] + 18) % 12) - 6;
   const accidental = ALTERATION_GLYPH[alteration];
   if (accidental === undefined) {
-    throw new Error(
-      `Degree ${pitch.degree} in ${key} needs ${alteration} semitones of accidental to spell as ${letter}`
-    );
+    throw new Error(`${what} needs ${alteration} semitones of accidental to spell as ${letter}`);
   }
 
   // Scientific pitch notation, against this app's middle C = MIDI 60 = C4. The
