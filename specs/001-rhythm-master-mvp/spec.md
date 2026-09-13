@@ -2615,8 +2615,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.5.4/1** — A changed scale survives a close and reopen of the Pattern
     - **AC-2.5.4/2** — A Melodic Pattern that carries no stored scale reads as Ionian (Major), so Patterns saved before the field existed need no migration
     - **AC-2.5.4/3** — `scale` is present only on Melodic Patterns: switching to Percussive removes it, switching to Melodic restores one (the stored value if present, else Ionian)
-    - **AC-2.5.4/4** — Every shipped Melodic Pattern carries `scale: "ionian"` explicitly
+    - **AC-2.5.4/4** — Every shipped Melodic Pattern carries its `scale` explicitly, a catalogue id, never left to the default
     - **AC-2.5.4/5** — On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern
+  - *(AC-2.5.4/4 revised 2026-09-13. It read "carries `scale: "ionian"` explicitly" while every shipped Melodic Pattern happened to be in a major key. The melodic exercises (T270) carry progressions in minor, modal and blues keys, and a Pattern whose chords are minor should print a minor key signature and walk a minor scale — so the criterion is that the scale is stated, not that it is Major.)*
 
 - **AC-2.5.5** — The scale never changes what is stamped or heard
   - **Given** any Pattern with stamped Pitches

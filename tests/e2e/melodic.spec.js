@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { SCALES } from '../../src/core/scales.js';
 
 test.use({
   launchOptions: {
@@ -1166,13 +1167,14 @@ test('AC-2.5.4/3 — `scale` is present only on Melodic Patterns: switching to P
   expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
 });
 
-test('AC-2.5.4/4 — Every shipped Melodic Pattern carries `scale: "ionian"` explicitly', async ({ page }) => {
+test('AC-2.5.4/4 — Every shipped Melodic Pattern carries its `scale` explicitly, a catalogue id, never left to the default', async ({ page }) => {
   await melodicBlank(page);
   const scales = await page.evaluate(() =>
-    window.__rm.seedStore.loadAll().filter((p) => p.soundMode === 'melodic').map((p) => p.scale)
+    window.__rm.seedStore.loadAll().filter((p) => p.soundMode === 'melodic').map((p) => [p.name, p.scale])
   );
   expect(scales.length).toBeGreaterThan(0);
-  for (const s of scales) expect(s).toBe('ionian');
+  const ids = SCALES.map((s) => s.id);
+  for (const [name, s] of scales) expect(ids, name).toContain(s);
 });
 
 test('AC-2.5.4/5 — On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern', async ({ page }) => {
