@@ -71,6 +71,90 @@ test('AC-4.1.2 — the cursor advances through the Beats in order', async ({ pag
   expect([...seen].sort()).toEqual(['0', '1', '2', '3']);
 });
 
+/*
+ * The cursor moving within a pass takes a fast path (`moveCursor`) that swaps
+ * one class instead of rebuilding every Measure, Beat and Slot — because
+ * rebuilding the whole app on every sounding event is what put the highlight a
+ * beat behind the audio on a TV-class CPU.
+ *
+ * That fast path is only safe while it produces the DOM the pure render would
+ * have produced. This asserts exactly that, byte for byte, so the two cannot
+ * quietly diverge: §6 says rendering is a pure function of (pattern,
+ * transportPosition), and a fast path is a second implementation of it.
+ */
+test('AC-4.1.2 — Visual highlight stays in sync with audio: moving the cursor gives the DOM a full render would have', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+
+  const compare = await page.evaluate(() => {
+    const pattern = window.__rm.getState().pattern;
+    const at = (measureIndex, beatIndex, slotIndex) => ({ measureIndex, beatIndex, slotIndex, loop: 0 });
+
+    const built = document.createElement('div');
+    const moved = document.createElement('div');
+    // The fast path always starts from a grid the full render built, as it does
+    // in the app: `onLoop` renders in full at the top of every pass.
+    window.__rmRenderGrid(moved, pattern, at(0, 0, 0), {});
+
+    const results = [];
+    for (const position of [at(0, 1, 0), at(0, 2, 3), at(0, 3, 0), null, at(0, 0, 0)]) {
+      window.__rmRenderGrid(built, pattern, position, {});
+      window.__rmMoveCursor(moved, position);
+      results.push({
+        position,
+        same: built.innerHTML === moved.innerHTML,
+        builtPlaying: built.querySelectorAll('.slot.playing').length,
+        movedPlaying: moved.querySelectorAll('.slot.playing').length,
+      });
+    }
+    return results;
+  });
+
+  for (const r of compare) {
+    expect(r.same, `cursor at ${JSON.stringify(r.position)} diverged from the full render`).toBe(true);
+    expect(r.movedPlaying).toBe(r.builtPlaying);
+  }
+});
+
+test('AC-4.1.2 — Visual highlight stays in sync with audio: playback moves the cursor without rebuilding the grid', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page, 300);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  // A full grid render replaces the container's children. Count only that.
+  await page.evaluate(() => {
+    const grid = document.querySelector('.grid');
+    window.__rmRebuilds = 0;
+    new MutationObserver((records) => {
+      for (const r of records) {
+        if (r.type === 'childList' && r.addedNodes.length > 0 && r.target === grid) window.__rmRebuilds++;
+      }
+    }).observe(grid, { childList: true });
+  });
+
+  // Sample where the cursor is, to prove it really advanced over the window
+  // rather than the grid simply sitting still.
+  const seen = new Set();
+  for (let i = 0; i < 20; i++) {
+    const cell = await page.evaluate(() => {
+      const el = document.querySelector('.grid .slot.playing');
+      return el ? `${el.dataset.beat}:${el.dataset.slot}` : null;
+    });
+    if (cell) seen.add(cell);
+    await page.waitForTimeout(50);
+  }
+  const rebuilds = await page.evaluate(() => window.__rmRebuilds);
+
+  // The cursor visited several Slots over the window...
+  expect(seen.size).toBeGreaterThanOrEqual(3);
+  // ...while the grid was rebuilt only at pass boundaries. One pass is 0.8s at
+  // this tempo and the window is about a second, so at most a couple. Before
+  // this fix the grid was rebuilt on EVERY sounding event, which is 4 per Beat.
+  expect(rebuilds).toBeLessThanOrEqual(3);
+});
+
 test('AC-4.1.3 — the loop counter increments once per full pass, not per Measure', async ({ page }) => {
   await page.goto('/');
   // Two Measures, so a per-Measure counter would tick twice as fast.

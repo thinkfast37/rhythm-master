@@ -42,7 +42,9 @@ export function addedTagsFor(patternId) {
 }
 
 export function update(patternId, fields) {
-  const all = loadAll();
+  // Copy before changing — see the note in patterns.upsert: reads are cached,
+  // so mutating one in place would edit the cache rather than the store.
+  const all = { ...loadAll() };
   all[patternId] = { ...(all[patternId] ?? {}), ...fields };
   writeStore(KEY, { byPatternId: all });
   return all[patternId];
