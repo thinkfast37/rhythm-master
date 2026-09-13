@@ -16,7 +16,7 @@ import { beatNoteValue } from '../core/meter.js';
 import { slotCount, subdivisionGroups } from '../core/recipes.js';
 import { effectiveAccent, defaultAccent } from '../core/accents.js';
 import { labelsFor, effectiveSystem } from '../core/counting.js';
-import { noteName } from '../core/pitch.js';
+import { noteName, inRegister, registerOf, soundingOctaveOffset } from '../core/pitch.js';
 import {
   hasHarmony,
   chordAt,
@@ -278,7 +278,10 @@ function renderPitchBadge(slot, key, chord = null, sounding = slot.pitch, dealt 
 
   const pitch = document.createElement('span');
   pitch.className = 'slot-pitch';
-  pitch.dataset.octave = String(sounding.octaveOffset ?? 0);
+  // The band says what the Slot sounds, so the Register is in it (AC-2.9.3/1).
+  const register = registerOf(pattern);
+  const heard = soundingOctaveOffset(sounding.octaveOffset ?? 0, register);
+  pitch.dataset.octave = String(heard);
   if (dealt) pitch.dataset.dealt = 'true';
 
   // A dealt step is named by what it is — a chord tone with its octave mark,
@@ -293,7 +296,7 @@ function renderPitchBadge(slot, key, chord = null, sounding = slot.pitch, dealt 
     pitch.appendChild(degree);
     let named = null;
     try {
-      named = key && chord ? stepName(sounding.step, chord, key, pattern, sounding.octaveOffset) : null;
+      named = key && chord ? stepName(sounding.step, chord, key, pattern, heard) : null;
     } catch {
       named = null;
     }
@@ -324,7 +327,8 @@ function renderPitchBadge(slot, key, chord = null, sounding = slot.pitch, dealt 
   // A Pattern mid-conversion to Melodic can hold a Pitch before a Key is set,
   // and an unspellable degree throws rather than guessing. Neither is a reason
   // to lose the degree the Composer authored, so the name is what goes missing.
-  const named = key ? (isTone ? tryChordToneName(sounding, chord, key) : tryNoteName(sounding, key)) : null;
+  const heardPitch = inRegister(sounding, register);
+  const named = key ? (isTone ? tryChordToneName(heardPitch, chord, key) : tryNoteName(heardPitch, key)) : null;
   if (named) {
     const name = document.createElement('span');
     name.className = 'slot-note-name';

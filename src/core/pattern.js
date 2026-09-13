@@ -13,7 +13,7 @@
 import { TIME_SIGNATURES, beatCount, beatNoteValue, isSupported } from './meter.js';
 import { defaultRecipeFor, isOffered, slotCount } from './recipes.js';
 import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
-import { isSupportedKey } from './pitch.js';
+import { isSupportedKey, MIN_REGISTER, MAX_REGISTER } from './pitch.js';
 import { isValidScale } from './scales.js';
 import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
 import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, isValidArpeggio, hasHarmony } from './harmony.js';
@@ -271,6 +271,16 @@ export function validate(pattern) {
   if ('scale' in (pattern ?? {})) {
     if (!melodic) fail('scale is only valid when soundMode is melodic');
     else if (!isValidScale(pattern.scale)) fail(`scale "${pattern.scale}" unsupported`);
+  }
+
+  // The Register, like the scale, is optional even on a Melodic Pattern — absent
+  // reads as Normal, so Patterns saved before it existed sound unchanged
+  // (data-model §7 rule 19).
+  if ('register' in (pattern ?? {})) {
+    if (!melodic) fail('register is only valid when soundMode is melodic');
+    else if (!Number.isInteger(pattern.register) || pattern.register < MIN_REGISTER || pattern.register > MAX_REGISTER) {
+      fail(`register ${pattern.register} outside ${MIN_REGISTER}–${MAX_REGISTER}`);
+    }
   }
 
   // A progression only on a Melodic Pattern, in shape (data-model §7 rule 14).

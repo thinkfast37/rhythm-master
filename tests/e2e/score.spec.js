@@ -492,3 +492,22 @@ test("AC-12.2.11/5 — The document's title while printing is the Pattern's name
   expect(await page.title()).toBe(before);
   await expect(page.locator('.score-print')).toHaveCount(0);
 });
+
+test('AC-2.9.3/2 — The score writes each note at the octave the Register sounds it in', async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0]]);
+  await stamp(page, 0, 0, 0, '1', 0); // middle C
+
+  const bottom = await lineY(page, 0);
+  const middle = await lineY(page, 2);
+  const space = (bottom - middle) / 2;
+  const atNormal = await noteY(page, 0, 0, 0);
+
+  await page.evaluate(async () => window.__rm.handlers.onRegister(-2));
+  await expect(page.locator('.score')).toBeVisible();
+  const atBass = await noteY(page, 0, 0, 0);
+
+  // Two octaves is seven staff steps each, and y grows downward.
+  expect(atBass - atNormal).toBeCloseTo(7 * space, 1);
+});

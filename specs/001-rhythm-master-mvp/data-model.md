@@ -43,6 +43,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `name` | Required. Duplicate names are permitted — identity is `id`, not name. | US-7.1 |
 | `key` | Present iff `soundMode === "melodic"`. One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
 | `scale` | Optional, and only when `soundMode === "melodic"`. One of the ids in `core/scales.js`'s catalogue (church modes, the five pentatonic modes, both blues scales, harmonic and melodic minor). Absent reads as `ionian`, so Patterns saved before the field existed need no migration; every shipped Melodic Pattern carries it explicitly. Drives the strip's in-scale marking and spelling only — never resolution to a sounding note, which stays `(degree, octaveOffset, key)`. | US-2.5 |
+| `register` | Optional, and only when `soundMode === "melodic"`. An integer −2 to +2: the whole octaves every note the Pattern sounds is moved by, Bass (−2) to Lead (+2). Absent reads as 0, so Patterns saved before the field existed sound unchanged. It shifts what sounds, never what is stored — no Slot's `octaveOffset` is touched — and a Slot's own octave plus the register is held inside the stepper's octave range of 1 to 7 (AC-2.9.2/4). | US-2.9 |
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern. | AC-4.4.7 |
 | `swingAmount` | The Pattern-wide swing amount, 0–100; optional, absent reads as 0. Every straight Subdivision Group without a per-group amount inherits it — which is why a Measure added later swings without any copying. Per-group amounts on a Beat (`beat.swing`, keyed by group index) act as overrides and play as authored. | AC-4.4.12, AC-4.4.13 |
@@ -161,7 +162,9 @@ octave stepper; tokens above `"7"` remain valid stored data — the shipped libr
 `octaveOffset` is an integer, 0 being the base octave — octave 4, whose degree 1 in C is middle C.
 The strip spans `octaveOffset` −3 to +3, shown to the musician as absolute octaves 1 to 7
 (AC-2.2.3). Resolution to a frequency or MIDI note number is `core/pitch.js`'s job and depends on
-`(degree, octaveOffset, key)` only.
+`(degree, octaveOffset, key)` and, since 2026-09-13, the Pattern's `register` — the sounding octave
+being the Slot's own plus the register, clamped to the same 1–7 range (US-2.9). The register is a
+property of the Pattern, not of the Pitch: no stored Pitch changes when it moves.
 
 *(Revised 2026-08-17. This previously said degrees ran `"1"`–`"7"`, which neither `core/pitch.js`
 nor `tools/validate-seed.js` has ever enforced and which the shipped library already contradicts —
@@ -230,6 +233,7 @@ produces a Medium Slot (odd *N* has no midpoint), and a 2-Slot Recipe never does
 | Chord name and numeral | `harmony.chords[i]` and `key` | AC-2.6.7/1 |
 | Harmonic cycle length, in passes | `harmony.change`, chord count, Measure count | AC-2.6.10/1 |
 | A chord tone's sounding note | `(tone, octaveOffset)`, the chord in force, `key` | AC-2.6.4 |
+| The octave a Slot sounds in | the Slot's `octaveOffset` plus the Pattern's `register`, clamped to octaves 1–7 | AC-2.9.2/4 |
 | The step a Slot sounds under an arpeggio | `harmony.arpeggio`, the sounding Slots in time order, the chord in force (the deal restarts on each change), the progression's fullest chord, the walk's scale | AC-2.6.6 |
 
 Persisting any of these would let it drift from the Pattern it describes. They are recomputed on
@@ -427,6 +431,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
     an id the catalogue no longer carries is skipped on read.
 18. A Song has a non-empty `name`, at least one Section, and each Section a `patternId` string and an
     `entries` array whose every entry has a `fill` from `ARPEGGIOS` and an integer `repeats` 1–16.
+19. `register`, where present, is an integer within −2 to +2 — and only when `soundMode` is `melodic`.
 
 A shipped Pattern failing validation is a build-breaking error — the seed file is checked in CI.
 A user-owned Pattern failing validation is repaired where unambiguously possible (clamping tempo,

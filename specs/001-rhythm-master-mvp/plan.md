@@ -208,7 +208,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.17 | T063, T204, T206, T210, T222, T236, T244, T272, T279 | T064, T205, T207, T211, T223, T237, T245, T273, T280 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.6 | T065, T272 | T066, T273 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
-| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272 | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273 |
+| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.13 | T074–T075, T162 | T076, T163 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
@@ -239,6 +239,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
+| **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.4 | T295 | T296 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

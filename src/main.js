@@ -968,6 +968,18 @@ const handlers = {
     render();
   },
 
+  /**
+   * The Register places every note the Pattern sounds, and rewrites none of them
+   * (US-2.9). Pattern content like the Key, so guarded on a shipped Pattern.
+   */
+  async onRegister(register) {
+    if (!(await guardShipped())) return;
+    state.pattern = { ...state.pattern, register };
+    if (state.isOwned) patternStore.upsert(state.pattern);
+    syncTransport();
+    render();
+  },
+
   onTempo(bpm) {
     state.pattern = { ...state.pattern, tempo: bpm };
     if (state.isOwned) patternStore.upsert(state.pattern);
@@ -1004,6 +1016,8 @@ const handlers = {
     } else {
       delete next.key;
       delete next.scale;
+      // A Register is meaningless without pitch (AC-2.9.1/4).
+      delete next.register;
       // A progression goes with the Key and scale it is spelled from (AC-2.6.8/3).
       delete next.harmony;
       // Pitch is meaningless in Percussive mode and would fail validation.

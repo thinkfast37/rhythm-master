@@ -13,6 +13,8 @@ import {
   degreeLabel,
   octaveNumber,
   octaveOffsetFor,
+  REGISTERS,
+  registerOf,
   clampOctave,
   noteName,
 } from '../core/pitch.js';
@@ -769,6 +771,12 @@ function renderPitchStripInto(root, pattern, state, handlers) {
     })
   );
 
+  // The Key picker carries its own label (AC-2.2.19/4). Without one it sat
+  // straight after the Note label, so "Note · C" read as the note being C.
+  const keyLabel = el('span', 'pitch-strip-label', { textContent: 'Key' });
+  keyLabel.dataset.label = 'key';
+  root.appendChild(keyLabel);
+
   // The Key sits with the note palette it governs — the maintainer hunted for
   // it in the Edit accordion (AC-2.2.19). Key is meaningless in Percussive
   // mode, so it is absent with the whole strip rather than present-but-disabled
@@ -797,6 +805,26 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   scale.value = scaleId;
   scale.addEventListener('change', (e) => handlers.onScale(e.target.value));
   root.appendChild(scale);
+
+  // The Register places the whole Pattern in an octave (AC-2.9.1): it sits with
+  // the Key and the scale because, like them, it governs every note at once —
+  // unlike the octave stepper below, which arms only the next stamp.
+  root.appendChild(
+    el('span', 'pitch-strip-label', {
+      textContent: 'Register',
+      title: 'Move every note this Pattern sounds by whole octaves — a bass line, or a fill up high',
+    })
+  );
+  const register = el('select', 'register-picker');
+  register.dataset.action = 'set-register';
+  register.setAttribute('aria-label', 'Register');
+  for (const r of REGISTERS) {
+    const octaves = r.value === 0 ? '' : ` (${r.value > 0 ? '+' : '−'}${Math.abs(r.value)} oct)`;
+    register.appendChild(el('option', null, { value: String(r.value), textContent: `${r.label}${octaves}` }));
+  }
+  register.value = String(registerOf(pattern));
+  register.addEventListener('change', (e) => handlers.onRegister(Number(e.target.value)));
+  root.appendChild(register);
 
   // Under an arpeggio the notes are dealt, not stamped: the chips stand down
   // and the strip says so, so nothing here looks tappable and does nothing
