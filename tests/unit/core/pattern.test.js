@@ -93,14 +93,26 @@ describe('core/pattern — Measures', () => {
     }
   });
 
-  it('AC-1.1.8 — a Measure can be removed, but never the last one', () => {
+  it('AC-1.1.8/1 — The −Measure control is disabled on a one-Measure Pattern: the core refuses to remove the last Measure', () => {
     let p = addMeasure(create());
     p = removeMeasure(p, 0);
     expect(p.measures).toHaveLength(1);
     expect(() => removeMeasure(p, 0)).toThrow(/at least one Measure/);
   });
 
-  it('AC-1.1.9 — no mutator touches its argument', () => {
+  it('AC-1.1.9 — Measure removal is always from the end: the core rule', () => {
+    let p = addMeasure(addMeasure(create()));
+    p = setTimeSignature(p, 1, '3/4');
+    p = setTimeSignature(p, 2, '7/8');
+    p = cycleAccent(p, 0, 1, 0);
+    const kept = structuredClone(p.measures.slice(0, 2));
+
+    const shorter = removeMeasure(p, p.measures.length - 1);
+    expect(shorter.measures).toHaveLength(2);
+    expect(shorter.measures).toEqual(kept);
+  });
+
+  it('no mutator touches its argument (Principle I: core/ is pure)', () => {
     const p = create();
     const before = structuredClone(p);
     addMeasure(p);

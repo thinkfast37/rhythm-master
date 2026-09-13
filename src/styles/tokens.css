@@ -1240,7 +1240,7 @@ body {
 /* No control may push the page sideways (AC-15.1.9). */
 .controls { max-width: 100%; }
 .presets, .tag-row { max-width: 100%; }
-.recipe-picker, .degree-picker, .octave-picker, .key-picker, .counting-picker, .sound-mode {
+.recipe-picker, .degree-picker, .octave-picker, .key-picker, .counting-picker {
   max-width: 100%;
 }
 
@@ -1462,12 +1462,13 @@ body {
   font-weight: 700;
 }
 
-.recipe-hint { margin: 0; font: 500 11px/1.4 var(--font-ui); color: var(--ink-dim); }
+.brush-hint { margin: 0; padding: 6px 12px 10px; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.brush-hint[hidden] { display: none; }
 /* The brush indicator names the tool in hand (AC-1.3.12); an active brush —
    subdivision or note — reads in the brand ink, the accent resting state stays
    dim. Keyed off data-brush, which carries the words the colour repeats. */
-.recipe-hint[data-brush='subdivision'],
-.recipe-hint[data-brush='note'] { color: var(--brand); }
+.brush-hint[data-brush='subdivision'],
+.brush-hint[data-brush='note'] { color: var(--brand); }
 
 /* While a Recipe is armed the grid is a brush, so every Beat reads as a target
    rather than the Slots reading as individually tappable. */
@@ -1733,6 +1734,114 @@ body {
   margin: 0;
   font: 500 12px/1.4 var(--font-ui);
   color: var(--ink-dim);
+}
+
+/* --- the workbench (AC-15.1.7, AC-15.1.8) --------------------------------- */
+
+/*
+ * The pinned transport: Play/Stop and the exact tempo entry ride in the top
+ * bar beside the library toggle and Prev/Next (AC-15.1.17). The bar's own
+ * padding and border do the framing, so the controls section sheds its own.
+ */
+.main-top-bar .play-controls {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.main-top-bar .transport { padding: 10px 16px; }
+.tempo-pinned { display: flex; align-items: center; gap: 4px; }
+.tempo-pinned .tempo-entry { width: 64px; }
+.tempo-unit {
+  font: 600 11px/1 var(--font-ui);
+  color: var(--ink-dim);
+  letter-spacing: .04em;
+}
+
+/*
+ * The Sound Mode switch in the header (AC-2.1.6): two options, the one in
+ * force filled. A row, not a select — both states read at a glance.
+ */
+.sound-mode {
+  display: inline-flex;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.mode-option {
+  padding: 7px 12px;
+  font: 600 12px/1 var(--font-ui);
+  color: var(--ink-dim);
+  background: #1c1f2b;
+  border: 0;
+  cursor: pointer;
+}
+.mode-option + .mode-option { border-left: 1px solid var(--line); }
+.mode-option[aria-pressed='true'] { color: #0b0c15; background: var(--brand); }
+.mode-option:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+/* Groups stack as a column: a title, then rows of controls. */
+.workbench-group {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.workbench-group[hidden] { display: none; }
+.group-title {
+  margin: 0;
+  font: 600 12px/1 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-dim);
+}
+/* The strips lost their own section boxes when they joined a group. */
+.workbench-group .pitch-strip,
+.workbench-group .harmony { padding: 0; border-bottom: 0; }
+.workbench-group .recipe-strip { padding: 0; }
+.structure-row { gap: 4px; }
+
+/*
+ * The tab bar: mobile only. Above it every group is on screen and the bar
+ * would name nothing (AC-15.1.7/2). The groups a tab does not name are hidden
+ * on mobile only, so the stacked layout never depends on the tab in force.
+ */
+.workbench-tabs { display: none; }
+.workbench-tab {
+  flex: 1 1 0;
+  min-height: 40px;
+  padding: 0 10px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink-dim);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  cursor: pointer;
+}
+.workbench-tab[aria-selected='true'] { color: var(--brand); border-bottom-color: var(--brand); }
+.workbench-tab[hidden] { display: none; }
+.workbench-tab:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+[data-viewport='mobile'] .workbench-tabs { display: flex; padding: 4px 12px 0; }
+[data-viewport='mobile'] .workbench-group[data-tab-active='false'] { display: none; }
+[data-viewport='mobile'] .group-title { display: none; }
+
+/* Delete: last in the actions row and set apart — the one action here that
+   cannot be undone (AC-7.5.2). */
+.actions .action.danger { margin-left: auto; border-color: #7a2a2a; color: #f0a0a0; }
+
+/* The pinned bar is taller with the transport in it; the sounding-Measure
+   autoscroll must clear it (AC-15.1.11). */
+.measure { scroll-margin-top: 64px; }
+
+/* At phone width the bar holds five controls: the navigation keeps its glyphs
+   and drops its words (AC-15.1.17/3). */
+@media (max-width: 767px) {
+  .nav-word { display: none; }
+  .nav-button { padding: 8px 10px; }
+  .main-top-bar { gap: 6px; }
 }
 
 /* --- sheet music (US-12.2) ------------------------------------------------ */

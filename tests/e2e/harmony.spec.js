@@ -17,7 +17,7 @@ test.use({
 async function melodicBlank(page, timeSignature = '4/4') {
   await page.goto('/');
   await page.evaluate((ts) => window.__rm.loadBlank(ts), timeSignature);
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 }
 
 /** The same, with a progression chosen. */
@@ -591,7 +591,7 @@ test('AC-2.6.7/6 — The chord strip is absent on a Pattern with no progression,
   await expect(page.locator('.chord-chip')).toHaveCount(0);
   await page.locator('.progression-picker').selectOption('I-IV-V');
   await expect(page.locator('.chord-strip')).toBeVisible();
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   await expect(page.locator('.chord-strip')).toBeHidden();
   await expect(page.locator('.chord-chip')).toHaveCount(0);
   await expect(page.locator('.harmony')).toBeHidden();
@@ -644,13 +644,13 @@ test('AC-2.6.8/3 — Switching to Percussive removes the progression along with 
   await harmonicBlank(page);
   await page.locator('.tone[data-tone="3"]').click();
   await accentZone(page, 0, 0).click();
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   const p = await pattern(page);
   expect('harmony' in p).toBe(false);
   expect('key' in p).toBe(false);
   expect('pitch' in p.measures[0].beats[0].slots[0]).toBe(false);
   // Back to Melodic: no progression, and the sounding Slot takes a degree it can sound.
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.progression-picker')).toHaveValue('none');
   expect((await slotState(page, 0, 0)).pitch).toEqual({ degree: '1', octaveOffset: 0 });
 });
@@ -677,21 +677,21 @@ async function untilFill(page, id, timeout = 9000) {
   return false;
 }
 
-test('AC-2.7.1/1 — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the harmony section beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression', async ({ page }) => {
+test('AC-2.7.1/1 — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the Practice group, and are absent, like the Arpeggio picker, on a Pattern without a progression', async ({ page }) => {
   await melodicBlank(page);
-  await expect(page.locator('.harmony .fill-cycle')).toHaveCount(0);
-  await expect(page.locator('.harmony .arpeggio-picker')).toHaveCount(0);
+  await expect(page.locator('.fill-cycle')).toHaveCount(0);
+  await expect(page.locator('.arpeggio-picker')).toHaveCount(0);
   await page.locator('.progression-picker').selectOption('I-IV-V');
-  const row = page.locator('.harmony .fill-cycle-row');
+  const row = page.locator('[data-section="practice"] .fill-cycle-row');
   await expect(row).toBeVisible();
   await expect(row.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
   const repeats = row.locator('.fill-cycle-repeats');
   await expect(repeats).toHaveValue('4');
   await expect(repeats).toHaveAttribute('min', '1');
   await expect(repeats).toHaveAttribute('max', '16');
-  // Beside the picker: the same section, the row right after it.
-  const order = await page.locator('.harmony .arpeggio-row, .harmony .fill-cycle-row').evaluateAll((els) => els.map((e) => e.className));
-  expect(order).toEqual(['arpeggio-row', 'fill-cycle-row']);
+  // With the playback settings, not in the harmony block the picker sits in.
+  await expect(page.locator('.harmony .fill-cycle')).toHaveCount(0);
+  await expect(page.locator('.harmony .arpeggio-picker')).toBeVisible();
 });
 
 test('AC-2.7.1/2 — The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load', async ({ page }) => {
@@ -703,7 +703,7 @@ test('AC-2.7.1/2 — The Repeats count is remembered as an app preference across
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).fillCycleRepeats)).toBe(6);
 
   await page.reload();
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await page.locator('.progression-picker').selectOption('I-IV-V');
   await expect(page.locator('.fill-cycle-repeats')).toHaveValue('6');
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');

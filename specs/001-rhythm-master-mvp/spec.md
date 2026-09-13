@@ -121,6 +121,10 @@ exist).
   - **When** the Composer looks at the −Measure control
   - **Then** it is disabled
   - **And** deleting the whole Pattern remains available as a separate, explicit action elsewhere in the UI
+  - **Cases**:
+    - **AC-1.1.8/1** — The −Measure control is disabled on a one-Measure Pattern
+    - **AC-1.1.8/2** — Deleting the whole Pattern remains a separate, explicit action elsewhere in the UI
+  - *(Cases added 2026-09-13 with T274, which finally builds the control. The criterion was specified in the MVP, its mutator written and unit-tested, and no control ever called it — the finding `check:unwired` was built for (CLAUDE.md §2c). −Measure sits in the Rhythm group beside + Measure (AC-15.1.8).)*
 
 - **AC-1.1.9** — Measure removal is always from the end
   - **Given** a Pattern with more than one Measure
@@ -296,7 +300,7 @@ exist).
     armed pitch has no disarmed state to go to — the asymmetry is in the state, not the rule.)*
 
 - **AC-1.3.12** — The grid always states its active brush
-  - **Given** the hint line under the Subdivision strip
+  - **Given** the brush line directly under the grid
   - **When** the Composer works the grid in any Sound Mode
   - **Then** it names the brush a grid tap will use right now — never only how to enter a mode —
     and follows a brush switch the moment a strip is tapped
@@ -311,6 +315,11 @@ exist).
     modes of one grid. The strips are exclusive brushes now — tapping one switches the tool — and a
     tool you switch by tapping needs a label that always says which is in hand. One line, in the
     hint's existing place, restating itself on every switch.)*
+  - *(Revised 2026-09-13 with T272: the line moved from under the Subdivision strip to
+    directly under the grid it describes. The two strips it reports on now sit in different
+    groups — the Subdivision chips in Rhythm, the note chips in Melody — and on a phone only
+    one group is on screen at a time (AC-15.1.7), so a line inside either would be out of view
+    exactly when the other brush was armed.)*
 
 ---
 
@@ -413,6 +422,17 @@ exist).
   - **Given** a Pattern with existing Accent Level data on its Slots
   - **When** the Composer switches Sound Mode in either direction
   - **Then** no Accent Level anywhere on the Pattern changes
+
+- **AC-2.1.6** — The Sound Mode switch is in the Pattern header
+  - **Given** any Pattern open, at any viewport width
+  - **When** the Composer looks for the Sound Mode
+  - **Then** a two-way Percussive | Melodic switch sits in the Pattern header, under the name, showing the current Mode — never inside a collapsed section, a tab or an accordion
+  - **And** one tap on the other Mode switches, with AC-2.1.1's immediacy and, on a shipped Pattern, the naming flow of US-7.3
+  - **Cases**:
+    - **AC-2.1.6/1** — The header carries a Percussive | Melodic switch that marks the current Mode
+    - **AC-2.1.6/2** — One tap on the other Mode switches the Pattern, and the switch shows the new Mode
+    - **AC-2.1.6/3** — On a 390px viewport the switch is reachable without opening any tab or accordion
+  - *(Added 2026-09-13 with the layout regroup, T272. The Mode was a dropdown inside the Edit accordion, the third section from the foot of the panel — and it is the first decision about a new Pattern, deciding which half of the controls the panel shows. The usability review of 2026-09-13 walked "build a melody from nothing" and found the musician scrolling to the bottom to find it, then back up to the strip it revealed.)*
 
 ---
 
@@ -532,8 +552,9 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-2.2.13** — The pitch strip is present wherever pitches are edited
   - **Given** a Melodic Pattern at any viewport width
   - **When** the Composer views the grid
-  - **Then** the pitch strip is visible alongside it without opening a collapsed section, since it is the palette the grid is stamped from
+  - **Then** the pitch strip is visible alongside it without opening a collapsed section, since it is the palette the grid is stamped from — it heads the Melody group, which is the group on screen whenever a Melodic Pattern loads, at every width (AC-15.1.7/3)
   - **And**, given a Percussive Pattern, no pitch strip is shown at all — not shown-but-disabled (consistent with AC-2.1.2's treatment of Key)
+  - *(Revised 2026-09-13 with T272. On a phone the workbench is tabbed (AC-15.1.7) and the strip lives on the Melody tab: "without opening anything" holds because that tab is the one selected when a Melodic Pattern loads, and switching Mode selects it again. Choosing the Rhythm or Practice tab hides it by the musician's own act, which is not a collapsed section.)*
 
 - **AC-2.2.14** — The note band is subordinate to the counting syllable, and separated from it
   - **Given** a Melodic Slot that sounds
@@ -581,13 +602,14 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-2.2.19** — The Key is chosen on the pitch strip
   - **Given** a Melodic Pattern open
   - **When** the Composer looks for the Key
-  - **Then** the Key picker is on the pitch strip, beside the scale picker — with the note palette it governs — and not in the Edit accordion among structural controls
+  - **Then** the Key picker is on the pitch strip, beside the scale picker — with the note palette it governs — and not in the Rhythm group among structural controls
   - **And** changing it there behaves exactly as before: guarded on a shipped Pattern (the AC-2.5.4 flow), renaming every note shown (AC-2.2.15/4, AC-2.2.16/2), never altering a stored degree (AC-2.3.2)
   - **Cases**:
     - **AC-2.2.19/1** — The Key picker renders on the pitch strip beside the scale picker
-    - **AC-2.2.19/2** — The Edit section holds no Key picker
+    - **AC-2.2.19/2** — The Rhythm group holds no Key picker
     - **AC-2.2.19/3** — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)
   - *(Added 2026-09-07 at the maintainer's request: "the key, when I'm in Melodic — I really think that should be in the notes section, because I'm up and hunting around trying to find it." The Key sat in the Edit accordion beside Sound and + Measure; everything else about a note — the scale, the degrees, the octave — already lives on the pitch strip.)*
+  - *(/2 retitled 2026-09-13 with T272: the Edit accordion became the Rhythm group, which is where the structural controls now live.)*
 
 ---
 
@@ -929,7 +951,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Added 2026-08-22 at the maintainer's request: "I would like the app to remember what tempo and swing percentage I've set for any rhythm that I've played … not stored as part of the rhythm, but more of a playback setting … applied when you load the rhythm and saved when it changes." Owned Patterns already behave this way via their own saved tempo; this extends the same memory to shipped Patterns without thawing them.)*
 
 - **AC-4.2.5** — Tempo can be typed exactly
-  - **Given** the playback settings
+  - **Given** the pinned bar (AC-15.1.17)
   - **When** the Practicing Musician types a BPM into the tempo entry field and commits it
   - **Then** exactly that tempo applies, clamped to 18–300 — with the same effect as the slider reaching the value: the restart of AC-4.2.2, the memory of AC-4.2.3–AC-4.2.4
   - **Cases**:
@@ -937,15 +959,17 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.2.5/2** — A typed value outside 18–300 clamps to the nearer bound, and a non-numeric entry leaves the tempo unchanged
     - **AC-4.2.5/3** — The field always shows the current tempo, however it was last set — slider, preset, or typing
   - *(Added 2026-09-07 at the maintainer's request: "I also don't have a way of just setting the tempo … to enter it exactly." The slider spans 283 integer values across a phone-width track, so any specific BPM was a hunt.)*
+  - *(Revised 2026-09-13 with T272: the entry field rides in the pinned bar beside Play, so an exact tempo is set from any scroll offset; the slider and the preset row stay in the Practice group.)*
 
 - **AC-4.2.6** — The tempo presets reach the ceiling
-  - **Given** the playback settings
+  - **Given** the Practice group
   - **When** the Practicing Musician looks at the tempo preset row
   - **Then** it offers 57, 67, 80, 90, 104, 120, 150, 180, 200, 220, 240, 260, 280 and 300, and tapping one sets exactly that tempo
   - **Cases**:
     - **AC-4.2.6/1** — The preset row offers exactly those fourteen values, in ascending order
     - **AC-4.2.6/2** — Tapping the 300 preset sets the tempo to the ceiling
   - *(Added 2026-09-07: T202 raised the ceiling from 220 to 300 but left the preset row at 220, so the top of the range was slider-only — and the maintainer asked for "more preselector buttons". The four additions continue the 20 BPM spacing the top of the old row already used.)*
+  - *(Wording revised 2026-09-13 with T272: "the playback settings" became the Practice group. Every preset stays — the maintainer: "I do like having a lot of those toggle switches … trying at different speeds.")*
 
 ---
 
@@ -1047,7 +1071,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 
 - **AC-4.4.7** — Swing feel: the Pattern chooses which pulse swing pairs at
   - **Given** a loaded Pattern
-  - **When** the Practicing Musician looks at the playback settings
+  - **When** the Practicing Musician looks at the Practice group
   - **Then** a Swing feel control offers exactly three levels — Quarters, 8ths, and 16ths — with 8ths, the AC-4.4.5 timing, selected by default
   - **And** the feel is one value for the whole Pattern
   - **And** selecting a feel takes effect immediately, with no confirmation step
@@ -1131,7 +1155,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 
 - **AC-4.4.14** — A Pattern with no straight-feel group says swing doesn't apply
   - **Given** a loaded Pattern in which every Subdivision Group is triplet feel
-  - **When** the Practicing Musician looks at the playback settings
+  - **When** the Practicing Musician looks at the Practice group
   - **Then** no swing amount control and no Swing feel control is shown; in their place one short note explains that swing doesn't apply because the Pattern is all triplet feel — absent with a reason, in AC-4.4.3's spirit, never present-but-disabled
   - **And** a Pattern with at least one straight-feel Subdivision Group shows the swing amount and Swing feel controls and no note — mixed Recipes and all-Undivided Patterns included, since an Undivided Beat is a 1-Slot straight group and the Quarters feel (AC-4.4.9) exists precisely so such Patterns can swing
   - **Cases**:
@@ -1139,9 +1163,10 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.4.14/2** — An all-triplet Pattern shows one note explaining swing doesn't apply to triplet feel
     - **AC-4.4.14/3** — A Pattern with a straight-feel group shows both swing controls and no note, all-Undivided Patterns included
   - *(Added 2026-08-23. The maintainer read the slider's absence on an all-triplet Pattern as a loading failure — the Swing feel picker stood alone with nothing to govern. Two changes: the absence now explains itself, and presence is decided by "any straight-feel group" rather than the old "any even-slot straight group", which wrongly hid the control on all-Undivided Patterns that the Quarters feel can swing.)*
+  - *(Wording revised 2026-09-13 with T272, here and in AC-4.4.15–AC-4.4.16: "the playback settings" became the Practice group.)*
 
 - **AC-4.4.15** — Swing presets
-  - **Given** the playback settings on a Pattern with at least one straight-feel Subdivision Group
+  - **Given** the Practice group on a Pattern with at least one straight-feel Subdivision Group
   - **When** the Practicing Musician looks at the swing amount control
   - **Then** a preset row offers 0, 15, 25, 33 and 50 — straight, light, moderate, the amount that lands an 8th pair's "&" exactly a triplet late at the 8ths feel, and hard — and tapping one sets the Pattern-wide amount exactly as moving the slider does (AC-4.4.12), clearing per-group overrides included
   - **Cases**:
@@ -1151,7 +1176,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Added 2026-09-07 at the maintainer's request, with AC-4.4.16: the slider was the only way to set an amount, and on the iPad it was the hardest control in the app to operate — tempo at least had presets to fall back on. The values chosen with the maintainer 2026-09-07.)*
 
 - **AC-4.4.16** — Swing can be typed exactly
-  - **Given** the playback settings on a Pattern with at least one straight-feel Subdivision Group
+  - **Given** the Practice group on a Pattern with at least one straight-feel Subdivision Group
   - **When** the Practicing Musician types an amount into the swing entry field and commits it
   - **Then** exactly that Pattern-wide amount applies, clamped to 0–100, with the same effect as the slider reaching the value — override clearing (AC-4.4.12), memory (AC-4.4.6) and the `swing` Tag (AC-4.4.13/5) included
   - **Cases**:
@@ -1360,7 +1385,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-5.5.3** — Prev/Next is reachable without scrolling
   - **Given** a Pattern is loaded and the main panel is scrolled away from its top — down the grid, or to the foot of the panel
   - **When** the Practicing Musician looks for Prev/Next
-  - **Then** both controls are on screen: the navigation bar is pinned to the top of the main panel and stays put as the panel scrolls, at every viewport (US-15.1)
+  - **Then** both controls are on screen: the navigation bar is pinned to the top of the main panel and stays put as the panel scrolls, at every viewport (US-15.1) — the same bar carries Play/Stop and the tempo entry (AC-15.1.17), with Prev/Next at its right
   - **And** there is exactly one Prev/Next control in the panel — the bar that used to sit at the foot of the panel is gone, so stepping through the library is always the same gesture in the same place
   - **Cases**:
     - **AC-5.5.3/1** — Prev/Next are on screen with the main panel scrolled to its foot
@@ -2063,17 +2088,26 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(The rule is "did this change what the main panel shows", not "was this a particular control" — otherwise every new way to load a Pattern has to remember to close the drawer, and one of them will not.)*
   - *(Revised 2026-08-17. This previously applied at mobile only and stated explicitly that the sidebar stays visible on tablet and desktop. Scrolling deep into a 110-Pattern list and picking one left the musician with the chosen Pattern on screen and the list still occupying a third of the window — so the rule now holds at every width, and the mobile special case is gone. Reopening is AC-15.1.13.)*
 
-- **AC-15.1.7** — Secondary control sections collapse to accordions on mobile
-  - **Given** a 390px-wide (mobile) viewport
-  - **When** the Practicing Musician views playback settings or edit controls
-  - **Then** those sections render as accordions, collapsed by default
-  - **And**, given a 1400px (desktop) viewport, those same sections render expanded rather than as accordions
+- **AC-15.1.7** — The workbench is tabbed on mobile and stacked open above it
+  - **Given** the three workbench groups — Melody (US-2.2, US-2.6; Melodic only), Rhythm (US-1.1, US-1.3, US-8.1, US-10.1, US-10.2) and Practice (US-4.2–US-4.4, US-5.6, US-2.7)
+  - **When** the Practicing Musician views them on a 390px-wide (mobile) viewport
+  - **Then** a tab bar names the groups and exactly one group is on screen at a time: Melody when a Melodic Pattern loads, Rhythm when a Percussive one does, and thereafter whichever tab was last tapped — until the next Pattern loads or the Mode changes, which reset it
+  - **And**, given a 1400px (desktop) or 900px (tablet) viewport, no tab bar is shown and all three groups are stacked, expanded, in the order AC-15.1.8 fixes
+  - **And** the Pattern actions section (US-7.4, US-7.5, US-11.1, US-12.1, US-13.1) renders as an accordion, collapsed by default, on mobile, and expanded rather than as an accordion on desktop
+  - **Cases**:
+    - **AC-15.1.7/1** — On mobile a tab bar names the workbench groups and exactly one group is on screen
+    - **AC-15.1.7/2** — On desktop and tablet there is no tab bar and every applicable group is on screen at once
+    - **AC-15.1.7/3** — A Melodic Pattern opens on the Melody tab and a Percussive one on the Rhythm tab, and switching Mode selects the tab for the new Mode
+    - **AC-15.1.7/4** — Tapping a tab shows that group and hides the others, and the Melody tab is absent on a Percussive Pattern
+    - **AC-15.1.7/5** — Pattern actions is a collapsed accordion on mobile and an expanded section on desktop
+  - *(Rewritten 2026-09-13 with T272. The previous wording collapsed "playback settings" and "edit controls" to accordions. The 2026-09-13 usability review measured the panel: on a four-bar Melodic Pattern the always-open harmony block alone was 428px on a phone, and Play sat 882px down an 800px screen. Tabs give the grid plus one palette one phone screen, with the transport pinned above (AC-15.1.17). Above mobile there is room to stack, and stacking keeps every control one glance away, so nothing there is tabbed.)*
 
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle and quick navigation, AC-5.5.3): Pattern header → chord strip (US-2.6, Melodic with a progression only) → grid → play controls → Recipe strip (US-1.3) → pitch strip (US-2.2, Melodic only) → harmony controls (US-2.6, Melodic only) → playback settings → edit controls → MIDI export (US-12.1) and other actions → family members (US-11.2, ≥768px only)
-  - **And** in Percussive mode the pitch strip, the chord strip and the harmony controls are absent rather than empty rows, so the order there is the same list with those entries removed; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
+  - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle, Play/Stop and the exact tempo entry, and quick navigation — AC-5.5.3, AC-15.1.17): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the brush line under it (AC-1.3.12) → the workbench tab bar (mobile only, AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6), fill cycling (US-2.7) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
+  - **And** in Percussive mode the Melody group, its tab and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed; likewise the tab bar is absent at 768px and wider, the family members area is absent below 768px, and absent at any width when the Pattern has no family members
+  - *(Rewritten 2026-09-13 with T272, superseding the ordered list the revisions below describe; they are kept as the record of how the previous order was reached. The 2026-09-13 usability review found the panel organised by what kind of control a thing was — a "Playback settings" accordion, an "Edit" accordion holding two controls, an "Export & actions" accordion holding three structure edits beside Delete — rather than by what the musician is doing. The groups are now named for the job: Melody, Rhythm, Practice. Play and the tempo entry leave the ordered list for the pinned bar, where Prev/Next already went for the same reason (AC-5.5.3): they are reached on every Pattern, and on a four-bar Pattern Play sat below the fold of a phone. Melody precedes Rhythm because, when it is present at all, it is what the musician switched into Melodic to reach; Rhythm precedes Practice because the palettes are aimed at while the grid is edited and the practice settings are set once per run.)*
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
   - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
   - *(Clarified 2026-09-12 with US-12.2: the grid entry is the grid **or the sheet music view shown in its place** — the Grid | Sheet toggle swaps what that one section holds and moves nothing else, so the order this AC fixes is unchanged.)*
@@ -2153,11 +2187,11 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Added 2026-08-23. Without these metas the Home-Screen entry is a plain bookmark: it opens in the device's default browser with full browser chrome — reported as Rhythm Master opening in Chrome with an address bar while Ear Trainer, which declares them, opens standalone.)*
 
 - **AC-15.1.16** — Operating a control neither steals focus nor moves the view
-  - **Given** any Pattern open, with a control that dispatches a change — the swing slider, the Sound select, a tempo preset — under the Practicing Musician's hands
+  - **Given** any Pattern open, with a control that dispatches a change — the swing slider, the Sound Mode switch, a tempo preset — under the Practicing Musician's hands
   - **When** operating it changes the Pattern or a setting and the UI updates to show the result
   - **Then** the control stays focused, and the next adjustment lands on it without re-selecting it — a setting that takes several adjustments to get right, swing being the reported one, is adjusted repeatedly without re-finding the control each time
   - **And** the sounding-Measure autoscroll (AC-15.1.11) does not move the view while the musician is interacting with the main panel or within two seconds of their last interaction, resuming on its own afterwards — hands-off playback is unchanged
-  - **And** when an update changes the height of the content above the focused control — switching Percussive to Melodic inserts the pitch strip above the editing controls — the main panel's scroll offset compensates, as far as the panel can scroll, so the control stays where it was on screen
+  - **And** when an update changes the height of the content above the focused control — a swing amount leaving 0 adds a Tag chip to the header (AC-4.4.13/5); switching Percussive to Melodic inserts the Melody group above the Rhythm and Practice groups — the main panel's scroll offset compensates, as far as the panel can scroll, so the control stays where it was on screen
   - **And** none of this depends on the control holding focus: a touchscreen moves no focus onto a slider, and the slider under the finger is still kept alive across the updates it causes and still anchors the compensation
   - **Cases**:
     - **AC-15.1.16/1** — The control being operated keeps focus across the update it causes
@@ -2169,6 +2203,19 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Added 2026-08-23. Reported by the maintainer: every tap on the swing control or the Sound select rebuilt the panel and dropped focus, and — during playback — the sounding-Measure autoscroll fired on the re-render each adjustment caused, yanking the view back to the Pattern mid-adjustment. AC-15.1.11's hands-off tracking is untouched; this pins what happens while hands are on the controls.)*
   - *(Revised 2026-09-07, adding /4 and /5. The maintainer re-reported the symptom from the iPad: "as soon as I touch the swing thing, it refocuses the entire screen." The /1–/3 protections all keyed off `document.activeElement`, and iPadOS Safari does not focus a range input on touch — so on the reported device every protection silently stood down. The operated control is now tracked by pointer as well as by focus. Swing suffered more than tempo for a second reason: crossing amount 0 adds or removes the automatic `swing` Tag chip in the header (AC-4.4.13/5), changing the height above the slider — the /3 case exactly, previously uncompensated under touch.)*
   - *(Revised again 2026-09-07, adding /6. Reported by the maintainer: "if i am playing a rhythm at fast tempo like 200 the stop button does not seem to work easily … if i slow the tempo then the stop works more easily." A tap only becomes a click if the element survives from finger-down to finger-up, and playback re-renders on every sounding event — at 200 BPM a render lands inside nearly every tap window, replacing the Stop button under the finger and eating the tap; at slow tempos taps slip between renders, which is exactly the tempo dependence reported. The /4 keep-alive covered only inputs and selects; the pointer-held control is now kept alive whatever its tag, with a kept-alive button's label still following the fresh render.)*
+  - *(Wording revised 2026-09-13 with T272 for the regrouped panel — the Sound select became the header's Mode switch, and the /3 example names the Tag chip case as well; the criterion is unchanged.)*
+
+- **AC-15.1.17** — Play and the exact tempo entry are pinned with the navigation
+  - **Given** a Pattern is loaded and the main panel is scrolled away from its top — down the grid, or to the foot of the panel
+  - **When** the Practicing Musician reaches for Play, Stop or the tempo
+  - **Then** Play/Stop and the exact tempo entry (AC-4.2.5) are on screen: they ride in the pinned bar of AC-5.5.3, beside the library toggle and Prev/Next, at every viewport width
+  - **And** there is exactly one Play/Stop control in the panel
+  - **Cases**:
+    - **AC-15.1.17/1** — Play is on screen with the main panel scrolled to its foot, and starts playback from there
+    - **AC-15.1.17/2** — The tempo entry is on screen with the main panel scrolled to its foot, and a tempo typed there applies
+    - **AC-15.1.17/3** — Play and the tempo entry stay reachable without scrolling at mobile width
+    - **AC-15.1.17/4** — The panel holds exactly one Play/Stop control
+  - *(Added 2026-09-13 with T272. Measured in the usability review of the same day: on a four-bar Melodic Pattern Play sat 780px down a 900px desktop window and 882px down an 800px phone, while the bar above it pinned only Library and Prev/Next. Play is the one control every session uses, and tempo the one most adjusted mid-practice; the slider and the preset row stay in the Practice group, where there is room for them, and the entry field is the pinned door to the same value.)*
 
 ---
 ### User Story 33 - Ship with a seeded Pattern library
@@ -2910,16 +2957,17 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 **Acceptance Scenarios**:
 
-- **AC-2.7.1** — Cycle mode is a playback setting beside the arpeggio
+- **AC-2.7.1** — Cycle mode is a playback setting in the Practice group
   - **Given** a Melodic Pattern with a progression
-  - **When** the Practicing Musician looks at the harmony section
-  - **Then** a Cycle toggle and a repeat count sit beside the Arpeggio picker, and turning the toggle on puts a fill in force without changing the Pattern
+  - **When** the Practicing Musician looks at the Practice group
+  - **Then** a Cycle toggle and a repeat count sit there with the other playback settings, and turning the toggle on puts a fill in force without changing the Pattern
   - **Cases**:
-    - **AC-2.7.1/1** — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the harmony section beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression
+    - **AC-2.7.1/1** — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the Practice group, and are absent, like the Arpeggio picker, on a Pattern without a progression
     - **AC-2.7.1/2** — The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load
     - **AC-2.7.1/3** — Turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it
     - **AC-2.7.1/4** — The fill in force is a playback setting: the Pattern's own arpeggio is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling
     - **AC-2.7.1/5** — Turning cycle mode off returns the Pattern's own arpeggio, from the next pass while playing and at once otherwise
+  - *(Revised 2026-09-13 with T272. The toggle sat beside the Arpeggio picker because it steps through that picker's catalogue; but it is a practice setting — it changes nothing on the Pattern (/4) — and the usability review found it the one playback control outside the playback group. It now sits with tempo, swing and counting.)*
 
 - **AC-2.7.2** — Playback steps through the catalogue
   - **Given** cycle mode on and a Pattern playing

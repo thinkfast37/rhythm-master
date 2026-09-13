@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
 import {
   exportsOf,
   mentionsBesidesDeclaration,
@@ -45,24 +47,44 @@ describe('tools/check-unwired — reading exports', () => {
 });
 
 describe('tools/check-unwired — the gate', () => {
+  /*
+   * A two-module tree with one export nothing reaches. Until T274 these tests
+   * used the real tree's `removeMeasure` — the finding the gate was built for —
+   * as the example; once that control was built the example was gone, so the
+   * shape is pinned here where nothing can wire it.
+   */
+  const withFixture = (fn) => {
+    const dir = mkdtempSync(join(tmpdir(), 'unwired-'));
+    try {
+      writeFileSync(join(dir, 'a.js'), 'export function lonely() {}\nexport function used() {}\n');
+      writeFileSync(join(dir, 'b.js'), "import { used } from './a.js';\nused();\n");
+      return fn(dir);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
   it('flags an export nothing reaches, and passes one that something does', () => {
-    // Written against the real tree rather than a fixture, because the failure this
-    // gate exists for is a property of the real tree.
-    const findings = findUnwired(jsFiles('src'));
-    const names = findings.map((f) => f.name);
+    withFixture((dir) => {
+      const names = findUnwired(jsFiles(dir)).map((f) => f.name);
+      expect(names).toContain('lonely');
+      expect(names).not.toContain('used');
+    });
 
-    // The finding the gate was built for: AC-1.1.8/AC-1.1.9 specify a −Measure
-    // control, and the mutator behind it has never been called.
-    expect(names).toContain('removeMeasure');
-
-    // And its neighbour in the same module, which the app does call, is not flagged.
-    expect(names).not.toContain('addMeasure');
-    expect(names).not.toContain('cycleAccent');
+    // And on the real tree: the finding the gate was built for — AC-1.1.8 and
+    // AC-1.1.9's −Measure control, whose mutator nothing called for the life of
+    // the project — is wired now (T274), and stays wired.
+    const real = findUnwired(jsFiles('src')).map((f) => f.name);
+    expect(real).not.toContain('removeMeasure');
+    expect(real).not.toContain('addMeasure');
+    expect(real).not.toContain('cycleAccent');
   });
 
   it('reports a stable key of file and name, so the baseline cannot drift', () => {
-    const finding = findUnwired(jsFiles('src')).find((f) => f.name === 'removeMeasure');
-    expect(finding.key).toBe('src/core/pattern.js removeMeasure');
+    withFixture((dir) => {
+      const finding = findUnwired(jsFiles(dir)).find((f) => f.name === 'lonely');
+      expect(finding.key).toBe(`${relative('.', join(dir, 'a.js'))} lonely`);
+    });
   });
 
   it('every current finding is either baselined or a build failure — no third state', () => {

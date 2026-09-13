@@ -96,9 +96,9 @@ export function scrollMeasureIntoView(gridEl, measureIndex) {
 }
 
 /**
- * Secondary control sections collapse to accordions on mobile and render
- * expanded above it (AC-15.1.7). Primary sections — the grid and the transport
- * — are never collapsible: they are why the app is open.
+ * The Pattern actions section collapses to an accordion on mobile and renders
+ * expanded above it (AC-15.1.7/5). Primary sections — the grid and the
+ * transport — are never collapsible: they are why the app is open.
  */
 export function applyAccordions(sections) {
   const mobile = isMobile();
@@ -112,4 +112,41 @@ export function applyAccordions(sections) {
       section.open = true;
     }
   }
+}
+
+/**
+ * The workbench (AC-15.1.7): three groups named for the job. On a phone one is
+ * on screen at a time, chosen by a tab bar; above mobile all three stack, open,
+ * and the bar is hidden by CSS — nothing here checks the width.
+ */
+export const WORKBENCH_TABS = [
+  ['melody', 'Melody'],
+  ['rhythm', 'Rhythm'],
+  ['practice', 'Practice'],
+];
+
+/**
+ * The tab in force: the one the musician chose, or the Mode's own — Melody on
+ * a Melodic Pattern, Rhythm on a Percussive one (AC-15.1.7/3). A chosen Melody
+ * tab on a Pattern that has since gone Percussive falls back the same way, so
+ * the screen is never left showing nothing.
+ */
+export function workbenchTabFor(pattern, chosen) {
+  const melodic = pattern.soundMode === 'melodic';
+  if (chosen && (chosen !== 'melody' || melodic)) return chosen;
+  return melodic ? 'melody' : 'rhythm';
+}
+
+/**
+ * Mark the tab bar and the groups with the tab in force. The Melody tab is
+ * absent, not disabled, on a Percussive Pattern (AC-15.1.7/4), matching the
+ * group it opens (AC-2.2.13).
+ */
+export function applyWorkbench(tabsEl, groups, active) {
+  const melodic = !groups.find((g) => g.dataset.tab === 'melody')?.hidden;
+  for (const tab of tabsEl.querySelectorAll('[data-tab]')) {
+    tab.hidden = tab.dataset.tab === 'melody' && !melodic;
+    tab.setAttribute('aria-selected', String(tab.dataset.tab === active));
+  }
+  for (const group of groups) group.dataset.tabActive = String(group.dataset.tab === active);
 }
