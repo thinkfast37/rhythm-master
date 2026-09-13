@@ -310,6 +310,23 @@ test('AC-4.2.3/5 — The carried tempo survives a reload, and is 80 BPM before a
   expect((await effective(page)).tempo).toBe(150);
 });
 
+test('AC-4.2.3/6 — A Pattern with any remembered playback setting takes no carried tempo, even when what was remembered is its swing', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const first = await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-swing"][data-amount="15"]').click();
+
+  await openSeed(page, 'second');
+  await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
+
+  // Only swing was ever set on the first Pattern; its tempo is still its own.
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
+  const got = await effective(page);
+  expect(got.tempo).toBe(80);
+  expect(got.swingAmount).toBe(15);
+});
+
 test('AC-4.4.17/1 — A Pattern with no swing of its own loads at the swing amount in effect on the Pattern just left', async ({
   page,
 }) => {
@@ -414,6 +431,26 @@ test('AC-4.4.17/5 — A carried amount does not give a shipped Pattern the `swin
   await page.locator('.library-search').fill(second.name);
   const rowTags = await page.locator('.pattern-item.current .tag-chip').allTextContents();
   expect(rowTags).not.toContain('swing');
+});
+
+test('AC-4.4.17/6 — A Pattern with any remembered playback setting takes no carried swing or feel, even when what was remembered is its tempo', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const first = await openSeed(page, 'plain');
+  await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
+
+  await openSeed(page, 'second');
+  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+  await page.locator('select.swing-feel').selectOption('sixteenth');
+
+  // Only the tempo was ever set on the first Pattern; it comes back straight,
+  // on the 8ths feel, at the tempo it remembers.
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
+  const got = await effective(page);
+  expect(got.tempo).toBe(120);
+  expect(got.swingAmount).toBe(0);
+  expect(got.swingFeel).toBe('eighth');
 });
 
 test('AC-4.3.1 — the metronome and count-in are off by default and toggleable', async ({ page }) => {
