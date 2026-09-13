@@ -1668,6 +1668,17 @@ body {
   padding: 8px 10px;
   cursor: pointer;
 }
+/* The catalogue's group headings (AC-2.6.1/1): plain, dimmed, never italic. */
+.progression-picker optgroup {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-dim);
+  background: #1c1f2b;
+}
+.progression-picker option {
+  color: var(--ink);
+  background: #1c1f2b;
+}
 .harmony button {
   min-height: 32px;
   padding: 0 10px;

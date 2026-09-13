@@ -24,6 +24,10 @@ import {
   memberFor,
   degreeAsTone,
   MAX_CHORDS,
+  PROGRESSIONS,
+  PROGRESSION_GROUPS,
+  spellProgression,
+  matchProgression,
 } from '../../../src/core/harmony.js';
 import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
 import { fillIndexFor, fillIndexOf, withArpeggio } from '../../../src/core/harmony.js';
@@ -48,6 +52,22 @@ const pitches = (p) =>
 
 describe('core/harmony', () => {
   // --- AC-2.6.1 — A progression is chosen from a catalogue of named progressions ---
+
+  it('AC-2.6.1/15 — No two catalogue entries spell the same chords under the default scale, so a chosen entry is always matched back to its own name', () => {
+    const seen = new Map();
+    for (const entry of PROGRESSIONS) {
+      const spelled = JSON.stringify(spellProgression(entry.id));
+      expect(seen.get(spelled), `${entry.id} spells the same chords as ${seen.get(spelled)}`).toBeUndefined();
+      seen.set(spelled, entry.id);
+      // And choosing it is matched back to it.
+      expect(matchProgression(setProgression(melodic(), entry.id))).toBe(entry.id);
+    }
+    // Every entry files under a heading that exists, and no id is used twice.
+    const groups = PROGRESSION_GROUPS.map((g) => g.id);
+    expect(PROGRESSIONS.every((p) => groups.includes(p.group))).toBe(true);
+    expect(new Set(PROGRESSIONS.map((p) => p.id)).size).toBe(PROGRESSIONS.length);
+    expect(PROGRESSIONS.every((p) => p.steps.length <= MAX_CHORDS)).toBe(true);
+  });
 
   it("AC-2.6.1/2 — Choosing a progression gives the Pattern one chord per step, each named in the Pattern's Key: I–IV–V in C is C, F and G", () => {
     const p = setProgression(melodic(), 'I-IV-V');
