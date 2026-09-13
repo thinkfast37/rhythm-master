@@ -112,9 +112,9 @@ test('AC-2.1.5 — switching Sound Mode leaves every Accent Level untouched', as
     page.locator('.slot').evaluateAll((els) => els.map((e) => e.dataset.accent));
 
   const before = await accentsOf();
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   expect(await accentsOf()).toEqual(before);
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   expect(await accentsOf()).toEqual(before);
 });
 
@@ -139,7 +139,7 @@ test('AC-2.4.2 — the app is interactive immediately, with no audio asset to ga
 test('AC-2.4.4 — a second Melodic play needs no reload, because nothing loads', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
 
   await page.locator('[data-action="play"]').click();
@@ -209,7 +209,7 @@ test('AC-7.5.4 — deleting one Family member leaves the other untouched', async
   await page.locator('.dialog-input').fill('My Custom Fill (Melodic)');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
   await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
   // Delete the melodic one; the rhythmic original must survive intact.
   await page.locator('[data-action="delete-pattern"]').click();
@@ -389,7 +389,9 @@ test('AC-4.3.3 — count-in length matches the first Measure’s Beat count', as
 
 test('AC-4.3.4 — the metronome setting persists across reloads', async ({ page }) => {
   await page.goto('/');
-  await page.locator('details[data-section="playback-settings"] > summary').click().catch(() => {});
+  // The click toggle is in the Practice group — a tab at mobile width, on
+  // screen at any other (AC-15.1.7).
+  await page.evaluate(() => window.__rm.handlers.onWorkbenchTab('practice'));
   await page.locator('[data-action="toggle-metronome"]').click();
   await expect(page.locator('[data-action="toggle-metronome"]')).toHaveClass(/\bon\b/);
 
@@ -514,7 +516,7 @@ test('AC-7.4.5 — a Make Copy result is immediately a Family member of its sour
 
   // Identical at the instant of creation, so it is a duplicate; changing the
   // Sound Mode makes the Family relationship the one that applies.
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   const family = await page.evaluate(() => window.__rm.currentFamily().map((p) => p.name));
   expect(family).toContain('Source Rhythm');
 });
@@ -663,7 +665,7 @@ test('AC-3.1.14 — percussive accent mapping is fixed and deterministic', async
 test('AC-3.1.15 — melodic accent changes gain and decay, never pitch', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
   // Two Slots at the same pitch but different accents.
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click(); // Strong

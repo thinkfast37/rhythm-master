@@ -9,6 +9,7 @@
 import {
   create,
   addMeasure,
+  removeMeasure,
   setTimeSignature,
   setTimeSignatureAll,
   setRecipe,
@@ -48,18 +49,20 @@ import { balanceBeatLines, forgetBeatWidths, observeGridWidth } from './ui/beat-
 import {
   renderHeader,
   renderPlayControls,
-  renderPlaybackSettings,
-  renderEditControls,
+  renderMelodyGroup,
+  renderRhythmGroup,
+  renderPracticeGroup,
+  renderBrushHint,
   renderFamilyMembers,
   renderActionControls,
-  renderPitchStrip,
-  renderRecipeStrip,
-  renderHarmony,
   heldControl,
 } from './ui/controls.js';
 import {
   applyViewport,
   applyAccordions,
+  applyWorkbench,
+  workbenchTabFor,
+  WORKBENCH_TABS,
   collapseLibrary,
   openLibrary,
   isLibraryOpen,
@@ -127,6 +130,13 @@ const state = {
    * unarmed, so the grid never comes back in a state the musician did not choose.
    */
   armedRecipe: null,
+  /**
+   * The workbench tab the musician chose on a phone (AC-15.1.7), or null for the
+   * Mode's own — Melody on a Melodic Pattern, Rhythm on a Percussive one. Reset
+   * on every load and Mode change, so a Pattern always opens on the group its
+   * Mode is about. Above mobile every group is on screen and this is unused.
+   */
+  workbenchTab: null,
   soundStatus: melodic.getStatus(),
   /** Library view state: search text, Tag and rating filters, and what is open. */
   view: { query: '', tags: [], minRating: 0, currentId: null },
@@ -408,6 +418,7 @@ export function loadPattern(pattern, { owned }) {
   });
   state.isOwned = owned;
   state.transportPosition = null;
+  state.workbenchTab = null;
   state.view = { ...state.view, currentId: pattern.id ?? null };
   // Loading while playing switches the running transport to the new Pattern,
   // from its top (AC-4.1.8) — the same restart path a tempo change takes, so a
@@ -439,6 +450,23 @@ const handlers = {
   async onAddMeasure() {
     if (!(await guardShipped())) return;
     apply(addMeasure);
+  },
+
+  /**
+   * −Measure: always the last one (AC-1.1.9), never the last remaining
+   * (AC-1.1.8). The control is disabled at one Measure; this guard is the
+   * second line, since `removeMeasure` throws rather than empties a Pattern.
+   */
+  async onRemoveMeasure() {
+    if (state.pattern.measures.length <= 1) return;
+    if (!(await guardShipped())) return;
+    apply(removeMeasure, state.pattern.measures.length - 1);
+  },
+
+  /** The workbench tab in force on a phone (AC-15.1.7/4). */
+  onWorkbenchTab(tab) {
+    state.workbenchTab = tab;
+    render();
   },
 
   /**
@@ -705,6 +733,9 @@ const handlers = {
 
   async onSoundMode(mode) {
     if (!(await guardShipped())) return;
+    // The tab follows the Mode (AC-15.1.7/3): Melodic opens on the palette it
+    // was switched into Melodic to reach.
+    state.workbenchTab = null;
     const next = structuredClone(state.pattern);
     next.soundMode = mode;
 
@@ -1196,8 +1227,10 @@ export { handlers };
  * Build the app shell.
  *
  * Main-panel section order is fixed top to bottom and does not vary by
- * viewport (AC-15.1.8): Pattern header, grid, play controls, playback settings,
- * edit controls, actions, quick navigation. DOM order is the priority order.
+ * viewport (AC-15.1.8): the pinned bar (library toggle, transport, quick
+ * navigation), then Pattern header, chord strip, grid, the workbench — Melody,
+ * Rhythm, Practice, tabbed on a phone (AC-15.1.7) — Pattern actions, family
+ * members. DOM order is the priority order.
  */
 export function mount(root) {
   root.innerHTML = '';
@@ -1284,55 +1317,59 @@ export function mount(root) {
   const scoreEl = document.createElement('div');
   scoreEl.className = 'score';
   viewEl.append(viewBar, gridEl, scoreEl);
+  // The brush line, directly under the grid it describes (AC-1.3.12). The two
+  // strips it reports on live in different groups, and on a phone only one
+  // group is on screen at a time, so it cannot sit in either.
+  const brushEl = document.createElement('p');
+  viewEl.appendChild(brushEl);
+
+  // The transport rides in the pinned bar (AC-15.1.17), reached from any scroll
+  // offset — on a four-bar Pattern it sat below the fold of a phone.
   const playEl = document.createElement('section');
   playEl.dataset.primary = 'true';
   playEl.dataset.section = 'play';
-  // Below the play controls, and never inside an accordion: it is the palette
-  // the grid is stamped from, so it has to be aimable while you stamp without
-  // opening anything first (AC-2.2.13). It sits under the transport rather than
-  // above it because the transport is reached on every Pattern in either Mode
-  // and the strip only while composing a melody — putting the strip first
-  // displaced Play on every Melodic Pattern (AC-15.1.8). Percussive Patterns
-  // render it empty and hidden.
-  const pitchEl = document.createElement('section');
-  pitchEl.dataset.section = 'pitch';
 
-  // The harmony controls sit under the pitch strip: the chords are the other
-  // half of the palette the role chips resolve through (US-2.6).
-  const harmonyEl = document.createElement('section');
-  harmonyEl.dataset.section = 'harmony';
-
-  // The Recipe strip sits with the editing controls rather than beside the pitch
-  // strip: it applies to every Pattern, where the pitch strip is Melodic-only.
-  const recipeEl = document.createElement('section');
-  recipeEl.dataset.section = 'recipe';
-
-  const settingsEl = document.createElement('details');
-  settingsEl.dataset.section = 'playback-settings';
-  const settingsSummary = document.createElement('summary');
-  settingsSummary.textContent = 'Playback settings';
-  const settingsBody = document.createElement('div');
-  settingsEl.append(settingsSummary, settingsBody);
-
-  const editEl = document.createElement('details');
-  editEl.dataset.section = 'edit';
-  const editSummary = document.createElement('summary');
-  editSummary.textContent = 'Edit';
-  const editBody = document.createElement('div');
-  editEl.append(editSummary, editBody);
+  /*
+   * The workbench (AC-15.1.7, AC-15.1.8): three groups named for the job —
+   * Melody, Rhythm, Practice — stacked and open above mobile, tabbed on it.
+   * The tab bar is always in the DOM and shown by CSS on the mobile viewport
+   * only, so the fixed order never depends on width. Melody is absent, not
+   * empty, on a Percussive Pattern (AC-2.2.13).
+   */
+  const tabsEl = document.createElement('nav');
+  tabsEl.className = 'workbench-tabs';
+  tabsEl.setAttribute('role', 'tablist');
+  tabsEl.setAttribute('aria-label', 'Workbench');
+  for (const [tab, label] of WORKBENCH_TABS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'workbench-tab';
+    b.setAttribute('role', 'tab');
+    b.dataset.action = `tab-${tab}`;
+    b.dataset.tab = tab;
+    b.textContent = label;
+    b.addEventListener('click', () => handlers.onWorkbenchTab(tab));
+    tabsEl.appendChild(b);
+  }
+  const group = (tab) => {
+    const section = document.createElement('section');
+    section.dataset.section = tab;
+    section.dataset.tab = tab;
+    return section;
+  };
+  const melodyEl = group('melody');
+  const rhythmEl = group('rhythm');
+  const practiceEl = group('practice');
 
   const actionsEl = document.createElement('details');
   actionsEl.dataset.section = 'actions';
   const actionsSummary = document.createElement('summary');
-  actionsSummary.textContent = 'Export & actions';
+  actionsSummary.textContent = 'Pattern actions';
   const actionsBody = document.createElement('div');
   actionsEl.append(actionsSummary, actionsBody);
-
-  for (const section of [settingsEl, editEl, actionsEl]) {
-    section.addEventListener('toggle', () => {
-      section.dataset.touched = 'true';
-    });
-  }
+  actionsEl.addEventListener('toggle', () => {
+    actionsEl.dataset.touched = 'true';
+  });
 
   const familyEl = document.createElement('section');
   familyEl.dataset.section = 'family';
@@ -1353,18 +1390,23 @@ export function mount(root) {
     b.type = 'button';
     b.className = 'nav-button';
     b.dataset.action = direction === 'previous' ? 'prev-pattern' : 'next-pattern';
-    b.textContent = direction === 'previous' ? '\u2039 Prev' : 'Next \u203a';
+    // The word is dropped at phone width, where the bar also holds the
+    // transport; the glyph alone is the control there.
+    const word = document.createElement('span');
+    word.className = 'nav-word';
+    word.textContent = direction === 'previous' ? 'Prev' : 'Next';
+    if (direction === 'previous') b.append('\u2039 ', word);
+    else b.append(word, ' \u203a');
     b.addEventListener('click', () => handlers.onNavigate(direction));
     navEl.appendChild(b);
   }
 
   const topBarEl = document.createElement('div');
   topBarEl.className = 'main-top-bar';
-  topBarEl.append(libraryToggle, navEl);
+  topBarEl.append(libraryToggle, playEl, navEl);
 
   main.append(
-    topBarEl, headerEl, chordStripEl, viewEl, playEl, recipeEl, pitchEl, harmonyEl,
-    settingsEl, editEl, actionsEl, familyEl
+    topBarEl, headerEl, chordStripEl, viewEl, tabsEl, melodyEl, rhythmEl, practiceEl, actionsEl, familyEl
   );
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
@@ -1430,11 +1472,11 @@ export function mount(root) {
 
   applyViewport(shell, { openLibrary: true });
   syncLibraryToggle();
-  applyAccordions([settingsEl, editEl, actionsEl]);
+  applyAccordions([actionsEl]);
   window.addEventListener('resize', () => {
     applyViewport(shell);
     syncLibraryToggle();
-    applyAccordions([settingsEl, editEl, actionsEl]);
+    applyAccordions([actionsEl]);
     // A resize can change the font the Slots lay out in as well as the room they
     // have, so the measured minimums go with it (AC-15.1.14/5).
     forgetBeatWidths();
@@ -1496,6 +1538,8 @@ export function mount(root) {
     printButton.hidden = !sheet;
     gridEl.hidden = sheet;
     scoreEl.hidden = !sheet;
+    // The brush line describes grid taps; the score takes none (AC-12.2.9).
+    brushEl.hidden = sheet;
     if (sheet) {
       // Read-only, from the same Pattern and position the grid renders from
       // (AC-12.2.1/4, AC-12.2.9); laid out to the width it has (AC-12.2.10).
@@ -1512,13 +1556,13 @@ export function mount(root) {
       // yields to paint, so the one-line fallback is never seen (AC-15.1.14).
       balanceBeatLines(gridEl);
     }
-    renderPitchStrip(pitchEl, pattern, s, handlers);
-    renderHarmony(harmonyEl, pattern, s, handlers);
-    renderRecipeStrip(recipeEl, pattern, s, handlers);
+    renderBrushHint(brushEl, pattern, s);
     renderPlayControls(playEl, pattern, s, handlers);
-    renderPlaybackSettings(settingsBody, pattern, s, handlers);
-    renderEditControls(editBody, pattern, s, handlers);
+    renderMelodyGroup(melodyEl, pattern, s, handlers);
+    renderRhythmGroup(rhythmEl, pattern, s, handlers);
+    renderPracticeGroup(practiceEl, pattern, s, handlers);
     renderActionControls(actionsBody, pattern, s, handlers);
+    applyWorkbench(tabsEl, [melodyEl, rhythmEl, practiceEl], workbenchTabFor(pattern, s.workbenchTab));
     renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
     renderFamilyMembers(familyEl, familyMembers(), handlers);
 
@@ -1548,12 +1592,12 @@ export function mount(root) {
     scoreEl,
     viewEl,
     chordStripEl,
-    pitchEl,
-    harmonyEl,
-    recipeEl,
+    brushEl,
     playEl,
-    settingsEl,
-    editEl,
+    tabsEl,
+    melodyEl,
+    rhythmEl,
+    practiceEl,
     actionsEl,
     navEl,
     familyEl,

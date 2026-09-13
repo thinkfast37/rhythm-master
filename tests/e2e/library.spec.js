@@ -479,12 +479,14 @@ async function scrollMainToFoot(page) {
   return scrolled;
 }
 
-async function navIsOnScreen(page) {
-  return page.locator('[data-action="next-pattern"]').evaluate((el) => {
+async function onScreen(page, selector) {
+  return page.locator(selector).evaluate((el) => {
     const box = el.getBoundingClientRect();
     return box.top >= 0 && box.bottom <= window.innerHeight && box.width > 0 && box.height > 0;
   });
 }
+
+const navIsOnScreen = (page) => onScreen(page, '[data-action="next-pattern"]');
 
 test('AC-5.5.3/1 — Prev/Next are on screen with the main panel scrolled to its foot', async ({
   page,
@@ -518,10 +520,76 @@ test('AC-5.5.3/3 — Prev/Next stay reachable without scrolling at mobile width'
   await page.goto('/');
   // The library opens at every width (AC-15.1.5); opening a Pattern collapses it.
   await page.locator('.pattern-item').nth(2).locator('.pattern-name').click();
-  // Mobile collapses the panel's sections into accordions, so open one to give
-  // the panel something to scroll (AC-15.1.7).
-  await page.locator('[data-section="playback-settings"] > summary').click();
+  // Mobile shows one workbench group at a time; the Practice tab is the tall
+  // one, so it gives the panel something to scroll (AC-15.1.7).
+  await page.locator('.workbench-tab[data-tab="practice"]').click();
 
   expect(await scrollMainToFoot(page)).toBeGreaterThan(0);
   expect(await navIsOnScreen(page)).toBe(true);
+});
+
+/*
+ * AC-15.1.17 — Play/Stop and the exact tempo entry ride in the same pinned bar,
+ * so a run starts, stops and changes speed from any scroll offset.
+ */
+test('AC-15.1.17/1 — Play is on screen with the main panel scrolled to its foot, and starts playback from there', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1000, height: 500 });
+  await page.goto('/');
+  await page.locator('.pattern-item').nth(2).locator('.pattern-name').click();
+
+  expect(await scrollMainToFoot(page)).toBeGreaterThan(0);
+  expect(await onScreen(page, '[data-action="play"]')).toBe(true);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('[data-action="stop"]')).toBeVisible();
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+  // Stop is the same control, in the same place.
+  expect(await onScreen(page, '[data-action="stop"]')).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(false);
+});
+
+test('AC-15.1.17/2 — The tempo entry is on screen with the main panel scrolled to its foot, and a tempo typed there applies', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1000, height: 500 });
+  await page.goto('/');
+  await page.locator('.pattern-item').nth(2).locator('.pattern-name').click();
+
+  expect(await scrollMainToFoot(page)).toBeGreaterThan(0);
+  expect(await onScreen(page, '.main-top-bar .tempo-entry')).toBe(true);
+
+  await page.locator('.main-top-bar .tempo-entry').fill('123');
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(123);
+  // The slider in the Practice group follows it (AC-4.2.5/1).
+  await expect(page.locator('.tempo-slider')).toHaveValue('123');
+});
+
+test('AC-15.1.17/3 — Play and the tempo entry stay reachable without scrolling at mobile width', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 640 });
+  await page.goto('/');
+  await page.locator('.pattern-item').nth(2).locator('.pattern-name').click();
+  await page.locator('.workbench-tab[data-tab="practice"]').click();
+
+  expect(await scrollMainToFoot(page)).toBeGreaterThan(0);
+  expect(await onScreen(page, '[data-action="play"]')).toBe(true);
+  expect(await onScreen(page, '.main-top-bar .tempo-entry')).toBe(true);
+  // And the bar holds them without pushing the page sideways (AC-15.1.9).
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('AC-15.1.17/4 — The panel holds exactly one Play/Stop control', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.main-panel [data-action="play"], .main-panel [data-action="stop"]')).toHaveCount(1);
+  // In the pinned bar, beside the library toggle and Prev/Next.
+  await expect(page.locator('.main-top-bar [data-action="play"]')).toHaveCount(1);
+  await expect(page.locator('.main-top-bar .tempo-entry')).toHaveCount(1);
 });

@@ -153,7 +153,7 @@ function presetRow(values, { action, dataKey, current, onPick }) {
  *    swapping the node is the safer path.
  */
 const KEEP_ALIVE_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
-const IDENTITY_KEYS = ['action', 'degree', 'bpm', 'amount', 'recipe', 'tag', 'patternId'];
+const IDENTITY_KEYS = ['action', 'degree', 'bpm', 'amount', 'recipe', 'tag', 'patternId', 'mode', 'tab'];
 
 /*
  * The control under an active pointer drag. iPadOS Safari moves NO focus onto a
@@ -283,29 +283,6 @@ function syncAttributes(o, n) {
   }
 }
 
-/**
- * Render the control bar.
- *
- * @param {HTMLElement} root
- * @param {object} pattern
- * @param {object} state    { settings, isOwned, isPlaying }
- * @param {object} handlers callbacks; each receives already-parsed values
- */
-export function renderControls(root, pattern, state, handlers) {
-  root.innerHTML = '';
-  root.className = 'controls';
-
-  root.appendChild(renderTransport(state, handlers));
-  root.appendChild(renderTempo(pattern, handlers));
-  root.appendChild(renderStructure(pattern, handlers));
-  root.appendChild(renderSound(pattern, handlers));
-  root.appendChild(renderSwing(pattern, handlers));
-  root.appendChild(renderCounting(pattern, state, handlers));
-  root.appendChild(renderActions(pattern, state, handlers));
-
-  return root;
-}
-
 /** The Pattern header: name, provenance, and Measure count. */
 export function renderHeader(root, pattern, state, handlers = {}) {
   root.className = 'pattern-header';
@@ -321,6 +298,11 @@ function renderHeaderInto(root, pattern, state, handlers) {
   name.addEventListener('change', (e) => handlers.onRename?.(e.target.value));
   name.addEventListener('blur', (e) => handlers.onRename?.(e.target.value));
   root.appendChild(name);
+
+  // The Sound Mode, under the name (AC-2.1.6). It is the first decision about
+  // a Pattern — it decides which half of the workbench the panel shows — so it
+  // sits where the eye lands, not in a section at the foot of the panel.
+  root.appendChild(renderSoundModeSwitch(pattern, handlers));
 
   // The Rating lives here as well as on the library row (AC-6.1.7): rating is
   // something you do while looking at — and playing — the Pattern, and on a
@@ -359,6 +341,32 @@ function renderHeaderInto(root, pattern, state, handlers) {
   }
 
   return root;
+}
+
+/**
+ * Percussive | Melodic, as a two-way switch rather than a select: both states
+ * read at a glance, and one tap changes Mode (AC-2.1.6). Tapping the Mode
+ * already in force does nothing — no prompt on a shipped Pattern for a change
+ * that is not one.
+ */
+function renderSoundModeSwitch(pattern, handlers) {
+  const group = el('div', 'sound-mode', { role: 'group' });
+  group.setAttribute('aria-label', 'Sound Mode');
+  group.dataset.mode = pattern.soundMode;
+  for (const mode of ['percussive', 'melodic']) {
+    const b = el('button', 'mode-option', {
+      type: 'button',
+      textContent: mode[0].toUpperCase() + mode.slice(1),
+    });
+    b.dataset.action = 'set-sound-mode';
+    b.dataset.mode = mode;
+    b.setAttribute('aria-pressed', String(pattern.soundMode === mode));
+    b.addEventListener('click', () => {
+      if (pattern.soundMode !== mode) handlers.onSoundMode?.(mode);
+    });
+    group.appendChild(b);
+  }
+  return group;
 }
 
 /**
@@ -406,34 +414,70 @@ function renderHeaderTags(pattern, state, handlers) {
   return wrap;
 }
 
-/** Play controls only — the primary transport, never collapsible. */
+/**
+ * The pinned transport (AC-15.1.17): Play/Stop and the exact tempo entry, in
+ * the bar that never scrolls away. Click, count-in, the slider and the preset
+ * row are in the Practice group, where there is room for them.
+ */
 export function renderPlayControls(root, pattern, state, handlers) {
   root.className = 'controls play-controls';
-  return rebuild(root, (fresh) => fresh.appendChild(renderTransport(state, handlers)));
+  return rebuild(root, (fresh) => {
+    fresh.appendChild(renderTransport(state, handlers));
+    fresh.appendChild(renderTempoEntry(pattern, handlers));
+  });
 }
 
-/** Playback settings: tempo, swing, counting system. */
-export function renderPlaybackSettings(root, pattern, state, handlers) {
-  root.className = 'controls playback-settings';
+/** A group's title: read on the stacked layout, hidden where a tab names it. */
+function groupTitle(text) {
+  return el('h2', 'group-title', { textContent: text });
+}
+
+/**
+ * The Melody group (AC-15.1.8): the pitch strip, then the harmony controls —
+ * the two halves of the palette a Melodic grid is stamped from. Absent, not
+ * empty, in Percussive (AC-2.2.13).
+ */
+export function renderMelodyGroup(root, pattern, state, handlers) {
+  root.className = 'controls workbench-group melody-group';
+  root.hidden = pattern.soundMode !== 'melodic';
   return rebuild(root, (fresh) => {
-    fresh.appendChild(renderTempo(pattern, handlers));
-    fresh.appendChild(renderSwing(pattern, handlers));
-    fresh.appendChild(renderCounting(pattern, state, handlers));
+    if (root.hidden) return;
+    fresh.appendChild(groupTitle('Melody'));
+    const strip = el('div', 'pitch-strip');
+    renderPitchStripInto(strip, pattern, state, handlers);
+    fresh.appendChild(strip);
+    const harmony = el('div', 'harmony');
+    renderHarmonyInto(harmony, pattern, state, handlers);
+    fresh.appendChild(harmony);
+  });
+}
+
+/** The Rhythm group: the Subdivision strip, then the Measure controls. */
+export function renderRhythmGroup(root, pattern, state, handlers) {
+  root.className = 'controls workbench-group rhythm-group';
+  return rebuild(root, (fresh) => {
+    fresh.appendChild(groupTitle('Rhythm'));
+    fresh.appendChild(renderRecipeStrip(pattern, state, handlers));
+    fresh.appendChild(renderStructure(pattern, handlers));
   });
 }
 
 /**
- * Edit controls: structure, subdivision, sound mode.
- *
- * Pitch is deliberately not here. It moved to the pitch strip beside the grid,
- * because a palette you have to expand a collapsed section to reach cannot be
- * aimed at while stamping (AC-2.2.13).
+ * The Practice group: everything set for a run, and nothing that edits the
+ * Pattern. Fill cycling is here rather than beside the Arpeggio picker whose
+ * catalogue it steps through, because it is a playback setting (AC-2.7.1).
  */
-export function renderEditControls(root, pattern, state, handlers) {
-  root.className = 'controls edit-controls';
+export function renderPracticeGroup(root, pattern, state, handlers) {
+  root.className = 'controls workbench-group practice-group';
   return rebuild(root, (fresh) => {
-    fresh.appendChild(renderStructure(pattern, handlers));
-    fresh.appendChild(renderSound(pattern, handlers));
+    fresh.appendChild(groupTitle('Practice'));
+    fresh.appendChild(renderClickControls(state, handlers));
+    fresh.appendChild(renderTempo(pattern, handlers));
+    fresh.appendChild(renderSwing(pattern, handlers));
+    fresh.appendChild(renderCounting(pattern, state, handlers));
+    if (pattern.soundMode === 'melodic' && hasHarmony(pattern)) {
+      fresh.appendChild(renderFillCycle(state, handlers));
+    }
   });
 }
 
@@ -443,7 +487,7 @@ export function renderActionControls(root, pattern, state, handlers) {
   return rebuild(root, (fresh) => fresh.appendChild(renderActions(pattern, state, handlers)));
 }
 
-/** Whole-Pattern operations: copy, delete, append, duplicate, export, submit. */
+/** Whole-Pattern operations: copy, export, duplicates, submit, and last, delete. */
 function renderActions(pattern, state, handlers) {
   const group = el('div', 'control-group actions');
 
@@ -458,24 +502,7 @@ function renderActions(pattern, state, handlers) {
   // Make Copy and Delete apply only to a Pattern you own. A shipped Pattern has
   // neither control rather than disabled ones: editing it goes through the
   // forced-naming flow, which is a different action (AC-7.4.6, US-7.5).
-  if (state.isOwned) {
-    button('make-copy', 'Make Copy', () => handlers.onMakeCopy());
-    button('delete-pattern', 'Delete', () => handlers.onDelete());
-  }
-
-  button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), {
-    disabled: pattern.measures.length >= MAX_MEASURES,
-  });
-  button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), {
-    disabled: pattern.measures.length * 2 > MAX_MEASURES,
-  });
-  // The opposite motion to Double Length in spirit — fewer Measures, not more —
-  // so it sits beside it. Disabled, not hidden, when no halving is possible:
-  // the Composer should see that the option exists and that this Pattern is
-  // already at its simplest (AC-10.2.3).
-  button('condense-pattern', 'Condense', () => handlers.onCondense(), {
-    disabled: !canCondense(pattern),
-  });
+  if (state.isOwned) button('make-copy', 'Make Copy', () => handlers.onMakeCopy());
   button('export-midi', 'Export MIDI', () => handlers.onExportMidi());
   // The standing possible-duplicates view (AC-11.1.4). It is library-wide, not about the
   // current Pattern, but it lives here because this is where whole-Pattern operations
@@ -486,6 +513,8 @@ function renderActions(pattern, state, handlers) {
   // beside Submit for the same reason Duplicates… does: this is where whole-Pattern
   // operations live, and separating the two Submits would only make the batch harder to find.
   button('submit-all', 'Submit All…', () => handlers.onSubmitAll());
+  // Last, and set apart: the one action here that cannot be undone (AC-7.5.2).
+  if (state.isOwned) button('delete-pattern', 'Delete', () => handlers.onDelete()).classList.add('danger');
 
   return group;
 }
@@ -638,18 +667,10 @@ function renderSwing(pattern, handlers) {
  * armed here onto that Slot (AC-2.2.6); changing what is armed alters nothing
  * already stamped (AC-2.2.9).
  *
- * It renders in its own section beside the grid rather than inside the Edit
- * accordion, because you cannot aim at a palette you have to open first
- * (AC-2.2.13). In Percussive mode it renders nothing at all.
+ * It heads the Melody group (AC-2.2.13): a palette you have to open first
+ * cannot be aimed at, so that group is the one on screen when a Melodic
+ * Pattern loads. In Percussive mode the group, and the strip with it, is absent.
  */
-export function renderPitchStrip(root, pattern, state, handlers) {
-  root.className = 'pitch-strip';
-  root.hidden = pattern.soundMode !== 'melodic';
-  return rebuild(root, (fresh) => {
-    if (!root.hidden) renderPitchStripInto(fresh, pattern, state, handlers);
-  });
-}
-
 function renderPitchStripInto(root, pattern, state, handlers) {
   const armed = state.armedPitch ?? { degree: '1', octaveOffset: 0 };
   const key = pattern.key ?? 'C';
@@ -789,19 +810,11 @@ function spellTone(pitch, chord, key) {
 }
 
 /**
- * The harmony section: the progression, when it changes, each chord's root and
- * quality, and the arpeggio (US-2.6). It sits under the pitch strip because it is the
- * other half of the same palette — the strip says which role, this says which
- * chords the role resolves through. Melodic only; Percussive renders nothing.
+ * The harmony controls: the progression, when it changes, each chord's root and
+ * quality, and the arpeggio (US-2.6). They sit under the pitch strip in the
+ * Melody group because they are the other half of the same palette — the strip
+ * says which role, this says which chords the role resolves through.
  */
-export function renderHarmony(root, pattern, state, handlers) {
-  root.className = 'harmony';
-  root.hidden = pattern.soundMode !== 'melodic';
-  return rebuild(root, (fresh) => {
-    if (!root.hidden) renderHarmonyInto(fresh, pattern, state, handlers);
-  });
-}
-
 function renderHarmonyInto(root, pattern, state, handlers) {
   const key = pattern.key ?? 'C';
   const harmonic = hasHarmony(pattern);
@@ -858,35 +871,6 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   arpeggio.addEventListener('change', (e) => handlers.onArpeggio(e.target.value));
   arpeggioRow.appendChild(arpeggio);
   root.appendChild(arpeggioRow);
-
-  // Cycle mode (US-2.7): play each fill for a number of harmonic cycles, then
-  // the next, through the whole catalogue. A playback setting — the fill in
-  // force arrives on `pattern` and the picker above shows it (AC-2.7.2/4); the
-  // Pattern's own arpeggio is untouched (AC-2.7.1/4).
-  const cycleRow = el('div', 'fill-cycle-row');
-  const cycling = Boolean(state.fillCycle?.on);
-  const cycle = el('button', `fill-cycle${cycling ? ' on' : ''}`, {
-    type: 'button',
-    textContent: cycling ? 'Cycling fills' : 'Cycle fills',
-    title: 'Play each fill for the number of harmonic cycles set here, then move on to the next',
-  });
-  cycle.dataset.action = 'toggle-fill-cycle';
-  cycle.setAttribute('aria-pressed', String(cycling));
-  cycle.addEventListener('click', () => handlers.onFillCycle(!cycling));
-  cycleRow.appendChild(cycle);
-  const repeats = el('input', 'fill-cycle-repeats', {
-    type: 'number',
-    min: '1',
-    max: '16',
-    step: '1',
-    value: String(state.settings.fillCycleRepeats ?? 4),
-  });
-  repeats.dataset.action = 'set-fill-cycle-repeats';
-  repeats.setAttribute('aria-label', 'Harmonic cycles each fill plays for');
-  repeats.addEventListener('change', (e) => handlers.onFillCycleRepeats(Number(e.target.value)));
-  cycleRow.appendChild(labelled('Repeats', repeats));
-  cycleRow.appendChild(el('span', 'fill-cycle-unit', { textContent: 'harmonic cycles each' }));
-  root.appendChild(cycleRow);
 
   // A progression only moves chord tones. With no arpeggio and no Slot holding
   // a role, say so — the first thing the maintainer heard was the chord names
@@ -1027,8 +1011,9 @@ function renderOctaveStepper(armed, handlers) {
   return group;
 }
 
+/** Play/Stop alone — the one control every session uses, pinned (AC-15.1.17). */
 function renderTransport(state, handlers) {
-  const group = el('div', 'control-group');
+  const group = el('div', 'control-group transport-group');
 
   const play = el('button', 'transport primary', {
     type: 'button',
@@ -1038,6 +1023,13 @@ function renderTransport(state, handlers) {
   // Audio starts ONLY from this handler — a user gesture (FR-010, FR-011).
   play.addEventListener('click', () => (state.isPlaying ? handlers.onStop() : handlers.onPlay()));
   group.appendChild(play);
+
+  return group;
+}
+
+/** The metronome click and the count-in (US-4.3), in the Practice group. */
+function renderClickControls(state, handlers) {
+  const group = el('div', 'control-group');
 
   const metronome = el('button', `toggle${state.settings.metronomeEnabled ? ' on' : ''}`, {
     type: 'button',
@@ -1062,17 +1054,31 @@ function renderTransport(state, handlers) {
   return group;
 }
 
+/**
+ * The exact tempo entry (AC-4.2.5), pinned beside Play (AC-15.1.17): the one
+ * door to the tempo that is reachable from any scroll offset. The slider and
+ * the preset row below share the one `onTempo` path, so the three never
+ * disagree (AC-4.2.5/3).
+ */
+function renderTempoEntry(pattern, handlers) {
+  const group = el('div', 'control-group tempo-pinned');
+  group.appendChild(
+    valueEntry('tempo-entry', {
+      min: MIN_TEMPO,
+      max: MAX_TEMPO,
+      value: pattern.tempo,
+      label: 'Tempo in BPM',
+      action: 'set-tempo-exact',
+      onCommit: (bpm) => handlers.onTempo(bpm),
+    })
+  );
+  group.appendChild(el('span', 'tempo-unit', { textContent: 'BPM' }));
+  return group;
+}
+
+/** The tempo slider and the preset row (AC-4.2.6), in the Practice group. */
 function renderTempo(pattern, handlers) {
   const group = el('div', 'control-group');
-
-  const entry = valueEntry('tempo-entry', {
-    min: MIN_TEMPO,
-    max: MAX_TEMPO,
-    value: pattern.tempo,
-    label: 'Tempo in BPM',
-    action: 'set-tempo-exact',
-    onCommit: (bpm) => handlers.onTempo(bpm),
-  });
 
   const slider = el('input', 'tempo-slider', {
     type: 'range',
@@ -1085,7 +1091,7 @@ function renderTempo(pattern, handlers) {
   // Changing tempo restarts playback at the new tempo (AC-4.2.2); the handler
   // owns that, not this control.
   slider.addEventListener('input', (e) => handlers.onTempo(Number(e.target.value)));
-  group.appendChild(labelledRow(`Tempo ${pattern.tempo}`, entry, slider));
+  group.appendChild(labelledRow(`Tempo ${pattern.tempo}`, slider));
 
   group.appendChild(
     presetRow(TEMPO_PRESETS, {
@@ -1099,16 +1105,59 @@ function renderTempo(pattern, handlers) {
   return group;
 }
 
+/**
+ * The Measure controls (US-1.1, US-8.1, US-10.1, US-10.2): the ways a Pattern
+ * gets longer or shorter, in one row. −Measure takes the last Measure
+ * (AC-1.1.9) and is disabled, not hidden, on a one-Measure Pattern
+ * (AC-1.1.8/1); Condense is disabled the same way when no halving is possible
+ * (AC-10.2.3), so the Composer sees that the option exists.
+ */
 function renderStructure(pattern, handlers) {
-  const group = el('div', 'control-group');
+  const row = el('div', 'control-group structure-row');
+  const measures = pattern.measures.length;
 
-  const add = el('button', 'action', { type: 'button', textContent: '+ Measure' });
-  add.dataset.action = 'add-measure';
-  add.disabled = pattern.measures.length >= MAX_MEASURES;
-  add.addEventListener('click', () => handlers.onAddMeasure());
-  group.appendChild(add);
+  const button = (action, label, onClick, disabled) => {
+    const b = el('button', 'action', { type: 'button', textContent: label, disabled });
+    b.dataset.action = action;
+    b.addEventListener('click', onClick);
+    row.appendChild(b);
+    return b;
+  };
 
-  return group;
+  button('remove-measure', '− Measure', () => handlers.onRemoveMeasure(), measures <= 1);
+  button('add-measure', '+ Measure', () => handlers.onAddMeasure(), measures >= MAX_MEASURES);
+  button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), measures * 2 > MAX_MEASURES);
+  button('condense-pattern', 'Condense', () => handlers.onCondense(), !canCondense(pattern));
+  button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), measures >= MAX_MEASURES);
+
+  return labelledGroup('Measures', row);
+}
+
+/** `labelled`, for a row of buttons — a `<label>` may govern only one control. */
+function labelledGroup(labelText, row) {
+  const wrap = el('div', 'control');
+  wrap.appendChild(el('span', 'control-label', { textContent: labelText }));
+  wrap.appendChild(row);
+  return wrap;
+}
+
+/**
+ * Every Recipe the Pattern's Measures can take between them, in catalogue
+ * order, each marked whether any Measure can take it now — a Pattern mixing
+ * 4/4 and 6/8 offers both sets (AC-1.3.4, AC-1.3.5).
+ */
+function offeredRecipes(pattern) {
+  const noteValues = [...new Set(pattern.measures.map((m) => beatNoteValue(m.timeSignature)))];
+  const seen = new Set();
+  const offered = [];
+  for (const nv of ['quarter', 'eighth']) {
+    for (const r of recipesFor(nv)) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+      offered.push({ ...r, applies: noteValues.some((v) => isOffered(r.id, v)) });
+    }
+  }
+  return offered;
 }
 
 /**
@@ -1124,32 +1173,14 @@ function renderStructure(pattern, handlers) {
  * width, and AC-15.1.10 forbids sideways scroll at the densest supported Pattern.
  * A strip costs the grid nothing.
  *
- * The strip shows every Recipe the Pattern's Measures can take between them, so a
- * Pattern mixing 4/4 and 6/8 shows both sets. A Recipe no Measure can take is
- * disabled rather than hidden, so the palette does not rearrange itself as the
- * Pattern's meters change (AC-1.3.4, AC-1.3.5).
+ * A Recipe no Measure can take is disabled rather than hidden, so the palette
+ * does not rearrange itself as the Pattern's meters change.
  */
-export function renderRecipeStrip(root, pattern, state, handlers) {
-  return rebuild(root, (fresh) => renderRecipeStripInto(fresh, pattern, state, handlers));
-}
-
-function renderRecipeStripInto(root, pattern, state, handlers) {
+function renderRecipeStrip(pattern, state, handlers) {
   const group = el('div', 'control-group recipe-strip');
 
-  const noteValues = [...new Set(pattern.measures.map((m) => beatNoteValue(m.timeSignature)))];
-  // Union across the meters present, in catalogue order, without duplicates.
-  const seen = new Set();
-  const offered = [];
-  for (const nv of ['quarter', 'eighth']) {
-    for (const r of recipesFor(nv)) {
-      if (seen.has(r.id)) continue;
-      seen.add(r.id);
-      offered.push({ ...r, applies: noteValues.some((v) => isOffered(r.id, v)) });
-    }
-  }
-
   const chips = el('div', 'recipe-chips');
-  for (const r of offered) {
+  for (const r of offeredRecipes(pattern)) {
     const armed = state.armedRecipe === r.id;
     const chip = el('button', `recipe-chip${armed ? ' armed' : ''}`, {
       type: 'button',
@@ -1164,12 +1195,21 @@ function renderRecipeStripInto(root, pattern, state, handlers) {
   }
   group.appendChild(labelled('Subdivision', chips));
 
-  // The brush indicator (AC-1.3.12): always names the brush a grid tap will use
-  // right now, not merely how to enter a mode. The strips are exclusive brushes
-  // switched by tapping (AC-1.3.11/5), so this line restates itself on every
-  // switch — a tool changed by a tap needs a label that always says which is in
-  // hand, because an armed chip's fill alone did not read as a mode in practice.
-  const armedRecipeLabel = offered.find((r) => r.id === state.armedRecipe)?.label;
+  return group;
+}
+
+/**
+ * The brush line (AC-1.3.12): directly under the grid, always naming the brush a
+ * grid tap will use right now, not merely how to enter a mode. The strips are
+ * exclusive brushes switched by tapping (AC-1.3.11/5), so this line restates
+ * itself on every switch — a tool changed by a tap needs a label that always
+ * says which is in hand, because an armed chip's fill alone did not read as a
+ * mode in practice. Under the grid rather than under either strip: the two
+ * strips sit in different groups, and on a phone only one group is on screen.
+ */
+export function renderBrushHint(root, pattern, state) {
+  root.className = 'brush-hint';
+  const armedRecipeLabel = offeredRecipes(pattern).find((r) => r.id === state.armedRecipe)?.label;
   let brush = 'accent';
   let text = 'Brush: Accent — tap a Slot to cycle its accent. Arm a subdivision to switch brushes.';
   if (armedRecipeLabel) {
@@ -1181,31 +1221,43 @@ function renderRecipeStripInto(root, pattern, state, handlers) {
     brush = 'note';
     text = `Brush: Note — ${armed.degree}${named ? ` (${named})` : ''}. Tap a note to stamp it. Arm a subdivision to switch brushes.`;
   }
-  const hint = el('p', 'recipe-hint', { textContent: text });
-  hint.dataset.brush = brush;
-  hint.dataset.armed = String(Boolean(state.armedRecipe));
-  group.appendChild(hint);
-
-  root.appendChild(group);
-  return group;
+  root.textContent = text;
+  root.dataset.brush = brush;
+  root.dataset.armed = String(Boolean(state.armedRecipe));
+  return root;
 }
 
-function renderSound(pattern, handlers) {
-  const group = el('div', 'control-group');
-
-  const mode = el('select', 'sound-mode');
-  mode.dataset.action = 'set-sound-mode';
-  for (const m of ['percussive', 'melodic']) {
-    mode.appendChild(el('option', null, { value: m, textContent: m[0].toUpperCase() + m.slice(1) }));
-  }
-  mode.value = pattern.soundMode;
-  mode.addEventListener('change', (e) => handlers.onSoundMode(e.target.value));
-  group.appendChild(labelled('Sound', mode));
-
-  // The Key is NOT here: it lives on the pitch strip with the rest of the note
-  // palette (AC-2.2.19), and is absent in Percussive mode with the strip.
-
-  return group;
+/**
+ * Cycle mode (US-2.7): play each fill for a number of harmonic cycles, then
+ * the next, through the whole catalogue. A playback setting — the fill in
+ * force arrives on `pattern` and the Arpeggio picker shows it (AC-2.7.2/4);
+ * the Pattern's own arpeggio is untouched (AC-2.7.1/4).
+ */
+function renderFillCycle(state, handlers) {
+  const cycleRow = el('div', 'control-group fill-cycle-row');
+  const cycling = Boolean(state.fillCycle?.on);
+  const cycle = el('button', `fill-cycle${cycling ? ' on' : ''}`, {
+    type: 'button',
+    textContent: cycling ? 'Cycling fills' : 'Cycle fills',
+    title: 'Play each fill for the number of harmonic cycles set here, then move on to the next',
+  });
+  cycle.dataset.action = 'toggle-fill-cycle';
+  cycle.setAttribute('aria-pressed', String(cycling));
+  cycle.addEventListener('click', () => handlers.onFillCycle(!cycling));
+  cycleRow.appendChild(cycle);
+  const repeats = el('input', 'fill-cycle-repeats', {
+    type: 'number',
+    min: '1',
+    max: '16',
+    step: '1',
+    value: String(state.settings.fillCycleRepeats ?? 4),
+  });
+  repeats.dataset.action = 'set-fill-cycle-repeats';
+  repeats.setAttribute('aria-label', 'Harmonic cycles each fill plays for');
+  repeats.addEventListener('change', (e) => handlers.onFillCycleRepeats(Number(e.target.value)));
+  cycleRow.appendChild(labelled('Repeats', repeats));
+  cycleRow.appendChild(el('span', 'fill-cycle-unit', { textContent: 'harmonic cycles each' }));
+  return labelledGroup('Fills', cycleRow);
 }
 
 function renderCounting(pattern, state, handlers) {

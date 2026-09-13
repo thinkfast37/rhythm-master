@@ -11,9 +11,9 @@ test.use({
 test('AC-2.1.1 — Sound Mode is Percussive by default and switchable', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await expect(page.locator('.sound-mode')).toHaveValue('percussive');
-  await page.locator('.sound-mode').selectOption('melodic');
-  await expect(page.locator('.sound-mode')).toHaveValue('melodic');
+  await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await expect(page.locator('.sound-mode [data-mode="melodic"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('AC-2.1.2 — Key appears only in Melodic mode, not disabled in Percussive', async ({ page }) => {
@@ -21,11 +21,11 @@ test('AC-2.1.2 — Key appears only in Melodic mode, not disabled in Percussive'
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.key-picker')).toHaveCount(0);
 
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.key-picker')).toBeVisible();
   await expect(page.locator('.key-picker')).toHaveValue('C');
 
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   await expect(page.locator('.key-picker')).toHaveCount(0);
 });
 
@@ -33,7 +33,7 @@ test('AC-2.1.3 — switching to Melodic gives every sounding Slot a pitch', asyn
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
   const pitched = await page.evaluate(() =>
     window.__rm.getState().pattern.measures[0].beats[0].slots[0].pitch
@@ -46,8 +46,8 @@ test('AC-2.1.4 — switching back to Percussive strips pitch, keeping the Patter
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
-  await page.locator('.sound-mode').selectOption('melodic');
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
 
   const state = await page.evaluate(() => {
     const p = window.__rm.getState().pattern;
@@ -57,11 +57,59 @@ test('AC-2.1.4 — switching back to Percussive strips pitch, keeping the Patter
   expect(state.pitch).toBe(false);
 });
 
+// --- AC-2.1.6: the Sound Mode switch is in the Pattern header ----------------
+
+test('AC-2.1.6/1 — The header carries a Percussive | Melodic switch that marks the current Mode', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  const switchEl = page.locator('.pattern-header .sound-mode');
+  await expect(switchEl).toBeVisible();
+  await expect(switchEl.locator('[data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(switchEl.locator('[data-mode="melodic"]')).toHaveAttribute('aria-pressed', 'false');
+  // Under the name, not in a section, tab or accordion.
+  const placement = await switchEl.evaluate((el) => ({
+    afterName: Boolean(
+      document.querySelector('.pattern-title').compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
+    ),
+    enclosed: Boolean(el.closest('details, section[data-tab]')),
+  }));
+  expect(placement.afterName).toBe(true);
+  expect(placement.enclosed).toBe(false);
+});
+
+test('AC-2.1.6/2 — One tap on the other Mode switches the Pattern, and the switch shows the new Mode', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.soundMode)).toBe('melodic');
+  await expect(page.locator('.sound-mode [data-mode="melodic"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'false');
+
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.soundMode)).toBe('percussive');
+  await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('AC-2.1.6/3 — On a 390px viewport the switch is reachable without opening any tab or accordion', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.library-toggle').click(); // close the auto-opened drawer
+
+  // Nothing opened, nothing tapped but the switch itself.
+  await expect(page.locator('.sound-mode [data-mode="melodic"]')).toBeVisible();
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.soundMode)).toBe('melodic');
+  await expect(page.locator('.pitch-strip')).toBeVisible();
+});
+
 /** A blank Melodic 4/4 Pattern, which is where every strip test starts. */
 async function melodicBlank(page) {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 }
 
 const slotAt = (page, beat, slot) => page.locator(`.slot[data-beat="${beat}"][data-slot="${slot}"]`);
@@ -122,12 +170,12 @@ test('AC-2.2.2 — the armed pitch starts at degree 1 octave 4 and stays armed',
   // Switching Pattern leaves it armed, since it belongs to the strip, not the
   // Pattern — but a reload starts over at the root.
   await page.evaluate(() => window.__rm.loadBlank('3/4', 'Another Pattern'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.degree[data-degree="6"]')).toHaveAttribute('aria-pressed', 'true');
 
   await page.reload();
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.degree[data-degree="1"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -312,7 +360,7 @@ test('AC-2.2.10 — A Melodic Slot has two tap zones, and they do different jobs
   await expect(accentZone(page, 0, 0)).toHaveAttribute('data-action', 'cycle-accent');
 
   // Percussive has no band at all: the whole Slot is the accent control.
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   await expect(page.locator('.slot-note')).toHaveCount(0);
   await expect(slotAt(page, 0, 0)).toHaveAttribute('data-action', 'cycle-accent');
 });
@@ -716,37 +764,44 @@ test('AC-2.2.12 — both zones stay tappable on the largest Pattern at 390px', a
 
 });
 
-test('AC-2.2.13 — the pitch strip is visible without opening anything, and absent in Percussive', async ({ page }) => {
+test('AC-2.2.13 — The pitch strip is present wherever pitches are edited', async ({ page }) => {
   await melodicBlank(page);
   await expect(page.locator('.pitch-strip')).toBeVisible();
 
-  // Not inside a collapsed section: no <details> ancestor.
-  const insideDetails = await page.evaluate(
-    () => Boolean(document.querySelector('.pitch-strip')?.closest('details'))
-  );
-  expect(insideDetails).toBe(false);
+  // Not inside a collapsed section: no <details> ancestor, and it heads the
+  // Melody group.
+  const placement = await page.evaluate(() => {
+    const strip = document.querySelector('.pitch-strip');
+    return { insideDetails: Boolean(strip?.closest('details')), group: strip?.closest('section')?.dataset.section };
+  });
+  expect(placement.insideDetails).toBe(false);
+  expect(placement.group).toBe('melody');
 
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   await expect(page.locator('.pitch-strip')).toBeHidden();
   await expect(page.locator('.degree')).toHaveCount(0);
 
-  // Still there at mobile width, where the accordions are collapsed (AC-15.1.7).
+  // Still there at mobile width, without opening anything: the Melody tab is
+  // the one selected when the Pattern goes Melodic (AC-15.1.7/3). The library,
+  // a column until now, becomes a drawer over the panel at this width, so it
+  // is closed first — the drawer is not a section, and the point here is the strip.
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.library-toggle').click();
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.pitch-strip')).toBeVisible();
 });
 
 test('AC-2.3.1 — the Key control offers exactly twelve keys', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.key-picker option')).toHaveCount(12);
 });
 
 test('AC-2.3.2 — changing Key transposes playback but leaves stored degrees alone', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
 
   const inC = await page.evaluate(() => window.__rmMidi());
@@ -773,7 +828,7 @@ test('AC-2.4.3 — Percussive playback starts immediately, with nothing to load'
 test('AC-2.4.3 — Melodic playback starts immediately too, with no loading state', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
 
   await page.locator('[data-action="play"]').click();
@@ -798,7 +853,7 @@ test('AC-2.4.2 — playing either Sound Mode fetches no audio asset at all', asy
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
   await page.locator('[data-action="stop"]').click();
 
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
 
@@ -1160,10 +1215,10 @@ test('AC-2.5.4/3 — `scale` is present only on Melodic Patterns: switching to P
   await melodicBlank(page);
   expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
 
-  await page.locator('.sound-mode').selectOption('percussive');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
   expect(await page.evaluate(() => 'scale' in window.__rm.getState().pattern)).toBe(false);
 
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
 });
 
@@ -1258,7 +1313,7 @@ test('AC-1.3.11/5 — Arming a pitch on the pitch strip disarms the armed Recipe
 test('AC-2.2.19/1 — The Key picker renders on the pitch strip beside the scale picker', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
   await expect(page.locator('.pitch-strip .key-picker')).toBeVisible();
   await expect(page.locator('.pitch-strip .scale-picker')).toBeVisible();
@@ -1276,18 +1331,18 @@ test('AC-2.2.19/1 — The Key picker renders on the pitch strip beside the scale
   expect(await page.evaluate(() => window.__rm.getState().pattern.key)).toBe('D');
 });
 
-test('AC-2.2.19/2 — The Edit section holds no Key picker', async ({ page }) => {
+test('AC-2.2.19/2 — The Rhythm group holds no Key picker', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
   await expect(page.locator('.pitch-strip .key-picker')).toBeVisible();
-  await expect(page.locator('[data-section="edit"] .key-picker')).toHaveCount(0);
+  await expect(page.locator('[data-section="rhythm"] .key-picker')).toHaveCount(0);
 });
 
 test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await expect(page.locator('.sound-mode')).toHaveValue('percussive');
+  await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.key-picker')).toHaveCount(0);
 });

@@ -88,6 +88,65 @@ async function applyRecipe(page, recipeId, measure = 0, beat = 0) {
   if (!(await page.locator('.dialog').isVisible().catch(() => false))) await chip.click();
 }
 
+// --- US-1.1: −Measure, specified in the MVP and built with T274 ---------------
+
+test('AC-1.1.8/1 — The −Measure control is disabled on a one-Measure Pattern', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  const remove = page.locator('[data-action="remove-measure"]');
+  await expect(remove).toBeVisible();
+  await expect(remove).toBeDisabled();
+
+  // Disabled, not absent: a second Measure enables it, and taking that
+  // Measure away disables it again.
+  await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(2);
+  await expect(remove).toBeEnabled();
+  await remove.click();
+  await expect(page.locator('.measure')).toHaveCount(1);
+  await expect(remove).toBeDisabled();
+});
+
+test('AC-1.1.8/2 — Deleting the whole Pattern remains a separate, explicit action elsewhere in the UI', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+
+  // One Measure: −Measure is off, and Delete is on — in the Pattern actions,
+  // not among the Measure controls.
+  await expect(page.locator('[data-action="remove-measure"]')).toBeDisabled();
+  const del = page.locator('[data-action="delete-pattern"]');
+  await expect(del).toBeEnabled();
+  await expect(page.locator('[data-section="actions"] [data-action="delete-pattern"]')).toHaveCount(1);
+  await expect(page.locator('[data-section="rhythm"] [data-action="delete-pattern"]')).toHaveCount(0);
+});
+
+test('AC-1.1.9 — Measure removal is always from the end', async ({ page }) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '3/4', '7/8']);
+  // Content in the first two, so "unchanged" is checked against something.
+  await page.locator('.measure[data-measure="0"] .slot[data-beat="1"][data-slot="0"]').click();
+  await page.locator('.measure[data-measure="1"] .slot[data-beat="2"][data-slot="0"]').click();
+
+  await page.locator('[data-action="remove-measure"]').click();
+
+  await expect(page.locator('.measure')).toHaveCount(2);
+  const remaining = await page.evaluate(() =>
+    window.__rm.getState().pattern.measures.map((m) => ({
+      ts: m.timeSignature,
+      on: m.beats.flatMap((b, bi) => b.slots.map((s, si) => (s.on ? `${bi}.${si}` : null))).filter(Boolean),
+    }))
+  );
+  expect(remaining).toEqual([
+    { ts: '4/4', on: ['1.0'] },
+    { ts: '3/4', on: ['2.0'] },
+  ]);
+  // The one taken was the last — the 7/8 — never one from the middle.
+  await expect(page.locator('.measure[data-measure="1"]')).toHaveAttribute('data-time-signature', '3/4');
+});
+
 test('AC-1.4.1 — Time Signature label is itself the picker control: every Measure shows its own current Time Signature', async ({
   page,
 }) => {
@@ -1391,11 +1450,11 @@ test('AC-15.2.8/4 — The Subdivision strip sits on the panel’s left edge with
 
   const { chips, play, panelMid } = await page.evaluate(() => ({
     chips: document.querySelector('.recipe-chips').getBoundingClientRect().left,
-    play: document.querySelector('[data-section="play"] button').getBoundingClientRect().left,
+    play: document.querySelector('[data-section="practice"] button').getBoundingClientRect().left,
     panelMid: document.querySelector('.main-panel').getBoundingClientRect().width / 2,
   }));
-  // On the same left edge as the transport's first control, and nowhere near
-  // the middle of the panel.
+  // On the same left edge as the Practice group's first control, and nowhere
+  // near the middle of the panel.
   expect(Math.abs(chips - play)).toBeLessThanOrEqual(2);
   expect(chips).toBeLessThan(panelMid / 4);
 });
@@ -1409,7 +1468,7 @@ test('AC-1.3.12/1 — With a Recipe armed, the indicator names the Subdivision b
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
   await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
-  const hint = page.locator('.recipe-hint');
+  const hint = page.locator('.brush-hint');
   await expect(hint).toHaveAttribute('data-brush', 'subdivision');
   await expect(hint).toContainText('Subdivision');
   await expect(hint).toContainText('Straight 8ths');
@@ -1420,9 +1479,9 @@ test('AC-1.3.12/2 — In Melodic mode with no Recipe armed, the indicator names 
 }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
-  const hint = page.locator('.recipe-hint');
+  const hint = page.locator('.brush-hint');
   await expect(hint).toHaveAttribute('data-brush', 'note');
   // The default armed pitch: degree 1 at the base octave, named in the Key (C).
   await expect(hint).toContainText('Note — 1 (C4)');
@@ -1439,7 +1498,7 @@ test('AC-1.3.12/3 — In Percussive mode with no Recipe armed, the indicator sta
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
-  const hint = page.locator('.recipe-hint');
+  const hint = page.locator('.brush-hint');
   await expect(hint).toHaveAttribute('data-brush', 'accent');
   await expect(hint).toContainText('Accent');
 });
@@ -1449,8 +1508,8 @@ test('AC-1.3.12/4 — The indicator follows a brush switch in either direction, 
 }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.sound-mode').selectOption('melodic');
-  const hint = page.locator('.recipe-hint');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  const hint = page.locator('.brush-hint');
 
   // Note → Subdivision, by tapping the Recipe strip.
   await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();

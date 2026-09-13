@@ -205,7 +205,7 @@ test('AC-11.2.1 — Family match criteria: a melodic variant surfaces as a Famil
   await page.locator('.dialog-input').fill('Melodic Version');
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
   await page.locator('.dialog-button', { hasText: 'Keep both' }).click();
-  await page.locator('.sound-mode').selectOption('melodic');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
 
   const result = await page.evaluate(() => ({
     family: window.__rm.currentFamily().map((p) => p.name),
@@ -268,8 +268,9 @@ test('AC-10.2.3/1 — Enabled for two 4/4 Measures of Straight 8ths', async ({ p
   await loadShaped(page, [fourQ, fourQ]);
   const condense = page.locator('[data-action="condense-pattern"]');
   await expect(condense).toBeEnabled();
-  // Beside Double Length (AC-10.2.3's When).
-  const actions = await page.locator('.control-group.actions button').evaluateAll((b) => b.map((x) => x.dataset.action));
+  // Beside Double Length (AC-10.2.3's When): the Measure controls of the
+  // Rhythm group (AC-15.1.8).
+  const actions = await page.locator('.structure-row button').evaluateAll((b) => b.map((x) => x.dataset.action));
   expect(actions.indexOf('condense-pattern')).toBe(actions.indexOf('duplicate-pattern') + 1);
 });
 

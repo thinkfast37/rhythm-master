@@ -105,46 +105,136 @@ test('AC-15.1.6 — loading a Pattern returns the main panel to its top', async 
   await expect(page.locator('.pattern-title')).toBeInViewport();
 });
 
-test('AC-15.1.7 — secondary sections are collapsed accordions on mobile, expanded on desktop', async ({
+// --- AC-15.1.7: the workbench is tabbed on mobile and stacked open above it ---
+
+const GROUPS = ['melody', 'rhythm', 'practice'];
+const group = (page, name) => page.locator(`section[data-section="${name}"]`);
+const tab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`);
+
+/** Which of the three groups are actually on screen. */
+async function visibleGroups(page) {
+  const out = [];
+  for (const name of GROUPS) if (await group(page, name).isVisible()) out.push(name);
+  return out;
+}
+
+test('AC-15.1.7/1 — On mobile a tab bar names the workbench groups and exactly one group is on screen', async ({
   page,
 }) => {
   await page.setViewportSize(MOBILE);
   await page.goto('/');
-  for (const name of ['playback-settings', 'edit', 'actions']) {
-    const section = page.locator(`details[data-section="${name}"]`);
-    await expect(section).toHaveAttribute('data-accordion', 'true');
-    expect(await section.evaluate((el) => el.open), name).toBe(false);
-  }
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.library-toggle').click();
 
-  await page.setViewportSize(DESKTOP);
-  await page.goto('/');
-  for (const name of ['playback-settings', 'edit', 'actions']) {
-    const section = page.locator(`details[data-section="${name}"]`);
-    await expect(section).toHaveAttribute('data-accordion', 'false');
-    expect(await section.evaluate((el) => el.open), name).toBe(true);
+  await expect(page.locator('.workbench-tabs')).toBeVisible();
+  await expect(tab(page, 'rhythm')).toBeVisible();
+  await expect(tab(page, 'practice')).toBeVisible();
+  expect(await visibleGroups(page)).toHaveLength(1);
+
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
+  await expect(tab(page, 'melody')).toBeVisible();
+  expect(await visibleGroups(page)).toHaveLength(1);
+});
+
+test('AC-15.1.7/2 — On desktop and tablet there is no tab bar and every applicable group is on screen at once', async ({
+  page,
+}) => {
+  for (const size of [DESKTOP, TABLET]) {
+    await page.setViewportSize(size);
+    await page.goto('/');
+    await page.evaluate(() => window.__rm.loadBlank('4/4'));
+    await page.locator('.library-toggle').click();
+
+    await expect(page.locator('.workbench-tabs'), `${size.width}px`).toBeHidden();
+    expect(await visibleGroups(page), `${size.width}px`).toEqual(['rhythm', 'practice']);
+
+    await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
+    expect(await visibleGroups(page), `${size.width}px melodic`).toEqual(['melody', 'rhythm', 'practice']);
   }
 });
 
+test('AC-15.1.7/3 — A Melodic Pattern opens on the Melody tab and a Percussive one on the Rhythm tab, and switching Mode selects the tab for the new Mode', async ({
+  page,
+}) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.library-toggle').click();
+
+  await expect(tab(page, 'rhythm')).toHaveAttribute('aria-selected', 'true');
+  expect(await visibleGroups(page)).toEqual(['rhythm']);
+
+  // Switching Mode, from the header, moves to the Melody tab — even though the
+  // musician had chosen another tab first.
+  await tab(page, 'practice').click();
+  expect(await visibleGroups(page)).toEqual(['practice']);
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await expect(tab(page, 'melody')).toHaveAttribute('aria-selected', 'true');
+  expect(await visibleGroups(page)).toEqual(['melody']);
+
+  // And back: Percussive opens on Rhythm.
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
+  await expect(tab(page, 'rhythm')).toHaveAttribute('aria-selected', 'true');
+  expect(await visibleGroups(page)).toEqual(['rhythm']);
+
+  // Loading a Melodic Pattern opens on Melody, whatever tab was in force.
+  await tab(page, 'practice').click();
+  await page.evaluate(async () => {
+    const p = window.__rm.loadBlank('4/4', 'Sung');
+    window.__rm.loadPattern({ ...p, soundMode: 'melodic', key: 'C', scale: 'ionian' }, { owned: true });
+  });
+  await expect(tab(page, 'melody')).toHaveAttribute('aria-selected', 'true');
+  expect(await visibleGroups(page)).toEqual(['melody']);
+});
+
+test('AC-15.1.7/4 — Tapping a tab shows that group and hides the others, and the Melody tab is absent on a Percussive Pattern', async ({
+  page,
+}) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await page.locator('.library-toggle').click();
+
+  await expect(tab(page, 'melody')).toBeHidden();
+  await tab(page, 'practice').click();
+  expect(await visibleGroups(page)).toEqual(['practice']);
+  await expect(page.locator('.tempo-slider')).toBeVisible();
+  await tab(page, 'rhythm').click();
+  expect(await visibleGroups(page)).toEqual(['rhythm']);
+  await expect(page.locator('.recipe-chips')).toBeVisible();
+});
+
+test('AC-15.1.7/5 — Pattern actions is a collapsed accordion on mobile and an expanded section on desktop', async ({
+  page,
+}) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  const section = page.locator('details[data-section="actions"]');
+  await expect(section).toHaveAttribute('data-accordion', 'true');
+  expect(await section.evaluate((el) => el.open)).toBe(false);
+
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/');
+  await expect(section).toHaveAttribute('data-accordion', 'false');
+  expect(await section.evaluate((el) => el.open)).toBe(true);
+});
+
 test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
-  // The pitch strip sits below the play controls, and is present in the DOM at
-  // both Sound Modes — hidden rather than removed in Percussive, so the order
-  // itself never depends on the mode (AC-2.2.13). The family members area is last
-  // and follows the same convention: always in the DOM, shown only at 768px and
-  // wider and only when there are members (AC-11.2.5, which is where its
-  // visibility is proved).
-  // The chord strip and the harmony controls follow the same convention as the
-  // pitch strip: always in the DOM, hidden unless they apply (US-2.6).
+  // Every entry is present in the DOM at both Sound Modes and every width —
+  // the Melody group and the chord strip hidden rather than removed in
+  // Percussive (AC-2.2.13), the tab bar hidden above mobile and the family
+  // members area below it (AC-15.1.7, AC-11.2.5) — so the order itself never
+  // depends on the mode or the viewport.
   const expected = [
     'HEADER.pattern-header',
     'SECTION[chords]',
-    // The grid section: the grid, or the sheet music in its place (US-12.2).
+    // The grid section: the grid, or the sheet music in its place (US-12.2),
+    // with the brush line under it (AC-1.3.12).
     'DIV.pattern-view',
-    'SECTION[play]',
-    'SECTION[recipe]',
-    'SECTION[pitch]',
-    'SECTION[harmony]',
-    'DETAILS[playback-settings]',
-    'DETAILS[edit]',
+    'NAV.workbench-tabs',
+    'SECTION[melody]',
+    'SECTION[rhythm]',
+    'SECTION[practice]',
     'DETAILS[actions]',
     'SECTION[family]',
   ];
@@ -152,8 +242,9 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
   const orderNow = () =>
     page.locator('.main-panel > *').evaluateAll((els) =>
       els
-        // The pinned bar — the library toggle and quick navigation — sits above
-        // the ordered sections rather than among them (AC-5.5.3).
+        // The pinned bar — the library toggle, the transport and quick
+        // navigation — sits above the ordered sections rather than among them
+        // (AC-5.5.3, AC-15.1.17).
         .filter((e) => !e.classList.contains('main-top-bar'))
         .map((e) => {
           if (e.tagName === 'DETAILS') return `DETAILS[${e.dataset.section}]`;
@@ -169,9 +260,8 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
 
     // Same order in Melodic mode, where the strip is the one that becomes
     // visible rather than the one that moves.
-    // Driven through the handler rather than the Sound Mode control, which is
-    // inside the Edit accordion and so collapsed at mobile width (AC-15.1.7) —
-    // and the point here is the section order, not how the mode was reached.
+    // Driven through the handler: the point here is the section order, not
+    // how the mode was reached.
     await page.evaluate(async () => {
       window.__rm.loadBlank('4/4');
       await window.__rm.handlers.onSoundMode('melodic');
@@ -192,20 +282,22 @@ test('AC-15.1.9 — wide controls never push the page sideways on mobile', async
 
   await page.locator('.library-toggle').click(); // close the auto-opened drawer
 
-  // Open every section and switch to Melodic, which adds the widest controls.
-  for (const name of ['playback-settings', 'edit', 'actions']) {
-    await page.locator(`details[data-section="${name}"] > summary`).click();
-  }
-  await page.locator('.sound-mode').selectOption('melodic');
+  // Open the one accordion and switch to Melodic, which adds the widest controls.
+  await page.locator('details[data-section="actions"] > summary').click();
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(page.locator('.pitch-strip')).toBeVisible();
   // The pitch strip at its widest: all twelve chromatic degrees. It wraps
   // within the panel rather than scrolling the page (US-2.2).
   await expect(page.locator('.degree')).toHaveCount(12);
 
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
-  );
-  expect(overflow).toBeLessThanOrEqual(0);
+  const overflow = () =>
+    page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(await overflow(), 'melody').toBeLessThanOrEqual(0);
+  // Each tab in turn: the Subdivision chips, then the tempo preset row.
+  for (const name of ['rhythm', 'practice']) {
+    await page.locator(`.workbench-tab[data-tab="${name}"]`).click();
+    expect(await overflow(), name).toBeLessThanOrEqual(0);
+  }
 });
 
 test('AC-15.1.11 — playback scrolls the sounding Measure into view and back on loop', async ({ page }) => {
@@ -454,16 +546,18 @@ test('AC-15.1.16/1 — The control being operated keeps focus across the update 
   await expect(slider).toHaveValue(String(before + 2));
   await expect(slider).toBeFocused();
 
-  // The Sound select: the mode switch rebuilds the panel around it and brings
-  // in the pitch strip, and the select stays under the musician's hands.
-  const sound = page.locator('.sound-mode').first();
-  await sound.focus();
-  await sound.selectOption('melodic');
-  await expect(sound).toHaveValue('melodic');
-  await expect(sound).toBeFocused();
-  await sound.selectOption('percussive');
-  await expect(sound).toHaveValue('percussive');
-  await expect(sound).toBeFocused();
+  // The Sound Mode switch: the mode change rebuilds the panel around it and
+  // brings in the Melody group, and focus stays on the option just tapped.
+  const melodic = page.locator('.sound-mode [data-mode="melodic"]');
+  await melodic.focus();
+  await page.keyboard.press('Enter');
+  await expect(melodic).toHaveAttribute('aria-pressed', 'true');
+  await expect(melodic).toBeFocused();
+  const percussive = page.locator('.sound-mode [data-mode="percussive"]');
+  await percussive.focus();
+  await page.keyboard.press('Enter');
+  await expect(percussive).toHaveAttribute('aria-pressed', 'true');
+  await expect(percussive).toBeFocused();
 });
 
 test('AC-15.1.16/2 — During playback the autoscroll stands down while controls are in use and for two seconds after', async ({
@@ -474,9 +568,9 @@ test('AC-15.1.16/2 — During playback the autoscroll stands down while controls
   await page.locator('.library-toggle').click();
   await loadTallPattern(page);
 
-  // The swing slider lives in the Playback settings accordion, collapsed at
-  // mobile width (AC-15.1.7).
-  await page.locator('[data-section="playback-settings"] summary').click();
+  // The swing slider lives in the Practice group, a tab at mobile width
+  // (AC-15.1.7).
+  await page.locator('.workbench-tab[data-tab="practice"]').click();
   await page.locator('[data-action="play"]').click();
 
   // Scroll the panel down to the slider, leaving the sounding Measure far
@@ -520,25 +614,26 @@ test('AC-15.1.16/2 — During playback the autoscroll stands down while controls
 test('AC-15.1.16/3 — A control keeps its place on screen when an update changes the height of the content above it', async ({
   page,
 }) => {
-  await page.setViewportSize(MOBILE);
+  // Tablet: the groups stack (AC-15.1.7/2), so an inserted group moves what
+  // is below it rather than replacing the tab on screen.
+  await page.setViewportSize(TABLET);
   await page.goto('/');
   await page.locator('.library-toggle').click();
   await loadTallPattern(page);
 
-  // The Sound select, inside the Edit accordion, scrolled to mid-panel.
-  await page.locator('[data-section="edit"] summary').click();
-  const sound = page.locator('.sound-mode').first();
-  await sound.scrollIntoViewIfNeeded();
-  await sound.focus();
-  const before = await sound.evaluate((el) => el.getBoundingClientRect().top);
+  // The swing slider, in the Practice group, scrolled to mid-panel and focused.
+  const slider = page.locator('.swing-slider').first();
+  await slider.scrollIntoViewIfNeeded();
+  await slider.focus();
+  const before = await slider.evaluate((el) => el.getBoundingClientRect().top);
 
-  // Switching to Melodic inserts the pitch strip above the editing controls —
-  // and the select neither moves on screen nor loses focus.
-  await sound.selectOption('melodic');
+  // Switching to Melodic inserts the Melody group above the Rhythm and
+  // Practice groups — and the slider neither moves on screen nor loses focus.
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
   await expect(page.locator('.pitch-strip')).toBeVisible();
-  const after = await sound.evaluate((el) => el.getBoundingClientRect().top);
+  const after = await slider.evaluate((el) => el.getBoundingClientRect().top);
   expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
-  await expect(sound).toBeFocused();
+  await expect(slider).toBeFocused();
 });
 
 test('AC-15.1.16/4 — A slider under a pointer drag keeps its DOM node across the updates it causes even when it never received focus, so a touch drag is not severed mid-gesture', async ({ page }) => {
@@ -577,19 +672,18 @@ test('AC-15.1.16/4 — A slider under a pointer drag keeps its DOM node across t
 });
 
 test('AC-15.1.16/5 — The height compensation anchors on the control under the pointer when nothing holds focus', async ({ page }) => {
-  await page.setViewportSize(MOBILE);
+  await page.setViewportSize(TABLET);
   await page.goto('/');
   await page.locator('.library-toggle').click();
   await loadTallPattern(page);
 
-  // The swing slider, inside the collapsed Playback settings accordion,
-  // scrolled to mid-panel and held by pointer — never focused.
-  await page.locator('[data-section="playback-settings"] summary').click();
+  // The swing slider, in the Practice group, scrolled to mid-panel and held by
+  // pointer — never focused.
   const slider = page.locator('.swing-slider').first();
   await slider.scrollIntoViewIfNeeded();
   await page.evaluate(() => {
-    // The summary click above left focus behind; shed it, so the anchor can
-    // only come from the pointer-held control — the case under test.
+    // Shed whatever holds focus, so the anchor can only come from the
+    // pointer-held control — the case under test.
     document.activeElement?.blur?.();
     const el = document.querySelector('.swing-slider');
     window.__heldSlider = el;
@@ -597,7 +691,7 @@ test('AC-15.1.16/5 — The height compensation anchors on the control under the 
   });
   const before = await slider.evaluate((el) => el.getBoundingClientRect().top);
 
-  // Switching to Melodic inserts the pitch strip above the playback settings —
+  // Switching to Melodic inserts the Melody group above the Practice group —
   // and the held slider neither moves on screen nor was ever focused.
   await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
   await expect(page.locator('.pitch-strip')).toBeVisible();
