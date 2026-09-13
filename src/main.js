@@ -36,7 +36,7 @@ import {
   addChord,
   removeChord,
   setArpeggio,
-  degreeAsTone,
+  DEFAULT_ARPEGGIO,
 } from './core/harmony.js';
 import { carriedPlaybackFor, playbackInEffect } from './core/playback-defaults.js';
 import { playClick, accentVoice, playPercussive } from './audio/voices.js';
@@ -354,14 +354,12 @@ async function guardShipped() {
 }
 
 /**
- * The armed pitch as it can be stamped on THIS Pattern: a role needs a
- * progression to resolve against, so on a Pattern without one the brush falls
- * back to the root rather than stamping something the Pattern cannot sound.
+ * The armed pitch as it can be stamped on THIS Pattern. The strip arms scale
+ * degrees only (AC-2.6.5/1) — notes that follow the chords come from the
+ * arpeggio, never from the brush — so there is nothing left to translate.
  */
 function armedFor(pattern) {
-  if (state.armedPitch.tone !== undefined && !hasHarmony(pattern)) {
-    return { degree: '1', octaveOffset: state.armedPitch.octaveOffset ?? 0 };
-  }
+  void pattern;
   return state.armedPitch;
 }
 
@@ -599,16 +597,7 @@ const handlers = {
    * tap the pitch was armed for.
    */
   onArmDegree(degree) {
-    // A degree and a role are the two shapes one armed pitch can take, never
-    // both at once (AC-2.6.5/4).
     state.armedPitch = { degree, octaveOffset: state.armedPitch.octaveOffset ?? 0 };
-    state.armedRecipe = null;
-    render();
-  },
-
-  /** Arm a chord-tone role (US-2.6): the same brush, resolving through the chord in force. */
-  onArmTone(tone) {
-    state.armedPitch = { tone, octaveOffset: state.armedPitch.octaveOffset ?? 0 };
     state.armedRecipe = null;
     render();
   },
@@ -629,18 +618,14 @@ const handlers = {
     if (!(await guardShipped())) return;
     if (id === 'none') {
       apply(clearHarmony);
-      // A role has nothing left to resolve against, so the brush goes back to the root.
-      if (state.armedPitch.tone !== undefined) handlers.onArmDegree('1');
       return;
     }
     apply(setProgression, id);
-    // The brush follows the notes: an armed tonic becomes the armed Root, so
-    // the next Slot turned on follows the progression too (AC-2.6.1/7).
-    const role = degreeAsTone(state.armedPitch, state.pattern.harmony.chords[0]);
-    if (role) {
-      state.armedPitch = role;
-      render();
-    }
+    // A progression with no arpeggio changes the chord names and nothing
+    // audible, because a stamped degree is fixed by design (AC-2.6.4/4). So
+    // choosing one hands the notes to the plainest reading of a chord and
+    // rewrites no stored Pitch to do it (AC-2.6.1/7).
+    apply(setArpeggio, DEFAULT_ARPEGGIO);
   },
 
   async onChordChange(change) {

@@ -479,11 +479,26 @@ async function scrollMainToFoot(page) {
   return scrolled;
 }
 
+/**
+ * Whether the control is wholly within the viewport. Polled, because playback
+ * re-renders the transport on every tick: a node resolved a moment ago can be
+ * detached by the time it is measured, and a detached node reports a 0×0 box at
+ * the origin — a torn read, not an off-screen control. The assertion is
+ * unchanged; only a measurement taken mid-render is retried.
+ */
 async function onScreen(page, selector) {
-  return page.locator(selector).evaluate((el) => {
-    const box = el.getBoundingClientRect();
-    return box.top >= 0 && box.bottom <= window.innerHeight && box.width > 0 && box.height > 0;
-  });
+  const measure = () =>
+    page
+      .locator(selector)
+      .evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        if (box.width === 0 && box.height === 0) return null; // detached mid-render
+        return box.top >= 0 && box.bottom <= window.innerHeight;
+      })
+      .catch(() => null);
+  let seen = null;
+  await expect.poll(async () => (seen = await measure()), { timeout: 5000 }).not.toBeNull();
+  return seen;
 }
 
 const navIsOnScreen = (page) => onScreen(page, '[data-action="next-pattern"]');

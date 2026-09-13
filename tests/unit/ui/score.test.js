@@ -342,6 +342,8 @@ describe('ui/score — the treble staff, as drawn (AC-12.2.5, AC-12.2.6)', () =>
   it('AC-12.2.5/5 — A chord-tone Pitch is written at the note it sounds in that pass through the chord in force: the Root under I–IV–V in C is C in pass 1, F in pass 2 and G in pass 3: as drawn', () => {
     let p = pattern([[0, 0, 0]], { melodic: true });
     p = setProgression(p, 'I-IV-V');
+    // Stamped directly — see the note in notation.test.js (AC-2.6.1/7).
+    p = setPitch(p, 0, 0, 0, { tone: 1, octaveOffset: 0 });
     const markup = draw(p);
     const roots = items(markup).filter((i) => i.kind === 'note');
     expect(roots.map((n) => n['data-pass'])).toEqual(['0', '1', '2']);

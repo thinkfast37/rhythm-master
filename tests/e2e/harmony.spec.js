@@ -20,10 +20,16 @@ async function melodicBlank(page, timeSignature = '4/4') {
   await page.locator('.sound-mode [data-mode="melodic"]').click();
 }
 
-/** The same, with a progression chosen. */
-async function harmonicBlank(page, progression = 'I-IV-V') {
+/**
+ * The same, with a progression chosen. Choosing one sets the Ascending arpeggio
+ * (AC-2.6.1/7), under which the notes are dealt and the strip cannot stamp; most
+ * tests here stamp by hand, so the helper puts the arpeggio back to None. Pass
+ * `{ arpeggio: 'up' }` — or a test of the default's own — to leave it standing.
+ */
+async function harmonicBlank(page, progression = 'I-IV-V', { arpeggio = 'none' } = {}) {
   await melodicBlank(page);
   await page.locator('.progression-picker').selectOption(progression);
+  await page.locator('.arpeggio-picker').selectOption(arpeggio);
 }
 
 const pattern = (page) => page.evaluate(() => window.__rm.getState().pattern);
@@ -292,115 +298,89 @@ test('AC-2.6.2/6 — Editing a chord on a shipped Pattern goes through the namin
   expect(await page.evaluate(() => window.__rm.getState().pattern.name)).toBe('My progression');
 });
 
-// --- AC-2.6.5 — The pitch strip offers chord-tone roles while a progression is active ---
+// --- AC-2.6.5 — The pitch strip stamps fixed notes only; a progression's notes come from the arpeggio ---
 
-test('AC-2.6.5/1 — The role chips are on the pitch strip when the Pattern has a progression, and absent when it does not', async ({ page }) => {
+test('AC-2.6.5/1 — The pitch strip carries no chord-tone role chips, whether or not the Pattern has a progression', async ({ page }) => {
   await melodicBlank(page);
-  await expect(page.locator('.pitch-strip .tone')).toHaveCount(0);
-  await page.locator('.progression-picker').selectOption('I-IV-V');
-  await expect(page.locator('.pitch-strip .tone')).toHaveCount(5);
-  expect(await page.locator('.pitch-strip .tone .degree-number').allTextContents()).toEqual(['R', '3', '5', '7', '9']);
-  // Beside the degree chips, which stay.
+  // Degree chips, and only degree chips, before a progression …
   await expect(page.locator('.pitch-strip .degree')).toHaveCount(12);
-  await page.locator('.progression-picker').selectOption('none');
   await expect(page.locator('.pitch-strip .tone')).toHaveCount(0);
-});
+  await expect(page.locator('.tone-group')).toHaveCount(0);
 
-test("AC-2.6.5/2 — Arming a role and tapping a sounding Slot's note band stores a chord-tone Pitch, leaving its Accent Level as it was", async ({ page }) => {
-  await harmonicBlank(page);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  // … and none after it either. Under the arpeggio it now carries, the degree
+  // chips stand down too (AC-2.6.6/7); with the arpeggio off they are back, and
+  // still no role chip joins them.
+  await expect(page.locator('.pitch-strip .tone')).toHaveCount(0);
+  await page.locator('.arpeggio-picker').selectOption('none');
+  await expect(page.locator('.pitch-strip .degree')).toHaveCount(12);
+  await expect(page.locator('.pitch-strip .tone')).toHaveCount(0);
+  await expect(page.locator('.tone-group')).toHaveCount(0);
+
+  // So the brush is always a fixed degree: stamping one under a progression
+  // stores a degree, never a role.
   await accentZone(page, 0, 0).click();
-  await accentZone(page, 0, 0).click(); // an explicit override, to prove it survives
-  const before = await slotState(page, 0, 0);
-
-  await page.locator('.tone[data-tone="3"]').click();
-  await expect(page.locator('.tone[data-tone="3"]')).toHaveAttribute('aria-pressed', 'true');
-  await noteBand(page, 0, 0).click();
-
-  const after = await slotState(page, 0, 0);
-  expect(after.pitch).toEqual({ tone: 3, octaveOffset: 0 });
-  expect(after.accent).toBe(before.accent);
-  expect(after.on).toBe(true);
-  await expect(slotAt(page, 0, 0).locator('.slot-degree')).toHaveText('3');
-});
-
-test('AC-2.6.5/3 — Each role chip names the note it sounds under the chord in force, and a role that chord lacks says which member stands in', async ({ page }) => {
-  await harmonicBlank(page); // C, F, G triads; chord in force at rest is C
-  await expect(page.locator('.tone[data-tone="1"] .degree-name')).toHaveText('C4');
-  await expect(page.locator('.tone[data-tone="3"] .degree-name')).toHaveText('E4');
-  await expect(page.locator('.tone[data-tone="5"] .degree-name')).toHaveText('G4');
-  // A triad has no 7th: the chip says its 5th stands in.
-  await expect(page.locator('.tone[data-tone="7"]')).toHaveAttribute('data-stand-in', '5');
-  await expect(page.locator('.tone[data-tone="7"] .degree-name')).toHaveText('as 5 · G4');
-  // Give the C a 7th and the chip becomes a real member.
-  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('maj7');
-  await expect(page.locator('.tone[data-tone="7"]')).not.toHaveAttribute('data-stand-in');
-  await expect(page.locator('.tone[data-tone="7"] .degree-name')).toHaveText('B4');
-  // The Key moves every name.
-  await page.locator('.key-picker').selectOption('G');
-  await expect(page.locator('.tone[data-tone="3"] .degree-name')).toHaveText('B4');
-});
-
-test('AC-2.6.5/4 — Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch', async ({ page }) => {
-  await harmonicBlank(page);
-  // Choosing the progression re-read the armed tonic as the Root (AC-2.6.1/7).
-  await expect(page.locator('.tone[aria-pressed="true"]')).toHaveAttribute('data-tone', '1');
-  await expect(page.locator('.degree[aria-pressed="true"]')).toHaveCount(0);
-  await page.locator('.tone[data-tone="5"]').click();
-  await expect(page.locator('.tone[aria-pressed="true"]')).toHaveCount(1);
-  await expect(page.locator('.degree[aria-pressed="true"]')).toHaveCount(0);
-  expect(await page.evaluate(() => window.__rm.getState().armedPitch)).toEqual({ tone: 5, octaveOffset: 0 });
-
+  expect((await slotState(page, 0, 0)).pitch).toEqual({ degree: '1', octaveOffset: 0 });
   await page.locator('.degree[data-degree="3"]').click();
-  await expect(page.locator('.degree[aria-pressed="true"]')).toHaveCount(1);
-  await expect(page.locator('.tone[aria-pressed="true"]')).toHaveCount(0);
-  expect(await page.evaluate(() => window.__rm.getState().armedPitch)).toEqual({ degree: '3', octaveOffset: 0 });
+  await noteBand(page, 0, 0).click();
+  expect((await slotState(page, 0, 0)).pitch).toEqual({ degree: '3', octaveOffset: 0 });
 });
 
-test('AC-2.6.5/5 — The octave stepper applies to a role exactly as to a degree', async ({ page }) => {
-  await harmonicBlank(page);
-  await page.locator('.tone[data-tone="3"]').click();
-  await page.locator('[data-action="octave-up"]').click();
-  await expect(page.locator('.octave-readout')).toHaveText('Oct 5');
-  await expect(page.locator('.tone[data-tone="3"] .degree-name')).toHaveText('E5');
-  await expect(page.locator('.tone[data-tone="3"]')).toHaveAttribute('aria-pressed', 'true');
-
-  await accentZone(page, 1, 0).click();
-  await noteBand(page, 1, 0).click();
-  expect((await slotState(page, 1, 0)).pitch).toEqual({ tone: 3, octaveOffset: 1 });
-  await expect(slotAt(page, 1, 0).locator('.slot-note-name')).toHaveText('E5');
-});
-
-test('AC-2.6.5/6 — Turning a Slot on while a role is armed gives it that role', async ({ page }) => {
-  await harmonicBlank(page);
-  await page.locator('.tone[data-tone="5"]').click();
-  await accentZone(page, 2, 0).click();
-  const slot = await slotState(page, 2, 0);
-  expect(slot.on).toBe(true);
-  expect(slot.pitch).toEqual({ tone: 5, octaveOffset: 0 });
-  await expect(slotAt(page, 2, 0).locator('.slot-degree')).toHaveText('5');
-  await expect(slotAt(page, 2, 0).locator('.slot-note-name')).toHaveText('G4');
-});
-
-test('AC-2.6.5/7 — While a Pattern has a progression, no arpeggio, and no Slot holds a role, the harmony section says so and points at the arpeggio setting and the role chips', async ({ page }) => {
+test('AC-2.6.5/2 — While a Pattern has a progression and no arpeggio, the harmony section says the notes stay fixed while the chords change, and points at the arpeggio setting', async ({ page }) => {
   await melodicBlank(page);
   await expect(page.locator('.harmony-hint')).toHaveCount(0);
+
+  // With the arpeggio the progression arrives with, there is nothing to warn
+  // about — the notes do follow the chords.
   await page.locator('.progression-picker').selectOption('I-IV-V');
-  // Nothing sounds yet, so nothing holds a role: the hint is up.
+  await expect(page.locator('.harmony-hint')).toHaveCount(0);
+
+  // Turn it off and the notes go back to being fixed, which is what the hint says.
+  await page.locator('.arpeggio-picker').selectOption('none');
   const hint = page.locator('.harmony-hint');
   await expect(hint).toBeVisible();
+  await expect(hint).toContainText('stay fixed');
   await expect(hint).toContainText('Arpeggio');
-  await expect(hint).toContainText('chord tone');
-  // The armed pitch was re-read as the Root, so the first Slot turned on holds a role.
+  // It points at the arpeggio setting and nothing else — there is no role to arm.
+  await expect(hint).not.toContainText('chord tone');
+
+  // A stamped note does not settle it; only the arpeggio does.
   await accentZone(page, 0, 0).click();
-  expect((await slotState(page, 0, 0)).pitch).toEqual({ tone: 1, octaveOffset: 0 });
-  await expect(page.locator('.harmony-hint')).toHaveCount(0);
-  // A fixed degree stamped over it brings the hint back …
-  await page.locator('.degree[data-degree="2"]').click();
-  await noteBand(page, 0, 0).click();
   await expect(page.locator('.harmony-hint')).toBeVisible();
-  // … and an arpeggio settles it.
   await page.locator('.arpeggio-picker').selectOption('up');
   await expect(page.locator('.harmony-hint')).toHaveCount(0);
+});
+
+test('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so the chords are audible at once, and leaves every stored Pitch exactly as it was', async ({ page }) => {
+  await melodicBlank(page);
+  // A written melody, none of it in the shape a progression would have rewritten.
+  for (const [beat, degree] of [[0, '1'], [1, '3'], [2, '2'], [3, '5']]) {
+    await accentZone(page, beat, 0).click();
+    await page.locator(`.degree[data-degree="${degree}"]`).click();
+    await noteBand(page, beat, 0).click();
+  }
+  const before = await page.evaluate(() => window.__rm.getState().pattern.measures[0].beats.map((b) => b.slots[0].pitch));
+  expect(before).toEqual([
+    { degree: '1', octaveOffset: 0 },
+    { degree: '3', octaveOffset: 0 },
+    { degree: '2', octaveOffset: 0 },
+    { degree: '5', octaveOffset: 0 },
+  ]);
+
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  // The arpeggio is set, so the chords are heard the moment they are chosen …
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('up');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.harmony.arpeggio)).toBe('up');
+  await expect(slotAt(page, 0, 0).locator('.slot-degree')).toHaveText('R');
+  await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('3');
+
+  // … and not one stored Pitch was touched to do it: the melody is still there
+  // underneath, and comes straight back with the arpeggio off.
+  const after = await page.evaluate(() => window.__rm.getState().pattern.measures[0].beats.map((b) => b.slots[0].pitch));
+  expect(after).toEqual(before);
+  await page.locator('.arpeggio-picker').selectOption('none');
+  await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('3');
+  await expect(slotAt(page, 2, 0).locator('.slot-degree')).toHaveText('2');
 });
 
 // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
@@ -434,11 +414,11 @@ test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in three g
   expect(await page.locator('.measure[data-measure="0"] .beat[data-beat="0"] .slot-degree').allTextContents()).toEqual(['R', '5', '3', '5']);
 });
 
-test('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio', async ({ page }) => {
+test('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio', async ({ page }) => {
   await harmonicBlank(page);
-  await accentZone(page, 0, 0).click(); // Root, from the re-read armed pitch
-  await page.locator('.tone[data-tone="5"]').click();
-  await accentZone(page, 1, 0).click(); // 5th
+  await accentZone(page, 0, 0).click(); // degree 1
+  await page.locator('.degree[data-degree="5"]').click();
+  await accentZone(page, 1, 0).click(); // degree 5
   await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('5');
 
   await page.locator('.arpeggio-picker').selectOption('up');
@@ -447,7 +427,7 @@ test('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitc
   await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('3');
   await expect(slotAt(page, 1, 0).locator('.slot-pitch')).toHaveAttribute('data-dealt', 'true');
   // The stored Pitch is untouched underneath.
-  expect((await slotState(page, 1, 0)).pitch).toEqual({ tone: 5, octaveOffset: 0 });
+  expect((await slotState(page, 1, 0)).pitch).toEqual({ degree: '5', octaveOffset: 0 });
   // The chips stand down, the bands are inert, and the strip says why.
   await expect(page.locator('.pitch-strip .degree')).toHaveCount(0);
   await expect(page.locator('.pitch-strip .tone')).toHaveCount(0);
@@ -459,7 +439,6 @@ test('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitc
   await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('5');
   await expect(slotAt(page, 1, 0).locator('.slot-pitch')).not.toHaveAttribute('data-dealt');
   await expect(page.locator('.pitch-strip .degree')).toHaveCount(12);
-  await expect(page.locator('.pitch-strip .tone')).toHaveCount(5);
   await expect(page.locator('.pitch-strip-note')).toHaveCount(0);
   await expect(noteBand(page, 1, 0)).toBeEnabled();
 });
@@ -569,8 +548,15 @@ test('AC-2.6.7/4 — At rest, the chord strip and the Measure headers show the f
 test("AC-2.6.7/5 — A chord-tone Slot's note band shows its role and the note it sounds under the chord governing it in the current pass, updating as the chord changes", async ({ page }) => {
   await harmonicBlank(page);
   await page.evaluate(() => window.__rm.handlers.onAddMeasure());
-  await page.locator('.tone[data-tone="3"]').click();
   await accentZone(page, 0, 0, 1).click();
+  // A chord-tone Pitch, loaded rather than stamped: the pitch strip arms fixed
+  // degrees only (AC-2.6.5/1), while roles still live in the data model and are
+  // what this criterion is about.
+  await page.evaluate(() => {
+    const p = structuredClone(window.__rm.getState().pattern);
+    p.measures[1].beats[0].slots[0].pitch = { tone: 3, octaveOffset: 0 };
+    window.__rm.loadPattern(p, { owned: true });
+  });
   await expect(slotAt(page, 0, 0, 1).locator('.slot-degree')).toHaveText('3');
   await expect(slotAt(page, 0, 0, 1).locator('.slot-note-name')).toHaveText('E4');
   // Under "every Measure", Measure 2 is the IV: the same Slot now reads A4.
@@ -642,8 +628,9 @@ test('AC-2.6.8/1 — A progression, its chord edits, the change setting and the 
 
 test('AC-2.6.8/3 — Switching to Percussive removes the progression along with the Key, scale and Pitch data', async ({ page }) => {
   await harmonicBlank(page);
-  await page.locator('.tone[data-tone="3"]').click();
   await accentZone(page, 0, 0).click();
+  await page.locator('.degree[data-degree="3"]').click();
+  await noteBand(page, 0, 0).click();
   await page.locator('.sound-mode [data-mode="percussive"]').click();
   const p = await pattern(page);
   expect('harmony' in p).toBe(false);
