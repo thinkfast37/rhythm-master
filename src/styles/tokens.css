@@ -214,14 +214,24 @@ body {
 
 /* --- grid ---------------------------------------------------------------- */
 
+/*
+ * A wrapping row of Measure boxes (AC-15.1.19, D-006 as amended): as many
+ * whole Measures on a row as fit at their preferred width, the next one
+ * starting the next row. A Measure is never split — the box is the flex item,
+ * so a row breaks between boxes — and a box wider than the row takes the row
+ * and wraps its Beats inside it (AC-15.1.10), which on a phone is every
+ * Measure of the densest Pattern, so there nothing changed. `flex-start`,
+ * not stretch: a box hugs its Beats (AC-15.2.8/2) in height as in width, so a
+ * Measure whose Beats wrapped does not stretch its neighbours.
+ */
 .grid {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 12px;
   padding: 12px;
 }
 
-/* One Measure per row, read down the page (D-006). */
 .measure {
   display: flex;
   align-items: stretch;
@@ -242,10 +252,11 @@ body {
   width: fit-content;
   max-width: 100%;
 }
-/* Held at the full width it could take while `beat-layout.js` measures it, so
-   "available" is the line and not last time's answer. One synchronous read
-   between two writes, never painted. */
-.measure.measuring { width: auto; }
+/* Held at the full width it could take — the whole row, now that boxes share
+   one (AC-15.1.19) — while `beat-layout.js` measures it, so "available" is the
+   line and not last time's answer. One synchronous read between two writes,
+   never painted. */
+.measure.measuring { flex: 0 0 100%; width: 100%; }
 
 .measure-meter {
   flex: 0 0 auto;
@@ -1127,8 +1138,47 @@ body {
 /* `min(…, 100%)` keeps AC-15.1.9's no-wider-than-the-panel guarantee, which
    .controls below states on its own; the extra selector depth is so this rule
    wins over that one, since a later `max-width: 100%` would otherwise let the
-   transport row alone escape the column. */
-.shell .main-panel > * { max-width: min(var(--content-max), 100%); }
+   transport row alone escape the column. The column is each PANE's (AC-15.2.8,
+   AC-15.1.18): on a narrow panel the panes are blocks in the one column and
+   this is what it was; on a wide one each pane is a column of its own. */
+.shell .main-panel > .main-top-bar,
+.shell .pane > * { max-width: min(var(--content-max), 100%); }
+.pane { min-width: 0; }
+
+/*
+ * The wide layout (AC-15.1.18): under the pinned bar, the Pattern pane and the
+ * workbench pane side by side, each scrolling on its own. The panel is marked
+ * `data-layout` by `responsive.js` from ITS width — 1024px and up — since the
+ * library beside it decides whether a window is wide enough, and a container
+ * query would say the same thing less testably.
+ *
+ * The workbench column: enough for the harmony rows, with the tempo presets
+ * and the Subdivision chips wrapping, and never so much that the grid pane
+ * loses a 4/4 Straight-16ths Measure's line on a 1366px tablet or a 1400px
+ * window (910px of box), or two plain 4/4 bars on a TV beside the library.
+ * The grid pane's sections are bounded by the pane rather than the 1120px
+ * column, since the pane already is the bound and the Measures flow across
+ * whatever width it has (AC-15.1.19).
+ */
+.main-panel[data-layout='wide'] {
+  --workbench-col: clamp(400px, 28%, 640px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--workbench-col);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+.main-panel[data-layout='wide'] > .main-top-bar {
+  grid-column: 1 / -1;
+  position: static;
+  max-width: none;
+}
+.main-panel[data-layout='wide'] > .pane {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.main-panel[data-layout='wide'] > .pane-workbench { border-left: 1px solid var(--line); }
+.main-panel[data-layout='wide'] > .pane-pattern > * { max-width: 100%; }
 .drawer-scrim { display: none; }
 
 /*
@@ -1219,10 +1269,10 @@ body {
 .pattern-header .rating { margin-top: 2px; }
 .pattern-header .star { font-size: 18px; padding: 2px 3px; }
 
-.main-panel > details {
+.pane > details {
   border-top: 1px solid var(--line);
 }
-.main-panel > details > summary {
+.pane > details > summary {
   padding: 12px;
   font: 600 12px/1 var(--font-ui);
   text-transform: uppercase;
@@ -1231,11 +1281,11 @@ body {
   cursor: pointer;
 }
 /* Above mobile these are plain expanded sections, not accordions (AC-15.1.7). */
-.main-panel > details[data-accordion='false'] > summary {
+.pane > details[data-accordion='false'] > summary {
   list-style: none;
   cursor: default;
 }
-.main-panel > details[data-accordion='false'] > summary::-webkit-details-marker { display: none; }
+.pane > details[data-accordion='false'] > summary::-webkit-details-marker { display: none; }
 
 /* No control may push the page sideways (AC-15.1.9). */
 .controls { max-width: 100%; }
@@ -1784,20 +1834,13 @@ body {
 .mode-option[aria-pressed='true'] { color: #0b0c15; background: var(--brand); }
 .mode-option:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
 
-/* Groups stack as a column: a title, then rows of controls. */
+/* A group is a column of control rows. Its name is its tab. */
 .workbench-group {
   flex-direction: column;
   align-items: stretch;
   gap: 12px;
 }
 .workbench-group[hidden] { display: none; }
-.group-title {
-  margin: 0;
-  font: 600 12px/1 var(--font-ui);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--ink-dim);
-}
 /* The strips lost their own section boxes when they joined a group. */
 .workbench-group .pitch-strip,
 .workbench-group .harmony { padding: 0; border-bottom: 0; }
@@ -1805,11 +1848,11 @@ body {
 .structure-row { gap: 4px; }
 
 /*
- * The tab bar: mobile only. Above it every group is on screen and the bar
- * would name nothing (AC-15.1.7/2). The groups a tab does not name are hidden
- * on mobile only, so the stacked layout never depends on the tab in force.
+ * The tab bar, at every width (AC-15.1.7): one group on screen, the rest
+ * hidden. Where the bar sits — under the grid, or beside it — is the panel
+ * layout's doing above; the bar itself does not care.
  */
-.workbench-tabs { display: none; }
+.workbench-tabs { display: flex; padding: 4px 12px 0; }
 .workbench-tab {
   flex: 1 1 0;
   min-height: 40px;
@@ -1824,9 +1867,7 @@ body {
 .workbench-tab[aria-selected='true'] { color: var(--brand); border-bottom-color: var(--brand); }
 .workbench-tab[hidden] { display: none; }
 .workbench-tab:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-[data-viewport='mobile'] .workbench-tabs { display: flex; padding: 4px 12px 0; }
-[data-viewport='mobile'] .workbench-group[data-tab-active='false'] { display: none; }
-[data-viewport='mobile'] .group-title { display: none; }
+.workbench-group[data-tab-active='false'] { display: none; }
 
 /* Delete: last in the actions row and set apart — the one action here that
    cannot be undone (AC-7.5.2). */

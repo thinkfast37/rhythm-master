@@ -165,6 +165,17 @@ protanopia, and tritanopia and asserts a minimum perceptual distance between all
 **Decision**: One Measure per row, stacked vertically, read down the page. Minimum Slot width
 24 CSS px. Playback auto-scrolls the sounding Measure into view.
 
+*(Amended 2026-09-13 with T290, AC-15.1.19. "One Measure per row" becomes "as many whole
+Measures per row as fit": a Measure is still its own bounded block and is never split across
+rows, but where the grid is wider than one Measure the next one sits to its right rather than
+under it, and the row wraps by whole Measure. On a phone nothing changes — every Measure of the
+densest Pattern is wider than the grid, so each still takes a row — and the tap minimum, the
+Beat wrapping inside a Measure and the autoscroll are untouched. What changed is the wide end:
+on a 1920×1080 TV an eight-bar 4/4 Pattern was 984px of grid beside about 1000px of empty
+panel, and the maintainer's rule for it was "fit based on how many cells are available … but
+don't split a measure across two rows". The alternatives below were rejected for the phone,
+and still are; this is the same decision extended to widths it never considered.)*
+
 **Rationale**: The worst case is 192 Slots on a 390 px viewport. Fitting that on one line means
 Slots under 3 mm — below a reliable tap target and too small for any accent indicator to read.
 Per-Measure rows keep Slots finger-sized, eliminate horizontal scrolling entirely, and make the

@@ -13,6 +13,9 @@ test.use({
   },
 });
 
+/** The workbench is tabbed at every width (AC-15.1.7): one group on screen at a time. */
+const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
+
 const DESKTOP = { width: 1100, height: 900 };
 const MOBILE = { width: 390, height: 844 };
 
@@ -52,10 +55,10 @@ const noteItem = (page, m, b, s) => page.locator(`.score .note-item[data-measure
 const noteY = async (page, m, b, s) => Number(await noteItem(page, m, b, s).locator('.notehead').getAttribute('cy'));
 const lineY = async (page, line) => Number(await page.locator(`.score .staff-line[data-line="${line}"]`).first().getAttribute('y1'));
 
+// The sections of both panes, in document order (AC-15.1.8, AC-15.1.18).
 const sectionOrder = (page) =>
-  page.locator('.main-panel > *').evaluateAll((els) =>
+  page.locator('.main-panel .pane > *').evaluateAll((els) =>
     els
-      .filter((e) => !e.classList.contains('main-top-bar'))
       .map((e) => (e.dataset.section ? `${e.tagName}[${e.dataset.section}]` : `${e.tagName}.${e.className.split(' ')[0]}`))
   );
 
@@ -252,8 +255,10 @@ test('AC-12.2.7/4 — Changing the counting system while Sheet is showing relabe
   const labels = () => page.locator('.score .count[data-measure="0"][data-beat="0"]');
   await expect(labels()).toHaveText(['ta', '(ka)', 'di', '(mi)']);
   // The picker is in the playback settings accordion, open at desktop width.
+  await onTab(page, 'practice');
   await page.locator('.counting-picker').selectOption('one-e-and-a');
   await expect(labels()).toHaveText(['1', '(e)', '&', '(a)']);
+  await onTab(page, 'practice');
   await page.locator('.counting-picker').selectOption('numbered');
   await expect(labels()).toHaveText(['1', '(2)', '3', '(4)']);
 });

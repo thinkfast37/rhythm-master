@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+/** The workbench is tabbed at every width (AC-15.1.7): one group on screen at a time. */
+const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
+
 /*
  * No storage reset here on purpose: Playwright gives each test its own browser
  * context, so localStorage already starts empty. An addInitScript clear would
@@ -77,6 +80,9 @@ async function loadMeasures(page, meters) {
  * the single `.recipe-picker` dropdown, which only ever reached Measure 1 Beat 1.
  */
 async function applyRecipe(page, recipeId, measure = 0, beat = 0) {
+  // The strip is on the Rhythm tab (AC-15.1.7), which a Percussive Pattern
+  // opens on and a Melodic one, or a visit to another tab, does not.
+  await onTab(page, 'rhythm');
   const chip = page.locator(`.recipe-chip[data-recipe="${recipeId}"]`);
   await chip.click();
   await page.locator(`.measure[data-measure="${measure}"] .beat[data-beat="${beat}"]`).click();
@@ -279,6 +285,7 @@ test('AC-5.6.4 — the grid labels Slots in the selected counting system', async
     await expect(first.nth(1)).toHaveAttribute('data-syllable', 'ka');
   }
 
+  await onTab(page, 'practice');
   await page.locator('.counting-picker').selectOption('one-e-and-a');
   const relabelled = page.locator('.beat[data-recipe="straight-16ths"] .slot-label');
   await expect(relabelled.nth(0)).toHaveAttribute('data-syllable', '1');
@@ -294,6 +301,7 @@ test('AC-5.6.4 — the grid labels Slots in the selected counting system', async
 test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await onTab(page, 'practice');
   await page.locator('.counting-picker').selectOption('one-e-and-a');
 
   for (let beat = 0; beat < 4; beat++) {
@@ -321,12 +329,15 @@ test('AC-5.6.2 — a mixed-feel Pattern counts by number whatever the preference
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
+  await onTab(page, 'practice');
   await page.locator('.counting-picker').selectOption('takadimi');
   await applyRecipe(page, 'triplet-straight-split');
 
   const labels = page.locator('.beat[data-recipe="triplet-straight-split"] .slot-label');
   await expect(labels.nth(0)).toHaveAttribute('data-syllable', '1');
   await expect(labels.nth(4)).toHaveAttribute('data-syllable', '5');
+  // The note sits with the counting picker, on the Practice tab.
+  await onTab(page, 'practice');
   await expect(page.locator('[data-forced-numbered]')).toBeVisible();
   // The stored preference is untouched (AC-5.6.3).
   await expect(page.locator('.counting-picker')).toHaveValue('takadimi');
@@ -685,6 +696,11 @@ test('AC-15.1.14/4 — Where every Beat fits one line, they occupy that one line
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
+    // As after loading a Pattern (AC-15.1.6): the library collapsed. With it
+    // open beside a 1400px window the panel is 1100px and splits into two
+    // panes (AC-15.1.18), and the grid pane there is narrower than this
+    // Measure's 908px — the case AC-15.1.10 provides for, not this one.
+    await page.locator('.library-toggle').click();
 
     const { perLine, widths } = await beatLayout(page);
     expect(perLine, `${width}px`).toEqual([4]);
@@ -695,11 +711,17 @@ test('AC-15.1.14/4 — Where every Beat fits one line, they occupy that one line
 test('AC-15.1.14/5 — The layout re-balances when the width available to the grid changes', async ({
   page,
 }) => {
-  // Laid out for a desktop, then carried to a phone.
+  // Laid out for a desktop, then carried to a phone. The library collapsed, as
+  // after loading a Pattern (AC-15.1.6): open beside a 1400px window it
+  // leaves a 1100px panel of two panes (AC-15.1.18) whose grid pane wraps this
+  // Measure — a re-balance too, but not the one under test here.
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto('/');
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
-  expect((await beatLayout(page)).perLine).toEqual([4]);
+  await page.locator('.library-toggle').click();
+  // Polled: the re-balance after the toggle runs from a ResizeObserver, on
+  // the next frame rather than inside the click.
+  await expect.poll(async () => (await beatLayout(page)).perLine.join(',')).toBe('4');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(async () => (await beatLayout(page)).perLine.join(',')).toBe('2,2');
@@ -717,9 +739,10 @@ test('AC-15.1.14/5 — The layout re-balances when the width available to the gr
   // toggle now moves the grid from 1100px to 1120px, which re-balances to the
   // same answer and so proves nothing.)
   await page.setViewportSize({ width: 1000, height: 900 });
-  // The library is open — the test hook's `loadPattern` does not collapse it,
+  // The library reopened — the test hook's `loadPattern` does not touch it,
   // unlike choosing one in the list — so this starts on two lines of six and
   // the click takes the column away.
+  await page.locator('.library-toggle').click();
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
   await expect(page.locator('.library-toggle')).toHaveAttribute('aria-expanded', 'true');
   const withLibrary = await beatLayout(page);
@@ -1156,7 +1179,9 @@ test('AC-15.2.7/3 — At the preferred size a cell is 44 CSS pixels wide, within
 });
 
 test('AC-15.2.7/4 — Where every Beat fits one line at the preferred size, the Beats occupy the start of the line and no cell is wider than the preferred size', async ({ page }) => {
-  await page.setViewportSize({ width: 1400, height: 900 });
+  // 1600, so the grid pane (AC-15.1.18) has spare room beside this 908px
+  // Measure worth measuring; at 1400 it has 60px.
+  await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), FOUR_FOUR);
   await page.locator('.library-toggle').click();
@@ -1365,35 +1390,55 @@ test('AC-1.3.5 — Recipes applicable to an eighth-note Beat', async ({ page }) 
 
 /* --- the panel is a column, and a Measure box hugs its Beats (AC-15.2.8) --- */
 
-test('AC-15.2.8/1 — On a wide desktop viewport no section of the main panel is wider than the content column, and every section shares one left edge', async ({ page }) => {
+test('AC-15.2.8/1 — On a wide desktop viewport no section is wider than the pane holding it, and the sections of a pane share one left edge', async ({ page }) => {
   await page.setViewportSize({ width: 2000, height: 1000 });
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.library-toggle').click();
 
-  const { column, sections } = await page.evaluate(() => {
+  // Two panes at this width (AC-15.1.18); each is the column this criterion
+  // describes. The workbench pane's sections are also held to the content
+  // column, as the whole panel used to be.
+  await expect(page.locator('.main-panel')).toHaveAttribute('data-layout', 'wide');
+  const { column, panes } = await page.evaluate(() => {
     const panel = document.querySelector('.main-panel');
     const column = parseFloat(getComputedStyle(panel).getPropertyValue('--content-max'));
-    const sections = [...panel.children]
-      .filter((e) => !e.hidden && !e.classList.contains('library-toggle'))
-      .map((e) => {
-        const r = e.getBoundingClientRect();
-        return { tag: e.dataset.section ?? e.className, left: r.left, right: r.right };
-      });
-    return { column, sections };
+    const panes = [...panel.querySelectorAll('.pane')].map((pane) => {
+      const box = pane.getBoundingClientRect();
+      // On screen: the groups a tab does not name are display: none.
+      const sections = [...pane.children]
+        .filter((e) => !e.hidden && e.getBoundingClientRect().width > 0)
+        .map((e) => {
+          const r = e.getBoundingClientRect();
+          return { tag: e.dataset.section ?? e.className, left: r.left, right: r.right };
+        });
+      return { pane: pane.className, left: box.left, width: box.width, sections };
+    });
+    return { column, panes };
   });
   expect(column).toBeGreaterThan(800);
-  expect(column).toBeLessThan(2000 - 400);
-  expect(sections.length).toBeGreaterThan(5);
-  const left = sections[0].left;
-  for (const s of sections) {
-    expect(s.right - s.left, s.tag).toBeLessThanOrEqual(column + 1);
-    expect(Math.abs(s.left - left), s.tag).toBeLessThanOrEqual(1);
+  expect(panes).toHaveLength(2);
+  for (const pane of panes) {
+    // The Pattern pane holds the header and the grid on a Percussive blank
+    // (the chord strip is absent); the workbench pane holds the tab bar, the
+    // groups, the actions and the family area.
+    expect(pane.sections.length, pane.pane).toBeGreaterThanOrEqual(2);
+    const left = pane.sections[0].left;
+    for (const s of pane.sections) {
+      const bound = pane.pane.includes('workbench') ? Math.min(column, pane.width) : pane.width;
+      expect(s.right - s.left, `${pane.pane} ${s.tag}`).toBeLessThanOrEqual(bound + 1);
+      expect(Math.abs(s.left - left), `${pane.pane} ${s.tag}`).toBeLessThanOrEqual(1);
+    }
   }
+  // And the two panes are two columns, not one: the workbench starts where
+  // the Pattern pane ends.
+  expect(panes[1].left).toBeGreaterThanOrEqual(panes[0].left + panes[0].width - 1);
 });
 
 test('AC-15.2.8/2 — A Measure box is as wide as its Beats and label: a 3/4 Measure’s box is narrower than a 4/4 Measure’s, and neither reaches the column’s edge', async ({ page }) => {
-  await page.setViewportSize({ width: 1400, height: 900 });
+  // 1600: the two boxes share a row in the grid pane (AC-15.1.19), and at
+  // this width the row still has well over 100px to spare after them.
+  await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await loadMeasures(page, ['4/4', '3/4']);
   await page.locator('.library-toggle').click();
@@ -1410,9 +1455,9 @@ test('AC-15.2.8/2 — A Measure box is as wide as its Beats and label: a 3/4 Mea
   });
   // Both boxes hug: 4/4 wider than 3/4, by about a Beat.
   expect(geometry.widths[0]).toBeGreaterThan(geometry.widths[1] + 150);
-  // Neither reaches the column's edge; both start on the same left.
+  // Neither reaches the column's edge. (Whether the two share a left edge is
+  // AC-15.1.19's business — they may sit on one row — and not this Case's.)
   for (const r of geometry.rights) expect(geometry.gridRight - r).toBeGreaterThan(100);
-  expect(Math.abs(geometry.lefts[0] - geometry.lefts[1])).toBeLessThanOrEqual(1);
 });
 
 test('AC-15.2.8/3 — On a 390px viewport the densest supported Pattern’s boxes take the width available and nothing scrolls sideways', async ({ page }) => {
@@ -1448,15 +1493,24 @@ test('AC-15.2.8/4 — The Subdivision strip sits on the panel’s left edge with
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.library-toggle').click();
 
-  const { chips, play, panelMid } = await page.evaluate(() => ({
-    chips: document.querySelector('.recipe-chips').getBoundingClientRect().left,
-    play: document.querySelector('[data-section="practice"] button').getBoundingClientRect().left,
-    panelMid: document.querySelector('.main-panel').getBoundingClientRect().width / 2,
-  }));
-  // On the same left edge as the Practice group's first control, and nowhere
-  // near the middle of the panel.
+  // The strip is in the Rhythm group, the tab a Percussive Pattern opens on
+  // (AC-15.1.7/3); the Practice group is a tab away, so its first control is
+  // compared after switching to it.
+  const chips = await page.locator('.recipe-chips').evaluate((el) => el.getBoundingClientRect().left);
+  await page.locator('.workbench-tab[data-tab="practice"]').click();
+  const { play, paneLeft, paneMid } = await page.evaluate(() => {
+    const pane = document.querySelector('.pane-workbench').getBoundingClientRect();
+    return {
+      play: document.querySelector('[data-section="practice"] button').getBoundingClientRect().left,
+      paneLeft: pane.left,
+      paneMid: pane.left + pane.width / 2,
+    };
+  });
+  // On the same left edge as the Practice group's first control, on the left
+  // edge of the pane that holds them (AC-15.1.18), and nowhere near its middle.
   expect(Math.abs(chips - play)).toBeLessThanOrEqual(2);
-  expect(chips).toBeLessThan(panelMid / 4);
+  expect(chips - paneLeft).toBeLessThan(40);
+  expect(chips).toBeLessThan(paneMid);
 });
 
 /* --- the brush indicator: the grid always states its active brush (AC-1.3.12) --- */
@@ -1511,17 +1565,23 @@ test('AC-1.3.12/4 — The indicator follows a brush switch in either direction, 
   await page.locator('.sound-mode [data-mode="melodic"]').click();
   const hint = page.locator('.brush-hint');
 
-  // Note → Subdivision, by tapping the Recipe strip.
+  // Note → Subdivision, by tapping the Recipe strip — on the Rhythm tab; the
+  // pitch strip is on the Melody tab (AC-15.1.7), and the brush line sits
+  // under the grid so it is read whichever is showing (AC-1.3.12).
+  await onTab(page, 'rhythm');
   await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
   await expect(hint).toHaveAttribute('data-brush', 'subdivision');
 
   // Subdivision → Note, by tapping the pitch strip (AC-1.3.11/5).
+  await onTab(page, 'melody');
   await page.locator('.degree[data-degree="5"]').click();
   await expect(hint).toHaveAttribute('data-brush', 'note');
 
   // And back again: the switch works both ways, as many times as tapped.
+  await onTab(page, 'rhythm');
   await page.locator('.recipe-chip[data-recipe="straight-16ths"]').click();
   await expect(hint).toHaveAttribute('data-brush', 'subdivision');
+  await onTab(page, 'melody');
   await page.locator('[data-action="octave-up"]').click();
   await expect(hint).toHaveAttribute('data-brush', 'note');
 });

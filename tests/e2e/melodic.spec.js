@@ -1292,16 +1292,23 @@ test('AC-1.3.11/5 — Arming a pitch on the pitch strip disarms the armed Recipe
   await melodicBlank(page);
   await accentZone(page, 0, 0).click();
 
-  // Stepping the octave is arming a pitch: the Recipe brush stands down.
+  // Stepping the octave is arming a pitch: the Recipe brush stands down. The
+  // Recipe strip is on the Rhythm tab and the pitch strip on Melody
+  // (AC-15.1.7), so the gesture crosses a tab each way.
+  const onTab = (name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
+  await onTab('rhythm');
   await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
   await expect(page.locator('.grid')).toHaveClass(/recipe-armed/);
+  await onTab('melody');
   await page.locator('[data-action="octave-down"]').click();
   await expect(page.locator('.grid')).not.toHaveClass(/recipe-armed/);
   await expect(page.locator('.recipe-chip.armed')).toHaveCount(0);
 
   // So is arming a degree.
+  await onTab('rhythm');
   await page.locator('.recipe-chip[data-recipe="straight-8ths"]').click();
   await expect(page.locator('.grid')).toHaveClass(/recipe-armed/);
+  await onTab('melody');
   await page.locator('.degree[data-degree="b3"]').click();
   await expect(page.locator('.grid')).not.toHaveClass(/recipe-armed/);
 

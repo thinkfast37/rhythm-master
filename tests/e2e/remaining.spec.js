@@ -8,6 +8,9 @@ test.use({
   },
 });
 
+/** The workbench is tabbed at every width (AC-15.1.7): one group on screen at a time. */
+const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
+
 async function makeOwned(page, name = 'Mine') {
   await page.locator('.slot').first().click();
   await page.locator('.dialog-input').fill(name);
@@ -392,6 +395,7 @@ test('AC-4.3.4 — the metronome setting persists across reloads', async ({ page
   // The click toggle is in the Practice group — a tab at mobile width, on
   // screen at any other (AC-15.1.7).
   await page.evaluate(() => window.__rm.handlers.onWorkbenchTab('practice'));
+  await onTab(page, 'practice');
   await page.locator('[data-action="toggle-metronome"]').click();
   await expect(page.locator('[data-action="toggle-metronome"]')).toHaveClass(/\bon\b/);
 
@@ -401,6 +405,7 @@ test('AC-4.3.4 — the metronome setting persists across reloads', async ({ page
 
 test('AC-4.3.5 — the count-in setting persists across reloads', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('[data-action="toggle-count-in"]').click();
   await expect(page.locator('[data-action="toggle-count-in"]')).toHaveClass(/\bon\b/);
 
@@ -410,6 +415,7 @@ test('AC-4.3.5 — the count-in setting persists across reloads', async ({ page 
 
 test('AC-4.3.6 — metronome and count-in are global, with no per-Pattern override', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('[data-action="toggle-metronome"]').click();
 
   // Switch to a different Pattern; the setting follows the app, not the Pattern.

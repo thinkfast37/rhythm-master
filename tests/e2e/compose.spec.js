@@ -23,9 +23,12 @@ async function keptBlank(page) {
     window.__rm.handlers.onKeepFill('root-fifth');
     window.__rm.handlers.onKeepFill('alberti');
   });
+  await onTab(page, 'compose');
 }
 
 const compose = (page) => page.locator('[data-section="compose"]');
+/** The workbench is tabbed at every width (AC-15.1.7): one group on screen. */
+const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
 const entries = (page) => compose(page).locator('.compose-entry');
 const fillInForce = (page) => page.evaluate(() => window.__rm.fillInForce());
 const songs = (page) => page.evaluate(() => window.__rm.songStore.loadAll());
@@ -58,8 +61,9 @@ test('AC-18.1.1/1 — Compose is a fourth workbench group, after Practice, tabbe
   await page.locator('.sound-mode [data-mode="melodic"]').click();
   await expect(compose(page)).toBeHidden();
   await page.locator('.progression-picker').selectOption('I-IV-V');
+  await onTab(page, 'compose');
   await expect(compose(page)).toBeVisible();
-  const order = await page.locator('.main-panel > section[data-tab]').evaluateAll((els) => els.map((e) => e.dataset.tab));
+  const order = await page.locator('.main-panel section[data-tab]').evaluateAll((els) => els.map((e) => e.dataset.tab));
   expect(order).toEqual(['melody', 'rhythm', 'practice', 'compose']);
 });
 
@@ -89,8 +93,10 @@ test('AC-18.1.1/3 — The palette lists the kept fills for this Pattern in catal
 
 test('AC-18.1.2/1 — Tapping a palette fill appends an entry whose repeats are the cycle Repeats setting at that moment', async ({ page }) => {
   await keptBlank(page);
+  await onTab(page, 'melody');
   await page.locator('.fill-cycle-repeats').fill('3');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await onTab(page, 'compose');
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await expect(entries(page)).toHaveCount(1);
   await expect(entries(page).first().locator('.entry-fill')).toHaveText('Alberti');
@@ -151,11 +157,15 @@ test("AC-18.1.2/5 — Unkeeping a fill leaves every entry that uses it in the Se
 
 test('AC-18.1.3/1 — Each entry is in force for its repeats, one repeat being one harmonic cycle, and the next entry takes over from the very next pass with nothing stopped or restarted, the loop counter still counting', async ({ page }) => {
   await keptBlank(page);
+  await onTab(page, 'melody');
   await page.locator('.fill-cycle-repeats').fill('1');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await onTab(page, 'compose');
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
+  await onTab(page, 'compose');
   await compose(page).locator('[data-action="play-song"]').click();
   expect(await fillInForce(page)).toBe('alberti');
   // One harmonic cycle of I–IV–V is three passes; the second entry follows.
@@ -169,11 +179,15 @@ test('AC-18.1.3/1 — Each entry is in force for its repeats, one repeat being o
 
 test('AC-18.1.3/2 — After the last entry the first is in force again; the Section loops until stopped', async ({ page }) => {
   await keptBlank(page);
+  await onTab(page, 'melody');
   await page.locator('.fill-cycle-repeats').fill('1');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await onTab(page, 'compose');
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
+  await onTab(page, 'compose');
   await compose(page).locator('[data-action="play-song"]').click();
   expect(await untilFill(page, 'root-fifth')).toBe(true);
   expect(await untilFill(page, 'alberti', 12000)).toBe(true);
@@ -217,11 +231,14 @@ test("AC-18.1.3/5 — Stop returns the Pattern's own arpeggio, exactly as stoppi
 test('AC-18.1.3/6 — Play song and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
+  await onTab(page, 'melody');
   await page.locator('.fill-cycle').click();
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+  await onTab(page, 'compose');
   await compose(page).locator('[data-action="play-song"]').click();
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
   expect(await fillInForce(page)).toBe('alberti');
+  await onTab(page, 'melody');
   await page.locator('.fill-cycle').click();
   expect(await page.evaluate(() => window.__rm.songEntryInForce())).toBeNull();
   await page.locator('[data-action="stop"]').click();
@@ -232,10 +249,14 @@ test('AC-18.1.3/6 — Play song and cycle mode are exclusive: starting either en
 
 test('AC-18.1.3/7 — Editing the Section while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists', async ({ page }) => {
   await keptBlank(page);
+  await onTab(page, 'melody');
   await page.locator('.fill-cycle-repeats').fill('1');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await onTab(page, 'compose');
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
+  await onTab(page, 'compose');
   await compose(page).locator('[data-action="play-song"]').click();
   await page.waitForTimeout(300);
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
@@ -351,6 +372,7 @@ test('AC-18.1.4/6 — A Song is not Pattern content: saving one changes nothing 
     window.__rm.handlers.onKeepFill('alberti');
     return s.id;
   });
+  await onTab(page, 'compose');
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('[data-action="song-save"]').click();
   await nameSong(page, 'On a shipped one');

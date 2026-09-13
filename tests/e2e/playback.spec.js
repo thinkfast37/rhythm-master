@@ -11,6 +11,9 @@ test.use({
   },
 });
 
+/** The workbench is tabbed at every width (AC-15.1.7): one group on screen at a time. */
+const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
+
 /** A 4/4 Pattern with one note per Beat, at a chosen tempo. */
 async function loadSimple(page, tempo = 240) {
   await page.evaluate((bpm) => {
@@ -201,6 +204,7 @@ test('AC-4.2.2 — changing tempo restarts playback and resets the loop counter'
   await page.waitForTimeout(1400);
   expect(await page.evaluate(() => window.__rm.getState().loop)).toBeGreaterThanOrEqual(1);
 
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
   await page.waitForTimeout(120);
 
@@ -249,6 +253,7 @@ test('AC-4.2.3/1 — A Pattern with no tempo of its own loads at the tempo in ef
   page,
 }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
 
   await openSeed(page, 'plain');
@@ -260,9 +265,11 @@ test('AC-4.2.3/2 — A tempo the Musician has set on a Pattern outranks the carr
 }) => {
   await page.goto('/');
   const first = await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
 
   await openSeed(page, 'second');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
 
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
@@ -273,6 +280,7 @@ test('AC-4.2.3/3 — An authored tempo differing from the 80 BPM default outrank
   page,
 }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
 
   const authored = await openSeed(page, 'authored');
@@ -299,6 +307,7 @@ test('AC-4.2.3/5 — The carried tempo survives a reload, and is 80 BPM before a
   );
   expect(fresh).toBe(80);
 
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
   await page.reload();
   const stored = await page.evaluate(
@@ -315,9 +324,11 @@ test('AC-4.2.3/6 — A Pattern with any remembered playback setting takes no car
 }) => {
   await page.goto('/');
   const first = await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="15"]').click();
 
   await openSeed(page, 'second');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="150"]').click();
 
   // Only swing was ever set on the first Pattern; its tempo is still its own.
@@ -332,6 +343,7 @@ test('AC-4.4.17/1 — A Pattern with no swing of its own loads at the swing amou
 }) => {
   await page.goto('/');
   await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
 
   await openSeed(page, 'second');
@@ -341,6 +353,7 @@ test('AC-4.4.17/1 — A Pattern with no swing of its own loads at the swing amou
 test('AC-4.4.17/2 — The swing feel carries the same way', async ({ page }) => {
   await page.goto('/');
   await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('select.swing-feel').selectOption('sixteenth');
 
   await openSeed(page, 'second');
@@ -352,9 +365,11 @@ test("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per
 }) => {
   await page.goto('/');
   const first = await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="15"]').click();
 
   await openSeed(page, 'second');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="50"]').click();
 
   // Remembered: the amount set on the first Pattern comes back, not the 50.
@@ -401,6 +416,7 @@ test('AC-4.4.17/4 — The carried swing survives a reload, and is 0 on the 8ths 
   expect(fresh.lastSwingFeel).toBe('eighth');
 
   await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
   await page.reload();
 
@@ -413,6 +429,7 @@ test('AC-4.4.17/5 — A carried amount does not give a shipped Pattern the `swin
 }) => {
   await page.goto('/');
   await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
 
   const second = await openSeed(page, 'second');
@@ -438,10 +455,13 @@ test('AC-4.4.17/6 — A Pattern with any remembered playback setting takes no ca
 }) => {
   await page.goto('/');
   const first = await openSeed(page, 'plain');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
 
   await openSeed(page, 'second');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+  await onTab(page, 'practice');
   await page.locator('select.swing-feel').selectOption('sixteenth');
 
   // Only the tempo was ever set on the first Pattern; it comes back straight,
@@ -458,6 +478,7 @@ test('AC-4.3.1 — the metronome and count-in are off by default and toggleable'
   await expect(page.locator('[data-action="toggle-metronome"]')).not.toHaveClass(/\bon\b/);
   await expect(page.locator('[data-action="toggle-count-in"]')).not.toHaveClass(/\bon\b/);
 
+  await onTab(page, 'practice');
   await page.locator('[data-action="toggle-metronome"]').click();
   await expect(page.locator('[data-action="toggle-metronome"]')).toHaveClass(/\bon\b/);
 
@@ -476,6 +497,7 @@ test('toggling the metronome during playback does not desync the Play/Stop butto
   // effect, and none of them may stop the transport or flip the Play/Stop
   // button back to "Play" while the Pattern is still actually playing.
   for (let i = 0; i < 4; i++) {
+    await onTab(page, 'practice');
     await page.locator('[data-action="toggle-metronome"]').click();
     const expectOn = i % 2 === 0;
     if (expectOn) {
@@ -765,6 +787,7 @@ test('AC-4.4.7/1 — The Swing feel control offers Quarters, 8ths, and 16ths, wi
 test('AC-4.4.7/2 — The feel is one value for the whole Pattern', async ({ page }) => {
   await page.goto('/');
   await setSwingSlider(page, 30);
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('sixteenth');
 
   const seen = await page.evaluate(() => {
@@ -781,6 +804,7 @@ test('AC-4.4.7/3 — Selecting a feel takes effect immediately, with no confirma
   page,
 }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('quarter');
   await expect(page.locator('.dialog')).toHaveCount(0);
   await expect(page.locator('.swing-feel').first()).toHaveValue('quarter');
@@ -793,6 +817,7 @@ test('AC-4.4.10/1 — Changing the swing feel on a shipped Pattern shows no nami
   await page.goto('/');
   const before = await page.evaluate(() => window.__rm.patternStore.loadAll().length);
 
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('sixteenth');
 
   await expect(page.locator('.dialog')).toHaveCount(0);
@@ -805,6 +830,7 @@ test('AC-4.4.10/2 — The feel set on a shipped Pattern is applied again when it
   page,
 }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('quarter');
   await page.reload();
   await expect(page.locator('.swing-feel').first()).toHaveValue('quarter');
@@ -814,6 +840,7 @@ test("AC-4.4.10/3 — The remembered feel lives in the overlay store and the shi
   page,
 }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('sixteenth');
 
   const stored = await page.evaluate(() => {
@@ -832,6 +859,7 @@ test('AC-4.4.10/4 — A swing feel alone never grants or removes the `swing` Tag
 }) => {
   await page.goto('/');
   const name = await page.evaluate(() => window.__rm.getState().pattern.name);
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('sixteenth');
 
   const chip = page.locator('.tag-filter[data-tag="swing"]');
@@ -854,6 +882,7 @@ test('AC-4.4.10/5 — On an owned Pattern the swing feel saves into the Pattern 
   await page.locator('.dialog-button', { hasText: 'Create' }).click();
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(true);
 
+  await onTab(page, 'practice');
   await page.locator('.swing-feel').first().selectOption('sixteenth');
 
   const stored = await page.evaluate(() => {
@@ -1319,6 +1348,7 @@ test('AC-4.2.5/2 — A typed value outside 18–300 clamps to the nearer bound, 
 
 test('AC-4.2.5/3 — The field always shows the current tempo, however it was last set — slider, preset, or typing', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('.preset', { hasText: /^120$/ }).click();
   await expect(page.locator('.tempo-entry')).toHaveValue('120');
 
@@ -1341,6 +1371,7 @@ test('AC-4.2.6/1 — The preset row offers exactly those fourteen values, in asc
 
 test('AC-4.2.6/2 — Tapping the 300 preset sets the tempo to the ceiling', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
   expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(300);
 });
@@ -1379,6 +1410,7 @@ test('AC-4.4.15/2 — Tapping a swing preset sets the Pattern-wide amount and cl
     );
   });
 
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="25"]').click();
   const after = await page.evaluate(() => ({
     amount: window.__rm.getState().pattern.swingAmount,
@@ -1393,11 +1425,13 @@ test('AC-4.4.15/3 — On an all-triplet Pattern the preset row is absent along w
   await loadUniform(page, { recipe: 'triplet-8ths', slots: [true, false, true] });
   await expect(page.locator('[data-action="preset-swing"]')).toHaveCount(0);
   await expect(page.locator('.swing-entry')).toHaveCount(0);
+  await onTab(page, 'practice');
   await expect(page.locator('.swing-note')).toBeVisible();
 });
 
 test('AC-4.4.16/1 — A typed amount applies exactly, and the slider follows it', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await commitEntry(page, '.swing-entry', '42');
   expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(42);
   await expect(page.locator('.swing-slider')).toHaveValue('42');
@@ -1405,6 +1439,7 @@ test('AC-4.4.16/1 — A typed amount applies exactly, and the slider follows it'
 
 test('AC-4.4.16/2 — A typed value outside 0–100 clamps to the nearer bound, and a non-numeric entry leaves the amount unchanged', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await commitEntry(page, '.swing-entry', '150');
   expect(await page.evaluate(() => window.__rm.getState().pattern.swingAmount)).toBe(100);
 
@@ -1418,6 +1453,7 @@ test('AC-4.4.16/2 — A typed value outside 0–100 clamps to the nearer bound, 
 
 test('AC-4.4.16/3 — The field always shows the current amount, however it was last set — slider, preset, or typing', async ({ page }) => {
   await page.goto('/');
+  await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
   await expect(page.locator('.swing-entry')).toHaveValue('33');
 

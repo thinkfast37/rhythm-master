@@ -74,6 +74,9 @@ import {
   applyAccordions,
   applyWorkbench,
   workbenchTabFor,
+  applyPanelLayout,
+  observePanelWidth,
+  scrollContainerOf,
   WORKBENCH_TABS,
   collapseLibrary,
   openLibrary,
@@ -1592,11 +1595,10 @@ export function mount(root) {
   playEl.dataset.section = 'play';
 
   /*
-   * The workbench (AC-15.1.7, AC-15.1.8): three groups named for the job —
-   * Melody, Rhythm, Practice — stacked and open above mobile, tabbed on it.
-   * The tab bar is always in the DOM and shown by CSS on the mobile viewport
-   * only, so the fixed order never depends on width. Melody is absent, not
-   * empty, on a Percussive Pattern (AC-2.2.13).
+   * The workbench (AC-15.1.7, AC-15.1.8): four groups named for the job —
+   * Melody, Rhythm, Practice, Compose — one on screen at a time, chosen by the
+   * tab bar, at every width. Melody is absent, not empty, on a Percussive
+   * Pattern (AC-2.2.13).
    */
   const tabsEl = document.createElement('nav');
   tabsEl.className = 'workbench-tabs';
@@ -1668,11 +1670,25 @@ export function mount(root) {
   topBarEl.className = 'main-top-bar';
   topBarEl.append(libraryToggle, playEl, navEl);
 
-  main.append(
-    topBarEl, headerEl, chordStripEl, viewEl, tabsEl, melodyEl, rhythmEl, practiceEl, composeEl, actionsEl, familyEl
-  );
+  /*
+   * Two panes under the pinned bar (AC-15.1.18): the Pattern — header, chord
+   * strip, grid — and the workbench — tab bar, groups, actions, family. On a
+   * wide panel they sit side by side and each scrolls on its own; on a narrow
+   * one they are plain blocks, one under the other, and the panel scrolls as
+   * one. The order AC-15.1.8 fixes is the same list either way.
+   */
+  const patternPaneEl = document.createElement('div');
+  patternPaneEl.className = 'pane pane-pattern';
+  patternPaneEl.append(headerEl, chordStripEl, viewEl);
+  const workbenchPaneEl = document.createElement('div');
+  workbenchPaneEl.className = 'pane pane-workbench';
+  workbenchPaneEl.append(tabsEl, melodyEl, rhythmEl, practiceEl, composeEl, actionsEl, familyEl);
+  main.append(topBarEl, patternPaneEl, workbenchPaneEl);
   shell.append(sidebar, scrim, main);
   root.appendChild(shell);
+  // In the tree now, so the panel has a width to be laid out by (AC-15.1.18).
+  applyPanelLayout(main);
+  observePanelWidth(main);
 
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
@@ -1729,7 +1745,8 @@ export function mount(root) {
     if (LOADS_A_PATTERN.includes(action)) {
       collapseLibrary(shell);
       syncLibraryToggle();
-      main.scrollTop = 0;
+      // Whichever of them scrolls in the layout in force (AC-15.1.18).
+      for (const el of [main, patternPaneEl, workbenchPaneEl]) el.scrollTop = 0;
     }
   });
 
@@ -1738,6 +1755,7 @@ export function mount(root) {
   applyAccordions([actionsEl]);
   window.addEventListener('resize', () => {
     applyViewport(shell);
+    applyPanelLayout(main);
     syncLibraryToggle();
     applyAccordions([actionsEl]);
     // A resize can change the font the Slots lay out in as well as the room they
@@ -1850,7 +1868,7 @@ export function mount(root) {
     // the control stays put on screen (AC-15.1.16/3).
     if (anchor && anchor.el.isConnected) {
       const delta = anchor.el.getBoundingClientRect().top - anchor.top;
-      if (delta !== 0) main.scrollTop += delta;
+      if (delta !== 0) scrollContainerOf(anchor.el, main).scrollTop += delta;
     }
 
     // Every Start is a fresh run, and a fresh run tracks (AC-15.1.16/2).
