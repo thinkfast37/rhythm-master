@@ -9,6 +9,10 @@
  *      from the 80 BPM default, a Pattern-wide or per-group swing amount;
  *   3. what was carried from the Pattern just left.
  *
+ * A Pattern with any overlay playback value at all is one the Musician has
+ * personalized, and takes nothing from the third source — whichever setting
+ * they touched (AC-4.2.3/6, AC-4.4.17/6).
+ *
  * The middle rule is why a tempo of exactly 80 counts as absent: 172 of the 208
  * shipped Patterns carry it as a placeholder rather than a choice, and nothing
  * in the data distinguishes the two. Accepted knowingly in AC-4.2.3 — the cost
@@ -49,6 +53,13 @@ function hasGroupSwing(pattern) {
  *   only the fields the carry actually governs
  */
 export function carriedPlaybackFor({ pattern, overlay = {}, carried = {} }) {
+  const personalized =
+    overlay.tempo !== undefined ||
+    overlay.swingAmount !== undefined ||
+    overlay.swing !== undefined ||
+    overlay.swingFeel !== undefined;
+  if (personalized) return {};
+
   const applied = {};
 
   const ownTempo = pattern.tempo !== undefined && pattern.tempo !== DEFAULT_TEMPO;

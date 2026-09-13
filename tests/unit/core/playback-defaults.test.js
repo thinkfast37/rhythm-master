@@ -61,6 +61,36 @@ describe('carriedPlaybackFor', () => {
     expect(perGroup.swingAmount).toBeUndefined();
   });
 
+  it('AC-4.2.3/6 — A Pattern with any remembered playback setting takes no carried tempo, even when what was remembered is its swing: the resolver', () => {
+    const applied = carriedPlaybackFor({
+      pattern: create('Plain'),
+      overlay: { swingAmount: 15 },
+      carried: CARRIED,
+    });
+    expect(applied.tempo).toBeUndefined();
+    expect(applied).toEqual({});
+  });
+
+  it('AC-4.4.17/6 — A Pattern with any remembered playback setting takes no carried swing or feel, even when what was remembered is its tempo: the resolver', () => {
+    const applied = carriedPlaybackFor({
+      pattern: create('Plain'),
+      overlay: { tempo: 120 },
+      carried: CARRIED,
+    });
+    expect(applied.swingAmount).toBeUndefined();
+    expect(applied.swingFeel).toBeUndefined();
+    expect(applied).toEqual({});
+
+    // A remembered feel alone, and a legacy per-group entry alone, each
+    // personalize the Pattern just the same.
+    expect(
+      carriedPlaybackFor({ pattern: create('Plain'), overlay: { swingFeel: 'eighth' }, carried: CARRIED })
+    ).toEqual({});
+    expect(
+      carriedPlaybackFor({ pattern: create('Plain'), overlay: { swing: { 0: 40 } }, carried: CARRIED })
+    ).toEqual({});
+  });
+
   it('carries nothing when nothing has been carried yet', () => {
     expect(carriedPlaybackFor({ pattern: create('Plain'), carried: {} })).toEqual({});
     expect(carriedPlaybackFor({ pattern: create('Plain'), carried: NO_CARRY })).toEqual({

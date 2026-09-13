@@ -931,14 +931,17 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **Then** it loads at 100 BPM: the tempo in effect on the Pattern just left carries over, whether the Musician set it by hand or it came with that Pattern
   - **And**, given instead the Pattern being opened has a tempo of its own, it loads at that tempo regardless of what was carried — a tempo of its own being either a remembered tempo the Musician set on it (AC-4.2.4), or an authored tempo that differs from the 80 BPM default, shipped or saved
   - **And** the carried tempo survives a reload, and before any Pattern has been opened on a fresh install it is 80 BPM (AC-4.2.1)
+  - **And** a Pattern the Musician has personalized — one with any remembered playback setting of its own (AC-4.2.4, AC-4.4.6, AC-4.4.10), whichever setting that was — takes nothing from the carry: it loads at what it remembers, at its authored values for the rest, and at the defaults otherwise. The carry reaches only Patterns the Musician has never adjusted
   - **Cases**:
     - **AC-4.2.3/1** — A Pattern with no tempo of its own loads at the tempo in effect on the Pattern just left
     - **AC-4.2.3/2** — A tempo the Musician has set on a Pattern outranks the carried tempo
     - **AC-4.2.3/3** — An authored tempo differing from the 80 BPM default outranks the carried tempo
     - **AC-4.2.3/4** — The tempo carries even when the Musician never touched the tempo control on the Pattern just left
     - **AC-4.2.3/5** — The carried tempo survives a reload, and is 80 BPM before any Pattern has been opened
+    - **AC-4.2.3/6** — A Pattern with any remembered playback setting takes no carried tempo, even when what was remembered is its swing
   - *(Revised 2026-08-22: shipped Patterns gain a per-Pattern remembered tempo, stored as a playback setting rather than on the frozen Pattern — see AC-4.2.4.)*
   - *(Revised 2026-09-12 at the maintainer's request: "a lot of rhythms I practice in a row need to be sped up, but I always end up starting at eighty and then changing it." The global last-used default was written to `rm.settings.v1` on every tempo change and never read back, and it could not have helped if it were: 172 of the 208 shipped Patterns carry the 80 BPM default as an authored tempo, so "no tempo of its own saved" never described any of them. Two changes: what carries is now the tempo **in effect** on the Pattern just left rather than the last one set by hand, and a shipped tempo counts as the Pattern's own only when it differs from the default. The consequence, accepted knowingly: a Pattern deliberately set to exactly 80 BPM is indistinguishable from one that never had a tempo chosen, so the carried tempo wins there.)*
+  - *(Case /6 added 2026-09-13 at the maintainer's request, with AC-4.4.17/6: the carry had decided field by field, so a Pattern with a remembered swing and no remembered tempo still took the tempo in effect on the Pattern just left. A Pattern the Musician has set anything on is theirs as they left it; the carry is for Patterns they have not yet touched.)*
 
 - **AC-4.2.4** — Tempo is remembered per Pattern, shipped Patterns included
   - **Given** a shipped Pattern the Practicing Musician set to 150 BPM
@@ -1192,13 +1195,16 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **And**, given instead the Pattern being opened has swing of its own, that outranks the carried values and loads unchanged
   - **And** a carried amount is playback only: loading writes nothing back to either store, and a carried amount does not give a shipped Pattern the `swing` Tag in the library (AC-4.4.6) — though an owned Pattern edited afterwards saves what it is sounding at, exactly as it always has
   - **And** an all-triplet Pattern is unaffected — it has no straight group for a carried amount to govern, and still shows AC-4.4.14's note in place of the controls
+  - **And** a Pattern the Musician has personalized — one with any remembered playback setting of its own (AC-4.2.4, AC-4.4.6, AC-4.4.10), whichever setting that was — takes nothing from the carry: neither the amount nor the feel. It loads at what it remembers, at its authored values for the rest, and at the defaults otherwise. The carry reaches only Patterns the Musician has never adjusted
   - **Cases**:
     - **AC-4.4.17/1** — A Pattern with no swing of its own loads at the swing amount in effect on the Pattern just left
     - **AC-4.4.17/2** — The swing feel carries the same way
     - **AC-4.4.17/3** — A Pattern's own swing — remembered, Pattern-wide, or per-group — outranks the carried values
     - **AC-4.4.17/4** — The carried swing survives a reload, and is 0 on the 8ths feel before any Pattern has been opened
     - **AC-4.4.17/5** — A carried amount does not give a shipped Pattern the `swing` Tag in the library
+    - **AC-4.4.17/6** — A Pattern with any remembered playback setting takes no carried swing or feel, even when what was remembered is its tempo
   - *(Added 2026-09-12 at the maintainer's request, with AC-4.2.3's revision: the Musician asked for tempo to carry across a practice run and chose to have swing carry with it, so a run of rhythms worked at one groove does not need the same two controls reset on every Pattern. The `swing` Tag clause is what keeps this from quietly re-opening AC-4.4.6's guarantee: a playback swing has never made a built-in filterable under `swing`, and a carried one must not either.)*
+  - *(Case /6 added 2026-09-13 at the maintainer's request, with AC-4.2.3/6: the carry had decided field by field, so a Pattern with a remembered tempo and no remembered swing still took the swing in effect on the Pattern just left — the very Patterns the Musician had made their own were the ones a stray groove could reach. A Pattern the Musician has set anything on is theirs as they left it; the carry is for Patterns they have not yet touched.)*
 
 ---
 
