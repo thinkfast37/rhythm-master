@@ -783,6 +783,81 @@ test('AC-15.1.16/6 — A button held mid-tap keeps its DOM node across the rende
   await expect(page.locator('[data-action="play"]')).toBeVisible();
 });
 
+/**
+ * A Melodic Pattern on a progression, every Slot of Beat 1 sounding and the
+ * tempo up, played — so a render streams several times a second while the
+ * entries below are typed into. Cycle mode on, so the Repeats box is live.
+ */
+async function playingWithEntries(page) {
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__rm.handlers.onSetting({ countInEnabled: false });
+    window.__rm.loadBlank('4/4', 'Typed Entries');
+  });
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  for (const slot of [0, 1, 2]) {
+    await page.locator('.measure[data-measure="0"] .slot[data-beat="0"][data-slot="' + slot + '"] .slot-accent').click();
+  }
+  await page.evaluate(() => window.__rm.handlers.onTempo(300));
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+}
+
+/** Type `value` into `entry` a digit at a time, slowly enough that renders land between keystrokes. */
+async function typeInto(entry, value) {
+  await entry.click();
+  await entry.press('Control+a');
+  for (const character of value) {
+    await entry.press(character);
+    await entry.page().waitForTimeout(150);
+  }
+}
+
+test('AC-15.1.16/8 — A number or text entry typed into but not yet committed keeps what is typed across the renders playback streams: a render writes its own value onto that entry only once the typing is committed or the entry is left: the Cycle fills Repeats count', async ({ page }) => {
+  await playingWithEntries(page);
+  const repeats = page.locator('.fill-cycle-repeats');
+  await expect(repeats).toHaveValue('4');
+
+  // Typed, and still standing several playback renders later — the reported bug
+  // was the stored 4 being written back over it before `change` could fire.
+  await typeInto(repeats, '2');
+  await page.waitForTimeout(600);
+  await expect(repeats).toHaveValue('2');
+
+  // Leaving the entry commits it: the setting, and the cycle, take the count.
+  await repeats.press('Tab');
+  await expect(repeats).toHaveValue('2');
+  expect(await page.evaluate(() => window.__rm.getState().settings.fillCycleRepeats)).toBe(2);
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).fillCycleRepeats)
+  ).toBe(2);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test('AC-15.1.16/8 — A number or text entry typed into but not yet committed keeps what is typed across the renders playback streams: a render writes its own value onto that entry only once the typing is committed or the entry is left: the Tempo entry, and the committed value written back once the entry is left', async ({ page }) => {
+  await playingWithEntries(page);
+  const tempo = page.locator('.tempo-entry');
+  await expect(tempo).toHaveValue('300');
+
+  // Three keystrokes, each with renders streaming between them.
+  await typeInto(tempo, '120');
+  await expect(tempo).toHaveValue('120');
+  await tempo.press('Tab');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(120);
+
+  // The write-back itself is untouched: an entry left holding a value the app
+  // refuses — over the maximum — is returned to what the state says, which is
+  // the behaviour AC-7.1.1 relies on for a cleared name.
+  await typeInto(tempo, '999');
+  await tempo.press('Tab');
+  await expect(tempo).toHaveValue('300');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.tempo)).toBe(300);
+  await page.locator('[data-action="stop"]').click();
+});
+
 // --- AC-15.1.18: two panes on a wide panel, each scrolling on its own ------
 
 /**
