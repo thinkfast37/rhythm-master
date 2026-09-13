@@ -2095,24 +2095,26 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Revised 2026-08-17. This previously applied at mobile only and stated explicitly that the sidebar stays visible on tablet and desktop. Scrolling deep into a 110-Pattern list and picking one left the musician with the chosen Pattern on screen and the list still occupying a third of the window — so the rule now holds at every width, and the mobile special case is gone. Reopening is AC-15.1.13.)*
 
 - **AC-15.1.7** — The workbench is tabbed on mobile and stacked open above it
-  - **Given** the three workbench groups — Melody (US-2.2, US-2.6; Melodic only), Rhythm (US-1.1, US-1.3, US-8.1, US-10.1, US-10.2) and Practice (US-4.2–US-4.4, US-5.6, US-2.7)
+  - **Given** the four workbench groups — Melody (US-2.2, US-2.6, US-2.7, US-2.8; Melodic only), Rhythm (US-1.1, US-1.3, US-8.1, US-10.1, US-10.2), Practice (US-4.2–US-4.4, US-5.6) and Compose (US-18.1; Melodic with a progression only)
   - **When** the Practicing Musician views them on a 390px-wide (mobile) viewport
   - **Then** a tab bar names the groups and exactly one group is on screen at a time: Melody when a Melodic Pattern loads, Rhythm when a Percussive one does, and thereafter whichever tab was last tapped — until the next Pattern loads or the Mode changes, which reset it
-  - **And**, given a 1400px (desktop) or 900px (tablet) viewport, no tab bar is shown and all three groups are stacked, expanded, in the order AC-15.1.8 fixes
+  - **And**, given a 1400px (desktop) or 900px (tablet) viewport, no tab bar is shown and every applicable group is stacked, expanded, in the order AC-15.1.8 fixes
   - **And** the Pattern actions section (US-7.4, US-7.5, US-11.1, US-12.1, US-13.1) renders as an accordion, collapsed by default, on mobile, and expanded rather than as an accordion on desktop
   - **Cases**:
     - **AC-15.1.7/1** — On mobile a tab bar names the workbench groups and exactly one group is on screen
     - **AC-15.1.7/2** — On desktop and tablet there is no tab bar and every applicable group is on screen at once
     - **AC-15.1.7/3** — A Melodic Pattern opens on the Melody tab and a Percussive one on the Rhythm tab, and switching Mode selects the tab for the new Mode
-    - **AC-15.1.7/4** — Tapping a tab shows that group and hides the others, and the Melody tab is absent on a Percussive Pattern
+    - **AC-15.1.7/4** — Tapping a tab shows that group and hides the others, and the Melody and Compose tabs are absent on a Percussive Pattern, Compose also on a Melodic one without a progression
     - **AC-15.1.7/5** — Pattern actions is a collapsed accordion on mobile and an expanded section on desktop
+  - *(Revised 2026-09-13 with US-2.8 and US-18.1 (T282, T284): a fourth group, Compose, after Practice; fill cycling moves from Practice to Melody (AC-2.7.1). Three groups became four because sequencing kept fills into a Section is a different job from auditioning them, and a mode inside Melody would be the hidden state this criterion's rewrite the same day was removing.)*
   - *(Rewritten 2026-09-13 with T272. The previous wording collapsed "playback settings" and "edit controls" to accordions. The 2026-09-13 usability review measured the panel: on a four-bar Melodic Pattern the always-open harmony block alone was 428px on a phone, and Play sat 882px down an 800px screen. Tabs give the grid plus one palette one phone screen, with the transport pinned above (AC-15.1.17). Above mobile there is room to stack, and stacking keeps every control one glance away, so nothing there is tabbed.)*
 
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle, Play/Stop and the exact tempo entry, and quick navigation — AC-5.5.3, AC-15.1.17): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the brush line under it (AC-1.3.12) → the workbench tab bar (mobile only, AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6), fill cycling (US-2.7) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
-  - **And** in Percussive mode the Melody group, its tab and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed; likewise the tab bar is absent at 768px and wider, the family members area is absent below 768px, and absent at any width when the Pattern has no family members
+  - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle, Play/Stop and the exact tempo entry, and quick navigation — AC-5.5.3, AC-15.1.17): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the brush line under it (AC-1.3.12) → the workbench tab bar (mobile only, AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
+  - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the tab bar is absent at 768px and wider, the family members area is absent below 768px, and absent at any width when the Pattern has no family members
+  - *(Revised 2026-09-13 with US-2.8 and US-18.1 (T282, T284): fill cycling returns to the Melody group with Keep beside it, and a Compose group follows Practice. See AC-2.7.1 and AC-15.1.7 for the reasoning.)*
   - *(Rewritten 2026-09-13 with T272, superseding the ordered list the revisions below describe; they are kept as the record of how the previous order was reached. The 2026-09-13 usability review found the panel organised by what kind of control a thing was — a "Playback settings" accordion, an "Edit" accordion holding two controls, an "Export & actions" accordion holding three structure edits beside Delete — rather than by what the musician is doing. The groups are now named for the job: Melody, Rhythm, Practice. Play and the tempo entry leave the ordered list for the pinned bar, where Prev/Next already went for the same reason (AC-5.5.3): they are reached on every Pattern, and on a four-bar Pattern Play sat below the fold of a phone. Melody precedes Rhythm because, when it is present at all, it is what the musician switched into Melodic to reach; Rhythm precedes Practice because the palettes are aimed at while the grid is edited and the practice settings are set once per run.)*
   - *(Revised 2026-08-17. The pitch strip is new, and sits immediately below the grid because it is the palette the grid is stamped from — a Slot's note band is aimed at while reading the strip, so putting anything between them, or putting the strip in a collapsed section, defeats it (AC-2.2.13). The cost is that the play controls move down by one strip row in Melodic mode; the transport keeps its position in Percussive, which is most of the library.)*
   - *(Revised again 2026-08-17: the pitch strip now sits **below** the play controls rather than above them. The clause above traded the transport's position away to keep the strip adjacent to the grid; used daily, that trade was the wrong way round — the transport is reached on every Pattern in either Mode, the strip only while composing a melody, and displacing Play on every Melodic Pattern cost more than the strip's adjacency won. The strip is still never inside a collapsed section, so AC-2.2.13 is untouched: what changed is which of two always-visible sections comes first.)*
@@ -2960,17 +2962,18 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 **Acceptance Scenarios**:
 
-- **AC-2.7.1** — Cycle mode is a playback setting in the Practice group
+- **AC-2.7.1** — Cycle mode is a playback setting in the Melody group
   - **Given** a Melodic Pattern with a progression
-  - **When** the Practicing Musician looks at the Practice group
-  - **Then** a Cycle toggle and a repeat count sit there with the other playback settings, and turning the toggle on puts a fill in force without changing the Pattern
+  - **When** the Practicing Musician looks at the Melody group
+  - **Then** a Cycle toggle and a repeat count sit there beside the Arpeggio picker whose catalogue they step through, and turning the toggle on puts a fill in force without changing the Pattern
   - **Cases**:
-    - **AC-2.7.1/1** — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the Practice group, and are absent, like the Arpeggio picker, on a Pattern without a progression
+    - **AC-2.7.1/1** — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the Melody group beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression
     - **AC-2.7.1/2** — The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load
     - **AC-2.7.1/3** — Turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it
     - **AC-2.7.1/4** — The fill in force is a playback setting: the Pattern's own arpeggio is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling
     - **AC-2.7.1/5** — Turning cycle mode off returns the Pattern's own arpeggio, from the next pass while playing and at once otherwise
   - *(Revised 2026-09-13 with T272. The toggle sat beside the Arpeggio picker because it steps through that picker's catalogue; but it is a practice setting — it changes nothing on the Pattern (/4) — and the usability review found it the one playback control outside the playback group. It now sits with tempo, swing and counting.)*
+  - *(Revised again 2026-09-13 with US-2.8 (T282): back beside the Arpeggio picker. The maintainer, using it, found cycling is not practice but audition — "the melody tab is almost like where you're experimenting with chord progressions and fills" — and a Keep control (AC-2.8.1) now sits with it there; a fill is kept while it is in force, so the control that puts it in force and the control that keeps it belong together. Every other clause of this criterion is unchanged: it is still a playback setting that writes nothing into the Pattern.)*
 
 - **AC-2.7.2** — Playback steps through the catalogue
   - **Given** cycle mode on and a Pattern playing
@@ -3046,6 +3049,110 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
+---
+
+### User Story 42 - Keep the fills worth composing with
+
+*Traceability: `US-2.8` — Keep the fills worth composing with*
+
+**As** the Composer, **I want** to mark a fill as kept while I audition fills over a progression, **so that** the ones I liked are waiting for me when I compose, without my having to remember which of twenty-three they were.
+
+*(Added 2026-09-13 at the maintainer's request: "if I'm gonna be listening to a bunch of fill patterns, I wanna be able to tag them somehow as I listen to them. It's like, oh, I like these ones. And then when I compose, I figure out how I wanna chain them together." Decisions taken with the maintainer the same day: judging and sequencing are different states of mind, so they are different groups — the Melody group is where fills are auditioned and kept, and cycle mode (US-2.7) moves there from Practice for that reason; a Keep is a mark on the Pattern in the Musician's own records, beside its Rating and added Tags, never Pattern content; it is implicitly per progression, since the progression is the Pattern's — a fill that works over I–IV–V–I may not over I–♭VII–IV, and re-auditioning after a progression change is right.)*
+
+**Independent Test**: On a Melodic Pattern with a progression, turn cycle mode on, press Keep on two fills as they come round, and assert that both show as kept in the Arpeggio picker, that the marks survive a reload and are absent on a different Pattern, that the Pattern's own data and its auto-save are untouched, and that a shipped Pattern was not prompted for a name.
+
+**Acceptance Scenarios**:
+
+- **AC-2.8.1** — Keep marks a fill for this Pattern
+  - **Given** a Melodic Pattern with a progression
+  - **When** the Composer presses Keep with a fill in force — the one cycling has reached, or the one chosen in the Arpeggio picker
+  - **Then** that fill is kept for this Pattern: marked in the picker, remembered across loads, and written into none of the Pattern's own data
+  - **Cases**:
+    - **AC-2.8.1/1** — A Keep control sits in the Melody group beside the Arpeggio picker and the cycle controls, names the fill it would keep, and is absent, like the picker, on a Pattern without a progression or with the arpeggio at None
+    - **AC-2.8.1/2** — Pressing Keep on a kept fill unkeeps it, and the control reads which it will do
+    - **AC-2.8.1/3** — The Arpeggio picker marks every kept fill, so the shortlist is visible without cycling
+    - **AC-2.8.1/4** — Keeps are per Pattern, shipped and custom alike, and survive a reload; a different Pattern shows its own keeps and none of this one's
+    - **AC-2.8.1/5** — A Keep is not Pattern content: the Pattern's own arpeggio is unchanged, nothing auto-saves, a shipped Pattern is never prompted for a name, and no export carries it
+    - **AC-2.8.1/6** — Nothing clears a Keep but the Composer: cycling on, changing the Key, editing the grid, changing the progression and stopping playback all leave every Keep as it was
+
+- **AC-2.8.2** — Keeping does not interrupt the audition
+  - **Given** cycle mode on and the Pattern playing
+  - **When** the Composer presses Keep
+  - **Then** the fill in force is kept and playback and the cycle continue exactly as they were
+  - **Cases**:
+    - **AC-2.8.2/1** — Keep is reachable while playing, and pressing it stops, restarts and reorders nothing — the loop counter keeps counting and the cycle keeps its place
+    - **AC-2.8.2/2** — The Melody group says how many fills are kept for this Pattern, so the Composer knows when there is something to compose with
+
+---
+
+### User Story 43 - Compose a Section from kept fills
+
+*Traceability: `US-18.1` — Compose a Section from kept fills*
+
+**As** the Composer, **I want** to chain the fills I kept into an ordered Section — each for a number of cycles — over the Pattern's progression, play it end to end, save it under a name and export it as one MIDI file, **so that** a rhythm I like and a progression I like become the bed of a song rather than a loop I listen to.
+
+*(Added 2026-09-13 at the maintainer's request: "one fill may run for, let's say, four bars, and then you tweak it to using a different fill on top of the same progression … I wanna be able to chain the fills into one long set, and I wanna retain that chain and … export it." Decisions taken with the maintainer the same day: the first deliverable is a **Section** — one Pattern, one progression, a sequence of fills with repeat counts — not a multi-layer arrangement, which they do not want ("I would be building a polyphonic sounding layer for this entire tool. I don't think I wanna go there yet"). The nouns are **Song** and **Section**; "Arrangement" is not used, and the earlier "multi-section Arrangements" scope exclusion is narrowed accordingly (Assumptions). A repeat is one harmonic cycle, the unit AC-2.7.2/1 already defines. A Song records which Pattern each Section plays over from the first version, so that a later Section on a different progression — verse to chorus — is a change to what the Compose group offers, not to what a Song is; this version's Compose group keeps every Section on the Pattern that is open. The progression is set in the Melody group and shown, not edited, in Compose: one place to change it. Compose is a fourth workbench group rather than a mode inside Melody, because a mode is remembered state the musician has to find, and the 2026-09-13 usability review (T272) was about exactly that.)*
+
+**Independent Test**: With three fills kept on a Melodic Pattern under I–IV–V, add two of them to the Section at 2 and 1 repeats, press Play song, and assert that the first fill is in force for six passes and the second for three, that the switch happens at a pass boundary with no stop, that the list loops, that Save under a name stores the Song apart from the Pattern and it is offered again when the Pattern is next opened, that deleting the Pattern is refused naming the Song, and that Export Song MIDI writes nine passes in order while the Pattern's own MIDI export is unchanged.
+
+**Acceptance Scenarios**:
+
+- **AC-18.1.1** — The Compose group
+  - **Given** a Melodic Pattern with a progression
+  - **When** the Composer opens the Compose group
+  - **Then** it shows the Pattern's progression, the fills kept for this Pattern as a palette, and the Section being built
+  - **Cases**:
+    - **AC-18.1.1/1** — Compose is a fourth workbench group, after Practice, tabbed on mobile with the others, and present only on a Melodic Pattern with a progression
+    - **AC-18.1.1/2** — The progression is shown as the chord strip names it and is not editable here; the group says it is set in Melody
+    - **AC-18.1.1/3** — The palette lists the kept fills for this Pattern in catalogue order, and says so, naming Keep, when none are kept
+
+- **AC-18.1.2** — Building the Section
+  - **Given** the Compose group with kept fills
+  - **When** the Composer taps a fill in the palette
+  - **Then** it is appended to the Section as an entry with a repeat count
+  - **Cases**:
+    - **AC-18.1.2/1** — Tapping a palette fill appends an entry whose repeats are the cycle Repeats setting at that moment
+    - **AC-18.1.2/2** — Each entry's repeats can be set from 1 to 16 in place
+    - **AC-18.1.2/3** — An entry can be moved up, moved down and removed; the same fill may appear in the Section more than once
+    - **AC-18.1.2/4** — The Section is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty
+    - **AC-18.1.2/5** — Unkeeping a fill leaves every entry that uses it in the Section; the palette is a shortlist, not the Section's source of truth
+
+- **AC-18.1.3** — Playing the Section
+  - **Given** a Section with at least one entry
+  - **When** the Composer presses Play song
+  - **Then** the entries play in order, each for its repeats, and the Section loops
+  - **Cases**:
+    - **AC-18.1.3/1** — Each entry is in force for its repeats, one repeat being one harmonic cycle, and the next entry takes over from the very next pass with nothing stopped or restarted, the loop counter still counting
+    - **AC-18.1.3/2** — After the last entry the first is in force again; the Section loops until stopped
+    - **AC-18.1.3/3** — Every view follows the fill in force exactly as under cycle mode, and the Compose group marks the entry playing
+    - **AC-18.1.3/4** — Play song is unavailable while the Section is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has
+    - **AC-18.1.3/5** — Stop returns the Pattern's own arpeggio, exactly as stopping cycle mode does
+    - **AC-18.1.3/6** — Play song and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern
+    - **AC-18.1.3/7** — Editing the Section while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists
+
+- **AC-18.1.4** — Saving a Song
+  - **Given** a Section with at least one entry
+  - **When** the Composer presses Save and gives a name
+  - **Then** the Song is stored under that name, apart from the Pattern, and is offered again whenever the Pattern is open
+  - **Cases**:
+    - **AC-18.1.4/1** — Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Section
+    - **AC-18.1.4/2** — A saved Song survives a reload and is listed only on the Pattern it was composed over
+    - **AC-18.1.4/3** — A Song can be renamed and deleted from the Compose group, deletion asking first
+    - **AC-18.1.4/4** — Edits to a loaded Song's Section are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes
+    - **AC-18.1.4/5** — Deleting a Pattern that a Song is composed over is refused with a message naming the Song or Songs, until they are deleted
+    - **AC-18.1.4/6** — A Song is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission
+    - **AC-18.1.4/7** — Songs are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Song
+
+- **AC-18.1.5** — Exporting a Song as MIDI
+  - **Given** a Section with at least one entry
+  - **When** the Composer presses Export Song MIDI
+  - **Then** one MIDI file holds the Section end to end, once through
+  - **Cases**:
+    - **AC-18.1.5/1** — The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Section once through, not looped
+    - **AC-18.1.5/2** — The file is named after the Song when it has been saved, and after the Pattern otherwise
+    - **AC-18.1.5/3** — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section
+    - **AC-18.1.5/4** — Export Song MIDI is unavailable while the Section is empty
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -3117,6 +3224,14 @@ specified in the Acceptance Scenarios above.
   or Pitch. A discovery relationship only — members are fully independent.
 - **Local Metadata**: App-local bookkeeping about a Pattern, stored separately from it and never
   included in any portable payload.
+- **Keep**: The Composer's mark that a fill is worth composing with over a Pattern. Lives with the
+  Pattern's Rating and added Tags in the Composer's own records, never in the Pattern, and is
+  cleared only by the Composer.
+- **Song**: A named, ordered sequence of Sections the Composer has saved. Stored apart from
+  Patterns; a Pattern a Song plays over cannot be deleted while the Song exists.
+- **Section**: One run of a Song: which Pattern it plays over, an ordered list of entries, each a
+  fill and the number of harmonic cycles it is in force for. This version's Compose group keeps every
+  Section of a Song on the one Pattern that is open.
 
 ## Success Criteria *(mandatory)*
 
@@ -3166,5 +3281,10 @@ specified in the Acceptance Scenarios above.
   mechanically from the predecessor application; their musical content is assumed correct as
   authored and is not re-evaluated here. That figure is a record of the conversion, not a size the
   library holds to — it grows by appending to `data/seed-patterns.json` (AC-16.1.1).
-- **Out of scope for this version**: multi-section Arrangements; a guided tutorial system; layering
-  two Patterns by merging their accents; and any form of export/import or cloud sync.
+- **Out of scope for this version**: multi-layer arrangements — two Patterns sounding at once, or a
+  Section whose entries play over different Patterns (US-18.1 stores which Pattern each Section plays
+  over so that this can come later without changing what a Song is); a guided tutorial system;
+  layering two Patterns by merging their accents; and any form of export/import or cloud sync beyond
+  MIDI. *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
+  single-layer Song of Sections over one Pattern, which is the maintainer's songwriting workflow, and
+  keeps the polyphonic case out.)*

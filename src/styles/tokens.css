@@ -1961,4 +1961,38 @@ body {
   border: 1px solid var(--line); border-radius: var(--radius);
 }
 .fill-cycle-unit { font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.keep-fill {
+  padding: 8px 14px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.keep-fill.on { border-color: var(--brand); color: var(--brand); }
+.keep-fill:disabled { opacity: 0.5; cursor: default; }
+.kept-count { font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.compose-group[hidden] { display: none; }
+.compose-group > * { padding: 4px 12px; }
+.compose-label { font: 600 12px/1.4 var(--font-ui); color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.compose-progression { margin: 0; font: 500 14px/1.5 var(--font-ui); color: var(--ink); }
+.compose-hint, .compose-empty, .compose-empty-palette, .compose-total { font: 500 12px/1.5 var(--font-ui); color: var(--ink-dim); margin: 4px 0; }
+.palette-row, .compose-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.palette-fill, .play-song, .song-save, .song-new, .song-export, .song-load, .song-rename, .song-delete, .entry-up, .entry-down, .entry-remove {
+  padding: 8px 12px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.play-song.on, .song-item.current .song-load { border-color: var(--brand); color: var(--brand); }
+button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-export:disabled, .entry-up:disabled, .entry-down:disabled { opacity: 0.5; cursor: default; }
+.compose-song-list, .compose-entries { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.compose-entries { list-style: decimal inside; }
+.song-item, .compose-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+.compose-entry.playing { border-color: var(--brand); }
+.entry-fill { font: 600 13px/1.4 var(--font-ui); color: var(--ink); min-width: 120px; }
+.entry-repeats { width: 56px; padding: 6px 8px; font: 600 13px/1 var(--font-ui); color: var(--ink); background: #1c1f2b; border: 1px solid var(--line); border-radius: var(--radius); }
+.entry-passes { font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.compose-section-head { display: flex; align-items: baseline; gap: 10px; }
+.compose-unsaved { font: 500 12px/1.4 var(--font-ui); color: var(--warn, #e0a030); }
 .score-fill { font: italic 500 13px/1.3 Georgia, 'Times New Roman', serif; }

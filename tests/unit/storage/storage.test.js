@@ -164,6 +164,21 @@ describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)
     expect(overlay.swing).toBeUndefined();
   });
 
+  it("AC-2.8.1/4 — Keeps are per Pattern, shipped and custom alike, and survive a reload; a different Pattern shows its own keeps and none of this one's: the store", async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    overlays.setKeptFills('s_8', ['root-fifth', 'alberti']);
+    overlays.setKeptFills('p_3', ['drone-root']);
+    expect(overlays.keptFillsFor('s_8')).toEqual(['root-fifth', 'alberti']);
+    expect(overlays.keptFillsFor('p_3')).toEqual(['drone-root']);
+    expect(overlays.keptFillsFor('s_9')).toEqual([]);
+    // Straight back out of the store, as a reload would read it.
+    expect(overlays.loadAll().s_8.keptFills).toEqual(['root-fifth', 'alberti']);
+    // Playback settings are untouched by a keep, and a keep by them.
+    overlays.setTempo('s_8', 120);
+    expect(overlays.keptFillsFor('s_8')).toEqual(['root-fifth', 'alberti']);
+    expect(overlays.applyPlaybackTo({ ...create('Shipped'), id: 's_8' }).keptFills).toBeUndefined();
+  });
+
   it('returns the Pattern as-is when nothing is remembered', async () => {
     const overlays = await import('../../../src/storage/overlays.js');
     const seed = { ...create('Shipped'), id: 's_3' };

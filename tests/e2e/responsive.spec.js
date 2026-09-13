@@ -107,7 +107,7 @@ test('AC-15.1.6 — loading a Pattern returns the main panel to its top', async 
 
 // --- AC-15.1.7: the workbench is tabbed on mobile and stacked open above it ---
 
-const GROUPS = ['melody', 'rhythm', 'practice'];
+const GROUPS = ['melody', 'rhythm', 'practice', 'compose'];
 const group = (page, name) => page.locator(`section[data-section="${name}"]`);
 const tab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`);
 
@@ -187,7 +187,7 @@ test('AC-15.1.7/3 — A Melodic Pattern opens on the Melody tab and a Percussive
   expect(await visibleGroups(page)).toEqual(['melody']);
 });
 
-test('AC-15.1.7/4 — Tapping a tab shows that group and hides the others, and the Melody tab is absent on a Percussive Pattern', async ({
+test('AC-15.1.7/4 — Tapping a tab shows that group and hides the others, and the Melody and Compose tabs are absent on a Percussive Pattern, Compose also on a Melodic one without a progression', async ({
   page,
 }) => {
   await page.setViewportSize(MOBILE);
@@ -196,6 +196,18 @@ test('AC-15.1.7/4 — Tapping a tab shows that group and hides the others, and t
   await page.locator('.library-toggle').click();
 
   await expect(tab(page, 'melody')).toBeHidden();
+  await expect(tab(page, 'compose')).toBeHidden();
+  // Melodic without a progression: Melody appears, Compose still does not;
+  // a progression brings Compose with it (AC-18.1.1/1).
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await expect(tab(page, 'melody')).toBeVisible();
+  await expect(tab(page, 'compose')).toBeHidden();
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await expect(tab(page, 'compose')).toBeVisible();
+  await tab(page, 'compose').click();
+  expect(await visibleGroups(page)).toEqual(['compose']);
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
+  await expect(tab(page, 'compose')).toBeHidden();
   await tab(page, 'practice').click();
   expect(await visibleGroups(page)).toEqual(['practice']);
   await expect(page.locator('.tempo-slider')).toBeVisible();
@@ -235,6 +247,7 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
     'SECTION[melody]',
     'SECTION[rhythm]',
     'SECTION[practice]',
+    'SECTION[compose]',
     'DETAILS[actions]',
     'SECTION[family]',
   ];

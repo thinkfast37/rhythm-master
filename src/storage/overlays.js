@@ -56,6 +56,15 @@ export function setAddedTags(patternId, addedTags) {
   return update(patternId, { addedTags });
 }
 
+/** Fills the Composer kept for a Pattern (AC-2.8.1): arpeggio ids, in the order kept. */
+export function keptFillsFor(patternId) {
+  return forPattern(patternId).keptFills ?? [];
+}
+
+export function setKeptFills(patternId, keptFills) {
+  return update(patternId, { keptFills });
+}
+
 /** Apply the rating overlay, returning a plain (unfrozen) copy the UI can read. */
 export function applyTo(pattern) {
   const overlay = forPattern(pattern.id);

@@ -1,3 +1,4 @@
+import { hasHarmony } from '../core/harmony.js';
 /**
  * Viewport behaviour: sidebar, library collapse, accordions, playback autoscroll.
  * US-15.1.
@@ -123,6 +124,7 @@ export const WORKBENCH_TABS = [
   ['melody', 'Melody'],
   ['rhythm', 'Rhythm'],
   ['practice', 'Practice'],
+  ['compose', 'Compose'],
 ];
 
 /**
@@ -133,6 +135,9 @@ export const WORKBENCH_TABS = [
  */
 export function workbenchTabFor(pattern, chosen) {
   const melodic = pattern.soundMode === 'melodic';
+  // Compose needs a progression as well as the Mode (AC-18.1.1/1).
+  const composable = melodic && hasHarmony(pattern);
+  if (chosen === 'compose') return composable ? chosen : melodic ? 'melody' : 'rhythm';
   if (chosen && (chosen !== 'melody' || melodic)) return chosen;
   return melodic ? 'melody' : 'rhythm';
 }
@@ -143,9 +148,10 @@ export function workbenchTabFor(pattern, chosen) {
  * group it opens (AC-2.2.13).
  */
 export function applyWorkbench(tabsEl, groups, active) {
-  const melodic = !groups.find((g) => g.dataset.tab === 'melody')?.hidden;
   for (const tab of tabsEl.querySelectorAll('[data-tab]')) {
-    tab.hidden = tab.dataset.tab === 'melody' && !melodic;
+    // A tab is absent exactly when its group is (AC-15.1.7/4): Melody and
+    // Compose on a Percussive Pattern, Compose on one without a progression.
+    tab.hidden = Boolean(groups.find((g) => g.dataset.tab === tab.dataset.tab)?.hidden);
     tab.setAttribute('aria-selected', String(tab.dataset.tab === active));
   }
   for (const group of groups) group.dataset.tabActive = String(group.dataset.tab === active);

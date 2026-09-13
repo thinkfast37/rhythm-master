@@ -11,6 +11,7 @@
 import { buildTimeline, loopDurationSeconds } from '../core/timeline.js';
 import { beatDurationSeconds, beatCount } from '../core/meter.js';
 import { cyclePasses } from '../core/harmony.js';
+import { totalPasses, entryAt, playingAt } from '../core/song.js';
 
 export const TICKS_PER_QUARTER = 480;
 
@@ -95,21 +96,80 @@ export function buildMidi(pattern) {
     timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80, note & 0x7f, 0] });
   }
 
-  timed.sort((a, b) => a.tick - b.tick);
+  // End of track, one cycle after the start so the file's duration is the
+  // Pattern's, not merely the last note's.
+  return assemble(timed, toTicks(passes * passSeconds));
+}
 
+/**
+ * Delta-encode timed events into one Format-0 file, closing the track at
+ * `endTick` or the last event, whichever is later.
+ */
+function assemble(timed, endTick) {
+  timed.sort((a, b) => a.tick - b.tick);
   const track = [];
   let previous = 0;
   for (const item of timed) {
     track.push(...variableLength(item.tick - previous), ...item.bytes);
     previous = item.tick;
   }
-  // End of track, one cycle after the start so the file's duration is the
-  // Pattern's, not merely the last note's.
-  const endTick = Math.max(previous, toTicks(passes * passSeconds));
-  track.push(...variableLength(endTick - previous), 0xff, 0x2f, 0x00);
-
+  const end = Math.max(previous, endTick);
+  track.push(...variableLength(end - previous), 0xff, 0x2f, 0x00);
   const header = chunk('MThd', [0, 0, 0, 1, (TICKS_PER_QUARTER >> 8) & 0xff, TICKS_PER_QUARTER & 0xff]);
   return new Uint8Array([...header, ...chunk('MTrk', track)]);
+}
+
+const tempoMeta = (tempo) => {
+  const usPerQuarter = Math.round((60 / tempo) * 1e6);
+  return [0xff, 0x51, 0x03, (usPerQuarter >> 16) & 0xff, (usPerQuarter >> 8) & 0xff, usPerQuarter & 0xff];
+};
+
+/**
+ * Build a .mid for a Song (AC-18.1.5/1): every entry's passes in order, each
+ * entry for its repeats with its fill in force, once through and not looped.
+ * Each pass is the same `buildTimeline` playback sounds for it, offset by the
+ * passes before it, so the file cannot disagree with what the Section plays.
+ * The Pattern's own export is untouched (AC-18.1.5/3).
+ *
+ * @param {object} song
+ * @param {(id: string) => object|null} patternById
+ * @returns {Uint8Array}
+ */
+export function buildSongMidi(song, patternById) {
+  const passes = totalPasses(song, patternById);
+  const timed = [];
+  let startTick = 0;
+  let previousTempo = null;
+  for (let loop = 0; loop < passes; loop++) {
+    const at = entryAt(song, patternById, loop);
+    const pattern = playingAt(song, patternById, loop);
+    const secondsPerQuarter = 60 / pattern.tempo;
+    const toTicks = (seconds) => startTick + Math.round((seconds / secondsPerQuarter) * TICKS_PER_QUARTER);
+
+    if (pattern.tempo !== previousTempo) {
+      timed.push({ tick: startTick, bytes: tempoMeta(pattern.tempo) });
+      previousTempo = pattern.tempo;
+    }
+
+    let measureStart = 0;
+    for (const measure of pattern.measures) {
+      const [numerator, denominator] = measure.timeSignature.split('/').map(Number);
+      timed.push({ tick: toTicks(measureStart), bytes: [0xff, 0x58, 0x04, numerator, Math.log2(denominator), 24, 8] });
+      measureStart += beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo);
+    }
+
+    // The pass within the entry's own harmonic cycles: the progression restarts
+    // at its first chord when an entry takes over.
+    for (const event of buildTimeline(pattern, at.passInEntry)) {
+      const note = event.pitch ? event.pitch.midiNote : PERCUSSIVE_NOTE;
+      const velocity = VELOCITY[event.accent] ?? VELOCITY[1];
+      const onTick = toTicks(event.timeSeconds);
+      timed.push({ tick: onTick, bytes: [0x90, note & 0x7f, velocity] });
+      timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80, note & 0x7f, 0] });
+    }
+    startTick = toTicks(loopDurationSeconds(pattern));
+  }
+  return assemble(timed, startTick);
 }
 
 /** A filename-safe version of the Pattern's name. */
@@ -118,14 +178,31 @@ export function midiFilename(pattern) {
   return `${base || 'pattern'}.mid`;
 }
 
-export function downloadMidi(pattern) {
-  const blob = new Blob([buildMidi(pattern)], { type: 'audio/midi' });
+/**
+ * The Song's file is named after the Song once it has been saved, and after
+ * the Pattern otherwise (AC-18.1.5/2).
+ */
+export function songMidiFilename(song, pattern) {
+  const named = song?.id && typeof song.name === 'string' && song.name.trim() !== '';
+  return midiFilename(named ? song : pattern);
+}
+
+function download(bytes, filename) {
+  const blob = new Blob([bytes], { type: 'audio/midi' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = midiFilename(pattern);
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+export function downloadMidi(pattern) {
+  download(buildMidi(pattern), midiFilename(pattern));
+}
+
+export function downloadSongMidi(song, patternById, pattern = patternById(song.sections[0]?.patternId)) {
+  download(buildSongMidi(song, patternById), songMidiFilename(song, pattern));
 }

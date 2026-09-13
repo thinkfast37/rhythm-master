@@ -47,7 +47,7 @@ export const TEMPO_PRESETS = [57, 67, 80, 90, 104, 120, 150, 180, 200, 220, 240,
  */
 export const SWING_PRESETS = [0, 15, 25, 33, 50];
 
-function el(tag, className, props = {}) {
+export function el(tag, className, props = {}) {
   const node = document.createElement(tag);
   if (className) node.className = className;
   Object.assign(node, props);
@@ -188,7 +188,7 @@ export function heldControl() {
   return pointerHeld?.isConnected ? pointerHeld : null;
 }
 
-function rebuild(root, build) {
+export function rebuild(root, build) {
   const focused = document.activeElement;
   const inside = focused && focused !== root && root.contains(focused);
   const held = heldControl();
@@ -423,7 +423,7 @@ export function renderPlayControls(root, pattern, state, handlers) {
 }
 
 /** A group's title: read on the stacked layout, hidden where a tab names it. */
-function groupTitle(text) {
+export function groupTitle(text) {
   return el('h2', 'group-title', { textContent: text });
 }
 
@@ -444,6 +444,9 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
     const harmony = el('div', 'harmony');
     renderHarmonyInto(harmony, pattern, state, handlers);
     fresh.appendChild(harmony);
+    // Cycling and Keep sit with the picker whose catalogue they step through:
+    // auditioning fills is melody work, not practice (AC-2.7.1, AC-2.8.1).
+    if (hasHarmony(pattern)) fresh.appendChild(renderFillCycle(pattern, state, handlers));
   });
 }
 
@@ -459,8 +462,7 @@ export function renderRhythmGroup(root, pattern, state, handlers) {
 
 /**
  * The Practice group: everything set for a run, and nothing that edits the
- * Pattern. Fill cycling is here rather than beside the Arpeggio picker whose
- * catalogue it steps through, because it is a playback setting (AC-2.7.1).
+ * Pattern.
  */
 export function renderPracticeGroup(root, pattern, state, handlers) {
   root.className = 'controls workbench-group practice-group';
@@ -470,9 +472,6 @@ export function renderPracticeGroup(root, pattern, state, handlers) {
     fresh.appendChild(renderTempo(pattern, handlers));
     fresh.appendChild(renderSwing(pattern, handlers));
     fresh.appendChild(renderCounting(pattern, state, handlers));
-    if (pattern.soundMode === 'melodic' && hasHarmony(pattern)) {
-      fresh.appendChild(renderFillCycle(state, handlers));
-    }
   });
 }
 
@@ -811,12 +810,18 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   arpeggio.setAttribute('aria-label', 'Arpeggio');
   arpeggio.appendChild(el('option', null, { value: 'none', textContent: 'None (as stamped)' }));
   let arpeggioGroup = null;
+  const kept = state.keptFills ?? [];
   for (const a of ARPEGGIOS) {
     if (arpeggioGroup?.label !== a.group) {
       arpeggioGroup = el('optgroup', null, { label: a.group });
       arpeggio.appendChild(arpeggioGroup);
     }
-    arpeggioGroup.appendChild(el('option', null, { value: a.id, textContent: a.label }));
+    // A kept fill is marked in the picker, so the shortlist reads without
+    // cycling (AC-2.8.1/3).
+    const isKept = kept.includes(a.id);
+    const option = el('option', null, { value: a.id, textContent: isKept ? `★ ${a.label}` : a.label });
+    if (isKept) option.dataset.kept = 'true';
+    arpeggioGroup.appendChild(option);
   }
   arpeggio.value = pattern.harmony.arpeggio ?? 'none';
   arpeggio.addEventListener('change', (e) => handlers.onArpeggio(e.target.value));
@@ -1083,7 +1088,7 @@ function renderStructure(pattern, handlers) {
 }
 
 /** `labelled`, for a row of buttons — a `<label>` may govern only one control. */
-function labelledGroup(labelText, row) {
+export function labelledGroup(labelText, row) {
   const wrap = el('div', 'control');
   wrap.appendChild(el('span', 'control-label', { textContent: labelText }));
   wrap.appendChild(row);
@@ -1182,7 +1187,7 @@ export function renderBrushHint(root, pattern, state) {
  * force arrives on `pattern` and the Arpeggio picker shows it (AC-2.7.2/4);
  * the Pattern's own arpeggio is untouched (AC-2.7.1/4).
  */
-function renderFillCycle(state, handlers) {
+function renderFillCycle(pattern, state, handlers) {
   const cycleRow = el('div', 'control-group fill-cycle-row');
   const cycling = Boolean(state.fillCycle?.on);
   const cycle = el('button', `fill-cycle${cycling ? ' on' : ''}`, {
@@ -1206,6 +1211,35 @@ function renderFillCycle(state, handlers) {
   repeats.addEventListener('change', (e) => handlers.onFillCycleRepeats(Number(e.target.value)));
   cycleRow.appendChild(labelled('Repeats', repeats));
   cycleRow.appendChild(el('span', 'fill-cycle-unit', { textContent: 'harmonic cycles each' }));
+
+  // Keep (AC-2.8.1): a mark on the fill in force — the one cycling has reached
+  // or the picker chose — in the Composer's own records, never the Pattern's.
+  // Absent at None, like the picker's own hint: there is nothing to keep.
+  const kept = state.keptFills ?? [];
+  const inForce = ARPEGGIOS.find((a) => a.id === pattern.harmony?.arpeggio);
+  if (inForce) {
+    const isKept = kept.includes(inForce.id);
+    const keep = el('button', `keep-fill${isKept ? ' on' : ''}`, {
+      type: 'button',
+      textContent: `${isKept ? 'Unkeep' : 'Keep'} ${inForce.label}`,
+      title: isKept
+        ? 'Take this fill off the shortlist the Compose group offers'
+        : 'Put this fill on the shortlist the Compose group offers',
+    });
+    keep.dataset.action = 'keep-fill';
+    keep.dataset.fill = inForce.id;
+    keep.setAttribute('aria-pressed', String(isKept));
+    if (!pattern.id) {
+      keep.disabled = true;
+      keep.title = 'Save the Pattern first; a keep is remembered against it';
+    }
+    keep.addEventListener('click', () => handlers.onKeepFill(inForce.id));
+    cycleRow.appendChild(keep);
+  }
+  const count = el('span', 'kept-count', {
+    textContent: kept.length === 0 ? 'Nothing kept yet' : `${kept.length} kept`,
+  });
+  cycleRow.appendChild(count);
   return labelledGroup('Fills', cycleRow);
 }
 
