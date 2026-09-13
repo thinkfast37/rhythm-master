@@ -590,7 +590,7 @@ test('AC-15.1.16/1 — The control being operated keeps focus across the update 
   await expect(percussive).toBeFocused();
 });
 
-test('AC-15.1.16/2 — Touching the main panel during playback stands the autoscroll down for the rest of that run, and the next Start restores it', async ({
+test('AC-15.1.16/2 — Touching or scrolling the main panel during playback stands the autoscroll down for the rest of that run, and the next Start restores it', async ({
   page,
 }) => {
   await page.setViewportSize(MOBILE);
@@ -645,6 +645,62 @@ test('AC-15.1.16/2 — Touching the main panel during playback stands the autosc
     null,
     { timeout: 10000 }
   );
+});
+
+test('AC-15.1.16/9 — A scroll of the main panel the app did not itself perform stands the autoscroll down, whatever gesture produced it and whether or not it raised a pointer or keyboard event', async ({
+  page,
+}) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+  await loadTallPattern(page);
+  await page.locator('[data-action="play"]').click();
+
+  /*
+   * Wait until the panel is genuinely at rest, rather than for a fixed time:
+   * the autoscroll scrolls smoothly, and a smooth scroll keeps animating toward
+   * its target after the call that started it. A real gesture cancels one — an
+   * assignment to `scrollTop` cannot, so a scroll set mid-animation is simply
+   * overridden by the animation finishing, which is a fact about this test's
+   * instrument and not about the criterion. Under parallel load the animation
+   * landed after the fixed wait and the test failed on it.
+   */
+  const panelAtRest = async () => {
+    for (let i = 0; i < 40; i++) {
+      const before = await page.locator('.main-panel').evaluate((el) => el.scrollTop);
+      await page.waitForTimeout(250);
+      const after = await page.locator('.main-panel').evaluate((el) => el.scrollTop);
+      if (before === after) return after;
+    }
+    throw new Error('the panel never stopped scrolling');
+  };
+  await panelAtRest();
+
+  /*
+   * Scroll with no input event of any kind — no pointer, no touch, no wheel,
+   * no key. This is the case /2's listeners could not see: a finger drag raises
+   * `pointerdown` before it scrolls, but momentum carrying on after the finger
+   * lifts does not, and nor does whatever iOS does in a Home-Screen app, where
+   * this was reported still standing. Setting `scrollTop` is the same thing
+   * from the page's point of view: the view moved and no input said so.
+   */
+  const panel = page.locator('.main-panel');
+  // Set and read in one evaluation, so `parked` is where the musician put the
+  // view and never where the app afterwards dragged it back to. Reading it in a
+  // second step made this test pass against the unfixed code: the autoscroll
+  // yanked the view, the panel came to rest there, and the test then asserted
+  // only that it stayed yanked.
+  const parked = await panel.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+    return el.scrollTop;
+  });
+  expect(parked).toBeGreaterThan(0);
+
+  // Four seconds of playback, and the view stays exactly where it was put.
+  for (let i = 0; i < 8; i++) {
+    await page.waitForTimeout(500);
+    expect(await panel.evaluate((el) => el.scrollTop), `offset held at ${(i + 1) * 500}ms`).toBe(parked);
+  }
 });
 
 test('AC-15.1.16/3 — A control keeps its place on screen when an update changes the height of the content above it', async ({
