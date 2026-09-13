@@ -188,6 +188,53 @@ export function heldControl() {
   return pointerHeld?.isConnected ? pointerHeld : null;
 }
 
+/*
+ * Entries typed into but not yet committed (AC-15.1.16/8).
+ *
+ * A number or text entry commits on `change` — on blur, or on Enter. Until
+ * then the digits live only in the element, and the keep-alive below would
+ * write the render's own value straight over them: playback renders on every
+ * sounding event, so a count typed into Cycle fills' Repeats box was reverted
+ * to the stored one within a fraction of a second and never reached the
+ * setting. Tracked at the document, like the pointer above, so every panel is
+ * covered by one listener and a control needs no opt-in.
+ *
+ * Only typed entries qualify. A range, checkbox or select commits on the spot,
+ * and each is written back by design — a slider marked dirty until it lost
+ * focus would stop following the state it had just changed.
+ */
+const TYPED_INPUT_TYPES = new Set(['number', 'text', 'search', 'tel', 'email', 'url', 'password']);
+const typing = new WeakSet();
+
+/** Whether a control holds typing that no `change` has committed yet. */
+function isTyping(control) {
+  return typing.has(control);
+}
+
+function typedEntry(target) {
+  if (!(target instanceof Element)) return null;
+  if (target.tagName === 'TEXTAREA') return target;
+  if (target.tagName !== 'INPUT') return null;
+  return TYPED_INPUT_TYPES.has(target.type) ? target : null;
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('input', (event) => {
+    const entry = typedEntry(event.target);
+    if (entry) typing.add(entry);
+  }, true);
+  // Capture, so the entry is committed before its own `change` listener runs
+  // and the render that listener causes writes the value back as usual — which
+  // is what returns a name field cleared to empty to its last valid name
+  // (AC-7.1.1).
+  for (const type of ['change', 'focusout']) {
+    document.addEventListener(type, (event) => {
+      const entry = typedEntry(event.target);
+      if (entry) typing.delete(entry);
+    }, true);
+  }
+}
+
 export function rebuild(root, build) {
   const focused = document.activeElement;
   const inside = focused && focused !== root && root.contains(focused);
@@ -306,7 +353,9 @@ function patchChildren(oldParent, newParent, active) {
       // Assigned only when they differ, for the same reason: writing a
       // select's own value back onto it is a change to the browser as far as an
       // open popup is concerned (AC-15.1.16/7).
-      if (value !== undefined && o.value !== value) o.value = value;
+      // Not over uncommitted typing (AC-15.1.16/8): what the musician has
+      // half-entered outranks what the last committed state would render.
+      if (value !== undefined && o.value !== value && !isTyping(o)) o.value = value;
       if ('checked' in o && o.checked !== n.checked) o.checked = n.checked;
       const disabled = n.disabled ?? false;
       if (o.disabled !== disabled) o.disabled = disabled;
