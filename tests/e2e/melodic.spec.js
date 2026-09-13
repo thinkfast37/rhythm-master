@@ -1361,3 +1361,144 @@ test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pi
   await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.key-picker')).toHaveCount(0);
 });
+
+/* --- the Register (US-2.9) ------------------------------------------------- */
+
+test('AC-2.9.1/1 — The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal', async ({ page }) => {
+  await melodicBlank(page);
+  const register = page.locator('.register-picker');
+  await expect(register).toBeVisible();
+
+  // On the strip, with the Key and the scale.
+  const onStrip = await page.evaluate(() =>
+    Boolean(document.querySelector('.pitch-strip .register-picker')) &&
+    Boolean(document.querySelector('.pitch-strip .key-picker')) &&
+    Boolean(document.querySelector('.pitch-strip .scale-picker'))
+  );
+  expect(onStrip).toBe(true);
+
+  const labels = await register.locator('option').allTextContents();
+  expect(labels.map((l) => l.split(' (')[0])).toEqual(['Bass', 'Low', 'Normal', 'High', 'Lead']);
+  await expect(register).toHaveValue('0');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.register)).toBeUndefined();
+});
+
+test('AC-2.9.1/2 — The Register is Pattern content: it is saved with the Pattern and survives a reload', async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+  await page.locator('.register-picker').selectOption('-2');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.register)).toBe(-2);
+
+  const id = await page.evaluate(() => window.__rm.getState().pattern.id);
+  await page.reload();
+  const stored = await page.evaluate(
+    (pid) => window.__rm.patternStore.loadAll().find((p) => p.id === pid).register,
+    id
+  );
+  expect(stored).toBe(-2);
+});
+
+test('AC-2.9.1/3 — Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through', async ({ page }) => {
+  await page.goto('/');
+  const id = await page.evaluate(() => {
+    const shipped = window.__rm.seedStore.loadAll().find((p) => p.soundMode === 'melodic');
+    window.__rm.handlers.onOpen(shipped.id, false);
+    return shipped.id;
+  });
+
+  await page.locator('.register-picker').selectOption('-1');
+  await expect(page.locator('.dialog-input')).toBeVisible();
+
+  await page.locator('.dialog-button:not(.primary)', { hasText: 'Cancel' }).click();
+  const after = await page.evaluate(
+    (pid) => ({
+      register: window.__rm.seedStore.loadAll().find((p) => p.id === pid).register,
+      isOwned: window.__rm.getState().isOwned,
+    }),
+    id
+  );
+  expect(after.register).toBeUndefined();
+  expect(after.isOwned).toBe(false);
+});
+
+test('AC-2.9.1/4 — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2’s treatment of Key)', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await expect(page.locator('.register-picker')).toHaveCount(0);
+
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.locator('.register-picker').selectOption('1');
+  await page.locator('.sound-mode [data-mode="percussive"]').click();
+  await expect(page.locator('.register-picker')).toHaveCount(0);
+  // And the field goes with the control, as the Key does.
+  expect(await page.evaluate(() => 'register' in window.__rm.getState().pattern)).toBe(false);
+});
+
+test('AC-2.9.3/1 — A note band names the note the Slot sounds at the current Register', async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+  const band = slotAt(page, 0, 0).locator('.slot-pitch');
+  await expect(band).toHaveAttribute('data-note-name', 'C4');
+
+  await page.locator('.register-picker').selectOption('-2');
+  await expect(band).toHaveAttribute('data-note-name', 'C2');
+  await expect(band).toHaveAttribute('data-octave', '-2');
+
+  await page.locator('.register-picker').selectOption('0');
+  await expect(band).toHaveAttribute('data-note-name', 'C4');
+});
+
+test('AC-2.9.4/1 — Stepping the octave changes no note already on the grid, and no note that sounds', async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+  await accentZone(page, 1, 0).click();
+
+  const before = await page.evaluate(() => ({
+    measures: JSON.stringify(window.__rm.getState().pattern.measures),
+    notes: window.__rmTimeline.buildTimeline(window.__rm.getState().pattern).filter((e) => e.pitch).map((e) => e.pitch.midiNote),
+  }));
+
+  await page.locator('[data-action="octave-down"]').click();
+  await expect(page.locator('.octave-readout')).toHaveAttribute('data-octave', '3');
+
+  const after = await page.evaluate(() => ({
+    measures: JSON.stringify(window.__rm.getState().pattern.measures),
+    notes: window.__rmTimeline.buildTimeline(window.__rm.getState().pattern).filter((e) => e.pitch).map((e) => e.pitch.midiNote),
+  }));
+  expect(after.measures).toBe(before.measures);
+  expect(after.notes).toEqual(before.notes);
+});
+
+test('AC-2.9.4/2 — Changing the Register moves every sounding note without the Composer stamping a Slot', async ({ page }) => {
+  await melodicBlank(page);
+  await accentZone(page, 0, 0).click();
+  await accentZone(page, 1, 0).click();
+
+  const before = await page.evaluate(() => ({
+    measures: JSON.stringify(window.__rm.getState().pattern.measures),
+    notes: window.__rmTimeline.buildTimeline(window.__rm.getState().pattern).filter((e) => e.pitch).map((e) => e.pitch.midiNote),
+  }));
+
+  await page.locator('.register-picker').selectOption('-1');
+
+  const after = await page.evaluate(() => ({
+    measures: JSON.stringify(window.__rm.getState().pattern.measures),
+    notes: window.__rmTimeline.buildTimeline(window.__rm.getState().pattern).filter((e) => e.pitch).map((e) => e.pitch.midiNote),
+  }));
+  expect(after.notes).toEqual(before.notes.map((n) => n - 12));
+  expect(after.measures).toBe(before.measures);
+});
+
+test('AC-2.2.19/4 — The Key picker carries a visible label of its own reading Key, and the strip’s Note label names the degree chips it sits with — neither picker is left to be identified by the label of the other', async ({ page }) => {
+  await melodicBlank(page);
+  const labels = page.locator('.pitch-strip .pitch-strip-label');
+  await expect(labels.filter({ hasText: /^Key$/ })).toHaveCount(1);
+  await expect(labels.filter({ hasText: /^Note$/ })).toHaveCount(1);
+
+  // The Key label is the one immediately before the Key picker.
+  const precedes = await page.evaluate(() => {
+    const picker = document.querySelector('.pitch-strip .key-picker');
+    return picker.previousElementSibling?.textContent;
+  });
+  expect(precedes).toBe('Key');
+});

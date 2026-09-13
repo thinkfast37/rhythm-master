@@ -88,6 +88,14 @@ for (const p of raw.patterns) {
   if (melodic !== ('scale' in p)) fail(name, 'scale must be present iff soundMode is melodic (AC-2.5.4/4)');
   if (melodic && !SCALES.includes(p.scale)) fail(name, `scale "${p.scale}" unsupported (data-model §7 rule 13)`);
 
+  // The Register, where present, only on a Melodic Pattern (data-model §7 rule 19).
+  if ('register' in p) {
+    if (!melodic) fail(name, 'register on a percussive Pattern (data-model §7 rule 19)');
+    else if (!Number.isInteger(p.register) || p.register < -2 || p.register > 2) {
+      fail(name, `register ${p.register} outside −2–2 (data-model §7 rule 19)`);
+    }
+  }
+
   // A progression, where present, only on a Melodic Pattern (data-model §7 rule 14).
   const harmonic = Boolean(p.harmony?.chords?.length);
   if ('harmony' in p) {

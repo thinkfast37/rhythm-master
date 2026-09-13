@@ -91,6 +91,19 @@ describe('export/midi', () => {
     expect(notes).toContain(expected);
   });
 
+  it('AC-2.9.2/5 — The MIDI export of a Pattern carries its notes at the Register, since it consumes the one timeline playback does (SC-003)', () => {
+    let p = { ...create('Tune'), soundMode: 'melodic', key: 'C' };
+    p = withNote(p, 0, 0);
+    p = setPitch(p, 0, 0, 0, { degree: '1', octaveOffset: 0 });
+    const bass = { ...p, register: -2 };
+
+    expect(noteOns(buildMidi(p)).map((e) => e.data[0])).toEqual([60]);
+    expect(noteOns(buildMidi(bass)).map((e) => e.data[0])).toEqual([36]);
+    expect(noteOns(buildMidi(bass)).map((e) => e.data[0])).toEqual(
+      buildTimeline(bass).map((e) => e.pitch.midiNote)
+    );
+  });
+
   it('AC-12.1.1 — the filename is derived from the Pattern name, safely', () => {
     expect(midiFilename({ name: 'Bossa Groove' })).toBe('bossa-groove.mid');
     expect(midiFilename({ name: '  Odd/Name?  ' })).toBe('oddname.mid');

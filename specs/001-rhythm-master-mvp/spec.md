@@ -608,8 +608,10 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-2.2.19/1** — The Key picker renders on the pitch strip beside the scale picker
     - **AC-2.2.19/2** — The Rhythm group holds no Key picker
     - **AC-2.2.19/3** — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)
+    - **AC-2.2.19/4** — The Key picker carries a visible label of its own reading Key, and the strip's Note label names the degree chips it sits with — neither picker is left to be identified by the label of the other
   - *(Added 2026-09-07 at the maintainer's request: "the key, when I'm in Melodic — I really think that should be in the notes section, because I'm up and hunting around trying to find it." The Key sat in the Edit accordion beside Sound and + Measure; everything else about a note — the scale, the degrees, the octave — already lives on the pitch strip.)*
   - *(/2 retitled 2026-09-13 with T272: the Edit accordion became the Rhythm group, which is where the structural controls now live.)*
+  - *(/4 added 2026-09-13. Reported by the maintainer while working on US-2.9: "where it says it says note, and it says C — but I really, it should be key". The Key picker had no label of its own and sat immediately after the strip's Note label, so the label of the degree chips read as the label of the Key.)*
 
 ---
 
@@ -3189,6 +3191,57 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-18.1.5/2** — The file is named after the Song when it has been saved, and after the Pattern otherwise
     - **AC-18.1.5/3** — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section
     - **AC-18.1.5/4** — Export Song MIDI is unavailable while the Section is empty
+
+### User Story 44 - Place the melody in a register
+
+*Traceability: `US-2.9` — Place the melody in a register*
+
+**As** the Composer, **I want** to put a whole Pattern in a low or high register without re-stamping a single note, **so that** the same progression can be practised as a bass line one day and a keyboard fill the next.
+
+*(Added 2026-09-13. Reported by the maintainer: "I would think the key and the octave should apply to the corresponding chord progression that I pick, but it doesn't seem to be working that way … I'm still hearing the same progression no matter what. And this is where I kinda want to do things like write a bass line versus writing like a keyboard fill." The Key does already apply to everything, because it resolves at play time (AC-2.3.2). The octave stepper never did and was never meant to: it arms what the next stamp gives a Slot (AC-2.2.3), so with a progression and an arpeggio dealing the notes, there is nothing for it to move. What was missing is a Pattern-level register — one setting that places everything the Pattern sounds, stamped Pitches and dealt steps alike, without editing a single stored Pitch.)*
+
+**Independent Test**: Give a Melodic Pattern a progression and an arpeggio, set the Register to Bass, and assert every note sounds two octaves below the same Pattern at Normal, that no stored Pitch changed, and that the Register survives a reload and reaches the MIDI file.
+
+**Acceptance Scenarios**:
+
+- **AC-2.9.1** — The Register is chosen on the pitch strip
+  - **Given** a Melodic Pattern open
+  - **When** the Composer looks for the Register
+  - **Then** the Register picker is on the pitch strip beside the Key and the scale, offering five steps — Bass (−2 octaves), Low (−1), Normal, High (+1) and Lead (+2) — with Normal the value of a Pattern that has never set one
+  - **Cases**:
+    - **AC-2.9.1/1** — The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal
+    - **AC-2.9.1/2** — The Register is Pattern content: it is saved with the Pattern and survives a reload
+    - **AC-2.9.1/3** — Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through
+    - **AC-2.9.1/4** — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)
+
+- **AC-2.9.2** — A Register moves every sounding note by whole octaves
+  - **Given** a Melodic Pattern, with or without a progression and an arpeggio
+  - **When** its Register is other than Normal
+  - **Then** every note it sounds moves by that many octaves — a stamped Pitch, a chord tone and an arpeggio's dealt step alike — and nothing stored on any Slot changes
+  - **Cases**:
+    - **AC-2.9.2/1** — At Low every sounding note is twelve semitones below the same Pattern at Normal, and at High twelve above; Bass and Lead are twenty-four either way
+    - **AC-2.9.2/2** — A dealt arpeggio step and a chord-tone Pitch move with the Register exactly as a stamped degree does
+    - **AC-2.9.2/3** — Setting a Register rewrites no stored Pitch: every Slot keeps the degree and `octaveOffset` it held, so returning to Normal sounds exactly as it did before
+    - **AC-2.9.2/4** — A Slot's own octave and the Register sum to the octave it sounds in, and that sum is held inside the octave range the stepper allows, 1 to 7 (AC-2.2.3) — so a Slot already at octave 7 does not rise past it at Lead, and one at octave 1 does not fall below it at Bass
+    - **AC-2.9.2/5** — The MIDI export of a Pattern carries its notes at the Register, since it consumes the one timeline playback does (SC-003)
+
+- **AC-2.9.3** — The grid and the score agree with what sounds
+  - **Given** a Melodic Pattern whose Register is other than Normal
+  - **When** the Composer looks at a note band or at the sheet music
+  - **Then** each names and writes the note at the octave it actually sounds, not the octave stored on the Slot
+  - **Cases**:
+    - **AC-2.9.3/1** — A note band names the note the Slot sounds at the current Register
+    - **AC-2.9.3/2** — The score writes each note at the octave the Register sounds it in
+
+- **AC-2.9.4** — The Register and the octave stepper are different controls
+  - **Given** a Melodic Pattern with notes already stamped
+  - **When** the Composer steps the octave, and then changes the Register
+  - **Then** the stepper changes nothing already on the grid — it arms what the next stamp gives a Slot (AC-2.2.3) — while the Register moves the whole line with no stamp at all
+  - **Cases**:
+    - **AC-2.9.4/1** — Stepping the octave changes no note already on the grid, and no note that sounds
+    - **AC-2.9.4/2** — Changing the Register moves every sounding note without the Composer stamping a Slot
+
+---
 
 ## Requirements *(mandatory)*
 

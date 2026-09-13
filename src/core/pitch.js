@@ -69,6 +69,52 @@ export function clampOctave(octave) {
   return Math.min(MAX_OCTAVE, Math.max(MIN_OCTAVE, octave));
 }
 
+/* --- the Register (US-2.9) ------------------------------------------------- */
+
+/**
+ * The Register places the whole Pattern in an octave without editing a single
+ * stored Pitch (AC-2.9.2/3): five steps, Bass to Lead, as whole octaves.
+ */
+export const REGISTERS = [
+  { value: -2, label: 'Bass' },
+  { value: -1, label: 'Low' },
+  { value: 0, label: 'Normal' },
+  { value: 1, label: 'High' },
+  { value: 2, label: 'Lead' },
+];
+
+export const MIN_REGISTER = -2;
+export const MAX_REGISTER = 2;
+
+/** A Pattern's Register: absent, or anything invalid, reads as Normal. */
+export function registerOf(pattern) {
+  const value = pattern?.register;
+  if (!Number.isInteger(value)) return 0;
+  return Math.min(MAX_REGISTER, Math.max(MIN_REGISTER, value));
+}
+
+/**
+ * The Slot's own octave and the Register sum to the octave it sounds in, held
+ * inside the stepper's own 1–7 range (AC-2.9.2/4) — so Lead cannot carry a Slot
+ * already at the top of the strip out of the range every other control respects.
+ */
+export function soundingOctaveOffset(octaveOffset = 0, register = 0) {
+  const offset = Number.isInteger(octaveOffset) ? octaveOffset : 0;
+  if (!register) return offset;
+  return octaveOffsetFor(clampOctave(octaveNumber(offset + register)));
+}
+
+/**
+ * The same Pitch, at the octave the Register sounds it in. The one conversion
+ * from a stored Pitch to a sounding one: resolution, naming, the score and the
+ * MIDI file all go through it, so none of them can disagree (AC-2.9.3).
+ */
+export function inRegister(pitch, register = 0) {
+  if (!pitch || !register) return pitch;
+  const octaveOffset = soundingOctaveOffset(pitch.octaveOffset ?? 0, register);
+  return octaveOffset === (pitch.octaveOffset ?? 0) ? pitch : { ...pitch, octaveOffset };
+}
+
 export function isSupportedKey(key) {
   return Object.prototype.hasOwnProperty.call(KEY_SEMITONES, key);
 }
