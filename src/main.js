@@ -1760,6 +1760,7 @@ export function mount(root) {
       collapseLibrary(shell);
       syncLibraryToggle();
       // Whichever of them scrolls in the layout in force (AC-15.1.18).
+      appScrolled();
       for (const el of [main, patternPaneEl, workbenchPaneEl]) el.scrollTop = 0;
     }
   });
@@ -1808,9 +1809,53 @@ export function mount(root) {
   const noteInteraction = () => {
     autoscrollStoodDown = true;
   };
-  for (const type of ['pointerdown', 'input', 'keydown']) {
+  for (const type of ['pointerdown', 'input', 'keydown', 'wheel', 'touchstart']) {
     main.addEventListener(type, noteInteraction, true);
   }
+
+  /*
+   * The view having moved is the real signal, not any particular input
+   * (AC-15.1.16/9). The listeners above are the gestures a browser reports as
+   * input, and a finger drag happens to raise `pointerdown` before it scrolls —
+   * which is why /2 passed everywhere it was checked. A scroll that raises no
+   * input event at all does not: momentum carrying on after the finger lifts,
+   * and whatever iOS does in a Home-Screen app, where this was reported still
+   * standing. So the panel scrolling is itself the stand-down: if the view moved
+   * and the app did not move it, the musician did.
+   *
+   * On `window`, because `scroll` does not bubble and the scrolling element
+   * differs by layout — the panel at narrow widths, one of its panes when wide
+   * (AC-15.1.18), the document if a browser scrolls that instead. Capture sees
+   * them all, and the target check keeps the library's own scrolling out of it.
+   */
+  let appScrollUntil = 0;
+  /*
+   * Scrolls the app performs are not the musician's: the autoscroll itself, the
+   * height compensation (AC-15.1.16/3), the reset on loading a Pattern
+   * (AC-15.1.12). Without this the autoscroll's first scroll would stand the
+   * autoscroll down, and hands-off tracking (AC-15.1.11) would never survive
+   * one. The window covers a smooth scroll's animation, which keeps raising
+   * events long after the call that started it; a real gesture inside that
+   * window still stands down through the input listeners above, which no
+   * programmatic scroll can raise.
+   */
+  const APP_SCROLL_MS = 900;
+  const appScrolled = () => {
+    appScrollUntil = performance.now() + APP_SCROLL_MS;
+  };
+  window.addEventListener(
+    'scroll',
+    (event) => {
+      if (performance.now() < appScrollUntil) return;
+      const target = event.target;
+      const ours =
+        target === document ||
+        target === document.scrollingElement ||
+        (target instanceof Node && main.contains(target));
+      if (ours) autoscrollStoodDown = true;
+    },
+    true
+  );
   let wasPlaying = false;
 
   subscribe((pattern, position, s) => {
@@ -1882,7 +1927,10 @@ export function mount(root) {
     // the control stays put on screen (AC-15.1.16/3).
     if (anchor && anchor.el.isConnected) {
       const delta = anchor.el.getBoundingClientRect().top - anchor.top;
-      if (delta !== 0) scrollContainerOf(anchor.el, main).scrollTop += delta;
+      if (delta !== 0) {
+        appScrolled();
+        scrollContainerOf(anchor.el, main).scrollTop += delta;
+      }
     }
 
     // Every Start is a fresh run, and a fresh run tracks (AC-15.1.16/2).
@@ -1892,7 +1940,11 @@ export function mount(root) {
     // Keep what is sounding on screen (AC-15.1.11) — unless the musician has
     // touched the panel during this run (AC-15.1.16/2).
     if (position && !gridEl.hidden && !autoscrollStoodDown) {
-      scrollMeasureIntoView(gridEl, position.measureIndex);
+      // Only when it actually scrolls. Playback renders on every sounding event
+      // and the sounding Measure is usually already in view, so marking every
+      // render as an app scroll would hold the window permanently open and the
+      // musician's own scrolling would never be seen (AC-15.1.16/9).
+      if (scrollMeasureIntoView(gridEl, position.measureIndex)) appScrolled();
     }
   });
 
