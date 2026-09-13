@@ -386,6 +386,9 @@ export const ARPEGGIOS = [
 ];
 
 export const CHANGES = ['pass', 'measure'];
+/* The arpeggio a freshly chosen progression takes: the plainest reading of a
+   chord, so the chords are audible the moment they are chosen (AC-2.6.1/7). */
+export const DEFAULT_ARPEGGIO = 'up';
 export const DEFAULT_CHANGE = 'pass';
 export const MAX_CHORDS = 16;
 
@@ -562,28 +565,6 @@ export function chordNumeral(chord) {
 
 /* --- mutations (every one returns a new Pattern) -------------------------- */
 
-/**
- * A fixed degree read against a chord: the role it is a member as, at the
- * octave that keeps it sounding where it was — or null when the degree is not
- * a member of the chord at all (AC-2.6.1/7). A tonic under chord I is that
- * chord's Root; degree 7 under a G triad is its 3rd; degree 2 under C is nothing.
- *
- * @param {{degree: string, octaveOffset?: number}} pitch
- * @returns {{tone: number, octaveOffset: number}|null}
- */
-export function degreeAsTone(pitch, chord) {
-  if (!chord || pitch?.degree === undefined) return null;
-  const semis = degreeSemitones(pitch.degree);
-  const root = degreeSemitones(chord.degree);
-  for (const tone of TONES) {
-    const member = memberFor(chord, tone);
-    if (member.tone !== tone) continue;
-    const gap = semis - root - member.interval;
-    if (((gap % 12) + 12) % 12 !== 0) continue;
-    return { tone, octaveOffset: (pitch.octaveOffset ?? 0) + gap / 12 };
-  }
-  return null;
-}
 
 /**
  * Give the Pattern a catalogue progression, spelled under its Key and scale
@@ -594,20 +575,13 @@ export function degreeAsTone(pitch, chord) {
  */
 export function setProgression(pattern, progressionId) {
   const chords = spellProgression(progressionId, pattern.scale ?? DEFAULT_SCALE);
-  const next = {
+  // Every stored Pitch is left exactly as it was (AC-2.6.1/7): what makes the
+  // progression audible is the arpeggio set alongside it, not an edit to the
+  // Composer's notes.
+  return {
     ...clone(pattern),
     harmony: { change: pattern.harmony?.change ?? DEFAULT_CHANGE, chords },
   };
-  for (const measure of next.measures) {
-    for (const beat of measure.beats) {
-      for (const slot of beat.slots) {
-        if (!slot.on || !slot.pitch) continue;
-        const role = degreeAsTone(slot.pitch, chords[0]);
-        if (role) slot.pitch = role;
-      }
-    }
-  }
-  return next;
 }
 
 /**

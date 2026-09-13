@@ -22,7 +22,6 @@ import {
   resolveChordTone,
   chordToneName,
   memberFor,
-  degreeAsTone,
   MAX_CHORDS,
   PROGRESSIONS,
   PROGRESSION_GROUPS,
@@ -130,53 +129,28 @@ describe('core/harmony', () => {
     expect(buildTimeline(baked, 0).map((e) => e.pitch.midiNote)).toEqual(heard);
   });
 
-  it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: tonics become Roots', () => {
-    // What a Pattern turned Melodic looks like: every sounding Slot on degree 1.
+  it('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so the chords are audible at once, and leaves every stored Pitch exactly as it was: every stored Pitch is left as it was', () => {
+    // A written melody: two members of a C triad, two notes that are not.
     let p = melodic();
-    for (const b of [0, 1, 2, 3]) p = note(p, 0, b, 0, { degree: '1', octaveOffset: 0 });
-    p = setProgression(p, 'I-IV-V');
-    expect(pitches(p)).toEqual(Array(4).fill({ tone: 1, octaveOffset: 0 }));
-    // And so it is heard: C, then F, then G.
-    expect([0, 1, 2].map((pass) => buildTimeline(p, pass)[0].pitch.midiNote)).toEqual([60, 65, 67]);
-  });
+    p = note(p, 0, 0, 0, { degree: '3', octaveOffset: 0 });
+    p = note(p, 0, 1, 0, { degree: '5', octaveOffset: -1 });
+    p = note(p, 0, 2, 0, { degree: '2', octaveOffset: 0 });
+    p = note(p, 0, 3, 0, { degree: '7', octaveOffset: 0 });
+    const before = pitches(p);
+    const heard = buildTimeline(p, 0).map((e) => e.pitch.midiNote);
 
-  it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: members become roles at their own octave, non-members stay fixed', () => {
-    let p = melodic();
-    p = note(p, 0, 0, 0, { degree: '3', octaveOffset: 0 }); // the 3rd of C
-    p = note(p, 0, 1, 0, { degree: '5', octaveOffset: -1 }); // the 5th of C, an octave down
-    p = note(p, 0, 2, 0, { degree: '2', octaveOffset: 0 }); // not in a C triad
-    p = note(p, 0, 3, 0, { degree: '7', octaveOffset: 0 }); // not in a C triad, is in Cmaj7
-    const before = buildTimeline(p, 0).map((e) => e.pitch.midiNote);
+    const chosen = setProgression(p, 'I-IV-V');
+    // Not one note is rewritten — no degree becomes a role, whether or not it
+    // is a member of the first chord.
+    expect(pitches(chosen)).toEqual(before);
+    // So with no arpeggio the melody sounds exactly as it did, which is what
+    // the arpeggio set alongside it in the app exists to change.
+    expect(buildTimeline(chosen, 0).map((e) => e.pitch.midiNote)).toEqual(heard);
 
-    const triads = setProgression(p, 'I-IV-V');
-    expect(pitches(triads)).toEqual([
-      { tone: 3, octaveOffset: 0 },
-      { tone: 5, octaveOffset: -1 },
-      { degree: '2', octaveOffset: 0 },
-      { degree: '7', octaveOffset: 0 },
-    ]);
-    // The first pass sounds exactly as it did.
-    expect(buildTimeline(triads, 0).map((e) => e.pitch.midiNote)).toEqual(before);
-
-    // Under a progression whose first chord has a 7th, the 7 is a member too.
-    const sevenths = setProgression(p, 'I-vi-ii-V');
-    expect(pitches(sevenths)[3]).toEqual({ tone: 7, octaveOffset: 0 });
-
-    // Read against a chord on another root: degree 7 is the 3rd of G.
-    expect(degreeAsTone({ degree: '7', octaveOffset: 0 }, { degree: '5', quality: 'maj' })).toEqual({ tone: 3, octaveOffset: 0 });
-    // Degree 2 at octave 4 is the 5th of a G chord rooted an octave lower.
-    expect(degreeAsTone({ degree: '2', octaveOffset: 0 }, { degree: '5', quality: 'maj' })).toEqual({ tone: 5, octaveOffset: -1 });
-    expect(degreeAsTone({ degree: 'b2', octaveOffset: 0 }, { degree: '1', quality: 'maj' })).toBeNull();
-  });
-
-  it('AC-2.6.1/7 — Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once: None and a fresh choice round-trip', () => {
-    let p = melodic();
-    for (const b of [0, 1]) p = note(p, 0, b, 0, { degree: '1', octaveOffset: 0 });
-    let chosen = setProgression(p, 'I-IV-V');
-    chosen = note(chosen, 0, 2, 0, { tone: 5, octaveOffset: 0 }); // stamped after choosing
-    const again = setProgression(clearHarmony(chosen), 'I-IV-V');
-    expect(pitches(again)).toEqual(pitches(chosen));
-    expect(again.harmony).toEqual(chosen.harmony);
+    // A chord-tone Pitch stamped under a progression still resolves through it
+    // (AC-2.6.4/4): fixed notes and roles mix, they are just never converted.
+    const mixed = note(chosen, 0, 3, 0, { tone: 1, octaveOffset: 0 });
+    expect([0, 1, 2].map((pass) => buildTimeline(mixed, pass)[3].pitch.midiNote)).toEqual([60, 65, 67]);
   });
 
   // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---
@@ -468,7 +442,7 @@ describe('core/harmony', () => {
     expect(notesOf(clearHarmony(walked))).toEqual(notesOf(walked));
   });
 
-  it('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio: the Pitches come back', () => {
+  it('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio: the Pitches come back', () => {
     let p = setProgression(melodic(), 'I-IV-V');
     p = note(p, 0, 0, 0, { degree: '5', octaveOffset: 0 });
     p = note(p, 0, 1, 0, { tone: 3, octaveOffset: 0 });

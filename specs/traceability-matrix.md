@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 565 across 41 User Stories
+**Criteria**: 560 across 41 User Stories
 
-**Coverage**: 374 of 565 criteria proven (66.2%)
+**Coverage**: 369 of 560 criteria proven (65.9%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 374 | 66.2% |
-| 🔴 Gap — HIGH | 71 | 12.6% |
-| 🟠 Gap — MEDIUM | 42 | 7.4% |
-| 🟡 Gap — LOW | 78 | 13.8% |
+| 🟢 Proven | 369 | 65.9% |
+| 🔴 Gap — HIGH | 71 | 12.7% |
+| 🟠 Gap — MEDIUM | 42 | 7.5% |
+| 🟡 Gap — LOW | 78 | 13.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -95,7 +95,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-15.2 | 19 | **19** | · | · | · | · | · |
 | 🟢 US-17.1 | 24 | **24** | · | · | · | · | · |
 | 🟢 US-2.5 | 14 | **14** | · | · | · | · | · |
-| 🟢 US-2.6 | 67 | **67** | · | · | · | · | · |
+| 🟢 US-2.6 | 62 | **62** | · | · | · | · | · |
 | 🟢 US-12.2 | 45 | **45** | · | · | · | · | · |
 | 🟢 US-2.7 | 14 | **14** | · | · | · | · | · |
 | 🟢 US-10.2 | 13 | **13** | · | · | · | · | · |
@@ -536,7 +536,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.6 | `AC-2.6.1/4` | A pentatonic or blues scale spells its chords from the parallel Ionian, or from Aeolian when the scale has ♭3 and no 3: I–IV–V under C Minor Pentatonic is Cm, Fm and Gm | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/5` | A step whose root lies outside the scale takes the quality the catalogue names for it, or a major triad: ♭VII in C Ionian is B♭ | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/6` | Choosing None removes the progression, and every chord-tone Pitch becomes the scale degree it sounded under the first chord, so the first pass sounds exactly as before | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.1/7` | Choosing a progression re-reads each fixed degree that is a member of the first chord as that role, leaves every other degree fixed, and re-reads the armed pitch the same way, so a Pattern of tonics follows the progression at once | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/7` | Choosing a progression sets the arpeggio to Ascending, so the chords are audible at once, and leaves every stored Pitch exactly as it was | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/8` | The Three chords and repeats group holds I–IV–V, I–I–IV–V, I–IV–IV–V, I–IV–V–V, I–IV–V–IV, I–IV–V–I, I–IV–I–V, I–V–IV, I–V–IV–I, I–IV and I–V | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/9` | The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–I–V–vi, V–vi–IV–I, IV–V–vi–I, I–vi–IV–V, I–IV–vi–V, I–V–vi–iii, I–iii–vi–IV, I–ii–IV–V, I–IV–ii–V, I–ii–iii–IV, vi–V–IV–III, the Royal Road IV–V–iii–vi, Creep's I–III–IV–iv, I–IV–iv–I, Something's I–Imaj7–I7–IV and Wonderwall's vi–I–V–II | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/10` | The Minor group holds i–iv–v, i–i–iv–v, i–iv–iv–v, i–iv–v–v, i–iv–V, i–i–iv–V, i–iv–iv–V, i–iv–V–V, i–iv–i–V, i–♭VI–♭III–♭VII, the Andalusian i–♭VII–♭VI–V, the Aeolian vamp i–♭VII–♭VI–♭VII, i–♭VI–♭VII, i–♭VII–♭VI, i–♭III–♭VII–♭VI, i–iv–♭VII–♭III, ♭VI–♭VII–i and Hotel California's i–V–♭VII–IV–♭VI–♭III–iv–V | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
@@ -561,20 +561,15 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.6 | `AC-2.6.4/4` | A scale-degree Pitch is unaffected by the progression, so fixed notes and chord tones mix in one Pattern | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.4/5` | Changing the Key transposes every chord and chord tone with it, altering no stored role, degree or octave | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.4/6` | Playback and MIDI export resolve a chord tone through the one timeline, so the two cannot disagree | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `export.test.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/1` 🖵 | The role chips are on the pitch strip when the Pattern has a progression, and absent when it does not | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/2` 🖵 | Arming a role and tapping a sounding Slot's note band stores a chord-tone Pitch, leaving its Accent Level as it was | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/3` 🖵 | Each role chip names the note it sounds under the chord in force, and a role that chord lacks says which member stands in | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/4` 🖵 | Arming a role disarms an armed degree and arming a degree disarms the role, so the strip holds one armed pitch | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/5` 🖵 | The octave stepper applies to a role exactly as to a degree | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/6` 🖵 | Turning a Slot on while a role is armed gives it that role | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.5/7` 🖵 | While a Pattern has a progression, no arpeggio, and no Slot holds a role, the harmony section says so and points at the arpeggio setting and the role chips | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/1` 🖵 | The pitch strip carries no chord-tone role chips, whether or not the Pattern has a progression | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.5/2` 🖵 | While a Pattern has a progression and no arpeggio, the harmony section says the notes stay fixed while the chords change, and points at the arpeggio setting | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/1` | The arpeggio setting offers None and a catalogue in three groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; drones: Drone above, Drone below, Chord root drone; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/2` | The deal runs continuously through the pass over every sounding Slot, restarting at the top of each pass and whenever the chord changes: four Slots a Measure under Ascending triads sound Root 3rd 5th Root, then 3rd 5th Root 3rd; under every-Measure changes each new chord starts on its Root | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/3` | Ascending deals the roles in order and repeats: over four roles, five sounding Slots take Root, 3rd, 5th, 7th, Root | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/4` | Alberti deals Root, 5th, 3rd, 5th; Descending deals from the highest role down; Up and down rises then falls without repeating the turn | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/5` | The roles dealt are the members of the progression's fullest chord, so a progression of triads deals Root, 3rd and 5th only | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/6` | The deal follows the rhythm: a Slot turned on or off re-deals the line, and no stored Pitch, Slot or Accent Level changes — each Slot keeps its own octave | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.6/7` 🖵 | Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree and role chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.6/7` 🖵 | Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/8` 🖵 | Changing the arpeggio on a shipped Pattern goes through the naming prompt | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/9` | A step is a chord tone at an octave, a drone, or a scale step rooted on the chord: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.6/10` | Drone above alternates rising chord tones with the Key's tonic an octave up whatever the chord — C C′ E C′ G C′ then F C′ A C′ C C′ — Drone below uses the tonic an octave down, and Chord root drone uses the chord's own root an octave up | P-041 | T249, T250, T253, T255, T257, T268 (6/6 done) | T251, T252, T254, T256, T258, T269 (6/6 done) | `harmony.test.js` | 🟢 OK |

@@ -19,17 +19,12 @@ import {
 import { SCALES, DEFAULT_SCALE, chromaticStrip } from '../core/scales.js';
 import {
   hasHarmony,
-  chordIn,
   chordName,
   chordNumeral,
-  chordToneName,
-  memberFor,
-  toneLabel,
   matchProgression,
   PROGRESSIONS,
   PROGRESSION_GROUPS,
   QUALITIES,
-  TONES,
   CHANGES,
   ARPEGGIOS,
   MAX_CHORDS,
@@ -762,51 +757,7 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   }
   root.appendChild(degrees);
 
-  // Chord-tone roles, only while the Pattern has a progression to resolve them
-  // (AC-2.6.5/1). Each names the note it sounds under the chord in force — the
-  // cursor's chord while playing, the first at rest — and a role that chord
-  // lacks says which member stands in for it (AC-2.6.5/3).
-  if (hasHarmony(pattern)) {
-    const position = state.transportPosition;
-    const chord = chordIn(pattern, position?.loop ?? 0, position?.measureIndex ?? 0);
-    const tones = el('div', 'tone-group', { role: 'group' });
-    tones.setAttribute('aria-label', 'Chord tone');
-    tones.appendChild(el('span', 'tone-group-label', { textContent: 'Chord tone' }));
-    for (const tone of TONES) {
-      const b = el('button', 'tone');
-      b.type = 'button';
-      b.dataset.action = 'set-tone';
-      b.dataset.tone = String(tone);
-      b.setAttribute('aria-pressed', String(tone === armed.tone));
-      b.appendChild(el('span', 'degree-number', { textContent: toneLabel(tone) }));
-
-      const member = memberFor(chord, tone);
-      const standIn = member.tone !== tone ? toneLabel(member.tone) : null;
-      if (standIn) b.dataset.standIn = standIn;
-      const named = spellTone({ tone, octaveOffset: armed.octaveOffset ?? 0 }, chord, key);
-      const text = [standIn ? `as ${standIn}` : null, named].filter(Boolean).join(' · ');
-      if (text) b.appendChild(el('span', 'degree-name', { textContent: text }));
-      if (named) b.dataset.noteName = named;
-      b.setAttribute(
-        'aria-label',
-        `Chord tone ${toneLabel(tone)}${standIn ? ` (this chord has none, sounds its ${standIn})` : ''}${named ? ` — ${named}` : ''}`
-      );
-      b.addEventListener('click', () => handlers.onArmTone(tone));
-      tones.appendChild(b);
-    }
-    root.appendChild(tones);
-  }
-
   root.appendChild(renderOctaveStepper(armed, handlers));
-}
-
-/** A chord tone's note name, or nothing if it cannot be spelled. */
-function spellTone(pitch, chord, key) {
-  try {
-    return chordToneName(pitch, chord, key).text;
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -872,17 +823,15 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   arpeggioRow.appendChild(arpeggio);
   root.appendChild(arpeggioRow);
 
-  // A progression only moves chord tones. With no arpeggio and no Slot holding
-  // a role, say so — the first thing the maintainer heard was the chord names
-  // changing and the notes not (AC-2.6.5/7).
-  const holdsRole = pattern.measures.some((m) =>
-    m.beats.some((b) => b.slots.some((s) => s.on && s.pitch?.tone !== undefined))
-  );
-  if (!pattern.harmony.arpeggio && !holdsRole) {
+  // Stamped notes are fixed by design (AC-2.6.4/4), so with no arpeggio the
+  // chords change and the notes do not. Say so, and point at the one setting
+  // that changes it — the first thing the maintainer heard was the chord names
+  // moving and the notes staying put (AC-2.6.5/2).
+  if (!pattern.harmony.arpeggio) {
     root.appendChild(
       el('p', 'harmony-hint', {
         textContent:
-          'No chord tones yet, so the notes stay fixed while the chords change. Choose an Arpeggio above, or arm a chord tone (R, 3, 5, 7, 9) on the pitch strip and tap a note.',
+          'The notes stay fixed while the chords change. Choose an Arpeggio above to make them follow the progression.',
       })
     );
   }

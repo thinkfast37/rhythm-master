@@ -293,6 +293,10 @@ describe('core/notation — the treble staff (AC-12.2.5)', () => {
   it('AC-12.2.5/5 — A chord-tone Pitch is written at the note it sounds in that pass through the chord in force: the Root under I–IV–V in C is C in pass 1, F in pass 2 and G in pass 3', () => {
     let p = pattern([[0, 0, 0]], { melodic: true });
     p = setProgression(p, 'I-IV-V');
+    // Stamped directly: a progression no longer converts stored degrees to roles
+    // (AC-2.6.1/7 as rewritten 2026-09-13), and this criterion is about how a
+    // chord-tone Pitch is written, however it came to be one.
+    p = setPitch(p, 0, 0, 0, { tone: 1, octaveOffset: 0 });
     const score = buildScore(p);
     expect(score.passes).toHaveLength(3);
     const roots = score.passes.map((pass) => pass.measures[0].beats[0].items[0]);
@@ -407,6 +411,10 @@ describe('core/notation — a progression written out (AC-12.2.8)', () => {
   it('AC-12.2.8/1 — The score holds as many passes as the MIDI file does, each beginning a new line, labelled "Pass 1", "Pass 2", … at its left when there is more than one', () => {
     let p = pattern([[0, 0, 0]], { melodic: true });
     p = setProgression(p, 'I-IV-V');
+    // Stamped directly: a progression no longer converts stored degrees to roles
+    // (AC-2.6.1/7 as rewritten 2026-09-13), and this criterion is about how a
+    // chord-tone Pitch is written, however it came to be one.
+    p = setPitch(p, 0, 0, 0, { tone: 1, octaveOffset: 0 });
     const score = buildScore(p);
     expect(score.passCount).toBe(cyclePasses(p));
     expect(score.passes.map((x) => x.label)).toEqual(['Pass 1', 'Pass 2', 'Pass 3']);
