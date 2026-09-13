@@ -189,3 +189,118 @@ describe('audio/scheduler under a progression (US-2.6)', () => {
     expect(notes[2].when - notes[0].when).toBeCloseTo(4, 6);
   });
 });
+
+/*
+ * The visual half of the same throttling (AC-4.1.2).
+ *
+ * The Hisense fix (T242) widened the lookahead so a clamped setInterval can no
+ * longer starve the AUDIO queue. It left the highlight where it was: flushed
+ * only from inside that same clamped tick. So on a browser polling once a
+ * second the audio sounds dead on the grid, scheduled a second ahead, while
+ * the highlight arrives up to a whole clamp behind it — reported from a
+ * Samsung TV as "the sound is ahead of the notes lighting up", more than a
+ * beat out at 80 BPM.
+ *
+ * These tests drive the transport with the timer clamped and only animation
+ * frames running, and require the highlight to arrive with its audio anyway.
+ */
+describe('audio/scheduler visuals under a throttled timer', () => {
+  /** Every pending animation-frame callback, run by flushFrames(). */
+  let frames = [];
+
+  function installFrames() {
+    frames = [];
+    let id = 0;
+    globalThis.requestAnimationFrame = (cb) => {
+      frames.push({ id: ++id, cb });
+      return id;
+    };
+    globalThis.cancelAnimationFrame = (target) => {
+      frames = frames.filter((f) => f.id !== target);
+    };
+  }
+
+  /** One frame: run what is queued, letting each re-queue for the next. */
+  function flushFrames() {
+    const due = frames;
+    frames = [];
+    for (const { cb } of due) cb();
+  }
+
+  afterEach(() => {
+    delete globalThis.requestAnimationFrame;
+    delete globalThis.cancelAnimationFrame;
+  });
+
+  /** 4/4 at 120 BPM with every sixteenth sounding: an event every 0.125s. */
+  function densePattern() {
+    let p = { ...create(), tempo: 120 };
+    for (let b = 0; b < 4; b++) for (let s = 0; s < 4; s++) p = cycleAccent(p, 0, b, s);
+    return p;
+  }
+
+  /** The clock at which each highlight was delivered. */
+  async function playThrottled() {
+    const seen = [];
+    transport = createTransport({ onPosition: () => seen.push(ctx.currentTime) });
+    installFrames();
+
+    const startP = transport.start(densePattern(), { metronomeEnabled: false, countInEnabled: false });
+    await vi.runOnlyPendingTimersAsync?.();
+    await startP;
+    ctx = (await import('../../../src/audio/context.js')).getContext();
+
+    // The clock advances a frame at a time. The poll timer fires ONCE, at
+    // 0.5s — a browser clamping it to half a second — and never again inside
+    // the window under test. Everything after that must come from frames.
+    let ticked = false;
+    for (let t = 0; t <= 1.6; t += 1 / 60) {
+      ctx.currentTime = t;
+      if (!ticked && t >= 0.5) {
+        ticked = true;
+        await vi.advanceTimersByTimeAsync(25);
+      }
+      flushFrames();
+    }
+    return seen;
+  }
+
+  it('AC-4.1.2 — Visual highlight stays in sync with audio: the highlight keeps pace when the poll timer is clamped', async () => {
+    const seen = await playThrottled();
+
+    // Pair each delivery with the audio event it belongs to: both come off the
+    // same queue in the same order, so the nth highlight belongs to the nth
+    // distinct sounding time.
+    const sounded = [...new Set(starts.map((s) => s.when))].sort((a, b) => a - b).filter((w) => w <= 1.6);
+
+    expect(sounded.length).toBeGreaterThan(8);
+    expect(seen.length).toBe(sounded.length);
+    sounded.forEach((when, i) => {
+      expect(seen[i] - when).toBeLessThanOrEqual(0.02 + 1e-9);
+    });
+  });
+
+  it('AC-4.1.2 — Visual highlight stays in sync with audio: no highlight arrives before the event it marks', async () => {
+    const seen = await playThrottled();
+    const sounded = [...new Set(starts.map((s) => s.when))].sort((a, b) => a - b).filter((w) => w <= 1.6);
+
+    sounded.forEach((when, i) => {
+      expect(seen[i]).toBeGreaterThanOrEqual(when - 1e-9);
+    });
+  });
+
+  it('AC-4.1.2 — Visual highlight stays in sync with audio: a browser without animation frames still highlights from the poll', async () => {
+    // No requestAnimationFrame installed at all: the frame flush is an
+    // addition, never the only path, so the tick must still deliver.
+    const seen = [];
+    transport = createTransport({ onPosition: () => seen.push(ctx.currentTime) });
+    const startP = transport.start(densePattern(), { metronomeEnabled: false, countInEnabled: false });
+    await vi.runOnlyPendingTimersAsync?.();
+    await startP;
+    ctx = (await import('../../../src/audio/context.js')).getContext();
+
+    for (let i = 1; i <= 20; i++) await tickAt(i * 0.025);
+
+    expect(seen.length).toBeGreaterThan(0);
+  });
+});
