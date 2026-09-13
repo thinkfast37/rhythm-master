@@ -79,7 +79,6 @@ import {
   openLibrary,
   isLibraryOpen,
   scrollMeasureIntoView,
-  AUTOSCROLL_GRACE_MS,
 } from './ui/responsive.js';
 import { renderComposeGroup } from './ui/compose.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
@@ -1760,16 +1759,27 @@ export function mount(root) {
     }).observe(scoreEl);
   }
 
-  // Hands on the main panel mean the view belongs to the musician, not to the
-  // playback autoscroll (AC-15.1.16/2). Captured, so it sees the interaction
-  // whatever the control does with the event.
-  let lastInteractionAt = -Infinity;
+  /*
+   * Hands on the main panel mean the view belongs to the musician, not to the
+   * playback autoscroll (AC-15.1.16/2) — and it stays theirs for the rest of
+   * the playback run, not for a fixed window. Adjusting a tempo or a melody
+   * while listening takes as long as it takes; any timer is a guess that
+   * expires mid-experiment, and the loop back to Measure 1 (AC-15.1.11) then
+   * hauls the view to the top of the Pattern.
+   *
+   * Captured, so it sees the interaction whatever the control does with the
+   * event. The Play button is itself on the panel, so pressing it sets this —
+   * which is why the run transition below clears it: the render Play triggers
+   * runs after the pointerdown that started it, restoring hands-off tracking.
+   */
+  let autoscrollStoodDown = false;
   const noteInteraction = () => {
-    lastInteractionAt = Date.now();
+    autoscrollStoodDown = true;
   };
   for (const type of ['pointerdown', 'input', 'keydown']) {
     main.addEventListener(type, noteInteraction, true);
   }
+  let wasPlaying = false;
 
   subscribe((pattern, position, s) => {
     // Where the operated control sits on screen, so the view can be put back if
@@ -1843,9 +1853,13 @@ export function mount(root) {
       if (delta !== 0) main.scrollTop += delta;
     }
 
-    // Keep what is sounding on screen (AC-15.1.11) — unless the musician's
-    // hands are on the panel, or were within the grace window (AC-15.1.16/2).
-    if (position && !gridEl.hidden && Date.now() - lastInteractionAt > AUTOSCROLL_GRACE_MS) {
+    // Every Start is a fresh run, and a fresh run tracks (AC-15.1.16/2).
+    if (s.isPlaying && !wasPlaying) autoscrollStoodDown = false;
+    wasPlaying = s.isPlaying;
+
+    // Keep what is sounding on screen (AC-15.1.11) — unless the musician has
+    // touched the panel during this run (AC-15.1.16/2).
+    if (position && !gridEl.hidden && !autoscrollStoodDown) {
       scrollMeasureIntoView(gridEl, position.measureIndex);
     }
   });

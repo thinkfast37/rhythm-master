@@ -573,7 +573,7 @@ test('AC-15.1.16/1 — The control being operated keeps focus across the update 
   await expect(percussive).toBeFocused();
 });
 
-test('AC-15.1.16/2 — During playback the autoscroll stands down while controls are in use and for two seconds after', async ({
+test('AC-15.1.16/2 — Touching the main panel during playback stands the autoscroll down for the rest of that run, and the next Start restores it', async ({
   page,
 }) => {
   await page.setViewportSize(MOBILE);
@@ -592,27 +592,33 @@ test('AC-15.1.16/2 — During playback the autoscroll stands down while controls
   // Focus first, THEN scroll: playback re-renders the panel on every sounding
   // event, and the app preserves the node of the control being operated, never
   // one merely being reached for (AC-15.1.16/1). Scrolling to an unfocused
-  // slider races those renders — under CI load the handle went stale between
-  // resolving the element and scrolling it. Ordering only; nothing asserted
-  // here changes, and the hands-on loop below is untouched.
+  // slider races those renders.
   const slider = page.locator('.swing-slider').first();
   await slider.focus();
   await slider.scrollIntoViewIfNeeded();
 
-  // Hands on: a nudge every 300ms for ~2.4s. Playback renders on every tick
-  // throughout, and through all of it the slider stays on screen.
-  for (let i = 0; i < 8; i++) {
-    await page.keyboard.press(i % 2 ? 'ArrowLeft' : 'ArrowRight');
-    await page.waitForTimeout(300);
-    const visible = await slider.evaluate((el) => {
+  const sliderVisible = () =>
+    slider.evaluate((el) => {
       const r = el.getBoundingClientRect();
       return r.top >= 0 && r.bottom <= window.innerHeight;
     });
-    expect(visible, `slider stays in view while hands are on (nudge ${i + 1})`).toBe(true);
+
+  // One touch of the panel is enough: the autoscroll stands down from here to
+  // the end of the run.
+  await page.keyboard.press('ArrowRight');
+
+  // Hands off for six seconds — three times the grace window this replaced,
+  // and long enough for a Pattern this tall to loop back to Measure 1 more
+  // than once. Playback renders throughout, and the view does not move.
+  for (let i = 0; i < 12; i++) {
+    await page.waitForTimeout(500);
+    expect(await sliderVisible(), `slider stays in view hands-off (${(i + 1) * 500}ms)`).toBe(true);
   }
 
-  // Hands off: once the grace window passes, the autoscroll resumes and takes
-  // the view back to the sounding Measure, leaving the slider behind.
+  // The next Start is a fresh run, and a fresh run tracks again: the autoscroll
+  // takes the view back to the sounding Measure, leaving the slider behind.
+  await page.evaluate(() => window.__rm.handlers.onStop());
+  await page.evaluate(() => window.__rm.handlers.onPlay());
   await page.waitForFunction(
     () => {
       const el = document.querySelector('.swing-slider');
