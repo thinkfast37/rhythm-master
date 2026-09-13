@@ -702,8 +702,10 @@ test('AC-15.1.14/4 — Where every Beat fits one line, they occupy that one line
     // Measure's 908px — the case AC-15.1.10 provides for, not this one.
     await page.locator('.library-toggle').click();
 
-    const { perLine, widths } = await beatLayout(page);
-    expect(perLine, `${width}px`).toEqual([4]);
+    // Polled: the re-balance after the toggle runs from a ResizeObserver, on
+    // the next frame rather than inside the click.
+    await expect.poll(async () => (await beatLayout(page)).perLine.join(','), `${width}px`).toBe('4');
+    const { widths } = await beatLayout(page);
     expect(spread(widths), `${width}px`).toBeLessThan(1);
   }
 });
