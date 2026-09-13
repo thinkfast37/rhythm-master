@@ -27,7 +27,10 @@ export function findById(id) {
 /** Insert or replace by id. This is the whole of auto-save (US-7.2). */
 export function upsert(pattern) {
   if (!pattern.id) throw new Error('A user-owned Pattern needs an id before it can be saved');
-  const all = loadAll();
+  // Copy before changing: reads are cached by raw string (keyValue.js), so
+  // mutating what loadAll handed back would edit the cached value in place and
+  // let a later read see a change that was never written.
+  const all = [...loadAll()];
   const i = all.findIndex((p) => p.id === pattern.id);
   if (i === -1) all.push(pattern);
   else all[i] = pattern;

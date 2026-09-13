@@ -32,7 +32,9 @@ export function update(patternId, fields) {
       throw new Error(`"${k}" is not a Local Metadata field; add it to LOCAL_META_FIELDS first.`);
     }
   }
-  const all = loadAll();
+  // Copy before changing — see the note in patterns.upsert: reads are cached
+  // by raw string, so mutating one in place would edit the cache, not the store.
+  const all = { ...loadAll() };
   all[patternId] = { ...(all[patternId] ?? {}), ...fields };
   writeStore(KEY, { byPatternId: all });
   return all[patternId];
@@ -40,7 +42,9 @@ export function update(patternId, fields) {
 
 /** Local Metadata for a deleted Pattern is dropped with it. */
 export function forget(patternId) {
-  const all = loadAll();
+  // Copy before changing — see the note in patterns.upsert: reads are cached
+  // by raw string, so mutating one in place would edit the cache, not the store.
+  const all = { ...loadAll() };
   delete all[patternId];
   writeStore(KEY, { byPatternId: all });
 }
