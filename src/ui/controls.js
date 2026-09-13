@@ -27,6 +27,7 @@ import {
   toneLabel,
   matchProgression,
   PROGRESSIONS,
+  PROGRESSION_GROUPS,
   QUALITIES,
   TONES,
   CHANGES,
@@ -820,7 +821,14 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   picker.dataset.action = 'set-progression';
   picker.setAttribute('aria-label', 'Chord progression');
   picker.appendChild(el('option', null, { value: 'none', textContent: 'None' }));
-  for (const p of PROGRESSIONS) picker.appendChild(el('option', null, { value: p.id, textContent: p.label }));
+  for (const group of PROGRESSION_GROUPS) {
+    const heading = el('optgroup');
+    heading.label = group.label;
+    for (const p of PROGRESSIONS) {
+      if (p.group === group.id) heading.appendChild(el('option', null, { value: p.id, textContent: p.label }));
+    }
+    picker.appendChild(heading);
+  }
   if (harmonic && !matched) picker.appendChild(el('option', null, { value: 'custom', textContent: 'Custom' }));
   picker.value = harmonic ? (matched ?? 'custom') : 'none';
   picker.addEventListener('change', (e) => handlers.onProgression(e.target.value));

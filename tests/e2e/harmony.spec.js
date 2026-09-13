@@ -53,26 +53,198 @@ async function loadAsShipped(page) {
 
 // --- AC-2.6.1 — A progression is chosen from a catalogue of named progressions ---
 
-test("AC-2.6.1/1 — The picker offers None and the catalogue: I–IV–V, I–V–vi–IV, vi–IV–I–V, I–vi–IV–V, ii–V–I, I–vi–ii–V, the twelve-bar blues, the Andalusian i–♭VII–♭VI–V, i–iv–v, i–♭VI–♭III–♭VII, I–IV–vi–V, Pachelbel's I–V–vi–iii–IV–I–IV–V, I–♭VII–IV, I–IV, and ii–V", async ({ page }) => {
+test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry under seven group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk', async ({ page }) => {
   await melodicBlank(page);
-  const options = await page.locator('.progression-picker option').evaluateAll((os) =>
-    os.map((o) => ({ value: o.value, text: o.textContent }))
-  );
-  expect(options.map((o) => o.value)).toEqual([
-    'none', 'I-IV-V', 'I-V-vi-IV', 'vi-IV-I-V', 'I-vi-IV-V', 'ii-V-I', 'I-vi-ii-V', 'twelve-bar-blues',
-    'andalusian', 'i-iv-v', 'i-bVI-bIII-bVII', 'I-IV-vi-V', 'pachelbel', 'I-bVII-IV', 'I-IV', 'ii-V',
+  const picker = page.locator('.progression-picker');
+  // None stands first, outside every group.
+  const first = await picker.locator(':scope > :first-child').evaluate((n) => ({ tag: n.tagName, value: n.value, text: n.textContent }));
+  expect(first).toEqual({ tag: 'OPTION', value: 'none', text: 'None' });
+  // Then the seven headings, in order.
+  const headings = await picker.locator('optgroup').evaluateAll((gs) => gs.map((g) => g.label));
+  expect(headings).toEqual([
+    'Three chords and repeats', 'Pop', 'Minor', 'Jazz', 'Blues', 'Modal and rock', 'Classical and folk',
   ]);
-  expect(options[0].text).toBe('None');
-  expect(options.map((o) => o.text)).toEqual(
-    expect.arrayContaining([
-      'I–IV–V', 'I–V–vi–IV (pop)', 'Twelve-bar blues', 'i–♭VII–♭VI–V (Andalusian)',
-      'I–V–vi–iii–IV–I–IV–V (Pachelbel)', 'I–♭VII–IV (Mixolydian)', 'ii–V',
-    ])
-  );
-  await expect(page.locator('.progression-picker')).toHaveValue('none');
+  // Every option but None sits under a heading, and the catalogue is the whole of it.
+  const stray = await picker.locator(':scope > option').count();
+  expect(stray).toBe(1);
+  const grouped = await picker.locator('optgroup option').count();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(grouped).toBe(PROGRESSIONS.length);
+  expect(grouped).toBeGreaterThanOrEqual(86);
+  await expect(picker).toHaveValue('none');
   // Choosing one names its chords in the Key.
-  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await picker.selectOption('I-IV-V');
   expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
+  // And Custom is not on offer until the chords stop matching the catalogue.
+  expect(await picker.locator('option[value="custom"]').count()).toBe(0);
+});
+
+/** The entries under one heading, as [value, label] pairs, in order. */
+const groupEntries = (page, heading) =>
+  page
+    .locator(`.progression-picker optgroup[label="${heading}"] option`)
+    .evaluateAll((os) => os.map((o) => [o.value, o.textContent]));
+
+/** Choose an entry and read the chord names on the strip. */
+async function chooseAndRead(page, id) {
+  await page.locator('.progression-picker').selectOption(id);
+  await expect(page.locator('.progression-picker')).toHaveValue(id);
+  return chordNames(page);
+}
+
+test('AC-2.6.1/8 — The Three chords and repeats group holds I–IV–V, I–I–IV–V, I–IV–IV–V, I–IV–V–V, I–IV–V–IV, I–IV–V–I, I–IV–I–V, I–V–IV, I–V–IV–I, I–IV and I–V', async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Three chords and repeats')).toEqual([
+    ['I-IV-V', 'I–IV–V'],
+    ['I-I-IV-V', 'I–I–IV–V'],
+    ['I-IV-IV-V', 'I–IV–IV–V'],
+    ['I-IV-V-V', 'I–IV–V–V (La Bamba)'],
+    ['I-IV-V-IV', 'I–IV–V–IV (Wild Thing)'],
+    ['I-IV-V-I', 'I–IV–V–I'],
+    ['I-IV-I-V', 'I–IV–I–V'],
+    ['I-V-IV', 'I–V–IV'],
+    ['I-V-IV-I', 'I–V–IV–I'],
+    ['I-IV', 'I–IV'],
+    ['I-V', 'I–V'],
+  ]);
+  // The repeat shapes hold the chord they double, in C.
+  expect(await chooseAndRead(page, 'I-I-IV-V')).toEqual(['C', 'C', 'F', 'G']);
+  expect(await chooseAndRead(page, 'I-IV-IV-V')).toEqual(['C', 'F', 'F', 'G']);
+  expect(await chooseAndRead(page, 'I-IV-V-V')).toEqual(['C', 'F', 'G', 'G']);
+});
+
+test("AC-2.6.1/9 — The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–I–V–vi, V–vi–IV–I, IV–V–vi–I, I–vi–IV–V, I–IV–vi–V, I–V–vi–iii, I–iii–vi–IV, I–ii–IV–V, I–IV–ii–V, I–ii–iii–IV, vi–V–IV–III, the Royal Road IV–V–iii–vi, Creep's I–III–IV–iv, I–IV–iv–I, Something's I–Imaj7–I7–IV and Wonderwall's vi–I–V–II", async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Pop')).toEqual([
+    ['I-V-vi-IV', 'I–V–vi–IV (pop)'],
+    ['vi-IV-I-V', 'vi–IV–I–V'],
+    ['IV-I-V-vi', 'IV–I–V–vi'],
+    ['V-vi-IV-I', 'V–vi–IV–I'],
+    ['IV-V-vi-I', 'IV–V–vi–I'],
+    ['I-vi-IV-V', 'I–vi–IV–V (’50s)'],
+    ['I-IV-vi-V', 'I–IV–vi–V'],
+    ['I-V-vi-iii', 'I–V–vi–iii'],
+    ['I-iii-vi-IV', 'I–iii–vi–IV'],
+    ['I-ii-IV-V', 'I–ii–IV–V'],
+    ['I-IV-ii-V', 'I–IV–ii–V'],
+    ['I-ii-iii-IV', 'I–ii–iii–IV (ascending)'],
+    ['vi-V-IV-III', 'vi–V–IV–III (Andalusian, relative minor)'],
+    ['IV-V-iii-vi', 'IV–V–iii–vi (Royal Road)'],
+    ['I-III-IV-iv', 'I–III–IV–iv (Creep)'],
+    ['I-IV-iv-I', 'I–IV–iv–I (minor four)'],
+    ['I-Imaj7-I7-IV', 'I–Imaj7–I7–IV (Something)'],
+    ['vi-I-V-II', 'vi–I–V–II (Wonderwall)'],
+  ]);
+  expect(await chooseAndRead(page, 'IV-V-iii-vi')).toEqual(['Fmaj7', 'G7', 'Em7', 'Am']);
+  expect(await chooseAndRead(page, 'I-III-IV-iv')).toEqual(['C', 'E', 'F', 'Fm']);
+  expect(await chooseAndRead(page, 'vi-I-V-II')).toEqual(['Am7', 'C', 'G', 'D7sus4']);
+});
+
+test("AC-2.6.1/10 — The Minor group holds i–iv–v, i–i–iv–v, i–iv–iv–v, i–iv–v–v, i–iv–V, i–i–iv–V, i–iv–iv–V, i–iv–V–V, i–iv–i–V, i–♭VI–♭III–♭VII, the Andalusian i–♭VII–♭VI–V, the Aeolian vamp i–♭VII–♭VI–♭VII, i–♭VI–♭VII, i–♭VII–♭VI, i–♭III–♭VII–♭VI, i–iv–♭VII–♭III, ♭VI–♭VII–i and Hotel California's i–V–♭VII–IV–♭VI–♭III–iv–V", async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Minor')).toEqual([
+    ['i-iv-v', 'i–iv–v'],
+    ['i-i-iv-v', 'i–i–iv–v'],
+    ['i-iv-iv-v', 'i–iv–iv–v'],
+    ['i-iv-v-v', 'i–iv–v–v'],
+    ['i-iv-V', 'i–iv–V (harmonic minor)'],
+    ['i-i-iv-V', 'i–i–iv–V'],
+    ['i-iv-iv-V', 'i–iv–iv–V'],
+    ['i-iv-V-V', 'i–iv–V–V'],
+    ['i-iv-i-V', 'i–iv–i–V'],
+    ['i-bVI-bIII-bVII', 'i–♭VI–♭III–♭VII'],
+    ['andalusian', 'i–♭VII–♭VI–V (Andalusian)'],
+    ['i-bVII-bVI-bVII', 'i–♭VII–♭VI–♭VII (Aeolian vamp)'],
+    ['i-bVI-bVII', 'i–♭VI–♭VII'],
+    ['i-bVII-bVI', 'i–♭VII–♭VI'],
+    ['i-bIII-bVII-bVI', 'i–♭III–♭VII–♭VI'],
+    ['i-iv-bVII-bIII', 'i–iv–♭VII–♭III'],
+    ['bVI-bVII-i', '♭VI–♭VII–i'],
+    ['hotel-california', 'i–V–♭VII–IV–♭VI–♭III–iv–V (Hotel California)'],
+  ]);
+  // Minor entries are minor under the default scale too: they carry their qualities.
+  expect(await chooseAndRead(page, 'i-iv-v-v')).toEqual(['Cm', 'Fm', 'Gm', 'Gm']);
+  expect(await chooseAndRead(page, 'i-iv-V')).toEqual(['Cm', 'Fm', 'G']);
+  expect(await chooseAndRead(page, 'hotel-california')).toEqual(['Cm', 'G', 'Bb', 'F', 'Ab', 'Eb', 'Fm', 'G']);
+});
+
+test("AC-2.6.1/11 — The Jazz group holds ii–V–I, ii–V, ii–V–I–I, the ii–V–I–VI7 turnaround, I–vi–ii–V, iii–vi–ii–V, I–VI7–ii–V, the minor ii°–V–i, the ragtime III7–VI7–II7–V7–I, the backdoor iv–♭VII–I, the tritone substitution ii–♭II–I, Autumn Leaves' iv–♭VII–♭III–♭VI–ii°–V–i, the Coltrane changes and the circle of fifths in sevenths", async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Jazz')).toEqual([
+    ['ii-V-I', 'ii–V–I (jazz)'],
+    ['ii-V', 'ii–V'],
+    ['ii-V-I-I', 'ii–V–I–I'],
+    ['ii-V-I-VI7', 'ii–V–I–VI7 (turnaround)'],
+    ['I-vi-ii-V', 'I–vi–ii–V (turnaround)'],
+    ['iii-vi-ii-V', 'iii–vi–ii–V'],
+    ['I-VI7-ii-V', 'I–VI7–ii–V'],
+    ['iio-V-i', 'ii°–V–i (minor)'],
+    ['ragtime', 'III7–VI7–II7–V7–I (ragtime)'],
+    ['backdoor', 'iv–♭VII–I (backdoor)'],
+    ['tritone', 'ii–♭II–I (tritone substitution)'],
+    ['autumn-leaves', 'iv–♭VII–♭III–♭VI–ii°–V–i (Autumn Leaves)'],
+    ['coltrane', 'I–♭III7–♭VI–VII7–III–V7–I (Coltrane changes)'],
+    ['circle-sevenths', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, sevenths)'],
+  ]);
+  expect(await chooseAndRead(page, 'iio-V-i')).toEqual(['Dm7♭5', 'G7', 'Cm7']);
+  expect(await chooseAndRead(page, 'ragtime')).toEqual(['E7', 'A7', 'D7', 'G7', 'Cmaj7']);
+  expect(await chooseAndRead(page, 'coltrane')).toEqual(['Cmaj7', 'Eb7', 'Abmaj7', 'B7', 'Emaj7', 'G7', 'Cmaj7']);
+});
+
+test('AC-2.6.1/12 — The Blues group holds the twelve-bar blues, its quick-change, V–V and no-turnaround forms, the twelve-bar minor blues, the twelve-bar jazz blues, the eight-bar blues and I7–IV7–V7', async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Blues')).toEqual([
+    ['twelve-bar-blues', 'Twelve-bar blues'],
+    ['quick-change-blues', 'Twelve-bar blues, quick change'],
+    ['v-v-blues', 'Twelve-bar blues, V–V'],
+    ['no-turnaround-blues', 'Twelve-bar blues, no turnaround'],
+    ['minor-blues', 'Twelve-bar minor blues'],
+    ['jazz-blues', 'Twelve-bar jazz blues'],
+    ['eight-bar-blues', 'Eight-bar blues'],
+    ['I7-IV7-V7', 'I7–IV7–V7'],
+  ]);
+  expect(await chooseAndRead(page, 'quick-change-blues')).toEqual([
+    'C7', 'F7', 'C7', 'C7', 'F7', 'F7', 'C7', 'C7', 'G7', 'F7', 'C7', 'G7',
+  ]);
+  expect(await chooseAndRead(page, 'minor-blues')).toEqual([
+    'Cm7', 'Cm7', 'Cm7', 'Cm7', 'Fm7', 'Fm7', 'Cm7', 'Cm7', 'Ab7', 'G7', 'Cm7', 'G7',
+  ]);
+  expect(await chooseAndRead(page, 'eight-bar-blues')).toEqual(['C7', 'G7', 'F7', 'F7', 'C7', 'G7', 'C7', 'G7']);
+});
+
+test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII–IV–I, I–I–♭VII–IV, I–♭VII–IV–IV, I–♭VII, the Mario cadence ♭VI–♭VII–I, I–♭III–IV, the Dorian i–IV, i–♭VII, the Lydian I–II and the Phrygian i–♭II', async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Modal and rock')).toEqual([
+    ['I-bVII-IV', 'I–♭VII–IV (Mixolydian)'],
+    ['I-bVII-IV-I', 'I–♭VII–IV–I'],
+    ['I-I-bVII-IV', 'I–I–♭VII–IV'],
+    ['I-bVII-IV-IV', 'I–♭VII–IV–IV'],
+    ['I-bVII', 'I–♭VII (Mixolydian vamp)'],
+    ['bVI-bVII-I', '♭VI–♭VII–I (Mario cadence)'],
+    ['I-bIII-IV', 'I–♭III–IV'],
+    ['i-IV', 'i–IV (Dorian)'],
+    ['i-bVII', 'i–♭VII'],
+    ['I-II', 'I–II (Lydian)'],
+    ['i-bII', 'i–♭II (Phrygian)'],
+  ]);
+  expect(await chooseAndRead(page, 'I-I-bVII-IV')).toEqual(['C', 'C', 'Bb', 'F']);
+  expect(await chooseAndRead(page, 'bVI-bVII-I')).toEqual(['Ab', 'Bb', 'C']);
+  expect(await chooseAndRead(page, 'i-IV')).toEqual(['Cm', 'F']);
+  expect(await chooseAndRead(page, 'i-bII')).toEqual(['Cm', 'Db']);
+});
+
+test("AC-2.6.1/14 — The Classical and folk group holds Pachelbel's I–V–vi–iii–IV–I–IV–V, the Passamezzo antico, the Romanesca, the Folia, the circle of fifths in triads and I–ii–V–I", async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Classical and folk')).toEqual([
+    ['pachelbel', 'I–V–vi–iii–IV–I–IV–V (Pachelbel)'],
+    ['passamezzo-antico', 'i–♭VII–i–V–♭III–♭VII–i–V (Passamezzo antico)'],
+    ['romanesca', '♭III–♭VII–i–V (Romanesca)'],
+    ['folia', 'i–V–i–♭VII–♭III–♭VII–i–V (Folia)'],
+    ['circle-triads', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, triads)'],
+    ['I-ii-V-I', 'I–ii–V–I'],
+  ]);
+  expect(await chooseAndRead(page, 'folia')).toEqual(['Cm', 'G', 'Cm', 'Bb', 'Eb', 'Bb', 'Cm', 'G']);
+  expect(await chooseAndRead(page, 'circle-triads')).toEqual(['C', 'F', 'Bdim', 'Em', 'Am', 'Dm', 'G', 'C']);
 });
 
 // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---

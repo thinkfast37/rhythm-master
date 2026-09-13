@@ -113,57 +113,199 @@ export function hasTone(chord, tone) {
 }
 
 /**
- * Named progressions (AC-2.6.1/1). A step is a degree of the Key; `seventh`
- * asks for the diatonic seventh chord, and an explicit `quality` overrides
- * the scale — the blues is dominant sevenths whatever the scale says, and a
- * borrowed chord is what it is.
+ * The headings the picker files the catalogue under (AC-2.6.1/1), in order.
+ */
+export const PROGRESSION_GROUPS = [
+  { id: 'three', label: 'Three chords and repeats' },
+  { id: 'pop', label: 'Pop' },
+  { id: 'minor', label: 'Minor' },
+  { id: 'jazz', label: 'Jazz' },
+  { id: 'blues', label: 'Blues' },
+  { id: 'modal', label: 'Modal and rock' },
+  { id: 'classical', label: 'Classical and folk' },
+];
+
+/**
+ * Named progressions (AC-2.6.1/1, /8–/14). A step is a degree of the Key;
+ * `seventh` asks for the diatonic seventh chord, and an explicit `quality`
+ * overrides the scale — the blues is dominant sevenths whatever the scale
+ * says, a borrowed chord is what it is, and a minor-key entry is minor under
+ * any scale so it is what it says.
+ *
+ * The repeat shapes of a three-chord progression — first, middle or last
+ * chord doubled — are entries of their own: a four-chord loop with one chord
+ * held is a different thing to practise from the three-chord loop it came from.
  */
 const s = (degree, extra = {}) => ({ degree, ...extra });
+const seq = (...degrees) => degrees.map((d) => s(d));
+const sevenths = (...degrees) => degrees.map((d) => s(d, { seventh: true }));
+const doms = (...degrees) => degrees.map((d) => s(d, { quality: '7' }));
+const min = (degree) => s(degree, { quality: 'min' });
+const maj = (degree) => s(degree, { quality: 'maj' });
+const entry = (group, id, label, steps) => ({ id, label, group, steps });
+
 export const PROGRESSIONS = [
-  { id: 'I-IV-V', label: 'I–IV–V', steps: [s('1'), s('4'), s('5')] },
-  { id: 'I-V-vi-IV', label: 'I–V–vi–IV (pop)', steps: [s('1'), s('5'), s('6'), s('4')] },
-  { id: 'vi-IV-I-V', label: 'vi–IV–I–V', steps: [s('6'), s('4'), s('1'), s('5')] },
-  { id: 'I-vi-IV-V', label: 'I–vi–IV–V (’50s)', steps: [s('1'), s('6'), s('4'), s('5')] },
-  {
-    id: 'ii-V-I',
-    label: 'ii–V–I (jazz)',
-    steps: [s('2', { seventh: true }), s('5', { seventh: true }), s('1', { seventh: true })],
-  },
-  {
-    id: 'I-vi-ii-V',
-    label: 'I–vi–ii–V (turnaround)',
-    steps: [
-      s('1', { seventh: true }),
-      s('6', { seventh: true }),
-      s('2', { seventh: true }),
-      s('5', { seventh: true }),
-    ],
-  },
-  {
-    id: 'twelve-bar-blues',
-    label: 'Twelve-bar blues',
-    steps: ['1', '1', '1', '1', '4', '4', '1', '1', '5', '4', '1', '5'].map((d) => s(d, { quality: '7' })),
-  },
-  {
-    id: 'andalusian',
-    label: 'i–♭VII–♭VI–V (Andalusian)',
-    steps: [s('1', { quality: 'min' }), s('b7'), s('b6'), s('5', { quality: 'maj' })],
-  },
-  { id: 'i-iv-v', label: 'i–iv–v', steps: [s('1', { quality: 'min' }), s('4', { quality: 'min' }), s('5', { quality: 'min' })] },
-  {
-    id: 'i-bVI-bIII-bVII',
-    label: 'i–♭VI–♭III–♭VII',
-    steps: [s('1', { quality: 'min' }), s('b6'), s('b3'), s('b7')],
-  },
-  { id: 'I-IV-vi-V', label: 'I–IV–vi–V', steps: [s('1'), s('4'), s('6'), s('5')] },
-  {
-    id: 'pachelbel',
-    label: 'I–V–vi–iii–IV–I–IV–V (Pachelbel)',
-    steps: ['1', '5', '6', '3', '4', '1', '4', '5'].map((d) => s(d)),
-  },
-  { id: 'I-bVII-IV', label: 'I–♭VII–IV (Mixolydian)', steps: [s('1'), s('b7'), s('4')] },
-  { id: 'I-IV', label: 'I–IV', steps: [s('1'), s('4')] },
-  { id: 'ii-V', label: 'ii–V', steps: [s('2', { seventh: true }), s('5', { seventh: true })] },
+  // --- Three chords and repeats (AC-2.6.1/8) ---
+  entry('three', 'I-IV-V', 'I–IV–V', seq('1', '4', '5')),
+  entry('three', 'I-I-IV-V', 'I–I–IV–V', seq('1', '1', '4', '5')),
+  entry('three', 'I-IV-IV-V', 'I–IV–IV–V', seq('1', '4', '4', '5')),
+  entry('three', 'I-IV-V-V', 'I–IV–V–V (La Bamba)', seq('1', '4', '5', '5')),
+  entry('three', 'I-IV-V-IV', 'I–IV–V–IV (Wild Thing)', seq('1', '4', '5', '4')),
+  entry('three', 'I-IV-V-I', 'I–IV–V–I', seq('1', '4', '5', '1')),
+  entry('three', 'I-IV-I-V', 'I–IV–I–V', seq('1', '4', '1', '5')),
+  entry('three', 'I-V-IV', 'I–V–IV', seq('1', '5', '4')),
+  entry('three', 'I-V-IV-I', 'I–V–IV–I', seq('1', '5', '4', '1')),
+  entry('three', 'I-IV', 'I–IV', seq('1', '4')),
+  entry('three', 'I-V', 'I–V', seq('1', '5')),
+
+  // --- Pop (AC-2.6.1/9) ---
+  entry('pop', 'I-V-vi-IV', 'I–V–vi–IV (pop)', seq('1', '5', '6', '4')),
+  entry('pop', 'vi-IV-I-V', 'vi–IV–I–V', seq('6', '4', '1', '5')),
+  entry('pop', 'IV-I-V-vi', 'IV–I–V–vi', seq('4', '1', '5', '6')),
+  entry('pop', 'V-vi-IV-I', 'V–vi–IV–I', seq('5', '6', '4', '1')),
+  entry('pop', 'IV-V-vi-I', 'IV–V–vi–I', seq('4', '5', '6', '1')),
+  entry('pop', 'I-vi-IV-V', 'I–vi–IV–V (’50s)', seq('1', '6', '4', '5')),
+  entry('pop', 'I-IV-vi-V', 'I–IV–vi–V', seq('1', '4', '6', '5')),
+  entry('pop', 'I-V-vi-iii', 'I–V–vi–iii', seq('1', '5', '6', '3')),
+  entry('pop', 'I-iii-vi-IV', 'I–iii–vi–IV', seq('1', '3', '6', '4')),
+  entry('pop', 'I-ii-IV-V', 'I–ii–IV–V', seq('1', '2', '4', '5')),
+  entry('pop', 'I-IV-ii-V', 'I–IV–ii–V', seq('1', '4', '2', '5')),
+  entry('pop', 'I-ii-iii-IV', 'I–ii–iii–IV (ascending)', seq('1', '2', '3', '4')),
+  entry('pop', 'vi-V-IV-III', 'vi–V–IV–III (Andalusian, relative minor)', [...seq('6', '5', '4'), maj('3')]),
+  entry('pop', 'IV-V-iii-vi', 'IV–V–iii–vi (Royal Road)', [...sevenths('4', '5', '3'), s('6')]),
+  entry('pop', 'I-III-IV-iv', 'I–III–IV–iv (Creep)', [s('1'), maj('3'), s('4'), min('4')]),
+  entry('pop', 'I-IV-iv-I', 'I–IV–iv–I (minor four)', [s('1'), s('4'), min('4'), s('1')]),
+  entry('pop', 'I-Imaj7-I7-IV', 'I–Imaj7–I7–IV (Something)', [
+    s('1'),
+    s('1', { quality: 'maj7' }),
+    s('1', { quality: '7' }),
+    s('4'),
+  ]),
+  entry('pop', 'vi-I-V-II', 'vi–I–V–II (Wonderwall)', [
+    s('6', { seventh: true }),
+    s('1'),
+    s('5'),
+    s('2', { quality: '7sus4' }),
+  ]),
+
+  // --- Minor (AC-2.6.1/10) ---
+  entry('minor', 'i-iv-v', 'i–iv–v', [min('1'), min('4'), min('5')]),
+  entry('minor', 'i-i-iv-v', 'i–i–iv–v', [min('1'), min('1'), min('4'), min('5')]),
+  entry('minor', 'i-iv-iv-v', 'i–iv–iv–v', [min('1'), min('4'), min('4'), min('5')]),
+  entry('minor', 'i-iv-v-v', 'i–iv–v–v', [min('1'), min('4'), min('5'), min('5')]),
+  entry('minor', 'i-iv-V', 'i–iv–V (harmonic minor)', [min('1'), min('4'), maj('5')]),
+  entry('minor', 'i-i-iv-V', 'i–i–iv–V', [min('1'), min('1'), min('4'), maj('5')]),
+  entry('minor', 'i-iv-iv-V', 'i–iv–iv–V', [min('1'), min('4'), min('4'), maj('5')]),
+  entry('minor', 'i-iv-V-V', 'i–iv–V–V', [min('1'), min('4'), maj('5'), maj('5')]),
+  entry('minor', 'i-iv-i-V', 'i–iv–i–V', [min('1'), min('4'), min('1'), maj('5')]),
+  entry('minor', 'i-bVI-bIII-bVII', 'i–♭VI–♭III–♭VII', [min('1'), s('b6'), s('b3'), s('b7')]),
+  entry('minor', 'andalusian', 'i–♭VII–♭VI–V (Andalusian)', [min('1'), s('b7'), s('b6'), maj('5')]),
+  entry('minor', 'i-bVII-bVI-bVII', 'i–♭VII–♭VI–♭VII (Aeolian vamp)', [min('1'), s('b7'), s('b6'), s('b7')]),
+  entry('minor', 'i-bVI-bVII', 'i–♭VI–♭VII', [min('1'), s('b6'), s('b7')]),
+  entry('minor', 'i-bVII-bVI', 'i–♭VII–♭VI', [min('1'), s('b7'), s('b6')]),
+  entry('minor', 'i-bIII-bVII-bVI', 'i–♭III–♭VII–♭VI', [min('1'), s('b3'), s('b7'), s('b6')]),
+  entry('minor', 'i-iv-bVII-bIII', 'i–iv–♭VII–♭III', [min('1'), min('4'), s('b7'), s('b3')]),
+  entry('minor', 'bVI-bVII-i', '♭VI–♭VII–i', [s('b6'), s('b7'), min('1')]),
+  entry('minor', 'hotel-california', 'i–V–♭VII–IV–♭VI–♭III–iv–V (Hotel California)', [
+    min('1'),
+    maj('5'),
+    s('b7'),
+    maj('4'),
+    s('b6'),
+    s('b3'),
+    min('4'),
+    maj('5'),
+  ]),
+
+  // --- Jazz (AC-2.6.1/11) ---
+  entry('jazz', 'ii-V-I', 'ii–V–I (jazz)', sevenths('2', '5', '1')),
+  entry('jazz', 'ii-V', 'ii–V', sevenths('2', '5')),
+  entry('jazz', 'ii-V-I-I', 'ii–V–I–I', sevenths('2', '5', '1', '1')),
+  entry('jazz', 'ii-V-I-VI7', 'ii–V–I–VI7 (turnaround)', [...sevenths('2', '5', '1'), ...doms('6')]),
+  entry('jazz', 'I-vi-ii-V', 'I–vi–ii–V (turnaround)', sevenths('1', '6', '2', '5')),
+  entry('jazz', 'iii-vi-ii-V', 'iii–vi–ii–V', sevenths('3', '6', '2', '5')),
+  entry('jazz', 'I-VI7-ii-V', 'I–VI7–ii–V', [...sevenths('1'), ...doms('6'), ...sevenths('2', '5')]),
+  entry('jazz', 'iio-V-i', 'ii°–V–i (minor)', [s('2', { quality: 'm7b5' }), ...doms('5'), s('1', { quality: 'm7' })]),
+  entry('jazz', 'ragtime', 'III7–VI7–II7–V7–I (ragtime)', [...doms('3', '6', '2', '5'), ...sevenths('1')]),
+  entry('jazz', 'backdoor', 'iv–♭VII–I (backdoor)', [s('4', { quality: 'm7' }), ...doms('b7'), ...sevenths('1')]),
+  entry('jazz', 'tritone', 'ii–♭II–I (tritone substitution)', [...sevenths('2'), ...doms('b2'), ...sevenths('1')]),
+  entry('jazz', 'autumn-leaves', 'iv–♭VII–♭III–♭VI–ii°–V–i (Autumn Leaves)', [
+    s('4', { quality: 'm7' }),
+    ...doms('b7'),
+    s('b3', { quality: 'maj7' }),
+    s('b6', { quality: 'maj7' }),
+    s('2', { quality: 'm7b5' }),
+    ...doms('5'),
+    s('1', { quality: 'm7' }),
+  ]),
+  entry('jazz', 'coltrane', 'I–♭III7–♭VI–VII7–III–V7–I (Coltrane changes)', [
+    ...sevenths('1'),
+    ...doms('b3'),
+    s('b6', { quality: 'maj7' }),
+    ...doms('7'),
+    s('3', { quality: 'maj7' }),
+    ...doms('5'),
+    ...sevenths('1'),
+  ]),
+  entry('jazz', 'circle-sevenths', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, sevenths)', sevenths('1', '4', '7', '3', '6', '2', '5', '1')),
+
+  // --- Blues (AC-2.6.1/12) ---
+  entry('blues', 'twelve-bar-blues', 'Twelve-bar blues', doms('1', '1', '1', '1', '4', '4', '1', '1', '5', '4', '1', '5')),
+  entry('blues', 'quick-change-blues', 'Twelve-bar blues, quick change', doms('1', '4', '1', '1', '4', '4', '1', '1', '5', '4', '1', '5')),
+  entry('blues', 'v-v-blues', 'Twelve-bar blues, V–V', doms('1', '1', '1', '1', '4', '4', '1', '1', '5', '5', '1', '1')),
+  entry('blues', 'no-turnaround-blues', 'Twelve-bar blues, no turnaround', doms('1', '1', '1', '1', '4', '4', '1', '1', '5', '4', '1', '1')),
+  entry('blues', 'minor-blues', 'Twelve-bar minor blues', [
+    ...['1', '1', '1', '1', '4', '4', '1', '1'].map((d) => s(d, { quality: 'm7' })),
+    ...doms('b6', '5'),
+    s('1', { quality: 'm7' }),
+    ...doms('5'),
+  ]),
+  entry('blues', 'jazz-blues', 'Twelve-bar jazz blues', [
+    ...doms('1', '4', '1', '1', '4', '4', '1', '6'),
+    s('2', { quality: 'm7' }),
+    ...doms('5', '1', '5'),
+  ]),
+  entry('blues', 'eight-bar-blues', 'Eight-bar blues', doms('1', '5', '4', '4', '1', '5', '1', '5')),
+  entry('blues', 'I7-IV7-V7', 'I7–IV7–V7', doms('1', '4', '5')),
+
+  // --- Modal and rock (AC-2.6.1/13) ---
+  entry('modal', 'I-bVII-IV', 'I–♭VII–IV (Mixolydian)', seq('1', 'b7', '4')),
+  entry('modal', 'I-bVII-IV-I', 'I–♭VII–IV–I', seq('1', 'b7', '4', '1')),
+  entry('modal', 'I-I-bVII-IV', 'I–I–♭VII–IV', seq('1', '1', 'b7', '4')),
+  entry('modal', 'I-bVII-IV-IV', 'I–♭VII–IV–IV', seq('1', 'b7', '4', '4')),
+  entry('modal', 'I-bVII', 'I–♭VII (Mixolydian vamp)', seq('1', 'b7')),
+  entry('modal', 'bVI-bVII-I', '♭VI–♭VII–I (Mario cadence)', seq('b6', 'b7', '1')),
+  entry('modal', 'I-bIII-IV', 'I–♭III–IV', seq('1', 'b3', '4')),
+  entry('modal', 'i-IV', 'i–IV (Dorian)', [min('1'), maj('4')]),
+  entry('modal', 'i-bVII', 'i–♭VII', [min('1'), s('b7')]),
+  entry('modal', 'I-II', 'I–II (Lydian)', [s('1'), maj('2')]),
+  entry('modal', 'i-bII', 'i–♭II (Phrygian)', [min('1'), s('b2')]),
+
+  // --- Classical and folk (AC-2.6.1/14) ---
+  entry('classical', 'pachelbel', 'I–V–vi–iii–IV–I–IV–V (Pachelbel)', seq('1', '5', '6', '3', '4', '1', '4', '5')),
+  entry('classical', 'passamezzo-antico', 'i–♭VII–i–V–♭III–♭VII–i–V (Passamezzo antico)', [
+    min('1'),
+    s('b7'),
+    min('1'),
+    maj('5'),
+    s('b3'),
+    s('b7'),
+    min('1'),
+    maj('5'),
+  ]),
+  entry('classical', 'romanesca', '♭III–♭VII–i–V (Romanesca)', [s('b3'), s('b7'), min('1'), maj('5')]),
+  entry('classical', 'folia', 'i–V–i–♭VII–♭III–♭VII–i–V (Folia)', [
+    min('1'),
+    maj('5'),
+    min('1'),
+    s('b7'),
+    s('b3'),
+    s('b7'),
+    min('1'),
+    maj('5'),
+  ]),
+  entry('classical', 'circle-triads', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, triads)', seq('1', '4', '7', '3', '6', '2', '5', '1')),
+  entry('classical', 'I-ii-V-I', 'I–ii–V–I', seq('1', '2', '5', '1')),
 ];
 
 /*

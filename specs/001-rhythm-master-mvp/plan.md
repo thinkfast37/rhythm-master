@@ -233,7 +233,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
-| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.10 | T249, T250, T253, T255, T257 | T251, T252, T254, T256, T258 |
+| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.10 | T249, T250, T253, T255, T257, T268 | T251, T252, T254, T256, T258, T269 |
 | **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260 | T261, T262 |
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263 | T264 |
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
