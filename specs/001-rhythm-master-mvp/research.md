@@ -436,6 +436,32 @@ disagree about which note a Slot is.
 
 ---
 
+## D-013 — Songs: a Section plays through the seam cycle mode already uses
+
+**Decision (2026-09-13)**: a Song (US-18.1) is its own store, `rm.songs.v1`, holding Sections that
+reference Patterns by id, and it plays through exactly the mechanism cycle mode (US-2.7) introduced:
+at each pass boundary the transport is handed the Pattern with the fill in force substituted
+(`withArpeggio`), and which fill is in force is a pure function of the pass number — `core/song.js`
+answers it from the Song's entries as `core/harmony.js` answers it from the catalogue order. One
+timeline per pass, unchanged (D-011); nothing new in the scheduler. Keeps (US-2.8) are an overlay
+field beside ratings and added Tags, since a keep is the Composer's judgement about a fill over a
+Pattern and belongs with the rest of their judgements about it.
+
+**Why**: the maintainer's workflow is judge, then sequence — audition fills over a progression,
+shortlist the ones that work, chain them with repeat counts, and build a song on that bed. The
+transport already knows how to switch fills at a pass boundary without stopping; a Song only changes
+who decides the next fill. Storing `patternId` per Section from the first version means the verse →
+chorus case later — different progressions per Section — changes the Compose group, not the schema.
+
+**Alternatives considered**: a Song as a chain of Pattern copies concatenated by Append (rejected
+for the same reason as in D-011 — the Measure cap — and because a Song of fills over one progression
+has no copies to make); Keeps stored on the Song rather than the Pattern (rejected: the shortlist is
+made before any Song exists, while auditioning, and belongs to the Pattern being auditioned); a mode
+inside the Melody group instead of a fourth workbench group (rejected: hidden state, exactly what the
+2026-09-13 usability review removed); multiple Patterns per Song in this version (deferred: loop
+length and meter can change between Sections, which is real transport work, and the maintainer's
+first need is one Section over one progression).
+
 ## Open items deliberately left to implementation
 
 These are genuinely low-stakes and do not need a decision before tasks are written:

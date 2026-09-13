@@ -664,21 +664,21 @@ async function untilFill(page, id, timeout = 9000) {
   return false;
 }
 
-test('AC-2.7.1/1 — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the Practice group, and are absent, like the Arpeggio picker, on a Pattern without a progression', async ({ page }) => {
+test('AC-2.7.1/1 — A Cycle toggle and a Repeats count, 1 to 16 and 4 by default, sit in the Melody group beside the Arpeggio picker, and are absent, like the picker, on a Pattern without a progression', async ({ page }) => {
   await melodicBlank(page);
   await expect(page.locator('.fill-cycle')).toHaveCount(0);
   await expect(page.locator('.arpeggio-picker')).toHaveCount(0);
   await page.locator('.progression-picker').selectOption('I-IV-V');
-  const row = page.locator('[data-section="practice"] .fill-cycle-row');
+  const row = page.locator('[data-section="melody"] .fill-cycle-row');
   await expect(row).toBeVisible();
   await expect(row.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
   const repeats = row.locator('.fill-cycle-repeats');
   await expect(repeats).toHaveValue('4');
   await expect(repeats).toHaveAttribute('min', '1');
   await expect(repeats).toHaveAttribute('max', '16');
-  // With the playback settings, not in the harmony block the picker sits in.
-  await expect(page.locator('.harmony .fill-cycle')).toHaveCount(0);
-  await expect(page.locator('.harmony .arpeggio-picker')).toBeVisible();
+  // In the Melody group with the picker, and nowhere in Practice (US-2.8).
+  await expect(page.locator('[data-section="melody"] .arpeggio-picker')).toBeVisible();
+  await expect(page.locator('[data-section="practice"] .fill-cycle')).toHaveCount(0);
 });
 
 test('AC-2.7.1/2 — The Repeats count is remembered as an app preference across loads; cycle mode itself is off on every load', async ({ page }) => {
@@ -898,4 +898,147 @@ test("AC-2.7.3/2 — MIDI export carries the Pattern's own arpeggio, never the f
   const ons = midiNoteOns(readFileSync(await download.path()));
   expect(ons.slice(0, 3)).toEqual([60, 60, 60]);
   expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
+});
+
+/*
+ * US-2.8 — Keep. A mark in the Composer's own records (rm.overlays.v1), never
+ * on the Pattern, made while auditioning fills in the Melody group.
+ */
+const keptFor = (page, id) =>
+  page.evaluate((pid) => JSON.parse(localStorage.getItem('rm.overlays.v1') ?? '{"byPatternId":{}}').byPatternId[pid]?.keptFills ?? [], id);
+
+test('AC-2.8.1/1 — A Keep control sits in the Melody group beside the Arpeggio picker and the cycle controls, names the fill it would keep, and is absent, like the picker, on a Pattern without a progression or with the arpeggio at None', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('.keep-fill')).toHaveCount(0);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  // A progression brings its own fill, so Keep is there at once; at None
+  // there is nothing to keep and it goes.
+  await expect(page.locator('[data-section="melody"] .fill-cycle-row')).toBeVisible();
+  await expect(page.locator('.keep-fill')).toHaveCount(1);
+  await page.locator('.arpeggio-picker').selectOption('none');
+  await expect(page.locator('.keep-fill')).toHaveCount(0);
+  await page.locator('.arpeggio-picker').selectOption('root-fifth');
+  const keep = page.locator('[data-section="melody"] .fill-cycle-row .keep-fill');
+  await expect(keep).toBeVisible();
+  await expect(keep).toHaveText(/^Keep /);
+  await expect(keep).toHaveAttribute('data-fill', 'root-fifth');
+  await expect(page.locator('[data-section="practice"] .keep-fill')).toHaveCount(0);
+});
+
+test('AC-2.8.1/2 — Pressing Keep on a kept fill unkeeps it, and the control reads which it will do', async ({ page }) => {
+  await harmonicBlank(page, 'I-IV-V', { arpeggio: 'root-fifth' });
+  const keep = page.locator('.keep-fill');
+  await keep.click();
+  await expect(keep).toHaveAttribute('aria-pressed', 'true');
+  await expect(keep).toHaveText(/^Unkeep /);
+  expect(await keptFor(page, 'p_test')).toEqual(['root-fifth']);
+  await keep.click();
+  await expect(keep).toHaveAttribute('aria-pressed', 'false');
+  await expect(keep).toHaveText(/^Keep /);
+  expect(await keptFor(page, 'p_test')).toEqual([]);
+});
+
+test('AC-2.8.1/3 — The Arpeggio picker marks every kept fill, so the shortlist is visible without cycling', async ({ page }) => {
+  await harmonicBlank(page, 'I-IV-V', { arpeggio: 'root-fifth' });
+  await page.locator('.keep-fill').click();
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  await page.locator('.keep-fill').click();
+  const marked = page.locator('.arpeggio-picker option[data-kept="true"]');
+  await expect(marked).toHaveCount(2);
+  // Marked in the picker's own (catalogue) order, whatever order they were kept in.
+  expect(await marked.evaluateAll((os) => os.map((o) => o.value))).toEqual(['alberti', 'root-fifth']);
+  await expect(page.locator('.kept-count')).toHaveText('2 kept');
+});
+
+test("AC-2.8.1/4 — Keeps are per Pattern, shipped and custom alike, and survive a reload; a different Pattern shows its own keeps and none of this one's", async ({ page }) => {
+  await harmonicBlank(page, 'I-IV-V', { arpeggio: 'root-fifth' });
+  await page.locator('.keep-fill').click();
+  // A second Pattern with the same progression and fill: no keep of its own.
+  await page.evaluate(() => {
+    const p = window.__rm.getState().pattern;
+    window.__rm.loadPattern({ ...p, id: 'p_other', name: 'Other' }, { owned: true });
+  });
+  await expect(page.locator('.keep-fill')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.kept-count')).toHaveText('Nothing kept yet');
+  // A shipped Pattern keeps its own too — through the same control, on the
+  // fill it carries (choosing another would fork it, which is not a keep).
+  const shipped = await page.evaluate(() => {
+    const seed = window.__rm.seedStore
+      .loadAll()
+      .find((s) => s.soundMode === 'melodic' && s.harmony?.chords?.length && s.harmony.arpeggio);
+    window.__rm.handlers.onOpen(seed.id, false);
+    return { id: seed.id, fill: seed.harmony.arpeggio };
+  });
+  await expect(page.locator('.keep-fill')).toHaveAttribute('data-fill', shipped.fill);
+  await page.locator('.keep-fill').click();
+  expect(await keptFor(page, shipped.id)).toEqual([shipped.fill]);
+  await page.reload();
+  expect(await keptFor(page, 'p_test')).toEqual(['root-fifth']);
+  expect(await keptFor(page, shipped.id)).toEqual([shipped.fill]);
+});
+
+test("AC-2.8.1/5 — A Keep is not Pattern content: the Pattern's own arpeggio is unchanged, nothing auto-saves, a shipped Pattern is never prompted for a name, and no export carries it", async ({ page }) => {
+  await page.goto('/');
+  const seed = await page.evaluate(() => {
+    const s = window.__rm.seedStore.loadAll().find((s) => s.soundMode === 'melodic' && s.harmony?.chords?.length);
+    window.__rm.handlers.onOpen(s.id, false);
+    return { id: s.id, arpeggio: s.harmony.arpeggio ?? null };
+  });
+  // Keep never goes through guardShipped: no prompt, no fork.
+  await page.evaluate(() => window.__rm.handlers.onKeepFill('root-fifth'));
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  const after = await page.evaluate((id) => {
+    const s = window.__rm.seedStore.loadAll().find((x) => x.id === id);
+    const owned = JSON.parse(localStorage.getItem('rm.patterns.v1') ?? '{}');
+    return { arpeggio: s.harmony.arpeggio ?? null, ownedCount: Object.keys(owned.byId ?? owned.patterns ?? {}).length, keptOnPattern: 'keptFills' in s };
+  }, seed.id);
+  expect(after.arpeggio).toBe(seed.arpeggio);
+  expect(after.keptOnPattern).toBe(false);
+  const midi = await page.evaluate(() => JSON.stringify(window.__rmMidi()));
+  expect(midi).not.toContain('keptFills');
+});
+
+test('AC-2.8.1/6 — Nothing clears a Keep but the Composer: cycling on, changing the Key, editing the grid, changing the progression and stopping playback all leave every Keep as it was', async ({ page }) => {
+  await harmonicBlank(page, 'I-IV-V', { arpeggio: 'root-fifth' });
+  await page.locator('.keep-fill').click();
+  await page.locator('.fill-cycle').click();
+  await page.locator('.key-picker').selectOption('Eb');
+  await page.locator('.measure[data-measure="0"] .slot[data-beat="0"][data-slot="0"] .slot-accent').click();
+  await page.locator('.progression-picker').selectOption('ii-V-I');
+  await page.locator('[data-action="play"]').click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-action="stop"]').click();
+  expect(await keptFor(page, 'p_test')).toEqual(['root-fifth']);
+});
+
+test('AC-2.8.2/1 — Keep is reachable while playing, and pressing it stops, restarts and reorders nothing — the loop counter keeps counting and the cycle keeps its place', async ({ page }) => {
+  await harmonicBlank(page, 'I-IV-V', { arpeggio: 'root-fifth' });
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  await page.waitForTimeout(700);
+  const before = await page.evaluate(() => ({ loop: window.__rm.getState().loop, cycle: window.__rm.getState().fillCycle }));
+  await page.locator('.keep-fill').click();
+  const after = await page.evaluate(() => ({
+    loop: window.__rm.getState().loop,
+    cycle: window.__rm.getState().fillCycle,
+    running: window.__rm.transport.isRunning,
+  }));
+  expect(after.running).toBe(true);
+  expect(after.loop).toBeGreaterThanOrEqual(before.loop);
+  expect(after.cycle).toEqual(before.cycle);
+  expect((await keptFor(page, 'p_test')).length).toBe(1);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test('AC-2.8.2/2 — The Melody group says how many fills are kept for this Pattern, so the Composer knows when there is something to compose with', async ({ page }) => {
+  await harmonicBlank(page, 'I-IV-V', { arpeggio: 'root-fifth' });
+  const count = page.locator('[data-section="melody"] .kept-count');
+  await expect(count).toHaveText('Nothing kept yet');
+  await page.locator('.keep-fill').click();
+  await expect(count).toHaveText('1 kept');
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  await page.locator('.keep-fill').click();
+  await expect(count).toHaveText('2 kept');
 });

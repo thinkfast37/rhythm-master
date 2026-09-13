@@ -299,11 +299,19 @@ cannot live on the Pattern, so they live here, keyed by Pattern id:
                                     // control went Pattern-wide), keyed "measure.beat.group";
                                     // still applied on load, as overrides
       "swingAmount": 30,            // remembered Pattern-wide playback swing (AC-4.4.12), 0–100
-      "swingFeel": "sixteenth"      // remembered playback swing feel (AC-4.4.10)
+      "swingFeel": "sixteenth",     // remembered playback swing feel (AC-4.4.10)
+      "keptFills": ["root-fifth", "alberti"]  // fills the Composer kept for this Pattern (AC-2.8.1),
+                                              // arpeggio ids from the catalogue, in the order kept
     }
   }
 }
 ```
+
+`keptFills` is the Composer's shortlist for the Compose group (US-18.1): user content like a
+rating, never Pattern content, cleared only by the Composer (AC-2.8.1/6). An id the catalogue no
+longer carries is skipped on read. Unlike the playback settings it is kept for owned Patterns too —
+a keep is about the Composer's judgement of a fill over this progression, not about the Pattern's
+data, so it has no place on the Pattern in either case.
 
 `tempo`, `swing`, `swingAmount`, and `swingFeel` are **playback settings** remembered per
 shipped Pattern
@@ -339,6 +347,41 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "fillCycleRepeats": 4           // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
 }
 ```
+
+### `rm.songs.v1` — Songs (US-18.1)
+
+A Song is the Composer's own sequence of fills over a Pattern's progression. It is neither Pattern
+content nor an overlay on one: it references Patterns by id and is stored apart from every other
+store, so nothing that happens to Patterns, ratings, added Tags or keeps can lose one (AC-18.1.4/7).
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "nextId": 3,
+  "songs": {
+    "song_2": {
+      "id": "song_2",
+      "name": "Bossa bed",
+      "sections": [
+        {
+          "patternId": "s_12",           // the Pattern this Section plays over
+          "entries": [
+            { "fill": "root-fifth", "repeats": 4 },   // an ARPEGGIOS id; harmonic cycles in force, 1–16
+            { "fill": "alberti", "repeats": 2 }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+`patternId` is stored per Section from the first version even though this version's Compose group
+keeps every Section of a Song on the one Pattern that is open: a later Section on a different
+progression — verse to chorus — is then a change to what the group offers, not to what a Song is.
+A repeat is one harmonic cycle, the unit cycle mode counts in (AC-2.7.2/1). A Pattern that any Song
+references cannot be deleted while the Song exists (AC-18.1.4/5). A Song is barred from every
+Pattern export and submission (AC-18.1.4/6); its own export is the Song MIDI file (AC-18.1.5).
 
 ### Seed file — `data/seed-patterns.json`
 
@@ -380,6 +423,10 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 14. `harmony`, where present, only when `soundMode` is `melodic`; its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`.
 15. A Pitch carries exactly one of `degree` (a degree token) or `tone` (1, 3, 5, 7 or 9), with an integer `octaveOffset`.
 16. A Pitch with `tone` only on a Pattern that has `harmony`.
+17. An overlay's `keptFills`, where present, is an array of ids from `core/harmony.js`'s `ARPEGGIOS`;
+    an id the catalogue no longer carries is skipped on read.
+18. A Song has a non-empty `name`, at least one Section, and each Section a `patternId` string and an
+    `entries` array whose every entry has a `fill` from `ARPEGGIOS` and an integer `repeats` 1–16.
 
 A shipped Pattern failing validation is a build-breaking error — the seed file is checked in CI.
 A user-owned Pattern failing validation is repaired where unambiguously possible (clamping tempo,
