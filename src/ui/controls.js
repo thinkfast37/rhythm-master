@@ -469,11 +469,6 @@ export function renderPlayControls(root, pattern, state, handlers) {
   });
 }
 
-/** A group's title: read on the stacked layout, hidden where a tab names it. */
-export function groupTitle(text) {
-  return el('h2', 'group-title', { textContent: text });
-}
-
 /**
  * The Melody group (AC-15.1.8): the pitch strip, then the harmony controls —
  * the two halves of the palette a Melodic grid is stamped from. Absent, not
@@ -484,7 +479,6 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
   root.hidden = pattern.soundMode !== 'melodic';
   return rebuild(root, (fresh) => {
     if (root.hidden) return;
-    fresh.appendChild(groupTitle('Melody'));
     const strip = el('div', 'pitch-strip');
     renderPitchStripInto(strip, pattern, state, handlers);
     fresh.appendChild(strip);
@@ -501,7 +495,6 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
 export function renderRhythmGroup(root, pattern, state, handlers) {
   root.className = 'controls workbench-group rhythm-group';
   return rebuild(root, (fresh) => {
-    fresh.appendChild(groupTitle('Rhythm'));
     fresh.appendChild(renderRecipeStrip(pattern, state, handlers));
     fresh.appendChild(renderStructure(pattern, handlers));
   });
@@ -514,7 +507,6 @@ export function renderRhythmGroup(root, pattern, state, handlers) {
 export function renderPracticeGroup(root, pattern, state, handlers) {
   root.className = 'controls workbench-group practice-group';
   return rebuild(root, (fresh) => {
-    fresh.appendChild(groupTitle('Practice'));
     fresh.appendChild(renderClickControls(state, handlers));
     fresh.appendChild(renderTempo(pattern, handlers));
     fresh.appendChild(renderSwing(pattern, handlers));

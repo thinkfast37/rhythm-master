@@ -228,9 +228,9 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.17 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.19 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
-| **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186 | T161, T169, T185, T187 |
+| **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186, T290 | T161, T169, T185, T187, T291 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
 | **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.10 | T249, T250, T253, T255, T257, T268 | T251, T252, T254, T256, T258, T269 |

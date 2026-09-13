@@ -16,6 +16,9 @@ import { hasHarmony } from '../core/harmony.js';
  * mobile slides a drawer off-canvas, the others drop the column out of the
  * layout. It is deliberately not called `data-drawer` any more, because above
  * mobile there is no drawer for it to describe.
+ *
+ * The main panel has a layout of its own, keyed on ITS width rather than the
+ * viewport's (AC-15.1.18) — see `panelLayout` below.
  */
 
 export const BREAKPOINTS = { tablet: 768, desktop: 1101 };
@@ -64,24 +67,27 @@ export function isLibraryOpen(shell) {
 }
 
 /**
- * Keep the sounding Measure on screen during playback. AC-15.1.11.
+ * Keep the sounding Measure on screen during playback. AC-15.1.11, AC-15.1.18/5.
  *
- * Without this, vertical Measure stacking means a long Pattern plays out of
- * view — the musician would be watching Measure 1 while hearing Measure 5.
- * Only scrolls when the Measure is actually outside the viewport, so a Pattern
- * that already fits never jitters.
+ * Without this, a long Pattern plays out of view — the musician would be
+ * watching Measure 1 while hearing Measure 5. Only scrolls when the Measure is
+ * actually outside the box it scrolls in, so a Pattern that already fits never
+ * jitters.
  *
- * The comparison stays against the viewport even though the main panel is the
- * scroll container (AC-15.1.12): the panel is bounded to the viewport height and
- * starts at its top, so the two agree, and `scrollIntoView` walks up to whatever
- * ancestor actually scrolls.
+ * The box is whatever scrolls the grid: the main panel on a narrow one, which
+ * is bounded to the viewport and starts at its top, or the grid pane on a wide
+ * one, which starts under the pinned bar (AC-15.1.18). `scrollIntoView` walks
+ * up to the same ancestor.
  */
 export function scrollMeasureIntoView(gridEl, measureIndex) {
   const measure = gridEl.querySelector(`.measure[data-measure="${measureIndex}"]`);
   if (!measure) return false;
 
   const rect = measure.getBoundingClientRect();
-  const fullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+  const box = scrollContainerOf(measure, null)?.getBoundingClientRect();
+  const top = box?.top ?? 0;
+  const bottom = box?.bottom ?? window.innerHeight;
+  const fullyVisible = rect.top >= top && rect.bottom <= bottom;
   if (fullyVisible) return false;
 
   measure.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -108,9 +114,10 @@ export function applyAccordions(sections) {
 }
 
 /**
- * The workbench (AC-15.1.7): three groups named for the job. On a phone one is
- * on screen at a time, chosen by a tab bar; above mobile all three stack, open,
- * and the bar is hidden by CSS — nothing here checks the width.
+ * The workbench (AC-15.1.7): four groups named for the job, one on screen at a
+ * time at every width, chosen by a tab bar. Where the bar and the groups SIT —
+ * under the grid, or beside it on a wide panel (AC-15.1.18) — is the panel
+ * layout's business, below; nothing here checks a width.
  */
 export const WORKBENCH_TABS = [
   ['melody', 'Melody'],
@@ -147,4 +154,72 @@ export function applyWorkbench(tabsEl, groups, active) {
     tab.setAttribute('aria-selected', String(tab.dataset.tab === active));
   }
   for (const group of groups) group.dataset.tabActive = String(group.dataset.tab === active);
+}
+
+/**
+ * The main panel's own layout (AC-15.1.18), by its width and not the
+ * viewport's:
+ *
+ *   wide   ≥ 1024px — two panes side by side under the pinned bar, the grid on
+ *                     the left and the tabbed workbench on the right, each
+ *                     scrolling on its own; the panel itself never scrolls
+ *   narrow <  1024px — one column, the workbench tabbed under the grid, and the
+ *                     panel scrolls as one (AC-15.1.12)
+ *
+ * Its width and not the viewport's because the library takes 240–300px beside
+ * it: the same window is wide enough for two panes with the library collapsed
+ * and not with it open, and collapsing fires no resize event.
+ *
+ * 1024 is the narrowest panel whose grid pane still holds a plain 4/4 Measure
+ * on one line — a 548px box beside the workbench pane's 400px floor (the pane's
+ * width is the CSS's, `--workbench-col`). A tablet in landscape with the
+ * library collapsed is above it; one in portrait is not.
+ */
+export const WIDE_PANEL_MIN = 1024;
+
+export function panelLayout(panelWidth) {
+  return panelWidth >= WIDE_PANEL_MIN ? 'wide' : 'narrow';
+}
+
+/** Mark the panel with the layout its current width calls for. */
+export function applyPanelLayout(main, width = main.clientWidth) {
+  const layout = panelLayout(width);
+  main.dataset.layout = layout;
+  return layout;
+}
+
+/**
+ * Re-mark the panel whenever its width changes — the window resizing, or the
+ * library taking or giving back its column (AC-15.1.18/4). Height changes are
+ * ignored: the layout changes the panel's content height, and reacting to that
+ * would loop.
+ */
+export function observePanelWidth(main) {
+  if (typeof ResizeObserver === 'undefined') return null;
+  let lastWidth = null;
+  const observer = new ResizeObserver(() => {
+    const width = main.clientWidth;
+    if (width === lastWidth) return;
+    lastWidth = width;
+    applyPanelLayout(main, width);
+  });
+  observer.observe(main);
+  return observer;
+}
+
+/**
+ * The element that scrolls `el`: the nearest ancestor with a scrolling
+ * overflow, stopping at `fallback`. On a wide panel that is the pane the
+ * control sits in; on a narrow one the panes do not scroll and it is the panel
+ * itself (AC-15.1.16/3 puts a control back where it was by moving whichever
+ * of them actually moved).
+ */
+export function scrollContainerOf(el, fallback) {
+  let node = el?.parentElement ?? null;
+  while (node && node !== fallback) {
+    const { overflowY } = getComputedStyle(node);
+    if (overflowY === 'auto' || overflowY === 'scroll') return node;
+    node = node.parentElement;
+  }
+  return fallback;
 }
