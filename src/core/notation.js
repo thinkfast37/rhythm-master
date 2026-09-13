@@ -20,7 +20,7 @@ import { beatNoteValue } from './meter.js';
 import { subdivisionGroups } from './recipes.js';
 import { STRONG } from './accents.js';
 import { labelsFor, effectiveSystem } from './counting.js';
-import { noteName } from './pitch.js';
+import { noteName, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
 import { SCALES, DEFAULT_SCALE } from './scales.js';
 import {
   chordAt,
@@ -244,9 +244,19 @@ const eventKey = (m, b, s) => `${m}:${b}:${s}`;
 function spell(slot, deal, chord, pattern, m, b, s) {
   const sounding = soundingPitch(slot, deal, m, b, s);
   if (!sounding) return null;
-  if (sounding.step !== undefined) return stepName(sounding.step, chord, pattern.key, pattern, sounding.octaveOffset);
-  if (sounding.tone !== undefined) return chordToneName(sounding, chord, pattern.key);
-  return noteName(sounding, pattern.key);
+  // Written at the octave it sounds in, not the one it is stored at (AC-2.9.3/2).
+  const register = registerOf(pattern);
+  if (sounding.step !== undefined) {
+    return stepName(
+      sounding.step,
+      chord,
+      pattern.key,
+      pattern,
+      soundingOctaveOffset(sounding.octaveOffset ?? 0, register)
+    );
+  }
+  if (sounding.tone !== undefined) return chordToneName(inRegister(sounding, register), chord, pattern.key);
+  return noteName(inRegister(sounding, register), pattern.key);
 }
 
 /**

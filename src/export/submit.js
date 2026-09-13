@@ -34,6 +34,8 @@ export function toSubmissionShape(pattern) {
   // The progression is the melody's harmony, so a submission without it would
   // arrive as a different piece (AC-2.6.8/5).
   if (pattern.soundMode === 'melodic' && pattern.harmony) out.harmony = structuredClone(pattern.harmony);
+  // The Register is part of how the Pattern sounds (US-2.9), so it travels with it.
+  if (pattern.soundMode === 'melodic' && pattern.register) out.register = pattern.register;
   return out;
 }
 

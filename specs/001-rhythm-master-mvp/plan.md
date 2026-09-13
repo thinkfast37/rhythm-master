@@ -208,7 +208,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.17 | T063, T204, T206, T210, T222, T236, T244, T272, T279 | T064, T205, T207, T211, T223, T237, T245, T273, T280 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.6 | T065, T272 | T066, T273 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
-| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272 | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273 |
+| **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.13 | T074–T075, T162 | T076, T163 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
@@ -228,7 +228,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.19 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T295 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T296 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.19 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186, T290 | T161, T169, T185, T187, T291 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
@@ -239,6 +239,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
+| **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.4 | T295 | T296 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

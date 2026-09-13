@@ -245,6 +245,19 @@ describe('core/notation — the treble staff (AC-12.2.5)', () => {
     expect(notesOf(buildScore(p))[0].step).toBe(4);
   });
 
+  it('AC-2.9.3/2 — The score writes each note at the octave the Register sounds it in: the model behind the drawn staff', () => {
+    let p = pattern([[0, 0, 0]], { melodic: true });
+    p = setPitch(p, 0, 0, 0, { degree: '1', octaveOffset: 0 });
+    expect(notesOf(buildScore(p))[0].name).toMatchObject({ letter: 'C', octave: 4 });
+
+    const bass = { ...p, register: -2 };
+    const written = notesOf(buildScore(bass))[0];
+    expect(written.name).toMatchObject({ letter: 'C', octave: 2 });
+    // The staff position moves with it, and the head is the note playback sounds.
+    expect(written.step).toBe(staffStep('C', 2));
+    expect(written.midiNote).toBe(buildTimeline(bass)[0].pitch.midiNote);
+  });
+
   it("AC-12.2.5/3 — A note's spelling is the pitch strip's: ♭3 in C is E♭, never D♯; 3 in D♭ is F and ♭3 in D♭ is F♭, so every degree keeps its own letter", () => {
     let p = pattern([[0, 0, 0]], { melodic: true });
     p = setPitch(p, 0, 0, 0, { degree: 'b3', octaveOffset: 0 });

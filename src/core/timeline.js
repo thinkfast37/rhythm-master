@@ -13,7 +13,7 @@
 import { beatCount, beatDurationSeconds, beatNoteValue } from './meter.js';
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
-import { resolve } from './pitch.js';
+import { resolve, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
 import { chordAt, resolveChordTone, resolveStep, arpeggioDeal, soundingPitch } from './harmony.js';
 import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
 
@@ -54,6 +54,10 @@ export function buildTimeline(pattern, pass = 0) {
   // Under an arpeggio the steps are dealt across the sounding Slots, and the
   // deal restarts on each chord change, so it belongs to this pass (AC-2.6.6).
   const deal = arpeggioDeal(pattern, pass);
+  // The Register moves every note this Pattern sounds, and nothing it stores
+  // (US-2.9). Playback, the cursor and the MIDI file share this one timeline, so
+  // applying it here is what keeps them from disagreeing.
+  const register = registerOf(pattern);
 
   pattern.measures.forEach((measure, measureIndex) => {
     const { timeSignature } = measure;
@@ -111,10 +115,16 @@ export function buildTimeline(pattern, pass = 0) {
           if (sounding) {
             pitch =
               sounding.step !== undefined
-                ? resolveStep(sounding.step, chord, pattern.key, pattern, sounding.octaveOffset)
+                ? resolveStep(
+                    sounding.step,
+                    chord,
+                    pattern.key,
+                    pattern,
+                    soundingOctaveOffset(sounding.octaveOffset ?? 0, register)
+                  )
                 : sounding.tone !== undefined
-                  ? resolveChordTone(sounding, chord, pattern.key)
-                  : resolve(sounding, pattern.key);
+                  ? resolveChordTone(inRegister(sounding, register), chord, pattern.key)
+                  : resolve(inRegister(sounding, register), pattern.key);
           }
 
           events.push({

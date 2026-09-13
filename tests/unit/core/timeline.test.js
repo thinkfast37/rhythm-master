@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../../../src/core/timeline.js';
 import {
   create,
+  setPitch,
   addMeasure,
   setTimeSignature,
   setRecipe,
@@ -11,6 +12,7 @@ import {
   setSwingFeel,
 } from '../../../src/core/pattern.js';
 import { MEDIUM, STRONG, WEAK } from '../../../src/core/accents.js';
+import { setProgression, setArpeggio } from '../../../src/core/harmony.js';
 
 /** Turn on every Slot of one Beat. */
 function fillBeat(pattern, m, b) {
@@ -326,5 +328,62 @@ describe('core/timeline', () => {
     p = fillBeat(p, 0, 0);
     p.measures[0].beats[0].slots.pop();
     expect(() => buildTimeline(p)).toThrow(/3 Slots for straight-16ths, expected 4/);
+  });
+});
+
+describe('core/timeline — the Register (US-2.9)', () => {
+  /** A one-Measure Melodic Pattern with the first Slot of Beat 1 sounding. */
+  const melodic = (pitch = { degree: '1', octaveOffset: 0 }) => {
+    let p = { ...create('Tune'), soundMode: 'melodic', key: 'C', scale: 'ionian' };
+    p = cycleAccent(p, 0, 0, 0);
+    return setPitch(p, 0, 0, 0, pitch);
+  };
+
+  const notes = (p) => buildTimeline(p).filter((e) => e.pitch).map((e) => e.pitch.midiNote);
+
+  it('AC-2.9.2/1 — At Low every sounding note is twelve semitones below the same Pattern at Normal, and at High twelve above; Bass and Lead are twenty-four either way', () => {
+    const p = melodic();
+    const normal = notes(p);
+    expect(normal).toEqual([60]);
+    expect(notes({ ...p, register: -1 })).toEqual(normal.map((n) => n - 12));
+    expect(notes({ ...p, register: 1 })).toEqual(normal.map((n) => n + 12));
+    expect(notes({ ...p, register: -2 })).toEqual(normal.map((n) => n - 24));
+    expect(notes({ ...p, register: 2 })).toEqual(normal.map((n) => n + 24));
+  });
+
+  it('AC-2.9.2/2 — A dealt arpeggio step and a chord-tone Pitch move with the Register exactly as a stamped degree does', () => {
+    let p = melodic();
+    p = fillBeat(p, 0, 0);
+    for (let s = 1; s < p.measures[0].beats[0].slots.length; s++) {
+      p = setPitch(p, 0, 0, s, { degree: '1', octaveOffset: 0 });
+    }
+    // Dealt steps: every note comes from the arpeggio, not the stored Pitch.
+    const dealt = setArpeggio(setProgression(p, 'I-IV-V'), 'up');
+    expect(notes({ ...dealt, register: -1 })).toEqual(notes(dealt).map((n) => n - 12));
+
+    // A chord-tone Pitch, with no arpeggio dealing over it.
+    const roles = setPitch(setArpeggio(setProgression(p, 'I-IV-V'), 'none'), 0, 0, 0, { tone: 3, octaveOffset: 0 });
+    expect(notes({ ...roles, register: 1 })).toEqual(notes(roles).map((n) => n + 12));
+  });
+
+  it('AC-2.9.2/3 — Setting a Register rewrites no stored Pitch: every Slot keeps the degree and `octaveOffset` it held, so returning to Normal sounds exactly as it did before', () => {
+    const p = melodic({ degree: 'b3', octaveOffset: -1 });
+    const before = structuredClone(p.measures);
+    const low = { ...p, register: -2 };
+    expect(notes(low)).not.toEqual(notes(p));
+    expect(low.measures).toEqual(before);
+    expect(notes({ ...low, register: 0 })).toEqual(notes(p));
+  });
+
+  it('AC-2.9.2/4 — A Slot’s own octave and the Register sum to the octave it sounds in, and that sum is held inside the octave range the stepper allows, 1 to 7 (AC-2.2.3) — so a Slot already at octave 7 does not rise past it at Lead, and one at octave 1 does not fall below it at Bass', () => {
+    const top = melodic({ degree: '1', octaveOffset: 3 }); // octave 7
+    expect(notes(top)).toEqual([96]);
+    expect(notes({ ...top, register: 2 })).toEqual([96]);
+    expect(notes({ ...top, register: -1 })).toEqual([84]);
+
+    const bottom = melodic({ degree: '1', octaveOffset: -3 }); // octave 1
+    expect(notes(bottom)).toEqual([24]);
+    expect(notes({ ...bottom, register: -2 })).toEqual([24]);
+    expect(notes({ ...bottom, register: 1 })).toEqual([36]);
   });
 });
