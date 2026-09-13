@@ -1042,3 +1042,67 @@ test('AC-2.8.2/2 — The Melody group says how many fills are kept for this Patt
   await page.locator('.keep-fill').click();
   await expect(count).toHaveText('2 kept');
 });
+
+// --- AC-15.1.16/7 — A panel whose rebuild would change nothing is left untouched ---
+
+test('AC-15.1.16/7 — A panel whose rebuild would change nothing is left untouched, so an open picker survives the renders playback streams', async ({
+  page,
+}) => {
+  await harmonicBlank(page);
+
+  /*
+   * Hold references to the live nodes: the picker itself and its options. A
+   * native popup cannot be observed from here, but what closed it can — the
+   * popup does not survive its `<select>` being replaced, nor its options being
+   * replaced under it. If these exact nodes are still in the document after
+   * playback has streamed renders at them, nothing tore the picker down.
+   *
+   * References, deliberately, and not a marker attribute: the skip compares the
+   * markup the render wants against the markup on screen, so an attribute
+   * written into the DOM by the test would make the two differ and provoke the
+   * very rebuild being tested.
+   */
+  const hold = () =>
+    page.evaluate(() => {
+      const picker = document.querySelector('.progression-picker');
+      window.__held = { picker, options: [...picker.querySelectorAll('option')] };
+      return window.__held.options.length;
+    });
+  const optionCount = await hold();
+  expect(optionCount).toBeGreaterThan(1);
+
+  const stillHeld = () =>
+    page.evaluate(() => {
+      const live = document.querySelector('.progression-picker');
+      return {
+        picker: window.__held.picker === live && live.isConnected,
+        options: window.__held.options.filter((o) => o.isConnected).length,
+      };
+    });
+
+  // Focused, as a musician operating it would leave it — and then left alone
+  // through four seconds of playback, which at this tempo is many renders.
+  await page.locator('.progression-picker').focus();
+  await page.locator('[data-action="play"]').click();
+  for (let i = 0; i < 8; i++) {
+    await page.waitForTimeout(500);
+    expect(await stillHeld(), `picker and options intact after ${(i + 1) * 500}ms of playback`).toEqual({
+      picker: true,
+      options: optionCount,
+    });
+  }
+
+  // And the same with nothing focused: on a browser that opens a picker without
+  // moving web focus onto it — the VIDAA TV browser, where this was reported —
+  // no keep-alive engages, so the skip is the only thing holding the element in
+  // place. Before it, the picker was replaced within the first tick.
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(1500);
+  expect(await stillHeld()).toEqual({ picker: true, options: optionCount });
+
+  // The skip is not a freeze: a real change still rebuilds. Choosing a
+  // progression mid-playback takes, and the chords it lays down follow.
+  await page.locator('.progression-picker').selectOption('I-V-vi-IV');
+  await expect(page.locator('.progression-picker')).toHaveValue('I-V-vi-IV');
+  await expect.poll(() => chordNames(page)).toEqual(['C', 'G', 'Am', 'F']);
+});
