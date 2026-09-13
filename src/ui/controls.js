@@ -208,6 +208,31 @@ export function rebuild(root, build) {
   const fresh = document.createElement('div');
   build(fresh);
 
+  /*
+   * A rebuild that would change nothing does nothing (AC-15.1.16/7).
+   *
+   * Playback renders on every sounding event, and most of these panels do not
+   * change between ticks — the harmony controls least of all. Rebuilding them
+   * identically several times a second tore down whatever the musician had
+   * open: a native picker's popup does not survive its `<select>`'s options
+   * being replaced, and on a browser that opens a picker without moving web
+   * focus onto it — the VIDAA TV browser — nothing below even engages and the
+   * element itself was replaced each tick. Reported as the progression picker
+   * "flickering on and off, and I can't actually select anything".
+   *
+   * The comparison is what the render wants against what is on screen, and it
+   * has to include the live state markup cannot carry — a control's `value`
+   * and `checked` are properties, absent from `innerHTML`. Without them the
+   * skip swallows the renders whose whole job is to write live state back: a
+   * name field cleared to empty reverts to the last valid name (AC-7.1.1) by
+   * being re-rendered with a value the markup never changed.
+   *
+   * Including them is also why skipping is safe. Equal signatures mean no
+   * render wanted to change anything — neither the markup nor a value — so
+   * nothing is being preserved against one.
+   */
+  if (liveSignature(fresh) === liveSignature(root)) return root;
+
   if (keepAlive) {
     patchChildren(root, fresh, keepAlive);
   } else {
@@ -216,6 +241,19 @@ export function rebuild(root, build) {
     if (identity) root.querySelector(identity)?.focus({ preventScroll: true });
   }
   return root;
+}
+
+/**
+ * Everything a rebuild could change: the markup, plus the live value and
+ * checked state of every control in it, in document order. Equal signatures
+ * either side of a build mean the rebuild is a no-op (AC-15.1.16/7).
+ */
+function liveSignature(root) {
+  let signature = root.innerHTML;
+  for (const control of root.querySelectorAll('input, select, textarea')) {
+    signature += `\u0000${control.value}\u0001${control.checked ? '1' : '0'}`;
+  }
+  return signature;
 }
 
 function focusIdentity(control) {
@@ -258,11 +296,20 @@ function patchChildren(oldParent, newParent, active) {
       const value = 'value' in n ? n.value : undefined;
       // A kept-alive button's label still follows the fresh render — only the
       // node under the finger is preserved, never a stale caption
-      // (AC-15.1.16/6).
-      if (o.tagName === 'SELECT' || o.tagName === 'BUTTON') o.replaceChildren(...n.childNodes);
-      if (value !== undefined) o.value = value;
-      if ('checked' in o) o.checked = n.checked;
-      o.disabled = n.disabled ?? false;
+      // (AC-15.1.16/6). Options identical to the ones already there are left
+      // alone, so an open picker is not torn down for no change (AC-15.1.16/7):
+      // the panel-level skip above cannot help when something ELSE in the panel
+      // did move — the chord in force, a fill label — and the picker is open.
+      if (o.tagName === 'SELECT' || o.tagName === 'BUTTON') {
+        if (o.innerHTML !== n.innerHTML) o.replaceChildren(...n.childNodes);
+      }
+      // Assigned only when they differ, for the same reason: writing a
+      // select's own value back onto it is a change to the browser as far as an
+      // open popup is concerned (AC-15.1.16/7).
+      if (value !== undefined && o.value !== value) o.value = value;
+      if ('checked' in o && o.checked !== n.checked) o.checked = n.checked;
+      const disabled = n.disabled ?? false;
+      if (o.disabled !== disabled) o.disabled = disabled;
     } else {
       patchChildren(o, n, active);
     }
