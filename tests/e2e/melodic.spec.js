@@ -580,20 +580,28 @@ test('AC-2.2.15/3 — The two are shown on one line within the band, so the band
 
   // The AC-15.1.10 worst case, in the Key producing the widest name any Key
   // can spell: b2 in Gb is Abb, a double accidental at four characters.
-  await page.evaluate(async () => {
-    const { handlers: h } = window.__rm;
-    window.__rm.loadBlank('12/8');
-    await h.onSoundMode('melodic');
-    await h.onKey('Gb');
-    for (let i = 0; i < 7; i++) await h.onAddMeasure();
-    const p = window.__rm.getState().pattern;
-    for (let m = 0; m < p.measures.length; m++)
-      for (let b = 0; b < p.measures[m].beats.length; b++)
-        for (let s = 0; s < p.measures[m].beats[b].slots.length; s++)
-          if (!window.__rm.getState().pattern.measures[m].beats[b].slots[s].on)
-            await h.onSlotTap(m, b, s);
-    h.onArmDegree('b2');
-    for (let b = 0; b < 12; b++) for (let s = 0; s < 2; s++) await h.onStampPitch(0, b, s);
+  // Built as data and loaded once: 192 Slots tapped through the handlers is
+  // 192 full re-renders, which the layout under test does not need.
+  await page.evaluate(() => {
+    const blank = window.__rm.loadBlank('12/8');
+    // Every Slot sounds and carries a pitch, as tapping each one in Melodic
+    // mode would have left it; the first Measure carries the widest name.
+    const measure = (degree) => ({
+      ...blank.measures[0],
+      beats: blank.measures[0].beats.map((beat) => ({
+        ...beat,
+        slots: beat.slots.map(() => ({ on: true, pitch: { degree, octaveOffset: 0 } })),
+      })),
+    });
+    window.__rm.loadPattern(
+      {
+        ...blank,
+        soundMode: 'melodic',
+        key: 'Gb',
+        measures: [measure('b2'), ...Array.from({ length: 7 }, () => measure('1'))],
+      },
+      { owned: true }
+    );
   });
   await expect(page.locator('.measure')).toHaveCount(8);
   await expect(page.locator('.slot-note-name').first()).toHaveText('Abb4');
