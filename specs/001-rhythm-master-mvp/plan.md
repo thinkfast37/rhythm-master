@@ -239,7 +239,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
-| **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.4 | T295 | T296 |
+| **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T299 | T296, T300 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

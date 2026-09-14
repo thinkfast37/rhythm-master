@@ -763,6 +763,7 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   const arpeggio = pattern.harmony?.arpeggio
     ? ARPEGGIOS.find((a) => a.id === pattern.harmony.arpeggio)
     : null;
+  const harmonic = hasHarmony(pattern);
 
   root.appendChild(
     el('span', 'pitch-strip-label', {
@@ -807,8 +808,10 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   root.appendChild(scale);
 
   // The Register places the whole Pattern in an octave (AC-2.9.1): it sits with
-  // the Key and the scale because, like them, it governs every note at once —
-  // unlike the octave stepper below, which arms only the next stamp.
+  // the Key and the scale because, like them, it governs every note at once,
+  // with or without a progression (AC-2.9.2) — unlike the octave stepper,
+  // which arms only the next stamp and so has nothing left to arm once a
+  // progression exists (AC-2.9.5).
   root.appendChild(
     el('span', 'pitch-strip-label', {
       textContent: 'Register',
@@ -828,14 +831,14 @@ function renderPitchStripInto(root, pattern, state, handlers) {
 
   // Under an arpeggio the notes are dealt, not stamped: the chips stand down
   // and the strip says so, so nothing here looks tappable and does nothing
-  // (AC-2.6.6/7). Key, scale and octave still apply.
+  // (AC-2.6.6/7). Key, scale and Register still apply; the octave stepper
+  // does not, since the Pattern has a progression (AC-2.9.5/1).
   if (arpeggio) {
     root.appendChild(
       el('p', 'pitch-strip-note', {
         textContent: `Notes follow the ${arpeggio.label} arpeggio. Set Arpeggio to None to stamp them by hand.`,
       })
     );
-    root.appendChild(renderOctaveStepper(armed, handlers));
     return;
   }
 
@@ -872,7 +875,11 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   }
   root.appendChild(degrees);
 
-  root.appendChild(renderOctaveStepper(armed, handlers));
+  // The octave stepper arms what a fixed-note stamp gets (AC-2.2.3); it is
+  // meaningless once a progression exists, since every sounding note then
+  // moves by the Register instead (AC-2.9.5/1) — even a fixed note stamped
+  // here with the arpeggio set to None.
+  if (!harmonic) root.appendChild(renderOctaveStepper(armed, handlers));
 }
 
 /**
