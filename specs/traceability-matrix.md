@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 624 across 44 User Stories
+**Criteria**: 627 across 44 User Stories
 
-**Coverage**: 433 of 624 criteria proven (69.4%)
+**Coverage**: 436 of 627 criteria proven (69.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 433 | 69.4% |
-| 🔴 Gap — HIGH | 71 | 11.4% |
+| 🟢 Proven | 436 | 69.5% |
+| 🔴 Gap — HIGH | 71 | 11.3% |
 | 🟠 Gap — MEDIUM | 42 | 6.7% |
-| 🟡 Gap — LOW | 78 | 12.5% |
+| 🟡 Gap — LOW | 78 | 12.4% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -101,7 +101,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-10.2 | 13 | **13** | · | · | · | · | · |
 | 🟢 US-2.8 | 8 | **8** | · | · | · | · | · |
 | 🟢 US-18.1 | 26 | **26** | · | · | · | · | · |
-| 🟢 US-2.9 | 13 | **13** | · | · | · | · | · |
+| 🟢 US-2.9 | 16 | **16** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -718,16 +718,19 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-18.1 | `AC-18.1.5/2` | The file is named after the Song when it has been saved, and after the Pattern otherwise | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song-midi.test.js`, `compose.spec.js` | 🟢 OK |
 | US-18.1 | `AC-18.1.5/3` | The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song-midi.test.js` | 🟢 OK |
 | US-18.1 | `AC-18.1.5/4` | Export Song MIDI is unavailable while the Section is empty | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.1/1` 🖵 | The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.1/2` 🖵 | The Register is Pattern content: it is saved with the Pattern and survives a reload | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.1/3` 🖵 | Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.1/4` 🖵 | In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key) | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.2/1` | At Low every sounding note is twelve semitones below the same Pattern at Normal, and at High twelve above; Bass and Lead are twenty-four either way | P-047 | T295 (1/1 done) | T296 (1/1 done) | `timeline.test.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.2/2` | A dealt arpeggio step and a chord-tone Pitch move with the Register exactly as a stamped degree does | P-047 | T295 (1/1 done) | T296 (1/1 done) | `timeline.test.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.2/3` | Setting a Register rewrites no stored Pitch: every Slot keeps the degree and `octaveOffset` it held, so returning to Normal sounds exactly as it did before | P-047 | T295 (1/1 done) | T296 (1/1 done) | `timeline.test.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.2/4` | A Slot's own octave and the Register sum to the octave it sounds in, and that sum is held inside the octave range the stepper allows, 1 to 7 (AC-2.2.3) — so a Slot already at octave 7 does not rise past it at Lead, and one at octave 1 does not fall below it at Bass | P-047 | T295 (1/1 done) | T296 (1/1 done) | `timeline.test.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.2/5` | The MIDI export of a Pattern carries its notes at the Register, since it consumes the one timeline playback does (SC-003) | P-047 | T295 (1/1 done) | T296 (1/1 done) | `export.test.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.3/1` 🖵 | A note band names the note the Slot sounds at the current Register | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.3/2` 🖵 | The score writes each note at the octave the Register sounds it in | P-047 | T295 (1/1 done) | T296 (1/1 done) | `notation.test.js`, `score.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.4/1` | Stepping the octave changes no note already on the grid, and no note that sounds | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.4/2` | Changing the Register moves every sounding note without the Composer stamping a Slot | P-047 | T295 (1/1 done) | T296 (1/1 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.1/1` 🖵 | The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.1/2` 🖵 | The Register is Pattern content: it is saved with the Pattern and survives a reload | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.1/3` 🖵 | Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.1/4` 🖵 | In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key) | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.2/1` | At Low every sounding note is twelve semitones below the same Pattern at Normal, and at High twelve above; Bass and Lead are twenty-four either way | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.2/2` | A dealt arpeggio step and a chord-tone Pitch move with the Register exactly as a stamped degree does | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.2/3` | Setting a Register rewrites no stored Pitch: every Slot keeps the degree and `octaveOffset` it held, so returning to Normal sounds exactly as it did before | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.2/4` | A Slot's own octave and the Register sum to the octave it sounds in, and that sum is held inside the octave range the stepper allows, 1 to 7 (AC-2.2.3) — so a Slot already at octave 7 does not rise past it at Lead, and one at octave 1 does not fall below it at Bass | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.2/5` | The MIDI export of a Pattern carries its notes at the Register, since it consumes the one timeline playback does (SC-003) | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `export.test.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.3/1` 🖵 | A note band names the note the Slot sounds at the current Register | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.3/2` 🖵 | The score writes each note at the octave the Register sounds it in | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `notation.test.js`, `score.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.4/1` | Stepping the octave changes no note already on the grid, and no note that sounds | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.4/2` | Changing the Register moves every sounding note without the Composer stamping a Slot | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.5/1` 🖵 | A Pattern with a progression — with or without an arpeggio — shows the Register picker and hides the octave stepper; this holds even with the arpeggio set to None, where the degree chips still stamp fixed notes but always at octave-offset 0, since there is no control on the strip to arm any other octave | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.5/2` 🖵 | A Pattern with no progression shows both the Register picker and the octave stepper: the stepper arms the octave a new stamp gets, and the Register then moves the whole finished line by octaves without re-stamping anything (AC-2.9.4) | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.5/3` 🖵 | Adding a Pattern's first chord hides the octave stepper on that render, leaving the Register in place; removing its last chord brings the stepper back — no reload needed | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |

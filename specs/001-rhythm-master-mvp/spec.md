@@ -3246,6 +3246,16 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.9.4/1** — Stepping the octave changes no note already on the grid, and no note that sounds
     - **AC-2.9.4/2** — Changing the Register moves every sounding note without the Composer stamping a Slot
 
+- **AC-2.9.5** — The octave stepper stands down once the Register can move the same note
+  - **Given** a Melodic Pattern open
+  - **When** the Composer looks at the pitch strip
+  - **Then** the Register picker is always present — it moves every sounding note whether or not there is a progression (AC-2.9.2) — while the octave stepper is present only on a Pattern with no progression, since a progression routes every sounding note through the Register and the arpeggio instead, leaving the stepper nothing of its own left to arm
+  - **Cases**:
+    - **AC-2.9.5/1** — A Pattern with a progression — with or without an arpeggio — shows the Register picker and hides the octave stepper; this holds even with the arpeggio set to None, where the degree chips still stamp fixed notes but always at octave-offset 0, since there is no control on the strip to arm any other octave
+    - **AC-2.9.5/2** — A Pattern with no progression shows both the Register picker and the octave stepper: the stepper arms the octave a new stamp gets, and the Register then moves the whole finished line by octaves without re-stamping anything (AC-2.9.4)
+    - **AC-2.9.5/3** — Adding a Pattern's first chord hides the octave stepper on that render, leaving the Register in place; removing its last chord brings the stepper back — no reload needed
+  - *(Added 2026-09-13, revised the same day. The maintainer, painting individual notes: "the Octave mode doesn't really make any sense... when I'm using a chord progression. I have to use the Register. But when I'm painting individual notes, then I should use the Octaves." First drafted as hiding the Register whenever there was no progression, which contradicted AC-2.9.2 — the Register already, deliberately, moves a plain melody with no progression at all, e.g. to hear it as a bass line without touching a stored Pitch. Asked to reconcile the two, the maintainer confirmed the controls are not redundant even without a progression: the octave stepper decides what octave each new stamp gets while composing, the Register then shifts the whole finished shape as one block, preserving the relative octaves between notes. So only the octave stepper is mode-exclusive; the Register stays on every Melodic Pattern. Mode is read from whether the Pattern has a progression at all (`hasHarmony`), not from the arpeggio alone — chosen because a progression with the arpeggio set to None still resolves every sounding note through the Register, AC-2.9.2, leaving the octave stepper with nothing to move even though the degree chips remain tappable. A fixed note stamped in that state now always lands at octave-offset 0; there was no control left to ask for anything else, and the maintainer confirmed that trade-off directly rather than have the octave stepper reappear for one sub-case.)*
+
 ---
 
 ## Requirements *(mandatory)*

@@ -1489,6 +1489,37 @@ test('AC-2.9.4/2 — Changing the Register moves every sounding note without the
   expect(after.measures).toBe(before.measures);
 });
 
+test('AC-2.9.5/1 — A Pattern with a progression — with or without an arpeggio — shows the Register picker and hides the octave stepper; this holds even with the arpeggio set to None, where the degree chips still stamp fixed notes but always at octave-offset 0, since there is no control on the strip to arm any other octave', async ({ page }) => {
+  await melodicBlank(page);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await expect(page.locator('.register-picker')).toBeVisible();
+  await expect(page.locator('.octave-stepper')).toHaveCount(0);
+
+  await page.locator('.arpeggio-picker').selectOption('none');
+  await expect(page.locator('.register-picker')).toBeVisible();
+  await expect(page.locator('.octave-stepper')).toHaveCount(0);
+});
+
+test('AC-2.9.5/2 — A Pattern with no progression shows both the Register picker and the octave stepper: the stepper arms the octave a new stamp gets, and the Register then moves the whole finished line by octaves without re-stamping anything (AC-2.9.4)', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('.octave-stepper')).toBeVisible();
+  await expect(page.locator('.register-picker')).toBeVisible();
+});
+
+test("AC-2.9.5/3 — Adding a Pattern's first chord hides the octave stepper on that render, leaving the Register in place; removing its last chord brings the stepper back — no reload needed", async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('.octave-stepper')).toBeVisible();
+  await expect(page.locator('.register-picker')).toBeVisible();
+
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await expect(page.locator('.register-picker')).toBeVisible();
+  await expect(page.locator('.octave-stepper')).toHaveCount(0);
+
+  await page.locator('.progression-picker').selectOption('none');
+  await expect(page.locator('.octave-stepper')).toBeVisible();
+  await expect(page.locator('.register-picker')).toBeVisible();
+});
+
 test('AC-2.2.19/4 — The Key picker carries a visible label of its own reading Key, and the strip’s Note label names the degree chips it sits with — neither picker is left to be identified by the label of the other', async ({ page }) => {
   await melodicBlank(page);
   const labels = page.locator('.pitch-strip .pitch-strip-label');
