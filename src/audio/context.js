@@ -6,12 +6,16 @@
  * construction rather than by hoping.
  *
  * When the device suspends audio — phone locks, a call arrives, the tab is
- * backgrounded — the transport stops and resets rather than silently continuing
- * or auto-resuming on return (AC-4.1.5, AC-4.1.6).
+ * backgrounded — the transport pauses at once rather than silently continuing
+ * (AC-4.1.5), and best-effort auto-resumes from the same place once the
+ * context comes back (AC-4.1.6, revised 2026-09-14) — never guaranteed, since
+ * a mobile browser can still kill a backgrounded audio session outright
+ * regardless of what this module reports.
  */
 
 let ctx = null;
 const suspendListeners = new Set();
+const resumeListeners = new Set();
 
 /**
  * Get the AudioContext, creating it if needed.
@@ -85,8 +89,22 @@ export function onSuspended(fn) {
   return () => suspendListeners.delete(fn);
 }
 
+/**
+ * Notified when the device may have offered the context back — a signal to go
+ * try `resume()`, not a promise that the context is actually running again
+ * (AC-4.1.6). The caller reads the context's own state after resuming.
+ */
+export function onResumed(fn) {
+  resumeListeners.add(fn);
+  return () => resumeListeners.delete(fn);
+}
+
 function fireSuspended() {
   for (const fn of suspendListeners) fn();
+}
+
+function fireResumed() {
+  for (const fn of resumeListeners) fn();
 }
 
 let watchingVisibility = false;
@@ -98,16 +116,20 @@ function watchForSuspension() {
     // dying statechange must not stop a run on its successor (AC-4.1.10/2).
     if (watched !== ctx) return;
     if (ctx.state === 'suspended' || ctx.state === 'interrupted') fireSuspended();
+    else if (ctx.state === 'running') fireResumed();
   });
 
   // A backgrounded tab suspends audio on mobile without always firing
   // statechange, so visibility is watched too. Once: the context can be
   // replaced (AC-4.1.10/2), and the document must not collect a listener per
-  // replacement.
+  // replacement. Returning to visible is the same signal in reverse — some
+  // browsers offer the context back without ever firing their own
+  // statechange, so a tab regaining focus is always worth a resume attempt.
   if (!watchingVisibility && typeof document !== 'undefined') {
     watchingVisibility = true;
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && ctx?.state === 'running') fireSuspended();
+      else if (document.visibilityState === 'visible' && ctx) fireResumed();
     });
   }
 }
@@ -116,5 +138,6 @@ function watchForSuspension() {
 export function __reset() {
   ctx = null;
   suspendListeners.clear();
+  resumeListeners.clear();
   watchingVisibility = false;
 }

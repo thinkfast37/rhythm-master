@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 627 across 44 User Stories
+**Criteria**: 644 across 45 User Stories
 
-**Coverage**: 436 of 627 criteria proven (69.5%)
+**Coverage**: 455 of 644 criteria proven (70.7%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 436 | 69.5% |
-| 🔴 Gap — HIGH | 71 | 11.3% |
-| 🟠 Gap — MEDIUM | 42 | 6.7% |
-| 🟡 Gap — LOW | 78 | 12.4% |
+| 🟢 Proven | 455 | 70.7% |
+| 🔴 Gap — HIGH | 70 | 10.9% |
+| 🟠 Gap — MEDIUM | 41 | 6.4% |
+| 🟡 Gap — LOW | 78 | 12.1% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -51,7 +51,7 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (191 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (189 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
@@ -67,7 +67,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-3.1 | 24 | 8 | · | · | 3 | 1 | 12 |
-| 🔴 US-4.1 | 21 | 15 | · | · | 3 | 1 | 2 |
+| 🔴 US-4.1 | 24 | 20 | · | · | 2 | · | 2 |
 | 🟠 US-4.2 | 15 | 14 | · | · | · | 1 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
 | 🔴 US-4.4 | 49 | 44 | · | · | 5 | · | · |
@@ -102,6 +102,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.8 | 8 | **8** | · | · | · | · | · |
 | 🟢 US-18.1 | 26 | **26** | · | · | · | · | · |
 | 🟢 US-2.9 | 16 | **16** | · | · | · | · | · |
+| 🟢 US-2.10 | 14 | **14** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -225,27 +226,30 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
 | US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `scheduler.test.js`, `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `scheduler.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.1 | `AC-4.1.7/1` 🖵 | It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.7/2` 🖵 | That cell fills completely with its own Accent colour, rather than being outlined | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.7/3` 🖵 | The counting syllable stays legible against the fill, at every Accent Level | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.7/4` 🖵 | A Slot that does not sound still shows the cursor as it passes, so the pulse can be followed through rests | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.3` | Loop counter increments once per full pass | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.4` | Mixed-meter Pattern plays each Measure by its own Time Signature | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.5` | Audio suspended by the device stops the transport and resets it | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-4.1 | `AC-4.1.6` 🖵 | Returning after a suspension requires a deliberate Play | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.1 | `AC-4.1.8/1` 🖵 | Opening a Pattern during playback keeps the transport running and switches the audible Pattern to the one opened | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.8/2` 🖵 | The Pattern opened during playback starts from its beginning, with the loop counter at 0 | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.8/3` 🖵 | Opening a Pattern while stopped starts no audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.9/1` 🖵 | An accent or Slot edit during playback sounds from the start of the next pass, with the transport running throughout | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.9/2` 🖵 | A Recipe change during playback sounds from the start of the next pass | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.9/3` 🖵 | A pitch, Key, scale or Sound Mode change during playback sounds from the start of the next pass | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.9/4` 🖵 | The loop counter keeps counting across an edit rather than resetting | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.9/5` 🖵 | A structural edit — adding a Measure, or a Time Signature change — takes effect at the next pass, with the pass length re-derived | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.10/1` | The gesture-time resume recovers a context reporting `interrupted`, not only `suspended` | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `context.test.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.10/2` | A context still not running after a resume attempt is replaced, and the shared audio graph is rebuilt against the replacement rather than reused | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `context.test.js` | 🟢 OK |
-| US-4.1 | `AC-4.1.10/3` | After the tab is backgrounded and returns, pressing Play sounds the Pattern again without a reload | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230 (9/9 done) | T056, T165, T221, T229, T231 (5/5 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `scheduler.test.js`, `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `scheduler.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.1 | `AC-4.1.7/1` 🖵 | It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.7/2` 🖵 | That cell fills completely with its own Accent colour, rather than being outlined | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.7/3` 🖵 | The counting syllable stays legible against the fill, at every Accent Level | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.7/4` 🖵 | A Slot that does not sound still shows the cursor as it passes, so the pulse can be followed through rests | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.3` | Loop counter increments once per full pass | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-4.1 | `AC-4.1.4` | Mixed-meter Pattern plays each Measure by its own Time Signature | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `timeline.test.js`, `playback.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-4.1 | `AC-4.1.5` | Audio suspended by the device pauses the transport | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.6/1` 🖵 | A recoverable suspension continues the same run: the loop keeps counting and the pass in progress finishes from where it paused, with no restart | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `scheduler.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.6/2` 🖵 | An unrecoverable suspension — the context stays stuck even after `src/audio/context.js`'s STUCK_STATES replace-and-close recovery has had its say, or that recovery hands back a genuinely different context object rather than the one that was interrupted — falls back to stop-and-reset, exactly as before this revision: the transport goes to stopped, the cursor returns to the first Slot of Measure 1, the loop counter resets to 0, and pressing Play starts a fresh run | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `scheduler.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.11/1` 🖵 | `playbackState` follows `'playing'`, `'paused'`, `'playing'` again and `'none'` across a start, a recoverable suspension, its resume and a stop, and `metadata` names the Pattern playing | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `mediaSession.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.11/2` 🖵 | A browser without `navigator.mediaSession` — including the automated test environment — is unaffected: every call is a no-op and none of them throw | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `mediaSession.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.8/1` 🖵 | Opening a Pattern during playback keeps the transport running and switches the audible Pattern to the one opened | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.8/2` 🖵 | The Pattern opened during playback starts from its beginning, with the loop counter at 0 | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.8/3` 🖵 | Opening a Pattern while stopped starts no audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.9/1` 🖵 | An accent or Slot edit during playback sounds from the start of the next pass, with the transport running throughout | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.9/2` 🖵 | A Recipe change during playback sounds from the start of the next pass | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.9/3` 🖵 | A pitch, Key, scale or Sound Mode change during playback sounds from the start of the next pass | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.9/4` 🖵 | The loop counter keeps counting across an edit rather than resetting | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.9/5` 🖵 | A structural edit — adding a Measure, or a Time Signature change — takes effect at the next pass, with the pass length re-derived | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.10/1` | The gesture-time resume recovers a context reporting `interrupted`, not only `suspended` | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `context.test.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.10/2` | A context still not running after a resume attempt is replaced, and the shared audio graph is rebuilt against the replacement rather than reused | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `context.test.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.10/3` | After the tab is backgrounded and returns, pressing Play sounds the Pattern again without a reload | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308 (10/10 done) | T056, T165, T221, T229, T231, T309 (6/6 done) | `playback.spec.js` | 🟢 OK |
 | US-4.2 | `AC-4.2.1` 🖵 | Default tempo and range | P-011 | T057, T058, T204, T234, T244, T272, T279 (7/7 done) | T059, T205, T235, T245, T273, T280 (6/6 done) | `playback.spec.js` | 🟢 OK |
 | US-4.2 | `AC-4.2.2` | Tempo change restarts playback immediately | P-011 | T057, T058, T204, T234, T244, T272, T279 (7/7 done) | T059, T205, T235, T245, T273, T280 (6/6 done) | `playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.2 | `AC-4.2.3/1` 🖵 | A Pattern with no tempo of its own loads at the tempo in effect on the Pattern just left | P-011 | T057, T058, T204, T234, T244, T272, T279 (7/7 done) | T059, T205, T235, T245, T273, T280 (6/6 done) | `playback-defaults.test.js`, `playback.spec.js` | 🟢 OK |
@@ -734,3 +738,17 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.9 | `AC-2.9.5/1` 🖵 | A Pattern with a progression — with or without an arpeggio — shows the Register picker and hides the octave stepper; this holds even with the arpeggio set to None, where the degree chips still stamp fixed notes but always at octave-offset 0, since there is no control on the strip to arm any other octave | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.5/2` 🖵 | A Pattern with no progression shows both the Register picker and the octave stepper: the stepper arms the octave a new stamp gets, and the Register then moves the whole finished line by octaves without re-stamping anything (AC-2.9.4) | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.5/3` 🖵 | Adding a Pattern's first chord hides the octave stepper on that render, leaving the Register in place; removing its last chord brings the stepper back — no reload needed | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.1/1` 🖵 | A Cycle progressions toggle sits in the fill-cycle row beside Cycle fills, sharing the same Repeats count (1–16, 4 by default) rather than a Repeats box of its own, and is absent, like the progression picker, on a Pattern without a progression | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.1/2` 🖵 | Cycle fills and Cycle progressions are independent controls: either can be on with the other off, both can be on together, and turning one on or off never changes the other's state | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.1/3` 🖵 | Turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.1/4` 🖵 | The progression in force is a playback setting: the Pattern's own progression is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.1/5` 🖵 | Turning progression cycling off returns the Pattern's own progression, from the next pass while playing and at once otherwise | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/1` 🖵 | One repeat is one harmonic cycle of the Pattern's own progression, counted exactly as Cycle fills counts its own; with Cycle fills also on, each catalogue steps forward independently on the shared repeats-count cadence rather than being coupled into one combined step | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/2` 🖵 | At the boundary the next progression is in force from the very next pass, the loop counter keeps counting, and nothing stops or restarts | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/3` 🖵 | The order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/4` 🖵 | The picker shows the progression in force, the note bands and the pitch strip follow its chords, and the score shows it — every view follows the progression in force, not the Pattern's own | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/5` 🖵 | Changing the shared Repeats count while playing applies without a restart, to whichever of Cycle fills and Cycle progressions is on | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/6` 🖵 | Stopping returns the progression in force to the starting progression — the Pattern's own, or the first of the catalogue when its chords match none — so every Play begins the cycle from the same place | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.2/7` 🖵 | Choosing a progression in the picker while cycling is the ordinary edit of the Pattern's progression, and the cycle begins again from that choice with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches and turns progression cycling off | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.3/1` 🖵 | While progression cycling is on the score's chord chips, chord names and numerals are the progression in force's; Print / PDF prints the same score | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.10 | `AC-2.10.3/2` 🖵 | MIDI export carries the Pattern's own progression, never the one in force while cycling: the file is the Pattern's data, and cycling is practice | P-048 | T310 (1/1 done) | T311 (1/1 done) | `harmony.spec.js` | 🟢 OK |

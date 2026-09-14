@@ -24,18 +24,39 @@ class FakeParam {
   exponentialRampToValueAtTime() {}
 }
 
+/** Set by a test so every FakeAudioContext constructed while it is true — the
+ *  original and any replacement `context.js`'s recovery logic builds — starts
+ *  and stays stuck, simulating a device that never gives audio back
+ *  (AC-4.1.6/2). */
+let allContextsStuck = false;
+
 class FakeAudioContext {
   constructor() {
-    this.state = 'running';
+    this.stuck = allContextsStuck;
+    this.state = this.stuck ? 'suspended' : 'running';
     this.currentTime = 0;
     this.destination = { name: 'destination' };
+    this._listeners = {};
   }
 
   async resume() {
-    this.state = 'running';
+    if (!this.stuck) this.state = 'running';
   }
 
-  addEventListener() {}
+  async close() {
+    this.state = 'closed';
+  }
+
+  addEventListener(type, fn) {
+    (this._listeners[type] ??= []).push(fn);
+  }
+
+  /** Test seam: change state as a real AudioContext's own machinery would,
+   *  firing any registered statechange listeners exactly as the browser does. */
+  _setState(state) {
+    this.state = state;
+    for (const fn of this._listeners.statechange ?? []) fn();
+  }
 
   createOscillator() {
     const ctx = this;
@@ -82,6 +103,7 @@ beforeEach(() => {
   resetContext();
   resetNodes();
   starts = [];
+  allContextsStuck = false;
   globalThis.AudioContext = FakeAudioContext;
   transport = createTransport({});
 });
@@ -152,6 +174,103 @@ describe('audio/scheduler under a throttled timer', () => {
     for (let i = 1; i <= 20; i++) await tickAt(i * 0.025);
 
     expect(transport._snapshot().lookaheadSeconds).toBeCloseTo(0.2, 10);
+  });
+});
+
+describe('audio/scheduler under a device suspension (AC-4.1.5, AC-4.1.6)', () => {
+  it('AC-4.1.6/1 — A recoverable suspension continues the same run: the loop keeps counting and the pass in progress finishes from where it paused, with no restart', async () => {
+    const suspends = [];
+    const resumes = [];
+    transport = createTransport({ onSuspend: () => suspends.push(true), onResume: () => resumes.push(true) });
+    await startTransport();
+    await tickAt(0.5);
+    const startsBeforeSuspend = starts.length;
+    const patternBeforeSuspend = transport._snapshot().pattern;
+    expect(startsBeforeSuspend).toBeGreaterThan(0);
+
+    // The device takes audio away mid-run (AC-4.1.5): scheduling stops at
+    // once, and nothing about the pass or Slot position is reset.
+    transport._handleSuspend();
+    expect(transport.isRunning).toBe(false);
+    expect(transport._snapshot().suspendedForRecovery).toBe(true);
+    expect(suspends).toEqual([true]);
+    expect(transport._snapshot().pattern).toBe(patternBeforeSuspend);
+
+    // Nothing sounds while suspended, even as time and the (cleared) timer move on.
+    await vi.advanceTimersByTimeAsync(500);
+    expect(starts.length).toBe(startsBeforeSuspend);
+
+    // The context comes back: the run continues from exactly here, no restart.
+    ctx.currentTime += 2; // time the tab was away
+    await transport._handleResume();
+    expect(transport.isRunning).toBe(true);
+    expect(transport._snapshot().suspendedForRecovery).toBe(false);
+    expect(resumes).toEqual([true]);
+    expect(transport._snapshot().pattern).toBe(patternBeforeSuspend);
+
+    // And scheduling picks back up: further ticks sound further events.
+    await tickAt(ctx.currentTime + 0.1);
+    expect(starts.length).toBeGreaterThan(startsBeforeSuspend);
+  });
+
+  it("AC-4.1.6/2 — An unrecoverable suspension — the context stays stuck even after `src/audio/context.js`'s STUCK_STATES replace-and-close recovery has had its say, or that recovery hands back a genuinely different context object rather than the one that was interrupted — falls back to stop-and-reset, exactly as before this revision: the transport goes to stopped, the cursor returns to the first Slot of Measure 1, the loop counter resets to 0, and pressing Play starts a fresh run: the context never comes back at all", async () => {
+    const stops = [];
+    transport = createTransport({ onStop: () => stops.push(true) });
+    await startTransport();
+    await tickAt(0.5);
+
+    transport._handleSuspend();
+    expect(transport.isRunning).toBe(false);
+    expect(transport._snapshot().suspendedForRecovery).toBe(true);
+
+    // The device never gives the context back — resume() and the
+    // replace-and-close it falls through to both stay stuck (AC-4.1.10/2).
+    ctx.stuck = true;
+    allContextsStuck = true;
+    ctx._setState('suspended');
+    await transport._handleResume();
+
+    // Falls back to exactly what a stop always did: not running, and the
+    // ordinary stop notification fires so app-level state resets to the top.
+    expect(transport.isRunning).toBe(false);
+    expect(transport._snapshot().suspendedForRecovery).toBe(false);
+    expect(stops).toEqual([true]);
+
+    // And it stays stopped — no further scheduling resumes on its own.
+    const before = starts.length;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(starts.length).toBe(before);
+  });
+
+  it("AC-4.1.6/2 — An unrecoverable suspension — the context stays stuck even after `src/audio/context.js`'s STUCK_STATES replace-and-close recovery has had its say, or that recovery hands back a genuinely different context object rather than the one that was interrupted — falls back to stop-and-reset, exactly as before this revision: the transport goes to stopped, the cursor returns to the first Slot of Measure 1, the loop counter resets to 0, and pressing Play starts a fresh run: a replacement context handed back running still falls back, since its clock cannot be re-anchored to a paused run", async () => {
+    const stops = [];
+    transport = createTransport({ onStop: () => stops.push(true) });
+    await startTransport();
+    await tickAt(0.5);
+
+    transport._handleSuspend();
+    expect(transport._snapshot().suspendedForRecovery).toBe(true);
+
+    // The original context never comes back (STUCK_STATES stays true for it
+    // forever), so context.js's own replace-and-close builds a fresh one —
+    // which, unlike the original, is not stuck and reports running at once.
+    // Its clock (currentTime) starts from 0 again, unrelated to the
+    // suspended run's.
+    ctx.stuck = true;
+    ctx._setState('suspended');
+
+    await transport._handleResume();
+
+    // A different context object came back running, but this must not be
+    // treated as the same run continuing — falls back exactly as an
+    // unrecoverable suspension does.
+    expect(transport.isRunning).toBe(false);
+    expect(transport._snapshot().suspendedForRecovery).toBe(false);
+    expect(stops).toEqual([true]);
+
+    const before = starts.length;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(starts.length).toBe(before);
   });
 });
 

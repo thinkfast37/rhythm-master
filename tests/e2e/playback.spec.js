@@ -226,12 +226,14 @@ test('AC-4.1.4 — a mixed-meter Pattern sounds every Beat of both Measures', as
   expect([...measuresSeen].sort()).toEqual(['0', '1']);
 });
 
-test('AC-4.1.5 — backgrounding the tab stops the transport and resets it', async ({ page }) => {
+test('AC-4.1.5 — Audio suspended by the device pauses the transport', async ({ page }) => {
   await page.goto('/');
   await loadSimple(page);
 
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.waitForTimeout(200);
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
 
   // Simulate the device taking audio away.
   await page.evaluate(() => {
@@ -239,7 +241,81 @@ test('AC-4.1.5 — backgrounding the tab stops the transport and resets it', asy
     document.dispatchEvent(new Event('visibilitychange'));
   });
 
+  // Nothing sounds while suspended…
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
+  const after = await page.evaluate(() => ({
+    running: window.__rm.transport.isRunning,
+    loop: window.__rm.getState().loop,
+  }));
+  expect(after.running).toBe(false);
+  // …but the position and the loop counter are held, not reset (revised
+  // 2026-09-14 — see AC-4.1.6 for why).
+  expect(after.loop).toBeGreaterThanOrEqual(loopBefore);
+});
+
+test('AC-4.1.6/1 — A recoverable suspension continues the same run: the loop keeps counting and the pass in progress finishes from where it paused, with no restart', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.waitForTimeout(200);
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
+
+  // Returning to the app resumes on its own — no Play press required.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+  // The same run: the loop counter never dropped back to 0.
+  expect(await page.evaluate(() => window.__rm.getState().loop)).toBeGreaterThanOrEqual(loopBefore);
+});
+
+test("AC-4.1.6/2 — An unrecoverable suspension — the context stays stuck even after `src/audio/context.js`'s STUCK_STATES replace-and-close recovery has had its say, or that recovery hands back a genuinely different context object rather than the one that was interrupted — falls back to stop-and-reset, exactly as before this revision: the transport goes to stopped, the cursor returns to the first Slot of Measure 1, the loop counter resets to 0, and pressing Play starts a fresh run", async ({ page }) => {
+  // The context reports the real, genuinely running state until the test
+  // forces it stuck — before that, Play works exactly as it always has. Once
+  // forced, `state` never reports 'running' again, on this context or on any
+  // replacement `context.js`'s recovery constructs, however many times it tries.
+  await page.addInitScript(() => {
+    const Real = window.AudioContext;
+    window.AudioContext = class extends Real {
+      get state() {
+        return window.__forcedAudioState ?? super.state;
+      }
+      async resume() {
+        return super.resume();
+      }
+    };
+  });
+
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
+
+  await page.evaluate(() => {
+    // The device never gives it back, whatever context.js tries.
+    window.__forcedAudioState = 'suspended';
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+
+  // Falls all the way back: stopped, reset to the top, a deliberate Play needed.
+  await expect(page.locator('[data-action="play"]')).toBeVisible({ timeout: 4000 });
   const after = await page.evaluate(() => ({
     running: window.__rm.transport.isRunning,
     position: window.__rm.getState().transportPosition,
@@ -250,9 +326,52 @@ test('AC-4.1.5 — backgrounding the tab stops the transport and resets it', asy
   expect(after.loop).toBe(0);
 });
 
-test('AC-4.1.6 — returning to the app does not resume playback by itself', async ({ page }) => {
+test("AC-4.1.11/1 — `playbackState` follows `'playing'`, `'paused'`, `'playing'` again and `'none'` across a start, a recoverable suspension, its resume and a stop, and `metadata` names the Pattern playing", async ({ page }) => {
   await page.goto('/');
   await loadSimple(page);
+  test.skip(
+    await page.evaluate(() => !('mediaSession' in navigator)),
+    'This Chromium build exposes no navigator.mediaSession — AC-4.1.11/2 covers that case.'
+  );
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('playing');
+  expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('Playback Test');
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('paused');
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('playing');
+
+  await page.locator('[data-action="stop"]').click();
+  await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('none');
+});
+
+test("AC-4.1.11/2 — A browser without `navigator.mediaSession` — including the automated test environment — is unaffected: every call is a no-op and none of them throw", async ({ page }) => {
+  // A real DOM with the API removed before the app's own script runs, so the
+  // whole start/pause/resume/stop cycle is driven with nothing there to call.
+  await page.addInitScript(() => {
+    // `mediaSession` is an inherited accessor on the Navigator prototype, not
+    // an own property of the instance — deleting it from the instance would do
+    // nothing, so the prototype's own copy is what has to go for `'mediaSession'
+    // in navigator` to read false, the real feature-detection this app runs.
+    delete Navigator.prototype.mediaSession;
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await loadSimple(page);
+  expect(await page.evaluate(() => 'mediaSession' in navigator)).toBe(false);
+
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
@@ -262,15 +381,15 @@ test('AC-4.1.6 — returning to the app does not resume playback by itself', asy
   });
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
 
-  // Regaining focus is not a transport interaction (FR-010).
   await page.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await page.waitForTimeout(400);
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
-  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(false);
+  await page.locator('[data-action="stop"]').click();
   await expect(page.locator('[data-action="play"]')).toBeVisible();
+  expect(errors).toEqual([]);
 });
 
 test('AC-4.2.1 — Default tempo and range: the control clamps to 18–300', async ({ page }) => {
@@ -1358,9 +1477,16 @@ test('AC-4.1.9/5 — A structural edit — adding a Measure, or a Time Signature
 test('AC-4.1.10/3 — After the tab is backgrounded and returns, pressing Play sounds the Pattern again without a reload', async ({ page }) => {
   // Wrap the context so the test can put it into the truly-stuck state iPadOS
   // leaves behind: natively suspended, reporting the non-standard 'interrupted'.
+  // `__allowRecovery` gates whether resume() can actually clear that — held
+  // false until the deliberate Play, so AC-4.1.6's own best-effort auto-resume
+  // attempt (fired on the visibilitychange below) genuinely fails first and
+  // falls back to stop-and-reset (AC-4.1.6/2), which is this AC's own Given
+  // clause: "the transport stopped and reset" — the case its cross-reference
+  // says it is now the fallback for.
   await page.addInitScript(() => {
     const Real = window.AudioContext;
     window.__audioContexts = [];
+    window.__allowRecovery = false;
     window.AudioContext = class extends Real {
       constructor(...args) {
         super(...args);
@@ -1370,7 +1496,7 @@ test('AC-4.1.10/3 — After the tab is backgrounded and returns, pressing Play s
         return window.__forcedAudioState ?? super.state;
       }
       async resume() {
-        window.__forcedAudioState = null;
+        if (window.__allowRecovery) window.__forcedAudioState = null;
         return super.resume();
       }
     };
@@ -1381,7 +1507,7 @@ test('AC-4.1.10/3 — After the tab is backgrounded and returns, pressing Play s
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
-  // Backgrounded: the transport stops and resets (AC-4.1.5)…
+  // Backgrounded: the transport pauses (AC-4.1.5)…
   await page.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
@@ -1389,14 +1515,23 @@ test('AC-4.1.10/3 — After the tab is backgrounded and returns, pressing Play s
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
 
   // …and the OS leaves the context genuinely suspended while reporting
-  // 'interrupted', which the old resume() ignored.
+  // 'interrupted', which the old resume() ignored. Foregrounding fires
+  // AC-4.1.6's own auto-resume attempt, which this context is rigged to
+  // refuse — falling all the way back to stop-and-reset.
   await page.evaluate(async () => {
     await window.__audioContexts[0].suspend();
     window.__forcedAudioState = 'interrupted';
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
   });
+  await expect(page.locator('[data-action="play"]')).toBeVisible({ timeout: 2000 });
+  expect(await page.evaluate(() => window.__rm.getState().loop)).toBe(0);
 
+  // Now the deliberate Play this AC is about: the gesture-time resume
+  // recovers the still-'interrupted' context.
+  await page.evaluate(() => {
+    window.__allowRecovery = true;
+  });
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
   expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);

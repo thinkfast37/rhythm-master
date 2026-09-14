@@ -1305,10 +1305,12 @@ export function renderBrushHint(root, pattern, state) {
 }
 
 /**
- * Cycle mode (US-2.7): play each fill for a number of harmonic cycles, then
- * the next, through the whole catalogue. A playback setting — the fill in
- * force arrives on `pattern` and the Arpeggio picker shows it (AC-2.7.2/4);
- * the Pattern's own arpeggio is untouched (AC-2.7.1/4).
+ * Cycle mode (US-2.7) and progression cycling (US-2.10): play each fill, or
+ * each progression, for a number of harmonic cycles, then the next, through
+ * its own catalogue — two independent toggles sharing one Repeats count. Both
+ * are playback settings — the fill and/or progression in force arrive on
+ * `pattern` and the pickers show them (AC-2.7.2/4, AC-2.10.2/4); the Pattern's
+ * own arpeggio and progression are untouched (AC-2.7.1/4, AC-2.10.1/4).
  */
 function renderFillCycle(pattern, state, handlers) {
   const cycleRow = el('div', 'control-group fill-cycle-row');
@@ -1322,6 +1324,21 @@ function renderFillCycle(pattern, state, handlers) {
   cycle.setAttribute('aria-pressed', String(cycling));
   cycle.addEventListener('click', () => handlers.onFillCycle(!cycling));
   cycleRow.appendChild(cycle);
+
+  // Progression cycling (US-2.10): the same shape as Cycle fills, its own
+  // independent toggle, sharing this row's Repeats rather than a second box
+  // (AC-2.10.1/1, AC-2.10.1/2).
+  const progressionCycling = Boolean(state.progressionCycle?.on);
+  const progressionCycle = el('button', `progression-cycle${progressionCycling ? ' on' : ''}`, {
+    type: 'button',
+    textContent: progressionCycling ? 'Cycling progressions' : 'Cycle progressions',
+    title: 'Play each progression for the number of harmonic cycles set here, then move on to the next',
+  });
+  progressionCycle.dataset.action = 'toggle-progression-cycle';
+  progressionCycle.setAttribute('aria-pressed', String(progressionCycling));
+  progressionCycle.addEventListener('click', () => handlers.onProgressionCycle(!progressionCycling));
+  cycleRow.appendChild(progressionCycle);
+
   const repeats = el('input', 'fill-cycle-repeats', {
     type: 'number',
     min: '1',

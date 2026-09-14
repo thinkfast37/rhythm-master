@@ -29,7 +29,7 @@ import {
   matchProgression,
 } from '../../../src/core/harmony.js';
 import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
-import { fillIndexFor, fillIndexOf, withArpeggio } from '../../../src/core/harmony.js';
+import { fillIndexFor, fillIndexOf, withArpeggio, progressionIndexFor, progressionIndexOf, withProgression } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 
 /** A Melodic Pattern in a Key and scale, `measures` Measures of 4/4. */
@@ -511,5 +511,63 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(withArpeggio(plain, 'alberti')).toBe(plain);
     const already = setArpeggio(p, 'alberti');
     expect(withArpeggio(already, 'alberti')).toBe(already);
+  });
+});
+
+describe('core/harmony — cycle mode: the progression in force (US-2.10)', () => {
+  it("AC-2.10.2/1 — One repeat is one harmonic cycle of the Pattern's own progression, counted exactly as Cycle fills counts its own; with Cycle fills also on, each catalogue steps forward independently on the shared repeats-count cadence rather than being coupled into one combined step", () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    expect(cyclePasses(p)).toBe(3);
+    const four = { start: 0, baseLoop: 0, repeats: 4 };
+    // Identical period math to fillIndexFor, since it is the same Pattern's own
+    // harmonic cycle length driving both catalogues on the shared Repeats count.
+    for (let loop = 0; loop < 12; loop++) expect(progressionIndexFor(p, four, loop), `pass ${loop}`).toBe(0);
+    expect(progressionIndexFor(p, four, 12)).toBe(1);
+    expect(progressionIndexFor(p, four, 23)).toBe(1);
+    expect(progressionIndexFor(p, four, 24)).toBe(2);
+
+    // Each catalogue advances independently: a fill-cycle step at loop 12 does
+    // not itself move the progression cycle, which is counted from its own
+    // start/baseLoop against the same repeats and Pattern.
+    const fillCfg = { start: 3, baseLoop: 0, repeats: 4 };
+    const progressionCfg = { start: 9, baseLoop: 0, repeats: 4 };
+    expect(fillIndexFor(p, fillCfg, 12)).toBe(4);
+    expect(progressionIndexFor(p, progressionCfg, 12)).toBe(10);
+  });
+
+  it("AC-2.10.2/3 — The order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first", () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    const n = PROGRESSIONS.length;
+    const one = { start: 0, baseLoop: 0, repeats: 1 };
+    const sequence = Array.from({ length: n + 2 }, (_, k) => PROGRESSIONS[progressionIndexFor(p, one, k * cyclePasses(p))].id);
+    expect(sequence.slice(0, n)).toEqual(PROGRESSIONS.map((entry) => entry.id));
+    expect(sequence[n]).toBe(PROGRESSIONS[0].id);
+    expect(sequence[n + 1]).toBe(PROGRESSIONS[1].id);
+    // The catalogue's group order names every heading AC-2.6.1/1 lists.
+    const orderedGroups = [];
+    for (const entry of PROGRESSIONS) if (!orderedGroups.includes(entry.group)) orderedGroups.push(entry.group);
+    expect(orderedGroups).toEqual(['three', 'pop', 'minor', 'jazz', 'blues', 'modal', 'classical', 'indie', 'sus']);
+  });
+
+  it("AC-2.10.1/3 — Turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none", () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    const iivvi = PROGRESSIONS.findIndex((entry) => entry.id === 'I-IV-V');
+    expect(progressionIndexOf(p)).toBe(iivvi);
+
+    // A Pattern with a progression edited into something the catalogue holds
+    // no entry for matches none, so the cycle starts from the first.
+    const custom = setChordDegree(p, 0, '2');
+    expect(matchProgression(custom)).toBeNull();
+    expect(progressionIndexOf(custom)).toBe(0);
+
+    // The overlay: the progression in force substituted, the Pattern's own chords untouched.
+    const jazz = PROGRESSIONS.find((entry) => entry.group === 'jazz');
+    const over = withProgression(p, jazz.id);
+    expect(matchProgression(over)).toBe(jazz.id);
+    expect(matchProgression(p)).toBe('I-IV-V');
+    const plain = melodic();
+    expect(withProgression(plain, jazz.id)).toBe(plain);
+    const already = withProgression(p, 'I-IV-V');
+    expect(already).toBe(p);
   });
 });
