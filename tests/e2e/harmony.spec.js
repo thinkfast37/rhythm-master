@@ -749,8 +749,16 @@ test("AC-2.7.1/5 — Turning cycle mode off returns the Pattern's own arpeggio, 
   await page.locator('.fill-cycle').click();
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
-  await page.locator('.fill-cycle').click();
-  const pending = await page.evaluate(() => window.__rm.transport._snapshot().pendingEdit);
+  // The toggle and the read happen in one synchronous turn. `pendingEdit` is
+  // cleared the moment the scheduler crosses the next pass boundary, and
+  // `cyclingBlank` runs at 300 BPM — a 0.8s pass against a ~0.4s lookahead — so
+  // a boundary routinely lands inside the round trip of a separate evaluate,
+  // which read the flag as already consumed. A scheduler tick cannot interleave
+  // within one evaluation, so this reads the flag the click itself set.
+  const pending = await page.evaluate(() => {
+    document.querySelector('.fill-cycle').click();
+    return window.__rm.transport._snapshot().pendingEdit;
+  });
   expect(pending).toBe(true);
   expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
   await page.waitForTimeout(1200);
