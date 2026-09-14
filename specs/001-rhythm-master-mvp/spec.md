@@ -855,17 +855,29 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** it plays
   - **Then** each loop plays Measure 1's 4 quarter-note Beats followed by Measure 2's 6 eighth-note Beats, each Beat sounding according to its own Recipe, before the loop counter (AC-4.1.3) increments and the sequence repeats from Measure 1
 
-- **AC-4.1.5** — Audio suspended by the device stops the transport and resets it
+- **AC-4.1.5** — Audio suspended by the device pauses the transport
   - **Given** a Pattern has been playing for 40 loops and the device suspends audio — the phone locks, a call arrives, or the browser tab is backgrounded by the OS
   - **When** the suspension occurs
-  - **Then** the transport goes to stopped, the playback cursor returns to the first Slot of Measure 1, and the loop counter resets to 0
-  - **And** no audio is scheduled or sounds while suspended
+  - **Then** scheduling and sounding stop at once — no audio is scheduled or sounds while suspended — but the playback cursor's position and the loop counter are held rather than reset, so a suspension the device offers back can pick the run up from exactly here (AC-4.1.6)
+  - *(Revised 2026-09-14: previously this reset the transport to the top of Measure 1 with the loop counter at 0, unconditionally. See AC-4.1.6's parenthetical for why.)*
 
-- **AC-4.1.6** — Returning after a suspension requires a deliberate Play
-  - **Given** playback was stopped and reset by a suspension (AC-4.1.5)
-  - **When** the musician returns to the app and it regains focus
-  - **Then** nothing plays, and the transport still reads stopped at the top of the Pattern
-  - **And** pressing Play starts a fresh run from Measure 1 with the loop counter at 0 — honouring FR-010, since regaining focus is not interaction with a transport control
+- **AC-4.1.6** — Returning after a suspension resumes automatically when the context recovers
+  - **Given** playback was paused by a suspension (AC-4.1.5)
+  - **When** the AudioContext the device took away comes back to running — the phone unlocks, the call ends, the tab returns to the foreground — while that is still the run it interrupted
+  - **Then** playback resumes on its own from the loop and the position it paused at, with no Play press required
+  - **Cases**:
+    - **AC-4.1.6/1** — A recoverable suspension continues the same run: the loop keeps counting and the pass in progress finishes from where it paused, with no restart
+    - **AC-4.1.6/2** — An unrecoverable suspension — the context stays stuck even after `src/audio/context.js`'s STUCK_STATES replace-and-close recovery has had its say, or that recovery hands back a genuinely different context object rather than the one that was interrupted — falls back to stop-and-reset, exactly as before this revision: the transport goes to stopped, the cursor returns to the first Slot of Measure 1, the loop counter resets to 0, and pressing Play starts a fresh run
+  - *(Revised 2026-09-14 at the maintainer's request: practising hands-free with the phone screen off, the device backgrounding the tab or locking the screen — ordinary within a few minutes of a practice run — was resetting playback to the top of the Pattern every time, which defeats the point of a practice loop. The maintainer considered and declined the smaller alternative of merely remembering the position for the next manual Play, because the screen-off case is exactly the one where pressing Play by hand is not convenient. This is best-effort, not a guarantee: iOS Safari and other mobile browsers may still kill background audio outright regardless of what the app does, which is why Case /2 — falling back to today's stop-and-reset — is kept rather than assumed away. A replacement context counts as Case /2 too, not Case /1: its audio clock starts fresh and unrelated to the interrupted context's, so nothing can re-anchor a paused run's position against it in place — that is not "the same run it interrupted" the way Case /1 requires, and AC-4.1.10's gesture-time recovery on Play, which rebuilds the graph against a replacement deliberately, is the path back whenever Case /2 is what happened.)*
+
+- **AC-4.1.11** — Media Session state and metadata track playback, where the browser supports it
+  - **Given** a browser exposing `navigator.mediaSession`
+  - **When** playback starts, is paused by a recoverable suspension (AC-4.1.5), resumes (AC-4.1.6/1), or stops
+  - **Then** `navigator.mediaSession.playbackState` follows `'playing'`, `'paused'`, `'playing'` again, or `'none'` in step, and `navigator.mediaSession.metadata` names the Pattern playing — best-effort scaffolding that makes some mobile OSes more willing to keep a backgrounded audio session alive, and gives the lock screen its own "Now Playing" treatment while it does
+  - **Cases**:
+    - **AC-4.1.11/1** — `playbackState` follows `'playing'`, `'paused'`, `'playing'` again and `'none'` across a start, a recoverable suspension, its resume and a stop, and `metadata` names the Pattern playing
+    - **AC-4.1.11/2** — A browser without `navigator.mediaSession` — including the automated test environment — is unaffected: every call is a no-op and none of them throw
+  - *(Added 2026-09-14 alongside AC-4.1.5/AC-4.1.6's revision: entirely feature-detected, so it changes nothing for a browser without the API and nothing here promises the OS will honour it — it is one more thing a background session can point to, not a guarantee it survives.)*
 
 - **AC-4.1.8** — Opening another Pattern during playback switches playback to it
   - **Given** a Pattern is playing
@@ -901,6 +913,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.1.10/2** — A context still not running after a resume attempt is replaced, and the shared audio graph is rebuilt against the replacement rather than reused
     - **AC-4.1.10/3** — After the tab is backgrounded and returns, pressing Play sounds the Pattern again without a reload
   - *(Added 2026-09-07 from the maintainer's iPad report: "if I minimize the app and go to a different app and I come back, the sound is gone … I have to close the app down and restart it." FR-011 always required recovery on the next user gesture, but no AC decomposed that clause, so nothing tested it — and the resume path only handled `'suspended'`, silently skipping the `'interrupted'` state iPadOS actually reports. The suspension *detector* knew about `'interrupted'`; the recovery half did not.)*
+  - *(Cross-reference added 2026-09-14 with AC-4.1.5/AC-4.1.6's revision: the Given clause's "transport stopped and reset" now describes only AC-4.1.6/2, the unrecoverable case — AC-4.1.6/1's recoverable suspension pauses and comes back on its own, never reaching a state where a deliberate Play is needed. This AC's gesture-time resume stays exactly as specified for the case where AC-4.1.6's own best-effort auto-resume could not bring the context back; it is the fallback AC-4.1.6/2 falls back to, not a separate path.)*
 
 ---
 
@@ -3031,6 +3044,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.7.2/5** — Changing the Repeats count while playing applies without a restart: the fill in force keeps its place and plays the new count from the pass it is on before the cycle moves on
     - **AC-2.7.2/6** — Stopping returns the fill in force to the starting fill — the Pattern's own, or the first of the catalogue when it has none — so every Play begins the cycle from the same place
     - **AC-2.7.2/7** — Choosing a fill in the picker while cycling is the ordinary edit of the Pattern's arpeggio, and the cycle begins again from that fill with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches, which turns cycle mode off
+  - *(Cross-reference added 2026-09-14 with AC-4.1.5/AC-4.1.6's revision: "Stopping" in /6 is unchanged and still means a transport that has actually gone to stopped — the musician's own Stop, or a suspension AC-4.1.6/2 could not recover. A recoverable suspension (AC-4.1.6/1) no longer stops the transport at all — it pauses and resumes the same run — so it never reaches this Case; the fill in force carries straight through a recoverable suspension exactly as it does through any other silent moment in a running pass.)*
 
 - **AC-2.7.3** — The score names the fill in force and the MIDI file keeps the Pattern's own
   - **Given** cycle mode on
@@ -3255,6 +3269,53 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.9.5/2** — A Pattern with no progression shows both the Register picker and the octave stepper: the stepper arms the octave a new stamp gets, and the Register then moves the whole finished line by octaves without re-stamping anything (AC-2.9.4)
     - **AC-2.9.5/3** — Adding a Pattern's first chord hides the octave stepper on that render, leaving the Register in place; removing its last chord brings the stepper back — no reload needed
   - *(Added 2026-09-13, revised the same day. The maintainer, painting individual notes: "the Octave mode doesn't really make any sense... when I'm using a chord progression. I have to use the Register. But when I'm painting individual notes, then I should use the Octaves." First drafted as hiding the Register whenever there was no progression, which contradicted AC-2.9.2 — the Register already, deliberately, moves a plain melody with no progression at all, e.g. to hear it as a bass line without touching a stored Pitch. Asked to reconcile the two, the maintainer confirmed the controls are not redundant even without a progression: the octave stepper decides what octave each new stamp gets while composing, the Register then shifts the whole finished shape as one block, preserving the relative octaves between notes. So only the octave stepper is mode-exclusive; the Register stays on every Melodic Pattern. Mode is read from whether the Pattern has a progression at all (`hasHarmony`), not from the arpeggio alone — chosen because a progression with the arpeggio set to None still resolves every sounding note through the Register, AC-2.9.2, leaving the octave stepper with nothing to move even though the degree chips remain tappable. A fixed note stamped in that state now always lands at octave-offset 0; there was no control left to ask for anything else, and the maintainer confirmed that trade-off directly rather than have the octave stepper reappear for one sub-case.)*
+
+---
+
+### User Story 45 - Cycle through chord progressions while practising
+
+*Traceability: `US-2.10` — Cycle through chord progressions while practising*
+
+**As** the Practicing Musician, **I want** playback to step through the progression catalogue one by one — each one repeated a number of harmonic cycles, on the same Repeats setting Cycle fills already uses — **so that** I can hear a rhythm and its fills against many chord progressions in one run, without stopping to pick each one by hand.
+
+*(Added 2026-09-14 at the maintainer's request, mirroring US-2.7: cycling through fills one by one for practice was already there for the arpeggio catalogue; the same idea against the progression catalogue lets a rhythm be auditioned against I–IV–V, then ii–V–I, then the twelve-bar blues, and on through the whole list, unattended. Decisions taken with the maintainer the same day: Cycle progressions is a second, independent toggle beside Cycle fills — not a merge of the two into one control — because the two catalogues are different things to audition and either may be wanted alone; it shares Cycle fills' existing Repeats count rather than a Repeats box of its own, with both catalogues stepping forward on that same cadence independently of each other when both are on, never coupled into a single combined step; and there is no "kept" or favourite-progressions concept here — Keep (US-2.8) stays a fills-only feature. Everything US-2.7 already decided about a playback overlay that never touches Pattern data carries over unchanged: nothing here is stored, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling.)*
+
+**Independent Test**: Turn Cycle progressions on over a Pattern with a progression, with the repeat count at 1, press Play, and assert that the progression in force advances through the catalogue at every harmonic cycle without a restart, that the picker, the note bands, the pitch strip and the score follow it, and that the Pattern's own progression, its auto-save and the MIDI file are untouched. Turn Cycle fills on at the same time and assert each catalogue advances on its own.
+
+**Acceptance Scenarios**:
+
+- **AC-2.10.1** — Progression cycling is a playback setting in the Melody group, independent of Cycle fills
+  - **Given** a Melodic Pattern with a progression
+  - **When** the Practicing Musician looks at the Melody group
+  - **Then** a Cycle progressions toggle sits beside Cycle fills, sharing its Repeats count, and turning it on puts a progression in force without changing the Pattern
+  - **Cases**:
+    - **AC-2.10.1/1** — A Cycle progressions toggle sits in the fill-cycle row beside Cycle fills, sharing the same Repeats count (1–16, 4 by default) rather than a Repeats box of its own, and is absent, like the progression picker, on a Pattern without a progression
+    - **AC-2.10.1/2** — Cycle fills and Cycle progressions are independent controls: either can be on with the other off, both can be on together, and turning one on or off never changes the other's state
+    - **AC-2.10.1/3** — Turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none
+    - **AC-2.10.1/4** — The progression in force is a playback setting: the Pattern's own progression is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling
+    - **AC-2.10.1/5** — Turning progression cycling off returns the Pattern's own progression, from the next pass while playing and at once otherwise
+
+- **AC-2.10.2** — Playback steps through the progression catalogue on the shared Repeats cadence
+  - **Given** progression cycling on and a Pattern playing
+  - **When** the progression in force has played its Repeats count of harmonic cycles
+  - **Then** the next progression in the catalogue is in force from the next pass, and playback never stops, restarts or jumps
+  - **Cases**:
+    - **AC-2.10.2/1** — One repeat is one harmonic cycle of the Pattern's own progression, counted exactly as Cycle fills counts its own; with Cycle fills also on, each catalogue steps forward independently on the shared repeats-count cadence rather than being coupled into one combined step
+    - **AC-2.10.2/2** — At the boundary the next progression is in force from the very next pass, the loop counter keeps counting, and nothing stops or restarts
+    - **AC-2.10.2/3** — The order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first
+    - **AC-2.10.2/4** — The picker shows the progression in force, the note bands and the pitch strip follow its chords, and the score shows it — every view follows the progression in force, not the Pattern's own
+    - **AC-2.10.2/5** — Changing the shared Repeats count while playing applies without a restart, to whichever of Cycle fills and Cycle progressions is on
+    - **AC-2.10.2/6** — Stopping returns the progression in force to the starting progression — the Pattern's own, or the first of the catalogue when its chords match none — so every Play begins the cycle from the same place
+    - **AC-2.10.2/7** — Choosing a progression in the picker while cycling is the ordinary edit of the Pattern's progression, and the cycle begins again from that choice with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches and turns progression cycling off
+  - *(Case /7 added 2026-09-14, discovered while testing this Story: without it, choosing a different progression in the picker while cycling had no visible effect at all — the cycle's overlay immediately substituted the progression in force straight back over the picker's choice, since nothing told the cycle a new choice had been made. Mirroring AC-2.7.2/7 exactly, as the rest of this Story already does, resolves it the same way fills already resolve it. Two further cross-references, kept out of the Case wording above to keep each Case's own criterion distinct from another AC's: Case /1's harmonic-cycle counting is exactly AC-2.7.2/1's for the fill catalogue; Case /3's declared order is AC-2.6.1/1's group listing; and Case /6's "Stopping" carries the same distinction AC-2.7.2/6 draws — a recoverable audio suspension (AC-4.1.6/1) is not stopping and does not reach this Case.)*
+
+- **AC-2.10.3** — The score follows the progression in force and the MIDI file keeps the Pattern's own
+  - **Given** progression cycling on
+  - **When** the Pattern is shown as Sheet or exported as MIDI
+  - **Then** the score's chords are the progression in force, and the MIDI file is the Pattern as saved
+  - **Cases**:
+    - **AC-2.10.3/1** — While progression cycling is on the score's chord chips, chord names and numerals are the progression in force's; Print / PDF prints the same score
+    - **AC-2.10.3/2** — MIDI export carries the Pattern's own progression, never the one in force while cycling: the file is the Pattern's data, and cycling is practice
 
 ---
 

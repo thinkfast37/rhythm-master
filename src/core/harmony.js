@@ -749,6 +749,49 @@ export function withArpeggio(pattern, id) {
   return { ...pattern, harmony: { ...pattern.harmony, arpeggio: id } };
 }
 
+/* --- cycle mode: the progression in force (US-2.10) ------------------------ */
+
+/**
+ * The catalogue index of a Pattern's own progression, matched from its chords
+ * under its own scale, or 0 — the first — when it has none or the chords match
+ * no entry (AC-2.10.1/3): the starting place a fresh cycle counts from, the
+ * same way `fillIndexOf` seeds Cycle fills.
+ */
+export function progressionIndexOf(pattern) {
+  const id = matchProgression(pattern);
+  const i = id === null ? -1 : PROGRESSIONS.findIndex((p) => p.id === id);
+  return i < 0 ? 0 : i;
+}
+
+/**
+ * The catalogue index of the progression in force under progression cycling for
+ * the pass `loop` (AC-2.10.2/2, /3): identical shape to `fillIndexFor` — the
+ * starting progression, stepped forward once for every `repeats` harmonic
+ * cycles of the Pattern's OWN progression played since `baseLoop`, wrapping
+ * round the catalogue. Cycle fills and Cycle progressions are independent
+ * catalogues that can both be driven by the same `repeats`, stepping forward on
+ * the same cadence without being coupled into one combined step (AC-2.10.2/1).
+ */
+export function progressionIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4 } = {}, loop = 0) {
+  const period = Math.max(1, Math.floor(repeats)) * cyclePasses(pattern);
+  const steps = Math.floor(Math.max(0, loop - baseLoop) / period);
+  const n = PROGRESSIONS.length;
+  return (((start + steps) % n) + n) % n;
+}
+
+/**
+ * The Pattern as played with the catalogue progression `id` in force — a
+ * playback overlay, never stored (AC-2.10.1/4). The arpeggio field, if any, is
+ * left untouched so Cycle fills and Cycle progressions compose freely. The
+ * Pattern itself is returned when it has no progression or already matches
+ * `id`.
+ */
+export function withProgression(pattern, id) {
+  if (!hasHarmony(pattern) || matchProgression(pattern) === id) return pattern;
+  const chords = spellProgression(id, pattern.scale ?? DEFAULT_SCALE);
+  return { ...pattern, harmony: { ...pattern.harmony, chords } };
+}
+
 /** The roles an arpeggio deals: the members of the progression's fullest chord (AC-2.6.6/5). */
 export function arpeggioRoles(pattern) {
   const chords = pattern.harmony?.chords ?? [];

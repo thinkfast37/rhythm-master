@@ -12,7 +12,7 @@
  */
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
 import { hasHarmony } from '../core/harmony.js';
-import { resume, onSuspended } from './context.js';
+import { resume, onSuspended, onResumed } from './context.js';
 import { playPercussive, playClick } from './voices.js';
 
 /** How far ahead events are scheduled, and how often we top up. */
@@ -36,7 +36,7 @@ const STALL_MARGIN = 2.5;
 /** The same safety offset start() uses, reused when a stall re-anchors. */
 const START_OFFSET_SECONDS = 0.06;
 
-export function createTransport({ onPosition, onLoop, onStop, playMelodic = null } = {}) {
+export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null } = {}) {
   let ctx = null;
   let master = null;
   let timer = null;
@@ -60,6 +60,10 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
   /** An edited Pattern waiting for the next pass boundary (AC-4.1.9). */
   let pending = null;
   let running = false;
+  /** Paused by a recoverable device suspension, waiting for the context to
+   *  come back (AC-4.1.5, AC-4.1.6) — distinct from `running` false because
+   *  the transport is not stopped: its position is held, not reset. */
+  let suspendedForRecovery = false;
   const pendingVisuals = [];
 
   /** Adaptive horizon (see MAX_LOOKAHEAD_SECONDS above). Kept across starts:
@@ -299,9 +303,12 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       // loop happens to complete.
       onLoop?.(0);
 
-      // The device taking audio away stops and resets; it never auto-resumes
-      // on return (AC-4.1.5, AC-4.1.6).
-      this._unwatch = onSuspended(() => this.stop());
+      // The device taking audio away pauses the run — position held, nothing
+      // scheduled or sounding — and best-effort auto-resumes it from the same
+      // place once the context comes back (AC-4.1.5, AC-4.1.6). A context that
+      // never comes back falls back to today's stop-and-reset.
+      this._unwatchSuspend = onSuspended(() => this._handleSuspend());
+      this._unwatchResume = onResumed(() => this._handleResume());
 
       lastTick = ctx.currentTime;
       tick();
@@ -311,14 +318,73 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
     },
 
     stop(silent = false) {
+      if (!running && !suspendedForRecovery) return;
+      running = false;
+      suspendedForRecovery = false;
+      clearInterval(timer);
+      timer = null;
+      stopFrameLoop();
+      pendingVisuals.length = 0;
+      this._unwatchSuspend?.();
+      this._unwatchResume?.();
+      if (!silent) onStop?.();
+    },
+
+    /**
+     * The device took audio away mid-run (AC-4.1.5). Scheduling and sounding
+     * stop at once — nothing is scheduled or sounds while suspended — but the
+     * pass and the position within it are held rather than reset, so a
+     * recovered context can pick the run up from exactly here (AC-4.1.6).
+     */
+    _handleSuspend() {
       if (!running) return;
       running = false;
       clearInterval(timer);
       timer = null;
       stopFrameLoop();
       pendingVisuals.length = 0;
-      this._unwatch?.();
-      if (!silent) onStop?.();
+      suspendedForRecovery = true;
+      onSuspend?.();
+    },
+
+    /**
+     * The device offered the context back (AC-4.1.6). Best-effort: a context
+     * that comes back running re-anchors the origin exactly as a throttled
+     * timer's stall does (`recoverFromStall`) and the run continues from the
+     * same loop and Slot it paused at — no restart, no reset. A context that
+     * stays stuck (`resume()`'s STUCK_STATES replace-and-close already having
+     * had its say) falls back to today's stop-and-reset, unchanged.
+     *
+     * A REPLACED context also falls back rather than continuing in place: its
+     * clock starts from a new origin unrelated to the suspended context's, so
+     * `origin` — anchored against the old context's `currentTime` — cannot be
+     * reused against it, and that is not "the same run it interrupted"
+     * (AC-4.1.6's own wording). AC-4.1.10/2's gesture-time recovery is what
+     * rebuilds the graph against a replacement, at a fresh Play.
+     */
+    async _handleResume() {
+      if (!suspendedForRecovery) return;
+      const suspendedCtx = ctx;
+      const next = await resume();
+      if (next.state !== 'running' || next !== suspendedCtx) {
+        this.stop();
+        return;
+      }
+      suspendedForRecovery = false;
+      ctx = next;
+      if (!master || master.context !== ctx) {
+        master = ctx.createGain();
+        master.gain.value = 0.9;
+        master.connect(ctx.destination);
+      }
+      lastTick = ctx.currentTime;
+      recoverFromStall(ctx.currentTime);
+      running = true;
+      tick();
+      timer = setInterval(tick, POLL_MS);
+      stopFrameLoop();
+      frame = requestFrame(frameLoop);
+      onResume?.();
     },
 
     /**
@@ -357,6 +423,7 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       timelineLength: timeline.length,
       pendingEdit: Boolean(pending),
       lookaheadSeconds: lookahead,
+      suspendedForRecovery,
     }),
   };
 }

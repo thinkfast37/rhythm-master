@@ -961,6 +961,301 @@ test("AC-2.7.3/2 — MIDI export carries the Pattern's own arpeggio, never the f
 });
 
 /*
+ * US-2.10 — Cycle through chord progressions while practising. The same
+ * playback-overlay shape as US-2.7's Cycle fills, over the progression
+ * catalogue instead, and independent of it.
+ */
+const progressionInForce = (page) => page.evaluate(() => window.__rm.progressionInForce());
+const progressionCycleState = (page) => page.evaluate(() => window.__rm.getState().progressionCycle);
+
+/** Wait until the progression in force is `id`, polling the real transport. */
+async function untilProgression(page, id, timeout = 9000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    if ((await progressionInForce(page)) === id) return true;
+    await page.waitForTimeout(80);
+  }
+  return false;
+}
+
+test('AC-2.10.1/1 — A Cycle progressions toggle sits in the fill-cycle row beside Cycle fills, sharing the same Repeats count (1–16, 4 by default) rather than a Repeats box of its own, and is absent, like the progression picker, on a Pattern without a progression', async ({ page }) => {
+  await melodicBlank(page);
+  await expect(page.locator('.progression-cycle')).toHaveCount(0);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  const row = page.locator('[data-section="melody"] .fill-cycle-row');
+  await expect(row).toBeVisible();
+  await expect(row.locator('.fill-cycle')).toBeVisible();
+  await expect(row.locator('.progression-cycle')).toHaveAttribute('aria-pressed', 'false');
+  // One Repeats box, shared: two toggles either side of it inside the row.
+  await expect(row.locator('.fill-cycle-repeats')).toHaveCount(1);
+  await expect(row.locator('.fill-cycle-repeats')).toHaveValue('4');
+});
+
+test("AC-2.10.1/2 — Cycle fills and Cycle progressions are independent controls: either can be on with the other off, both can be on together, and turning one on or off never changes the other's state", async ({ page }) => {
+  await harmonicBlank(page);
+  await page.locator('.progression-cycle').click();
+  await expect(page.locator('.progression-cycle')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
+
+  await page.locator('.fill-cycle').click();
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.progression-cycle')).toHaveAttribute('aria-pressed', 'true');
+
+  await page.locator('.progression-cycle').click();
+  await expect(page.locator('.progression-cycle')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test("AC-2.10.1/3 — Turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none", async ({ page }) => {
+  await harmonicBlank(page);
+  await page.locator('.progression-cycle').click();
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  expect(await progressionCycleState(page)).toMatchObject({ on: true, baseLoop: 0 });
+
+  // A progression the catalogue holds no entry for: the cycle starts from the first.
+  await page.locator('.progression-cycle').click();
+  await page.evaluate(() => window.__rm.handlers.onChordDegree(0, '2'));
+  await page.locator('.progression-cycle').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(await progressionInForce(page)).toBe(PROGRESSIONS[0].id);
+});
+
+test("AC-2.10.1/4 — The progression in force is a playback setting: the Pattern's own progression is not changed, nothing auto-saves, and a shipped Pattern is never prompted for a name by cycling", async ({ page }) => {
+  await harmonicBlank(page);
+  const savedBefore = await page.evaluate(() => JSON.stringify(window.__rm.patternStore.findById('p_test')));
+  await page.locator('.progression-cycle').click();
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  expect(await page.evaluate(() => JSON.stringify(window.__rm.patternStore.findById('p_test')))).toBe(savedBefore);
+
+  // A shipped Pattern: cycling shows no naming prompt and stays unowned.
+  await page.locator('.progression-cycle').click();
+  await loadAsShipped(page);
+  await page.locator('.progression-cycle').click();
+  await expect(page.locator('.dialog-input')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+});
+
+test("AC-2.10.1/5 — Turning progression cycling off returns the Pattern's own progression, from the next pass while playing and at once otherwise", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+
+  // While playing: the transport is handed the Pattern for its next pass, and the run keeps going.
+  const pending = await page.evaluate(() => {
+    document.querySelector('.progression-cycle').click();
+    return window.__rm.transport._snapshot().pendingEdit;
+  });
+  expect(pending).toBe(true);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+  await page.waitForTimeout(1500);
+  // Back to the Pattern's own I–IV–V — its first chord, degree '1'.
+  expect(await page.evaluate(() => window.__rm.transport._snapshot().pattern.harmony.chords[0].degree)).toBe('1');
+  await page.locator('[data-action="stop"]').click();
+
+  // And at once while stopped.
+  await page.locator('.progression-cycle').click();
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  await page.locator('.progression-cycle').click();
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+});
+
+test("AC-2.10.2/2 — At the boundary the next progression is in force from the very next pass, the loop counter keeps counting, and nothing stops or restarts", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  const next = PROGRESSIONS[1].id;
+  expect(await untilProgression(page, next)).toBe(true);
+  const at = await page.evaluate(() => ({ loop: window.__rm.getState().loop, running: window.__rm.transport.isRunning }));
+  expect(at.running).toBe(true);
+  expect(at.loop).toBeGreaterThan(0);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.10.2/1 — One repeat is one harmonic cycle of the Pattern's own progression, counted exactly as Cycle fills counts its own; with Cycle fills also on, each catalogue steps forward independently on the shared repeats-count cadence rather than being coupled into one combined step: proven live through the real transport", async ({ page }) => {
+  await cyclingBlank(page); // I-IV-V over one Measure: cyclePasses = 3, so one repeat is 3 passes.
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.arpeggio-picker').selectOption('up');
+  // Both catalogues cycling at once, so a boundary that moved only one of them
+  // — the "combined step" this Case rules out — would be visible here.
+  await page.locator('.progression-cycle').click();
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  expect(await fillInForce(page)).toBe('up');
+
+  // Held through the first pass — well inside the three-pass repeat — nothing has moved yet.
+  await page.waitForTimeout(800);
+  expect(await page.evaluate(() => window.__rm.getState().loop)).toBeLessThan(3);
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  expect(await fillInForce(page)).toBe('up');
+
+  const { PROGRESSIONS, ARPEGGIOS } = await import('../../src/core/harmony.js');
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  // The repeat boundary moved both catalogues — independently, not one in place of the other.
+  expect(await page.evaluate(() => window.__rm.getState().loop)).toBeGreaterThanOrEqual(3);
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[1].id);
+
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.10.2/3 — The order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first: proven live through the real transport", async ({ page }) => {
+  await cyclingBlank(page); // I-IV-V over one Measure: cyclePasses = 3
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  // Start the cycle at the catalogue's last entry: the Pattern's own progression,
+  // picked as that last entry (US-2.6's ordinary edit, AC-2.10.2/7).
+  const last = PROGRESSIONS[PROGRESSIONS.length - 1];
+  await page.locator('.progression-picker').selectOption(last.id);
+  await page.locator('.progression-cycle').click();
+  expect(await progressionInForce(page)).toBe(last.id);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  // The next entry after the catalogue's last one is its first — the wrap.
+  expect(await untilProgression(page, PROGRESSIONS[0].id)).toBe(true);
+  // And the step after that continues in order, not back to the start of the catalogue's groups.
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.10.2/4 — The picker shows the progression in force, the note bands and the pitch strip follow its chords, and the score shows it — every view follows the progression in force, not the Pattern's own", async ({ page }) => {
+  await cyclingBlank(page);
+  // An arpeggio, so the note bands deal chord tones rather than the fixed
+  // Roots `cyclingBlank` stamps — otherwise nothing on the grid moves with
+  // the chord at all (AC-2.6.1/6's fixed-degree design).
+  await page.locator('.arpeggio-picker').selectOption('up');
+  const before = await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents();
+  const beforeChords = await chordNames(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  const next = PROGRESSIONS[1].id;
+  expect(await untilProgression(page, next)).toBe(true);
+  await expect(page.locator('.progression-picker')).toHaveValue(next);
+  expect(await chordNames(page)).not.toEqual(beforeChords);
+  // The note bands and the pitch strip follow the new chord.
+  const after = await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents();
+  expect(after).not.toEqual(before);
+  await expect(page.locator('.pitch-strip-note')).toContainText('Ascending');
+  // The Pattern's own progression is unchanged underneath — still I–IV–V's I.
+  expect(await page.evaluate(() => window.__rm.transport._snapshot().pattern.harmony.chords[0].degree)).toBe('1');
+
+  // The score view shows the same chord chips (AC-2.10.3/1 proves its own content).
+  await page.locator('[data-action="view-sheet"]').click();
+  await expect(page.locator('.score')).toBeVisible();
+  await page.locator('[data-action="stop"]').click();
+});
+
+test('AC-2.10.2/5 — Changing the shared Repeats count while playing applies without a restart, to whichever of Cycle fills and Cycle progressions is on', async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  const before = await page.evaluate(() => ({ loop: window.__rm.getState().loop, running: window.__rm.transport.isRunning }));
+
+  await page.locator('.fill-cycle-repeats').fill('4');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  expect(await progressionInForce(page)).toBe(PROGRESSIONS[1].id);
+  const cycle = await progressionCycleState(page);
+  expect(cycle.on).toBe(true);
+  expect(cycle.baseLoop).toBeGreaterThanOrEqual(before.loop);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.10.2/6 — Stopping returns the progression in force to the starting progression — the Pattern's own, or the first of the catalogue when its chords match none — so every Play begins the cycle from the same place", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  expect(await progressionCycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+});
+
+test("AC-2.10.2/7 — Choosing a progression in the picker while cycling is the ordinary edit of the Pattern's progression, and the cycle begins again from that choice with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches and turns progression cycling off", async ({ page }) => {
+  await harmonicBlank(page);
+  await page.locator('.progression-cycle').click();
+  await page.locator('.progression-picker').selectOption('ii-V-I');
+  expect((await pattern(page)).harmony.chords[0].degree).toBe('2');
+  expect(await progressionInForce(page)).toBe('ii-V-I');
+  const cycle = await progressionCycleState(page);
+  expect(cycle.on).toBe(true);
+  expect(cycle.start).toBeGreaterThan(0);
+
+  await page.locator('.progression-picker').selectOption('none');
+  expect('harmony' in (await pattern(page))).toBe(false);
+  expect(await progressionInForce(page)).toBeNull();
+  // None removes the progression entirely, so the whole cycling row goes with
+  // it — there is nothing left to cycle (AC-2.10.1/1).
+  await expect(page.locator('.progression-cycle')).toHaveCount(0);
+  expect((await progressionCycleState(page)).on).toBe(false);
+});
+
+test("AC-2.10.3/1 — While progression cycling is on the score's chord chips, chord names and numerals are the progression in force's; Print / PDF prints the same score", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('[data-action="view-sheet"]').click();
+  const before = await page.locator('.score .chord-name').allTextContents();
+
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  const after = await page.locator('.score .chord-name').allTextContents();
+  expect(after).not.toEqual(before);
+
+  await page.evaluate(() => {
+    window.print = () => {};
+    window.__rm.handlers.onPrintScore();
+  });
+  expect(await page.locator('.score-print .chord-name').allTextContents()).toEqual(after);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.10.3/2 — MIDI export carries the Pattern's own progression, never the one in force while cycling: the file is the Pattern's data, and cycling is practice", async ({ page }) => {
+  await cyclingBlank(page); // I-IV-V, Roots stamped: C C C
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export-midi"]').click()]);
+  const ons = midiNoteOns(readFileSync(await download.path()));
+  // The Pattern's own I chord's root, C4 = 60 — not whatever was in force while cycling.
+  expect(ons.slice(0, 1)).toEqual([60]);
+  expect((await pattern(page)).harmony.chords[0].degree).toBe('1');
+});
+
+/*
  * US-2.8 — Keep. A mark in the Composer's own records (rm.overlays.v1), never
  * on the Pattern, made while auditioning fills in the Melody group.
  */

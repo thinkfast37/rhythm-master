@@ -37,6 +37,7 @@ import {
   removeChord,
   setArpeggio,
   DEFAULT_ARPEGGIO,
+  matchProgression,
 } from './core/harmony.js';
 import { carriedPlaybackFor, playbackInEffect } from './core/playback-defaults.js';
 import { playClick, accentVoice, playPercussive } from './audio/voices.js';
@@ -88,7 +89,17 @@ import { renderComposeGroup } from './ui/compose.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
-import { ARPEGGIOS, fillIndexOf, fillIndexFor, withArpeggio } from './core/harmony.js';
+import {
+  ARPEGGIOS,
+  PROGRESSIONS,
+  fillIndexOf,
+  fillIndexFor,
+  withArpeggio,
+  progressionIndexOf,
+  progressionIndexFor,
+  withProgression,
+} from './core/harmony.js';
+import * as mediaSession from './audio/mediaSession.js';
 import { renderScore, printScore } from './ui/score.js';
 import {
   buildSubmission,
@@ -131,6 +142,14 @@ const state = {
    * index the cycle counts from, `baseLoop` the pass it counts from.
    */
   fillCycle: { on: false, start: 0, baseLoop: 0 },
+  /**
+   * Progression cycling (US-2.10): step through the progression catalogue
+   * while practising, the same shape as `fillCycle` and independent of it —
+   * either can be on with the other off, or both together, each stepping its
+   * own catalogue on the shared Repeats cadence (AC-2.10.1/2, AC-2.10.2/1). A
+   * practice setting, never Pattern data (AC-2.10.1/4).
+   */
+  progressionCycle: { on: false, start: 0, baseLoop: 0 },
   /**
    * The Compose group (US-18.1): the Section being built over the open
    * Pattern, the saved Song it came from (for the unsaved mark), and whether
@@ -225,6 +244,23 @@ function fillIndexAt(loop) {
   return fillIndexFor(state.pattern, { ...state.fillCycle, repeats: state.settings.fillCycleRepeats }, loop);
 }
 
+/** Whether progression cycling has a progression in force: on, over a Melodic Pattern with one (US-2.10). */
+function progressionCycling() {
+  return state.progressionCycle.on && state.pattern.soundMode === 'melodic' && hasHarmony(state.pattern);
+}
+
+/** The catalogue index of the progression in force for a pass, or null outside progression cycling. */
+function progressionIndexAt(loop) {
+  if (!progressionCycling()) return null;
+  return progressionIndexFor(state.pattern, { ...state.progressionCycle, repeats: state.settings.fillCycleRepeats }, loop);
+}
+
+/** The progression in force for a pass, as its catalogue id, or null when the Pattern's own sounds. */
+function progressionIdAt(loop) {
+  const index = progressionIndexAt(loop);
+  return index === null ? null : PROGRESSIONS[index].id;
+}
+
 /**
  * The Composer's records for the open Pattern — kept fills (AC-2.8.1) and
  * Songs (AC-18.1.4) — read from their stores only when one of them changes.
@@ -275,10 +311,18 @@ function fillIdAt(loop) {
   return index === null ? null : ARPEGGIOS[index].id;
 }
 
-/** The Pattern as it plays in pass `loop`: the fill in force substituted (US-2.7, US-18.1). */
+/**
+ * The Pattern as it plays in pass `loop`: the progression in force substituted
+ * first, then the fill in force (US-2.7, US-2.10, US-18.1) — independent
+ * overlays, so either, neither, or both apply without disturbing the other.
+ */
 function playingAt(loop) {
-  const id = fillIdAt(loop);
-  return id === null ? state.pattern : withArpeggio(state.pattern, id);
+  let sounding = state.pattern;
+  const progressionId = progressionIdAt(loop);
+  if (progressionId !== null) sounding = withProgression(sounding, progressionId);
+  const fillId = fillIdAt(loop);
+  if (fillId !== null) sounding = withArpeggio(sounding, fillId);
+  return sounding;
 }
 
 /**
@@ -325,15 +369,25 @@ function rebaseCycle() {
   state.fillCycle.baseLoop = state.isPlaying ? state.loop : 0;
 }
 
+/** As `rebaseCycle`, for progression cycling (US-2.10). */
+function rebaseProgressionCycle() {
+  const index = progressionIndexAt(state.isPlaying ? state.loop : 0);
+  state.progressionCycle.start = index ?? progressionIndexOf(state.pattern);
+  state.progressionCycle.baseLoop = state.isPlaying ? state.loop : 0;
+}
+
 function syncTransport() {
   if (state.isPlaying) transport.update(scheduled(), state.settings);
 }
 
 function restartTransport() {
   if (!state.isPlaying) return;
-  // A restart resets the loop counter (AC-4.2.2); the fill in force carries on.
+  // A restart resets the loop counter (AC-4.2.2); the fill and progression in
+  // force carry on.
   rebaseCycle();
   state.fillCycle.baseLoop = 0;
+  rebaseProgressionCycle();
+  state.progressionCycle.baseLoop = 0;
   return transport.restart(scheduled(), state.settings);
 }
 
@@ -751,6 +805,16 @@ const handlers = {
       return;
     }
     if (!(await guardShipped())) return;
+    // Under progression cycling the chosen progression is where the cycle
+    // begins again, with its repeats counted afresh; None hands the notes
+    // back to the stamped Pitches, which is progression cycling off
+    // (AC-2.10.2/7 — the same shape as AC-2.7.2/7 for a fill).
+    if (state.progressionCycle.on) {
+      const index = id === 'none' ? -1 : PROGRESSIONS.findIndex((p) => p.id === id);
+      state.progressionCycle = index < 0
+        ? { on: false, start: 0, baseLoop: 0 }
+        : { on: true, start: index, baseLoop: state.isPlaying ? state.loop : 0 };
+    }
     if (id === 'none') {
       apply(clearHarmony);
       return;
@@ -813,6 +877,21 @@ const handlers = {
     render();
   },
 
+  /**
+   * Progression cycling on or off (AC-2.10.1): from the Pattern's own
+   * progression, or the first catalogue entry when its chords match none.
+   * Independent of Cycle fills (AC-2.10.1/2) — this never touches `fillCycle`.
+   */
+  onProgressionCycle(on) {
+    state.progressionCycle = on
+      ? { on: true, start: progressionIndexOf(state.pattern), baseLoop: state.isPlaying ? state.loop : 0 }
+      : { on: false, start: 0, baseLoop: 0 };
+    // Progression cycling and Play song are exclusive, the same as Cycle fills (AC-18.1.3/6).
+    if (on) state.compose.on = false;
+    syncTransport();
+    render();
+  },
+
   // --- compose (US-18.1) — the Section is the Composer's, never Pattern data ---
 
   /** Append a kept fill at the cycle Repeats setting (AC-18.1.2/1). */
@@ -857,6 +936,7 @@ const handlers = {
     state.compose.on = true;
     state.compose.baseLoop = 0;
     state.fillCycle = { on: false, start: 0, baseLoop: 0 };
+    state.progressionCycle = { on: false, start: 0, baseLoop: 0 };
     if (state.isPlaying) {
       state.compose.baseLoop = state.loop;
       syncTransport();
@@ -974,10 +1054,16 @@ const handlers = {
     render();
   },
 
-  /** Harmonic cycles each fill plays for; the fill in force keeps its place and plays the new count (AC-2.7.2/5). */
+  /**
+   * Harmonic cycles each fill and/or progression plays for, shared by Cycle
+   * fills and Cycle progressions (AC-2.10.2/5): whichever is on keeps its
+   * place and plays the new count from the pass it is on before moving on
+   * (AC-2.7.2/5).
+   */
   onFillCycleRepeats(count) {
     const repeats = Math.min(16, Math.max(1, Math.round(Number(count) || 4)));
     if (state.fillCycle.on) rebaseCycle();
+    if (state.progressionCycle.on) rebaseProgressionCycle();
     state.settings = settingsStore.save({ fillCycleRepeats: repeats });
     syncTransport();
     render();
@@ -1102,9 +1188,10 @@ const handlers = {
   async onPlay() {
     state.isPlaying = true;
     state.loop = 0;
-    // Every Play begins the cycle from the same place (AC-2.7.2/6), and the
-    // ordinary Play loops the Pattern, never the Section (AC-18.1.3/4).
+    // Every Play begins the cycle from the same place (AC-2.7.2/6, AC-2.10.2/6),
+    // and the ordinary Play loops the Pattern, never the Section (AC-18.1.3/4).
     state.fillCycle = { ...state.fillCycle, start: fillIndexOf(state.pattern), baseLoop: 0 };
+    state.progressionCycle = { ...state.progressionCycle, start: progressionIndexOf(state.pattern), baseLoop: 0 };
     state.compose.on = false;
     render();
 
@@ -1112,6 +1199,10 @@ const handlers = {
     // asset — nothing to load, nothing to block on (AC-2.4.3).
     state.soundStatus = melodic.getStatus();
     await transport.start(scheduled(), state.settings);
+    // Best-effort: lets a browser that supports it keep the audio session
+    // alive in the background, and shows the lock screen the Pattern playing
+    // (AC-4.1.11).
+    mediaSession.setPlaying(state.pattern.name);
   },
 
   onStop() {
@@ -1507,26 +1598,52 @@ const transport = createTransport({
     render('cursor');
   },
   onLoop(loop) {
-    const previous = fillIdAt(state.loop);
+    const previousFill = fillIdAt(state.loop);
+    const previousProgression = progressionIdAt(state.loop);
     state.loop = loop;
-    // The pass starting here is under the next fill: hand the transport the
-    // Pattern with it in force. This callback fires at the boundary before the
-    // transport swaps in a pending Pattern, so the fill changes for exactly
-    // this pass, with no restart and the counter still counting (AC-2.7.2/2).
-    const id = fillIdAt(loop);
-    if (id !== null && id !== previous) transport.update(playingAt(loop), state.settings);
+    // The pass starting here is under the next fill and/or progression: hand
+    // the transport the Pattern with them in force. This callback fires at
+    // the boundary before the transport swaps in a pending Pattern, so either
+    // changes for exactly this pass, with no restart and the counter still
+    // counting (AC-2.7.2/2, AC-2.10.2/2).
+    const fill = fillIdAt(loop);
+    const progression = progressionIdAt(loop);
+    if ((fill !== null && fill !== previousFill) || (progression !== null && progression !== previousProgression)) {
+      transport.update(playingAt(loop), state.settings);
+    }
     render();
   },
+  onSuspend() {
+    // A recoverable device suspension pauses the run rather than stopping it
+    // (AC-4.1.5, revised 2026-09-14): `state.isPlaying` and the loop counter
+    // stay exactly as they were, so a resume can pick up from here. Only the
+    // cursor display clears — nothing is sounding, so nothing should look
+    // highlighted — and the lock screen is told playback paused (AC-4.1.11).
+    state.transportPosition = null;
+    mediaSession.setPaused();
+    render();
+  },
+  onResume() {
+    // The context came back and the scheduler picked the run up from where it
+    // paused (AC-4.1.6): the loop counter was never touched, and the cursor
+    // reappears on its own from the next `onPosition` tick. Only the lock
+    // screen needs telling here.
+    mediaSession.setPlaying(state.pattern.name);
+  },
   onStop() {
-    // Reaching here means either the musician stopped, or the device suspended
-    // audio. Both reset to the top of the Pattern (AC-4.1.5).
+    // Reaching here means the musician stopped, or a device suspension could
+    // not be recovered — the only two cases that still reset to the top of
+    // the Pattern (AC-4.1.5, AC-4.1.6, revised 2026-09-14; a recoverable
+    // suspension no longer reaches here at all — see `onSuspend`/`onResume`).
     state.isPlaying = false;
     state.transportPosition = null;
     state.loop = 0;
-    // Back to the starting fill (AC-2.7.2/6), and the Pattern's own after a
-    // Song (AC-18.1.3/5).
+    // Back to the starting fill and progression (AC-2.7.2/6, AC-2.10.2/6), and
+    // the Pattern's own after a Song (AC-18.1.3/5).
     state.fillCycle = { ...state.fillCycle, start: fillIndexOf(state.pattern), baseLoop: 0 };
+    state.progressionCycle = { ...state.progressionCycle, start: progressionIndexOf(state.pattern), baseLoop: 0 };
     state.compose.on = false;
+    mediaSession.setStopped();
     render();
   },
 });
@@ -2265,6 +2382,8 @@ if (typeof window !== 'undefined') {
     melodic,
     /** The fill cycle mode has in force, as its catalogue id, or null (US-2.7). */
     fillInForce: () => playing().harmony?.arpeggio ?? null,
+    /** The progression cycling has in force, as its catalogue id, or null (US-2.10). */
+    progressionInForce: () => matchProgression(playing()),
     songStore,
     /** The Song entry in force on the pass on screen, or null (US-18.1). */
     songEntryInForce: () => songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
