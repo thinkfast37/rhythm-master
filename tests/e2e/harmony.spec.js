@@ -59,16 +59,17 @@ async function loadAsShipped(page) {
 
 // --- AC-2.6.1 — A progression is chosen from a catalogue of named progressions ---
 
-test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry under seven group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk', async ({ page }) => {
+test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry under nine group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords', async ({ page }) => {
   await melodicBlank(page);
   const picker = page.locator('.progression-picker');
   // None stands first, outside every group.
   const first = await picker.locator(':scope > :first-child').evaluate((n) => ({ tag: n.tagName, value: n.value, text: n.textContent }));
   expect(first).toEqual({ tag: 'OPTION', value: 'none', text: 'None' });
-  // Then the seven headings, in order.
+  // Then the nine headings, in order.
   const headings = await picker.locator('optgroup').evaluateAll((gs) => gs.map((g) => g.label));
   expect(headings).toEqual([
     'Three chords and repeats', 'Pop', 'Minor', 'Jazz', 'Blues', 'Modal and rock', 'Classical and folk',
+    'Indie and alt', 'Sus and open chords',
   ]);
   // Every option but None sits under a heading, and the catalogue is the whole of it.
   const stray = await picker.locator(':scope > option').count();
@@ -76,7 +77,7 @@ test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry un
   const grouped = await picker.locator('optgroup option').count();
   const { PROGRESSIONS } = await import('../../src/core/harmony.js');
   expect(grouped).toBe(PROGRESSIONS.length);
-  expect(grouped).toBeGreaterThanOrEqual(86);
+  expect(grouped).toBeGreaterThanOrEqual(114);
   await expect(picker).toHaveValue('none');
   // Choosing one names its chords in the Key.
   await picker.selectOption('I-IV-V');
@@ -251,6 +252,57 @@ test("AC-2.6.1/14 — The Classical and folk group holds Pachelbel's I–V–vi�
   ]);
   expect(await chooseAndRead(page, 'folia')).toEqual(['Cm', 'G', 'Cm', 'Bb', 'Eb', 'Bb', 'Cm', 'G']);
   expect(await chooseAndRead(page, 'circle-triads')).toEqual(['C', 'F', 'Bdim', 'Em', 'Am', 'Dm', 'G', 'C']);
+});
+
+test('AC-2.6.1/16 — The Indie and alt group holds vi–V–I, vi–IV–V, vi–V–IV–V, IV–vi–I–V, I–V–vi–V, vi–iii–IV–I, I–iii–vi–V, the double plagal ♭VII–IV–I, I–V–♭VII–IV, the Dorian vamp i–♭VII–IV, the Dorian i–♭III–♭VII–IV, i–♭III–iv and Imaj7–V–iii–II (Fast Car)', async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Indie and alt')).toEqual([
+    ['vi-V-I', 'vi–V–I'],
+    ['vi-IV-V', 'vi–IV–V'],
+    ['vi-V-IV-V', 'vi–V–IV–V'],
+    ['IV-vi-I-V', 'IV–vi–I–V'],
+    ['I-V-vi-V', 'I–V–vi–V'],
+    ['vi-iii-IV-I', 'vi–iii–IV–I'],
+    ['I-iii-vi-V', 'I–iii–vi–V'],
+    ['bVII-IV-I', '♭VII–IV–I (double plagal)'],
+    ['I-V-bVII-IV', 'I–V–♭VII–IV'],
+    ['i-bVII-IV', 'i–♭VII–IV (Dorian vamp)'],
+    ['i-bIII-bVII-IV', 'i–♭III–♭VII–IV (Dorian)'],
+    ['i-bIII-iv', 'i–♭III–iv'],
+    ['Imaj7-V-iii-II', 'Imaj7–V–iii–II (Fast Car)'],
+  ]);
+  // The chords each one names, in C.
+  expect(await chooseAndRead(page, 'vi-V-I')).toEqual(['Am', 'G', 'C']);
+  expect(await chooseAndRead(page, 'bVII-IV-I')).toEqual(['Bb', 'F', 'C']);
+  expect(await chooseAndRead(page, 'i-bIII-bVII-IV')).toEqual(['Cm', 'Eb', 'Bb', 'F']);
+  expect(await chooseAndRead(page, 'Imaj7-V-iii-II')).toEqual(['Cmaj7', 'G', 'Em', 'D']);
+});
+
+test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2, Isus2–Isus4–I, I–Isus4–IV–V, the delayed dominant Vsus4–V–I, V7sus4–V7–I, the suspended cadence ii7–V7sus4–Imaj7, I–IVsus2–I–V (Free Fallin’), the open sus loop Isus2–IVsus2–Vsus4, the suspended pop loop I–V–vi–IVsus2, vi–IV–Isus2–Vsus4, the Mixolydian sus I–♭VIIsus2–IVsus2, the minor sus vamp i–♭VIIsus2–♭VIsus2, IVadd9–I–V, Iadd9–IVadd9–V and I–IVadd9–vi7–V', async ({ page }) => {
+  await melodicBlank(page);
+  expect(await groupEntries(page, 'Sus and open chords')).toEqual([
+    ['I-Isus4-I-Isus2', 'I–Isus4–I–Isus2 (open-string embellishment)'],
+    ['Isus2-Isus4-I', 'Isus2–Isus4–I'],
+    ['I-Isus4-IV-V', 'I–Isus4–IV–V'],
+    ['Vsus4-V-I', 'Vsus4–V–I (delayed dominant)'],
+    ['V7sus4-V7-I', 'V7sus4–V7–I'],
+    ['ii7-V7sus4-Imaj7', 'ii7–V7sus4–Imaj7 (suspended cadence)'],
+    ['I-IVsus2-I-V', 'I–IVsus2–I–V (Free Fallin’)'],
+    ['Isus2-IVsus2-Vsus4', 'Isus2–IVsus2–Vsus4 (open sus loop)'],
+    ['I-V-vi-IVsus2', 'I–V–vi–IVsus2 (the pop loop, suspended)'],
+    ['vi-IV-Isus2-Vsus4', 'vi–IV–Isus2–Vsus4'],
+    ['I-bVIIsus2-IVsus2', 'I–♭VIIsus2–IVsus2 (Mixolydian sus)'],
+    ['i-bVIIsus2-bVIsus2', 'i–♭VIIsus2–♭VIsus2 (minor sus vamp)'],
+    ['IVadd9-I-V', 'IVadd9–I–V (open folk trio)'],
+    ['Iadd9-IVadd9-V', 'Iadd9–IVadd9–V'],
+    ['I-IVadd9-vi7-V', 'I–IVadd9–vi7–V'],
+  ]);
+  // The suspensions are what they say, in C, whatever the scale would have stacked.
+  expect(await chooseAndRead(page, 'I-Isus4-I-Isus2')).toEqual(['C', 'Csus4', 'C', 'Csus2']);
+  expect(await chooseAndRead(page, 'V7sus4-V7-I')).toEqual(['G7sus4', 'G7', 'C']);
+  expect(await chooseAndRead(page, 'I-V-vi-IVsus2')).toEqual(['C', 'G', 'Am', 'Fsus2']);
+  expect(await chooseAndRead(page, 'i-bVIIsus2-bVIsus2')).toEqual(['Cm', 'Bbsus2', 'Absus2']);
+  expect(await chooseAndRead(page, 'I-IVadd9-vi7-V')).toEqual(['C', 'Fadd9', 'Am7', 'G']);
 });
 
 // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---

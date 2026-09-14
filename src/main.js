@@ -41,6 +41,7 @@ import {
 import { carriedPlaybackFor, playbackInEffect } from './core/playback-defaults.js';
 import { playClick, accentVoice, playPercussive } from './audio/voices.js';
 import * as patternStore from './storage/patterns.js';
+import { rawOf } from './storage/keyValue.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
@@ -56,7 +57,7 @@ import {
   validateSong,
 } from './core/song.js';
 import { downloadSongMidi, songMidiFilename } from './export/midi.js';
-import { renderGrid, renderChordStrip } from './ui/grid.js';
+import { renderGrid, renderChordStrip, moveCursor } from './ui/grid.js';
 import { balanceBeatLines, forgetBeatWidths, observeGridWidth } from './ui/beat-layout.js';
 import {
   renderHeader,
@@ -343,13 +344,32 @@ export function subscribe(fn) {
   return () => listeners.delete(fn);
 }
 
-function render() {
+/*
+ * `kind` is 'full' or 'cursor'.
+ *
+ * A 'cursor' render is the playback cursor moving WITHIN a pass, and nothing
+ * else: no Pattern content changed, no setting changed, no height changed. Only
+ * what depends on `transportPosition` is redrawn.
+ *
+ * It exists because a full render rebuilds the header, the grid, five control
+ * groups, the workbench, the whole library list and the Family list, and one
+ * used to run on every sounding event — five times a second at 80 BPM in
+ * sixteenths. On a desktop that is invisible. On a TV-class CPU it saturates the
+ * main thread, and the highlight falls a beat behind audio that is scheduled
+ * ahead and sounding perfectly (AC-4.1.2). Measured at 20x CPU throttle: 11.3
+ * seconds of blocked main thread inside a 4-second window.
+ *
+ * Anything that changes only at a pass boundary — the chord in force, the
+ * arpeggio deal, the Song entry, the loop counter — is NOT on this path. The
+ * boundary fires `onLoop`, which renders in full.
+ */
+function render(kind = 'full') {
   // The views see the Pattern as it plays — under cycle mode, with the fill in
   // force in place of its own (AC-2.7.2/4). State still carries the real one.
   const shown = playing();
   // The Song entry sounding, for the Compose group to mark (AC-18.1.3/3).
   state.songEntryInForce = songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
-  for (const fn of listeners) fn(shown, state.transportPosition, state);
+  for (const fn of listeners) fn(shown, state.transportPosition, state, kind);
 }
 
 /**
@@ -531,6 +551,19 @@ export function loadPattern(pattern, { owned }) {
  * The library as the UI sees it: shipped Patterns with their user overlays
  * applied, plus owned Patterns as they are.
  */
+/** Every field of the library memo key, compared without building a string. */
+function sameLibrarySignature(a, b) {
+  return (
+    a !== null &&
+    a.patterns === b.patterns &&
+    a.overlays === b.overlays &&
+    a.query === b.query &&
+    a.minRating === b.minRating &&
+    a.tags === b.tags &&
+    a.currentId === b.currentId
+  );
+}
+
 function libraryEntries() {
   return buildEntries(
     seedStore.loadAll().map(overlayStore.applyTo),
@@ -1469,7 +1502,9 @@ const transport = createTransport({
   playMelodic: melodic.playMelodic,
   onPosition(position) {
     state.transportPosition = position;
-    render();
+    // The cursor moving within a pass — see `render`. A pass boundary comes
+    // through `onLoop` below, which renders in full.
+    render('cursor');
   },
   onLoop(loop) {
     const previous = fillIdAt(state.loop);
@@ -1857,8 +1892,52 @@ export function mount(root) {
     true
   );
   let wasPlaying = false;
+  /** Memo keys for the two lists that are expensive and rarely change. */
+  let lastLibrarySignature = null;
+  let lastFamilySignature = null;
 
-  subscribe((pattern, position, s) => {
+  /*
+   * Keep what is sounding on screen (AC-15.1.11) — unless the musician has
+   * touched the panel during this run (AC-15.1.16/2). Shared by both render
+   * paths, because the cursor moving is exactly when it has work to do.
+   */
+  const followCursor = (position) => {
+    if (!position || gridEl.hidden || autoscrollStoodDown) return;
+    // Only when it actually scrolls. Playback renders on every sounding event
+    // and the sounding Measure is usually already in view, so marking every
+    // render as an app scroll would hold the window permanently open and the
+    // musician's own scrolling would never be seen (AC-15.1.16/9).
+    if (scrollMeasureIntoView(gridEl, position.measureIndex)) appScrolled();
+  };
+
+  subscribe((pattern, position, s, kind) => {
+    /*
+     * The cursor path (see `render`): the highlight moving within a pass. The
+     * grid keeps its DOM and one class moves; the chord strip is redrawn
+     * because the chord in force is marked per Measure, and it is one small
+     * row. Everything else — header, control groups, workbench, library,
+     * Family — cannot have changed, so it is not touched.
+     *
+     * No anchor bookkeeping either: that exists to put the view back when a
+     * render changes the height of what is above the operated control
+     * (AC-15.1.16/3), and this render changes no heights. Reading
+     * getBoundingClientRect here would force a synchronous layout on every
+     * sounding event for nothing.
+     */
+    if (kind === 'cursor') {
+      if (s.settings.patternView === 'sheet') {
+        renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem, fill: fillLabel() }), {
+          width: scoreEl.clientWidth || main.clientWidth || 680,
+          transportPosition: position,
+        });
+      } else {
+        moveCursor(gridEl, position);
+      }
+      renderChordStrip(chordStripEl, pattern, position);
+      followCursor(position);
+      return;
+    }
+
     // Where the operated control sits on screen, so the view can be put back if
     // this render changes the height of what is above it (AC-15.1.16/3). Touch
     // moves no focus onto a slider, so the pointer-held control is the anchor
@@ -1919,8 +1998,41 @@ export function mount(root) {
       [melodyEl, rhythmEl, practiceEl, composeEl],
       workbenchTabFor(pattern, s.workbenchTab)
     );
-    renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
-    renderFamilyMembers(familyEl, familyMembers(), handlers);
+    /*
+     * The library list is the most expensive thing on the page — three hundred
+     * rows, rebuilt from scratch — and almost every render leaves it identical:
+     * changing the tempo, arming a Recipe, crossing a pass boundary. Skip it
+     * when nothing it draws from has changed.
+     *
+     * The signature is the two stores' RAW strings plus the view state. Raw
+     * rather than parsed, so the check costs a string comparison instead of the
+     * work it is trying to avoid; a write from anywhere changes the string, so
+     * this cannot go stale. `libraryEntries()` is inside the guard because
+     * building the entries is itself most of the cost.
+     */
+    const librarySignature = {
+      patterns: rawOf(patternStore.KEY),
+      overlays: rawOf(overlayStore.KEY),
+      query: s.view.query,
+      minRating: s.view.minRating,
+      tags: s.view.tags.join('\u0000'),
+      currentId: s.view.currentId,
+    };
+    if (!sameLibrarySignature(lastLibrarySignature, librarySignature)) {
+      lastLibrarySignature = librarySignature;
+      renderLibrary(libraryEl, libraryEntries(), s.view, handlers);
+    }
+
+    // The Family list reads the owned-Pattern store and the current Pattern's
+    // family, so it turns over on that same string plus which Pattern is loaded.
+    if (
+      lastFamilySignature === null ||
+      lastFamilySignature.patterns !== librarySignature.patterns ||
+      lastFamilySignature.id !== pattern.id
+    ) {
+      lastFamilySignature = { patterns: librarySignature.patterns, id: pattern.id };
+      renderFamilyMembers(familyEl, familyMembers(), handlers);
+    }
 
     // The render moved the focused control — the pitch strip appearing above
     // it, say — so move the panel's scroll with it, as far as it can go, and
@@ -1937,15 +2049,7 @@ export function mount(root) {
     if (s.isPlaying && !wasPlaying) autoscrollStoodDown = false;
     wasPlaying = s.isPlaying;
 
-    // Keep what is sounding on screen (AC-15.1.11) — unless the musician has
-    // touched the panel during this run (AC-15.1.16/2).
-    if (position && !gridEl.hidden && !autoscrollStoodDown) {
-      // Only when it actually scrolls. Playback renders on every sounding event
-      // and the sounding Measure is usually already in view, so marking every
-      // render as an app scroll would hold the window permanently open and the
-      // musician's own scrolling would never be seen (AC-15.1.16/9).
-      if (scrollMeasureIntoView(gridEl, position.measureIndex)) appScrolled();
-    }
+    followCursor(position);
   });
 
   return {
@@ -2179,6 +2283,7 @@ if (typeof window !== 'undefined') {
 /** Test seams. */
 if (typeof window !== 'undefined') {
   window.__rmRenderGrid = renderGrid;
+  window.__rmMoveCursor = moveCursor;
   window.__rmAudio = { playClick, accentVoice, playPercussive };
   window.__rmMelodicDynamics = () => melodic.DYNAMICS;
   window.__rmTimeline = { buildTimeline, buildBeatGrid };

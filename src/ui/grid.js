@@ -71,6 +71,36 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
 }
 
 /**
+ * Move the playback cursor without rebuilding the grid.
+ *
+ * WITHIN a pass, the only thing in the grid that depends on `transportPosition`
+ * is which Slot carries `playing`: the chord band and the arpeggio deal depend
+ * on the PASS, and a pass boundary does a full render anyway. So the cursor can
+ * move by swapping one class, and the DOM that results is the DOM the pure
+ * render would have produced — `tests/unit/ui/grid.test.js` asserts exactly
+ * that, byte for byte, so this fast path cannot quietly diverge from it.
+ *
+ * `renderGrid` empties and rebuilds every Measure, Beat and Slot. Doing that on
+ * every sounding event is what put the highlight a beat behind the audio on a
+ * TV-class CPU (AC-4.1.2): the audio is scheduled ahead on the audio clock and
+ * sounds correctly, while the main thread is still rebuilding the page.
+ */
+export function moveCursor(root, transportPosition = null) {
+  const previous = root.querySelector('.slot.playing');
+  const next = transportPosition
+    ? root.querySelector(
+        `.slot[data-measure="${transportPosition.measureIndex}"]` +
+          `[data-beat="${transportPosition.beatIndex}"]` +
+          `[data-slot="${transportPosition.slotIndex}"]`
+      )
+    : null;
+  if (previous === next) return root;
+  previous?.classList.remove('playing');
+  next?.classList.add('playing');
+  return root;
+}
+
+/**
  * The chord strip: the whole progression above the grid, the chord in force
  * marked Now and the one after it Next — by a word, not only a colour — so what
  * to play next is read off the screen rather than remembered (AC-2.6.7).

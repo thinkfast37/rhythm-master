@@ -67,6 +67,8 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
   let lookahead = LOOKAHEAD_SECONDS;
   /** Audio-clock time of the previous tick, for measuring timer gaps. */
   let lastTick = 0;
+  /** Handle of the pending animation frame, or null when the loop is stopped. */
+  let frame = null;
 
   function eventTime(loop, offset) {
     return origin + countInSeconds + loop * loopDuration + offset;
@@ -203,6 +205,43 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
     }
   }
 
+  /*
+   * The visual half of the throttling the lookahead above already survives
+   * (AC-4.1.2). Widening the lookahead keeps the AUDIO on the grid, because
+   * events are handed to Web Audio far ahead of when they sound. It does
+   * nothing for the highlight, which is flushed from inside the same clamped
+   * tick — so on a browser polling once a second the audio is correct and the
+   * highlight is up to a whole clamp behind it. Heard from a Samsung TV as the
+   * sound running more than a beat ahead of the lit Slot at 80 BPM.
+   *
+   * An animation frame is driven by the compositor, not the timer, and keeps
+   * arriving at the panel's refresh while setInterval is clamped. It is a
+   * FLUSH ONLY: it never schedules audio and never touches the origin, so
+   * nothing about what is heard depends on it running — a browser with no
+   * requestAnimationFrame at all keeps exactly today's tick-driven highlight.
+   * The queue is still read against `ctx.currentTime`, so the frame decides
+   * only how often the queue is looked at, never what time an event carries.
+   */
+  function requestFrame(cb) {
+    return typeof globalThis.requestAnimationFrame === 'function' ? globalThis.requestAnimationFrame(cb) : null;
+  }
+
+  function frameLoop() {
+    if (!running) {
+      frame = null;
+      return;
+    }
+    flushVisuals();
+    frame = requestFrame(frameLoop);
+  }
+
+  function stopFrameLoop() {
+    if (frame !== null && typeof globalThis.cancelAnimationFrame === 'function') {
+      globalThis.cancelAnimationFrame(frame);
+    }
+    frame = null;
+  }
+
   /** A count-in Measure of clicks before the Pattern starts (US-4.3). */
   function scheduleCountIn() {
     if (!settings.countInEnabled || beatGrid.length === 0) return 0;
@@ -267,6 +306,8 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       lastTick = ctx.currentTime;
       tick();
       timer = setInterval(tick, POLL_MS);
+      stopFrameLoop();
+      frame = requestFrame(frameLoop);
     },
 
     stop(silent = false) {
@@ -274,6 +315,7 @@ export function createTransport({ onPosition, onLoop, onStop, playMelodic = null
       running = false;
       clearInterval(timer);
       timer = null;
+      stopFrameLoop();
       pendingVisuals.length = 0;
       this._unwatch?.();
       if (!silent) onStop?.();

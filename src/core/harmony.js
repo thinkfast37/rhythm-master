@@ -123,6 +123,8 @@ export const PROGRESSION_GROUPS = [
   { id: 'blues', label: 'Blues' },
   { id: 'modal', label: 'Modal and rock' },
   { id: 'classical', label: 'Classical and folk' },
+  { id: 'indie', label: 'Indie and alt' },
+  { id: 'sus', label: 'Sus and open chords' },
 ];
 
 /**
@@ -141,6 +143,9 @@ const seq = (...degrees) => degrees.map((d) => s(d));
 const sevenths = (...degrees) => degrees.map((d) => s(d, { seventh: true }));
 const doms = (...degrees) => degrees.map((d) => s(d, { quality: '7' }));
 const min = (degree) => s(degree, { quality: 'min' });
+const sus2 = (degree) => s(degree, { quality: 'sus2' });
+const sus4 = (degree) => s(degree, { quality: 'sus4' });
+const add9 = (degree) => s(degree, { quality: 'add9' });
 const maj = (degree) => s(degree, { quality: 'maj' });
 const entry = (group, id, label, steps) => ({ id, label, group, steps });
 
@@ -306,6 +311,42 @@ export const PROGRESSIONS = [
   ]),
   entry('classical', 'circle-triads', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, triads)', seq('1', '4', '7', '3', '6', '2', '5', '1')),
   entry('classical', 'I-ii-V-I', 'I–ii–V–I', seq('1', '2', '5', '1')),
+
+  // --- Indie and alt (AC-2.6.1/16) ---
+  entry('indie', 'vi-V-I', 'vi–V–I', seq('6', '5', '1')),
+  entry('indie', 'vi-IV-V', 'vi–IV–V', seq('6', '4', '5')),
+  entry('indie', 'vi-V-IV-V', 'vi–V–IV–V', seq('6', '5', '4', '5')),
+  entry('indie', 'IV-vi-I-V', 'IV–vi–I–V', seq('4', '6', '1', '5')),
+  entry('indie', 'I-V-vi-V', 'I–V–vi–V', seq('1', '5', '6', '5')),
+  entry('indie', 'vi-iii-IV-I', 'vi–iii–IV–I', seq('6', '3', '4', '1')),
+  entry('indie', 'I-iii-vi-V', 'I–iii–vi–V', seq('1', '3', '6', '5')),
+  entry('indie', 'bVII-IV-I', '♭VII–IV–I (double plagal)', seq('b7', '4', '1')),
+  entry('indie', 'I-V-bVII-IV', 'I–V–♭VII–IV', seq('1', '5', 'b7', '4')),
+  entry('indie', 'i-bVII-IV', 'i–♭VII–IV (Dorian vamp)', [min('1'), s('b7'), maj('4')]),
+  entry('indie', 'i-bIII-bVII-IV', 'i–♭III–♭VII–IV (Dorian)', [min('1'), s('b3'), s('b7'), maj('4')]),
+  entry('indie', 'i-bIII-iv', 'i–♭III–iv', [min('1'), s('b3'), min('4')]),
+  entry('indie', 'Imaj7-V-iii-II', 'Imaj7–V–iii–II (Fast Car)', [s('1', { quality: 'maj7' }), s('5'), s('3'), maj('2')]),
+
+  // --- Sus and open chords (AC-2.6.1/17) ---
+  entry('sus', 'I-Isus4-I-Isus2', 'I–Isus4–I–Isus2 (open-string embellishment)', [s('1'), sus4('1'), s('1'), sus2('1')]),
+  entry('sus', 'Isus2-Isus4-I', 'Isus2–Isus4–I', [sus2('1'), sus4('1'), s('1')]),
+  entry('sus', 'I-Isus4-IV-V', 'I–Isus4–IV–V', [s('1'), sus4('1'), s('4'), s('5')]),
+  entry('sus', 'Vsus4-V-I', 'Vsus4–V–I (delayed dominant)', [sus4('5'), s('5'), s('1')]),
+  entry('sus', 'V7sus4-V7-I', 'V7sus4–V7–I', [s('5', { quality: '7sus4' }), s('5', { quality: '7' }), s('1')]),
+  entry('sus', 'ii7-V7sus4-Imaj7', 'ii7–V7sus4–Imaj7 (suspended cadence)', [
+    s('2', { quality: 'm7' }),
+    s('5', { quality: '7sus4' }),
+    s('1', { quality: 'maj7' }),
+  ]),
+  entry('sus', 'I-IVsus2-I-V', 'I–IVsus2–I–V (Free Fallin’)', [s('1'), sus2('4'), s('1'), s('5')]),
+  entry('sus', 'Isus2-IVsus2-Vsus4', 'Isus2–IVsus2–Vsus4 (open sus loop)', [sus2('1'), sus2('4'), sus4('5')]),
+  entry('sus', 'I-V-vi-IVsus2', 'I–V–vi–IVsus2 (the pop loop, suspended)', [s('1'), s('5'), s('6'), sus2('4')]),
+  entry('sus', 'vi-IV-Isus2-Vsus4', 'vi–IV–Isus2–Vsus4', [s('6'), s('4'), sus2('1'), sus4('5')]),
+  entry('sus', 'I-bVIIsus2-IVsus2', 'I–♭VIIsus2–IVsus2 (Mixolydian sus)', [s('1'), sus2('b7'), sus2('4')]),
+  entry('sus', 'i-bVIIsus2-bVIsus2', 'i–♭VIIsus2–♭VIsus2 (minor sus vamp)', [min('1'), sus2('b7'), sus2('b6')]),
+  entry('sus', 'IVadd9-I-V', 'IVadd9–I–V (open folk trio)', [add9('4'), s('1'), s('5')]),
+  entry('sus', 'Iadd9-IVadd9-V', 'Iadd9–IVadd9–V', [add9('1'), add9('4'), s('5')]),
+  entry('sus', 'I-IVadd9-vi7-V', 'I–IVadd9–vi7–V', [s('1'), add9('4'), s('6', { quality: 'm7' }), s('5')]),
 ];
 
 /*

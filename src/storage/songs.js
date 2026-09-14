@@ -47,7 +47,9 @@ function nextId(existing) {
 
 /** Insert or replace by id, assigning one when the Song has none. Returns the saved Song. */
 export function upsert(song) {
-  const all = loadAll();
+  // Copy before changing — see the note in patterns.upsert: reads are cached
+  // by raw string, so mutating one in place would edit the cache, not the store.
+  const all = [...loadAll()];
   const saved = { ...song, id: song.id ?? nextId(all) };
   const i = all.findIndex((s) => s.id === saved.id);
   if (i === -1) all.push(saved);
