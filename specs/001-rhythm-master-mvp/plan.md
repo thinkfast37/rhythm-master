@@ -202,7 +202,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-007** | US-1.3 — Mixed subdivision within a Beat, via Recipes | AC-1.3.1–AC-1.3.12 | T041–T043, T182, T224, T226, T272 | T044, T183, T225, T227, T273 |
 | **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045 | T046 |
 | **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.18 | T047–T048, T050, T166, T169 | T049, T166, T169 |
-| **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.11 | T051–T055, T165, T220, T228, T230, T308 | T056, T165, T221, T229, T231, T309 |
+| **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.13 | T051–T055, T165, T220, T228, T230, T308, T318 | T056, T165, T221, T229, T231, T309, T319 |
 | **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.6 | T057–T058, T204, T234, T244, T272, T279 | T059, T205, T235, T245, T273, T280 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.17 | T063, T204, T206, T210, T222, T236, T244, T272, T279 | T064, T205, T207, T211, T223, T237, T245, T273, T280 |

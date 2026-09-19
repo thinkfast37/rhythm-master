@@ -6,7 +6,7 @@
  * left alone.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { setPlaying, setPaused, setStopped } from '../../../src/audio/mediaSession.js';
+import { setPlaying, setPaused, setStopped, setHandlers } from '../../../src/audio/mediaSession.js';
 
 describe('audio/mediaSession — feature-detected, no navigator.mediaSession present (AC-4.1.11/2)', () => {
   it("AC-4.1.11/2 — A browser without `navigator.mediaSession` — including the automated test environment — is unaffected: every call is a no-op and none of them throw", () => {
@@ -52,5 +52,73 @@ describe('audio/mediaSession — a browser exposing navigator.mediaSession (AC-4
 
     setStopped();
     expect(session.playbackState).toBe('none');
+  });
+});
+
+describe('audio/mediaSession — action handlers on a browser without setActionHandler (AC-4.1.13/3)', () => {
+  const originalNavigator = globalThis.navigator;
+
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
+  });
+
+  it('AC-4.1.13/3 — A browser without `setActionHandler` is unaffected: registering the handlers is a no-op and nothing throws', () => {
+    const calls = [];
+    const onPlay = () => calls.push('play');
+    const onStop = () => calls.push('stop');
+
+    // No navigator at all — this suite's real environment.
+    expect(() => setHandlers({ onPlay, onStop })).not.toThrow();
+
+    // A browser exposing mediaSession but not this method: the older shape of
+    // the API, and the one the feature detection is actually for.
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { mediaSession: { playbackState: 'none', metadata: null } },
+      configurable: true,
+    });
+    expect(() => setHandlers({ onPlay, onStop })).not.toThrow();
+    expect(calls).toEqual([]);
+  });
+});
+
+describe('audio/mediaSession — action handlers wired to the transport (AC-4.1.13/1, AC-4.1.13/2)', () => {
+  const originalNavigator = globalThis.navigator;
+  let registered;
+
+  beforeEach(() => {
+    registered = new Map();
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        mediaSession: {
+          playbackState: 'none',
+          metadata: null,
+          setActionHandler(action, handler) {
+            // A real browser throws on an action it does not support; this one
+            // supports all three, and AC-4.1.13/3 covers the other shape.
+            registered.set(action, handler);
+          },
+        },
+      },
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
+  });
+
+  it("AC-4.1.13/1 — The `'play'` action starts playback when the transport is stopped: the registered handler is the app's own Play", () => {
+    const calls = [];
+    setHandlers({ onPlay: () => calls.push('play'), onStop: () => calls.push('stop') });
+    registered.get('play')();
+    expect(calls).toEqual(['play']);
+  });
+
+  it("AC-4.1.13/2 — The `'pause'` and `'stop'` actions both stop playback when it is running: both are registered to the app's own Stop", () => {
+    const calls = [];
+    setHandlers({ onPlay: () => calls.push('play'), onStop: () => calls.push('stop') });
+    registered.get('pause')();
+    registered.get('stop')();
+    expect(calls).toEqual(['stop', 'stop']);
   });
 });

@@ -879,6 +879,26 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.1.11/2** — A browser without `navigator.mediaSession` — including the automated test environment — is unaffected: every call is a no-op and none of them throw
   - *(Added 2026-09-14 alongside AC-4.1.5/AC-4.1.6's revision: entirely feature-detected, so it changes nothing for a browser without the API and nothing here promises the OS will honour it — it is one more thing a background session can point to, not a guarantee it survives.)*
 
+- **AC-4.1.12** — A silent keep-alive media element holds the audio session open while a run lasts
+  - **Given** a mobile browser whose OS suspends a page's audio when the screen locks or the tab is backgrounded, and which keeps a page alive while it is playing media
+  - **When** playback starts at a transport control
+  - **Then** a looping, silent media element starts alongside the run — its silence generated at runtime, never a shipped audio asset — so the page holds an active media session for as long as the run lasts, and it is stopped when playback stops
+  - **Cases**:
+    - **AC-4.1.12/1** — Play starts the keep-alive element playing; Stop ends it
+    - **AC-4.1.12/2** — A recoverable suspension leaves the keep-alive element playing, since being the thing the OS declines to kill is the whole of its job — only a stop ends it
+    - **AC-4.1.12/3** — A browser that cannot play it — no `Audio` constructor, or a `play()` that rejects — is unaffected: playback starts, runs and stops exactly as it would without it, and nothing throws
+  - *(Added 2026-09-19 from the maintainer's iPhone report — Case /2's "recoverable suspension" is AC-4.1.5's, named here rather than in the Case's own title, since an AC ID inside a title makes `check:trace`'s per-mention scan read the test as a wrongly-named proof of *that* AC (see T309): practising with the screen off, Safari was taking the audio away within a few seconds of the lock. AC-4.1.5/AC-4.1.6's revision made the return graceful — the run pauses and picks itself back up on unlock, which is what the maintainer observes — but nothing stopped the suspension happening in the first place, and a Pattern that goes silent the moment the screen sleeps cannot be practised hands-free. A page playing an audio element is the one lever a web page has over that decision. Best-effort, and more so than AC-4.1.11: it is a behaviour of Apple's that is neither specified nor promised, it cannot be proven in CI — no automated browser locks a real phone's screen — and it may stop working whenever Apple chooses. AC-4.1.5/AC-4.1.6 are deliberately kept underneath it as the fallback for when it does not hold, rather than being retired on the strength of it. Constitution 6's "no audio assets" is untouched: the silence is a runtime-generated buffer, the same standing as the reverb impulse.)*
+
+- **AC-4.1.13** — The OS's own Now Playing controls drive the transport
+  - **Given** a browser exposing `navigator.mediaSession.setActionHandler`
+  - **When** the Practicing Musician presses play, pause or stop on the OS's own transport controls — the lock screen, Control Centre, a headphone button — rather than the app's
+  - **Then** the app's transport starts or stops in step, exactly as pressing the app's own Play or Stop would, including the reset-to-top that the app's Stop performs
+  - **Cases**:
+    - **AC-4.1.13/1** — The `'play'` action starts playback when the transport is stopped
+    - **AC-4.1.13/2** — The `'pause'` and `'stop'` actions both stop playback when it is running
+    - **AC-4.1.13/3** — A browser without `setActionHandler` is unaffected: registering the handlers is a no-op and nothing throws
+  - *(Added 2026-09-19 alongside AC-4.1.12, which puts the app on the lock screen in earnest: once the OS shows Now Playing controls for this page, controls that do nothing are worse than no controls. The app has no pause of its own — the transport is Play and Stop (AC-4.1.1, AC-4.1.4) — so `'pause'` is mapped to the app's Stop rather than inventing a third transport state, and Case /2 says so outright so the mapping is a stated decision rather than a surprise on the lock screen.)*
+
 - **AC-4.1.8** — Opening another Pattern during playback switches playback to it
   - **Given** a Pattern is playing
   - **When** the Practicing Musician opens a different Pattern — from the library list, or via Prev/Next (US-5.5)

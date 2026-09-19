@@ -100,6 +100,7 @@ import {
   withProgression,
 } from './core/harmony.js';
 import * as mediaSession from './audio/mediaSession.js';
+import * as keepAlive from './audio/keepAlive.js';
 import { renderScore, printScore } from './ui/score.js';
 import {
   buildSubmission,
@@ -1186,6 +1187,10 @@ const handlers = {
 
   /** The only entry point to audio, and it is a user gesture (FR-010). */
   async onPlay() {
+    // Inside the gesture, before anything awaits: the silent keep-alive is
+    // autoplay-gated exactly as the AudioContext is, and it is what makes a
+    // locked phone more willing to leave this run alone (AC-4.1.12/1).
+    keepAlive.start();
     state.isPlaying = true;
     state.loop = 0;
     // Every Play begins the cycle from the same place (AC-2.7.2/6, AC-2.10.2/6),
@@ -1644,6 +1649,9 @@ const transport = createTransport({
     state.progressionCycle = { ...state.progressionCycle, start: progressionIndexOf(state.pattern), baseLoop: 0 };
     state.compose.on = false;
     mediaSession.setStopped();
+    // Only a stop ends the keep-alive — a recoverable suspension never reaches
+    // here, and holding the session open through one is its job (AC-4.1.12/2).
+    keepAlive.stop();
     render();
   },
 });
@@ -2357,6 +2365,17 @@ export function init(root = document.getElementById('app')) {
 
   mount(root);
   render();
+  // The lock screen's own play/pause/stop, once AC-4.1.12 has put this page
+  // on it in earnest (AC-4.1.13). Registered once, at start-up: the handlers
+  // read the live transport state each time they fire.
+  mediaSession.setHandlers({
+    onPlay: () => {
+      if (!state.isPlaying) handlers.onPlay();
+    },
+    onStop: () => {
+      if (state.isPlaying) handlers.onStop();
+    },
+  });
   promptLibraryDuplicates();
   startBilling(root);
 }
@@ -2380,6 +2399,8 @@ if (typeof window !== 'undefined') {
     currentFamily,
     unresolvedLibraryDuplicates,
     melodic,
+    /** Test seam: the silent keep-alive element, once one exists (AC-4.1.12). */
+    keepAlive: () => keepAlive.current(),
     /** The fill cycle mode has in force, as its catalogue id, or null (US-2.7). */
     fillInForce: () => playing().harmony?.arpeggio ?? null,
     /** The progression cycling has in force, as its catalogue id, or null (US-2.10). */
