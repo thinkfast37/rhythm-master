@@ -236,6 +236,20 @@ function renderEntry(entry, viewState, handlers) {
   open.addEventListener('click', () => handlers.onOpen(pattern.id, owned));
   item.appendChild(open);
 
+  /*
+   * The one piece of a Pattern's Tags a row cannot do without (AC-5.1.7). An
+   * edited copy keeps the name of the shipped Pattern it came from (US-7.3),
+   * so without this the two rows are indistinguishable. It says which it is in
+   * words rather than by colour alone, and it is not a control: provenance is
+   * decided by which store the Pattern came from and nothing can change it
+   * from here.
+   */
+  const provenance = el('span', `pattern-provenance ${owned ? 'custom' : 'built-in'}`, {
+    textContent: owned ? 'Custom' : 'Built-in',
+  });
+  provenance.dataset.provenance = owned ? 'custom' : 'built-in';
+  item.appendChild(provenance);
+
   item.appendChild(renderStars(pattern, handlers));
 
   /*
