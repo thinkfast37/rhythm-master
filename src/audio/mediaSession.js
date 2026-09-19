@@ -41,3 +41,30 @@ export function setStopped() {
   const s = session();
   if (s) s.playbackState = 'none';
 }
+
+/**
+ * Wire the OS's own Now Playing controls to the app's transport (AC-4.1.13).
+ *
+ * The app has no pause of its own — the transport is Play and Stop — so
+ * `'pause'` is mapped to Stop rather than inventing a third transport state
+ * (AC-4.1.13/2). Registering is entirely optional: a browser exposing
+ * `mediaSession` without `setActionHandler`, or one that rejects a particular
+ * action it does not support, is left alone (AC-4.1.13/3).
+ */
+export function setHandlers({ onPlay, onStop }) {
+  const s = session();
+  if (!s || typeof s.setActionHandler !== 'function') return;
+  const actions = [
+    ['play', onPlay],
+    ['pause', onStop],
+    ['stop', onStop],
+  ];
+  for (const [action, handler] of actions) {
+    try {
+      s.setActionHandler(action, handler);
+    } catch {
+      // An action this browser does not know about throws on registration;
+      // the ones it does know about are unaffected.
+    }
+  }
+}

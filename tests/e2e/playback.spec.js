@@ -392,6 +392,149 @@ test("AC-4.1.11/2 — A browser without `navigator.mediaSession` — including t
   expect(errors).toEqual([]);
 });
 
+test('AC-4.1.12/1 — Play starts the keep-alive element playing; Stop ends it', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+
+  // Nothing before Play: the element is built inside the gesture, never at load.
+  expect(await page.evaluate(() => window.__rm.keepAlive())).toBeNull();
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await expect
+    .poll(() => page.evaluate(() => {
+      const el = window.__rm.keepAlive();
+      return el ? { paused: el.paused, loop: el.loop, silent: el.src.startsWith('data:audio/wav;base64,') } : null;
+    }))
+    .toEqual({ paused: false, loop: true, silent: true });
+
+  await page.locator('[data-action="stop"]').click();
+  await expect(page.locator('[data-action="play"]')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__rm.keepAlive().paused)).toBe(true);
+});
+
+test('AC-4.1.12/2 — A recoverable suspension leaves the keep-alive element playing, since being the thing the OS declines to kill is the whole of its job — only a stop ends it', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await expect.poll(() => page.evaluate(() => window.__rm.keepAlive()?.paused)).toBe(false);
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  // The transport pauses (AC-4.1.5) — the keep-alive does not.
+  await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
+  expect(await page.evaluate(() => window.__rm.keepAlive().paused)).toBe(false);
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await page.evaluate(() => window.__rm.keepAlive().paused)).toBe(false);
+});
+
+test('AC-4.1.12/3 — A browser that cannot play it — no `Audio` constructor, or a `play()` that rejects — is unaffected: playback starts, runs and stops exactly as it would without it, and nothing throws: driven through the real app with a rejecting play()', async ({ page }) => {
+  // The element constructs, then refuses — the autoplay-policy case, which a
+  // missing constructor alone would not reach (the unit suite covers that one).
+  await page.addInitScript(() => {
+    HTMLMediaElement.prototype.play = function play() {
+      return Promise.reject(new DOMException('blocked', 'NotAllowedError'));
+    };
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await loadSimple(page);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.locator('[data-action="stop"]').click();
+  await expect(page.locator('[data-action="play"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("AC-4.1.13/1 — The `'play'` action starts playback when the transport is stopped: fired through the browser's own Media Session", async ({ page }) => {
+  // Capture what the app actually registers with the real Media Session API,
+  // so the test fires the OS's own handler rather than a seam standing in for
+  // it. `setActionHandler` stores handlers where no page script can read them.
+  await page.addInitScript(() => {
+    window.__rmMediaActions = {};
+    if (!('mediaSession' in navigator)) return;
+    const real = MediaSession.prototype.setActionHandler;
+    MediaSession.prototype.setActionHandler = function setActionHandler(action, handler) {
+      window.__rmMediaActions[action] = handler;
+      return real.call(this, action, handler);
+    };
+  });
+  await page.goto('/');
+  await loadSimple(page);
+  test.skip(
+    await page.evaluate(() => !('mediaSession' in navigator) || typeof navigator.mediaSession.setActionHandler !== 'function'),
+    'This Chromium build exposes no navigator.mediaSession.setActionHandler — AC-4.1.13/3 covers that case.'
+  );
+
+  // The OS's own control, not the app's: the handler the app registered is
+  // what the lock screen's Play button reaches.
+  await page.evaluate(() => window.__rmMediaActions.play());
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
+test("AC-4.1.13/2 — The `'pause'` and `'stop'` actions both stop playback when it is running: fired through the browser's own Media Session", async ({ page }) => {
+  // Capture what the app actually registers with the real Media Session API,
+  // so the test fires the OS's own handler rather than a seam standing in for
+  // it. `setActionHandler` stores handlers where no page script can read them.
+  await page.addInitScript(() => {
+    window.__rmMediaActions = {};
+    if (!('mediaSession' in navigator)) return;
+    const real = MediaSession.prototype.setActionHandler;
+    MediaSession.prototype.setActionHandler = function setActionHandler(action, handler) {
+      window.__rmMediaActions[action] = handler;
+      return real.call(this, action, handler);
+    };
+  });
+  await page.goto('/');
+  await loadSimple(page);
+  test.skip(
+    await page.evaluate(() => !('mediaSession' in navigator) || typeof navigator.mediaSession.setActionHandler !== 'function'),
+    'This Chromium build exposes no navigator.mediaSession.setActionHandler — AC-4.1.13/3 covers that case.'
+  );
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.evaluate(() => window.__rmMediaActions.pause());
+  await expect(page.locator('[data-action="play"]')).toBeVisible({ timeout: 4000 });
+  expect(await page.evaluate(() => window.__rm.getState().loop)).toBe(0);
+
+  // And 'stop' does the same thing from the same running state.
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.evaluate(() => window.__rmMediaActions.stop());
+  await expect(page.locator('[data-action="play"]')).toBeVisible({ timeout: 4000 });
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(false);
+});
+
+test('AC-4.1.13/3 — A browser without `setActionHandler` is unaffected: registering the handlers is a no-op and nothing throws: driven through the real app with the method absent', async ({ page }) => {
+  await page.addInitScript(() => {
+    // The API exposed without this one method — the older Media Session shape.
+    if ('mediaSession' in navigator) delete MediaSession.prototype.setActionHandler;
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.locator('[data-action="stop"]').click();
+  await expect(page.locator('[data-action="play"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('AC-4.2.1 — Default tempo and range: the control clamps to 18–300', async ({ page }) => {
   await page.goto('/');
   const slider = page.locator('.tempo-slider');
