@@ -7,7 +7,7 @@
  * come back.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { resume, getContext, __reset } from '../../../src/audio/context.js';
+import { resume, getContext, onSuspended, onResumed, __reset } from '../../../src/audio/context.js';
 import { ensureCompressor, __reset as resetNodes } from '../../../src/audio/nodes.js';
 
 class FakeAudioContext {
@@ -99,5 +99,48 @@ describe('resume() after a device suspension', () => {
     const rebuiltGraph = ensureCompressor(recovered);
     expect(rebuiltGraph).not.toBe(staleGraph);
     expect(rebuiltGraph.owner).toBe(recovered);
+  });
+});
+
+/**
+ * Backgrounding is not a suspension (AC-4.1.5, revised 2026-09-19). The
+ * visibility listener used to fire the suspend signal the moment a page went
+ * hidden with its context still running, which is what made a locked phone
+ * pause the app itself.
+ */
+describe('the visibility listener after AC-4.1.5\'s revision', () => {
+  let handler;
+
+  beforeEach(() => {
+    handler = null;
+    globalThis.document = {
+      visibilityState: 'visible',
+      addEventListener(type, fn) {
+        if (type === 'visibilitychange') handler = fn;
+      },
+    };
+  });
+
+  afterEach(() => {
+    delete globalThis.document;
+  });
+
+  it('AC-4.1.5/2 — A page hidden while its context keeps running plays on — scheduling continues and the loop counter keeps climbing: going hidden fires no suspend signal', () => {
+    const suspends = [];
+    const resumes = [];
+    onSuspended(() => suspends.push(true));
+    onResumed(() => resumes.push(true));
+    getContext(); // registers the listener
+    expect(handler).toBeTypeOf('function');
+
+    globalThis.document.visibilityState = 'hidden';
+    handler();
+    expect(suspends).toEqual([]);
+
+    // Coming back is still worth a resume attempt: some browsers hand the
+    // context back without ever firing their own statechange.
+    globalThis.document.visibilityState = 'visible';
+    handler();
+    expect(resumes).toEqual([true]);
   });
 });

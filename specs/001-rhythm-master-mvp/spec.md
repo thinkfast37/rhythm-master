@@ -855,11 +855,16 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** it plays
   - **Then** each loop plays Measure 1's 4 quarter-note Beats followed by Measure 2's 6 eighth-note Beats, each Beat sounding according to its own Recipe, before the loop counter (AC-4.1.3) increments and the sequence repeats from Measure 1
 
-- **AC-4.1.5** — Audio suspended by the device pauses the transport
-  - **Given** a Pattern has been playing for 40 loops and the device suspends audio — the phone locks, a call arrives, or the browser tab is backgrounded by the OS
-  - **When** the suspension occurs
+- **AC-4.1.5** — Audio the device has actually taken away pauses the transport
+  - **Given** a Pattern has been playing for 40 loops and the device takes audio away — the AudioContext reports `suspended` or `interrupted`, whether it announces that with a `statechange` or is merely found in that state at the next scheduling tick
+  - **When** that suspension is detected
   - **Then** scheduling and sounding stop at once — no audio is scheduled or sounds while suspended — but the playback cursor's position and the loop counter are held rather than reset, so a suspension the device offers back can pick the run up from exactly here (AC-4.1.6)
+  - **And** a page that is merely backgrounded or hidden, with its context still running, is **not** a suspension and does not pause anything: the run plays on
+  - **Cases**:
+    - **AC-4.1.5/1** — A context that reports `suspended` or `interrupted` pauses the run, holding its position and loop counter
+    - **AC-4.1.5/2** — A page hidden while its context keeps running plays on — scheduling continues and the loop counter keeps climbing
   - *(Revised 2026-09-14: previously this reset the transport to the top of Measure 1 with the loop counter at 0, unconditionally. See AC-4.1.6's parenthetical for why.)*
+  - *(Revised 2026-09-19 at the maintainer's request, from an iPhone report against AC-4.1.12's own first attempt: the keep-alive element did its job — the lock screen showed the app playing — and the Pattern still fell silent, because this criterion treated "the browser tab is backgrounded by the OS" as itself a suspension. `src/audio/context.js` fired the suspend signal the moment the page went hidden while the context was still running, so locking the phone made the app pause **itself**, whatever iOS would have allowed. Hidden is not proof that audio is gone; only the context's own state is. The shortcut existed because a mobile browser can suspend without firing `statechange`, and that job moves to the scheduling tick, which reads the context's real state each time it runs — a truthful signal rather than a proxy for one. The unrecoverable case (AC-4.1.6/2) is untouched and still catches a context that never comes back.)*
 
 - **AC-4.1.6** — Returning after a suspension resumes automatically when the context recovers
   - **Given** playback was paused by a suspension (AC-4.1.5)
@@ -898,6 +903,16 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.1.13/2** — The `'pause'` and `'stop'` actions both stop playback when it is running
     - **AC-4.1.13/3** — A browser without `setActionHandler` is unaffected: registering the handlers is a no-op and nothing throws
   - *(Added 2026-09-19 alongside AC-4.1.12, which puts the app on the lock screen in earnest: once the OS shows Now Playing controls for this page, controls that do nothing are worse than no controls. The app has no pause of its own — the transport is Play and Stop (AC-4.1.1, AC-4.1.4) — so `'pause'` is mapped to the app's Stop rather than inventing a third transport state, and Case /2 says so outright so the mapping is a stated decision rather than a surprise on the lock screen.)*
+
+- **AC-4.1.14** — Scheduling ticks come from the audio thread, so a backgrounded page keeps its cadence
+  - **Given** a Pattern playing while the page is backgrounded, where `setInterval` is throttled to as little as once a minute
+  - **When** the scheduler needs to top up its lookahead
+  - **Then** the polling cadence is driven from the AudioContext's own thread — an `AudioWorklet` that posts a tick as it renders — rather than from a wall-clock timer, so the cadence survives the throttling, and it stops exactly when the context stops, which is the same signal AC-4.1.5 pauses on
+  - **And** a browser without `AudioWorklet` falls back to the wall-clock timer and behaves exactly as it does today, adaptive lookahead included
+  - **Cases**:
+    - **AC-4.1.14/1** — Where `AudioWorklet` is available, the transport's ticks come from it and the wall-clock timer is not what drives scheduling
+    - **AC-4.1.14/2** — Where it is not available, or its module fails to load, the wall-clock timer drives scheduling exactly as before and playback is unaffected
+  - *(Added 2026-09-19 alongside AC-4.1.5's revision, and required by it: not pausing a hidden page is worthless on its own, because a hidden page's `setInterval` is throttled to roughly once a minute while the lookahead reaches at most 1.5 seconds ahead — the run would sound for a second and a half and then gap. An audio-thread tick is immune to that throttling, and it has a second property worth more than the first: it exists if and only if audio is actually flowing, so it cannot report a cadence the audio is not keeping. Constitution III is unaffected and better served — the tick still only drives the polling cadence, never when a note sounds, and the audio clock remains the only timebase.)*
 
 - **AC-4.1.8** — Opening another Pattern during playback switches playback to it
   - **Given** a Pattern is playing

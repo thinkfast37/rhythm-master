@@ -119,17 +119,25 @@ function watchForSuspension() {
     else if (ctx.state === 'running') fireResumed();
   });
 
-  // A backgrounded tab suspends audio on mobile without always firing
-  // statechange, so visibility is watched too. Once: the context can be
-  // replaced (AC-4.1.10/2), and the document must not collect a listener per
-  // replacement. Returning to visible is the same signal in reverse — some
-  // browsers offer the context back without ever firing their own
-  // statechange, so a tab regaining focus is always worth a resume attempt.
+  /*
+   * Returning to visible is worth a resume attempt: some browsers offer the
+   * context back without ever firing their own statechange. Going hidden is
+   * NOT the mirror of that, and used to be treated as one — a page merely
+   * backgrounded fired the suspend signal while its context was still running,
+   * so locking the phone made the app pause itself whatever the OS would have
+   * allowed, which is exactly what silenced AC-4.1.12's first attempt
+   * (AC-4.1.5, revised 2026-09-19). Hidden is not proof that audio is gone;
+   * only the context's own state is. A mobile browser that suspends without
+   * firing statechange is caught by the scheduler's tick reading that state,
+   * a truthful signal rather than a proxy for one.
+   *
+   * Registered once: the context can be replaced (AC-4.1.10/2), and the
+   * document must not collect a listener per replacement.
+   */
   if (!watchingVisibility && typeof document !== 'undefined') {
     watchingVisibility = true;
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden' && ctx?.state === 'running') fireSuspended();
-      else if (document.visibilityState === 'visible' && ctx) fireResumed();
+      if (document.visibilityState === 'visible' && ctx) fireResumed();
     });
   }
 }

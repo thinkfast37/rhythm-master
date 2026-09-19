@@ -13,11 +13,13 @@
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
 import { hasHarmony } from '../core/harmony.js';
 import { resume, onSuspended, onResumed } from './context.js';
+import { startTicking } from './tickSource.js';
 import { playPercussive, playClick } from './voices.js';
 
-/** How far ahead events are scheduled, and how often we top up. */
+/** How far ahead events are scheduled. The cadence it is topped up at comes
+ *  from `tickSource.js` — the audio thread where that is available, so a
+ *  backgrounded page keeps scheduling (AC-4.1.14). */
 const LOOKAHEAD_SECONDS = 0.2;
-const POLL_MS = 25;
 
 /*
  * TV and set-top browsers (the Hisense/VIDAA browser, notably) clamp timers
@@ -39,7 +41,9 @@ const START_OFFSET_SECONDS = 0.06;
 export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null } = {}) {
   let ctx = null;
   let master = null;
-  let timer = null;
+  /** The polling cadence in force, or null when nothing is running
+   *  (AC-4.1.14). Replaces the raw `setInterval` handle this once held. */
+  let ticker = null;
 
   /** Absolute audio-clock time of loop 0, Slot 0. Moves only at a pass-boundary
    *  re-anchor (AC-4.1.9) or a stall recovery — never by per-tick accumulation. */
@@ -186,6 +190,16 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
 
   function tick() {
     if (!running) return;
+    /*
+     * A mobile browser can suspend a context without firing statechange, and
+     * scheduling into a suspended context is silence with no error. Reading
+     * the state here is what catches that (AC-4.1.5, revised 2026-09-19) —
+     * the page merely being hidden no longer stands in for it.
+     */
+    if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
+      transport._handleSuspend();
+      return;
+    }
     const now = ctx.currentTime;
     const gap = now - lastTick;
     lastTick = now;
@@ -260,7 +274,9 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
 
   const totalBeats = () => pattern.measures.reduce((n, m) => n + m.beats.length, 0);
 
-  return {
+  // Named rather than returned anonymously, so `tick` can reach the suspend
+  // handler that a context found already suspended has to go through.
+  const transport = {
     get isRunning() {
       return running;
     },
@@ -312,7 +328,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
 
       lastTick = ctx.currentTime;
       tick();
-      timer = setInterval(tick, POLL_MS);
+      ticker?.stop();
+      ticker = startTicking(ctx, tick);
       stopFrameLoop();
       frame = requestFrame(frameLoop);
     },
@@ -321,8 +338,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       if (!running && !suspendedForRecovery) return;
       running = false;
       suspendedForRecovery = false;
-      clearInterval(timer);
-      timer = null;
+      ticker?.stop();
+      ticker = null;
       stopFrameLoop();
       pendingVisuals.length = 0;
       this._unwatchSuspend?.();
@@ -339,8 +356,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
     _handleSuspend() {
       if (!running) return;
       running = false;
-      clearInterval(timer);
-      timer = null;
+      ticker?.stop();
+      ticker = null;
       stopFrameLoop();
       pendingVisuals.length = 0;
       suspendedForRecovery = true;
@@ -381,7 +398,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       recoverFromStall(ctx.currentTime);
       running = true;
       tick();
-      timer = setInterval(tick, POLL_MS);
+      ticker?.stop();
+      ticker = startTicking(ctx, tick);
       stopFrameLoop();
       frame = requestFrame(frameLoop);
       onResume?.();
@@ -424,6 +442,10 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       pendingEdit: Boolean(pending),
       lookaheadSeconds: lookahead,
       suspendedForRecovery,
+      /** `'worklet'` or `'timer'`, or null when stopped (AC-4.1.14). */
+      tickSource: ticker?.source ?? null,
     }),
   };
+
+  return transport;
 }

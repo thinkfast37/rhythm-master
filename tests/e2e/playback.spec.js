@@ -14,6 +14,40 @@ test.use({
 /** The workbench is tabbed at every width (AC-15.1.7): one group on screen at a time. */
 const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
 
+/**
+ * A context whose state can be forced, installed before the app's own script
+ * runs. Merely hiding the page is no longer a suspension (AC-4.1.5, revised
+ * 2026-09-19), so a test that needs a real one makes the context report it.
+ */
+async function withForcibleContext(page) {
+  await page.addInitScript(() => {
+    const Real = window.AudioContext;
+    window.AudioContext = class extends Real {
+      get state() {
+        return window.__forcedAudioState ?? super.state;
+      }
+    };
+  });
+}
+
+/** Take audio away for real: the next scheduling tick reads this state. */
+const suspendForReal = (page) => page.evaluate(() => {
+  window.__forcedAudioState = 'suspended';
+});
+
+/** Give it back, and tell the app to go look — as a returning tab does. */
+const offerItBack = (page) => page.evaluate(() => {
+  delete window.__forcedAudioState;
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+});
+
+/** Background the page without touching the audio context's state. */
+const goHidden = (page) => page.evaluate(() => {
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+});
+
 /** A 4/4 Pattern with one note per Beat, at a chosen tempo. */
 async function loadSimple(page, tempo = 240) {
   await page.evaluate((bpm) => {
@@ -226,7 +260,8 @@ test('AC-4.1.4 — a mixed-meter Pattern sounds every Beat of both Measures', as
   expect([...measuresSeen].sort()).toEqual(['0', '1']);
 });
 
-test('AC-4.1.5 — Audio suspended by the device pauses the transport', async ({ page }) => {
+test('AC-4.1.5/1 — A context that reports `suspended` or `interrupted` pauses the run, holding its position and loop counter', async ({ page }) => {
+  await withForcibleContext(page);
   await page.goto('/');
   await loadSimple(page);
 
@@ -235,11 +270,9 @@ test('AC-4.1.5 — Audio suspended by the device pauses the transport', async ({
   await page.waitForTimeout(200);
   const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
 
-  // Simulate the device taking audio away.
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  // The device takes audio away without announcing it — no statechange, just a
+  // context that now reports suspended. The scheduling tick is what notices.
+  await suspendForReal(page);
 
   // Nothing sounds while suspended…
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
@@ -248,12 +281,30 @@ test('AC-4.1.5 — Audio suspended by the device pauses the transport', async ({
     loop: window.__rm.getState().loop,
   }));
   expect(after.running).toBe(false);
-  // …but the position and the loop counter are held, not reset (revised
-  // 2026-09-14 — see AC-4.1.6 for why).
+  // …but the position and the loop counter are held, not reset.
   expect(after.loop).toBeGreaterThanOrEqual(loopBefore);
 });
 
+test('AC-4.1.5/2 — A page hidden while its context keeps running plays on — scheduling continues and the loop counter keeps climbing', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
+
+  // Backgrounded, with the audio context untouched: this is the phone's screen
+  // going off, and it used to pause the run all by itself.
+  await goHidden(page);
+
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 6000 })
+    .toBeGreaterThan(loopBefore);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
+});
+
 test('AC-4.1.6/1 — A recoverable suspension continues the same run: the loop keeps counting and the pass in progress finishes from where it paused, with no restart', async ({ page }) => {
+  await withForcibleContext(page);
   await page.goto('/');
   await loadSimple(page);
   await page.locator('[data-action="play"]').click();
@@ -261,17 +312,11 @@ test('AC-4.1.6/1 — A recoverable suspension continues the same run: the loop k
   await page.waitForTimeout(200);
   const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await suspendForReal(page);
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
 
   // Returning to the app resumes on its own — no Play press required.
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await offerItBack(page);
 
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
   expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
@@ -301,15 +346,11 @@ test("AC-4.1.6/2 — An unrecoverable suspension — the context stays stuck eve
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  // Taken away for real, and never given back whatever context.js tries.
+  await suspendForReal(page);
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
 
   await page.evaluate(() => {
-    // The device never gives it back, whatever context.js tries.
-    window.__forcedAudioState = 'suspended';
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
   });
@@ -327,6 +368,7 @@ test("AC-4.1.6/2 — An unrecoverable suspension — the context stays stuck eve
 });
 
 test("AC-4.1.11/1 — `playbackState` follows `'playing'`, `'paused'`, `'playing'` again and `'none'` across a start, a recoverable suspension, its resume and a stop, and `metadata` names the Pattern playing", async ({ page }) => {
+  await withForcibleContext(page);
   await page.goto('/');
   await loadSimple(page);
   test.skip(
@@ -339,16 +381,10 @@ test("AC-4.1.11/1 — `playbackState` follows `'playing'`, `'paused'`, `'playing
   await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('playing');
   expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('Playback Test');
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await suspendForReal(page);
   await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('paused');
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await offerItBack(page);
   await expect.poll(() => page.evaluate(() => navigator.mediaSession.playbackState)).toBe('playing');
 
   await page.locator('[data-action="stop"]').click();
@@ -365,6 +401,7 @@ test("AC-4.1.11/2 — A browser without `navigator.mediaSession` — including t
     // in navigator` to read false, the real feature-detection this app runs.
     delete Navigator.prototype.mediaSession;
   });
+  await withForcibleContext(page);
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
 
@@ -375,16 +412,10 @@ test("AC-4.1.11/2 — A browser without `navigator.mediaSession` — including t
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await suspendForReal(page);
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await offerItBack(page);
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
   await page.locator('[data-action="stop"]').click();
@@ -414,24 +445,19 @@ test('AC-4.1.12/1 — Play starts the keep-alive element playing; Stop ends it',
 });
 
 test('AC-4.1.12/2 — A recoverable suspension leaves the keep-alive element playing, since being the thing the OS declines to kill is the whole of its job — only a stop ends it', async ({ page }) => {
+  await withForcibleContext(page);
   await page.goto('/');
   await loadSimple(page);
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
   await expect.poll(() => page.evaluate(() => window.__rm.keepAlive()?.paused)).toBe(false);
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  // The transport pauses (AC-4.1.5) — the keep-alive does not.
+  await suspendForReal(page);
+  // The transport pauses — the keep-alive does not.
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
   expect(await page.evaluate(() => window.__rm.keepAlive().paused)).toBe(false);
 
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await offerItBack(page);
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
   expect(await page.evaluate(() => window.__rm.keepAlive().paused)).toBe(false);
 });
@@ -530,6 +556,62 @@ test('AC-4.1.13/3 — A browser without `setActionHandler` is unaffected: regist
   await loadSimple(page);
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await page.locator('[data-action="stop"]').click();
+  await expect(page.locator('[data-action="play"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("AC-4.1.14/1 — Where `AudioWorklet` is available, the transport's ticks come from it and the wall-clock timer is not what drives scheduling", async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+  test.skip(
+    await page.evaluate(() => typeof AudioWorkletNode !== 'function'),
+    'This Chromium build has no AudioWorklet — AC-4.1.14/2 covers that case.'
+  );
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  // Registration is async, so the timer carries the first few ticks by design.
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.transport._snapshot().tickSource), { timeout: 4000 })
+    .toBe('worklet');
+
+  // And it is genuinely what is driving scheduling: with every wall-clock
+  // timer torn out from under it, the run keeps advancing.
+  await page.evaluate(() => {
+    window.setInterval = () => 0;
+  });
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 6000 })
+    .toBeGreaterThan(loopBefore);
+});
+
+test('AC-4.1.14/2 — Where it is not available, or its module fails to load, the wall-clock timer drives scheduling exactly as before and playback is unaffected', async ({ page }) => {
+  // The module fails to load — the harder half of this Case, since a browser
+  // with no AudioWorklet at all never reaches the node construction below it.
+  await page.addInitScript(() => {
+    Object.defineProperty(AudioContext.prototype, 'audioWorklet', {
+      configurable: true,
+      get() {
+        return { addModule: () => Promise.reject(new Error('blocked')) };
+      },
+    });
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 6000 })
+    .toBeGreaterThan(loopBefore);
+  expect(await page.evaluate(() => window.__rm.transport._snapshot().tickSource)).toBe('timer');
+
   await page.locator('[data-action="stop"]').click();
   await expect(page.locator('[data-action="play"]')).toBeVisible();
   expect(errors).toEqual([]);
@@ -1650,10 +1732,10 @@ test('AC-4.1.10/3 — After the tab is backgrounded and returns, pressing Play s
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
 
-  // Backgrounded: the transport pauses (AC-4.1.5)…
+  // Audio taken away: the transport pauses (AC-4.1.5). Backgrounding alone no
+  // longer does this — only the context's own state does (revised 2026-09-19).
   await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
+    window.__forcedAudioState = 'suspended';
   });
   await expect(page.locator('.slot.playing')).toHaveCount(0, { timeout: 2000 });
 
