@@ -27,6 +27,28 @@ test('AC-5.2.1 — typing filters the list', async ({ page }) => {
   }
 });
 
+test('AC-5.2.4 — Typing in the search field keeps the field focused', async ({ page }) => {
+  await page.goto('/');
+  const search = page.locator('.library-search');
+  await search.click();
+
+  // Typed character by character through the real keyboard, because the bug was
+  // in what each keystroke's re-render did to the element being typed into:
+  // `fill()` writes the whole string in one event and would never have seen it.
+  for (const ch of 'bossa') {
+    await page.keyboard.type(ch);
+    await expect(search).toBeFocused();
+  }
+
+  await expect(search).toHaveValue('bossa');
+  const caret = await search.evaluate((n) => [n.selectionStart, n.selectionEnd]);
+  expect(caret).toEqual([5, 5]);
+
+  const count = await page.locator('.pattern-item').count();
+  expect(count).toBeGreaterThan(0);
+  expect(count).toBeLessThan(SEED_PATTERN_COUNT);
+});
+
 test('AC-5.2.3 — clearing the search restores the full list', async ({ page }) => {
   await page.goto('/');
   await page.locator('.library-search').fill('clave');

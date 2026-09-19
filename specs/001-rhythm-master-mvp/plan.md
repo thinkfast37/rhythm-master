@@ -217,7 +217,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-022** | US-7.4 — Make a named copy of a Pattern you own | AC-7.4.1–AC-7.4.6 | T083 | T084 |
 | **P-023** | US-7.5 — Delete a Pattern | AC-7.5.1–AC-7.5.4 | T085 | T086 |
 | **P-024** | US-5.1 — Browse the library | AC-5.1.1–AC-5.1.6 | T087 | T088 |
-| **P-025** | US-5.2 — Search by text | AC-5.2.1–AC-5.2.3 | T089 | T090 |
+| **P-025** | US-5.2 — Search by text | AC-5.2.1–AC-5.2.4 | T089, T312 | T090, T313 |
 | **P-026** | US-5.3 — Organise by Tag, including automatic Tags | AC-5.3.1–AC-5.3.10 | T091–T092 | T093 |
 | **P-027** | US-5.5 — Navigate sequentially | AC-5.5.1–AC-5.5.3 | T094, T246, T272 | T095, T247, T273 |
 | **P-028** | US-6.1 — Rate a Pattern | AC-6.1.1–AC-6.1.7 | T096, T200 | T097, T201 |

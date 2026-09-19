@@ -14,13 +14,13 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 644 across 45 User Stories
+**Criteria**: 645 across 45 User Stories
 
-**Coverage**: 455 of 644 criteria proven (70.7%)
+**Coverage**: 456 of 645 criteria proven (70.7%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 455 | 70.7% |
+| 🟢 Proven | 456 | 70.7% |
 | 🔴 Gap — HIGH | 70 | 10.9% |
 | 🟠 Gap — MEDIUM | 41 | 6.4% |
 | 🟡 Gap — LOW | 78 | 12.1% |
@@ -72,7 +72,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
 | 🔴 US-4.4 | 49 | 44 | · | · | 5 | · | · |
 | 🔴 US-5.1 | 6 | 0 | · | · | 5 | · | 1 |
-| 🔴 US-5.2 | 3 | 0 | · | · | 1 | · | 2 |
+| 🔴 US-5.2 | 4 | 1 | · | · | 1 | · | 2 |
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
 | 🟠 US-5.5 | 5 | 3 | · | · | · | 1 | 1 |
 | 🔴 US-5.6 | 13 | 2 | · | · | 10 | 1 | · |
@@ -326,9 +326,10 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.1 | `AC-5.1.4` | Default sort order: Rating descending, then alphabetical within each Rating | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.1 | `AC-5.1.5` 🖵 | Sort order applies on top of Tag filtering | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.1 | `AC-5.1.6` | "List order" elsewhere in the doc means this sort order | P-024 | T087 (1/1 done) | T088 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.2 | `AC-5.2.1` 🖵 | Search matches name/description | P-025 | T089 (1/1 done) | T090 (1/1 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.2 | `AC-5.2.2` 🖵 | Search matching is case-insensitive | P-025 | T089 (1/1 done) | T090 (1/1 done) | `library.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.2 | `AC-5.2.3` 🖵 | Search results keep the library's default sort order | P-025 | T089 (1/1 done) | T090 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.2 | `AC-5.2.1` 🖵 | Search matches name/description | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-5.2 | `AC-5.2.2` 🖵 | Search matching is case-insensitive | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-5.2 | `AC-5.2.3` 🖵 | Search results keep the library's default sort order | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.2 | `AC-5.2.4` 🖵 | Typing in the search field keeps the field focused | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-5.3 | `AC-5.3.1` | Auto-tags recompute immediately on configuration change | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.3 | `AC-5.3.2` | `custom` is permanent, set once at creation | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.3 | `AC-5.3.3` | `percussive`/`melodic` always reflects current Sound Mode | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
