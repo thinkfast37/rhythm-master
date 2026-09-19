@@ -1290,6 +1290,17 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** the filtered list renders
   - **Then** it applies the same Rating-descending-then-alphabetical order as AC-5.1.4 — "Apple Groove" before "Zebra Groove" — search filtering does not override the library's default sort order
 
+- **AC-5.2.4** — Typing in the search field keeps the field focused
+  - **Given** the Practicing Musician has clicked into the search field and typed "b"
+  - **When** they keep typing "ossa" without touching anything else
+  - **Then** the field still holds focus with the caret after the last character typed, the field reads "bossa", and the list has narrowed on every keystroke — filtering the list never takes focus away from the field being typed into
+
+*(AC-5.2.4 added 2026-09-19. Reported by the maintainer: every keystroke in the
+library search re-rendered the panel and rebuilt the input element, so the browser
+dropped focus and the next character went nowhere. The criterion was never written
+down — the search ACs asserted what the list shows, and nothing asserted that the
+field survives showing it.)*
+
 ---
 
 ### User Story 16 - Organise by Tag, including automatic Tags
