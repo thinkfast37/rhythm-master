@@ -178,6 +178,45 @@ describe('audio/scheduler under a throttled timer', () => {
 });
 
 describe('audio/scheduler under a device suspension (AC-4.1.5, AC-4.1.6)', () => {
+  it('AC-4.1.5/1 — A context that reports `suspended` or `interrupted` pauses the run, holding its position and loop counter: found suspended at a scheduling tick, with no statechange fired', async () => {
+    const suspends = [];
+    transport = createTransport({ onSuspend: () => suspends.push(true) });
+    await startTransport();
+    await tickAt(0.5);
+    const startsBeforeSuspend = starts.length;
+    const patternBeforeSuspend = transport._snapshot().pattern;
+    expect(startsBeforeSuspend).toBeGreaterThan(0);
+
+    // A mobile browser that suspends without announcing it: the state changes
+    // and no statechange listener ever runs. The tick is what has to notice —
+    // the page being hidden no longer stands in for this (revised 2026-09-19).
+    ctx.state = 'suspended';
+    await tickAt(0.6);
+
+    expect(suspends).toEqual([true]);
+    expect(transport.isRunning).toBe(false);
+    // Held, not reset: the same Pattern, ready for the context to come back.
+    expect(transport._snapshot().suspendedForRecovery).toBe(true);
+    expect(transport._snapshot().pattern).toBe(patternBeforeSuspend);
+    // And nothing more is scheduled into a context that cannot sound it.
+    await vi.advanceTimersByTimeAsync(500);
+    expect(starts.length).toBe(startsBeforeSuspend);
+  });
+
+  it('AC-4.1.5/1 — A context that reports `suspended` or `interrupted` pauses the run, holding its position and loop counter: the iPadOS `interrupted` state does it too', async () => {
+    const suspends = [];
+    transport = createTransport({ onSuspend: () => suspends.push(true) });
+    await startTransport();
+    await tickAt(0.5);
+
+    ctx.state = 'interrupted';
+    await tickAt(0.6);
+
+    expect(suspends).toEqual([true]);
+    expect(transport.isRunning).toBe(false);
+    expect(transport._snapshot().suspendedForRecovery).toBe(true);
+  });
+
   it('AC-4.1.6/1 — A recoverable suspension continues the same run: the loop keeps counting and the pass in progress finishes from where it paused, with no restart', async () => {
     const suspends = [];
     const resumes = [];
