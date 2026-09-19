@@ -14,13 +14,13 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 648 across 45 User Stories
+**Criteria**: 649 across 45 User Stories
 
-**Coverage**: 459 of 648 criteria proven (70.8%)
+**Coverage**: 460 of 649 criteria proven (70.9%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 459 | 70.8% |
+| 🟢 Proven | 460 | 70.9% |
 | 🔴 Gap — HIGH | 70 | 10.8% |
 | 🟠 Gap — MEDIUM | 41 | 6.3% |
 | 🟡 Gap — LOW | 78 | 12.0% |
@@ -72,7 +72,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
 | 🔴 US-4.4 | 49 | 44 | · | · | 5 | · | · |
 | 🔴 US-5.1 | 10 | 4 | · | · | 5 | · | 1 |
-| 🔴 US-5.2 | 3 | 0 | · | · | 1 | · | 2 |
+| 🔴 US-5.2 | 4 | 1 | · | · | 1 | · | 2 |
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
 | 🟠 US-5.5 | 5 | 3 | · | · | · | 1 | 1 |
 | 🔴 US-5.6 | 13 | 2 | · | · | 10 | 1 | · |
@@ -320,19 +320,20 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.4 | `AC-4.4.17/4` 🖵 | The carried swing survives a reload, and is 0 on the 8ths feel before any Pattern has been opened | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279 (9/9 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280 (9/9 done) | `playback.spec.js` | 🟢 OK |
 | US-4.4 | `AC-4.4.17/5` 🖵 | A carried amount does not give a shipped Pattern the `swing` Tag in the library | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279 (9/9 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280 (9/9 done) | `playback.spec.js` | 🟢 OK |
 | US-4.4 | `AC-4.4.17/6` 🖵 | A Pattern with any remembered playback setting takes no carried swing or feel, even when what was remembered is its tempo | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279 (9/9 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280 (9/9 done) | `playback-defaults.test.js`, `playback.spec.js` | 🟢 OK |
-| US-5.1 | `AC-5.1.1` | Shipped and custom Patterns appear in one unified list | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.1 | `AC-5.1.2` 🖵 | Library entry shows name, meter, and Measure/Beat count | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.3` 🖵 | Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.4` | Default sort order: Rating descending, then alphabetical within each Rating | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.5` 🖵 | Sort order applies on top of Tag filtering | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.6` | "List order" elsewhere in the doc means this sort order | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.7/1` 🖵 | A row for a shipped Pattern carries a marker reading "Built-in" | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.spec.js` | 🟢 OK |
-| US-5.1 | `AC-5.1.7/2` 🖵 | A row for a Pattern the musician owns carries a marker reading "Custom" | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.spec.js` | 🟢 OK |
-| US-5.1 | `AC-5.1.7/3` 🖵 | The marker says which it is in words, never by colour alone | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.spec.js` | 🟢 OK |
-| US-5.1 | `AC-5.1.7/4` 🖵 | Two Patterns sharing one name, one shipped and one owned, are told apart by their markers, and both still sit in the one unified list | P-024 | T087, T314 (2/2 done) | T088, T315 (2/2 done) | `library.spec.js` | 🟢 OK |
-| US-5.2 | `AC-5.2.1` 🖵 | Search matches name/description | P-025 | T089 (1/1 done) | T090 (1/1 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.2 | `AC-5.2.2` 🖵 | Search matching is case-insensitive | P-025 | T089 (1/1 done) | T090 (1/1 done) | `library.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.2 | `AC-5.2.3` 🖵 | Search results keep the library's default sort order | P-025 | T089 (1/1 done) | T090 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.1` | Shipped and custom Patterns appear in one unified list | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-5.1 | `AC-5.1.2` 🖵 | Library entry shows name, meter, and Measure/Beat count | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.3` 🖵 | Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.4` | Default sort order: Rating descending, then alphabetical within each Rating | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.5` 🖵 | Sort order applies on top of Tag filtering | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.6` | "List order" elsewhere in the doc means this sort order | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.7/1` 🖵 | A row for a shipped Pattern carries a marker reading "Built-in" | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-5.1 | `AC-5.1.7/2` 🖵 | A row for a Pattern the musician owns carries a marker reading "Custom" | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-5.1 | `AC-5.1.7/3` 🖵 | The marker says which it is in words, never by colour alone | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-5.1 | `AC-5.1.7/4` 🖵 | Two Patterns sharing one name, one shipped and one owned, are told apart by their markers, and both still sit in the one unified list | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
+| US-5.2 | `AC-5.2.1` 🖵 | Search matches name/description | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-5.2 | `AC-5.2.2` 🖵 | Search matching is case-insensitive | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-5.2 | `AC-5.2.3` 🖵 | Search results keep the library's default sort order | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.2 | `AC-5.2.4` 🖵 | Typing in the search field keeps the field focused | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-5.3 | `AC-5.3.1` | Auto-tags recompute immediately on configuration change | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.3 | `AC-5.3.2` | `custom` is permanent, set once at creation | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-5.3 | `AC-5.3.3` | `percussive`/`melodic` always reflects current Sound Mode | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |

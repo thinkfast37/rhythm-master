@@ -117,17 +117,42 @@ function el(tag, className, props = {}) {
 }
 
 export function renderLibrary(root, entries, viewState, handlers) {
+  // The search field is carried across renders rather than rebuilt (AC-5.2.4).
+  // Every keystroke re-renders the library, and a replaced input is a different
+  // element: the browser drops focus and the caret with the old one, so typing a
+  // second character meant clicking back into the box first. The node survives
+  // `innerHTML = ''` because this reference holds it, but moving it still blurs
+  // it, so focus and the selection are restored explicitly below.
+  const existing = root.querySelector(':scope > .library-search');
+  const hadFocus = existing !== null && document.activeElement === existing;
+  const caret = hadFocus ? [existing.selectionStart, existing.selectionEnd] : null;
+
   root.innerHTML = '';
   root.className = 'library';
 
-  const search = el('input', 'library-search', {
-    type: 'search',
-    placeholder: 'Search patterns',
-    value: viewState.query ?? '',
-  });
-  search.dataset.action = 'search';
-  search.addEventListener('input', (e) => handlers.onSearch(e.target.value));
+  const search =
+    existing ??
+    el('input', 'library-search', {
+      type: 'search',
+      placeholder: 'Search patterns',
+    });
+  if (existing === null) {
+    search.dataset.action = 'search';
+    // The listener is attached once, for the life of the node, and reads the
+    // handler through the node — `handlers` is rebuilt per render, and a closure
+    // captured on the first one would go stale.
+    search.addEventListener('input', (e) => search.rmOnSearch(e.target.value));
+  }
+  search.rmOnSearch = handlers.onSearch;
+  // Only write the value when it actually differs: assigning an identical value
+  // still collapses the selection to the end of the field.
+  const query = viewState.query ?? '';
+  if (search.value !== query) search.value = query;
   root.appendChild(search);
+  if (hadFocus) {
+    search.focus();
+    if (caret[0] !== null) search.setSelectionRange(caret[0], caret[1]);
+  }
 
   const newButton = el('button', 'new-pattern', { type: 'button', textContent: '+ New Pattern' });
   newButton.dataset.action = 'new-pattern';
