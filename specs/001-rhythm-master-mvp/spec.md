@@ -1263,6 +1263,17 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** Prev/Next navigation (US-5.5) or Pattern Family display (US-11.2) references "the list" or "list order"
   - **Then** it means this Rating-descending-then-alphabetical order, applied to whatever the current filter set is — not a separately defined ordering
 
+- **AC-5.1.7** — A library row says whether the Pattern ships with the app or is the musician's own
+  - **Given** the library contains "Bossa Groove" (shipped with the app) and a Pattern of the same name the Practicing Musician edited into a copy of their own
+  - **When** they look at the list
+  - **Then** each row carries a provenance marker in words — "Built-in" on a shipped Pattern, "Custom" on one they own — so the two rows are told apart without opening either, while the list itself stays unified and undivided (AC-5.1.1)
+  - **Cases**:
+    - **AC-5.1.7/1** — A row for a shipped Pattern carries a marker reading "Built-in"
+    - **AC-5.1.7/2** — A row for a Pattern the musician owns carries a marker reading "Custom"
+    - **AC-5.1.7/3** — The marker says which it is in words, never by colour alone
+    - **AC-5.1.7/4** — Two Patterns sharing one name, one shipped and one owned, are told apart by their markers, and both still sit in the one unified list
+  - *(Added 2026-09-19. Asked for by the maintainer: "I'm really having trouble finding the ones I changed … I want to make sure I can easily find the built-in ones versus the ones that are not built-in." The `built-in` and `custom` automatic Tags (US-5.3) already exist and already filter correctly, and the shipped Patterns already carry them — but a row showed neither, and Tag chips were deliberately removed from rows (T151) because repeating them on every row made the list far longer to scroll. The provenance marker is the one piece of that information a row cannot do without: an edited copy keeps the name of the Pattern it came from (US-7.3), so without it two identical-looking rows are genuinely indistinguishable.)*
+
 ---
 
 ### User Story 15 - Search by text

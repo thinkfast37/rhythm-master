@@ -1072,6 +1072,16 @@ body {
   font: 500 14px/1.3 var(--font-ui);
   color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
 }
+.pattern-provenance {
+  flex: 0 0 auto;
+  padding: 2px 7px; border-radius: 999px;
+  font: 500 10px/1.4 var(--font-ui);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  border: 1px solid var(--ink-dim); color: var(--ink-dim);
+}
+/* Told apart by the word it carries, never by colour alone (AC-5.1.7/3). */
+.pattern-provenance.custom { border-color: var(--brand); color: var(--brand); }
+
 .rating { display: flex; gap: 1px; }
 .star {
   padding: 0 1px; border: 0; background: none; cursor: pointer;

@@ -4,6 +4,8 @@ import { validate, MAX_MEASURES } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { beatCount, isSupported } from '../../../src/core/meter.js';
 import { SEED_PATTERN_COUNT } from '../../seed-count.js';
+import { canCondense, condense } from '../../../src/core/condense.js';
+import { rhythmFingerprint } from '../../../src/core/similarity.js';
 
 const library = seed.loadAll();
 
@@ -176,5 +178,52 @@ describe('the shipped Pattern library', () => {
       measures: [{ timeSignature: '4/4', beats: [{ recipe: 'straight-16ths', slots: [{ on: true }] }] }],
     };
     expect(validate(broken).valid).toBe(false);
+  });
+});
+
+/**
+ * The condensed exercises (T312). Data, not behaviour: each one is what
+ * `condense` makes of a shipped exercise, so the file and the Condense control
+ * cannot drift apart — press the button on the original and you get this
+ * Pattern's rhythm.
+ */
+describe('the condensed exercises', () => {
+  const condensed = library.filter((p) => (p.tags ?? []).includes('Condensed'));
+  const exercises = library.filter(
+    (p) => (p.tags ?? []).includes('Exercises') && !(p.tags ?? []).includes('Condensed')
+  );
+
+  it('there is one for every exercise that Condense can simplify, and no other', () => {
+    expect(condensed).toHaveLength(exercises.filter(canCondense).length);
+    expect(condensed.length).toBeGreaterThan(0);
+    for (const p of condensed) expect(p.tags).toContain('Exercises');
+  });
+
+  it('each is exactly what Condense makes of a shipped exercise', () => {
+    const sources = new Map(
+      exercises.filter(canCondense).map((p) => [rhythmFingerprint(condense(p)), p])
+    );
+    for (const p of condensed) {
+      expect(sources.has(rhythmFingerprint(p))).toBe(true);
+    }
+  });
+
+  it('none can be condensed any further', () => {
+    for (const p of condensed) expect(canCondense(p)).toBe(false);
+  });
+
+  it('each carries its source exercise’s level and meter Tags, and stores no automatic Tag', () => {
+    for (const p of condensed) {
+      expect(['Beginner', 'Intermediate', 'Advanced'].some((l) => p.tags.includes(l))).toBe(true);
+      for (const automatic of ['built-in', 'custom', 'percussive', 'melodic', 'swing']) {
+        expect(p.tags).not.toContain(automatic);
+      }
+    }
+  });
+
+  it('a melodic one advances its progression once a pass, since the Measures it was written over are gone', () => {
+    const melodic = condensed.filter((p) => p.harmony);
+    expect(melodic.length).toBeGreaterThan(0);
+    for (const p of melodic) expect(p.harmony.change).toBe('pass');
   });
 });

@@ -608,3 +608,70 @@ test('AC-15.1.17/4 — The panel holds exactly one Play/Stop control', async ({ 
   await expect(page.locator('.main-top-bar [data-action="play"]')).toHaveCount(1);
   await expect(page.locator('.main-top-bar .tempo-entry')).toHaveCount(1);
 });
+
+/*
+ * AC-5.1.7 — the provenance marker. An edited copy keeps the name of the
+ * shipped Pattern it came from (US-7.3), so the row must say which it is.
+ */
+test('AC-5.1.7/1 — A row for a shipped Pattern carries a marker reading "Built-in"', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const shipped = page.locator('.pattern-item[data-owned="false"]');
+  await expect(shipped).toHaveCount(SEED_PATTERN_COUNT);
+  const markers = await shipped.locator('.pattern-provenance').allTextContents();
+  expect(markers).toHaveLength(SEED_PATTERN_COUNT);
+  expect(new Set(markers)).toEqual(new Set(['Built-in']));
+});
+
+test('AC-5.1.7/2 — A row for a Pattern the musician owns carries a marker reading "Custom"', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('[data-action="new-pattern"]').click();
+  const owned = page.locator('.pattern-item[data-owned="true"]');
+  await expect(owned).toHaveCount(1);
+  await expect(owned.locator('.pattern-provenance')).toHaveText('Custom');
+});
+
+test('AC-5.1.7/3 — The marker says which it is in words, never by colour alone', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('[data-action="new-pattern"]').click();
+  // Read the words with colour removed from the question entirely.
+  const words = await page.evaluate(() =>
+    [...document.querySelectorAll('.pattern-item')].map((item) => ({
+      owned: item.dataset.owned,
+      text: item.querySelector('.pattern-provenance')?.textContent ?? null,
+    }))
+  );
+  expect(words.length).toBeGreaterThan(1);
+  for (const row of words) {
+    expect(row.text).toBe(row.owned === 'true' ? 'Custom' : 'Built-in');
+  }
+});
+
+test('AC-5.1.7/4 — Two Patterns sharing one name, one shipped and one owned, are told apart by their markers, and both still sit in the one unified list', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const name = await page.evaluate(() => {
+    const shipped = window.__rm.seedStore.loadAll()[0];
+    const mine = window.__rm.handlers.onNewPattern();
+    window.__rm.handlers.onRename(shipped.name);
+    return { name: shipped.name, id: mine.id };
+  });
+  await page.locator('.library-search').fill(name.name);
+  // Matched on the whole name: a shipped name is often a prefix of others.
+  const rows = await page.evaluate(
+    (wanted) =>
+      [...document.querySelectorAll('.pattern-item')]
+        .filter((item) => item.querySelector('.pattern-name')?.textContent === wanted)
+        .map((item) => item.querySelector('.pattern-provenance')?.textContent ?? null),
+    name.name
+  );
+  expect(rows.sort()).toEqual(['Built-in', 'Custom']);
+  // One unified list, no "custom" or "shipped" section dividing it (AC-5.1.1).
+  await expect(page.locator('.pattern-list')).toHaveCount(1);
+});
