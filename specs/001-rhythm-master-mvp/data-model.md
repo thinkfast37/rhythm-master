@@ -343,8 +343,9 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "schemaVersion": 1,
   "countingSystem": "takadimi",   // "takadimi" | "one-e-and-a" | "numbered"
   "lastTempo": 100,               // AC-4.2.3 — carried from the Pattern just left
-  "lastSwingAmount": 33,          // AC-4.4.17 — carried with it
-  "lastSwingFeel": "eighth",      // AC-4.4.17 — "quarter" | "eighth" | "sixteenth"
+                                  // (lastSwingAmount and lastSwingFeel were written here
+                                  //  2026-09-12 to 2026-09-20; swing no longer carries,
+                                  //  AC-4.4.17, and a stored value is ignored on load)
   "metronomeEnabled": false,
   "countInEnabled": false,
   "patternView": "grid",          // AC-12.2.1/1 — "grid" | "sheet", the view the main panel shows the Pattern in

@@ -548,12 +548,12 @@ function armedFor(pattern) {
 }
 
 /**
- * The tempo and swing a Pattern with none of its own loads at: the ones in
- * effect on the Pattern just left (AC-4.2.3, AC-4.4.17).
+ * The tempo a Pattern with none of its own loads at: the one in effect on the
+ * Pattern just left (AC-4.2.3). Swing and swing feel never carry (AC-4.4.17,
+ * reversed 2026-09-20): a Pattern with no swing of its own loads straight.
  *
  * Applied to the loaded copy only — neither store is written on load, so a
- * carried amount never becomes a shipped Pattern's own data nor gives it the
- * `swing` Tag, which the library derives from the stores.
+ * carried tempo never becomes a shipped Pattern's own data.
  *
  * The overlay is read from its store rather than taken from `pattern`, which
  * arrives with the overlay already applied: post-overlay, a remembered 80 BPM
@@ -561,28 +561,9 @@ function armedFor(pattern) {
  */
 function withCarriedPlayback(pattern) {
   const overlay = pattern.id ? overlayStore.forPattern(pattern.id) : {};
-  const carried = {
-    tempo: state.settings.lastTempo,
-    swingAmount: state.settings.lastSwingAmount,
-    swingFeel: state.settings.lastSwingFeel,
-  };
+  const carried = { tempo: state.settings.lastTempo };
   const applied = carriedPlaybackFor({ pattern, overlay, carried });
-
-  let next = pattern;
-  if (applied.tempo !== undefined) next = { ...next, tempo: applied.tempo };
-  // A stored value this build does not accept is skipped rather than failing
-  // the load, exactly as the overlay store treats its own (AC-4.4.6).
-  try {
-    if (applied.swingAmount !== undefined) next = setSwingAmount(next, applied.swingAmount);
-  } catch {
-    /* an amount this build does not accept */
-  }
-  try {
-    if (applied.swingFeel !== undefined) next = setSwingFeel(next, applied.swingFeel);
-  } catch {
-    /* a feel this build does not know */
-  }
-  return next;
+  return applied.tempo !== undefined ? { ...pattern, tempo: applied.tempo } : pattern;
 }
 
 export function loadPattern(pattern, { owned }) {
@@ -593,11 +574,7 @@ export function loadPattern(pattern, { owned }) {
   // What the next Pattern carries is what this one is sounding at, whether the
   // Musician chose it or it came with the Pattern (AC-4.2.3/4).
   const inEffect = playbackInEffect(state.pattern);
-  state.settings = settingsStore.save({
-    lastTempo: inEffect.tempo,
-    lastSwingAmount: inEffect.swingAmount,
-    lastSwingFeel: inEffect.swingFeel,
-  });
+  state.settings = settingsStore.save({ lastTempo: inEffect.tempo });
   state.isOwned = owned;
   state.transportPosition = null;
   state.workbenchTab = null;
@@ -835,8 +812,7 @@ const handlers = {
       overlayStore.setSwingAmount(state.pattern.id, amount);
       render();
     }
-    // Carried to the next Pattern that has no swing of its own (AC-4.4.17).
-    state.settings = settingsStore.save({ lastSwingAmount: amount });
+    // Never carried to the next Pattern (AC-4.4.17): swing is this Pattern's.
     restartTransport();
   },
 
@@ -849,7 +825,6 @@ const handlers = {
       overlayStore.setSwingFeel(state.pattern.id, feel);
       render();
     }
-    state.settings = settingsStore.save({ lastSwingFeel: feel });
     restartTransport();
   },
 
