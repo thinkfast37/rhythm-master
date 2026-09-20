@@ -437,15 +437,19 @@ test('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so t
 
 // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in three groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; drones: Drone above, Drone below, Chord root drone; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern", async ({ page }) => {
+test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in four groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; fingerpicking: Travis picking, Travis picking with the treble descending, Alternating bass with a treble pair, Backward roll, Inside out, Outside in, Six-string sweep, Six-string sweep up and back; drones: Drone above, Drone below, Chord root drone; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern", async ({ page }) => {
   await harmonicBlank(page); // owned Pattern p_test
   expect(await page.locator('.arpeggio-picker > option').allTextContents()).toEqual(['None (as stamped)']);
   expect(await page.locator('.arpeggio-picker optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual([
-    'Chord tones', 'Drones', 'Scale walks',
+    'Chord tones', 'Fingerpicking', 'Drones', 'Scale walks',
   ]);
   expect(await page.locator('.arpeggio-picker optgroup[label="Chord tones"] option').allTextContents()).toEqual([
     'Ascending', 'Descending', 'Up and down', 'Up and down, repeating the turn', 'Alberti', 'Root only', 'Root and fifth',
     'Up to the octave', 'Down from the octave', 'Up over and down',
+  ]);
+  expect(await page.locator('.arpeggio-picker optgroup[label="Fingerpicking"] option').allTextContents()).toEqual([
+    'Travis picking', 'Travis picking, treble descending', 'Alternating bass, treble pair', 'Backward roll', 'Inside out', 'Outside in',
+    'Six-string sweep', 'Six-string sweep, up and back',
   ]);
   expect(await page.locator('.arpeggio-picker optgroup[label="Drones"] option').allTextContents()).toEqual([
     'Drone above (tonic)', 'Drone below (tonic)', 'Chord root drone',
