@@ -364,6 +364,11 @@ const ROOT_UP = { drone: 'root', octave: 1 };
 const tones = (roles) => roles.map((r) => T(r));
 const interleave = (roles, between) => roles.flatMap((r) => [T(r), between]);
 const upDown = (roles) => (roles.length < 3 ? roles : [...roles, ...roles.slice(1, -1).reverse()]);
+/**
+ * A fingerpicking shape (AC-2.6.6/13): `[tone, octave]` pairs, the thumb's bass
+ * at the Slot's octave and the fingers' treble an octave up.
+ */
+const picking = (shape) => () => shape.map(([t, o]) => T(t, o));
 
 /** The scales a walk can take (AC-2.6.6/11); `pattern` walks the Pattern's own. */
 export const WALK_SCALES = [
@@ -390,7 +395,7 @@ const walkUpDown = (kind) => (ctx) => {
 };
 
 /**
- * The arpeggios a Pattern can follow (AC-2.6.6/1), in three groups. Absent on
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in four groups. Absent on
  * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`.
  */
 export const ARPEGGIOS = [
@@ -414,6 +419,14 @@ export const ARPEGGIOS = [
     group: 'Chord tones',
     steps: ({ roles }) => [...tones(roles), T(1, 1), ...tones([...roles].reverse().slice(0, -1))],
   },
+  { id: 'travis', label: 'Travis picking', group: 'Fingerpicking', steps: picking([[1], [3, 1], [5], [1, 1]]) },
+  { id: 'travis-down', label: 'Travis picking, treble descending', group: 'Fingerpicking', steps: picking([[1], [1, 1], [5], [3, 1]]) },
+  { id: 'bass-treble-pair', label: 'Alternating bass, treble pair', group: 'Fingerpicking', steps: picking([[1], [3, 1], [5, 1], [5], [3, 1], [5, 1]]) },
+  { id: 'backward-roll', label: 'Backward roll', group: 'Fingerpicking', steps: picking([[1], [1, 1], [5], [3]]) },
+  { id: 'inside-out', label: 'Inside out', group: 'Fingerpicking', steps: picking([[1], [3], [1, 1], [5]]) },
+  { id: 'outside-in', label: 'Outside in', group: 'Fingerpicking', steps: picking([[1], [1, 1], [3], [5]]) },
+  { id: 'sweep', label: 'Six-string sweep', group: 'Fingerpicking', steps: picking([[1], [5], [1, 1], [3, 1], [5, 1], [1, 2]]) },
+  { id: 'sweep-back', label: 'Six-string sweep, up and back', group: 'Fingerpicking', steps: picking([[1], [5], [1, 1], [3, 1], [5, 1], [3, 1], [1, 1], [5]]) },
   { id: 'drone-above', label: 'Drone above (tonic)', group: 'Drones', steps: ({ roles }) => interleave(roles, DRONE_UP) },
   { id: 'drone-below', label: 'Drone below (tonic)', group: 'Drones', steps: ({ roles }) => interleave(roles, DRONE_DOWN) },
   { id: 'root-drone', label: 'Chord root drone', group: 'Drones', steps: ({ roles }) => interleave(roles, ROOT_UP) },

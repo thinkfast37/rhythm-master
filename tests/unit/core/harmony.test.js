@@ -15,6 +15,7 @@ import {
   soundingPitch,
   dealKey,
   ARPEGGIOS,
+  arpeggioSequence,
   stepLabel,
   chordAt,
   cyclePasses,
@@ -400,6 +401,7 @@ describe('core/harmony', () => {
     expect(stepLabel({ tone: 3 })).toBe('3');
     expect(ARPEGGIOS.map((a) => a.id)).toEqual([
       'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave', 'up-over-down',
+      'travis', 'travis-down', 'bass-treble-pair', 'backward-roll', 'inside-out', 'outside-in', 'sweep', 'sweep-back',
       'drone-above', 'drone-below', 'root-drone',
       'scale-up-major', 'scale-up-minor', 'scale-up-major-pentatonic', 'scale-up-minor-pentatonic', 'scale-up-pattern',
       'scale-up-down-major', 'scale-up-down-minor', 'scale-up-down-major-pentatonic', 'scale-up-down-minor-pentatonic', 'scale-up-down-pattern',
@@ -440,6 +442,32 @@ describe('core/harmony', () => {
     // And every walk bakes back to fixed degrees that sound the same (AC-2.6.1/6).
     const walked = setArpeggio(p, 'scale-up-major');
     expect(notesOf(clearHarmony(walked))).toEqual(notesOf(walked));
+  });
+
+  it("AC-2.6.6/13 — A fingerpicking fill is a guitarist's right-hand pattern written as chord tones, the thumb's bass at the Slot's octave and the fingers' treble an octave up: Travis picking sounds Root 3rd↑ 5th Root↑; Travis picking with the treble descending sounds Root Root↑ 5th 3rd↑; Alternating bass with a treble pair sounds Root 3rd↑ 5th↑ 5th 3rd↑ 5th↑; Backward roll sounds Root Root↑ 5th 3rd; Inside out sounds Root 3rd Root↑ 5th; Outside in sounds Root Root↑ 3rd 5th; Six-string sweep sounds Root 5th Root↑ 3rd↑ 5th↑ Root↑↑; Six-string sweep up and back sounds Root 5th Root↑ 3rd↑ 5th↑ 3rd↑ Root↑ 5th — each over the chord in force, so a sus chord's suspended note takes its 3rd's place and an every-Measure change starts each shape again on the new chord", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats, under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('travis')).toEqual([60, 76, 67, 72, 60, 76, 67, 72, 60, 76, 67, 72]);
+    expect(under('travis-down')).toEqual([60, 72, 67, 76, 60, 72, 67, 76, 60, 72, 67, 76]);
+    expect(under('bass-treble-pair')).toEqual([60, 76, 79, 67, 76, 79, 60, 76, 79, 67, 76, 79]);
+    expect(under('backward-roll')).toEqual([60, 72, 67, 64, 60, 72, 67, 64, 60, 72, 67, 64]);
+    expect(under('inside-out')).toEqual([60, 64, 72, 67, 60, 64, 72, 67, 60, 64, 72, 67]);
+    expect(under('outside-in')).toEqual([60, 72, 64, 67, 60, 72, 64, 67, 60, 72, 64, 67]);
+    expect(under('sweep')).toEqual([60, 67, 72, 76, 79, 84, 60, 67, 72, 76, 79, 84]);
+    expect(under('sweep-back')).toEqual([60, 67, 72, 76, 79, 76, 72, 67, 60, 67, 72, 76]);
+    // The band writes the treble with its octave mark.
+    expect(arpeggioSequence('travis', p).map(stepLabel)).toEqual(['R', '3↑', '5', 'R↑']);
+    expect(arpeggioSequence('sweep', p).map(stepLabel)).toEqual(['R', '5', 'R↑', '3↑', '5↑', 'R↑↑']);
+    // Every shape is Root, 3rd and 5th: over Dm7 the 7th is never dealt.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 5);
+    expect(under('travis', sevenths)).toEqual([62, 77, 69, 74, 62]);
+    // A sus2 chord's suspended note takes the 3rd's place: under Csus2 the treble 3rd is D5.
+    const sus = sounding(setProgression(melodic(), 'Isus2-IVsus2-Vsus4'), 4);
+    expect(under('travis', sus)).toEqual([60, 74, 67, 72]);
+    // An every-Measure change starts each shape again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 4);
+    expect(under('travis', changing)).toEqual([60, 76, 67, 72, 65, 81, 72, 77, 67, 83, 74, 79]);
+    expect(under('backward-roll', changing)).toEqual([60, 72, 67, 64, 65, 77, 72, 69, 67, 79, 74, 71]);
   });
 
   it('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio: the Pitches come back', () => {
@@ -484,17 +512,17 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — The order is the catalogue's, through all three groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — The order is the catalogue's, through all four groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
-    expect(n).toBe(23);
+    expect(n).toBe(31);
     const one = { start: 0, baseLoop: 0, repeats: 1 };
     const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
     expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
     expect(sequence[n]).toBe(ARPEGGIOS[0].id);
     expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
     expect(sequence).not.toContain('none');
-    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Drones', 'Scale walks']);
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Scale walks']);
 
     // A Pattern's own fill is where the cycle starts; none means the first.
     expect(fillIndexOf(p)).toBe(0);
