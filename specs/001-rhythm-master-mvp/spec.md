@@ -1455,6 +1455,7 @@ field survives showing it.)*
   - **Given** the Tag filter "warmup" is active, matching exactly "Bossa Groove," "Samba Break," and "Simple Fill," in that list order
   - **When** the Practicing Musician has "Bossa Groove" loaded and taps Next
   - **Then** "Samba Break" loads — the second item in the filtered list, not the second item in the full unfiltered library
+  - *(Clarified 2026-09-20 with US-14.1 (T328): under a practice goal the list is the filtered list narrowed further by the level and Mode the goal bar shows (AC-14.1.4/6) — still a filtered list, never the full library. Under Any level, and under every other goal, it is exactly the list this criterion describes.)*
 
 - **AC-5.5.2** — Prev/Next doesn't wrap at list boundaries
   - **Given** the same filtered list as AC-5.5.1, with "Simple Fill" (the last item) currently loaded
@@ -3427,12 +3428,15 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-14.1.4** — A rhythm at your level
   - **Given** one of the four practice goals
   - **When** the Practicing Musician sets a level and asks for a rhythm
-  - **Then** the pinned bar offers Beginner, Intermediate and Advanced, Give me one loads a shipped Pattern carrying that level's Tag, and Pick from the library opens the library filtered to it
+  - **Then** the pinned bar offers Beginner, Intermediate, Advanced and Any level; Give me one — the dice — loads a shipped Pattern carrying that level's Tag, or any at Any level; Pick from the library opens the library filtered to it; and Prev and Next step through the same rhythms
   - **Cases**:
-    - **AC-14.1.4/1** — The pinned bar offers the three levels under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference
+    - **AC-14.1.4/1** — The pinned bar offers the three levels and Any level under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference
     - **AC-14.1.4/2** — Give me one loads a shipped Pattern carrying the level's Tag other than the one open — Percussive under Vocalise or clap it, Melodic under Play melodies over it — exactly as opening it from the library would
     - **AC-14.1.4/3** — Pick from the library opens the library filtered to the level's Tag, with the Mode Tag added under the two goals that have one, and the filter can be changed or cleared as any other
     - **AC-14.1.4/4** — Give me one draws from the whole level: fed every position in turn it reaches every shipped Pattern at that level and never the one open, and yields nothing when the level has no other
+    - **AC-14.1.4/5** — Under Any level the dice draws from every shipped Pattern in the goal's Mode, whatever its level, and Pick from the library filters to the Mode Tag alone, or to nothing under a goal without one
+    - **AC-14.1.4/6** — Under a practice goal Prev and Next step through the rhythms the dice draws from — the level's Tag and the goal's Mode, within whatever filter the library already has — in the library's order; under Any level, and under the other goals, they step through the library as filtered, as before
+  - *(Revised 2026-09-20 with T328, from the maintainer the same day: "being able to easily cycle through the different rhythms or also being able to randomly pick rhythms, like having a dice … ideally you can choose whether to do it in the level you set … or you could do it across all levels if you want, just to give yourself a chance to see how hard things might be." Give me one wears the dice and keeps its name; Any level joins the level choice; and Prev/Next, already pinned beside it, are the cycling — narrowed to the level under a practice goal rather than doubled, since two Nexts that disagree about what is next would be worse than one that follows the level set.)*
 
 ---
 
