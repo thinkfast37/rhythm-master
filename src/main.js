@@ -1193,10 +1193,13 @@ const handlers = {
     keepAlive.start();
     state.isPlaying = true;
     state.loop = 0;
-    // Every Play begins the cycle from the same place (AC-2.7.2/6, AC-2.10.2/6),
-    // and the ordinary Play loops the Pattern, never the Section (AC-18.1.3/4).
-    state.fillCycle = { ...state.fillCycle, start: fillIndexOf(state.pattern), baseLoop: 0 };
-    state.progressionCycle = { ...state.progressionCycle, start: progressionIndexOf(state.pattern), baseLoop: 0 };
+    // Play carries each cycle on from the fill and progression held on screen,
+    // with their repeats counted afresh (AC-2.7.2/6, AC-2.10.2/6): `start` is
+    // whatever the last Stop held, or the Pattern's own when the cycle was
+    // turned on since. Only the counting is reset. The ordinary Play loops the
+    // Pattern, never the Section (AC-18.1.3/4).
+    state.fillCycle = { ...state.fillCycle, baseLoop: 0 };
+    state.progressionCycle = { ...state.progressionCycle, baseLoop: 0 };
     state.compose.on = false;
     render();
 
@@ -1640,13 +1643,23 @@ const transport = createTransport({
     // not be recovered — the only two cases that still reset to the top of
     // the Pattern (AC-4.1.5, AC-4.1.6, revised 2026-09-14; a recoverable
     // suspension no longer reaches here at all — see `onSuspend`/`onResume`).
+    // What was sounding when Stop was pressed, read before the pass counter is
+    // cleared: each cycle holds the fill and the progression in force rather
+    // than snapping back to the Pattern's own (AC-2.7.2/6, AC-2.10.2/6, both
+    // reversed 2026-09-20). Stop is the gesture the musician makes to sit with
+    // something they liked, and neither is Pattern data — holding them commits
+    // nothing. The cycle toggle is what returns the Pattern's own.
+    const sounding = state.transportPosition?.loop ?? state.loop;
+    const heldFill = fillIndexAt(sounding) ?? fillIndexOf(state.pattern);
+    const heldProgression = progressionIndexAt(sounding) ?? progressionIndexOf(state.pattern);
     state.isPlaying = false;
     state.transportPosition = null;
     state.loop = 0;
-    // Back to the starting fill and progression (AC-2.7.2/6, AC-2.10.2/6), and
-    // the Pattern's own after a Song (AC-18.1.3/5).
-    state.fillCycle = { ...state.fillCycle, start: fillIndexOf(state.pattern), baseLoop: 0 };
-    state.progressionCycle = { ...state.progressionCycle, start: progressionIndexOf(state.pattern), baseLoop: 0 };
+    // `baseLoop: 0` against a cleared counter means the next Play carries on
+    // from what is held, with its repeats counted afresh. A Song still ends on
+    // the Pattern's own, since its entries are not these cycles (AC-18.1.3/5).
+    state.fillCycle = { ...state.fillCycle, start: heldFill, baseLoop: 0 };
+    state.progressionCycle = { ...state.progressionCycle, start: heldProgression, baseLoop: 0 };
     state.compose.on = false;
     mediaSession.setStopped();
     // Only a stop ends the keep-alive — a recoverable suspension never reaches

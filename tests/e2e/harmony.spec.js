@@ -876,25 +876,39 @@ test('AC-2.7.2/5 — Changing the Repeats count while playing applies without a 
   await page.locator('[data-action="stop"]').click();
 });
 
-test("AC-2.7.2/6 — Stopping returns the fill in force to the starting fill — the Pattern's own, or the first of the catalogue when it has none — so every Play begins the cycle from the same place", async ({ page }) => {
+test("AC-2.7.2/6 — Stopping holds the fill in force where it is: every view keeps showing it, the next Play carries the cycle on from it with its repeats counted afresh, and turning cycle mode off is what returns the Pattern's own fill", async ({ page }) => {
+  const { ARPEGGIOS } = await import('../../src/core/harmony.js');
   await cyclingBlank(page);
   await page.locator('.fill-cycle-repeats').fill('1');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
   await page.locator('.fill-cycle').click();
   await page.locator('[data-action="play"]').click();
-  expect(await untilFill(page, 'down')).toBe(true);
+  expect(await untilFill(page, ARPEGGIOS[1].id)).toBe(true);
   await page.locator('[data-action="stop"]').click();
-  expect(await fillInForce(page)).toBe('up');
-  await expect(page.locator('.arpeggio-picker')).toHaveValue('up');
-  expect(await cycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
 
-  // With a fill of its own, the Pattern's own fill is the starting place.
+  // Held, not snapped back to the Pattern's own: state and picker both stay on it.
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[1].id);
+  await expect(page.locator('.arpeggio-picker')).toHaveValue(ARPEGGIOS[1].id);
+  expect(await cycleState(page)).toEqual({ on: true, start: 1, baseLoop: 0 });
+
+  // The next Play carries the cycle on from there, counting its repeats afresh.
+  await page.locator('[data-action="play"]').click();
+  expect(await untilFill(page, ARPEGGIOS[2].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[2].id);
+
+  // Turning cycle mode off is what returns the Pattern's own fill — here None.
   await page.locator('.fill-cycle').click();
+  expect(await fillInForce(page)).toBeNull();
+
+  // And with a fill of its own, that fill is what comes back.
   await page.locator('.arpeggio-picker').selectOption('alberti');
   await page.locator('.fill-cycle').click();
   await page.locator('[data-action="play"]').click();
   expect(await untilFill(page, 'root')).toBe(true);
   await page.locator('[data-action="stop"]').click();
+  expect(await fillInForce(page)).toBe('root');
+  await page.locator('.fill-cycle').click();
   expect(await fillInForce(page)).toBe('alberti');
 });
 
@@ -1184,17 +1198,36 @@ test('AC-2.10.2/5 — Changing the shared Repeats count while playing applies wi
   await page.locator('[data-action="stop"]').click();
 });
 
-test("AC-2.10.2/6 — Stopping returns the progression in force to the starting progression — the Pattern's own, or the first of the catalogue when its chords match none — so every Play begins the cycle from the same place", async ({ page }) => {
+test("AC-2.10.2/6 — Stopping holds the progression in force where it is: every view keeps showing it, the next Play carries the cycle on from it with its repeats counted afresh, and turning progression cycling off is what returns the Pattern's own progression", async ({ page }) => {
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
   await cyclingBlank(page);
   await page.locator('.fill-cycle-repeats').fill('1');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
   await page.locator('.progression-cycle').click();
+  const own = await chordNames(page);
   await page.locator('[data-action="play"]').click();
-  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
   expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
   await page.locator('[data-action="stop"]').click();
+
+  // Held, not snapped back: state, picker and chord strip all stay on it.
+  expect(await progressionInForce(page)).toBe(PROGRESSIONS[1].id);
+  await expect(page.locator('.progression-picker')).toHaveValue(PROGRESSIONS[1].id);
+  expect(await chordNames(page)).not.toEqual(own);
+  expect(await progressionCycleState(page)).toEqual({ on: true, start: 1, baseLoop: 0 });
+
+  // The next Play carries the cycle on from there, counting its repeats afresh.
+  await page.locator('[data-action="play"]').click();
+  expect(await untilProgression(page, PROGRESSIONS[2].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await progressionInForce(page)).toBe(PROGRESSIONS[2].id);
+
+  // Nothing was written into the Pattern by any of it (AC-2.10.1/4).
+  expect(await page.evaluate(() => window.__rm.getState().pattern.harmony.chords[0].degree)).toBe('1');
+
+  // Turning progression cycling off is what returns the Pattern's own.
+  await page.locator('.progression-cycle').click();
   expect(await progressionInForce(page)).toBe('I-IV-V');
-  expect(await progressionCycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+  expect(await chordNames(page)).toEqual(own);
 });
 
 test("AC-2.10.2/7 — Choosing a progression in the picker while cycling is the ordinary edit of the Pattern's progression, and the cycle begins again from that choice with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches and turns progression cycling off", async ({ page }) => {
