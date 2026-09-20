@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 658 across 45 User Stories
+**Criteria**: 674 across 46 User Stories
 
-**Coverage**: 469 of 658 criteria proven (71.3%)
+**Coverage**: 485 of 674 criteria proven (72.0%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 469 | 71.3% |
-| 🔴 Gap — HIGH | 70 | 10.6% |
-| 🟠 Gap — MEDIUM | 41 | 6.2% |
-| 🟡 Gap — LOW | 78 | 11.9% |
+| 🟢 Proven | 485 | 72.0% |
+| 🔴 Gap — HIGH | 70 | 10.4% |
+| 🟠 Gap — MEDIUM | 41 | 6.1% |
+| 🟡 Gap — LOW | 78 | 11.6% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -103,6 +103,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-18.1 | 26 | **26** | · | · | · | · | · |
 | 🟢 US-2.9 | 16 | **16** | · | · | · | · | · |
 | 🟢 US-2.10 | 14 | **14** | · | · | · | · | · |
+| 🟢 US-14.1 | 16 | **16** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -447,7 +448,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-13.1 | `AC-13.1.4/1` | A Pattern submitted and unedited since is excluded from a later bulk submission | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.4/2` | A Pattern edited since it was submitted is included again | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.4/3` | A Pattern never submitted is included | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
-| US-13.1 | `AC-13.1.5` | Submission-tracking is Local Metadata, never part of the export payload | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `storage.test.js`, `operations.spec.js` | 🟢 OK |
+| US-13.1 | `AC-13.1.5` 🖵 | Submission-tracking is Local Metadata, never part of the export payload | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `storage.test.js`, `operations.spec.js` | 🟢 OK |
 | US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297 (18/18 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298 (16/16 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297 (18/18 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298 (16/16 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297 (18/18 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298 (16/16 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -766,3 +767,19 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.10 | `AC-2.10.2/7` 🖵 | Choosing a progression in the picker while cycling is the ordinary edit of the Pattern's progression, and the cycle begins again from that choice with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches and turns progression cycling off | P-048 | T310, T323 (2/2 done) | T311, T324 (2/2 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.10 | `AC-2.10.3/1` 🖵 | While progression cycling is on the score's chord chips, chord names and numerals are the progression in force's; Print / PDF prints the same score | P-048 | T310, T323 (2/2 done) | T311, T324 (2/2 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.10 | `AC-2.10.3/2` 🖵 | MIDI export carries the Pattern's own progression, never the one in force while cycling: the file is the Pattern's data, and cycling is practice | P-048 | T310, T323 (2/2 done) | T311, T324 (2/2 done) | `harmony.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.1/1` 🖵 | On a first launch the goals screen is shown in place of the main panel and the library, and choosing a goal opens the main panel | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.1/2` 🖵 | The screen names every goal with a one-line description: the four practice goals first, then the three compose goals, then Lab set apart | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.1/3` 🖵 | A Goals control in the pinned bar returns to the goals screen from any goal, Lab included, with the current goal marked | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.1/4` 🖵 | The app opens on the goals screen on every launch unless the remembered goal is Lab, and the remembered goal is marked as current | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.2/1` 🖵 | The tab bar offers exactly the groups the chosen goal names, in the main panel's fixed order, and the group on screen is the first of them that applies to the Pattern | P-049 | T326 (1/1 done) | T327 (1/1 done) | `responsive.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.2/2` 🖵 | Play a rhythm and Vocalise or clap it offer Practice alone; Feel the groove offers Practice and Melody; Play melodies over it offers Melody and Practice | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.2/3` 🖵 | Compose a rhythm offers Rhythm and Practice with Pattern actions; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.2/4` 🖵 | Pattern actions and the family members are absent under the four practice goals | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.2/5` 🖵 | The chosen goal is remembered as an app preference, applied on the next launch, and changes nothing on any Pattern | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.3/1` 🖵 | Lab offers every workbench group, Pattern actions and the family members, exactly as the tabbed workbench and the main panel's fixed order already describe | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.3/2` 🖵 | Once Lab is chosen the app opens straight into it on every later launch, until another goal is chosen from the goals screen | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.3/3` 🖵 | A Help toggle in the pinned bar, present in Lab alone, shows a one-line description of each control in the group on screen and in the pinned bar, hides them again, and is remembered | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.4/1` | The pinned bar offers the three levels under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.4/2` | Give me one loads a shipped Pattern carrying the level's Tag other than the one open — Percussive under Vocalise or clap it, Melodic under Play melodies over it — exactly as opening it from the library would | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.4/3` | Pick from the library opens the library filtered to the level's Tag, with the Mode Tag added under the two goals that have one, and the filter can be changed or cleared as any other | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
+| US-14.1 | `AC-14.1.4/4` | Give me one draws from the whole level: fed every position in turn it reaches every shipped Pattern at that level and never the one open, and yields nothing when the level has no other | P-049 | T326 (1/1 done) | T327 (1/1 done) | `goals.test.js` | 🟢 OK |

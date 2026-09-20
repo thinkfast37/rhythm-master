@@ -38,13 +38,15 @@ in the evening — but separating them keeps each story honest about whose probl
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
 | **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-3.1, US-4.4, US-7.1–7.5, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
+| **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
 | **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
-Two personas from earlier drafts are deliberately absent: **The New User**, who belonged to the
-deferred tutorial epic, and any persona for Pattern layering, which was cut (US-9.x does not
-exist).
+One persona from earlier drafts is deliberately absent: any persona for Pattern layering, which
+was cut (US-9.x does not exist). *(Revised 2026-09-20: **The New User**, dropped with the deferred
+tutorial epic, returns for US-14.1 — the goals screen is what that epic became, and it is written
+from this view.)*
 
 ---
 
@@ -2114,7 +2116,7 @@ field survives showing it.)*
 
 ---
 
-*(Epic 14 — Tutorial System — is deferred, to be specified later. The gap in epic numbering is intentional — it's not reused.)*
+*(Epic 14 was reserved for a Tutorial System and left unspecified. It now holds US-14.1, the goals screen, specified 2026-09-20 as User Story 46 below: the same intent — a first day that does not need the whole tool — met by showing less rather than by explaining more. A step-by-step walkthrough is still out of scope.)*
 
 ---
 
@@ -2155,6 +2157,7 @@ field survives showing it.)*
   - **Given** a 390px-wide (mobile) viewport
   - **When** the app loads
   - **Then** the drawer opens automatically
+  - *(Clarified 2026-09-20 with US-14.1 (T326): a load that lands on the goals screen (AC-14.1.1) still opens the drawer, behind the screen; choosing a goal then shows the main panel with the drawer closed, as loading a Pattern does (AC-15.1.6), since the panel is what was asked for. Pick from the library (AC-14.1.4/3) and the toggle are the ways back in.)*
   - **And**, when the Practicing Musician reloads the page again later, it auto-opens again — this happens on every load at mobile width, not only the first-ever visit
 
 - **AC-15.1.6** — The library collapses whenever a Pattern is loaded, at every width
@@ -2178,6 +2181,7 @@ field survives showing it.)*
     - **AC-15.1.7/3** — A Melodic Pattern opens on the Melody tab and a Percussive one on the Rhythm tab, and switching Mode selects the tab for the new Mode
     - **AC-15.1.7/4** — Tapping a tab shows that group and hides the others, and the Melody and Compose tabs are absent on a Percussive Pattern, Compose also on a Melodic one without a progression
     - **AC-15.1.7/5** — Pattern actions is a collapsed accordion on mobile and an expanded section on desktop
+  - *(Revised 2026-09-20 with US-14.1 (T326): a chosen goal offers only the groups it is for, so a tab can also be absent because the goal has no use for it (AC-14.1.2). This criterion describes Lab, where every group is offered; the reset rule — Melody or Rhythm on load, whichever is first offered — reads "the first offered group that applies to the Pattern" under any goal.)*
   - *(Revised 2026-09-13 with T290, reversing the second And-clause and Case /2 of the same day's rewrite below. Measured on the built app: with the groups stacked open above mobile, an eight-bar Melodic Pattern with a progression made the main panel 2562px tall on a 1920×1080 TV and 2602px on a 1180×820 tablet — 2.4 and 3.2 screens — of which about 1280px was the four groups stacked under the grid. The maintainer, 2026-09-13: "I don't want scrolling to become the norm … having tabs for the control sections even on tablet is totally fine." One tab is on screen at every width; a wide panel puts it beside the grid (AC-15.1.18), so on a TV nothing in the workbench is ever scrolled to. The rewrite's own reasoning — "above mobile there is room to stack" — was true of the four-bar Pattern it measured and false of an eight-bar one.)*
   - *(Revised 2026-09-13 with US-2.8 and US-18.1 (T282, T284): a fourth group, Compose, after Practice; fill cycling moves from Practice to Melody (AC-2.7.1). Three groups became four because sequencing kept fills into a Section is a different job from auditioning them, and a mode inside Melody would be the hidden state this criterion's rewrite the same day was removing.)*
   - *(Rewritten 2026-09-13 with T272. The previous wording collapsed "playback settings" and "edit controls" to accordions. The 2026-09-13 usability review measured the panel: on a four-bar Melodic Pattern the always-open harmony block alone was 428px on a phone, and Play sat 882px down an 800px screen. Tabs give the grid plus one palette one phone screen, with the transport pinned above (AC-15.1.17). Above mobile there is room to stack, and stacking keeps every control one glance away, so nothing there is tabbed.)*
@@ -2188,6 +2192,7 @@ field survives showing it.)*
   - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle, Play/Stop and the exact tempo entry, and quick navigation — AC-5.5.3, AC-15.1.17): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - **And**, on a wide panel (AC-15.1.18), the same list is split across two panes that sit side by side: the Pattern header, chord strip and grid in the left pane; the tab bar, the groups, Pattern actions and family members in the right — each pane keeping the order above, so no section ever swaps places with another
+  - *(Revised 2026-09-20 with US-14.1 (T326): the pinned bar carries a second row, the goal bar — the Goals control, the goal's name and, under the practice goals, the level and Give me one and Pick from the library; under Lab, the Help toggle (AC-14.1.1/3, AC-14.1.3/3, AC-14.1.4/1). It sits with the pinned bar above the panes, so the section order this criterion fixes is untouched; and under a goal the groups, Pattern actions and family members it has no use for are absent rather than empty, in exactly the way the Melody group already is in Percussive (AC-14.1.2).)*
   - *(Revised 2026-09-13 with T290: the tab bar is present at every width (AC-15.1.7), and on a wide panel the list is laid out as two panes rather than one column (AC-15.1.18). The order itself is untouched; what changed is that a wide panel reads it as two columns rather than one.)*
   - *(Revised 2026-09-13 with US-2.8 and US-18.1 (T282, T284): fill cycling returns to the Melody group with Keep beside it, and a Compose group follows Practice. See AC-2.7.1 and AC-15.1.7 for the reasoning.)*
   - *(Rewritten 2026-09-13 with T272, superseding the ordered list the revisions below describe; they are kept as the record of how the previous order was reached. The 2026-09-13 usability review found the panel organised by what kind of control a thing was — a "Playback settings" accordion, an "Edit" accordion holding two controls, an "Export & actions" accordion holding three structure edits beside Delete — rather than by what the musician is doing. The groups are now named for the job: Melody, Rhythm, Practice. Play and the tempo entry leave the ordered list for the pinned bar, where Prev/Next already went for the same reason (AC-5.5.3): they are reached on every Pattern, and on a four-bar Pattern Play sat below the fold of a phone. Melody precedes Rhythm because, when it is present at all, it is what the musician switched into Melodic to reach; Rhythm precedes Practice because the palettes are aimed at while the grid is edited and the practice settings are set once per run.)*
@@ -2306,6 +2311,7 @@ field survives showing it.)*
     - **AC-15.1.17/2** — The tempo entry is on screen with the main panel scrolled to its foot, and a tempo typed there applies
     - **AC-15.1.17/3** — Play and the tempo entry stay reachable without scrolling at mobile width
     - **AC-15.1.17/4** — The panel holds exactly one Play/Stop control
+  - *(Revised 2026-09-20 with US-14.1 (T326): the bar gains a second row for the goal controls (AC-15.1.8). Play and the tempo entry keep the first row, so nothing here moves; the second row wraps under it at every width.)*
   - *(Added 2026-09-13 with T272. Measured in the usability review of the same day: on a four-bar Melodic Pattern Play sat 780px down a 900px desktop window and 882px down an 800px phone, while the bar above it pinned only Library and Prev/Next. Play is the one control every session uses, and tempo the one most adjusted mid-practice; the slider and the preset row stay in the Practice group, where there is room for them, and the entry field is the pinned door to the same value.)*
 
 - **AC-15.1.18** — On a wide panel the grid and the workbench sit side by side, each scrolling on its own
@@ -3376,6 +3382,58 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.10.3/1** — While progression cycling is on the score's chord chips, chord names and numerals are the progression in force's; Print / PDF prints the same score
     - **AC-2.10.3/2** — MIDI export carries the Pattern's own progression, never the one in force while cycling: the file is the Pattern's data, and cycling is practice
 
+### User Story 46 - Choose a goal
+
+*Traceability: `US-14.1` — Choose a goal*
+
+**As** the New User, **I want** to say what I came to do — play a rhythm, clap it, put a melody over it, compose one — and be shown only the controls that job needs, with a rhythm at my level handed to me when I ask, **so that** I can practise on the first day without learning the whole cockpit first; **and as** the Composer who built the cockpit, **I want** a Lab that keeps every control on screen and is remembered, **so that** the goals screen costs me nothing.
+
+*(Added 2026-09-20 at the maintainer's request. Their own words: "right now the Rhythm Master is really designed for a power user who really knows a lot of music theory … unless you kind of know how the tool works, it can be pretty confusing"; "it would be useful to have the tool be more task driven … some controls only make sense together, even though everything is kind of shown at once"; "there's so many controls in the cockpit of an airplane. And for me, that's fine because I designed the whole thing, but for a new user they just don't know what the heck to do." Decisions taken with the maintainer the same day: the cockpit stays, as one goal among the others, named **Lab** ("the cockpit should be one of the options, which is like experimenting"), and once chosen it is remembered and the app opens straight into it ("once you're in cockpit mode, it should just remember … you probably want to jump around and do a bunch of different things"); there is always a way back to the goals screen ("there needs to be a way to get back to the original goal list"); the practice goals hand out a rhythm by level or let the musician pick ("it just gives you one based on what level you're at or you actually pick from the library"), the levels being the library's own `Beginner`, `Intermediate` and `Advanced` Tags, which T325 put on every shipped Pattern for exactly this. The seven goals are the Personas table made visible: the practice goals are the Practicing Musician's stories, the compose goals the Composer's. One rule, not a matrix: a goal decides which workbench groups are offered, and never hides a control inside a group — beginner, intermediate and advanced are levels of rhythm, not of interface. The New User persona, dropped from an earlier draft with the tutorial epic, returns for this story; a step-by-step walkthrough stays out of scope (Assumptions). Help content lives in Lab as a toggle, since Lab is where every control is and so where a description of each is worth having.)*
+
+**Independent Test**: On a first launch, assert the goals screen is shown in place of the main panel; choose Play a rhythm and assert the tab bar offers Practice alone, that Beginner is the level, that Give me one loads a shipped Pattern tagged Beginner other than the one open, and that Pick from the library opens the library filtered to Beginner. Reload and assert the goals screen returns with Play a rhythm marked. Choose Lab and assert every group, Pattern actions and the family members are offered as AC-15.1.7 and AC-15.1.8 describe; reload and assert the app opens straight into Lab; press Goals and assert the screen returns with Lab marked.
+
+**Acceptance Scenarios**:
+
+- **AC-14.1.1** — The goals screen
+  - **Given** the app is launched
+  - **When** no goal has been chosen, or the remembered goal is not Lab
+  - **Then** a goals screen is shown in place of the main panel and the library, naming each goal with a line on what it is for, and choosing one opens the main panel
+  - **Cases**:
+    - **AC-14.1.1/1** — On a first launch the goals screen is shown in place of the main panel and the library, and choosing a goal opens the main panel
+    - **AC-14.1.1/2** — The screen names every goal with a one-line description: the four practice goals first, then the three compose goals, then Lab set apart
+    - **AC-14.1.1/3** — A Goals control in the pinned bar returns to the goals screen from any goal, Lab included, with the current goal marked
+    - **AC-14.1.1/4** — The app opens on the goals screen on every launch unless the remembered goal is Lab, and the remembered goal is marked as current
+
+- **AC-14.1.2** — A goal offers its own controls
+  - **Given** a goal is chosen
+  - **When** the main panel is shown
+  - **Then** the tab bar offers only the workbench groups that goal is for, the rest absent, and Pattern actions and the family members likewise absent where the goal has no use for them
+  - **Cases**:
+    - **AC-14.1.2/1** — The tab bar offers exactly the groups the chosen goal names, in the main panel's fixed order, and the group on screen is the first of them that applies to the Pattern
+    - **AC-14.1.2/2** — Play a rhythm and Vocalise or clap it offer Practice alone; Feel the groove offers Practice and Melody; Play melodies over it offers Melody and Practice
+    - **AC-14.1.2/3** — Compose a rhythm offers Rhythm and Practice with Pattern actions; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members
+    - **AC-14.1.2/4** — Pattern actions and the family members are absent under the four practice goals
+    - **AC-14.1.2/5** — The chosen goal is remembered as an app preference, applied on the next launch, and changes nothing on any Pattern
+
+- **AC-14.1.3** — Lab
+  - **Given** Lab is chosen
+  - **When** the main panel is shown
+  - **Then** every workbench group, Pattern actions and the family members are offered exactly as before goals existed, the app opens straight into Lab on every later launch, and a Help toggle describes the controls
+  - **Cases**:
+    - **AC-14.1.3/1** — Lab offers every workbench group, Pattern actions and the family members, exactly as the tabbed workbench and the main panel's fixed order already describe
+    - **AC-14.1.3/2** — Once Lab is chosen the app opens straight into it on every later launch, until another goal is chosen from the goals screen
+    - **AC-14.1.3/3** — A Help toggle in the pinned bar, present in Lab alone, shows a one-line description of each control in the group on screen and in the pinned bar, hides them again, and is remembered
+
+- **AC-14.1.4** — A rhythm at your level
+  - **Given** one of the four practice goals
+  - **When** the Practicing Musician sets a level and asks for a rhythm
+  - **Then** the pinned bar offers Beginner, Intermediate and Advanced, Give me one loads a shipped Pattern carrying that level's Tag, and Pick from the library opens the library filtered to it
+  - **Cases**:
+    - **AC-14.1.4/1** — The pinned bar offers the three levels under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference
+    - **AC-14.1.4/2** — Give me one loads a shipped Pattern carrying the level's Tag other than the one open — Percussive under Vocalise or clap it, Melodic under Play melodies over it — exactly as opening it from the library would
+    - **AC-14.1.4/3** — Pick from the library opens the library filtered to the level's Tag, with the Mode Tag added under the two goals that have one, and the filter can be changed or cleared as any other
+    - **AC-14.1.4/4** — Give me one draws from the whole level: fed every position in turn it reaches every shipped Pattern at that level and never the one open, and yields nothing when the level has no other
+
 ---
 
 ## Requirements *(mandatory)*
@@ -3510,6 +3568,6 @@ specified in the Acceptance Scenarios above.
   Section whose entries play over different Patterns (US-18.1 stores which Pattern each Section plays
   over so that this can come later without changing what a Song is); a guided tutorial system;
   layering two Patterns by merging their accents; and any form of export/import or cloud sync beyond
-  MIDI. *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
+  MIDI. *(Revised 2026-09-20: "a guided tutorial system" stays excluded as a walkthrough; what Epic 14 delivers instead is US-14.1, a goals screen that shows each job its own controls.)* *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
   single-layer Song of Sections over one Pattern, which is the maintainer's songwriting workflow, and
   keeps the polyphonic case out.)*

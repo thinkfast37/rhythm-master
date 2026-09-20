@@ -86,6 +86,9 @@ import {
   scrollMeasureIntoView,
 } from './ui/responsive.js';
 import { renderComposeGroup } from './ui/compose.js';
+import { renderGoals, renderGoalBar } from './ui/goals.js';
+import { renderHelp } from './ui/help.js';
+import { LAB, surfaceFor, pickAtLevel, libraryTagsFor, LEVELS } from './core/goals.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
@@ -185,6 +188,12 @@ const state = {
    */
   workbenchTab: null,
   soundStatus: melodic.getStatus(),
+  /**
+   * Whether the goals screen stands in for the main panel (US-14.1). Open on
+   * launch unless the remembered goal is Lab (AC-14.1.1/4), and again from the
+   * Goals control (AC-14.1.1/3). Not stored: what is remembered is the goal.
+   */
+  goalsOpen: false,
   /** Library view state: search text, Tag and rating filters, and what is open. */
   view: { query: '', tags: [], minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
@@ -634,6 +643,9 @@ export function setTransportPosition(position) {
 
 // --- handlers ---------------------------------------------------------------
 
+/** What `mount` built, once it has: the handlers that reach the shell go through it. */
+let ui = null;
+
 const handlers = {
   async onAddMeasure() {
     if (!(await guardShipped())) return;
@@ -649,6 +661,67 @@ const handlers = {
     if (state.pattern.measures.length <= 1) return;
     if (!(await guardShipped())) return;
     apply(removeMeasure, state.pattern.measures.length - 1);
+  },
+
+  // --- goals (US-14.1) ---
+
+  /**
+   * Choosing a goal remembers it and opens the main panel on it (AC-14.1.1/1,
+   * AC-14.1.2/5). The tab resets so the panel opens on the first group the
+   * goal offers that applies (AC-14.1.2/1). Nothing on any Pattern changes.
+   */
+  onGoal(id) {
+    state.settings = settingsStore.save({ goal: id });
+    state.goalsOpen = false;
+    state.workbenchTab = null;
+    // The main panel is what was asked for, so the drawer that AC-15.1.5
+    // opened on load gets out of its way — as loading a Pattern does
+    // (AC-15.1.6). Pick from the library is the way back in.
+    ui?.hideLibrary();
+    render();
+  },
+
+  /** Back to the goals screen, from any goal, Lab included (AC-14.1.1/3). */
+  onShowGoals() {
+    state.goalsOpen = true;
+    render();
+  },
+
+  /** The level Give me one draws from, remembered (AC-14.1.4/1). */
+  onLevel(level) {
+    if (!LEVELS.includes(level)) throw new Error(`Unknown level: ${level}`);
+    state.settings = settingsStore.save({ level });
+    render();
+  },
+
+  /**
+   * A shipped Pattern at the level, in the goal's Mode, never the one open
+   * (AC-14.1.4/2). The draw is the one impure input the pure picker takes;
+   * opening goes through the library's own path, overlays and all.
+   */
+  onGiveMeOne() {
+    const { soundMode } = surfaceFor(state.settings.goal);
+    const pick = pickAtLevel(seedStore.loadAll(), {
+      level: state.settings.level,
+      soundMode,
+      excludeId: state.pattern.id,
+      random: Math.random(),
+    });
+    if (pick) handlers.onOpen(pick.id, false);
+    return pick;
+  },
+
+  /** The library, filtered to the level's Tag and the goal's Mode Tag (AC-14.1.4/3). */
+  onPickFromLibrary() {
+    state.view = { ...state.view, tags: libraryTagsFor(state.settings.goal, state.settings.level) };
+    ui?.showLibrary();
+    render();
+  },
+
+  /** Lab's Help, remembered (AC-14.1.3/3). */
+  onHelp(on) {
+    state.settings = settingsStore.save({ labHelp: Boolean(on) });
+    render();
   },
 
   /** The workbench tab in force on a phone (AC-15.1.7/4). */
@@ -1855,7 +1928,18 @@ export function mount(root) {
 
   const topBarEl = document.createElement('div');
   topBarEl.className = 'main-top-bar';
-  topBarEl.append(libraryToggle, playEl, navEl);
+  // The goal bar is the pinned bar's second row (AC-15.1.8, AC-15.1.17): the
+  // way back to the goals screen and the goal's own controls, reached from
+  // any scroll offset like the transport beside them.
+  const goalBarEl = document.createElement('div');
+  // Lab's Help for the pinned bar itself, under the goal bar (AC-14.1.3/3).
+  const barHelpEl = document.createElement('div');
+  barHelpEl.className = 'bar-help';
+  topBarEl.append(libraryToggle, playEl, navEl, goalBarEl, barHelpEl);
+
+  // The goals screen (AC-14.1.1): stands in for the library and the main
+  // panel together while open, so it is a child of the shell beside them.
+  const goalsEl = document.createElement('section');
 
   /*
    * Two panes under the pinned bar (AC-15.1.18): the Pattern — header, chord
@@ -1871,11 +1955,16 @@ export function mount(root) {
   workbenchPaneEl.className = 'pane pane-workbench';
   workbenchPaneEl.append(tabsEl, melodyEl, rhythmEl, practiceEl, composeEl, actionsEl, familyEl);
   main.append(topBarEl, patternPaneEl, workbenchPaneEl);
-  shell.append(sidebar, scrim, main);
+  shell.append(goalsEl, sidebar, scrim, main);
   root.appendChild(shell);
   // In the tree now, so the panel has a width to be laid out by (AC-15.1.18).
   applyPanelLayout(main);
   observePanelWidth(main);
+  // The pinned bar's height, for the autoscroll to clear (AC-15.1.11): two
+  // rows with the goal bar, and its wrapping depends on the width.
+  const measurePinned = () => main.style.setProperty('--pinned-height', `${topBarEl.offsetHeight}px`);
+  measurePinned();
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(measurePinned).observe(topBarEl);
 
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
@@ -2096,6 +2185,18 @@ export function mount(root) {
       ? { autoTags: entry.autoTags, lockedTags: entry.lockedTags, userTags: entry.userTags }
       : { autoTags: automaticTags(pattern, s.isOwned), lockedTags: [], userTags: pattern.tags ?? [] };
 
+    // The goals screen in place of everything else while it is open
+    // (AC-14.1.1/1); the goal bar and its Help otherwise.
+    shell.dataset.goals = s.goalsOpen ? 'open' : 'closed';
+    renderGoals(goalsEl, s, handlers);
+    renderGoalBar(goalBarEl, s, handlers);
+    const barHelp = renderHelp('bar', s);
+    barHelpEl.replaceChildren(...(barHelp ? [barHelp] : []));
+    barHelpEl.hidden = !barHelp;
+    // What the goal offers (AC-14.1.2): the groups, Pattern actions and the
+    // family members it has a use for. Lab offers everything (AC-14.1.3/1).
+    const surface = surfaceFor(s.settings.goal);
+
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
     renderChordStrip(chordStripEl, pattern, position);
     const sheet = s.settings.patternView === 'sheet';
@@ -2131,11 +2232,16 @@ export function mount(root) {
     renderPracticeGroup(practiceEl, pattern, s, handlers);
     renderComposeGroup(composeEl, pattern, s, handlers);
     renderActionControls(actionsBody, pattern, s, handlers);
-    applyWorkbench(
-      tabsEl,
-      [melodyEl, rhythmEl, practiceEl, composeEl],
-      workbenchTabFor(pattern, s.workbenchTab)
-    );
+    // A group the goal has no use for is absent, exactly as Melody already is
+    // in Percussive: the renderers above decide whether the Pattern can use a
+    // group, and the goal decides whether it is offered at all (AC-14.1.2/1).
+    const groups = [melodyEl, rhythmEl, practiceEl, composeEl];
+    for (const g of groups) {
+      const usable = g === rhythmEl || g === practiceEl ? true : !g.hidden;
+      g.hidden = !usable || !surface.tabs.includes(g.dataset.tab);
+    }
+    applyWorkbench(tabsEl, groups, workbenchTabFor(pattern, s.workbenchTab, surface.tabs));
+    actionsEl.hidden = !surface.actions;
     /*
      * The library list is the most expensive thing on the page — three hundred
      * rows, rebuilt from scratch — and almost every render leaves it identical:
@@ -2166,10 +2272,13 @@ export function mount(root) {
     if (
       lastFamilySignature === null ||
       lastFamilySignature.patterns !== librarySignature.patterns ||
-      lastFamilySignature.id !== pattern.id
+      lastFamilySignature.id !== pattern.id ||
+      lastFamilySignature.offered !== surface.family
     ) {
-      lastFamilySignature = { patterns: librarySignature.patterns, id: pattern.id };
+      lastFamilySignature = { patterns: librarySignature.patterns, id: pattern.id, offered: surface.family };
       renderFamilyMembers(familyEl, familyMembers(), handlers);
+      // Absent under a goal that has no use for it (AC-14.1.2/4).
+      if (!surface.family) familyEl.hidden = true;
     }
 
     // The render moved the focused control — the pitch strip appearing above
@@ -2192,6 +2301,15 @@ export function mount(root) {
 
   return {
     shell,
+    /** Opens the library at every width, the toggle following (AC-14.1.4/3). */
+    showLibrary() {
+      openLibrary(shell);
+      syncLibraryToggle();
+    },    /** Collapses it, the toggle following (AC-14.1.1/1). */
+    hideLibrary() {
+      collapseLibrary(shell);
+      syncLibraryToggle();
+    },
     sidebar,
     libraryEl,
     libraryToggle,
@@ -2362,6 +2480,9 @@ export function init(root = document.getElementById('app')) {
   }
 
   state.settings = settingsStore.load();
+  // The goals screen first, unless the remembered goal is Lab (AC-14.1.1/4,
+  // AC-14.1.3/2): a Lab user has said they know the tool.
+  state.goalsOpen = state.settings.goal !== LAB;
 
   // Open with music in it rather than an empty grid (US-16.1).
   const owned = patternStore.loadAll();
@@ -2376,7 +2497,7 @@ export function init(root = document.getElementById('app')) {
       { owned: false }
     );
 
-  mount(root);
+  ui = mount(root);
   render();
   // The lock screen's own play/pause/stop, once AC-4.1.12 has put this page
   // on it in earnest (AC-4.1.13). Registered once, at start-up: the handlers
