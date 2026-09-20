@@ -2158,11 +2158,11 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .bar-help .control-help-text { margin: 0; }
 /* At phone width the bar wraps to a third row for the long label; the word
    goes, as the navigation's does (AC-15.1.17/3). */
-.pick-word { display: inline; }
+.pick-word, .give-word { display: inline; }
 
 @media (max-width: 767px) {
   .goal-name { display: none; }
-  .pick-word { display: none; }
+  .pick-word, .give-word { display: none; }
   .goal-bar { gap: 6px; }
   .goal-bar button, .goal-bar select { padding: 8px 10px; }
   .bar-help .control-help { grid-template-columns: 1fr; gap: 2px 0; }

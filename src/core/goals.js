@@ -19,6 +19,13 @@ export const ALL_TABS = ['melody', 'rhythm', 'practice', 'compose'];
 /** The library's own level Tags, easiest first (AC-14.1.4/1). */
 export const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 
+/**
+ * The level setting that means every level (AC-14.1.4/5): the dice and
+ * Prev/Next then range over the whole library in the goal's Mode, so a
+ * musician can see how hard things get.
+ */
+export const ANY_LEVEL = 'any';
+
 export const LAB = 'lab';
 
 /**
@@ -146,14 +153,15 @@ export function isPracticeGoal(id) {
 export function libraryTagsFor(id, level) {
   const goal = goalById(id);
   if (!goal.practice) return [];
-  return goal.soundMode ? [level, goal.soundMode] : [level];
+  const tags = level === ANY_LEVEL ? [] : [level];
+  return goal.soundMode ? [...tags, goal.soundMode] : tags;
 }
 
 /** The Patterns Give me one may draw from: at the level, in the goal's Mode, never the one open. */
 export function candidatesAtLevel(patterns, { level, soundMode = null, excludeId = null } = {}) {
   return patterns.filter(
     (p) =>
-      (p.tags ?? []).includes(level) &&
+      (level === ANY_LEVEL || (p.tags ?? []).includes(level)) &&
       (soundMode === null || p.soundMode === soundMode) &&
       p.id !== excludeId
   );

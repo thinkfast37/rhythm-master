@@ -345,13 +345,14 @@ test('AC-14.1.3/3 — A Help toggle in the pinned bar, present in Lab alone, sho
 
 /* --- AC-14.1.4 — a rhythm at your level ---------------------------------------- */
 
-test('AC-14.1.4/1 — The pinned bar offers the three levels under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference', async ({ page }) => {
+test('AC-14.1.4/1 — The pinned bar offers the three levels and Any level under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference', async ({ page }) => {
   await page.goto('/');
   for (const id of ['play', 'vocalise', 'groove', 'melody']) {
     await chooseGoal(page, id);
     const level = goalBar(page).locator('.level-picker');
     await expect(level, id).toBeVisible();
-    expect(await level.locator('option').allTextContents(), id).toEqual(['Beginner', 'Intermediate', 'Advanced']);
+    expect(await level.locator('option').allTextContents(), id).toEqual(['Beginner', 'Intermediate', 'Advanced', 'Any level']);
+    await expect(goalBar(page).locator('[data-action="give-me-one"]'), id).toBeVisible();
     await page.locator('[data-action="show-goals"]').click();
   }
   for (const id of ['compose-rhythm', 'add-melody', 'share', 'lab']) {
@@ -456,4 +457,125 @@ test('AC-14.1.4/3 — Pick from the library opens the library filtered to the le
   await goalBar(page).locator('[data-action="pick-from-library"]').click();
   await expect(shell).toHaveAttribute('data-library', 'open');
   expect((await selected()).sort()).toEqual(['Intermediate', 'melodic']);
+});
+
+test('AC-14.1.4/5 — Under Any level the dice draws from every shipped Pattern in the goal’s Mode, whatever its level, and Pick from the library filters to the Mode Tag alone, or to nothing under a goal without one', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await chooseGoal(page, 'play');
+  await goalBar(page).locator('.level-picker').selectOption('any');
+  expect((await settings(page)).level).toBe('any');
+  const give = goalBar(page).locator('[data-action="give-me-one"]');
+  const levelOf = (tags) => ['Beginner', 'Intermediate', 'Advanced'].find((l) => tags.includes(l));
+
+  // Enough draws to see more than one level go by; every draw is shipped and new.
+  const seen = new Set();
+  let previous = (await patternState(page)).id;
+  for (let i = 0; i < 12; i++) {
+    await give.click();
+    const s = await stateOf(page);
+    expect(s.pattern.id).not.toBe(previous);
+    expect(s.isOwned).toBe(false);
+    seen.add(levelOf(s.pattern.tags));
+    previous = s.pattern.id;
+  }
+  expect(seen.size).toBeGreaterThan(1);
+
+  // Pick from the library: nothing to filter to under a goal without a Mode…
+  const selected = () =>
+    page.locator('.tag-filter[aria-pressed="true"]').evaluateAll((els) => els.map((e) => e.dataset.tag));
+  await goalBar(page).locator('[data-action="pick-from-library"]').click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-library', 'open');
+  expect(await selected()).toEqual([]);
+  await page.locator('.library-toggle').click();
+
+  // …and the Mode Tag alone under one with a Mode, the draws all Melodic.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'melody');
+  await expect(goalBar(page).locator('.level-picker')).toHaveValue('any');
+  for (let i = 0; i < 4; i++) {
+    await give.click();
+    expect((await patternState(page)).soundMode).toBe('melodic');
+  }
+  await goalBar(page).locator('[data-action="pick-from-library"]').click();
+  expect(await selected()).toEqual(['melodic']);
+});
+
+test('AC-14.1.4/6 — Under a practice goal Prev and Next step through the rhythms the dice draws from — the level’s Tag and the goal’s Mode, within whatever filter the library already has — in the library’s order; under Any level, and under the other goals, they step through the library as filtered, as before', async ({ page }) => {
+  await page.goto('/');
+  await chooseGoal(page, 'play');
+  // Choosing a goal closed the drawer (AC-14.1.1/1); it is opened below only
+  // to set and clear a filter of the library's own.
+  const next = page.locator('[data-action="next-pattern"]');
+  const prev = page.locator('[data-action="prev-pattern"]');
+
+  // Beginner: every step lands on a Beginner Pattern, and the ones in between
+  // — the library's next rows — are skipped rather than visited.
+  // The library's order is by name (ui/library.js sortEntries), rating breaking ties.
+  const library = await page.evaluate(() =>
+    window.__rm.seedStore
+      .loadAll()
+      .map((p) => ({ id: p.id, name: p.name, rating: p.rating ?? 0, tags: p.tags, mode: p.soundMode }))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) || b.rating - a.rating)
+  );
+  const idxOf = (id) => library.findIndex((p) => p.id === id);
+  let at = idxOf((await patternState(page)).id);
+  for (let i = 0; i < 6; i++) {
+    await next.click();
+    const s = await patternState(page);
+    expect(s.tags).toContain('Beginner');
+    const now = idxOf(s.id);
+    // The next Beginner row after the one left, in library order.
+    const expected = library.findIndex((p, j) => j > at && p.tags.includes('Beginner'));
+    expect(now).toBe(expected === -1 ? library.findIndex((p) => p.tags.includes('Beginner')) : expected);
+    at = now;
+  }
+  await prev.click();
+  expect((await patternState(page)).tags).toContain('Beginner');
+
+  // Within the library's own filter: Waltz on top of Beginner (two shipped
+  // Patterns carry both, so three steps go round them).
+  await page.locator('.library-toggle').click();
+  await page.locator('.tag-filter[data-tag="Waltz"]').click();
+  await page.locator('.library-toggle').click();
+  const visited = new Set();
+  for (let i = 0; i < 3; i++) {
+    await next.click();
+    const s = await patternState(page);
+    expect(s.tags).toContain('Beginner');
+    expect(s.tags).toContain('Waltz');
+    visited.add(s.id);
+  }
+  expect(visited.size).toBe(2);
+  await page.locator('.library-toggle').click();
+  await page.locator('[data-action="clear-tags"]').click();
+  await page.locator('.library-toggle').click();
+
+  // The goal's Mode too: Vocalise never steps onto a Melodic Pattern.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'vocalise');
+  await goalBar(page).locator('.level-picker').selectOption('Advanced');
+  for (let i = 0; i < 6; i++) {
+    await next.click();
+    const s = await patternState(page);
+    expect(s.soundMode).toBe('percussive');
+    expect(s.tags).toContain('Advanced');
+  }
+
+  // Any level: the plain library order, the next row whatever its level.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'play');
+  await goalBar(page).locator('.level-picker').selectOption('any');
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), library[0].id);
+  await next.click();
+  expect((await patternState(page)).id).toBe(library[1].id);
+  await next.click();
+  expect((await patternState(page)).id).toBe(library[2].id);
+
+  // Lab: unchanged, the library as filtered.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'lab');
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), library[0].id);
+  await next.click();
+  expect((await patternState(page)).id).toBe(library[1].id);
 });

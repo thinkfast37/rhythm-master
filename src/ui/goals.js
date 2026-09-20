@@ -7,7 +7,7 @@
  * me one and Pick from the library under a practice goal (AC-14.1.4), the Help
  * toggle under Lab (AC-14.1.3/3).
  */
-import { GOALS, LEVELS, LAB, goalById, isPracticeGoal } from '../core/goals.js';
+import { GOALS, LEVELS, ANY_LEVEL, LAB, goalById, isPracticeGoal } from '../core/goals.js';
 import { el, rebuild } from './controls.js';
 
 const GROUPS = [
@@ -78,17 +78,22 @@ export function renderGoalBar(root, state, handlers) {
       const level = el('select', 'level-picker');
       level.dataset.action = 'set-level';
       level.setAttribute('aria-label', 'Level');
-      for (const name of LEVELS) {
-        const option = el('option', '', { value: name, textContent: name });
-        option.selected = name === state.settings.level;
+      // The three levels, then Any level (AC-14.1.4/5): the whole library,
+      // to see how hard things get.
+      for (const [value, text] of [...LEVELS.map((n) => [n, n]), [ANY_LEVEL, 'Any level']]) {
+        const option = el('option', '', { value, textContent: text });
+        option.selected = value === state.settings.level;
         level.appendChild(option);
       }
       level.addEventListener('change', (e) => handlers.onLevel?.(e.target.value));
       fresh.appendChild(level);
 
-      const give = el('button', 'give-one', { type: 'button', textContent: 'Give me one' });
+      // The dice (AC-14.1.4/2): a rhythm at random, at the level set.
+      const give = el('button', 'give-one', { type: 'button' });
+      give.append('\u{1F3B2}', el('span', 'give-word', { textContent: ' Give me one' }));
       give.dataset.action = 'give-me-one';
-      give.setAttribute('title', 'Load a shipped rhythm at this level');
+      give.setAttribute('aria-label', 'Give me one: load a rhythm at random');
+      give.setAttribute('title', 'Load a rhythm at random, at this level');
       give.addEventListener('click', () => handlers.onGiveMeOne?.());
       fresh.appendChild(give);
 

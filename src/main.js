@@ -88,7 +88,7 @@ import {
 import { renderComposeGroup } from './ui/compose.js';
 import { renderGoals, renderGoalBar } from './ui/goals.js';
 import { renderHelp } from './ui/help.js';
-import { LAB, surfaceFor, pickAtLevel, libraryTagsFor, LEVELS } from './core/goals.js';
+import { LAB, ANY_LEVEL, surfaceFor, pickAtLevel, libraryTagsFor, isPracticeGoal, LEVELS } from './core/goals.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
@@ -612,6 +612,20 @@ export function loadPattern(pattern, { owned }) {
 }
 
 /**
+ * The list Prev/Next step through (AC-5.5.1): the library as filtered — and,
+ * under a practice goal, narrowed further to the rhythms the dice draws from,
+ * the level's Tag and the goal's Mode (AC-14.1.4/6). Under Any level and the
+ * other goals that narrowing is empty, so the list is exactly the view's.
+ */
+function navigationView() {
+  if (!isPracticeGoal(state.settings.goal)) return state.view;
+  const extra = libraryTagsFor(state.settings.goal, state.settings.level).filter(
+    (t) => !state.view.tags.some((v) => String(v).toLowerCase() === t.toLowerCase())
+  );
+  return { ...state.view, tags: [...state.view.tags, ...extra] };
+}
+
+/**
  * The library as the UI sees it: shipped Patterns with their user overlays
  * applied, plus owned Patterns as they are.
  */
@@ -689,7 +703,7 @@ const handlers = {
 
   /** The level Give me one draws from, remembered (AC-14.1.4/1). */
   onLevel(level) {
-    if (!LEVELS.includes(level)) throw new Error(`Unknown level: ${level}`);
+    if (!LEVELS.includes(level) && level !== ANY_LEVEL) throw new Error(`Unknown level: ${level}`);
     state.settings = settingsStore.save({ level });
     render();
   },
@@ -1660,7 +1674,7 @@ const handlers = {
 
   /** Prev/Next follow the filtered, sorted order on screen (US-5.5). */
   onNavigate(direction) {
-    const { previous, next } = neighbours(libraryEntries(), state.view);
+    const { previous, next } = neighbours(libraryEntries(), navigationView());
     const target = direction === 'previous' ? previous : next;
     if (target) handlers.onOpen(target.pattern.id, target.owned);
   },

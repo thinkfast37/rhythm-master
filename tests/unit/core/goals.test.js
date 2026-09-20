@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   GOALS,
   LEVELS,
+  ANY_LEVEL,
   LAB,
   ALL_TABS,
   goalById,
@@ -86,6 +87,21 @@ describe('core/goals — the catalogue (US-14.1)', () => {
     // Not a practice goal: nothing to filter to.
     expect(libraryTagsFor('compose-rhythm', 'Beginner')).toEqual([]);
     expect(libraryTagsFor(LAB, 'Beginner')).toEqual([]);
+  });
+
+  it('AC-14.1.4/5 — Under Any level the dice draws from every shipped Pattern in the goal’s Mode, whatever its level, and Pick from the library filters to the Mode Tag alone, or to nothing under a goal without one: the Tags and the draw', () => {
+    expect(ANY_LEVEL).toBe('any');
+    expect(libraryTagsFor('play', ANY_LEVEL)).toEqual([]);
+    expect(libraryTagsFor('groove', ANY_LEVEL)).toEqual([]);
+    expect(libraryTagsFor('vocalise', ANY_LEVEL)).toEqual(['percussive']);
+    expect(libraryTagsFor('melody', ANY_LEVEL)).toEqual(['melodic']);
+
+    // Every level reached, the open one never, the Mode still honoured.
+    const reached = new Set();
+    for (let i = 0; i < 100; i++) reached.add(pickAtLevel(LIBRARY, { level: ANY_LEVEL, excludeId: 's_0', random: i / 100 }).id);
+    expect([...reached].sort()).toEqual(['s_1', 's_2', 's_3', 's_4', 's_5']);
+    expect(candidatesAtLevel(LIBRARY, { level: ANY_LEVEL, soundMode: 'melodic' }).map((x) => x.id)).toEqual(['s_1', 's_4']);
+    expect(pickAtLevel([p('only', 'Advanced')], { level: ANY_LEVEL, excludeId: 'only' })).toBeNull();
   });
 });
 
