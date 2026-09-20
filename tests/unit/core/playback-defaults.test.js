@@ -1,12 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  carriedPlaybackFor,
-  playbackInEffect,
-  NO_CARRY,
-  DEFAULT_SWING_AMOUNT,
-} from '../../../src/core/playback-defaults.js';
+import { carriedPlaybackFor, playbackInEffect, NO_CARRY } from '../../../src/core/playback-defaults.js';
 import { create, setSwingAmount, setSwingFeel, setGroupSwing } from '../../../src/core/pattern.js';
-import { DEFAULT_SWING_FEEL } from '../../../src/core/swing.js';
 
 const CARRIED = { tempo: 150, swingAmount: 33, swingFeel: 'sixteenth' };
 
@@ -31,28 +25,30 @@ describe('carriedPlaybackFor', () => {
     expect(carriedPlaybackFor({ pattern: create('Plain'), carried: CARRIED }).tempo).toBe(150);
   });
 
-  it('AC-4.4.17/1 — A Pattern with no swing of its own loads at the swing amount in effect on the Pattern just left: the resolver', () => {
-    expect(carriedPlaybackFor({ pattern: create('Plain'), carried: CARRIED }).swingAmount).toBe(33);
+  it('AC-4.4.17/1 — A Pattern with no swing of its own loads straight, whatever swing amount was in effect on the Pattern just left: the resolver', () => {
+    const applied = carriedPlaybackFor({ pattern: create('Plain'), carried: CARRIED });
+    expect(applied.swingAmount).toBeUndefined();
+    expect(applied).toEqual({ tempo: 150 });
   });
 
-  it('AC-4.4.17/2 — The swing feel carries the same way: the resolver', () => {
-    expect(carriedPlaybackFor({ pattern: create('Plain'), carried: CARRIED }).swingFeel).toBe(
-      'sixteenth'
-    );
+  it('AC-4.4.17/2 — The swing feel does not carry either: a Pattern with no feel of its own loads on the 8ths feel: the resolver', () => {
+    expect(carriedPlaybackFor({ pattern: create('Plain'), carried: CARRIED }).swingFeel).toBeUndefined();
     const own = setSwingFeel(create('Own feel'), 'quarter');
     expect(carriedPlaybackFor({ pattern: own, carried: CARRIED }).swingFeel).toBeUndefined();
   });
 
-  it("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per-group — outranks the carried values: the resolver", () => {
+  it("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per-group — loads as it is: the resolver", () => {
+    // The resolver never touches swing, so each of the three is left exactly as the Pattern and its overlay say.
     const remembered = carriedPlaybackFor({
       pattern: create('Plain'),
       overlay: { swingAmount: 15 },
       carried: CARRIED,
     });
-    expect(remembered.swingAmount).toBeUndefined();
+    expect(remembered).toEqual({});
 
     const wide = carriedPlaybackFor({ pattern: setSwingAmount(create('Wide'), 25), carried: CARRIED });
     expect(wide.swingAmount).toBeUndefined();
+    expect(wide.swingFeel).toBeUndefined();
 
     const perGroup = carriedPlaybackFor({
       pattern: setGroupSwing(create('Grouped'), 0, 0, 0, 40),
@@ -71,33 +67,13 @@ describe('carriedPlaybackFor', () => {
     expect(applied).toEqual({});
   });
 
-  it('AC-4.4.17/6 — A Pattern with any remembered playback setting takes no carried swing or feel, even when what was remembered is its tempo: the resolver', () => {
-    const applied = carriedPlaybackFor({
-      pattern: create('Plain'),
-      overlay: { tempo: 120 },
-      carried: CARRIED,
-    });
-    expect(applied.swingAmount).toBeUndefined();
-    expect(applied.swingFeel).toBeUndefined();
-    expect(applied).toEqual({});
-
-    // A remembered feel alone, and a legacy per-group entry alone, each
-    // personalize the Pattern just the same.
-    expect(
-      carriedPlaybackFor({ pattern: create('Plain'), overlay: { swingFeel: 'eighth' }, carried: CARRIED })
-    ).toEqual({});
-    expect(
-      carriedPlaybackFor({ pattern: create('Plain'), overlay: { swing: { 0: 40 } }, carried: CARRIED })
-    ).toEqual({});
-  });
-
   it('carries nothing when nothing has been carried yet', () => {
     expect(carriedPlaybackFor({ pattern: create('Plain'), carried: {} })).toEqual({});
-    expect(carriedPlaybackFor({ pattern: create('Plain'), carried: NO_CARRY })).toEqual({
-      tempo: 80,
-      swingAmount: DEFAULT_SWING_AMOUNT,
-      swingFeel: DEFAULT_SWING_FEEL,
-    });
+    expect(carriedPlaybackFor({ pattern: create('Plain'), carried: NO_CARRY })).toEqual({ tempo: 80 });
+  });
+
+  it('AC-4.4.17/4 — No swing is stored to carry, so a reload starts an untouched Pattern straight: the fresh-install carry holds a tempo alone', () => {
+    expect(NO_CARRY).toEqual({ tempo: 80 });
   });
 });
 
@@ -106,11 +82,8 @@ describe('playbackInEffect', () => {
     expect(playbackInEffect({ ...create('Authored'), tempo: 200 }).tempo).toBe(200);
   });
 
-  it('reports the defaults for a Pattern that states neither swing nor feel', () => {
-    expect(playbackInEffect(create('Plain'))).toEqual({
-      tempo: 80,
-      swingAmount: 0,
-      swingFeel: DEFAULT_SWING_FEEL,
-    });
+  it('reports the tempo alone — swing is never part of what carries (AC-4.4.17)', () => {
+    expect(playbackInEffect(create('Plain'))).toEqual({ tempo: 80 });
+    expect(playbackInEffect(setSwingAmount(create('Swung'), 33))).toEqual({ tempo: 80 });
   });
 });

@@ -647,8 +647,8 @@ test('AC-4.2.2 — changing tempo restarts playback and resets the loop counter'
 });
 
 /*
- * AC-4.2.3 / AC-4.4.17 — tempo and swing carry from the Pattern just left to a
- * Pattern that has none of its own.
+ * AC-4.2.3 / AC-4.4.17 — tempo carries from the Pattern just left to a Pattern
+ * that has none of its own; swing and swing feel never do.
  *
  * These drive the real open path, because what is being proven is what the
  * Musician hears when they step through a practice run, not what a resolver
@@ -766,29 +766,38 @@ test('AC-4.2.3/6 — A Pattern with any remembered playback setting takes no car
   expect(got.swingAmount).toBe(15);
 });
 
-test('AC-4.4.17/1 — A Pattern with no swing of its own loads at the swing amount in effect on the Pattern just left', async ({
+test('AC-4.4.17/1 — A Pattern with no swing of its own loads straight, whatever swing amount was in effect on the Pattern just left', async ({
   page,
 }) => {
   await page.goto('/');
   await openSeed(page, 'plain');
   await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
+  expect((await effective(page)).swingAmount).toBe(33);
 
   await openSeed(page, 'second');
-  expect((await effective(page)).swingAmount).toBe(33);
+  expect((await effective(page)).swingAmount).toBe(0);
+  // Nothing was stored to carry it, either.
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')));
+  expect(stored.lastSwingAmount).toBeUndefined();
 });
 
-test('AC-4.4.17/2 — The swing feel carries the same way', async ({ page }) => {
+test('AC-4.4.17/2 — The swing feel does not carry either: a Pattern with no feel of its own loads on the 8ths feel', async ({
+  page,
+}) => {
   await page.goto('/');
   await openSeed(page, 'plain');
   await onTab(page, 'practice');
   await page.locator('select.swing-feel').selectOption('sixteenth');
+  expect((await effective(page)).swingFeel).toBe('sixteenth');
 
   await openSeed(page, 'second');
-  expect((await effective(page)).swingFeel).toBe('sixteenth');
+  expect((await effective(page)).swingFeel).toBe('eighth');
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')));
+  expect(stored.lastSwingFeel).toBeUndefined();
 });
 
-test("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per-group — outranks the carried values", async ({
+test("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per-group — loads as it is", async ({
   page,
 }) => {
   await page.goto('/');
@@ -800,19 +809,20 @@ test("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per
   await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="50"]').click();
 
-  // Remembered: the amount set on the first Pattern comes back, not the 50.
+  // Remembered: the amount set on the first Pattern comes back.
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
   expect((await effective(page)).swingAmount).toBe(15);
 
-  // Per-group data: a Pattern carrying its own group override is not flattened
-  // by a carried Pattern-wide amount (AC-4.4.2, AC-4.4.13).
-  const grouped = await page.evaluate(() => {
+  // Pattern-wide and per-group data: a Pattern carrying its own swing loads
+  // with it intact (AC-4.4.2, AC-4.4.13).
+  const own = await page.evaluate(() => {
     window.__rm.loadPattern(
       {
         id: 'p_grouped',
         name: 'Grouped Swing',
         soundMode: 'percussive',
         tempo: 80,
+        swingAmount: 25,
         tags: [],
         rating: 0,
         measures: [
@@ -831,74 +841,44 @@ test("AC-4.4.17/3 — A Pattern's own swing — remembered, Pattern-wide, or per
     const p = window.__rm.getState().pattern;
     return { groupSwing: p.measures[0].beats[0].swing?.[0], wide: p.swingAmount ?? 0 };
   });
-  expect(grouped.groupSwing).toBe(40);
-  expect(grouped.wide).toBe(0);
+  expect(own.groupSwing).toBe(40);
+  expect(own.wide).toBe(25);
 });
 
-test('AC-4.4.17/4 — The carried swing survives a reload, and is 0 on the 8ths feel before any Pattern has been opened', async ({
+test('AC-4.4.17/4 — No swing is stored to carry, so a reload starts an untouched Pattern straight', async ({
   page,
 }) => {
   await page.goto('/');
   const fresh = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')));
-  expect(fresh.lastSwingAmount).toBe(0);
-  expect(fresh.lastSwingFeel).toBe('eighth');
+  expect(fresh.lastSwingAmount).toBeUndefined();
+  expect(fresh.lastSwingFeel).toBeUndefined();
 
   await openSeed(page, 'plain');
-  await onTab(page, 'practice');
-  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
-  await page.reload();
-
-  await openSeed(page, 'second');
-  expect((await effective(page)).swingAmount).toBe(33);
-});
-
-test('AC-4.4.17/5 — A carried amount does not give a shipped Pattern the `swing` Tag in the library', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await openSeed(page, 'plain');
-  await onTab(page, 'practice');
-  await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
-
-  const second = await openSeed(page, 'second');
-  expect((await effective(page)).swingAmount).toBe(33);
-
-  const tags = await page.evaluate(() =>
-    [...document.querySelectorAll('.header-tags .tag-chip')].map((c) => c.textContent)
-  );
-  expect(tags).not.toContain('swing');
-
-  // And the library row agrees: the Tag derives from the stores, not the
-  // loaded copy, so a carried amount cannot make it filterable (AC-4.4.6).
-  if ((await page.locator('.shell').getAttribute('data-library')) !== 'open') {
-    await page.locator('.library-toggle').click();
-  }
-  await page.locator('.library-search').fill(second.name);
-  const rowTags = await page.locator('.pattern-item.current .tag-chip').allTextContents();
-  expect(rowTags).not.toContain('swing');
-});
-
-test('AC-4.4.17/6 — A Pattern with any remembered playback setting takes no carried swing or feel, even when what was remembered is its tempo', async ({
-  page,
-}) => {
-  await page.goto('/');
-  const first = await openSeed(page, 'plain');
-  await onTab(page, 'practice');
-  await page.locator('[data-action="preset-tempo"][data-bpm="120"]').click();
-
-  await openSeed(page, 'second');
   await onTab(page, 'practice');
   await page.locator('[data-action="preset-swing"][data-amount="33"]').click();
   await onTab(page, 'practice');
   await page.locator('select.swing-feel').selectOption('sixteenth');
+  await page.reload();
 
-  // Only the tempo was ever set on the first Pattern; it comes back straight,
-  // on the 8ths feel, at the tempo it remembers.
-  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), first.id);
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')));
+  expect(stored.lastSwingAmount).toBeUndefined();
+  expect(stored.lastSwingFeel).toBeUndefined();
+
+  await openSeed(page, 'second');
   const got = await effective(page);
-  expect(got.tempo).toBe(120);
   expect(got.swingAmount).toBe(0);
   expect(got.swingFeel).toBe('eighth');
+
+  // A value left in the store by the build that carried swing is ignored.
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('rm.settings.v1'));
+    localStorage.setItem('rm.settings.v1', JSON.stringify({ ...s, lastSwingAmount: 33, lastSwingFeel: 'sixteenth' }));
+  });
+  await page.reload();
+  await openSeed(page, 'second');
+  const after = await effective(page);
+  expect(after.swingAmount).toBe(0);
+  expect(after.swingFeel).toBe('eighth');
 });
 
 test('AC-4.3.1 — the metronome and count-in are off by default and toggleable', async ({ page }) => {
