@@ -132,13 +132,22 @@ export const WORKBENCH_TABS = [
  * tab on a Pattern that has since gone Percussive falls back the same way, so
  * the screen is never left showing nothing.
  */
-export function workbenchTabFor(pattern, chosen) {
+export function workbenchTabFor(pattern, chosen, offered = WORKBENCH_TABS.map(([tab]) => tab)) {
   const melodic = pattern.soundMode === 'melodic';
   // Compose needs a progression as well as the Mode (AC-18.1.1/1).
   const composable = melodic && hasHarmony(pattern);
-  if (chosen === 'compose') return composable ? chosen : melodic ? 'melody' : 'rhythm';
-  if (chosen && (chosen !== 'melody' || melodic)) return chosen;
-  return melodic ? 'melody' : 'rhythm';
+  // A tab is on offer when the goal names it (AC-14.1.2/1) and the Pattern
+  // can use it: Melody and Compose are absent in Percussive, Compose also
+  // without a progression (AC-15.1.7/4).
+  const applies = (tab) =>
+    offered.includes(tab) && (tab === 'melody' ? melodic : tab === 'compose' ? composable : true);
+  if (chosen && applies(chosen)) return chosen;
+  // The Mode's own group first — Melody on a Melodic Pattern, Rhythm on a
+  // Percussive one (AC-15.1.7/3) — then the rest in AC-15.1.8's order.
+  const preferred = melodic
+    ? ['melody', 'rhythm', 'practice', 'compose']
+    : ['rhythm', 'practice', 'melody', 'compose'];
+  return preferred.find(applies) ?? null;
 }
 
 /**

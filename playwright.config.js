@@ -8,6 +8,21 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     /*
+     * Every context opens in Lab (US-14.1). The suite was written against the
+     * cockpit, and Lab is the cockpit, remembered; a first launch shows the
+     * goals screen instead (AC-14.1.1/4), which tests/e2e/goals.spec.js
+     * exercises with an empty storage state of its own.
+     */
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://localhost:4173',
+          localStorage: [{ name: 'rm.settings.v1', value: JSON.stringify({ schemaVersion: 1, goal: 'lab' }) }],
+        },
+      ],
+    },
+    /*
      * Use the Chromium already present in the container rather than letting
      * Playwright download its own. The bundled revision moves with the
      * @playwright/test version, so pin the path instead of the build number

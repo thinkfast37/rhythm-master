@@ -348,9 +348,17 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "metronomeEnabled": false,
   "countInEnabled": false,
   "patternView": "grid",          // AC-12.2.1/1 — "grid" | "sheet", the view the main panel shows the Pattern in
-  "fillCycleRepeats": 4           // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
+  "fillCycleRepeats": 4,          // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
+  "goal": null,                   // AC-14.1.2/5 — the chosen goal's id, or "lab"; null until one is chosen, which is what opens the goals screen
+  "level": "Beginner",            // AC-14.1.4/1 — "Beginner" | "Intermediate" | "Advanced", the level Tag Give me one draws from
+  "labHelp": false                // AC-14.1.3/3 — whether Lab's Help toggle is on
 }
 ```
+
+`goal`, `level` and `labHelp` were added 2026-09-20 with US-14.1. All three are preferences about
+the interface, not about any Pattern: choosing a goal or a level writes nothing to a Pattern, an
+overlay or a Song (AC-14.1.2/5). The app opens on the goals screen whenever `goal` is anything but
+`"lab"` (AC-14.1.1/4).
 
 ### `rm.songs.v1` — Songs (US-18.1)
 

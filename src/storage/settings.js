@@ -30,6 +30,16 @@ export const DEFAULTS = {
   patternView: 'grid',
   /** Harmonic cycles each fill plays for in cycle mode (AC-2.7.1/2). Cycle mode itself is not stored. */
   fillCycleRepeats: 4,
+  /**
+   * The chosen goal's id, or 'lab' (US-14.1). null until one is chosen, and
+   * anything but 'lab' opens the goals screen on launch (AC-14.1.1/4). A
+   * preference about the interface, never about a Pattern (AC-14.1.2/5).
+   */
+  goal: null,
+  /** The level Tag Give me one draws from under a practice goal (AC-14.1.4/1). */
+  level: 'Beginner',
+  /** Whether Lab's Help toggle is on (AC-14.1.3/3). */
+  labHelp: false,
 };
 
 export function load() {

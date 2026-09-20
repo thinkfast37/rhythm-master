@@ -9,6 +9,7 @@
 import { ARPEGGIOS, hasHarmony, chordNumeral } from '../core/harmony.js';
 import { entryPasses, totalPasses } from '../core/song.js';
 import { el, rebuild } from './controls.js';
+import { renderHelp } from './help.js';
 
 export function composeApplies(pattern) {
   return pattern.soundMode === 'melodic' && hasHarmony(pattern);
@@ -27,6 +28,8 @@ export function renderComposeGroup(root, pattern, state, handlers) {
   root.hidden = !composeApplies(pattern);
   return rebuild(root, (fresh) => {
     if (root.hidden) return;
+    const help = renderHelp('compose', state);
+    if (help) fresh.appendChild(help);
     // The progression, as the chord strip names it — set in Melody, one place
     // to change it (AC-18.1.1/2).
     const over = el('p', 'compose-progression');

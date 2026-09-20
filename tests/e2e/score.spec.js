@@ -70,6 +70,10 @@ test('AC-12.2.1/1 — A Grid | Sheet toggle sits at the head of the grid section
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  // A cleared store is a first launch, which opens on the goals screen
+  // (AC-14.1.1/1); the main panel is reached by choosing one. Lab, so the
+  // panel is the one this criterion was written against (AC-14.1.3/1).
+  await page.locator('.goal-card[data-goal="lab"]').click();
   // The toggle heads the grid section, and a first load shows the grid.
   const view = page.locator('.pattern-view');
   await expect(view.locator('> .view-toggle')).toBeVisible();
