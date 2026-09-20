@@ -2,10 +2,12 @@
  * Goals (US-14.1): what the musician came to do, and which of the workbench's
  * groups that job is for.
  *
- * One rule, not a matrix. A goal decides which groups the tab bar offers and
- * whether Pattern actions and the family members are present; it never hides a
- * control inside a group. Lab offers everything, and is the cockpit the app had
- * before goals existed (AC-14.1.3/1).
+ * Two kinds of goal. A **practice** goal is read-only playback (AC-14.1.5):
+ * no workbench, no edits, one panel of the playback settings that goal is
+ * about. A **compose** goal decides which workbench groups the tab bar offers
+ * and whether Pattern actions and the family members are present, and never
+ * hides a control inside a group. Lab offers everything, and is the cockpit
+ * the app had before goals existed (AC-14.1.3/1).
  *
  * Pure: the catalogue, the surface a goal id resolves to, and the draw that
  * hands out a shipped Pattern at a level. Randomness is a parameter — `core/`
@@ -28,20 +30,26 @@ export const ANY_LEVEL = 'any';
 
 export const LAB = 'lab';
 
+/** The playback settings a practice panel can hold, in the order it shows them (AC-14.1.5/4). */
+export const PANEL_ITEMS = ['click', 'tempo', 'counting', 'swing', 'cycle'];
+
 /**
  * The seven goals, then Lab. `practice` marks the four that hand out a rhythm
- * by level (AC-14.1.4); `soundMode` is the Mode a practice goal draws from,
- * or null for either. `tabs` are listed in the order the tab bar shows them.
+ * by level (AC-14.1.4) and edit nothing (AC-14.1.5); `panel` is what their one
+ * panel holds; `soundMode` is the Mode they draw from, or null for either.
+ * `tabs` are listed in the order the tab bar shows them, and are empty under
+ * a practice goal, which has no workbench.
  */
 export const GOALS = Object.freeze([
   {
     id: 'play',
     title: 'Play a rhythm',
-    blurb: 'Pick one at your level, loop it, set the tempo, count yourself in.',
+    blurb: 'Loop one at your level, set the tempo, count yourself in. Nothing to edit.',
     group: 'practise',
     practice: true,
     soundMode: null,
-    tabs: ['practice'],
+    panel: ['click', 'tempo'],
+    tabs: [],
     actions: false,
     family: false,
   },
@@ -52,39 +60,43 @@ export const GOALS = Object.freeze([
     group: 'practise',
     practice: true,
     soundMode: 'percussive',
-    tabs: ['practice'],
+    panel: ['click', 'tempo', 'counting'],
+    tabs: [],
     actions: false,
     family: false,
   },
   {
     id: 'groove',
     title: 'Feel the groove',
-    blurb: 'Swing it, shape its accents, and cycle through fills while it plays.',
+    blurb: 'Swing it, and hear how the accents fall at different feels.',
     group: 'practise',
     practice: true,
     soundMode: null,
-    tabs: ['melody', 'practice'],
+    panel: ['click', 'tempo', 'swing'],
+    tabs: [],
     actions: false,
     family: false,
   },
   {
     id: 'melody',
     title: 'Play melodies over it',
-    blurb: 'Choose a scale and a chord progression, place it in a register, and play along.',
+    blurb: 'Cycle fills and chord progressions over a melodic rhythm, and play along.',
     group: 'practise',
     practice: true,
     soundMode: 'melodic',
-    tabs: ['melody', 'practice'],
+    panel: ['click', 'tempo', 'cycle'],
+    tabs: [],
     actions: false,
     family: false,
   },
   {
     id: 'compose-rhythm',
     title: 'Compose a rhythm',
-    blurb: 'Build Measures and Beats, choose subdivisions, set accents, and save it.',
+    blurb: 'Build Measures and Beats, choose subdivisions, shape the accents, and save it.',
     group: 'compose',
     practice: false,
     soundMode: null,
+    panel: [],
     tabs: ['rhythm', 'practice'],
     actions: true,
     family: false,
@@ -96,6 +108,7 @@ export const GOALS = Object.freeze([
     group: 'compose',
     practice: false,
     soundMode: null,
+    panel: [],
     tabs: ['melody', 'practice', 'compose'],
     actions: true,
     family: false,
@@ -107,6 +120,7 @@ export const GOALS = Object.freeze([
     group: 'compose',
     practice: false,
     soundMode: null,
+    panel: [],
     tabs: ['practice'],
     actions: true,
     family: true,
@@ -118,6 +132,7 @@ export const GOALS = Object.freeze([
     group: LAB,
     practice: false,
     soundMode: null,
+    panel: [],
     tabs: ALL_TABS,
     actions: true,
     family: true,
@@ -130,8 +145,10 @@ export function goalById(id) {
 }
 
 /**
- * What the main panel offers under a goal: the tabs in AC-15.1.8's order,
- * and whether Pattern actions and the family members are present (AC-14.1.2).
+ * What the main panel offers under a goal: the tabs in AC-15.1.8's order and
+ * whether Pattern actions and the family members are present (AC-14.1.2) —
+ * or, under a practice goal, nothing of the workbench and one read-only panel
+ * of playback settings in PANEL_ITEMS' order (AC-14.1.5).
  */
 export function surfaceFor(id) {
   const goal = goalById(id);
@@ -140,6 +157,8 @@ export function surfaceFor(id) {
     actions: goal.actions,
     family: goal.family,
     practice: goal.practice,
+    readOnly: goal.practice,
+    panel: PANEL_ITEMS.filter((item) => goal.panel.includes(item)),
     soundMode: goal.soundMode,
   };
 }

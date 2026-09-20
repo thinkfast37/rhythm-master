@@ -1863,6 +1863,8 @@ body {
  * layout's doing above; the bar itself does not care.
  */
 .workbench-tabs { display: flex; padding: 4px 12px 0; }
+/* Absent under a practice goal (AC-14.1.5/3). */
+.workbench-tabs[hidden] { display: none; }
 .workbench-tab {
   flex: 1 1 0;
   min-height: 40px;
@@ -2168,3 +2170,12 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   .bar-help .control-help { grid-template-columns: 1fr; gap: 2px 0; }
   .bar-help .control-help-text { margin: 0 0 6px; }
 }
+
+/* A practice goal edits nothing (AC-14.1.5): the grid is looked at and
+   played, the name is a heading, and the library offers no New Pattern. */
+.shell[data-readonly='true'] .slot,
+.shell[data-readonly='true'] .note-band,
+.shell[data-readonly='true'] [data-action='change-time-signature'] { cursor: default; }
+.shell[data-readonly='true'] [data-action='new-pattern'] { display: none; }
+.pattern-title-static { margin: 0 0 6px; font: 700 20px/1.2 var(--font-ui); color: var(--ink); border-bottom: 1px solid transparent; }
+.practice-panel .panel-note { margin: 0; font: 400 13px/1.45 var(--font-ui); color: var(--ink-dim); }

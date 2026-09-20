@@ -241,7 +241,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |
 | **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323 | T311, T324 |
-| **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.4 | T326, T328 | T327, T329 |
+| **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330 | T327, T329, T331 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

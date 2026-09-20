@@ -5,6 +5,7 @@ import {
   ANY_LEVEL,
   LAB,
   ALL_TABS,
+  PANEL_ITEMS,
   goalById,
   surfaceFor,
   isPracticeGoal,
@@ -41,15 +42,13 @@ describe('core/goals — the catalogue (US-14.1)', () => {
     expect(goalById(LAB).title).toBe('Lab');
   });
 
-  it('AC-14.1.2/2 — Play a rhythm and Vocalise or clap it offer Practice alone; Feel the groove offers Practice and Melody; Play melodies over it offers Melody and Practice: the surfaces', () => {
-    expect(surfaceFor('play').tabs).toEqual(['practice']);
-    expect(surfaceFor('vocalise').tabs).toEqual(['practice']);
-    // In AC-15.1.8's order, whatever order the goal lists them in.
-    expect(surfaceFor('groove').tabs).toEqual(['melody', 'practice']);
-    expect(surfaceFor('melody').tabs).toEqual(['melody', 'practice']);
+  it('AC-14.1.2/2 — The four practice goals offer no workbench group: the tab bar is absent, and one practice panel stands in its place: the surfaces', () => {
     for (const id of ['play', 'vocalise', 'groove', 'melody']) {
       expect(isPracticeGoal(id)).toBe(true);
       expect(surfaceFor(id).practice).toBe(true);
+      expect(surfaceFor(id).readOnly).toBe(true);
+      expect(surfaceFor(id).tabs).toEqual([]);
+      expect(surfaceFor(id).panel.length).toBeGreaterThan(0);
     }
     expect(surfaceFor('vocalise').soundMode).toBe('percussive');
     expect(surfaceFor('melody').soundMode).toBe('melodic');
@@ -57,11 +56,15 @@ describe('core/goals — the catalogue (US-14.1)', () => {
     expect(surfaceFor('groove').soundMode).toBeNull();
   });
 
-  it('AC-14.1.2/3 — Compose a rhythm offers Rhythm and Practice with Pattern actions; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members: the surfaces', () => {
+  it('AC-14.1.2/3 — Compose a rhythm offers Rhythm and Practice with Pattern actions and the grid’s accent brush; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members: the surfaces', () => {
     expect(surfaceFor('compose-rhythm')).toMatchObject({ tabs: ['rhythm', 'practice'], actions: true, family: false });
     expect(surfaceFor('add-melody')).toMatchObject({ tabs: ['melody', 'practice', 'compose'], actions: true, family: false });
     expect(surfaceFor('share')).toMatchObject({ tabs: ['practice'], actions: true, family: true });
-    for (const id of ['compose-rhythm', 'add-melody', 'share']) expect(isPracticeGoal(id)).toBe(false);
+    for (const id of ['compose-rhythm', 'add-melody', 'share']) {
+      expect(isPracticeGoal(id)).toBe(false);
+      expect(surfaceFor(id).readOnly).toBe(false);
+      expect(surfaceFor(id).panel).toEqual([]);
+    }
   });
 
   it('AC-14.1.2/4 — Pattern actions and the family members are absent under the four practice goals: the surfaces', () => {
@@ -72,7 +75,7 @@ describe('core/goals — the catalogue (US-14.1)', () => {
   });
 
   it('AC-14.1.3/1 — Lab offers every workbench group, Pattern actions and the family members, exactly as the tabbed workbench and the main panel’s fixed order already describe: the surface', () => {
-    expect(surfaceFor(LAB)).toMatchObject({ tabs: ALL_TABS, actions: true, family: true, practice: false, soundMode: null });
+    expect(surfaceFor(LAB)).toMatchObject({ tabs: ALL_TABS, actions: true, family: true, practice: false, readOnly: false, panel: [], soundMode: null });
     // An id that is no goal — nothing chosen yet, or a stale store — is Lab, the cockpit.
     expect(surfaceFor(null)).toEqual(surfaceFor(LAB));
     expect(surfaceFor('no-such-goal')).toEqual(surfaceFor(LAB));
@@ -102,6 +105,21 @@ describe('core/goals — the catalogue (US-14.1)', () => {
     expect([...reached].sort()).toEqual(['s_1', 's_2', 's_3', 's_4', 's_5']);
     expect(candidatesAtLevel(LIBRARY, { level: ANY_LEVEL, soundMode: 'melodic' }).map((x) => x.id)).toEqual(['s_1', 's_4']);
     expect(pickAtLevel([p('only', 'Advanced')], { level: ANY_LEVEL, excludeId: 'only' })).toBeNull();
+  });
+});
+
+describe('core/goals — the practice panels (AC-14.1.5)', () => {
+  it('AC-14.1.5/4 — Play a rhythm’s panel holds Click and Count-in and Tempo; Vocalise or clap it adds Counting; Feel the groove adds Swing; Play melodies over it adds Cycle fills, Cycle progressions and Repeats, without Keep: the panels', () => {
+    expect(PANEL_ITEMS).toEqual(['click', 'tempo', 'counting', 'swing', 'cycle']);
+    expect(surfaceFor('play').panel).toEqual(['click', 'tempo']);
+    expect(surfaceFor('vocalise').panel).toEqual(['click', 'tempo', 'counting']);
+    expect(surfaceFor('groove').panel).toEqual(['click', 'tempo', 'swing']);
+    expect(surfaceFor('melody').panel).toEqual(['click', 'tempo', 'cycle']);
+    // Always in PANEL_ITEMS' order, whatever order a goal lists its items in.
+    for (const g of GOALS) {
+      const order = surfaceFor(g.id).panel.map((i) => PANEL_ITEMS.indexOf(i));
+      expect(order).toEqual([...order].sort((a, b) => a - b));
+    }
   });
 });
 

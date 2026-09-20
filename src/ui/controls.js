@@ -385,18 +385,25 @@ export function renderHeader(root, pattern, state, handlers = {}) {
 }
 
 function renderHeaderInto(root, pattern, state, handlers) {
-  // The name is editable in place rather than behind a rename dialog: it is the
-  // first thing a Composer wants to change about a new Pattern (AC-7.1.1).
-  const name = el('input', 'pattern-title', { type: 'text', value: pattern.name });
-  name.dataset.action = 'rename';
-  name.addEventListener('change', (e) => handlers.onRename?.(e.target.value));
-  name.addEventListener('blur', (e) => handlers.onRename?.(e.target.value));
-  root.appendChild(name);
+  // Under a practice goal the header shows and never edits (AC-14.1.5/2): the
+  // name is a heading, the Mode switch, tag editing and Undo are absent.
+  const readOnly = Boolean(state.readOnly);
+  if (readOnly) {
+    root.appendChild(el('h1', 'pattern-title pattern-title-static', { textContent: pattern.name }));
+  } else {
+    // The name is editable in place rather than behind a rename dialog: it is the
+    // first thing a Composer wants to change about a new Pattern (AC-7.1.1).
+    const name = el('input', 'pattern-title', { type: 'text', value: pattern.name });
+    name.dataset.action = 'rename';
+    name.addEventListener('change', (e) => handlers.onRename?.(e.target.value));
+    name.addEventListener('blur', (e) => handlers.onRename?.(e.target.value));
+    root.appendChild(name);
 
-  // The Sound Mode, under the name (AC-2.1.6). It is the first decision about
-  // a Pattern — it decides which half of the workbench the panel shows — so it
-  // sits where the eye lands, not in a section at the foot of the panel.
-  root.appendChild(renderSoundModeSwitch(pattern, handlers));
+    // The Sound Mode, under the name (AC-2.1.6). It is the first decision about
+    // a Pattern — it decides which half of the workbench the panel shows — so it
+    // sits where the eye lands, not in a section at the foot of the panel.
+    root.appendChild(renderSoundModeSwitch(pattern, handlers));
+  }
 
   // The Rating lives here as well as on the library row (AC-6.1.7): rating is
   // something you do while looking at — and playing — the Pattern, and on a
@@ -413,9 +420,9 @@ function renderHeaderInto(root, pattern, state, handlers) {
     })
   );
 
-  root.appendChild(renderHeaderTags(pattern, state, handlers));
+  root.appendChild(renderHeaderTags(pattern, state, handlers, { editable: !readOnly }));
 
-  if (handlers.onUndo) {
+  if (handlers.onUndo && !readOnly) {
     const undoButton = el('button', 'undo', { type: 'button', textContent: 'Undo' });
     undoButton.dataset.action = 'undo';
     undoButton.disabled = !state.canUndo;
@@ -472,7 +479,7 @@ function renderSoundModeSwitch(pattern, handlers) {
  * automatic (derived), built-in (the Pattern's own, if it ships with the app),
  * and the musician's own.
  */
-function renderHeaderTags(pattern, state, handlers) {
+function renderHeaderTags(pattern, state, handlers, { editable = true } = {}) {
   const wrap = el('div', 'header-tags');
   const tags = state.currentTags ?? { autoTags: [], lockedTags: [], userTags: [] };
 
@@ -490,6 +497,10 @@ function renderHeaderTags(pattern, state, handlers) {
   for (const t of tags.userTags) {
     const chip = el('span', 'tag-chip user', { textContent: t });
     chip.dataset.automatic = 'false';
+    if (!editable) {
+      wrap.appendChild(chip);
+      continue;
+    }
     const remove = el('button', 'tag-remove', { type: 'button', textContent: '×' });
     remove.dataset.action = 'remove-tag';
     remove.dataset.tag = t;
@@ -499,11 +510,13 @@ function renderHeaderTags(pattern, state, handlers) {
     wrap.appendChild(chip);
   }
 
-  const add = el('button', 'tag-add', { type: 'button', textContent: '+ tag' });
-  add.dataset.action = 'add-tag';
-  add.setAttribute('title', 'Add a tag');
-  add.addEventListener('click', () => handlers.onAddTagPrompt?.(pattern.id));
-  wrap.appendChild(add);
+  if (editable) {
+    const add = el('button', 'tag-add', { type: 'button', textContent: '+ tag' });
+    add.dataset.action = 'add-tag';
+    add.setAttribute('title', 'Add a tag');
+    add.addEventListener('click', () => handlers.onAddTagPrompt?.(pattern.id));
+    wrap.appendChild(add);
+  }
 
   return wrap;
 }
@@ -570,6 +583,33 @@ export function renderPracticeGroup(root, pattern, state, handlers) {
     fresh.appendChild(renderTempo(pattern, handlers));
     fresh.appendChild(renderSwing(pattern, handlers));
     fresh.appendChild(renderCounting(pattern, state, handlers));
+  });
+}
+
+/**
+ * A practice goal's one panel (AC-14.1.5/3, /4): the playback settings that
+ * goal is about, in a fixed order, and nothing that edits the Pattern. The
+ * cycling row comes without Keep, which is the Composer's record.
+ */
+export function renderPracticePanel(root, pattern, state, handlers, items) {
+  root.className = 'controls workbench-group practice-group practice-panel';
+  root.dataset.panel = items.join(' ');
+  return rebuild(root, (fresh) => {
+    for (const item of items) {
+      if (item === 'click') fresh.appendChild(renderClickControls(state, handlers));
+      else if (item === 'tempo') fresh.appendChild(renderTempo(pattern, handlers));
+      else if (item === 'counting') fresh.appendChild(renderCounting(pattern, state, handlers));
+      else if (item === 'swing') fresh.appendChild(renderSwing(pattern, handlers));
+      else if (item === 'cycle') {
+        if (hasHarmony(pattern)) fresh.appendChild(renderFillCycle(pattern, state, handlers, { keep: false }));
+        else
+          fresh.appendChild(
+            el('p', 'panel-note', {
+              textContent: 'Cycling needs a rhythm with a chord progression. Give me one draws melodic rhythms, which have one.',
+            })
+          );
+      }
+    }
   });
 }
 
@@ -1320,7 +1360,7 @@ export function renderBrushHint(root, pattern, state) {
  * `pattern` and the pickers show them (AC-2.7.2/4, AC-2.10.2/4); the Pattern's
  * own arpeggio and progression are untouched (AC-2.7.1/4, AC-2.10.1/4).
  */
-function renderFillCycle(pattern, state, handlers) {
+function renderFillCycle(pattern, state, handlers, { keep = true } = {}) {
   const cycleRow = el('div', 'control-group fill-cycle-row');
   const cycling = Boolean(state.fillCycle?.on);
   const cycle = el('button', `fill-cycle${cycling ? ' on' : ''}`, {
@@ -1365,6 +1405,7 @@ function renderFillCycle(pattern, state, handlers) {
   // Absent at None, like the picker's own hint: there is nothing to keep.
   const kept = state.keptFills ?? [];
   const inForce = ARPEGGIOS.find((a) => a.id === pattern.harmony?.arpeggio);
+  if (!keep) return labelledGroup('Fills', cycleRow);
   if (inForce) {
     const isKept = kept.includes(inForce.id);
     const keep = el('button', `keep-fill${isKept ? ' on' : ''}`, {

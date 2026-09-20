@@ -66,6 +66,7 @@ import {
   renderMelodyGroup,
   renderRhythmGroup,
   renderPracticeGroup,
+  renderPracticePanel,
   renderBrushHint,
   renderFamilyMembers,
   renderActionControls,
@@ -1983,6 +1984,9 @@ export function mount(root) {
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
   gridEl.addEventListener('click', (event) => {
+    // Under a practice goal the grid is looked at and played, never edited
+    // (AC-14.1.5/1): no accent, no stamp, no Time Signature prompt.
+    if (surfaceFor(state.settings.goal).readOnly) return;
     /*
      * An armed Recipe turns the grid into a Recipe brush: a tap anywhere within a
      * Beat gives that Beat the armed subdivision (AC-1.3.11/2). Checked before the
@@ -2209,9 +2213,11 @@ export function mount(root) {
     barHelpEl.hidden = !barHelp;
     // What the goal offers (AC-14.1.2): the groups, Pattern actions and the
     // family members it has a use for. Lab offers everything (AC-14.1.3/1).
+    // A practice goal offers none of it and edits nothing (AC-14.1.5).
     const surface = surfaceFor(s.settings.goal);
+    shell.dataset.readonly = String(surface.readOnly);
 
-    renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags }, handlers);
+    renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags, readOnly: surface.readOnly }, handlers);
     renderChordStrip(chordStripEl, pattern, position);
     const sheet = s.settings.patternView === 'sheet';
     for (const b of viewBar.querySelectorAll('.view-button')) {
@@ -2221,8 +2227,9 @@ export function mount(root) {
     printButton.hidden = !sheet;
     gridEl.hidden = sheet;
     scoreEl.hidden = !sheet;
-    // The brush line describes grid taps; the score takes none (AC-12.2.9).
-    brushEl.hidden = sheet;
+    // The brush line describes grid taps; the score takes none (AC-12.2.9),
+    // and neither does a practice goal's grid (AC-14.1.5/1).
+    brushEl.hidden = sheet || surface.readOnly;
     if (sheet) {
       // Read-only, from the same Pattern and position the grid renders from
       // (AC-12.2.1/4, AC-12.2.9); laid out to the width it has (AC-12.2.10).
@@ -2243,7 +2250,14 @@ export function mount(root) {
     renderPlayControls(playEl, pattern, s, handlers);
     renderMelodyGroup(melodyEl, pattern, s, handlers);
     renderRhythmGroup(rhythmEl, pattern, s, handlers);
-    renderPracticeGroup(practiceEl, pattern, s, handlers);
+    if (surface.readOnly) {
+      // The practice panel stands in the Practice group's place (AC-14.1.5/3):
+      // the one section of the workbench a practice goal shows, so the
+      // section order AC-15.1.8 fixes is unchanged.
+      renderPracticePanel(practiceEl, pattern, s, handlers, surface.panel);
+    } else {
+      renderPracticeGroup(practiceEl, pattern, s, handlers);
+    }
     renderComposeGroup(composeEl, pattern, s, handlers);
     renderActionControls(actionsBody, pattern, s, handlers);
     // A group the goal has no use for is absent, exactly as Melody already is
@@ -2255,6 +2269,13 @@ export function mount(root) {
       g.hidden = !usable || !surface.tabs.includes(g.dataset.tab);
     }
     applyWorkbench(tabsEl, groups, workbenchTabFor(pattern, s.workbenchTab, surface.tabs));
+    // No workbench at all under a practice goal: the tab bar goes, and the
+    // panel is on screen in the Practice group's place.
+    tabsEl.hidden = surface.readOnly;
+    if (surface.readOnly) {
+      practiceEl.hidden = false;
+      practiceEl.dataset.tabActive = 'true';
+    }
     actionsEl.hidden = !surface.actions;
     /*
      * The library list is the most expensive thing on the page — three hundred
