@@ -140,9 +140,9 @@ test('AC-14.1.1/4 — The app opens on the goals screen on every launch unless t
 
 test('AC-14.1.2/1 — The tab bar offers exactly the groups the chosen goal names, in the main panel’s fixed order, and the group on screen is the first of them that applies to the Pattern', async ({ page }) => {
   await page.goto('/');
-  await chooseGoal(page, 'melody');
-  // Play melodies over it names Melody and Practice. On a Percussive Pattern
-  // Melody does not apply, so Practice is offered and on screen.
+  await chooseGoal(page, 'add-melody');
+  // Add a melody to it names Melody, Practice and Compose. On a Percussive
+  // Pattern neither Melody nor Compose applies, so Practice is offered and on screen.
   expect((await patternState(page)).soundMode).toBe('percussive');
   expect(await offeredTabs(page)).toEqual(['practice']);
   expect(await activeTab(page)).toBe('practice');
@@ -150,37 +150,38 @@ test('AC-14.1.2/1 — The tab bar offers exactly the groups the chosen goal name
   await expect(page.locator('[data-section="melody"]')).toBeHidden();
 
   await melodicWithProgression(page);
-  expect(await offeredTabs(page)).toEqual(['melody', 'practice']);
+  expect(await offeredTabs(page)).toEqual(['melody', 'practice', 'compose']);
   expect(await activeTab(page)).toBe('melody');
-  // Rhythm and Compose apply to this Pattern but are not offered: absent.
+  // Rhythm applies to this Pattern but is not offered: absent.
   await expect(page.locator('.workbench-tab[data-tab="rhythm"]')).toBeHidden();
-  await expect(page.locator('.workbench-tab[data-tab="compose"]')).toBeHidden();
   await expect(page.locator('[data-section="rhythm"]')).toBeHidden();
-  await expect(page.locator('[data-section="compose"]')).toBeHidden();
   // A tapped tab stays the one in force.
   await page.locator('.workbench-tab[data-tab="practice"]').click();
   expect(await activeTab(page)).toBe('practice');
 });
 
-test('AC-14.1.2/2 — Play a rhythm and Vocalise or clap it offer Practice alone; Feel the groove offers Practice and Melody; Play melodies over it offers Melody and Practice', async ({ page }) => {
+test('AC-14.1.2/2 — The four practice goals offer no workbench group: the tab bar is absent, and one practice panel stands in its place', async ({ page }) => {
   await page.goto('/');
   await chooseGoal(page, 'lab');
+  // Even on a Pattern every group applies to.
   await melodicWithProgression(page);
-  const expected = {
-    play: ['practice'],
-    vocalise: ['practice'],
-    groove: ['melody', 'practice'],
-    melody: ['melody', 'practice'],
-  };
-  for (const [id, tabs] of Object.entries(expected)) {
+  for (const id of ['play', 'vocalise', 'groove', 'melody']) {
     await page.locator('[data-action="show-goals"]').click();
     await chooseGoal(page, id);
-    expect(await offeredTabs(page), id).toEqual(tabs);
-    expect(await activeTab(page), id).toBe(tabs[0]);
+    await expect(page.locator('.workbench-tabs'), id).toBeHidden();
+    expect(await offeredTabs(page), id).toEqual([]);
+    for (const tab of ['melody', 'rhythm', 'compose']) await expect(page.locator(`[data-section="${tab}"]`), id).toBeHidden();
+    await expect(page.locator('.practice-panel'), id).toBeVisible();
+    await expect(page.locator('[data-section="practice"].practice-panel'), id).toHaveCount(1);
   }
+  // And back in Lab the tab bar returns with the Practice group proper.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'lab');
+  await expect(page.locator('.workbench-tabs')).toBeVisible();
+  await expect(page.locator('.practice-panel')).toHaveCount(0);
 });
 
-test('AC-14.1.2/3 — Compose a rhythm offers Rhythm and Practice with Pattern actions; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members', async ({ page }) => {
+test('AC-14.1.2/3 — Compose a rhythm offers Rhythm and Practice with Pattern actions and the grid’s accent brush; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto('/');
   await chooseGoal(page, 'lab');
@@ -195,6 +196,7 @@ test('AC-14.1.2/3 — Compose a rhythm offers Rhythm and Practice with Pattern a
   expect(await offeredTabs(page)).toEqual(['rhythm', 'practice']);
   await expect(actions(page)).toBeVisible();
   await expect(family(page)).toBeHidden();
+  await expect(page.locator('.brush-hint')).toBeVisible();
 
   await page.locator('[data-action="show-goals"]').click();
   await chooseGoal(page, 'add-melody');
@@ -213,6 +215,15 @@ test('AC-14.1.2/3 — Compose a rhythm offers Rhythm and Practice with Pattern a
   await expect(actions(page)).toBeVisible();
   await expect(family(page)).toBeVisible();
   await expect(family(page).locator('.family-link')).toHaveCount(1);
+
+  // The grid's accent brush is Compose a rhythm's: a Slot tap cycles its
+  // accent. Last, since the edit takes this Pattern out of its family.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'compose-rhythm');
+  const slot = page.locator('.slot').first();
+  const before = await slot.getAttribute('data-accent');
+  await slot.click();
+  expect(await slot.getAttribute('data-accent')).not.toBe(before);
 });
 
 test('AC-14.1.2/4 — Pattern actions and the family members are absent under the four practice goals', async ({ page }) => {
@@ -578,4 +589,178 @@ test('AC-14.1.4/6 — Under a practice goal Prev and Next step through the rhyth
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), library[0].id);
   await next.click();
   expect((await patternState(page)).id).toBe(library[1].id);
+});
+
+/* --- AC-14.1.5 — practice goals are read-only --------------------------------- */
+
+/** Everything a tap could have changed, for a byte-identical comparison. */
+const snapshot = (page) =>
+  page.evaluate(() => ({
+    pattern: JSON.stringify(window.__rm.getState().pattern),
+    patterns: localStorage.getItem('rm.patterns.v1'),
+    overlays: localStorage.getItem('rm.overlays.v1'),
+    dialogs: document.querySelectorAll('.dialog').length,
+  }));
+
+test('AC-14.1.5/1 — Under a practice goal the grid takes no edit: tapping a Slot, a note band or a Time Signature changes nothing and prompts nothing, and the brush line is absent', async ({ page }) => {
+  await page.goto('/');
+  await chooseGoal(page, 'play');
+  await expect(page.locator('.shell')).toHaveAttribute('data-readonly', 'true');
+  await expect(page.locator('.brush-hint')).toBeHidden();
+
+  const before = await snapshot(page);
+  await page.locator('.slot').first().click();
+  await page.locator('[data-action="change-time-signature"]').first().click();
+  await page.waitForTimeout(150);
+  expect(await snapshot(page)).toEqual(before);
+  await expect(page.locator('.dialog')).toHaveCount(0);
+
+  // A note band on a Melodic rhythm, the same — an owned one without a fill,
+  // whose bands would take a stamp anywhere else (a shipped fill's are inert).
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'melody');
+  await page.evaluate(() => {
+    const beat = () => ({
+      recipe: 'straight-16ths',
+      slots: [{ on: true, pitch: { degree: '1', octaveOffset: 0 } }, { on: false }, { on: true, pitch: { degree: '3', octaveOffset: 0 } }, { on: false }],
+    });
+    window.__rm.loadPattern(
+      { id: 'p_readonly', name: 'Owned Melody', soundMode: 'melodic', key: 'C', tempo: 100, tags: [], rating: 0, measures: [{ timeSignature: '4/4', beats: [beat(), beat(), beat(), beat()] }] },
+      { owned: true }
+    );
+  });
+  expect((await patternState(page)).soundMode).toBe('melodic');
+  const band = page.locator('[data-action="stamp-pitch"]:not(:disabled)').first();
+  await expect(band).toBeVisible();
+  const melodicBefore = await snapshot(page);
+  await band.click();
+  await page.locator('.slot').first().click();
+  await page.waitForTimeout(150);
+  expect(await snapshot(page)).toEqual(melodicBefore);
+  await expect(page.locator('.dialog')).toHaveCount(0);
+
+  // Lab: the same taps edit, as they always have.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'lab');
+  await expect(page.locator('.shell')).toHaveAttribute('data-readonly', 'false');
+  await expect(page.locator('.brush-hint')).toBeVisible();
+  const slot = page.locator('.slot').first();
+  const accent = await slot.getAttribute('data-accent');
+  await slot.click();
+  expect(await slot.getAttribute('data-accent')).not.toBe(accent);
+});
+
+test('AC-14.1.5/2 — The header offers no Sound Mode switch, rename, tag editing or Undo; the name, Rating, Tags and meter are shown, and the Rating still works', async ({ page }) => {
+  await page.goto('/');
+  await chooseGoal(page, 'vocalise');
+  const header = page.locator('.pattern-header');
+  await expect(header.locator('.sound-mode')).toHaveCount(0);
+  await expect(header.locator('input.pattern-title')).toHaveCount(0);
+  await expect(header.locator('[data-action="add-tag"]')).toHaveCount(0);
+  await expect(header.locator('[data-action="remove-tag"]')).toHaveCount(0);
+  await expect(header.locator('[data-action="undo"]')).toHaveCount(0);
+
+  const name = (await patternState(page)).name;
+  await expect(header.locator('.pattern-title')).toHaveText(name);
+  await expect(header.locator('.pattern-meta')).toBeVisible();
+  await expect(header.locator('.tag-chip').first()).toBeVisible();
+  await header.locator('.rating .star[data-value="3"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.rating)).toBe(3);
+  await expect(header.locator('.rating')).toHaveAttribute('data-rating', '3');
+
+  // Lab: every one of them back.
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'lab');
+  await expect(header.locator('.sound-mode')).toHaveCount(1);
+  await expect(header.locator('input.pattern-title')).toHaveCount(1);
+  await expect(header.locator('[data-action="add-tag"]')).toHaveCount(1);
+  await expect(header.locator('[data-action="undo"]')).toHaveCount(1);
+});
+
+test('AC-14.1.5/3 — The workbench tab bar, its groups, Pattern actions and the family members are absent; in their place one practice panel holds the goal’s own playback settings, and the library offers no New Pattern', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await chooseGoal(page, 'lab');
+  await page.locator('.library-toggle').click();
+  await makeOwned(page, 'Groove');
+  await seedTwin(page, 'Groove (Melodic)');
+  await expect(family(page)).toBeVisible();
+  await expect(page.locator('[data-action="new-pattern"]')).toBeVisible();
+
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'groove');
+  await expect(page.locator('.workbench-tabs')).toBeHidden();
+  for (const tab of ['melody', 'rhythm', 'compose']) await expect(page.locator(`[data-section="${tab}"]`)).toBeHidden();
+  await expect(actions(page)).toBeHidden();
+  await expect(family(page)).toBeHidden();
+  const panel = page.locator('[data-section="practice"].practice-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute('data-panel', 'click tempo swing');
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('[data-action="new-pattern"]')).toBeHidden();
+});
+
+test('AC-14.1.5/4 — Play a rhythm’s panel holds Click and Count-in and Tempo; Vocalise or clap it adds Counting; Feel the groove adds Swing; Play melodies over it adds Cycle fills, Cycle progressions and Repeats, without Keep', async ({ page }) => {
+  await page.goto('/');
+  const panel = page.locator('.practice-panel');
+  const present = async (selector) => (await panel.locator(selector).count()) > 0;
+  const expectPanel = async (id, { counting, swing, cycle }) => {
+    await chooseGoal(page, id);
+    expect(await present('[data-action="toggle-metronome"]'), `${id} click`).toBe(true);
+    expect(await present('[data-action="toggle-count-in"]'), `${id} count-in`).toBe(true);
+    expect(await present('.tempo-slider'), `${id} tempo`).toBe(true);
+    expect(await present('.counting-picker'), `${id} counting`).toBe(counting);
+    expect(await present('.swing-slider'), `${id} swing`).toBe(swing);
+    expect(await present('[data-action="toggle-fill-cycle"]'), `${id} cycle`).toBe(cycle);
+    expect(await present('[data-action="keep-fill"]'), `${id} keep`).toBe(false);
+    // Nothing that edits the Pattern is ever on the panel.
+    for (const editing of ['.recipe-strip', '.pitch-strip', '[data-action="add-measure"]', '.progression-picker', '.scale-picker', '.key-picker'])
+      expect(await present(editing), `${id} ${editing}`).toBe(false);
+    await page.locator('[data-action="show-goals"]').click();
+  };
+  await expectPanel('play', { counting: false, swing: false, cycle: false });
+  await expectPanel('vocalise', { counting: true, swing: false, cycle: false });
+  await expectPanel('groove', { counting: false, swing: true, cycle: false });
+  // Play melodies over it: the cycling row once a melodic rhythm with a progression is open.
+  await chooseGoal(page, 'melody');
+  await goalBar(page).locator('[data-action="give-me-one"]').click();
+  expect(await present('[data-action="toggle-fill-cycle"]')).toBe(true);
+  expect(await present('[data-action="toggle-progression-cycle"]')).toBe(true);
+  expect(await present('.fill-cycle-repeats')).toBe(true);
+  expect(await present('[data-action="keep-fill"]')).toBe(false);
+  expect(await present('.counting-picker')).toBe(false);
+  expect(await present('.swing-slider')).toBe(false);
+});
+
+test('AC-14.1.5/5 — Every setting in the panel is a playback setting that writes nothing to the Pattern: a shipped Pattern is never asked for a name under a practice goal, and the Pattern store is unchanged by any of them', async ({ page }) => {
+  await page.goto('/');
+  const stores = () =>
+    page.evaluate(() => ({ patterns: localStorage.getItem('rm.patterns.v1'), owned: window.__rm.getState().isOwned }));
+  const before = await stores();
+
+  await chooseGoal(page, 'groove');
+  await page.locator('.practice-panel [data-action="toggle-metronome"]').click();
+  await page.locator('.practice-panel [data-action="toggle-count-in"]').click();
+  await page.locator('.practice-panel [data-action="preset-tempo"][data-bpm="120"]').click();
+  await page.locator('.practice-panel [data-action="preset-swing"][data-amount="33"]').click();
+  await page.locator('.practice-panel .swing-feel').selectOption('sixteenth');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'vocalise');
+  await page.locator('.practice-panel .counting-picker').selectOption('numbered');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+
+  await page.locator('[data-action="show-goals"]').click();
+  await chooseGoal(page, 'melody');
+  await goalBar(page).locator('[data-action="give-me-one"]').click();
+  await page.locator('.practice-panel [data-action="toggle-fill-cycle"]').click();
+  await page.locator('.practice-panel [data-action="toggle-progression-cycle"]').click();
+  await page.locator('.practice-panel .fill-cycle-repeats').fill('2');
+  await page.locator('.practice-panel .fill-cycle-repeats').dispatchEvent('change');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+
+  const after = await stores();
+  expect(after).toEqual(before);
+  expect(after.owned).toBe(false);
 });
