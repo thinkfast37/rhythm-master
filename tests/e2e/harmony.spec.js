@@ -933,6 +933,56 @@ test("AC-2.7.2/7 — Choosing a fill in the picker while cycling is the ordinary
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
 });
 
+test("AC-2.7.2/8 — While stopped under cycle mode the pinned bar shows a Stop beside Play, and pressing it begins the cycle again from the Pattern's own fill — the first of the catalogue when it has None — with cycle mode still on, every view following that fill, the Pattern's own arpeggio untouched and a shipped Pattern never prompted; the next Play runs the cycle from there", async ({ page }) => {
+  const { ARPEGGIOS } = await import('../../src/core/harmony.js');
+  await cyclingBlank(page);
+  const reset = page.locator('.main-top-bar [data-action="reset-cycle"]');
+  // Not cycling: the one Play and nothing beside it.
+  await expect(reset).toHaveCount(0);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await expect(reset).toHaveText('Stop');
+  await page.locator('[data-action="play"]').click();
+  // Playing: the ordinary Stop alone.
+  await expect(reset).toHaveCount(0);
+  expect(await untilFill(page, ARPEGGIOS[1].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  // The first Stop holds (AC-2.7.2/6); the second is there to press.
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[1].id);
+  await expect(reset).toHaveText('Stop');
+
+  await reset.click();
+  // Back to the Pattern's own — None here, so the catalogue's first — with cycle mode still on.
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[0].id);
+  await expect(page.locator('.arpeggio-picker')).toHaveValue(ARPEGGIOS[0].id);
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+  expect(await cycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+  expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
+
+  // The next Play runs the cycle from there: the first fill first, then the second.
+  await page.locator('[data-action="play"]').click();
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[0].id);
+  expect(await untilFill(page, ARPEGGIOS[1].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+
+  // With a fill of its own — and shipped — that fill is where the cycle begins again, and nothing prompts.
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  await loadAsShipped(page);
+  // Cycle mode is still on across the reload, from the Pattern's own Alberti.
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('[data-action="play"]').click();
+  expect(await untilFill(page, 'root')).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await fillInForce(page)).toBe('root');
+  await reset.click();
+  expect(await fillInForce(page)).toBe('alberti');
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('alberti');
+  expect((await pattern(page)).harmony.arpeggio).toBe('alberti');
+  await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+});
+
 test("AC-2.7.3/1 — While cycle mode is on the score's head carries a Fill line naming the fill in force, and the notes are that fill's; Print / PDF prints the same score", async ({ page }) => {
   await cyclingBlank(page);
   await page.locator('[data-action="view-sheet"]').click();
@@ -1232,6 +1282,45 @@ test("AC-2.10.2/6 — Stopping holds the progression in force where it is: every
   await page.locator('.progression-cycle').click();
   expect(await progressionInForce(page)).toBe('I-IV-V');
   expect(await chordNames(page)).toEqual(own);
+});
+
+test("AC-2.10.2/8 — While stopped under progression cycling the pinned bar shows a Stop beside Play, and pressing it begins the cycle again from the Pattern's own progression with progression cycling still on, every view following it and the Pattern's own chords untouched; the one Stop resets Cycle fills and Cycle progressions together, whichever are on", async ({ page }) => {
+  const { PROGRESSIONS, ARPEGGIOS } = await import('../../src/core/harmony.js');
+  await cyclingBlank(page);
+  const reset = page.locator('.main-top-bar [data-action="reset-cycle"]');
+  await expect(reset).toHaveCount(0);
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  const own = await chordNames(page);
+  await expect(reset).toHaveText('Stop');
+  await page.locator('[data-action="play"]').click();
+  await expect(reset).toHaveCount(0);
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect(await progressionInForce(page)).toBe(PROGRESSIONS[1].id);
+
+  await reset.click();
+  // Back to the Pattern's own, cycling still on: state, picker and chord strip agree.
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  await expect(page.locator('.progression-picker')).toHaveValue('I-IV-V');
+  expect(await chordNames(page)).toEqual(own);
+  await expect(page.locator('.progression-cycle')).toHaveAttribute('aria-pressed', 'true');
+  expect(await progressionCycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+  expect(await page.evaluate(() => window.__rm.getState().pattern.harmony.chords[0].degree)).toBe('1');
+
+  // Both cycles on: the one Stop takes both back to the start.
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+  expect((await progressionCycleState(page)).start).toBeGreaterThan(0);
+  expect((await cycleState(page)).start).toBeGreaterThan(0);
+  await reset.click();
+  expect(await progressionInForce(page)).toBe('I-IV-V');
+  expect(await fillInForce(page)).toBe(ARPEGGIOS[0].id);
+  expect(await progressionCycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
+  expect(await cycleState(page)).toEqual({ on: true, start: 0, baseLoop: 0 });
 });
 
 test("AC-2.10.2/7 — Choosing a progression in the picker while cycling is the ordinary edit of the Pattern's progression, and the cycle begins again from that choice with its repeats counted afresh; choosing None hands the notes back to the stamped Pitches and turns progression cycling off", async ({ page }) => {

@@ -1149,7 +1149,30 @@ function renderTransport(state, handlers) {
   play.addEventListener('click', () => (state.isPlaying ? handlers.onStop() : handlers.onPlay()));
   group.appendChild(play);
 
+  // Stopped under a cycle, Stop stays beside Play: the second press begins the
+  // cycle again from the Pattern's own fill and progression, the way a deck
+  // returns to the start when Stop is pressed twice (AC-2.7.2/8, AC-2.10.2/8).
+  // Only then — an ordinary Pattern shows the one button (AC-15.1.17/4).
+  if (!state.isPlaying && cycleOn(state)) {
+    const reset = el('button', 'transport transport-reset', {
+      type: 'button',
+      textContent: 'Stop',
+      title: 'Stop again: start the cycle over from the Pattern’s own fill',
+    });
+    reset.setAttribute('aria-label', 'Stop again: start the cycle over from the Pattern’s own fill');
+    reset.dataset.action = 'reset-cycle';
+    reset.addEventListener('click', () => handlers.onResetCycle());
+    group.appendChild(reset);
+  }
+
   return group;
+}
+
+/** Whether a cycle is on for the open Pattern: Melodic with a progression, fills or progressions cycling. */
+function cycleOn(state) {
+  const p = state.pattern;
+  if (!p || p.soundMode !== 'melodic' || !hasHarmony(p)) return false;
+  return Boolean(state.fillCycle?.on || state.progressionCycle?.on);
 }
 
 /** The metronome click and the count-in (US-4.3), in the Practice group. */
