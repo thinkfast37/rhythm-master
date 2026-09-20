@@ -623,12 +623,35 @@ test('AC-15.1.17/3 — Play and the tempo entry stay reachable without scrolling
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('AC-15.1.17/4 — The panel holds exactly one Play/Stop control', async ({ page }) => {
+test('AC-15.1.17/4 — The panel holds exactly one Play/Stop control; the only other transport button is the Stop a stopped cycle adds beside Play, and it is absent whenever no cycle is on or the Pattern is playing', async ({ page }) => {
   await page.goto('/');
+  const transport = page.locator('.main-panel .transport');
   await expect(page.locator('.main-panel [data-action="play"], .main-panel [data-action="stop"]')).toHaveCount(1);
+  await expect(transport).toHaveCount(1);
   // In the pinned bar, beside the library toggle and Prev/Next.
   await expect(page.locator('.main-top-bar [data-action="play"]')).toHaveCount(1);
   await expect(page.locator('.main-top-bar .tempo-entry')).toHaveCount(1);
+
+  // A Melodic Pattern with a progression, cycling: stopped, Stop sits beside Play (AC-2.7.2/8).
+  await page.evaluate(() => window.__rm.loadBlank());
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await expect(transport).toHaveCount(1);
+  await page.locator('.fill-cycle').click();
+  await expect(transport).toHaveCount(2);
+  await expect(page.locator('.main-top-bar [data-action="play"]')).toHaveCount(1);
+  await expect(page.locator('.main-top-bar [data-action="reset-cycle"]')).toHaveText('Stop');
+
+  // Playing, the ordinary Stop alone; stopped again, the pair returns.
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.main-panel [data-action="play"], .main-panel [data-action="stop"]')).toHaveCount(1);
+  await expect(transport).toHaveCount(1);
+  await page.locator('[data-action="stop"]').click();
+  await expect(transport).toHaveCount(2);
+
+  // Cycle off: back to the one button.
+  await page.locator('.fill-cycle').click();
+  await expect(transport).toHaveCount(1);
 });
 
 /*

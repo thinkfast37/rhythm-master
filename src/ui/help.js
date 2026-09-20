@@ -17,7 +17,7 @@ export function helpOn(state) {
 export const HELP = Object.freeze({
   bar: [
     ['Library', 'Opens the list of every Pattern, shipped and your own, with search and Tag filters.'],
-    ['Play / Stop', 'Loops the Pattern from the top until you stop it.'],
+    ['Play / Stop', 'Loops the Pattern from the top until you stop it. Under a cycle, a second Stop starts the cycle over from the Pattern’s own fill.'],
     ['BPM', 'The exact tempo in beats per minute; type a number, or use the slider and presets in Practice.'],
     ['Prev / Next', 'Steps to the neighbouring Pattern in the library list as it is filtered now.'],
     ['Goals', 'Back to the goals screen, to work a different way or leave Lab.'],

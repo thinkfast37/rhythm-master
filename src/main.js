@@ -1305,6 +1305,24 @@ const handlers = {
     transport.stop();
   },
 
+  /**
+   * The second Stop (AC-2.7.2/8, AC-2.10.2/8): pressed while already stopped
+   * under a cycle, it begins whichever cycles are on again from the Pattern's
+   * own fill and progression — exactly what turning each on gives (AC-2.7.1/3,
+   * AC-2.10.1/3) — with the cycle still on. The first Stop holds what was
+   * sounding (AC-2.7.2/6); this is the way back to the start without the
+   * toggle, and without the picker's edit that would prompt a shipped Pattern.
+   * Playback settings only: nothing is written into the Pattern.
+   */
+  onResetCycle() {
+    if (state.isPlaying) return;
+    if (state.fillCycle.on) state.fillCycle = { on: true, start: fillIndexOf(state.pattern), baseLoop: 0 };
+    if (state.progressionCycle.on) {
+      state.progressionCycle = { on: true, start: progressionIndexOf(state.pattern), baseLoop: 0 };
+    }
+    render();
+  },
+
   // --- library ---
 
   /**
