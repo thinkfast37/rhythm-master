@@ -65,12 +65,17 @@ function silentWavUri() {
 }
 
 let element = null;
+/** The generated silence, built once and kept so a run can return to it. */
+let silentUri = null;
+/** Whether what the element holds is AC-4.1.15's render rather than silence. */
+let carriesRun = false;
 
 function ensure() {
   if (element) return element;
   if (typeof Audio !== 'function' || typeof btoa !== 'function') return null;
   try {
-    element = new Audio(silentWavUri());
+    silentUri ??= silentWavUri();
+    element = new Audio(silentUri);
     element.loop = true;
     element.preload = 'auto';
     // iOS refuses to play an element it thinks wants the full-screen player.
@@ -81,6 +86,64 @@ function ensure() {
     element = null;
   }
   return element;
+}
+
+/**
+ * Give the element the rendered run to carry (AC-4.1.15).
+ *
+ * It keeps playing at volume 0 until the screen goes off, so the media session
+ * it holds is never interrupted by the swap — a session dropped and re-taken
+ * at the moment of locking is the one moment it must not be.
+ */
+export function setRendered(url) {
+  const el = ensure();
+  if (!el) return;
+  try {
+    el.volume = 0;
+    el.src = url;
+    el.loop = true;
+    carriesRun = true;
+    const played = el.play();
+    played?.catch?.(() => {});
+  } catch {
+    // The run keeps the live transport and loses only the handover.
+    carriesRun = false;
+  }
+}
+
+/**
+ * The screen went off: the element takes the sound over from the live
+ * transport, from `phaseSeconds` into the rendered cycle (AC-4.1.15/2).
+ *
+ * A seek and a volume change, nothing more — both instant on an in-memory
+ * source, which is what makes this safe to do at the moment of locking.
+ */
+export function takeOver(phaseSeconds) {
+  // Silence is not something to hand the sound over to: an element with no
+  // render behind it keeps holding the session and nothing more (AC-4.1.15/6).
+  if (!element || !carriesRun) return;
+  try {
+    if (Number.isFinite(phaseSeconds)) element.currentTime = phaseSeconds;
+    element.volume = 1;
+    element.play()?.catch?.(() => {});
+  } catch {
+    // Nothing downstream depends on the handover succeeding.
+  }
+}
+
+/** The screen came back: the live transport has the sound again (AC-4.1.15/3). */
+export function standDown() {
+  if (!element) return;
+  try {
+    element.volume = 0;
+  } catch {
+    // As above.
+  }
+}
+
+/** Test seam: whether the element is currently carrying the run's sound. */
+export function isCarrying() {
+  return Boolean(element && carriesRun && element.volume > 0 && !element.paused);
 }
 
 /**
@@ -95,6 +158,10 @@ export function start() {
   const el = ensure();
   if (!el) return;
   try {
+    // Back to silence for a fresh run: the previous run's render is gone, and
+    // an element left holding it would hand the wrong Pattern over.
+    if (!carriesRun && el.src !== silentUri) el.src = silentUri;
+    el.volume = 1;
     const played = el.play();
     if (played && typeof played.catch === 'function') {
       played.catch(() => {
@@ -114,7 +181,9 @@ export function start() {
  */
 export function stop() {
   if (!element) return;
+  carriesRun = false;
   try {
+    element.volume = 0;
     element.pause();
     element.currentTime = 0;
   } catch {

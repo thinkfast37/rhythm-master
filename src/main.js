@@ -105,6 +105,7 @@ import {
 } from './core/harmony.js';
 import * as mediaSession from './audio/mediaSession.js';
 import * as keepAlive from './audio/keepAlive.js';
+import { renderCycle } from './audio/backgroundRender.js';
 import { renderScore, printScore } from './ui/score.js';
 import {
   buildSubmission,
@@ -273,6 +274,66 @@ function progressionIdAt(loop) {
 }
 
 /**
+ * How many passes until everything in force repeats (AC-4.1.15/4).
+ *
+ * Each overlay cycles independently over its own catalogue at the shared
+ * Repeats setting, so the run repeats at the least common multiple of their
+ * periods. Nothing cycling is a period of one: the Pattern itself.
+ */
+function cyclePasses() {
+  const repeats = Math.max(1, state.settings.fillCycleRepeats ?? 4);
+  const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+  const lcm = (a, b) => (a / gcd(a, b)) * b;
+
+  let passes = 1;
+  if (cycling()) passes = lcm(passes, ARPEGGIOS.length * repeats);
+  if (progressionCycling()) passes = lcm(passes, PROGRESSIONS.length * repeats);
+  // A Song plays its Section through once per cycle rather than repeating a
+  // catalogue, so its own length is its period.
+  if (songPlaying()) {
+    const entries = state.compose.song?.sections[0]?.entries ?? [];
+    const songPasses = entries.reduce((n, e) => n + Math.max(1, e.repeats ?? 1), 0);
+    if (songPasses > 0) passes = lcm(passes, songPasses);
+  }
+  return passes;
+}
+
+/** The rendered cycle currently loaded into the keep-alive element, or null. */
+let rendered = null;
+
+/**
+ * Render the run as it now stands, for the element to carry when the screen
+ * goes off (AC-4.1.15/1). Called at Play and whenever what is heard changes.
+ *
+ * Deliberately not awaited by anything: a render that has not finished when
+ * the screen locks simply means no handover for that lock, which is exactly
+ * where this app stood before AC-4.1.15.
+ */
+let renderToken = 0;
+async function refreshBackgroundAudio() {
+  const token = (renderToken += 1);
+  if (!state.isPlaying) {
+    if (rendered) URL.revokeObjectURL(rendered.url);
+    rendered = null;
+    return;
+  }
+  const next = await renderCycle({
+    patternAt: (pass) => playingAt(pass),
+    passes: cyclePasses(),
+    settings: state.settings,
+    sampleRate: 44100,
+  });
+  // A later render started while this one ran: that one owns the element.
+  if (token !== renderToken || !next) {
+    if (next) URL.revokeObjectURL(next.url);
+    return;
+  }
+  if (rendered) URL.revokeObjectURL(rendered.url);
+  rendered = next;
+  keepAlive.setRendered(next.url);
+}
+
+/**
  * The Composer's records for the open Pattern — kept fills (AC-2.8.1) and
  * Songs (AC-18.1.4) — read from their stores only when one of them changes.
  * Render runs on every position tick and must not parse a store each time.
@@ -388,7 +449,10 @@ function rebaseProgressionCycle() {
 }
 
 function syncTransport() {
-  if (state.isPlaying) transport.update(scheduled(), state.settings);
+  if (!state.isPlaying) return;
+  transport.update(scheduled(), state.settings);
+  // What the screen-off handover would play has changed with it (AC-4.1.15/5).
+  refreshBackgroundAudio();
 }
 
 function restartTransport() {
@@ -399,6 +463,9 @@ function restartTransport() {
   state.fillCycle.baseLoop = 0;
   rebaseProgressionCycle();
   state.progressionCycle.baseLoop = 0;
+  // Tempo, swing and settings all restart the run, and all change what the
+  // screen-off handover would play (AC-4.1.15/5).
+  refreshBackgroundAudio();
   return transport.restart(scheduled(), state.settings);
 }
 
@@ -1274,6 +1341,9 @@ const handlers = {
     // alive in the background, and shows the lock screen the Pattern playing
     // (AC-4.1.11).
     mediaSession.setPlaying(state.pattern.name);
+    // Not awaited: the run is already sounding, and this only decides whether
+    // the next screen-off has a handover to make (AC-4.1.15/1).
+    refreshBackgroundAudio();
   },
 
   onStop() {
@@ -1746,6 +1816,7 @@ const transport = createTransport({
     // Only a stop ends the keep-alive — a recoverable suspension never reaches
     // here, and holding the session open through one is its job (AC-4.1.12/2).
     keepAlive.stop();
+    refreshBackgroundAudio();
     render();
   },
 });
@@ -2530,6 +2601,27 @@ export function init(root = document.getElementById('app')) {
   // The lock screen's own play/pause/stop, once AC-4.1.12 has put this page
   // on it in earnest (AC-4.1.13). Registered once, at start-up: the handlers
   // read the live transport state each time they fire.
+  /*
+   * The screen-off handover (AC-4.1.15/2, /3). Registered once, at start-up.
+   *
+   * Going hidden is the last moment this page is certainly allowed to run
+   * code, so the handover is a seek and a volume change and nothing more —
+   * both instant on an in-memory source. Coming back, the live transport has
+   * the sound again: AC-4.1.6's auto-resume picks the run up, and the element
+   * drops to silent without ever stopping, so the media session it holds is
+   * unbroken across both directions.
+   */
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (!state.isPlaying || !rendered) return;
+      if (document.visibilityState === 'hidden') {
+        keepAlive.takeOver(transport.elapsed() % rendered.seconds);
+      } else {
+        keepAlive.standDown();
+      }
+    });
+  }
+
   mediaSession.setHandlers({
     onPlay: () => {
       if (!state.isPlaying) handlers.onPlay();
@@ -2561,8 +2653,12 @@ if (typeof window !== 'undefined') {
     currentFamily,
     unresolvedLibraryDuplicates,
     melodic,
-    /** Test seam: the silent keep-alive element, once one exists (AC-4.1.12). */
+    /** Test seam: the keep-alive element, once one exists (AC-4.1.12). */
     keepAlive: () => keepAlive.current(),
+    /** Test seam: the rendered cycle the element carries, or null (AC-4.1.15). */
+    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole },
+    /** Test seam: whether the element has the sound rather than the transport. */
+    carrying: () => keepAlive.isCarrying(),
     /** The fill cycle mode has in force, as its catalogue id, or null (US-2.7). */
     fillInForce: () => playing().harmony?.arpeggio ?? null,
     /** The progression cycling has in force, as its catalogue id, or null (US-2.10). */
