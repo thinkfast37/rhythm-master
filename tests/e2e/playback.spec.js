@@ -432,12 +432,14 @@ test('AC-4.1.12/1 — Play starts the keep-alive element playing; Stop ends it',
 
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  // Playing and looping, and inaudible whichever of the two sources it holds:
+  // the generated silence it starts on, or AC-4.1.15's render once that lands.
   await expect
     .poll(() => page.evaluate(() => {
       const el = window.__rm.keepAlive();
-      return el ? { paused: el.paused, loop: el.loop, silent: el.src.startsWith('data:audio/wav;base64,') } : null;
+      return el ? { paused: el.paused, loop: el.loop, audible: window.__rm.carrying() } : null;
     }))
-    .toEqual({ paused: false, loop: true, silent: true });
+    .toEqual({ paused: false, loop: true, audible: false });
 
   await page.locator('[data-action="stop"]').click();
   await expect(page.locator('[data-action="play"]')).toBeVisible();
@@ -611,6 +613,138 @@ test('AC-4.1.14/2 — Where it is not available, or its module fails to load, th
     .poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 6000 })
     .toBeGreaterThan(loopBefore);
   expect(await page.evaluate(() => window.__rm.transport._snapshot().tickSource)).toBe('timer');
+
+  await page.locator('[data-action="stop"]').click();
+  await expect(page.locator('[data-action="play"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('AC-4.1.15/1 — Play renders the run and gives it to the element, which keeps playing inaudibly until the screen goes off', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  // The render is async and deliberately not awaited by Play.
+  await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.passes ?? null), { timeout: 8000 }).toBe(1);
+  const el = await page.evaluate(() => {
+    const e = window.__rm.keepAlive();
+    return { paused: e.paused, volume: e.volume, blob: e.src.startsWith('blob:'), loop: e.loop };
+  });
+  expect(el).toEqual({ paused: false, volume: 0, blob: true, loop: true });
+  expect(await page.evaluate(() => window.__rm.carrying())).toBe(false);
+});
+
+test('AC-4.1.15/2 — The page going hidden hands the sound to the element, seeked to the position the run had reached', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.seconds ?? null), { timeout: 8000 }).toBeGreaterThan(0);
+
+  // Let the run get somewhere into the loop, so a seek to 0 would be visible.
+  await page.waitForTimeout(400);
+  const elapsed = await page.evaluate(() => window.__rm.transport.elapsed());
+  await goHidden(page);
+
+  const after = await page.evaluate(() => ({
+    volume: window.__rm.keepAlive().volume,
+    paused: window.__rm.keepAlive().paused,
+    at: window.__rm.keepAlive().currentTime,
+    carrying: window.__rm.carrying(),
+    seconds: window.__rm.rendered().seconds,
+  }));
+  expect(after.volume).toBe(1);
+  expect(after.paused).toBe(false);
+  expect(after.carrying).toBe(true);
+  // Seeked to where the run had reached, within the rendered cycle.
+  expect(after.at).toBeGreaterThan(0);
+  expect(after.at).toBeLessThanOrEqual(after.seconds);
+  expect(Math.abs(after.at - (elapsed % after.seconds))).toBeLessThan(0.5);
+});
+
+test('AC-4.1.15/3 — The page returning hands the sound back: the element goes inaudible again without ever stopping, so the media session is unbroken in both directions', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.seconds ?? null), { timeout: 8000 }).toBeGreaterThan(0);
+
+  await goHidden(page);
+  expect(await page.evaluate(() => window.__rm.carrying())).toBe(true);
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+
+  const after = await page.evaluate(() => ({
+    volume: window.__rm.keepAlive().volume,
+    // Never stopped: the session it holds is unbroken across the handover.
+    paused: window.__rm.keepAlive().paused,
+    carrying: window.__rm.carrying(),
+  }));
+  expect(after).toEqual({ volume: 0, paused: false, carrying: false });
+});
+
+test('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+
+  // Nothing cycling: the period is the Pattern itself, one pass.
+  await page.locator('[data-action="play"]').click();
+  await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.passes ?? null), { timeout: 8000 }).toBe(1);
+  const one = await page.evaluate(() => window.__rm.rendered());
+  expect(one.whole).toBe(true);
+  const loopSeconds = await page.evaluate(() => window.__rm.transport._snapshot().loopDuration);
+  expect(Math.abs(one.seconds - loopSeconds)).toBeLessThan(0.01);
+});
+
+test('AC-4.1.15/5 — A change to what is heard — a Pattern edit, a tempo, a swing, a setting — renders again, so the screen-off audio is never the previous run', async ({ page }) => {
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.seconds ?? null), { timeout: 8000 }).toBeGreaterThan(0);
+  const before = await page.evaluate(() => ({
+    seconds: window.__rm.rendered().seconds,
+    src: window.__rm.keepAlive().src,
+  }));
+
+  // Halve the tempo: the same Pattern takes twice as long, so the rendered
+  // cycle must grow with it rather than stay the previous run's length.
+  await page.evaluate(() => window.__rm.handlers.onTempo(120));
+
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.rendered()?.seconds ?? null), { timeout: 8000 })
+    .toBeGreaterThan(before.seconds * 1.5);
+  expect(await page.evaluate(() => window.__rm.keepAlive().src)).not.toBe(before.src);
+});
+
+test('AC-4.1.15/6 — A browser with no `OfflineAudioContext`, or a render that fails, is unaffected: the live transport plays exactly as it would without any of this and nothing throws', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.OfflineAudioContext;
+    delete window.webkitOfflineAudioContext;
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+
+  // Nothing rendered, and going hidden hands over nothing — the run simply
+  // pauses and resumes as it did before any of this existed.
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => window.__rm.rendered())).toBeNull();
+  await goHidden(page);
+  expect(await page.evaluate(() => window.__rm.carrying())).toBe(false);
+
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
+  await expect
+    .poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 6000 })
+    .toBeGreaterThan(loopBefore);
 
   await page.locator('[data-action="stop"]').click();
   await expect(page.locator('[data-action="play"]')).toBeVisible();

@@ -434,6 +434,17 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
     /** Test seam: the absolute time an event would sound at. */
     _eventTime: (loop, offset) => eventTime(loop, offset),
 
+    /**
+     * Seconds of Pattern heard since this run began, past any count-in — what
+     * a background render is seeked to when it takes the sound over
+     * (AC-4.1.15/2). Read against the audio clock, like everything else here,
+     * so a suspended context reports the moment it stopped rather than drifting.
+     */
+    elapsed() {
+      if (!ctx) return 0;
+      return Math.max(0, ctx.currentTime - origin - countInSeconds);
+    },
+
     /** Test seam: what the transport is actually sounding right now. */
     _snapshot: () => ({
       pattern,

@@ -9,20 +9,21 @@
 /*
  * Cached per AudioContext, not globally. A node belongs to the context that
  * created it, and connecting across contexts throws — so if the context is ever
- * replaced (a hard suspend on iOS, or a test using an OfflineAudioContext), the
- * cached nodes must be rebuilt rather than reused.
+ * replaced (a hard suspend on iOS), the cached nodes must be rebuilt rather
+ * than reused.
+ *
+ * A WeakMap rather than one slot plus a reset, because two contexts are now
+ * live at once: the transport's, and the OfflineAudioContext a background
+ * render builds beside it (AC-4.1.15). A single slot made the render evict the
+ * playing context's bus and rebuild it underneath a run — a second compressor
+ * on the destination for every render, and the old one orphaned but still
+ * connected. Keyed by context, neither can see the other's nodes at all.
  */
-let owner = null;
-let compressor = null;
-let reverb = null;
-let reverbWet = null;
+const buses = new WeakMap();
 
-function resetIfNewContext(ctx) {
-  if (owner === ctx) return;
-  owner = ctx;
-  compressor = null;
-  reverb = null;
-  reverbWet = null;
+function busFor(ctx) {
+  if (!buses.has(ctx)) buses.set(ctx, { compressor: null, reverb: null, reverbWet: null });
+  return buses.get(ctx);
 }
 
 /**
@@ -44,10 +45,10 @@ function buildReverbImpulse(ctx) {
 
 /** The master bus. Every voice, both Modes, routes through this. Idempotent. */
 export function ensureCompressor(ctx) {
-  resetIfNewContext(ctx);
-  if (compressor) return compressor;
+  const bus = busFor(ctx);
+  if (bus.compressor) return bus.compressor;
 
-  compressor = ctx.createDynamicsCompressor();
+  const compressor = ctx.createDynamicsCompressor();
   compressor.threshold.value = -24;
   compressor.knee.value = 8;
   compressor.ratio.value = 3;
@@ -55,6 +56,7 @@ export function ensureCompressor(ctx) {
   compressor.release.value = 0.25;
   compressor.connect(ctx.destination);
 
+  bus.compressor = compressor;
   return compressor;
 }
 
@@ -64,23 +66,27 @@ export function ensureCompressor(ctx) {
  * response is 1.5 seconds of synthesised stereo noise: not free to build.
  */
 export function ensureReverb(ctx) {
-  resetIfNewContext(ctx);
-  if (reverb) return reverb;
+  const cached = busFor(ctx);
+  if (cached.reverb) return cached.reverb;
 
-  const bus = ensureCompressor(ctx);
-  reverb = ctx.createConvolver();
+  const destination = ensureCompressor(ctx);
+  const reverb = ctx.createConvolver();
   reverb.buffer = buildReverbImpulse(ctx);
-  reverbWet = ctx.createGain();
+  const reverbWet = ctx.createGain();
   reverbWet.gain.value = 0.35; // 35% wet
   reverb.connect(reverbWet);
-  reverbWet.connect(bus);
+  reverbWet.connect(destination);
 
+  cached.reverb = reverb;
+  cached.reverbWet = reverbWet;
   return reverb;
 }
 
-export function __reset() {
-  owner = null;
-  compressor = null;
-  reverb = null;
-  reverbWet = null;
-}
+/**
+ * Test seam, kept for the suites that call it between cases.
+ *
+ * There is nothing left to clear: the cache is keyed by context, so a test
+ * that builds a fresh context already gets a fresh bus, and one that keeps its
+ * context wants the bus it has.
+ */
+export function __reset() {}
