@@ -2657,8 +2657,10 @@ if (typeof window !== 'undefined') {
     keepAlive: () => keepAlive.current(),
     /** Test seam: the rendered cycle the element carries, or null (AC-4.1.15). */
     rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole },
-    /** Test seam: whether the element has the sound rather than the transport. */
+    /** Test seam: whether the carrier has the sound rather than the transport. */
     carrying: () => keepAlive.isCarrying(),
+    /** Test seam: the carrier element holding the render, or null (AC-4.1.15). */
+    carrier: () => keepAlive.currentCarrier(),
     /** The fill cycle mode has in force, as its catalogue id, or null (US-2.7). */
     fillInForce: () => playing().harmony?.arpeggio ?? null,
     /** The progression cycling has in force, as its catalogue id, or null (US-2.10). */

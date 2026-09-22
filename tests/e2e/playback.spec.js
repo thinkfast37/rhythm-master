@@ -629,10 +629,10 @@ test('AC-4.1.15/1 — Play renders the run and gives it to the element, which ke
   // The render is async and deliberately not awaited by Play.
   await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.passes ?? null), { timeout: 8000 }).toBe(1);
   const el = await page.evaluate(() => {
-    const e = window.__rm.keepAlive();
-    return { paused: e.paused, volume: e.volume, blob: e.src.startsWith('blob:'), loop: e.loop };
+    const e = window.__rm.carrier();
+    return { paused: e.paused, muted: e.muted, blob: e.src.startsWith('blob:'), loop: e.loop };
   });
-  expect(el).toEqual({ paused: false, volume: 0, blob: true, loop: true });
+  expect(el).toEqual({ paused: false, muted: true, blob: true, loop: true });
   expect(await page.evaluate(() => window.__rm.carrying())).toBe(false);
 });
 
@@ -649,13 +649,13 @@ test('AC-4.1.15/2 — The page going hidden hands the sound to the element, seek
   await goHidden(page);
 
   const after = await page.evaluate(() => ({
-    volume: window.__rm.keepAlive().volume,
-    paused: window.__rm.keepAlive().paused,
-    at: window.__rm.keepAlive().currentTime,
+    muted: window.__rm.carrier().muted,
+    paused: window.__rm.carrier().paused,
+    at: window.__rm.carrier().currentTime,
     carrying: window.__rm.carrying(),
     seconds: window.__rm.rendered().seconds,
   }));
-  expect(after.volume).toBe(1);
+  expect(after.muted).toBe(false);
   expect(after.paused).toBe(false);
   expect(after.carrying).toBe(true);
   // Seeked to where the run had reached, within the rendered cycle.
@@ -680,12 +680,14 @@ test('AC-4.1.15/3 — The page returning hands the sound back: the element goes 
   });
 
   const after = await page.evaluate(() => ({
-    volume: window.__rm.keepAlive().volume,
-    // Never stopped: the session it holds is unbroken across the handover.
-    paused: window.__rm.keepAlive().paused,
+    muted: window.__rm.carrier().muted,
+    // Never stopped: the carrier keeps rolling, so the next handover is again
+    // a single property change, and the keep-alive's session is untouched.
+    paused: window.__rm.carrier().paused,
+    silenceStillPlaying: !window.__rm.keepAlive().paused,
     carrying: window.__rm.carrying(),
   }));
-  expect(after).toEqual({ volume: 0, paused: false, carrying: false });
+  expect(after).toEqual({ muted: true, paused: false, silenceStillPlaying: true, carrying: false });
 });
 
 test('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat', async ({ page }) => {
@@ -708,7 +710,7 @@ test('AC-4.1.15/5 — A change to what is heard — a Pattern edit, a tempo, a s
   await expect.poll(() => page.evaluate(() => window.__rm.rendered()?.seconds ?? null), { timeout: 8000 }).toBeGreaterThan(0);
   const before = await page.evaluate(() => ({
     seconds: window.__rm.rendered().seconds,
-    src: window.__rm.keepAlive().src,
+    src: window.__rm.carrier().src,
   }));
 
   // Halve the tempo: the same Pattern takes twice as long, so the rendered
@@ -718,7 +720,7 @@ test('AC-4.1.15/5 — A change to what is heard — a Pattern edit, a tempo, a s
   await expect
     .poll(() => page.evaluate(() => window.__rm.rendered()?.seconds ?? null), { timeout: 8000 })
     .toBeGreaterThan(before.seconds * 1.5);
-  expect(await page.evaluate(() => window.__rm.keepAlive().src)).not.toBe(before.src);
+  expect(await page.evaluate(() => window.__rm.carrier().src)).not.toBe(before.src);
 });
 
 test('AC-4.1.15/6 — A browser with no `OfflineAudioContext`, or a render that fails, is unaffected: the live transport plays exactly as it would without any of this and nothing throws', async ({ page }) => {
@@ -749,6 +751,53 @@ test('AC-4.1.15/6 — A browser with no `OfflineAudioContext`, or a render that 
   await page.locator('[data-action="stop"]').click();
   await expect(page.locator('[data-action="play"]')).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('AC-4.1.15/7 — The carrier is silenced by `muted`, not by `volume`: a browser that ignores `volume` on a media element — iOS Safari does, where it is read-only — must still hear nothing from the carrier while the screen is on', async ({ page }) => {
+  // iOS Safari's actual behaviour, installed before the app's own script: the
+  // volume setter is accepted and does nothing, exactly as it does on a phone.
+  // Desktop Chromium honours volume, which is why nothing in CI could hear
+  // this fault until it was reproduced deliberately.
+  await page.addInitScript(() => {
+    const proto = HTMLMediaElement.prototype;
+    const real = Object.getOwnPropertyDescriptor(proto, 'volume');
+    Object.defineProperty(proto, 'volume', {
+      configurable: true,
+      get: real.get,
+      set() {
+        // Silently ignored, as on iOS.
+      },
+    });
+  });
+
+  await page.goto('/');
+  await loadSimple(page);
+  await page.locator('[data-action="play"]').click();
+  await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 4000 });
+  await expect.poll(() => page.evaluate(() => window.__rm.carrier() !== null), { timeout: 8000 }).toBe(true);
+
+  // Playing, so the handover is a single property change away — and silent,
+  // by the one means this browser honours.
+  const onScreen = await page.evaluate(() => ({
+    muted: window.__rm.carrier().muted,
+    paused: window.__rm.carrier().paused,
+    volumeIgnored: window.__rm.carrier().volume,
+    carrying: window.__rm.carrying(),
+  }));
+  expect(onScreen.muted).toBe(true);
+  expect(onScreen.paused).toBe(false);
+  // The very thing that made this ship broken: volume never moved.
+  expect(onScreen.volumeIgnored).toBe(1);
+  expect(onScreen.carrying).toBe(false);
+
+  // The keep-alive element is untouched by any of it: audible silence still,
+  // so the session it holds cannot be lost to the carrier being muted.
+  expect(await page.evaluate(() => window.__rm.keepAlive().muted)).toBe(false);
+
+  // And the handover still works on the same browser.
+  await goHidden(page);
+  expect(await page.evaluate(() => window.__rm.carrier().muted)).toBe(false);
+  expect(await page.evaluate(() => window.__rm.carrying())).toBe(true);
 });
 
 test('AC-4.2.1 — Default tempo and range: the control clamps to 18–300', async ({ page }) => {
