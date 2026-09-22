@@ -14,13 +14,13 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 688 across 46 User Stories
+**Criteria**: 689 across 46 User Stories
 
-**Coverage**: 499 of 688 criteria proven (72.5%)
+**Coverage**: 500 of 689 criteria proven (72.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 499 | 72.5% |
+| 🟢 Proven | 500 | 72.6% |
 | 🔴 Gap — HIGH | 70 | 10.2% |
 | 🟠 Gap — MEDIUM | 41 | 6.0% |
 | 🟡 Gap — LOW | 78 | 11.3% |
@@ -67,7 +67,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
 | 🔴 US-3.1 | 24 | 8 | · | · | 3 | 1 | 12 |
-| 🔴 US-4.1 | 39 | 35 | · | · | 2 | · | 2 |
+| 🔴 US-4.1 | 40 | 36 | · | · | 2 | · | 2 |
 | 🟠 US-4.2 | 15 | 14 | · | · | · | 1 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
 | 🔴 US-4.4 | 47 | 42 | · | · | 5 | · | · |
@@ -255,6 +255,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.1 | `AC-4.1.15/4` 🖵 | What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `backgroundRender.test.js`, `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.15/5` 🖵 | A change to what is heard — a Pattern edit, a tempo, a swing, a setting — renders again, so the screen-off audio is never the previous run | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.15/6` 🖵 | A browser with no `OfflineAudioContext`, or a render that fails, is unaffected: the live transport plays exactly as it would without any of this and nothing throws | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `backgroundRender.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.15/7` 🖵 | The carrier is silenced by `muted`, not by `volume`: a browser that ignores `volume` on a media element — iOS Safari does, where it is read-only — must still hear nothing from the carrier while the screen is on | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.8/1` 🖵 | Opening a Pattern during playback keeps the transport running and switches the audible Pattern to the one opened | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.8/2` 🖵 | The Pattern opened during playback starts from its beginning, with the loop counter at 0 | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.8/3` 🖵 | Opening a Pattern while stopped starts no audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338 (13/13 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339 (9/9 done) | `playback.spec.js` | 🟢 OK |
