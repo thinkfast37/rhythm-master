@@ -92,6 +92,20 @@ const groupEntries = (page, heading) =>
     .locator(`.progression-picker optgroup[label="${heading}"] option`)
     .evaluateAll((os) => os.map((o) => [o.value, o.textContent]));
 
+/**
+ * A heading's own entries, in order, then its song progressions in catalogue
+ * order (AC-2.6.1/18) — the own list is what the heading's criterion names.
+ */
+async function ownThenSongs(page, heading, own) {
+  const entries = await groupEntries(page, heading);
+  expect(entries.slice(0, own.length)).toEqual(own);
+  const { PROGRESSIONS, PROGRESSION_GROUPS } = await import('../../src/core/harmony.js');
+  const group = PROGRESSION_GROUPS.find((g) => g.label === heading).id;
+  const songs = PROGRESSIONS.filter((p) => p.fromSongs && p.group === group).map((p) => [p.id, p.label]);
+  expect(songs.length).toBeGreaterThan(0);
+  expect(entries.slice(own.length)).toEqual(songs);
+}
+
 /** Choose an entry and read the chord names on the strip. */
 async function chooseAndRead(page, id) {
   await page.locator('.progression-picker').selectOption(id);
@@ -120,9 +134,9 @@ test('AC-2.6.1/8 — The Three chords and repeats group holds I–IV–V, I–I�
   expect(await chooseAndRead(page, 'I-IV-V-V')).toEqual(['C', 'F', 'G', 'G']);
 });
 
-test("AC-2.6.1/9 — The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–I–V–vi, V–vi–IV–I, IV–V–vi–I, I–vi–IV–V, I–IV–vi–V, I–V–vi–iii, I–iii–vi–IV, I–ii–IV–V, I–IV–ii–V, I–ii–iii–IV, vi–V–IV–III, the Royal Road IV–V–iii–vi, Creep's I–III–IV–iv, I–IV–iv–I, Something's I–Imaj7–I7–IV and Wonderwall's vi–I–V–II", async ({ page }) => {
+test("AC-2.6.1/9 — The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–I–V–vi, V–vi–IV–I, IV–V–vi–I, I–vi–IV–V, I–IV–vi–V, I–V–vi–iii, I–iii–vi–IV, I–ii–IV–V, I–IV–ii–V, I–ii–iii–IV, vi–V–IV–III, the Royal Road IV–V–iii–vi, Creep's I–III–IV–iv, I–IV–iv–I, Something's I–Imaj7–I7–IV and Wonderwall's vi–I–V–II, then the song progressions filed under it", async ({ page }) => {
   await melodicBlank(page);
-  expect(await groupEntries(page, 'Pop')).toEqual([
+  await ownThenSongs(page, 'Pop', [
     ['I-V-vi-IV', 'I–V–vi–IV (pop)'],
     ['vi-IV-I-V', 'vi–IV–I–V'],
     ['IV-I-V-vi', 'IV–I–V–vi'],
@@ -147,9 +161,9 @@ test("AC-2.6.1/9 — The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–
   expect(await chooseAndRead(page, 'vi-I-V-II')).toEqual(['Am7', 'C', 'G', 'D7sus4']);
 });
 
-test("AC-2.6.1/10 — The Minor group holds i–iv–v, i–i–iv–v, i–iv–iv–v, i–iv–v–v, i–iv–V, i–i–iv–V, i–iv–iv–V, i–iv–V–V, i–iv–i–V, i–♭VI–♭III–♭VII, the Andalusian i–♭VII–♭VI–V, the Aeolian vamp i–♭VII–♭VI–♭VII, i–♭VI–♭VII, i–♭VII–♭VI, i–♭III–♭VII–♭VI, i–iv–♭VII–♭III, ♭VI–♭VII–i and Hotel California's i–V–♭VII–IV–♭VI–♭III–iv–V", async ({ page }) => {
+test("AC-2.6.1/10 — The Minor group holds i–iv–v, i–i–iv–v, i–iv–iv–v, i–iv–v–v, i–iv–V, i–i–iv–V, i–iv–iv–V, i–iv–V–V, i–iv–i–V, i–♭VI–♭III–♭VII, the Andalusian i–♭VII–♭VI–V, the Aeolian vamp i–♭VII–♭VI–♭VII, i–♭VI–♭VII, i–♭VII–♭VI, i–♭III–♭VII–♭VI, i–iv–♭VII–♭III, ♭VI–♭VII–i and Hotel California's i–V–♭VII–IV–♭VI–♭III–iv–V, then the song progressions filed under it", async ({ page }) => {
   await melodicBlank(page);
-  expect(await groupEntries(page, 'Minor')).toEqual([
+  await ownThenSongs(page, 'Minor', [
     ['i-iv-v', 'i–iv–v'],
     ['i-i-iv-v', 'i–i–iv–v'],
     ['i-iv-iv-v', 'i–iv–iv–v'],
@@ -219,9 +233,9 @@ test('AC-2.6.1/12 — The Blues group holds the twelve-bar blues, its quick-chan
   expect(await chooseAndRead(page, 'eight-bar-blues')).toEqual(['C7', 'G7', 'F7', 'F7', 'C7', 'G7', 'C7', 'G7']);
 });
 
-test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII–IV–I, I–I–♭VII–IV, I–♭VII–IV–IV, I–♭VII, the Mario cadence ♭VI–♭VII–I, I–♭III–IV, the Dorian i–IV, i–♭VII, the Lydian I–II and the Phrygian i–♭II', async ({ page }) => {
+test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII–IV–I, I–I–♭VII–IV, I–♭VII–IV–IV, I–♭VII, the Mario cadence ♭VI–♭VII–I, I–♭III–IV, the Dorian i–IV, i–♭VII, the Lydian I–II and the Phrygian i–♭II, then the song progressions filed under it', async ({ page }) => {
   await melodicBlank(page);
-  expect(await groupEntries(page, 'Modal and rock')).toEqual([
+  await ownThenSongs(page, 'Modal and rock', [
     ['I-bVII-IV', 'I–♭VII–IV (Mixolydian)'],
     ['I-bVII-IV-I', 'I–♭VII–IV–I'],
     ['I-I-bVII-IV', 'I–I–♭VII–IV'],
@@ -240,9 +254,9 @@ test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII
   expect(await chooseAndRead(page, 'i-bII')).toEqual(['Cm', 'Db']);
 });
 
-test("AC-2.6.1/14 — The Classical and folk group holds Pachelbel's I–V–vi–iii–IV–I–IV–V, the Passamezzo antico, the Romanesca, the Folia, the circle of fifths in triads and I–ii–V–I", async ({ page }) => {
+test("AC-2.6.1/14 — The Classical and folk group holds Pachelbel's I–V–vi–iii–IV–I–IV–V, the Passamezzo antico, the Romanesca, the Folia, the circle of fifths in triads and I–ii–V–I, then the song progressions filed under it", async ({ page }) => {
   await melodicBlank(page);
-  expect(await groupEntries(page, 'Classical and folk')).toEqual([
+  await ownThenSongs(page, 'Classical and folk', [
     ['pachelbel', 'I–V–vi–iii–IV–I–IV–V (Pachelbel)'],
     ['passamezzo-antico', 'i–♭VII–i–V–♭III–♭VII–i–V (Passamezzo antico)'],
     ['romanesca', '♭III–♭VII–i–V (Romanesca)'],
@@ -254,9 +268,9 @@ test("AC-2.6.1/14 — The Classical and folk group holds Pachelbel's I–V–vi�
   expect(await chooseAndRead(page, 'circle-triads')).toEqual(['C', 'F', 'Bdim', 'Em', 'Am', 'Dm', 'G', 'C']);
 });
 
-test('AC-2.6.1/16 — The Indie and alt group holds vi–V–I, vi–IV–V, vi–V–IV–V, IV–vi–I–V, I–V–vi–V, vi–iii–IV–I, I–iii–vi–V, the double plagal ♭VII–IV–I, I–V–♭VII–IV, the Dorian vamp i–♭VII–IV, the Dorian i–♭III–♭VII–IV, i–♭III–iv and Imaj7–V–iii–II (Fast Car)', async ({ page }) => {
+test('AC-2.6.1/16 — The Indie and alt group holds vi–V–I, vi–IV–V, vi–V–IV–V, IV–vi–I–V, I–V–vi–V, vi–iii–IV–I, I–iii–vi–V, the double plagal ♭VII–IV–I, I–V–♭VII–IV, the Dorian vamp i–♭VII–IV, the Dorian i–♭III–♭VII–IV, i–♭III–iv and Imaj7–V–iii–II (Fast Car), then the song progressions filed under it', async ({ page }) => {
   await melodicBlank(page);
-  expect(await groupEntries(page, 'Indie and alt')).toEqual([
+  await ownThenSongs(page, 'Indie and alt', [
     ['vi-V-I', 'vi–V–I'],
     ['vi-IV-V', 'vi–IV–V'],
     ['vi-V-IV-V', 'vi–V–IV–V'],
@@ -278,9 +292,9 @@ test('AC-2.6.1/16 — The Indie and alt group holds vi–V–I, vi–IV–V, vi�
   expect(await chooseAndRead(page, 'Imaj7-V-iii-II')).toEqual(['Cmaj7', 'G', 'Em', 'D']);
 });
 
-test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2, Isus2–Isus4–I, I–Isus4–IV–V, the delayed dominant Vsus4–V–I, V7sus4–V7–I, the suspended cadence ii7–V7sus4–Imaj7, I–IVsus2–I–V (Free Fallin’), the open sus loop Isus2–IVsus2–Vsus4, the suspended pop loop I–V–vi–IVsus2, vi–IV–Isus2–Vsus4, the Mixolydian sus I–♭VIIsus2–IVsus2, the minor sus vamp i–♭VIIsus2–♭VIsus2, IVadd9–I–V, Iadd9–IVadd9–V and I–IVadd9–vi7–V', async ({ page }) => {
+test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2, Isus2–Isus4–I, I–Isus4–IV–V, the delayed dominant Vsus4–V–I, V7sus4–V7–I, the suspended cadence ii7–V7sus4–Imaj7, I–IVsus2–I–V (Free Fallin’), the open sus loop Isus2–IVsus2–Vsus4, the suspended pop loop I–V–vi–IVsus2, vi–IV–Isus2–Vsus4, the Mixolydian sus I–♭VIIsus2–IVsus2, the minor sus vamp i–♭VIIsus2–♭VIsus2, IVadd9–I–V, Iadd9–IVadd9–V and I–IVadd9–vi7–V, then the song progressions filed under it', async ({ page }) => {
   await melodicBlank(page);
-  expect(await groupEntries(page, 'Sus and open chords')).toEqual([
+  await ownThenSongs(page, 'Sus and open chords', [
     ['I-Isus4-I-Isus2', 'I–Isus4–I–Isus2 (open-string embellishment)'],
     ['Isus2-Isus4-I', 'Isus2–Isus4–I'],
     ['I-Isus4-IV-V', 'I–Isus4–IV–V'],
@@ -303,6 +317,43 @@ test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2,
   expect(await chooseAndRead(page, 'I-V-vi-IVsus2')).toEqual(['C', 'G', 'Am', 'Fsus2']);
   expect(await chooseAndRead(page, 'i-bVIIsus2-bVIsus2')).toEqual(['Cm', 'Bbsus2', 'Absus2']);
   expect(await chooseAndRead(page, 'I-IVadd9-vi7-V')).toEqual(['C', 'Fadd9', 'Am7', 'G']);
+});
+
+test("AC-2.6.1/18 — Every song progression files after its heading's own entries, under the heading its chords fit: a suspended or add9 chord under Sus and open chords, else a minor tonic under Minor, else a root from outside the major scale under Modal and rock, else Pop for Coldplay, Classical and folk for Bob Dylan, and Indie and alt for Radiohead, The National, Wilco and Bon Iver", async ({ page }) => {
+  await melodicBlank(page);
+  const { PROGRESSIONS, PROGRESSION_GROUPS } = await import('../../src/core/harmony.js');
+  const { SONGBOOK } = await import('../../src/core/songbook.js');
+  const MINOR = ['min', 'm7', 'm6', 'm9', 'mMaj7', 'dim', 'm7b5', 'dim7'];
+  const OUTSIDE = ['b2', 'b3', '#4', 'b6', 'b7'];
+  const expected = (p) => {
+    if (p.steps.some((x) => ['sus2', 'sus4', 'add9', '7sus4'].includes(x.quality))) return 'Sus and open chords';
+    const tonic = p.steps.find((x) => x.degree === '1');
+    if (tonic && MINOR.includes(tonic.quality)) return 'Minor';
+    if (p.steps.some((x) => OUTSIDE.includes(x.degree))) return 'Modal and rock';
+    const { artist } = SONGBOOK.find((c) => c.progression === p.id);
+    if (artist === 'Coldplay') return 'Pop';
+    if (artist === 'Bob Dylan') return 'Classical and folk';
+    return 'Indie and alt';
+  };
+  // The heading each entry sits under in the picker itself.
+  const placed = new Map(
+    await page
+      .locator('.progression-picker optgroup')
+      .evaluateAll((gs) => gs.flatMap((g) => [...g.querySelectorAll('option')].map((o) => [o.value, g.label])))
+  );
+  const songEntries = PROGRESSIONS.filter((p) => p.fromSongs);
+  expect(songEntries.length).toBe(112);
+  for (const p of songEntries) expect(placed.get(p.id), p.id).toBe(expected(p));
+  // Under every heading, once the song progressions begin nothing else follows.
+  const fromSongs = new Set(songEntries.map((p) => p.id));
+  for (const g of PROGRESSION_GROUPS) {
+    const values = (await groupEntries(page, g.label)).map(([v]) => v);
+    const first = values.findIndex((v) => fromSongs.has(v));
+    if (first >= 0) expect(values.slice(first).every((v) => fromSongs.has(v)), g.label).toBe(true);
+  }
+  // A song entry is what the song plays, whatever the scale would have stacked.
+  expect(await chooseAndRead(page, 'I-vi7-ii-V-I-iv')).toEqual(['C', 'Am7', 'Dm', 'G', 'C', 'Fm']);
+  expect(await chooseAndRead(page, 'i-bVII-bVI-i-bVI')).toEqual(['Cm', 'Bb', 'Ab', 'Cm', 'Ab']);
 });
 
 // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---
@@ -1587,3 +1638,76 @@ test('AC-15.1.16/7 — A panel whose rebuild would change nothing is left untouc
   await expect(page.locator('.progression-picker')).toHaveValue('I-V-vi-IV');
   await expect.poll(() => chordNames(page)).toEqual(['C', 'G', 'Am', 'F']);
 });
+
+// --- AC-2.6.11 — The picker says which songs use the chosen progression ---
+
+const heardIn = (page) => page.locator('.harmony-head + .heard-in');
+
+test("AC-2.6.11/1 — A progression songs are credited to shows a Heard in line under the picker naming each artist once, followed by their songs and the section each uses it in: I–III–IV–iv reads Radiohead, Creep (verse and chorus)", async ({ page }) => {
+  await melodicBlank(page);
+  await page.locator('.progression-picker').selectOption('I-III-IV-iv');
+  // Right under the picker, the artist once, then the song and its section.
+  await expect(heardIn(page)).toBeVisible();
+  await expect(heardIn(page).locator('.heard-in-label')).toHaveText('Heard in');
+  expect(await heardIn(page).locator('.heard-in-artist').allTextContents()).toEqual(['Radiohead Creep (verse and chorus)']);
+  await expect(heardIn(page).locator('.heard-in-artist strong')).toHaveText('Radiohead');
+  // Two artists on one loop: each named once, in the songbook's artist order.
+  await page.locator('.progression-picker').selectOption('I-iii-vi-V');
+  expect(await heardIn(page).locator('.heard-in-artist').allTextContents()).toEqual([
+    'The National Sorrow (verse)',
+    'Coldplay Fix You (verse)',
+  ]);
+  // One artist, two songs: named once, songs listed after.
+  const { SONGBOOK } = await import('../../src/core/songbook.js');
+  const byEntry = new Map();
+  for (const c of SONGBOOK) byEntry.set(c.progression, [...(byEntry.get(c.progression) ?? []), c]);
+  const [id, credits] = [...byEntry].find(([, cs]) => cs.length > 1 && cs.every((c) => c.artist === cs[0].artist));
+  await page.locator('.progression-picker').selectOption(id);
+  expect(await heardIn(page).locator('.heard-in-artist').allTextContents()).toEqual([
+    `${credits[0].artist} ${credits.map((c) => `${c.title} (${c.section})`).join(', ')}`,
+  ]);
+});
+
+test("AC-2.6.11/2 — A progression no song is credited to, None, and Custom chords show no Heard in line", async ({ page }) => {
+  await melodicBlank(page);
+  // None.
+  await expect(page.locator('.heard-in')).toHaveCount(0);
+  // A catalogue entry no song is credited to.
+  const { SONGBOOK } = await import('../../src/core/songbook.js');
+  expect(SONGBOOK.some((c) => c.progression === 'ii-V-I')).toBe(false);
+  await page.locator('.progression-picker').selectOption('ii-V-I');
+  await expect(page.locator('.progression-picker')).toHaveValue('ii-V-I');
+  await expect(page.locator('.heard-in')).toHaveCount(0);
+  // A credited one shows it; editing its chords into Custom takes it away.
+  await page.locator('.progression-picker').selectOption('I-III-IV-iv');
+  await expect(page.locator('.heard-in')).toHaveCount(1);
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('maj9');
+  await expect(page.locator('.progression-picker')).toHaveValue('custom');
+  await expect(page.locator('.heard-in')).toHaveCount(0);
+});
+
+test('AC-2.6.11/3 — Every song credit names a catalogue entry, and every song progression is credited to at least one song', async ({ page }) => {
+  // One choice per credited entry — some ninety of them.
+  test.setTimeout(180_000);
+  await melodicBlank(page);
+  const { PROGRESSIONS } = await import('../../src/core/harmony.js');
+  const { SONGBOOK, ARTISTS } = await import('../../src/core/songbook.js');
+  // Every credit names an entry the picker offers.
+  const offered = new Set(await page.locator('.progression-picker option').evaluateAll((os) => os.map((o) => o.value)));
+  for (const c of SONGBOOK) expect(offered.has(c.progression), `${c.title} names ${c.progression}`).toBe(true);
+  // Every song entry carries at least one credit, and choosing any credited
+  // entry lists exactly its credits, by artist in the songbook's order.
+  const credited = new Set(SONGBOOK.map((c) => c.progression));
+  for (const p of PROGRESSIONS.filter((e) => e.fromSongs)) expect(credited.has(p.id), `${p.id} has no song`).toBe(true);
+  const picker = page.locator('.progression-picker');
+  for (const id of credited) {
+    await picker.selectOption(id);
+    await expect(picker).toHaveValue(id);
+    const credits = SONGBOOK.filter((c) => c.progression === id);
+    const want = ARTISTS.filter((a) => credits.some((c) => c.artist === a)).map(
+      (a) => `${a} ${credits.filter((c) => c.artist === a).map((c) => `${c.title} (${c.section})`).join(', ')}`
+    );
+    expect(await heardIn(page).locator('.heard-in-artist').allTextContents(), id).toEqual(want);
+  }
+});
+

@@ -13,7 +13,7 @@
  * What is rendered is the whole cycle — every pass until the fills and
  * progressions in force repeat — so a cycling practice run keeps cycling with
  * the screen off rather than freezing on one chord. The catalogues are large
- * (31 fills, 114 progressions), so a full progression cycle can reach several
+ * (31 fills, 226 progressions), so a full progression cycle can reach several
  * minutes; `MAX_BYTES` is the ceiling that keeps a phone's memory out of it,
  * and a cycle past it renders the whole passes that fit in `FALLBACK_SECONDS`
  * and repeats those.
@@ -31,8 +31,12 @@ import { playMelodic } from './melodic.js';
 /** 16-bit mono: two bytes a frame. */
 const BYTES_PER_FRAME = 2;
 
-/** Roughly 30 MB — the most of a phone's memory this may hold. */
-const MAX_BYTES = 30 * 1024 * 1024;
+/**
+ * Roughly 60 MB — the most of a phone's memory this may hold. Raised from 30 MB
+ * when the song progressions doubled the catalogue (T342), so the whole
+ * catalogue's cycle at a 3-second pass still renders whole.
+ */
+const MAX_BYTES = 60 * 1024 * 1024;
 
 /** What a cycle too long for the ceiling renders instead, in seconds. */
 const FALLBACK_SECONDS = 180;

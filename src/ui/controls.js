@@ -37,6 +37,7 @@ import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
 import { MIN_SWING, MAX_SWING, DEFAULT_SWING_FEEL } from '../core/swing.js';
 import { renderStars } from './library.js';
+import { heardIn } from '../core/songbook.js';
 
 /**
  * Preset tempos: the predecessor's ten, extended to the 300 BPM ceiling at the
@@ -968,6 +969,23 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   picker.addEventListener('change', (e) => handlers.onProgression(e.target.value));
   head.appendChild(picker);
   root.appendChild(head);
+
+  // The songs that use the chosen progression (AC-2.6.11), by artist, so the
+  // picker's labels stay short however many songs share a loop.
+  const credits = matched ? heardIn(matched) : [];
+  if (credits.length) {
+    const line = el('p', 'heard-in');
+    line.appendChild(el('span', 'heard-in-label', { textContent: 'Heard in' }));
+    for (const { artist, songs } of credits) {
+      const group = el('span', 'heard-in-artist');
+      group.appendChild(el('strong', null, { textContent: artist }));
+      group.appendChild(
+        document.createTextNode(` ${songs.map(({ title, section }) => `${title} (${section})`).join(', ')}`)
+      );
+      line.appendChild(group);
+    }
+    root.appendChild(line);
+  }
 
   if (!harmonic) return;
 
