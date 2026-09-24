@@ -8,10 +8,11 @@
  */
 import { describe, it, expect } from 'vitest';
 import { planRender, encodeWav, renderCycle } from '../../../src/audio/backgroundRender.js';
+import { PROGRESSIONS } from '../../../src/core/harmony.js';
 
 const SAMPLE_RATE = 44100;
-/** Seconds of 16-bit mono audio that fit in the module's 30 MB ceiling. */
-const CEILING_SECONDS = (30 * 1024 * 1024) / (SAMPLE_RATE * 2);
+/** Seconds of 16-bit mono audio that fit in the module's 60 MB ceiling. */
+const CEILING_SECONDS = (60 * 1024 * 1024) / (SAMPLE_RATE * 2);
 
 describe('audio/backgroundRender — how much of the cycle is rendered (AC-4.1.15/4)', () => {
   it('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: a cycle under the ceiling is rendered whole', () => {
@@ -22,6 +23,17 @@ describe('audio/backgroundRender — how much of the cycle is rendered (AC-4.1.1
     expect(plan.whole).toBe(true);
     expect(plan.passes).toBe(114);
     expect(plan.seconds).toBeCloseTo(342, 6);
+    expect(plan.seconds).toBeLessThan(CEILING_SECONDS);
+  });
+
+  it('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: the whole catalogue with its song progressions is rendered whole', () => {
+    // The song progressions (T342) doubled the catalogue; the ceiling was
+    // raised so cycling through every entry at a 3-second pass still fits.
+    expect(PROGRESSIONS.length).toBeGreaterThan(200);
+    const passes = PROGRESSIONS.map(() => 3);
+    const plan = planRender(passes, SAMPLE_RATE);
+    expect(plan.whole).toBe(true);
+    expect(plan.passes).toBe(PROGRESSIONS.length);
     expect(plan.seconds).toBeLessThan(CEILING_SECONDS);
   });
 

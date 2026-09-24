@@ -147,7 +147,11 @@ const sus2 = (degree) => s(degree, { quality: 'sus2' });
 const sus4 = (degree) => s(degree, { quality: 'sus4' });
 const add9 = (degree) => s(degree, { quality: 'add9' });
 const maj = (degree) => s(degree, { quality: 'maj' });
+/* A song progression's chord, its quality always explicit (AC-2.6.1/18). */
+const q = (degree, quality) => s(degree, { quality });
 const entry = (group, id, label, steps) => ({ id, label, group, steps });
+/* An entry transcribed from a song (AC-2.6.1/18); the songs are credited in core/songbook.js. */
+const songEntry = (group, id, label, steps) => ({ ...entry(group, id, label, steps), fromSongs: true });
 
 export const PROGRESSIONS = [
   // --- Three chords and repeats (AC-2.6.1/8) ---
@@ -193,6 +197,20 @@ export const PROGRESSIONS = [
     s('2', { quality: '7sus4' }),
   ]),
 
+  // Song progressions (AC-2.6.1/18), credited in core/songbook.js.
+  songEntry('pop', 'I-V6-IVmaj7', 'I–V6–IVmaj7 (Yellow)', [q('1', 'maj'), q('5', '6'), q('4', 'maj7')]),
+  songEntry('pop', 'IV-vi-V', 'IV–vi–V (Yellow)', [q('4', 'maj'), q('6', 'min'), q('5', 'maj')]),
+  songEntry('pop', 'IV-V-I-vi', 'IV–V–I–vi (Viva La Vida)', [q('4', 'maj'), q('5', 'maj'), q('1', 'maj'), q('6', 'min')]),
+  songEntry('pop', 'IV-V-iii-vi-triads', 'IV–V–iii–vi (Viva La Vida)', [q('4', 'maj'), q('5', 'maj'), q('3', 'min'), q('6', 'min')]),
+  songEntry('pop', 'vi-IV-I-iii', 'vi–IV–I–iii (A Sky Full of Stars)', [q('6', 'min'), q('4', 'maj'), q('1', 'maj'), q('3', 'min')]),
+  songEntry('pop', 'IV-I-V-IV', 'IV–I–V–IV (Fix You)', [q('4', 'maj'), q('1', 'maj'), q('5', 'maj'), q('4', 'maj')]),
+  songEntry('pop', 'ii-V-vi-I', 'ii–V–vi–I (Paradise)', [q('2', 'min'), q('5', 'maj'), q('6', 'min'), q('1', 'maj')]),
+  songEntry('pop', 'ii-IV-I-V', 'ii–IV–I–V (Paradise)', [q('2', 'min'), q('4', 'maj'), q('1', 'maj'), q('5', 'maj')]),
+  songEntry('pop', 'IV-vi-V-I', 'IV–vi–V–I (My Universe)', [q('4', 'maj'), q('6', 'min'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('pop', 'I-v-v-ii', 'I–v–v–ii (Clocks)', [q('1', 'maj'), q('5', 'min'), q('5', 'min'), q('2', 'min')]),
+  songEntry('pop', 'I-v-IV', 'I–v–IV (Clocks)', [q('1', 'maj'), q('5', 'min'), q('4', 'maj')]),
+  songEntry('pop', 'vi-IVmaj7-I-V6', 'vi–IVmaj7–I–V6 (Til Kingdom Come)', [q('6', 'min'), q('4', 'maj7'), q('1', 'maj'), q('5', '6')]),
+
   // --- Minor (AC-2.6.1/10) ---
   entry('minor', 'i-iv-v', 'i–iv–v', [min('1'), min('4'), min('5')]),
   entry('minor', 'i-i-iv-v', 'i–i–iv–v', [min('1'), min('1'), min('4'), min('5')]),
@@ -221,6 +239,30 @@ export const PROGRESSIONS = [
     min('4'),
     maj('5'),
   ]),
+
+  // Song progressions (AC-2.6.1/18), credited in core/songbook.js.
+  songEntry('minor', 'i-IV-v-bVII-i-bVI-v-bVII', 'i–IV–v–♭VII–i–♭VI–v–♭VII (Karma Police)', [q('1', 'min'), q('4', 'maj'), q('5', 'min'), q('b7', 'maj'), q('1', 'min'), q('b6', 'maj'), q('5', 'min'), q('b7', 'maj')]),
+  songEntry('minor', 'i-V-bIII-IV-i-V-I', 'i–V–♭III–IV–i–V–I (Exit Music)', [q('1', 'min'), q('5', 'maj'), q('b3', 'maj'), q('4', 'maj'), q('1', 'min'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('minor', 'i-v', 'i–v (Street Spirit)', [q('1', 'min'), q('5', 'min')]),
+  songEntry('minor', 'bIII-v-i-i', '♭III–v–i–i (Street Spirit)', [q('b3', 'maj'), q('5', 'min'), q('1', 'min'), q('1', 'min')]),
+  songEntry('minor', 'i-bVII-bVI-i-bVI', 'i–♭VII–♭VI–i–♭VI (Reckoner)', [q('1', 'min'), q('b7', 'maj'), q('b6', 'maj'), q('1', 'min'), q('b6', 'maj')]),
+  songEntry('minor', 'iii-i-iv-bVImaj7-V', 'iii–i–iv–♭VImaj7–V (Reckoner)', [q('3', 'min'), q('1', 'min'), q('4', 'min'), q('b6', 'maj7'), q('5', 'maj')]),
+  songEntry('minor', 'i-iv-bIII-v-i-bVI-bIII-v', 'i–iv–♭III–v–i–♭VI–♭III–v (Lucky)', [q('1', 'min'), q('4', 'min'), q('b3', 'maj'), q('5', 'min'), q('1', 'min'), q('b6', 'maj'), q('b3', 'maj'), q('5', 'min')]),
+  songEntry('minor', 'IV-i-IV-i-IV-i-bVI-V7', 'IV–i–IV–i–IV–i–♭VI–V7 (Lucky)', [q('4', 'maj'), q('1', 'min'), q('4', 'maj'), q('1', 'min'), q('4', 'maj'), q('1', 'min'), q('b6', 'maj'), q('5', '7')]),
+  songEntry('minor', 'i-bIII-bVI-iv', 'i–♭III–♭VI–iv (Afraid of Everyone)', [q('1', 'min'), q('b3', 'maj'), q('b6', 'maj'), q('4', 'min')]),
+  songEntry('minor', 'i-bVII6-bVI-V', 'i–♭VII6–♭VI–V (How to Fight Loneliness)', [q('1', 'min'), q('b7', '6'), q('b6', 'maj'), q('5', 'maj')]),
+  songEntry('minor', 'iv-bVII-viio7-i', 'iv–♭VII–vii°7–i (How to Fight Loneliness)', [q('4', 'min'), q('b7', 'maj'), q('7', 'dim7'), q('1', 'min')]),
+  songEntry('minor', 'i7-bVII-bVI', 'i7–♭VII–♭VI (Blood Bank)', [q('1', 'm7'), q('b7', 'maj'), q('b6', 'maj')]),
+  songEntry('minor', 'bIII-bVII-i7-bVI', '♭III–♭VII–i7–♭VI (Blood Bank)', [q('b3', 'maj'), q('b7', 'maj'), q('1', 'm7'), q('b6', 'maj')]),
+  songEntry('minor', 'bVI-bVII-i-bVII', '♭VI–♭VII–i–♭VII (Something Just Like This)', [q('b6', 'maj'), q('b7', 'maj'), q('1', 'min'), q('b7', 'maj')]),
+  songEntry('minor', 'iv-bVII-i', 'iv–♭VII–i (Hymn for the Weekend)', [q('4', 'min'), q('b7', 'maj'), q('1', 'min')]),
+  songEntry('minor', 'i-bVI-iv-bVII', 'i–♭VI–iv–♭VII (Hymn for the Weekend)', [q('1', 'min'), q('b6', 'maj'), q('4', 'min'), q('b7', 'maj')]),
+  songEntry('minor', 'bIIImaj7-i', '♭IIImaj7–i (Sparks)', [q('b3', 'maj7'), q('1', 'min')]),
+  songEntry('minor', 'i-imMaj7-i9-i6-bVImaj7', 'i–imMaj7–i9–i6–♭VImaj7 (Sparks)', [q('1', 'min'), q('1', 'mMaj7'), q('1', 'm9'), q('1', 'm6'), q('b6', 'maj7')]),
+  songEntry('minor', 'i-bIII-iv-bVI', 'i–♭III–iv–♭VI (Princess of China)', [q('1', 'min'), q('b3', 'maj'), q('4', 'min'), q('b6', 'maj')]),
+  songEntry('minor', 'i-bVI', 'i–♭VI (Hurricane)', [q('1', 'min'), q('b6', 'maj')]),
+  songEntry('minor', 'v-i-bVI-bIII-bVII', 'v–i–♭VI–♭III–♭VII (Hurricane)', [q('5', 'min'), q('1', 'min'), q('b6', 'maj'), q('b3', 'maj'), q('b7', 'maj')]),
+  songEntry('minor', 'bVI-V-i', '♭VI–V–i (One More Cup of Coffee)', [q('b6', 'maj'), q('5', 'maj'), q('1', 'min')]),
 
   // --- Jazz (AC-2.6.1/11) ---
   entry('jazz', 'ii-V-I', 'ii–V–I (jazz)', sevenths('2', '5', '1')),
@@ -286,6 +328,19 @@ export const PROGRESSIONS = [
   entry('modal', 'I-II', 'I–II (Lydian)', [s('1'), maj('2')]),
   entry('modal', 'i-bII', 'i–♭II (Phrygian)', [min('1'), s('b2')]),
 
+  // Song progressions (AC-2.6.1/18), credited in core/songbook.js.
+  songEntry('modal', 'bIII-IV-bVII-VI7', '♭III–IV–♭VII–VI7 (Karma Police)', [q('b3', 'maj'), q('4', 'maj'), q('b7', 'maj'), q('6', '7')]),
+  songEntry('modal', 'ii-IV-bVII-IV-bVII-IV-V7', 'ii–IV–♭VII–IV–♭VII–IV–V7 (Karma Police)', [q('2', 'min'), q('4', 'maj'), q('b7', 'maj'), q('4', 'maj'), q('b7', 'maj'), q('4', 'maj'), q('5', '7')]),
+  songEntry('modal', 'I-bIImaj7-bIII', 'I–♭IImaj7–♭III (Everything in Its Right Place)', [q('1', 'maj'), q('b2', 'maj7'), q('b3', 'maj')]),
+  songEntry('modal', 'vi-bVI-V-#IV-IV', 'vi–♭VI–V–♯IV–IV (Just)', [q('6', 'min'), q('b6', 'maj'), q('5', 'maj'), q('#4', 'maj'), q('4', 'maj')]),
+  songEntry('modal', 'I-bIII-II-IV', 'I–♭III–II–IV (Just)', [q('1', 'maj'), q('b3', 'maj'), q('2', 'maj'), q('4', 'maj')]),
+  songEntry('modal', 'bIII-bVI', '♭III–♭VI (How to Fight Loneliness)', [q('b3', 'maj'), q('b6', 'maj')]),
+  songEntry('modal', 'I-I-bVII-V', 'I–I–♭VII–V (Heavy Metal Drummer)', [q('1', 'maj'), q('1', 'maj'), q('b7', 'maj'), q('5', 'maj')]),
+  songEntry('modal', 'IV-iv-I-bVI-IV-I', 'IV–iv–I–♭VI–IV–I (Poor Places)', [q('4', 'maj'), q('4', 'min'), q('1', 'maj'), q('b6', 'maj'), q('4', 'maj'), q('1', 'maj')]),
+  songEntry('modal', 'I-IV-bIII-I', 'I–IV–♭III–I (Handshake Drugs)', [q('1', 'maj'), q('4', 'maj'), q('b3', 'maj'), q('1', 'maj')]),
+  songEntry('modal', 'I-iii-bVII-ii', 'I–iii–♭VII–ii (Lay, Lady, Lay)', [q('1', 'maj'), q('3', 'min'), q('b7', 'maj'), q('2', 'min')]),
+  songEntry('modal', 'bVII-I', '♭VII–I (Tangled Up in Blue)', [q('b7', 'maj'), q('1', 'maj')]),
+
   // --- Classical and folk (AC-2.6.1/14) ---
   entry('classical', 'pachelbel', 'I–V–vi–iii–IV–I–IV–V (Pachelbel)', seq('1', '5', '6', '3', '4', '1', '4', '5')),
   entry('classical', 'passamezzo-antico', 'i–♭VII–i–V–♭III–♭VII–i–V (Passamezzo antico)', [
@@ -312,6 +367,29 @@ export const PROGRESSIONS = [
   entry('classical', 'circle-triads', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, triads)', seq('1', '4', '7', '3', '6', '2', '5', '1')),
   entry('classical', 'I-ii-V-I', 'I–ii–V–I', seq('1', '2', '5', '1')),
 
+  // Song progressions (AC-2.6.1/18), credited in core/songbook.js.
+  songEntry('classical', 'I-V-ii-ii-I-V-IV-IV', 'I–V–ii–ii–I–V–IV–IV (Knockin’ on Heaven’s Door)', [q('1', 'maj'), q('5', 'maj'), q('2', 'min'), q('2', 'min'), q('1', 'maj'), q('5', 'maj'), q('4', 'maj'), q('4', 'maj')]),
+  songEntry('classical', 'I-ii-iii-IV-V', 'I–ii–iii–IV–V (Like a Rolling Stone)', [q('1', 'maj'), q('2', 'min'), q('3', 'min'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'IV-iii-ii-I-ii-IV-V', 'IV–iii–ii–I–ii–IV–V (Like a Rolling Stone)', [q('4', 'maj'), q('3', 'min'), q('2', 'min'), q('1', 'maj'), q('2', 'min'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'I-vi-IV-I-I-ii-IV-V', 'I–vi–IV–I–I–ii–IV–V (The Times They Are A-Changin’)', [q('1', 'maj'), q('6', 'min'), q('4', 'maj'), q('1', 'maj'), q('1', 'maj'), q('2', 'min'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'I-ii-V-I-V-IV-V-I-IV-V-I', 'I–ii–V–I–V–IV–V–I–IV–V–I (The Times They Are A-Changin’)', [q('1', 'maj'), q('2', 'min'), q('5', 'maj'), q('1', 'maj'), q('5', 'maj'), q('4', 'maj'), q('5', 'maj'), q('1', 'maj'), q('4', 'maj'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('classical', 'I-IV-V-I-I-IV-V', 'I–IV–V–I–I–IV–V (Blowin’ in the Wind)', [q('1', 'maj'), q('4', 'maj'), q('5', 'maj'), q('1', 'maj'), q('1', 'maj'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'IV-V-I-vi-IV-V-I', 'IV–V–I–vi–IV–V–I (Blowin’ in the Wind)', [q('4', 'maj'), q('5', 'maj'), q('1', 'maj'), q('6', 'min'), q('4', 'maj'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('classical', 'I-V-vi-IV-I-V', 'I–V–vi–IV–I–V (Don’t Think Twice, It’s All Right)', [q('1', 'maj'), q('5', 'maj'), q('6', 'min'), q('4', 'maj'), q('1', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'I-V-vi-II7-V-V7', 'I–V–vi–II7–V–V7 (Don’t Think Twice, It’s All Right)', [q('1', 'maj'), q('5', 'maj'), q('6', 'min'), q('2', '7'), q('5', 'maj'), q('5', '7')]),
+  songEntry('classical', 'I-I7-IV-II7-I-V-I', 'I–I7–IV–II7–I–V–I (Don’t Think Twice, It’s All Right)', [q('1', 'maj'), q('1', '7'), q('4', 'maj'), q('2', '7'), q('1', 'maj'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('classical', 'V-vi-I', 'V–vi–I (Lay, Lady, Lay)', [q('5', 'maj'), q('6', 'min'), q('1', 'maj')]),
+  songEntry('classical', 'iii-V-vi-I', 'iii–V–vi–I (Lay, Lady, Lay)', [q('3', 'min'), q('5', 'maj'), q('6', 'min'), q('1', 'maj')]),
+  songEntry('classical', 'IV-V-I-IV-I-IV-V', 'IV–V–I–IV–I–IV–V (Mr. Tambourine Man)', [q('4', 'maj'), q('5', 'maj'), q('1', 'maj'), q('4', 'maj'), q('1', 'maj'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'IV-V-I-IV-I-IV-ii-V', 'IV–V–I–IV–I–IV–ii–V (Mr. Tambourine Man)', [q('4', 'maj'), q('5', 'maj'), q('1', 'maj'), q('4', 'maj'), q('1', 'maj'), q('4', 'maj'), q('2', 'min'), q('5', 'maj')]),
+  songEntry('classical', 'I7-IV7-I7', 'I7–IV7–I7 (Subterranean Homesick Blues)', [q('1', '7'), q('4', '7'), q('1', '7')]),
+  songEntry('classical', 'V7-I7', 'V7–I7 (Subterranean Homesick Blues)', [q('5', '7'), q('1', '7')]),
+  songEntry('classical', 'I-ii-iii-ii-I', 'I–ii–iii–ii–I (It Ain’t Me Babe)', [q('1', 'maj'), q('2', 'min'), q('3', 'min'), q('2', 'min'), q('1', 'maj')]),
+  songEntry('classical', 'IV-V-I', 'IV–V–I (It Ain’t Me Babe)', [q('4', 'maj'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('classical', 'V-vi-I-IV-V', 'V–vi–I–IV–V (Tangled Up in Blue)', [q('5', 'maj'), q('6', 'min'), q('1', 'maj'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('classical', 'I-iii-ii-IV', 'I–iii–ii–IV (Just Like a Woman)', [q('1', 'maj'), q('3', 'min'), q('2', 'min'), q('4', 'maj')]),
+  songEntry('classical', 'I-iii-IV-I-IV-I-V-I', 'I–iii–IV–I–IV–I–V–I (Girl from the North Country)', [q('1', 'maj'), q('3', 'min'), q('4', 'maj'), q('1', 'maj'), q('4', 'maj'), q('1', 'maj'), q('5', 'maj'), q('1', 'maj')]),
+
   // --- Indie and alt (AC-2.6.1/16) ---
   entry('indie', 'vi-V-I', 'vi–V–I', seq('6', '5', '1')),
   entry('indie', 'vi-IV-V', 'vi–IV–V', seq('6', '4', '5')),
@@ -326,6 +404,47 @@ export const PROGRESSIONS = [
   entry('indie', 'i-bIII-bVII-IV', 'i–♭III–♭VII–IV (Dorian)', [min('1'), s('b3'), s('b7'), maj('4')]),
   entry('indie', 'i-bIII-iv', 'i–♭III–iv', [min('1'), s('b3'), min('4')]),
   entry('indie', 'Imaj7-V-iii-II', 'Imaj7–V–iii–II (Fast Car)', [s('1', { quality: 'maj7' }), s('5'), s('3'), maj('2')]),
+
+  // Song progressions (AC-2.6.1/18), credited in core/songbook.js.
+  songEntry('indie', 'I-vi7-ii-V-I-iv', 'I–vi7–ii–V–I–iv (No Surprises)', [q('1', 'maj'), q('6', 'm7'), q('2', 'min'), q('5', 'maj'), q('1', 'maj'), q('4', 'min')]),
+  songEntry('indie', 'ii-V-triads', 'ii–V (No Surprises)', [q('2', 'min'), q('5', 'maj')]),
+  songEntry('indie', 'IV-I', 'IV–I (Let Down)', [q('4', 'maj'), q('1', 'maj')]),
+  songEntry('indie', 'ii7-IV-I-I', 'ii7–IV–I–I (High and Dry)', [q('2', 'm7'), q('4', 'maj'), q('1', 'maj'), q('1', 'maj')]),
+  songEntry('indie', 'I-vi-V-IV', 'I–vi–V–IV (Fake Plastic Trees)', [q('1', 'maj'), q('6', 'min'), q('5', 'maj'), q('4', 'maj')]),
+  songEntry('indie', 'ii7-I', 'ii7–I (Fake Plastic Trees)', [q('2', 'm7'), q('1', 'maj')]),
+  songEntry('indie', 'ii7-iii7-V', 'ii7–iii7–V (Weird Fishes/Arpeggi)', [q('2', 'm7'), q('3', 'm7'), q('5', 'maj')]),
+  songEntry('indie', 'I-vi', 'I–vi (Bloodbuzz Ohio)', [q('1', 'maj'), q('6', 'min')]),
+  songEntry('indie', 'IV-vi-vi-V', 'IV–vi–vi–V (About Today)', [q('4', 'maj'), q('6', 'min'), q('6', 'min'), q('5', 'maj')]),
+  songEntry('indie', 'I-IVmaj7-I-iii', 'I–IVmaj7–I–iii (Runaway)', [q('1', 'maj'), q('4', 'maj7'), q('1', 'maj'), q('3', 'min')]),
+  songEntry('indie', 'ii-V-I-vi', 'ii–V–I–vi (Pink Rabbits)', [q('2', 'min'), q('5', 'maj'), q('1', 'maj'), q('6', 'min')]),
+  songEntry('indie', 'ii-V-I-IV', 'ii–V–I–IV (Pink Rabbits)', [q('2', 'min'), q('5', 'maj'), q('1', 'maj'), q('4', 'maj')]),
+  songEntry('indie', 'I-ii-IV-V-IV-ii', 'I–ii–IV–V–IV–ii (England)', [q('1', 'maj'), q('2', 'min'), q('4', 'maj'), q('5', 'maj'), q('4', 'maj'), q('2', 'min')]),
+  songEntry('indie', 'vi-I-IV-I', 'vi–I–IV–I (Graceless)', [q('6', 'min'), q('1', 'maj'), q('4', 'maj'), q('1', 'maj')]),
+  songEntry('indie', 'I-IV-I-IV-I-IV-I-V', 'I–IV–I–IV–I–IV–I–V (Graceless)', [q('1', 'maj'), q('4', 'maj'), q('1', 'maj'), q('4', 'maj'), q('1', 'maj'), q('4', 'maj'), q('1', 'maj'), q('5', 'maj')]),
+  songEntry('indie', 'IV-I-ii-V', 'IV–I–ii–V (Terrible Love)', [q('4', 'maj'), q('1', 'maj'), q('2', 'min'), q('5', 'maj')]),
+  songEntry('indie', 'vi-I-ii-V', 'vi–I–ii–V (Conversation 16)', [q('6', 'min'), q('1', 'maj'), q('2', 'min'), q('5', 'maj')]),
+  songEntry('indie', 'I-IV-vi-IV', 'I–IV–vi–IV (Conversation 16)', [q('1', 'maj'), q('4', 'maj'), q('6', 'min'), q('4', 'maj')]),
+  songEntry('indie', 'vi-iii-IV-I-ii-V', 'vi–iii–IV–I–ii–V (Jesus, Etc.)', [q('6', 'min'), q('3', 'min'), q('4', 'maj'), q('1', 'maj'), q('2', 'min'), q('5', 'maj')]),
+  songEntry('indie', 'I-I-vi-III-IV-I-V', 'I–I–vi–III–IV–I–V (Jesus, Etc.)', [q('1', 'maj'), q('1', 'maj'), q('6', 'min'), q('3', 'maj'), q('4', 'maj'), q('1', 'maj'), q('5', 'maj')]),
+  songEntry('indie', 'ii7-IVmaj7', 'ii7–IVmaj7 (Impossible Germany)', [q('2', 'm7'), q('4', 'maj7')]),
+  songEntry('indie', 'ii7-IVmaj7-I-vi7', 'ii7–IVmaj7–I–vi7 (Impossible Germany)', [q('2', 'm7'), q('4', 'maj7'), q('1', 'maj'), q('6', 'm7')]),
+  songEntry('indie', 'I-I-vi-V-IV', 'I–I–vi–V–IV (Say You Miss Me)', [q('1', 'maj'), q('1', 'maj'), q('6', 'min'), q('5', 'maj'), q('4', 'maj')]),
+  songEntry('indie', 'III-vi-IV', 'III–vi–IV (Say You Miss Me)', [q('3', 'maj'), q('6', 'min'), q('4', 'maj')]),
+  songEntry('indie', 'I-V-vi-IV-II7-IV', 'I–V–vi–IV–II7–IV (Poor Places)', [q('1', 'maj'), q('5', 'maj'), q('6', 'min'), q('4', 'maj'), q('2', '7'), q('4', 'maj')]),
+  songEntry('indie', 'I-V-vi-I7', 'I–V–vi–I7 (Poor Places)', [q('1', 'maj'), q('5', 'maj'), q('6', 'min'), q('1', '7')]),
+  songEntry('indie', 'IV-ii7-I-II', 'IV–ii7–I–II (Poor Places)', [q('4', 'maj'), q('2', 'm7'), q('1', 'maj'), q('2', 'maj')]),
+  songEntry('indie', 'I-IV-V-IV-I-V', 'I–IV–V–IV–I–V (Kamera)', [q('1', 'maj'), q('4', 'maj'), q('5', 'maj'), q('4', 'maj'), q('1', 'maj'), q('5', 'maj')]),
+  songEntry('indie', 'V-ii-V-I', 'V–ii–V–I (War on War)', [q('5', 'maj'), q('2', 'min'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('indie', 'Imaj7-I-V-IV', 'Imaj7–I–V–IV (Via Chicago)', [q('1', 'maj7'), q('1', 'maj'), q('5', 'maj'), q('4', 'maj')]),
+  songEntry('indie', 'I-IV-iii-IV', 'I–IV–iii–IV (Hate It Here)', [q('1', 'maj'), q('4', 'maj'), q('3', 'min'), q('4', 'maj')]),
+  songEntry('indie', 'I-V-IV-ii-IV', 'I–V–IV–ii–IV (Box Full of Letters)', [q('1', 'maj'), q('5', 'maj'), q('4', 'maj'), q('2', 'min'), q('4', 'maj')]),
+  songEntry('indie', 'vi-I', 'vi–I (Skinny Love)', [q('6', 'min'), q('1', 'maj')]),
+  songEntry('indie', 'I-I-IV', 'I–I–IV (Skinny Love)', [q('1', 'maj'), q('1', 'maj'), q('4', 'maj')]),
+  songEntry('indie', 'vi-I-vi-I-IV-V-IV-V', 'vi–I–vi–I–IV–V–IV–V (Hey, Ma)', [q('6', 'min'), q('1', 'maj'), q('6', 'min'), q('1', 'maj'), q('4', 'maj'), q('5', 'maj'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('indie', 'I-IV-vi-V-I-iii-IV-V', 'I–IV–vi–V–I–iii–IV–V (Hey, Ma)', [q('1', 'maj'), q('4', 'maj'), q('6', 'min'), q('5', 'maj'), q('1', 'maj'), q('3', 'min'), q('4', 'maj'), q('5', 'maj')]),
+  songEntry('indie', 'vi-IV-vi-IV-vi-V-I', 'vi–IV–vi–IV–vi–V–I (Hey, Ma)', [q('6', 'min'), q('4', 'maj'), q('6', 'min'), q('4', 'maj'), q('6', 'min'), q('5', 'maj'), q('1', 'maj')]),
+  songEntry('indie', 'IV-I-V-V-vi-IV-I-I', 'IV–I–V–V–vi–IV–I–I (8 (circle))', [q('4', 'maj'), q('1', 'maj'), q('5', 'maj'), q('5', 'maj'), q('6', 'min'), q('4', 'maj'), q('1', 'maj'), q('1', 'maj')]),
+  songEntry('indie', 'I-iii-IV-I', 'I–iii–IV–I (For Emma)', [q('1', 'maj'), q('3', 'min'), q('4', 'maj'), q('1', 'maj')]),
 
   // --- Sus and open chords (AC-2.6.1/17) ---
   entry('sus', 'I-Isus4-I-Isus2', 'I–Isus4–I–Isus2 (open-string embellishment)', [s('1'), sus4('1'), s('1'), sus2('1')]),
@@ -347,6 +466,14 @@ export const PROGRESSIONS = [
   entry('sus', 'IVadd9-I-V', 'IVadd9–I–V (open folk trio)', [add9('4'), s('1'), s('5')]),
   entry('sus', 'Iadd9-IVadd9-V', 'Iadd9–IVadd9–V', [add9('1'), add9('4'), s('5')]),
   entry('sus', 'I-IVadd9-vi7-V', 'I–IVadd9–vi7–V', [s('1'), add9('4'), s('6', { quality: 'm7' }), s('5')]),
+  // Song progressions (AC-2.6.1/18), credited in core/songbook.js.
+  songEntry('sus', 'ii-IV-I-Vsus4', 'ii–IV–I–Vsus4 (Light Years)', [q('2', 'min'), q('4', 'maj'), q('1', 'maj'), q('5', 'sus4')]),
+  songEntry('sus', 'Vsus4-I-IVadd9', 'Vsus4–I–IVadd9 (re: Stacks)', [q('5', 'sus4'), q('1', 'maj'), q('4', 'add9')]),
+  songEntry('sus', 'Vsus4-vi7-IV', 'Vsus4–vi7–IV (re: Stacks)', [q('5', 'sus4'), q('6', 'm7'), q('4', 'maj')]),
+  songEntry('sus', 'vi7-IV-I-Vsus4', 'vi7–IV–I–Vsus4 (The Scientist)', [q('6', 'm7'), q('4', 'maj'), q('1', 'maj'), q('5', 'sus4')]),
+  songEntry('sus', 'IVsus2-I', 'IVsus2–I (Every Teardrop Is a Waterfall)', [q('4', 'sus2'), q('1', 'maj')]),
+  songEntry('sus', 'IVsus2-I-vi-V', 'IVsus2–I–vi–V (Every Teardrop Is a Waterfall)', [q('4', 'sus2'), q('1', 'maj'), q('6', 'min'), q('5', 'maj')]),
+  songEntry('sus', 'I-V-I7-IV-iv-I-II9-V7sus4', 'I–V–I7–IV–iv–I–II9–V7sus4 (Make You Feel My Love)', [q('1', 'maj'), q('5', 'maj'), q('1', '7'), q('4', 'maj'), q('4', 'min'), q('1', 'maj'), q('2', '9'), q('5', '7sus4')]),
 ];
 
 /*

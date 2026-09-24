@@ -1789,6 +1789,21 @@ body {
   color: var(--ink-dim);
 }
 
+/* The songs that use the chosen progression (AC-2.6.11). */
+.heard-in {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 0;
+  font: 500 12px/1.4 var(--font-ui);
+  color: var(--ink-dim);
+}
+.heard-in-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+.heard-in-artist strong { font-weight: 600; }
+
 /* The pitch strip standing down under an arpeggio (AC-2.6.6/7). */
 .pitch-strip-note {
   margin: 0;
