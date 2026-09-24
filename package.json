@@ -18,6 +18,7 @@
     "validate:seed": "node tools/validate-seed.js",
     "check:cvd": "node tools/check-cvd.js",
     "check:unwired": "node tools/check-unwired.mjs",
+    "chords": "node tools/chord-sheet.mjs",
     "lint": "eslint .",
     "trace:matrix": "node .claude/skills/spec-trace/spec-trace.mjs matrix",
     "trace:changed": "node .claude/skills/spec-trace/spec-trace.mjs changed",
