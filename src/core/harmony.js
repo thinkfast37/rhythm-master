@@ -480,7 +480,7 @@ export const PROGRESSIONS = [
  * A fill pattern is a sequence of STEPS (AC-2.6.6/9), each one of:
  *   { tone, octave? }            a chord tone at an octave (Root, 3rd, …, R↑)
  *   { drone: 'tonic'|'root', octave }   the Key's tonic or the chord's root, fixed
- *   { drone: 'fifth'|'seventh', octave } the scale's 5th or 7th above the Key, fixed
+ *   { drone: 'second'|'fifth'|'seventh', octave } the scale's 2nd, 5th or 7th above the Key, fixed
  *   { scale: kind, step, octave? }      the n-th step of a scale rooted on the chord
  * Every catalogue entry builds its sequence from the progression's roles and,
  * for a walk, the scale it names. Nothing here is stored: the deal is derived.
@@ -523,6 +523,17 @@ export function walkDegrees(kind, pattern) {
 }
 
 const walkUp = (kind) => (ctx) => ctx.walk(kind).map((_, i) => ({ scale: kind, step: i + 1 }));
+/** Rising chord tones in runs of `run`, each run opened by the pedal (AC-2.6.6/15). */
+const pedalEvery = (run, pedal) => ({ roles }) => {
+  const n = (roles.length * run) / gcd(roles.length, run);
+  return Array.from({ length: n / run }, (_, i) => [pedal, ...Array.from({ length: run }, (__, j) => T(roles[(i * run + j) % roles.length]))]).flat();
+};
+/** The Pattern's scale walked from the chord's root, the pedal after every step (AC-2.6.6/15). */
+const walkOverPedal = (pedal, down = false) => (ctx) => {
+  const n = ctx.walk('pattern').length;
+  const steps = Array.from({ length: n }, (_, i) => ({ scale: 'pattern', step: down ? n + 1 - i : i + 1 }));
+  return steps.flatMap((step) => [step, pedal]);
+};
 const walkUpDown = (kind) => (ctx) => {
   const n = ctx.walk(kind).length;
   const up = Array.from({ length: n }, (_, i) => ({ scale: kind, step: i + 1 }));
@@ -530,7 +541,7 @@ const walkUpDown = (kind) => (ctx) => {
 };
 
 /**
- * The arpeggios a Pattern can follow (AC-2.6.6/1), in four groups. Absent on
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in five groups. Absent on
  * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`.
  */
 export const ARPEGGIOS = [
@@ -575,6 +586,14 @@ export const ARPEGGIOS = [
   { id: 'scale-seventh-drone', label: 'Scale 7th drone', group: 'Drones', steps: ({ roles }) => interleave(roles, D('seventh')) },
   { id: 'scale-seventh-above', label: 'Scale 7th above', group: 'Drones', steps: ({ roles }) => interleave(roles, D('seventh', 1)) },
   { id: 'scale-seventh-below', label: 'Scale 7th below', group: 'Drones', steps: ({ roles }) => interleave(roles, D('seventh', -1)) },
+  { id: 'pedal-scale-up', label: 'Scale up over a tonic pedal', group: 'Pedal points', steps: walkOverPedal(D('tonic', -1)) },
+  { id: 'pedal-scale-down', label: 'Scale down over a tonic pedal', group: 'Pedal points', steps: walkOverPedal(D('tonic', -1), true) },
+  { id: 'pedal-scale-up-fifth', label: 'Scale up over a 5th pedal', group: 'Pedal points', steps: walkOverPedal(D('fifth', -1)) },
+  { id: 'pedal-every-third', label: 'Pedal every third note', group: 'Pedal points', steps: pedalEvery(2, D('tonic', -1)) },
+  { id: 'pedal-every-fourth', label: 'Pedal every fourth note', group: 'Pedal points', steps: pedalEvery(3, D('tonic', -1)) },
+  { id: 'pedal-descending', label: 'Descending over a tonic pedal', group: 'Pedal points', steps: ({ roles }) => interleave([...roles].reverse(), D('tonic', -1)) },
+  { id: 'pedal-neighbours', label: 'Neighbour notes around the tonic', group: 'Pedal points', steps: () => [D('tonic'), D('second'), D('tonic'), D('seventh', -1)] },
+  { id: 'tanpura-cycle', label: 'Tanpura cycle (drone only)', group: 'Pedal points', steps: () => [D('fifth', -1), D('tonic'), D('tonic'), D('tonic', -1)] },
   ...WALK_SCALES.map((w) => ({ id: `scale-up-${w.id}`, label: `Scale up, ${w.label}`, group: 'Scale walks', steps: walkUp(w.id) })),
   ...WALK_SCALES.map((w) => ({
     id: `scale-up-down-${w.id}`,
@@ -1023,12 +1042,13 @@ function droneSemitones(drone, chord, pattern) {
   if (drone === 'root') return degreeSemitones(chord.degree);
   if (drone === 'tonic') return 0;
   const degrees = stackingDegrees(pattern?.scale ?? DEFAULT_SCALE);
+  if (drone === 'second') return degreeSemitones(degrees[1]);
   if (drone === 'fifth') return degreeSemitones(degrees[4]);
   if (drone === 'seventh') return degreeSemitones(degrees[6]);
   throw new Error(`Unknown drone: ${drone}`);
 }
 
-const DRONE_MARK = { tonic: 'T', root: 'R', fifth: '5̂', seventh: '7̂' };
+const DRONE_MARK = { tonic: 'T', root: 'R', second: '2̂', fifth: '5̂', seventh: '7̂' };
 
 /** Semitones above the Key's tonic a step sounds, before the Slot's own octave. */
 function stepSemitones(step, chord, pattern) {
