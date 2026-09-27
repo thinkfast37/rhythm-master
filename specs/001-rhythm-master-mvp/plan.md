@@ -235,12 +235,12 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
 | **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.11 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346 | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347 |
 | **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260 | T261, T262 |
-| **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346 | T264, T273, T283, T324, T333, T335, T347 |
+| **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346, T348 | T264, T273, T283, T324, T333, T335, T347, T349 |
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |
-| **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334 | T311, T324, T335 |
+| **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334, T348 | T311, T324, T335, T349 |
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330 | T327, T329, T331 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
