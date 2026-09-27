@@ -1751,10 +1751,17 @@ const handlers = {
 const transport = createTransport({
   playMelodic: melodic.playMelodic,
   onPosition(position) {
+    // The first sounding event of a pass is the boundary as it is HEARD.
+    // `onLoop` below fires when the pass is scheduled, up to the lookahead
+    // before it sounds — and the views draw what is sounding, so a full render
+    // there still shows the pass before. Rendering in full here as well is
+    // what puts the picker, the note bands, the chord strip and the score on
+    // the new fill or progression the moment it is heard, rather than a
+    // whole pass later at the next boundary (AC-2.7.2/4, AC-2.10.2/4).
+    const crossed = position.loop !== state.transportPosition?.loop;
     state.transportPosition = position;
-    // The cursor moving within a pass — see `render`. A pass boundary comes
-    // through `onLoop` below, which renders in full.
-    render('cursor');
+    // The cursor moving within a pass — see `render`.
+    render(crossed ? 'full' : 'cursor');
   },
   onLoop(loop) {
     const previousFill = fillIdAt(state.loop);

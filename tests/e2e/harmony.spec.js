@@ -936,6 +936,28 @@ test("AC-2.7.2/4 — The picker shows the fill in force, the note bands show its
   expect(steps).toEqual(['-2', '0', '2']); // C4 E4 G4
 });
 
+test("AC-2.7.2/4 — The picker shows the fill in force, the note bands show its deal and the pitch strip says the notes follow it, and the score shows it — every view follows the fill in force, not the Pattern's own arpeggio: while playing, the views follow the pass as it is heard, not one pass late", async ({ page }) => {
+  await cyclingBlank(page);
+  // 150 bpm: a pass is 1.6 s, so a view one pass behind is a clear miss
+  // against the window below, and never a near thing on a slow runner.
+  await page.evaluate(() => window.__rm.handlers.onTempo(150));
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+
+  // The transport reports Descending sounding; the views must say so at once,
+  // not at the next pass boundary.
+  expect(await untilFill(page, 'down', 12000)).toBe(true);
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('down', { timeout: 400 });
+  await expect(page.locator('.pitch-strip-note')).toContainText('Descending', { timeout: 400 });
+  expect(await page.locator('.measure[data-measure="0"] .slot-degree').allTextContents()).toEqual(['5', '3', 'R']);
+
+  expect(await untilFill(page, 'up-down', 12000)).toBe(true);
+  await expect(page.locator('.arpeggio-picker')).toHaveValue('up-down', { timeout: 400 });
+  await page.locator('[data-action="stop"]').click();
+});
+
 test('AC-2.7.2/5 — Changing the Repeats count while playing applies without a restart: the fill in force keeps its place and plays the new count from the pass it is on before the cycle moves on', async ({ page }) => {
   await cyclingBlank(page);
   await page.locator('.fill-cycle-repeats').fill('1');
@@ -1306,6 +1328,25 @@ test("AC-2.10.2/4 — The picker shows the progression in force, the note bands 
   // The score view shows the same chord chips (AC-2.10.3/1 proves its own content).
   await page.locator('[data-action="view-sheet"]').click();
   await expect(page.locator('.score')).toBeVisible();
+  await page.locator('[data-action="stop"]').click();
+});
+
+test("AC-2.10.2/4 — The picker shows the progression in force, the note bands and the pitch strip follow its chords, and the score shows it — every view follows the progression in force, not the Pattern's own: while playing, the views follow the pass as it is heard, not one pass late", async ({ page }) => {
+  await cyclingBlank(page);
+  await page.evaluate(() => window.__rm.handlers.onTempo(150));
+  await page.locator('.arpeggio-picker').selectOption('up');
+  await page.locator('.fill-cycle-repeats').fill('1');
+  await page.locator('.fill-cycle-repeats').dispatchEvent('change');
+  await page.locator('.progression-cycle').click();
+  await page.locator('[data-action="play"]').click();
+
+  const { PROGRESSIONS, spellProgression, chordName } = await import('../../src/core/harmony.js');
+  const next = PROGRESSIONS[1].id;
+  expect(await untilProgression(page, next, 12000)).toBe(true);
+  await expect(page.locator('.progression-picker')).toHaveValue(next, { timeout: 400 });
+  // The chord strip names the next progression's chords, not the last one's.
+  const expected = spellProgression(next, 'ionian').map((c) => chordName(c, 'C'));
+  expect(await chordNames(page)).toEqual(expected);
   await page.locator('[data-action="stop"]').click();
 });
 
