@@ -488,11 +488,11 @@ test('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so t
 
 // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in four groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; fingerpicking: Travis picking, Travis picking with the treble descending, Alternating bass with a treble pair, Backward roll, Inside out, Outside in, Six-string sweep, Six-string sweep up and back; drones: Drone above, Drone below, Chord root drone; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern", async ({ page }) => {
+test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in five groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; fingerpicking: Travis picking, Travis picking with the treble descending, Alternating bass with a treble pair, Backward roll, Inside out, Outside in, Six-string sweep, Six-string sweep up and back; drones: Drone above, Drone below, Chord root drone, Scale root drone, Scale root and octave, Scale 5th drone, Scale 5th above, Scale 5th below, Scale root and 5th, Tanpura, Scale 7th drone, Scale 7th above, Scale 7th below; pedal points: Scale up over a tonic pedal, Scale down over a tonic pedal, Scale up over a 5th pedal, Pedal every third note, Pedal every fourth note, Descending over a tonic pedal, Neighbour notes around the tonic, Tanpura cycle; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern", async ({ page }) => {
   await harmonicBlank(page); // owned Pattern p_test
   expect(await page.locator('.arpeggio-picker > option').allTextContents()).toEqual(['None (as stamped)']);
   expect(await page.locator('.arpeggio-picker optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual([
-    'Chord tones', 'Fingerpicking', 'Drones', 'Scale walks',
+    'Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks',
   ]);
   expect(await page.locator('.arpeggio-picker optgroup[label="Chord tones"] option').allTextContents()).toEqual([
     'Ascending', 'Descending', 'Up and down', 'Up and down, repeating the turn', 'Alberti', 'Root only', 'Root and fifth',
@@ -504,6 +504,12 @@ test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in four gr
   ]);
   expect(await page.locator('.arpeggio-picker optgroup[label="Drones"] option').allTextContents()).toEqual([
     'Drone above (tonic)', 'Drone below (tonic)', 'Chord root drone',
+    'Scale root drone', 'Scale root and octave', 'Scale 5th drone', 'Scale 5th above', 'Scale 5th below',
+    'Scale root and 5th', 'Tanpura (5th and octave)', 'Scale 7th drone', 'Scale 7th above', 'Scale 7th below',
+  ]);
+  expect(await page.locator('.arpeggio-picker optgroup[label="Pedal points"] option').allTextContents()).toEqual([
+    'Scale up over a tonic pedal', 'Scale down over a tonic pedal', 'Scale up over a 5th pedal', 'Pedal every third note',
+    'Pedal every fourth note', 'Descending over a tonic pedal', 'Neighbour notes around the tonic', 'Tanpura cycle (drone only)',
   ]);
   expect(await page.locator('.arpeggio-picker optgroup[label="Scale walks"] option').allTextContents()).toEqual([
     'Scale up, major', 'Scale up, natural minor', 'Scale up, major pentatonic', 'Scale up, minor pentatonic', "Scale up, the Pattern's scale",
@@ -568,6 +574,26 @@ test('AC-2.6.6/12 — The note band names a dealt step by what it is — a chord
   await page.locator('.arpeggio-picker').selectOption('scale-up-minor-pentatonic');
   expect(await labels()).toEqual(['s1', 's2', 's3', 's4']);
   expect(await names()).toEqual(['C4', 'Eb4', 'F4', 'G4']);
+});
+
+test("AC-2.6.6/14 — A scale drone alternates rising chord tones with a degree of the Pattern's scale, fixed whatever the chord, and the note band marks it by that degree: in C major over C then F, Scale 5th above sounds C G′ E G′ G G′ then F G′ A G′ C G′; Scale root drone and Scale 5th drone sit at the Slot's own octave, Scale 5th below an octave down; Scale root and octave, Scale root and 5th, and Tanpura take two drones in turn — tonic then tonic above, tonic then 5th, 5th then tonic above; the Scale 7th drones sound the scale's own 7th — B in major, B♭ in natural minor — and a scale with no 7th takes it from the major or minor it stacks its chords from, as its chords do: the note band", async ({ page }) => {
+  await harmonicBlank(page);
+  for (const s of [0, 1, 2, 3]) await accentZone(page, 0, s).click();
+  const labels = () => page.locator('.measure[data-measure="0"] .slot-degree').allTextContents();
+  const names = () => page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents();
+
+  await page.locator('.arpeggio-picker').selectOption('scale-fifth-above');
+  expect(await labels()).toEqual(['R', '5̂↑', '3', '5̂↑']);
+  expect(await names()).toEqual(['C4', 'G5', 'E4', 'G5']);
+  await expect(slotAt(page, 0, 1).locator('.slot-pitch')).toHaveAttribute('data-step', '5̂↑');
+
+  await page.locator('.arpeggio-picker').selectOption('tanpura');
+  expect(await labels()).toEqual(['R', '5̂', '3', 'T↑']);
+  expect(await names()).toEqual(['C4', 'G4', 'E4', 'C5']);
+
+  await page.locator('.arpeggio-picker').selectOption('scale-seventh-below');
+  expect(await labels()).toEqual(['R', '7̂↓', '3', '7̂↓']);
+  expect(await names()).toEqual(['C4', 'B3', 'E4', 'B3']);
 });
 
 test('AC-2.6.6/8 — Changing the arpeggio on a shipped Pattern goes through the naming prompt', async ({ page }) => {

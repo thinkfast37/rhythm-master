@@ -403,6 +403,10 @@ describe('core/harmony', () => {
       'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave', 'up-over-down',
       'travis', 'travis-down', 'bass-treble-pair', 'backward-roll', 'inside-out', 'outside-in', 'sweep', 'sweep-back',
       'drone-above', 'drone-below', 'root-drone',
+      'scale-root-drone', 'scale-root-octave', 'scale-fifth-drone', 'scale-fifth-above', 'scale-fifth-below',
+      'scale-root-fifth', 'tanpura', 'scale-seventh-drone', 'scale-seventh-above', 'scale-seventh-below',
+      'pedal-scale-up', 'pedal-scale-down', 'pedal-scale-up-fifth', 'pedal-every-third', 'pedal-every-fourth',
+      'pedal-descending', 'pedal-neighbours', 'tanpura-cycle',
       'scale-up-major', 'scale-up-minor', 'scale-up-major-pentatonic', 'scale-up-minor-pentatonic', 'scale-up-pattern',
       'scale-up-down-major', 'scale-up-down-minor', 'scale-up-down-major-pentatonic', 'scale-up-down-minor-pentatonic', 'scale-up-down-pattern',
     ]);
@@ -424,6 +428,73 @@ describe('core/harmony', () => {
     expect(stepLabel({ drone: 'tonic', octave: 1 })).toBe('T↑');
     expect(stepLabel({ drone: 'tonic', octave: -1 })).toBe('T↓');
     expect(stepLabel({ drone: 'root', octave: 1 })).toBe('R↑');
+  });
+
+  it("AC-2.6.6/14 — A scale drone alternates rising chord tones with a degree of the Pattern's scale, fixed whatever the chord, and the note band marks it by that degree: in C major over C then F, Scale 5th above sounds C G′ E G′ G G′ then F G′ A G′ C G′; Scale root drone and Scale 5th drone sit at the Slot's own octave, Scale 5th below an octave down; Scale root and octave, Scale root and 5th, and Tanpura take two drones in turn — tonic then tonic above, tonic then 5th, 5th then tonic above; the Scale 7th drones sound the scale's own 7th — B in major, B♭ in natural minor — and a scale with no 7th takes it from the major or minor it stacks its chords from, as its chords do", () => {
+    // Three Measures, six sounding Slots each, one chord per Measure: C, F, G, in C major.
+    let p = setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure');
+    p = sounding(p, 6);
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('scale-fifth-above')).toEqual([
+      60, 79, 64, 79, 67, 79,
+      65, 79, 69, 79, 72, 79,
+      67, 79, 71, 79, 74, 79,
+    ]);
+    expect(under('scale-root-drone').slice(0, 6)).toEqual([60, 60, 64, 60, 67, 60]);
+    expect(under('scale-fifth-drone').slice(0, 6)).toEqual([60, 67, 64, 67, 67, 67]);
+    expect(under('scale-fifth-below').slice(0, 6)).toEqual([60, 55, 64, 55, 67, 55]);
+    // Two drones in turn: tonic then tonic above, tonic then 5th, 5th then tonic above.
+    expect(under('scale-root-octave').slice(0, 6)).toEqual([60, 60, 64, 72, 67, 60]);
+    expect(under('scale-root-fifth').slice(0, 6)).toEqual([60, 60, 64, 67, 67, 60]);
+    expect(under('tanpura').slice(0, 6)).toEqual([60, 67, 64, 72, 67, 67]);
+    // The 7th is the scale's own: B in major, B♭ in natural minor.
+    expect(under('scale-seventh-drone').slice(0, 6)).toEqual([60, 71, 64, 71, 67, 71]);
+    expect(under('scale-seventh-above').slice(6, 12)).toEqual([65, 83, 69, 83, 72, 83]);
+    expect(under('scale-seventh-below').slice(0, 2)).toEqual([60, 59]);
+    expect(under('scale-seventh-drone', { ...p, scale: 'aeolian' }).slice(0, 2)).toEqual([60, 70]);
+    // A scale with no 7th takes it from the major or minor it stacks its chords from.
+    expect(under('scale-seventh-drone', { ...p, scale: 'major-pentatonic' }).slice(0, 2)).toEqual([60, 71]);
+    expect(under('scale-seventh-drone', { ...p, scale: 'minor-pentatonic' }).slice(0, 2)).toEqual([60, 70]);
+    // The 5th is the scale's too: Locrian's is the flat fifth.
+    expect(under('scale-fifth-drone', { ...p, scale: 'locrian' }).slice(0, 2)).toEqual([60, 66]);
+    // The drone follows the Key, not the chord: in G the 5th above is D6.
+    expect(under('scale-fifth-above', { ...p, key: 'G' }).slice(0, 2)).toEqual([67, 86]);
+    // The band marks each drone by its degree.
+    expect(arpeggioSequence('tanpura', p).map(stepLabel)).toEqual(['R', '5̂', '3', 'T↑', '5', '5̂', 'R', 'T↑', '3', '5̂', '5', 'T↑']);
+    expect(stepLabel({ drone: 'fifth', octave: -1 })).toBe('5̂↓');
+    expect(stepLabel({ drone: 'seventh', octave: 1 })).toBe('7̂↑');
+    expect(stepLabel({ drone: 'tonic' })).toBe('T');
+    // And every scale drone bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    const droned = setArpeggio(p, 'tanpura');
+    expect(notesOf(clearHarmony(droned))).toEqual(notesOf(droned));
+  });
+
+  it("AC-2.6.6/15 — A pedal-point fill holds a note of the Key under a moving line, the pedal an octave below the Slot: Scale up over a tonic pedal walks the Pattern's scale up from the chord's root with the tonic between every step — under F in C, F C′ G C′ A C′ B♭ C′ C C′ D C′ E C′ with C an octave down — Scale down over a tonic pedal walks it down from the octave, and Scale up over a 5th pedal puts the scale's 5th under the walk; Pedal every third note and Pedal every fourth note open each run of two or three rising chord tones with the tonic; Descending over a tonic pedal deals the chord tones falling with the tonic between them; Neighbour notes around the tonic and Tanpura cycle ignore the chord — the tonic, the scale's 2nd, the tonic and the scale's 7th below; the scale's 5th below, the tonic twice and the tonic below", () => {
+    // Two Measures, fourteen sounding Slots each, one chord per Measure: C then F, in C major.
+    let p = setChange(setProgression(melodic({ measures: 2 }), 'I-IV-V'), 'measure');
+    p = sounding(p, 14);
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    // Under F: F C′ G C′ A C′ B♭ C′ C C′ D C′ E C′, the pedal C an octave down.
+    expect(under('pedal-scale-up').slice(14, 28)).toEqual([65, 48, 67, 48, 69, 48, 70, 48, 72, 48, 74, 48, 76, 48]);
+    expect(under('pedal-scale-up').slice(0, 4)).toEqual([60, 48, 62, 48]);
+    expect(under('pedal-scale-down').slice(14, 20)).toEqual([77, 48, 76, 48, 74, 48]);
+    expect(under('pedal-scale-up-fifth').slice(14, 18)).toEqual([65, 55, 67, 55]);
+    // The walk is the Pattern's own scale: Dorian from C is C D E♭.
+    expect(under('pedal-scale-up', { ...p, scale: 'dorian' }).slice(0, 6)).toEqual([60, 48, 62, 48, 63, 48]);
+    expect(under('pedal-every-third').slice(0, 9)).toEqual([48, 60, 64, 48, 67, 60, 48, 64, 67]);
+    expect(under('pedal-every-fourth').slice(14, 22)).toEqual([48, 65, 69, 72, 48, 65, 69, 72]);
+    expect(under('pedal-descending').slice(0, 6)).toEqual([67, 48, 64, 48, 60, 48]);
+    // The last two ignore the chord: the same under C and under F.
+    expect(under('pedal-neighbours').slice(0, 4)).toEqual([60, 62, 60, 59]);
+    expect(under('pedal-neighbours').slice(14, 18)).toEqual([60, 62, 60, 59]);
+    expect(under('tanpura-cycle').slice(0, 4)).toEqual([55, 60, 60, 48]);
+    expect(under('tanpura-cycle').slice(14, 18)).toEqual([55, 60, 60, 48]);
+    expect(stepLabel({ drone: 'second' })).toBe('2̂');
+    // And every pedal fill bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['pedal-scale-down', 'pedal-every-third', 'pedal-neighbours']) {
+      const filled = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
   });
 
   it("AC-2.6.6/11 — A scale walk steps up the chosen scale from the chord's root, one octave and round again: Scale up in major under F sounds F G A B♭ C D E then F; Scale up and down turns without repeating the turn; the Pattern's scale walks the scale the Pattern carries", () => {
@@ -512,17 +583,17 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — The order is the catalogue's, through all four groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — The order is the catalogue's, through all five groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
-    expect(n).toBe(31);
+    expect(n).toBe(49);
     const one = { start: 0, baseLoop: 0, repeats: 1 };
     const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
     expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
     expect(sequence[n]).toBe(ARPEGGIOS[0].id);
     expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
     expect(sequence).not.toContain('none');
-    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Scale walks']);
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks']);
 
     // A Pattern's own fill is where the cycle starts; none means the first.
     expect(fillIndexOf(p)).toBe(0);
