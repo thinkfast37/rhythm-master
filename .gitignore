@@ -14,3 +14,4 @@ playwright-report/
 tests/.vitest-report.json
 tests/.playwright-report.json
 chord-reviews/
+research-out/

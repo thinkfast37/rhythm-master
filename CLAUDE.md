@@ -475,3 +475,8 @@ Three habits that follow from this:
 - Report failures plainly, with the output.
 - When the maintainer challenges something, check whether they are right before
   defending it. On this project they usually have been.
+- **The maintainer can run things locally.** A cloud session's proxy blocks
+  YouTube, Hooktheory and Ultimate Guitar, among others. When research needs a
+  blocked site, do not guess from search snippets: write a script under
+  `tools/research/`, add its exact commands to `tools/research/README.md`, and
+  ask the maintainer to run it and send back the output.
