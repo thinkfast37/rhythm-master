@@ -19,6 +19,7 @@
     "check:cvd": "node tools/check-cvd.js",
     "check:unwired": "node tools/check-unwired.mjs",
     "chords": "node tools/chord-sheet.mjs",
+    "research:bennett": "node tools/research/bennett-videos.mjs",
     "lint": "eslint .",
     "trace:matrix": "node .claude/skills/spec-trace/spec-trace.mjs matrix",
     "trace:changed": "node .claude/skills/spec-trace/spec-trace.mjs changed",
