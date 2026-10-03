@@ -37,7 +37,7 @@ in the evening — but separating them keeps each story honest about whose probl
 
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
-| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-3.1, US-4.4, US-7.1–7.5, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
+| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
 | **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
@@ -2066,7 +2066,7 @@ field survives showing it.)*
 
 *Traceability: `US-13.1` — Submit a Pattern for review*
 
-**As** the Contributor, **I want** to submit a Pattern, or a batch of my Patterns, for review, **so that** my original work can become part of the shared library for other users — and, in the absence of any sync/export-import feature, this is also the only way one of my custom Patterns ever becomes available to me on a different browser or device: once merged, it ships with the app itself rather than living only in the browser storage where I created it.
+**As** the Contributor, **I want** to submit a Pattern, or a batch of my Patterns, for review, **so that** my original work can become part of the shared library for other users — and, for a Pattern I want everyone to have, this is how it becomes available on every browser and device: once merged, it ships with the app itself rather than living only in the browser storage where I created it. *(Revised 2026-10-03: this read "in the absence of any sync/export-import feature, this is also the only way" one of my Patterns reaches another device. The whole-library backup (US-7.6) is now the way to carry my own library there; submission is for sharing.)*
 
 **Independent Test**: Trigger single and bulk submission and assert payload completeness, the oversized-URL fallback, and that Local Metadata never leaks.
 
@@ -3495,6 +3495,49 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
+### User Story 47 - Back up and restore the whole library
+
+*Traceability: `US-7.6` — Back up and restore the whole library*
+
+**As** the Composer, **I want** to save everything the app holds for me — my Patterns, Songs, ratings, Tags, Keeps, settings and its bookkeeping — to one file, and to restore the app from that file, **so that** clearing the browser, losing a phone or moving to another device does not cost me my library.
+
+*(Added 2026-10-03 at the maintainer's request: "a backup and restore feature where you can just … store the whole file, like the whole library on a file and then restore it from that file … It should have all the stuff that's in the local storage … whatever you've configured, everything." Decisions taken with the maintainer the same day: Local Metadata is included, which Constitution 3.6.0 permits for this file alone (FR-006); and restore **replaces** — the app afterwards holds exactly what the backup did, after a confirmation — rather than merging, since a restore that half-keeps the current library is not a restore. Shipped Patterns are not copied: they ship with the app, and what the musician added to them lives in the overlays, which are. The file is local and the musician's own; nothing is sent anywhere (Principle V).)*
+
+**Independent Test**: With a custom Pattern, a rating on a shipped Pattern, a Song, a changed setting and a submission mark stored, press Back up library and assert one JSON file downloads holding all five stores as stored. Change the library, choose Restore library with that file, confirm, and assert the app reloads holding exactly the backed-up library and nothing from after it. Choose a file that is not a backup and assert a message says so and nothing changed.
+
+**Acceptance Scenarios**:
+
+- **AC-7.6.1** — Back up writes the whole library to one file
+  - **Given** a library with custom Patterns, Songs, ratings, added Tags and Keeps, settings and Local Metadata
+  - **When** the Composer presses Back up library
+  - **Then** one JSON file downloads holding every store the app keeps, exactly as stored, naming its format and carrying a `schemaVersion`; nothing in the app changes
+  - **Cases**:
+    - **AC-7.6.1/1** — A Back up library control in the library panel, offered under every goal, downloads one JSON file named for the day it was made
+    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Songs, settings and Local Metadata — each exactly as stored, and a store never written is absent
+    - **AC-7.6.1/3** — The file names its format and carries its own schemaVersion and the time it was made
+    - **AC-7.6.1/4** — Shipped Patterns are not in the file; the ratings, added Tags and Keeps on them are, in the overlays
+
+- **AC-7.6.2** — Restore replaces the library with the file's
+  - **Given** a backup file
+  - **When** the Composer chooses Restore library, picks the file and confirms
+  - **Then** every store is replaced by the file's, a store the file lacks is cleared, and the app reopens holding exactly the backed-up library
+  - **Cases**:
+    - **AC-7.6.2/1** — A Restore library control beside Back up library opens a file picker; once a file is picked, a prompt says the current library will be replaced, and Cancel changes nothing
+    - **AC-7.6.2/2** — Confirmed, every store in the file is written and every store the file lacks is cleared, so the stores afterwards are exactly the backup's
+    - **AC-7.6.2/3** — After restoring, the app shows the backed-up library — its custom Patterns, ratings, Songs and settings — and nothing added since the backup
+    - **AC-7.6.2/4** — Backing up and restoring round-trips: a backup restored into an emptied app gives back every store unchanged
+
+- **AC-7.6.3** — A file that cannot be restored changes nothing
+  - **Given** a file that is not a usable backup
+  - **When** the Composer picks it to restore
+  - **Then** it is refused with a message saying why, before anything is written, and every store is as it was
+  - **Cases**:
+    - **AC-7.6.3/1** — A file that is not JSON, or not a Rhythm Master backup, is refused with a message and leaves the library as it was
+    - **AC-7.6.3/2** — A backup, or any store in it, at a schemaVersion newer than this build understands is refused rather than downgraded, and nothing is written
+    - **AC-7.6.3/3** — A backup with a malformed store — Patterns or Songs not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written
+
+---
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -3516,7 +3559,11 @@ specified in the Acceptance Scenarios above.
   discarding it.
 - **FR-006**: Local Metadata — submission history, resolved-duplicate-prompt state, and similar
   operational bookkeeping — MUST be stored separately from Pattern definitions, keyed by Pattern
-  identity, and MUST NOT appear in any export or submission payload.
+  identity, and MUST NOT appear in any Pattern export or submission payload. The whole-library
+  backup (US-7.6) is the one file that carries it, as its own store, never merged into a Pattern.
+  *(Revised 2026-10-03 with Constitution 3.6.0 and US-7.6: "any export" became "any Pattern
+  export". The maintainer asked for a backup holding "everything" and chose to include Local
+  Metadata, so a restored library does not re-ask duplicate prompts or forget what was submitted.)*
 - **FR-007**: Patterns shipped with the app MUST NOT be mutated in place; editing one MUST produce a
   new user-owned Pattern. Provenance MUST be a durable property, not derived from mutable state.
 - **FR-008**: No API key, token, or secret may appear in client code. Third-party write operations
@@ -3565,7 +3612,8 @@ specified in the Acceptance Scenarios above.
 - **Pattern Family**: A set of Patterns sharing identical rhythm content but differing in Sound Mode
   or Pitch. A discovery relationship only — members are fully independent.
 - **Local Metadata**: App-local bookkeeping about a Pattern, stored separately from it and never
-  included in any portable payload.
+  included in a Pattern's portable payload; the whole-library backup (US-7.6) carries it as its own
+  store.
 - **Keep**: The Composer's mark that a fill is worth composing with over a Pattern. Lives with the
   Pattern's Rating and added Tags in the Composer's own records, never in the Pattern, and is
   cleared only by the Composer.
@@ -3626,7 +3674,9 @@ specified in the Acceptance Scenarios above.
 - **Out of scope for this version**: multi-layer arrangements — two Patterns sounding at once, or a
   Section whose entries play over different Patterns (US-18.1 stores which Pattern each Section plays
   over so that this can come later without changing what a Song is); a guided tutorial system;
-  layering two Patterns by merging their accents; and any form of export/import or cloud sync beyond
-  MIDI. *(Revised 2026-09-20: "a guided tutorial system" stays excluded as a walkthrough; what Epic 14 delivers instead is US-14.1, a goals screen that shows each job its own controls.)* *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
+  layering two Patterns by merging their accents; and cloud sync, or any export/import beyond MIDI
+  and the whole-library backup file (US-7.6). *(Revised 2026-10-03: the backup file is in scope —
+  a local file the musician saves and restores, not a sync service (Constitution Principle V).)*
+  *(Revised 2026-09-20: "a guided tutorial system" stays excluded as a walkthrough; what Epic 14 delivers instead is US-14.1, a goals screen that shows each job its own controls.)* *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
   single-layer Song of Sections over one Pattern, which is the maintainer's songwriting workflow, and
   keeps the polyphonic case out.)*

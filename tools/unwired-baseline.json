@@ -6,7 +6,6 @@
     "src/audio/nodes.js __reset": "Test seam, as above. Permanent.",
     "src/main.js setTransportPosition": "Test seam. Drives the visual cursor to a known position without running the transport, so rendering can be asserted as a pure function of (pattern, position). Permanent.",
     "src/storage/keyValue.js useBackingStore": "Test seam. Swaps localStorage for an in-memory store so storage tests do not depend on a browser. Permanent.",
-    "src/storage/keyValue.js clearStore": "Test seam, as above. Permanent.",
     "src/storage/seed.js validateAll": "Called by the seed tests rather than by the app — the shipped library is validated at build time by `npm run validate:seed`, not on load. Permanent.",
     "src/storage/seed.js noteOnCount": "Test-only measure of the shipped library's density, used to pin the conversion's output. Permanent.",
     "src/audio/context.js isReady": "OUTSTANDING. No consumer in src/. Either a leftover from the gesture-gating work or a query the UI ought to be making before it offers transport controls — needs a decision, not a permanent home here.",

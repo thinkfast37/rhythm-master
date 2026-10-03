@@ -115,6 +115,9 @@ import {
 } from './export/submit.js';
 import { findDuplicates, findFamily, isDuplicate, duplicateGroups } from './core/similarity.js';
 import * as localMetaStore from './storage/localMeta.js';
+import * as backupStore from './storage/backup.js';
+import { backupFilename } from './core/backup.js';
+import { downloadBackup } from './export/backup.js';
 import {
   ask,
   askForText,
@@ -1677,6 +1680,35 @@ const handlers = {
 
   onExportMidi() {
     downloadMidi(state.pattern);
+  },
+
+  /** Every store to one file (AC-7.6.1). Changes nothing in the app. */
+  onBackupLibrary() {
+    const createdAt = new Date().toISOString();
+    downloadBackup(backupStore.backupText(createdAt), backupFilename(createdAt));
+  },
+
+  /**
+   * Replace the whole library with a backup's (AC-7.6.2). The file is checked
+   * before the musician is asked, so a file that cannot be restored is refused
+   * with its reason and nothing written (AC-7.6.3). Once restored, the app
+   * reopens, so every view, setting and goal comes from the restored stores
+   * rather than from this session's state.
+   */
+  async onRestoreLibrary(file) {
+    const text = await file.text();
+    const checked = backupStore.checkBackup(text);
+    if (!checked.ok) {
+      await ask({ message: checked.error, options: [{ label: 'OK', value: true, primary: true }] });
+      return;
+    }
+    const replace = await confirm(
+      'Restore this backup? It replaces everything in the app — your Patterns, Songs, ratings, Tags, Keeps and settings — with what the file holds. What is here now and not in the file will be lost.',
+      { confirmLabel: 'Replace library' }
+    );
+    if (!replace) return;
+    backupStore.restoreBackup(text);
+    location.reload();
   },
 
   /**

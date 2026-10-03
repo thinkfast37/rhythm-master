@@ -1,6 +1,40 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.5.0 → 3.6.0
+
+3.6.0 — The Local Metadata separation rule (Client-Side Architecture Constraints) gains
+  one exception: the whole-library backup (US-7.6) carries `rm.localMeta.v1` as its own
+  store. Everything else in the rule stands — Local Metadata is still stored separately,
+  keyed by Pattern identity, never part of a Pattern's definition, and never in a
+  Pattern's JSON, MIDI export or submission payload.
+
+  Asked for on 2026-10-03: *"a backup and restore feature where you can just … store the
+  whole library on a file and then restore it from that file. It should have all the
+  stuff that's in the local storage … whatever you've configured, everything."* Offered
+  the choice of leaving Local Metadata out, the maintainer chose to include it.
+
+  Justification, since this narrows a NON-NEGOTIABLE clause (Governance, item 2): the rule
+  exists so that a Pattern's portable form says nothing about one installation's history
+  with it — a Pattern sent to someone else, or submitted to the shared library, must not
+  carry "submitted on" or "duplicate prompt answered". A backup is not that. It is the
+  installation's own state, made by the same musician to restore the same library,
+  possibly on another device; leaving the bookkeeping out would make a restored library
+  re-ask duplicate prompts already answered and forget which Patterns were submitted —
+  exactly the history the musician asked to keep. The structural separation is
+  untouched: Local Metadata stays its own store inside the file, and no code path merges
+  it into a Pattern.
+
+  MINOR rather than MAJOR: no principle is removed or redefined incompatibly — every
+  artifact that complied with 3.5.0 complies with 3.6.0 — and the exception is a single
+  named file format.
+
+  Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅. Follow-up:
+  spec.md FR-006, the Local Metadata Key Entity and the Assumptions' out-of-scope line
+  revised, US-7.6 added; data-model §6 and quickstart V8 revised; CLAUDE.md §6 amended
+  (T354, T355).
+
+Earlier:
 Version change: 3.4.0 → 3.5.0
 
 3.5.0 — Principle V gains a section: the app may also ship as a store-distributed native
@@ -479,9 +513,13 @@ These constraints govern how state, data, and rendering are wired together:
 - **Local Metadata separation (MANDATORY)**: App-local bookkeeping *about* a Pattern —
   submission history, resolved-duplicate-prompt state, and any similar operational
   tracking — MUST be stored separately, keyed by Pattern identity, and MUST NOT be part
-  of the Pattern's own definition. No such field may ever appear in an export or
-  submission payload. A Pattern's portable form describes the music and nothing about
-  this installation's history with it.
+  of the Pattern's own definition. No such field may ever appear in a Pattern's portable
+  form — its JSON, its MIDI export or a submission payload. A Pattern's portable form
+  describes the music and nothing about this installation's history with it. The one
+  file that may carry Local Metadata is the **whole-library backup** (US-7.6): a copy of
+  this installation's stores, made by the musician for restoring their own installation,
+  in which Local Metadata travels as its own store, keyed by Pattern identity and never
+  merged into a Pattern (added 2026-10-03, v3.6.0).
 - **Provenance is durable**: Whether a Pattern shipped with the app or was authored by
   the user is a permanent property, not derived from mutable state. Shipped Patterns are
   never mutated in place; editing one produces a new user-owned Pattern.
@@ -529,4 +567,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.5.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-18
+**Version**: 3.6.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-03
