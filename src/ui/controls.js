@@ -31,7 +31,7 @@ import {
   ARPEGGIOS,
   MAX_CHORDS,
 } from '../core/harmony.js';
-import { renderHelp } from './help.js';
+import { placeHelp } from './help.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -532,6 +532,7 @@ export function renderPlayControls(root, pattern, state, handlers) {
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderTransport(state, handlers));
     fresh.appendChild(renderTempoEntry(pattern, handlers));
+    placeHelp(fresh, 'bar', state);
   });
 }
 
@@ -545,9 +546,6 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
   root.hidden = pattern.soundMode !== 'melodic';
   return rebuild(root, (fresh) => {
     if (root.hidden) return;
-    // Lab's Help, part of the group it describes (AC-14.1.3/3).
-    const help = renderHelp('melody', state);
-    if (help) fresh.appendChild(help);
     const strip = el('div', 'pitch-strip');
     renderPitchStripInto(strip, pattern, state, handlers);
     fresh.appendChild(strip);
@@ -557,6 +555,8 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
     // Cycling and Keep sit with the picker whose catalogue they step through:
     // auditioning fills is melody work, not practice (AC-2.7.1, AC-2.8.1).
     if (hasHarmony(pattern)) fresh.appendChild(renderFillCycle(pattern, state, handlers));
+    // Lab's Help, part of the group it describes (AC-14.1.3/3).
+    placeHelp(fresh, 'melody', state);
   });
 }
 
@@ -564,10 +564,9 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
 export function renderRhythmGroup(root, pattern, state, handlers) {
   root.className = 'controls workbench-group rhythm-group';
   return rebuild(root, (fresh) => {
-    const help = renderHelp('rhythm', state);
-    if (help) fresh.appendChild(help);
     fresh.appendChild(renderRecipeStrip(pattern, state, handlers));
     fresh.appendChild(renderStructure(pattern, handlers));
+    placeHelp(fresh, 'rhythm', state);
   });
 }
 
@@ -578,12 +577,11 @@ export function renderRhythmGroup(root, pattern, state, handlers) {
 export function renderPracticeGroup(root, pattern, state, handlers) {
   root.className = 'controls workbench-group practice-group';
   return rebuild(root, (fresh) => {
-    const help = renderHelp('practice', state);
-    if (help) fresh.appendChild(help);
     fresh.appendChild(renderClickControls(state, handlers));
     fresh.appendChild(renderTempo(pattern, handlers));
     fresh.appendChild(renderSwing(pattern, handlers));
     fresh.appendChild(renderCounting(pattern, state, handlers));
+    placeHelp(fresh, 'practice', state);
   });
 }
 

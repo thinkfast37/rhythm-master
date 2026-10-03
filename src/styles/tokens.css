@@ -1025,7 +1025,7 @@ body {
 
 /* Sits in the pinned bar, pushed to its trailing edge so the library toggle
    keeps the leading one (AC-5.5.3). */
-.pattern-nav { display: flex; gap: 8px; margin-left: auto; }
+.pattern-nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .nav-button {
   font: 500 13px/1 var(--font-ui); color: var(--ink);
   background: #1c1f2b; border: 1px solid var(--line);
@@ -2152,27 +2152,48 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .goal-name { font: 600 13px/1 var(--font-ui); color: var(--ink-dim); white-space: nowrap; }
 .give-one { border-color: var(--brand) !important; color: var(--brand) !important; }
 
-/* Lab's Help (AC-14.1.3/3): a description list at the head of the group on
-   screen, and one for the pinned bar under the goal bar. */
-.bar-help { flex: 1 0 100%; }
-.bar-help[hidden] { display: none; }
-.control-help {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2px 0;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  font: 400 12px/1.45 var(--font-ui);
-  color: var(--ink-dim);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+/* Lab's Help (AC-14.1.3/3): a small ? beside each control, and one shared
+   pop-up on the body for the description, so nothing takes room or sits over
+   the controls until a ? is tapped. */
+/* Specific enough to win over each panel's own button sizing. */
+.shell button.help-tip {
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 2px;
+  padding: 0;
+  font: 700 12px/1 var(--font-ui);
+  color: var(--brand);
+  background: transparent;
+  border: 1px solid var(--brand);
+  border-radius: 50%;
+  cursor: pointer;
+  vertical-align: middle;
 }
-.control-help-name { font-weight: 600; color: var(--ink); }
-.control-help-text { margin: 0 0 6px; }
-/* The bar's own list has the width for two columns. */
-.bar-help .control-help { margin: 0; grid-template-columns: max-content 1fr; gap: 4px 12px; }
-.bar-help .control-help-text { margin: 0; }
+/* A fingertip-sized target around the small mark. */
+.shell button.help-tip::after { content: ''; position: absolute; inset: -10px; }
+
+.shell button.help-tip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.help-pop {
+  position: fixed;
+  z-index: 1000;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 10px 12px;
+  font: 400 13px/1.45 var(--font-ui);
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+.help-pop[hidden] { display: none; }
+.help-pop-name { display: block; margin-bottom: 2px; }
+.help-pop-text { color: var(--ink-dim); }
 /* At phone width the bar wraps to a third row for the long label; the word
    goes, as the navigation's does (AC-15.1.17/3). */
 .pick-word, .give-word { display: inline; }
@@ -2182,8 +2203,6 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   .pick-word, .give-word { display: none; }
   .goal-bar { gap: 6px; }
   .goal-bar button, .goal-bar select { padding: 8px 10px; }
-  .bar-help .control-help { grid-template-columns: 1fr; gap: 2px 0; }
-  .bar-help .control-help-text { margin: 0 0 6px; }
 }
 
 /* A practice goal edits nothing (AC-14.1.5): the grid is looked at and
