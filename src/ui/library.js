@@ -159,6 +159,25 @@ export function renderLibrary(root, entries, viewState, handlers) {
   newButton.addEventListener('click', () => handlers.onNewPattern());
   root.appendChild(newButton);
 
+  // The whole library to a file and back (US-7.6). Offered under every goal,
+  // unlike New Pattern: a backup edits no Pattern, and a restore replaces the
+  // library only after its own confirmation (AC-7.6.1/1, AC-7.6.2/1).
+  const backupRow = el('div', 'library-backup');
+  const backupButton = el('button', 'backup-library', { type: 'button', textContent: 'Back up library' });
+  backupButton.dataset.action = 'backup-library';
+  backupButton.addEventListener('click', () => handlers.onBackupLibrary());
+  const restoreFile = el('input', 'restore-file', { type: 'file', accept: '.json,application/json', hidden: true });
+  restoreFile.addEventListener('change', () => {
+    const file = restoreFile.files?.[0];
+    restoreFile.value = '';
+    if (file) handlers.onRestoreLibrary(file);
+  });
+  const restoreButton = el('button', 'restore-library', { type: 'button', textContent: 'Restore library' });
+  restoreButton.dataset.action = 'restore-library';
+  restoreButton.addEventListener('click', () => restoreFile.click());
+  backupRow.append(backupButton, restoreButton, restoreFile);
+  root.appendChild(backupRow);
+
   const ratingFilter = el('div', 'rating-filter');
   for (const min of [0, 3, 4, 5]) {
     const b = el('button', `rating-option${(viewState.minRating ?? 0) === min ? ' on' : ''}`, {

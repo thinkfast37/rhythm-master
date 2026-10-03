@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 695 across 46 User Stories
+**Criteria**: 706 across 47 User Stories
 
-**Coverage**: 506 of 695 criteria proven (72.8%)
+**Coverage**: 517 of 706 criteria proven (73.2%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 506 | 72.8% |
-| 🔴 Gap — HIGH | 70 | 10.1% |
-| 🟠 Gap — MEDIUM | 41 | 5.9% |
-| 🟡 Gap — LOW | 78 | 11.2% |
+| 🟢 Proven | 517 | 73.2% |
+| 🔴 Gap — HIGH | 70 | 9.9% |
+| 🟠 Gap — MEDIUM | 41 | 5.8% |
+| 🟡 Gap — LOW | 78 | 11.0% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -104,6 +104,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.9 | 16 | **16** | · | · | · | · | · |
 | 🟢 US-2.10 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-14.1 | 23 | **23** | · | · | · | · | · |
+| 🟢 US-7.6 | 11 | **11** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -804,3 +805,14 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-14.1 | `AC-14.1.4/4` | Give me one draws from the whole level: fed every position in turn it reaches every shipped Pattern at that level and never the one open, and yields nothing when the level has no other | P-049 | T326, T328, T330, T352 (4/4 done) | T327, T329, T331, T353 (4/4 done) | `goals.test.js` | 🟢 OK |
 | US-14.1 | `AC-14.1.4/5` | Under Any level the dice draws from every shipped Pattern in the goal's Mode, whatever its level, and Pick from the library filters to the Mode Tag alone, or to nothing under a goal without one | P-049 | T326, T328, T330, T352 (4/4 done) | T327, T329, T331, T353 (4/4 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
 | US-14.1 | `AC-14.1.4/6` | Under a practice goal Prev and Next step through the rhythms the dice draws from — the level's Tag and the goal's Mode, within whatever filter the library already has — in the library's order; under Any level, and under the other goals, they step through the library as filtered, as before | P-049 | T326, T328, T330, T352 (4/4 done) | T327, T329, T331, T353 (4/4 done) | `goals.spec.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.1/1` 🖵 | A Back up library control in the library panel, offered under every goal, downloads one JSON file named for the day it was made | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.spec.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.1/2` | The file holds every store the app keeps — Patterns, overlays, Songs, settings and Local Metadata — each exactly as stored, and a store never written is absent | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.1/3` | The file names its format and carries its own schemaVersion and the time it was made | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.1/4` | Shipped Patterns are not in the file; the ratings, added Tags and Keeps on them are, in the overlays | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.2/1` 🖵 | A Restore library control beside Back up library opens a file picker; once a file is picked, a prompt says the current library will be replaced, and Cancel changes nothing | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.spec.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.2/2` | Confirmed, every store in the file is written and every store the file lacks is cleared, so the stores afterwards are exactly the backup's | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.2/3` 🖵 | After restoring, the app shows the backed-up library — its custom Patterns, ratings, Songs and settings — and nothing added since the backup | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.spec.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.2/4` | Backing up and restoring round-trips: a backup restored into an emptied app gives back every store unchanged | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.3/1` | A file that is not JSON, or not a Rhythm Master backup, is refused with a message and leaves the library as it was | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js`, `backup.spec.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.3/2` | A backup, or any store in it, at a schemaVersion newer than this build understands is refused rather than downgraded, and nothing is written | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.3/3` | A backup with a malformed store — Patterns or Songs not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |

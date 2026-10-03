@@ -242,6 +242,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |
 | **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334, T348 | T311, T324, T335, T349 |
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352 | T327, T329, T331, T353 |
+| **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

@@ -115,6 +115,8 @@ automated form of this is AC-4.1.1's 500-loop assertion, which is the version th
 2. Export it as MIDI, and open the submission body.
 
 **Expected**: neither contains submission history, resolved-duplicate state, ids, ratings, or tags.
+The whole-library backup (US-7.6) is the one file that does carry it, as its own store
+(Constitution 3.6.0).
 The automated form is the serialization test in
 [contracts/file-formats.md](./contracts/file-formats.md).
 

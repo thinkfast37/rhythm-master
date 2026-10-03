@@ -382,8 +382,10 @@ following change.
 - **Provenance is not a field.** Built-in vs custom is decided by which store a
   Pattern came from, so an edit cannot forge it.
 - **Local Metadata never leaves.** `rm.localMeta.v1` is app-local bookkeeping and
-  is barred from every export. `rm.overlays.v1` is user content (ratings, added
-  tags) and is a different store for that reason.
+  is barred from every Pattern export — JSON, MIDI, submission. `rm.overlays.v1` is
+  user content (ratings, added tags) and is a different store for that reason. The
+  one exception is the whole-library backup (US-7.6, Constitution 3.6.0), which
+  copies every store, this one included, as its own store.
 - **No audio assets.** Both Sound Modes are Web Audio synthesis; the reverb
   impulse is generated at runtime.
 - **The store build is the web build.** The App Store / Google Play apps are a

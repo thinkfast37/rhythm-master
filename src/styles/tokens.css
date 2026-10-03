@@ -1327,6 +1327,13 @@ body {
   color: #0b0c15; background: var(--brand);
   border: 0; border-radius: var(--radius); cursor: pointer;
 }
+/* Back up and Restore (US-7.6): rarely used, so quieter than New Pattern above them. */
+.library-backup { display: flex; gap: 6px; margin-bottom: 10px; }
+.library-backup button {
+  flex: 1; padding: 6px 8px; font: 500 11px/1 var(--font-ui);
+  color: var(--ink-dim); background: transparent;
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
 .rating-filter { display: flex; gap: 4px; margin-bottom: 8px; }
 .rating-option {
   padding: 5px 8px; font: 500 11px/1 var(--font-ui);

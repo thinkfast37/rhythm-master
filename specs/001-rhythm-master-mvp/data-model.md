@@ -259,7 +259,7 @@ requires.
 
 ## 6. Storage schema
 
-Three separate `localStorage` keys. The separation is what makes FR-006 structural.
+Five separate `localStorage` keys. The separation is what makes FR-006 structural.
 
 ### `rm.patterns.v1` — user-owned Patterns
 
@@ -267,7 +267,7 @@ Three separate `localStorage` keys. The separation is what makes FR-006 structur
 { "schemaVersion": 1, "patterns": [ /* Pattern[] */ ] }
 ```
 
-### `rm.localMeta.v1` — Local Metadata (NEVER exported — FR-006)
+### `rm.localMeta.v1` — Local Metadata (never in a Pattern export — FR-006)
 
 App-local bookkeeping *about* Patterns, keyed by Pattern id:
 
@@ -284,7 +284,8 @@ App-local bookkeeping *about* Patterns, keyed by Pattern id:
 ```
 
 No code path may merge this into a Pattern. A serialization test asserts that no key from this
-store appears in any MIDI export, submission payload, or Pattern JSON.
+store appears in any MIDI export, submission payload, or Pattern JSON. The whole-library backup
+(below) is the one file that carries it, as its own store (FR-006, Constitution 3.6.0).
 
 ### `rm.overlays.v1` — user content on shipped Patterns
 
@@ -405,6 +406,33 @@ Pattern export and submission (AC-18.1.4/6); its own export is the Song MIDI fil
 Shipped Patterns omit `id` (assigned deterministically on load) and omit anything derivable. This
 keeps US-16.2's promise that adding a Pattern to the library is a plain data edit — name, mode,
 tempo, tags, and measures, nothing bookkeeping-shaped.
+
+### Library backup file — `rhythm-master-backup-YYYY-MM-DD.json` (US-7.6)
+
+```jsonc
+{
+  "format": "rhythm-master-backup",
+  "schemaVersion": 1,
+  "createdAt": "2026-10-03T14:05:09.000Z",
+  "stores": {
+    "rm.patterns.v1":  { "schemaVersion": 1, "patterns": [ /* … */ ] },
+    "rm.overlays.v1":  { "schemaVersion": 1, "byPatternId": { /* … */ } },
+    "rm.songs.v1":     { "schemaVersion": 1, "songs": [ /* … */ ] },
+    "rm.settings.v1":  { "schemaVersion": 1, /* … */ },
+    "rm.localMeta.v1": { "schemaVersion": 1, "byPatternId": { /* … */ } }
+  }
+}
+```
+
+Every store, exactly as stored, keyed by its `localStorage` key; a store never written is absent.
+Shipped Patterns are not in it — they ship with the app, and what the musician added to them is in
+`rm.overlays.v1`. The file's own `schemaVersion` versions the envelope; each store keeps its own and
+is upgraded on restore by the same migrations below.
+
+Restore replaces: each store in the file is written, and each store the file lacks is cleared, so
+the installation afterwards holds exactly what the backup did (AC-7.6.2). Nothing is written until
+the whole file has been checked — a file that is not a backup, is from a newer version, or has a
+malformed store is refused with every store untouched (AC-7.6.3).
 
 ### Migration
 
