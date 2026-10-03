@@ -3465,7 +3465,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-14.1.3/1** — Lab offers every workbench group, Pattern actions and the family members, exactly as the tabbed workbench and the main panel's fixed order already describe
     - **AC-14.1.3/2** — Once Lab is chosen the app opens straight into it on every later launch, until another goal is chosen from the goals screen
-    - **AC-14.1.3/3** — A Help toggle in the pinned bar, present in Lab alone, shows a one-line description of each control in the group on screen and in the pinned bar, hides them again, and is remembered
+    - **AC-14.1.3/3** — A Help toggle in the pinned bar, present in Lab alone, puts a ? beside each control in the group on screen and in the pinned bar that pops up its one-line description when tapped, takes the ?s away again, and is remembered
+  - *(Revised 2026-10-03 with T352, from the maintainer the same day: on a Melodic Pattern in Lab "there's a lot of help text on the right panel and it seems to overlap the controls … I'd rather be like pop outs where I click like a … little question mark." The descriptions were laid out as a block at the head of each group and a second block in the pinned bar, which pushed the controls down and, pinned, sat over the content as it scrolled. The toggle stays, so Help is still off by default and one tap away; what it shows is a ? per control instead of the text, and the text is a pop-up that sits over the page until it is dismissed, taking no room while closed. Pop-up style chosen by the maintainer the same day.)*
 
 - **AC-14.1.5** — Practice goals are read-only
   - **Given** one of the four practice goals

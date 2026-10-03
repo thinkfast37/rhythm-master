@@ -352,7 +352,7 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "fillCycleRepeats": 4,          // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
   "goal": null,                   // AC-14.1.2/5 — the chosen goal's id, or "lab"; null until one is chosen, which is what opens the goals screen
   "level": "Beginner",            // AC-14.1.4/1 — "Beginner" | "Intermediate" | "Advanced" | "any", the level the dice and Prev/Next draw from; "any" is every level (AC-14.1.4/5)
-  "labHelp": false                // AC-14.1.3/3 — whether Lab's Help toggle is on
+  "labHelp": false                // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
 }
 ```
 

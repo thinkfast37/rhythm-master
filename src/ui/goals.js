@@ -9,6 +9,7 @@
  */
 import { GOALS, LEVELS, ANY_LEVEL, LAB, goalById, isPracticeGoal } from '../core/goals.js';
 import { el, rebuild } from './controls.js';
+import { placeHelp } from './help.js';
 
 const GROUPS = [
   ['practise', 'Practise'],
@@ -113,5 +114,6 @@ export function renderGoalBar(root, state, handlers) {
       help.addEventListener('click', () => handlers.onHelp?.(!on));
       fresh.appendChild(help);
     }
+    placeHelp(fresh, 'bar', state);
   });
 }

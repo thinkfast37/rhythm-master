@@ -88,7 +88,7 @@ import {
 } from './ui/responsive.js';
 import { renderComposeGroup } from './ui/compose.js';
 import { renderGoals, renderGoalBar } from './ui/goals.js';
-import { renderHelp } from './ui/help.js';
+import { placeHelp } from './ui/help.js';
 import { LAB, ANY_LEVEL, surfaceFor, pickAtLevel, libraryTagsFor, isPracticeGoal, LEVELS } from './core/goals.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
@@ -2019,9 +2019,7 @@ export function mount(root) {
   // any scroll offset like the transport beside them.
   const goalBarEl = document.createElement('div');
   // Lab's Help for the pinned bar itself, under the goal bar (AC-14.1.3/3).
-  const barHelpEl = document.createElement('div');
-  barHelpEl.className = 'bar-help';
-  topBarEl.append(libraryToggle, playEl, navEl, goalBarEl, barHelpEl);
+  topBarEl.append(libraryToggle, playEl, navEl, goalBarEl);
 
   // The goals screen (AC-14.1.1): stands in for the library and the main
   // panel together while open, so it is a child of the shell beside them.
@@ -2275,13 +2273,14 @@ export function mount(root) {
       : { autoTags: automaticTags(pattern, s.isOwned), lockedTags: [], userTags: pattern.tags ?? [] };
 
     // The goals screen in place of everything else while it is open
-    // (AC-14.1.1/1); the goal bar and its Help otherwise.
+    // (AC-14.1.1/1); the goal bar otherwise.
     shell.dataset.goals = s.goalsOpen ? 'open' : 'closed';
     renderGoals(goalsEl, s, handlers);
     renderGoalBar(goalBarEl, s, handlers);
-    const barHelp = renderHelp('bar', s);
-    barHelpEl.replaceChildren(...(barHelp ? [barHelp] : []));
-    barHelpEl.hidden = !barHelp;
+    // The pinned bar's ?s on the parts built once; the rebuilt parts place
+    // their own (AC-14.1.3/3).
+    placeHelp(topBarEl, 'bar', s, ['Library']);
+    placeHelp(navEl, 'bar', s, ['Prev / Next']);
     // What the goal offers (AC-14.1.2): the groups, Pattern actions and the
     // family members it has a use for. Lab offers everything (AC-14.1.3/1).
     // A practice goal offers none of it and edits nothing (AC-14.1.5).

@@ -319,39 +319,92 @@ test('AC-14.1.3/2 — Once Lab is chosen the app opens straight into it on every
   await expect(goals(page)).toBeVisible();
 });
 
-test('AC-14.1.3/3 — A Help toggle in the pinned bar, present in Lab alone, shows a one-line description of each control in the group on screen and in the pinned bar, hides them again, and is remembered', async ({ page }) => {
+test('AC-14.1.3/3 — A Help toggle in the pinned bar, present in Lab alone, puts a ? beside each control in the group on screen and in the pinned bar that pops up its one-line description when tapped, takes the ?s away again, and is remembered', async ({ page }) => {
   await page.goto('/');
   await chooseGoal(page, 'play');
   await expect(goalBar(page).locator('[data-action="toggle-help"]')).toHaveCount(0);
+  await expect(page.locator('.help-tip')).toHaveCount(0);
   await page.locator('[data-action="show-goals"]').click();
   await chooseGoal(page, 'lab');
   const help = goalBar(page).locator('[data-action="toggle-help"]');
   await expect(help).toBeVisible();
   await expect(help).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('.control-help')).toHaveCount(0);
+  await expect(page.locator('.help-tip')).toHaveCount(0);
 
   await help.click();
   await expect(help).toHaveAttribute('aria-pressed', 'true');
-  // The pinned bar's own, and the group on screen's — Rhythm on a Percussive Pattern.
-  await expect(page.locator('.main-top-bar .control-help[data-help="bar"]')).toBeVisible();
-  const rhythmHelp = page.locator('[data-section="rhythm"] .control-help[data-help="rhythm"]');
-  await expect(rhythmHelp).toBeVisible();
-  expect(await rhythmHelp.locator('dt').count()).toBeGreaterThan(2);
-  for (const line of await rhythmHelp.locator('dd').allTextContents()) {
-    expect(line.trim().length).toBeGreaterThan(10);
-    expect(line).not.toContain('\n');
+  // The pinned bar's own, each beside its control.
+  const bar = page.locator('.main-top-bar');
+  for (const [name, control] of [
+    ['Library', '.library-toggle'],
+    ['Play / Stop', '.transport'],
+    ['Prev / Next', '[data-action="next-pattern"]'],
+    ['Goals', '.goals-button'],
+  ]) {
+    const tip = bar.locator(`.help-tip[data-help="bar"][data-help-for="${name}"]`);
+    await expect(tip, name).toBeVisible();
+    expect(await tip.evaluate((t, sel) => t.previousElementSibling?.matches(sel), control), name).toBe(true);
   }
-  // Another group on screen, its own descriptions.
+  // The group on screen's — Rhythm on a Percussive Pattern — and no block of text.
+  const rhythmTips = page.locator('[data-section="rhythm"] .help-tip[data-help="rhythm"]');
+  expect(await rhythmTips.count()).toBeGreaterThan(2);
+  await expect(rhythmTips.first()).toBeVisible();
+  await expect(page.locator('.control-help')).toHaveCount(0);
+
+  // Tapped, a ? pops up its one line over the page; tapped again, it closes.
+  const pop = page.locator('.help-pop');
+  await expect(pop).toBeHidden();
+  const condense = page.locator('[data-section="rhythm"] .help-tip[data-help-for="Condense"]');
+  await condense.click();
+  await expect(pop).toBeVisible();
+  await expect(pop).toContainText('Condense');
+  const line = await pop.locator('.help-pop-text').textContent();
+  expect(line.trim().length).toBeGreaterThan(10);
+  expect(line).not.toContain('\n');
+  expect(await pop.evaluate((p) => getComputedStyle(p).position)).toBe('fixed');
+  await condense.click();
+  await expect(pop).toBeHidden();
+  // A tap elsewhere, or Escape, dismisses it too.
+  await condense.click();
+  await expect(pop).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(pop).toBeHidden();
+
+  // Another group on screen, its own ?s; the hidden group's are not seen.
   await page.locator('.workbench-tab[data-tab="practice"]').click();
-  await expect(page.locator('[data-section="practice"] .control-help[data-help="practice"]')).toBeVisible();
-  await expect(page.locator('[data-section="rhythm"] .control-help')).toBeHidden();
+  await expect(page.locator('[data-section="practice"] .help-tip[data-help="practice"]').first()).toBeVisible();
+  await expect(page.locator('[data-section="rhythm"] .help-tip').first()).toBeHidden();
 
   await help.click();
-  await expect(page.locator('.control-help')).toHaveCount(0);
+  await expect(page.locator('.help-tip')).toHaveCount(0);
   await help.click();
   await page.reload();
   await expect(goalBar(page).locator('[data-action="toggle-help"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.main-top-bar .control-help[data-help="bar"]')).toBeVisible();
+  await expect(bar.locator('.help-tip[data-help="bar"]').first()).toBeVisible();
+});
+
+test('AC-14.1.3/3 — A Help toggle in the pinned bar, present in Lab alone, puts a ? beside each control in the group on screen and in the pinned bar that pops up its one-line description when tapped, takes the ?s away again, and is remembered: on a Melodic Pattern the ?s take no room above the controls, and an open description moves nothing', async ({ page }) => {
+  await page.goto('/');
+  await chooseGoal(page, 'lab');
+  await melodicWithProgression(page);
+  const strip = page.locator('[data-section="melody"] .pitch-strip');
+  const top = async (loc) => (await loc.boundingBox()).y;
+  const stripOff = await top(strip);
+  const gridOff = await top(page.locator('.grid'));
+
+  await goalBar(page).locator('[data-action="toggle-help"]').click();
+  const tips = page.locator('[data-section="melody"] .help-tip[data-help="melody"]');
+  expect(await tips.count()).toBeGreaterThan(5);
+  // Nothing is laid out ahead of the strip or the grid: the ?s sit in the rows.
+  expect(await page.locator('[data-section="melody"] > :first-child').evaluate((e) => e.className)).toBe('pitch-strip');
+  expect(Math.abs((await top(page.locator('.grid'))) - gridOff)).toBeLessThan(2);
+  const stripOn = await top(strip);
+  expect(Math.abs(stripOn - stripOff)).toBeLessThan(2);
+
+  await page.locator('[data-section="melody"] .help-tip[data-help-for="Scale"]').click();
+  await expect(page.locator('.help-pop')).toBeVisible();
+  await expect(page.locator('.help-pop')).toContainText('Scale');
+  expect(Math.abs((await top(strip)) - stripOn)).toBeLessThan(2);
 });
 
 /* --- AC-14.1.4 — a rhythm at your level ---------------------------------------- */
