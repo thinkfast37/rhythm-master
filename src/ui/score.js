@@ -63,7 +63,7 @@ const glyph = {
   sharp: (x, y, sp) =>
     `<g class="accidental" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})"><path d="M -0.22 -1.25 V 1.15 M 0.22 -1.15 V 1.25" stroke-width="0.11" fill="none"/><path d="M -0.5 -0.15 L 0.5 -0.45 M -0.5 0.55 L 0.5 0.25" stroke-width="0.3" fill="none"/></g>`,
   flat: (x, y, sp) =>
-    `<g class="accidental" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})"><path d="M -0.3 -1.9 V 0.6" stroke-width="0.12" fill="none"/><path d="M -0.3 0.6 c 0.9 -0.5 1.15 -1.3 0.6 -1.45 c -0.3 -0.1 -0.6 0.2 -0.6 0.55 z"/></g>`,
+    `<g class="accidental" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})"><path d="M -0.3 -1.9 V 0.6" stroke-width="0.12" fill="none"/><path fill-rule="evenodd" d="M -0.3 0.6 c 0.9 -0.5 1.15 -1.3 0.6 -1.45 c -0.3 -0.1 -0.6 0.2 -0.6 0.55 z M -0.24 0.36 c 0.62 -0.42 0.78 -0.98 0.48 -1.06 c -0.22 -0.06 -0.48 0.16 -0.48 0.5 z"/></g>`,
   natural: (x, y, sp) =>
     `<g class="accidental" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})"><path d="M -0.28 -1.3 V 0.7 M 0.28 -0.7 V 1.3" stroke-width="0.11" fill="none"/><path d="M -0.28 -0.45 L 0.28 -0.65 M -0.28 0.55 L 0.28 0.35" stroke-width="0.28" fill="none"/></g>`,
   'double-sharp': (x, y, sp) =>
