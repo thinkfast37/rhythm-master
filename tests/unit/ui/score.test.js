@@ -339,6 +339,25 @@ describe('ui/score — the treble staff, as drawn (AC-12.2.5, AC-12.2.6)', () =>
     }
   });
 
+  it('AC-12.2.5/4 — An accidental is written before a note when its letter is not already at that alteration — by the key signature or by an earlier accidental in the same Measure on the same letter and octave — and a natural is written when the note undoes one; an accidental holds to the end of its Measure and no further: a flat\'s bowl is drawn hollow, as written by hand, inline and in the key signature', () => {
+    // A filled shape with no hole inside it is a solid bowl. Each flat's bowl must be
+    // a stroked outline, or a filled crescent with its inside cut out (evenodd, two contours).
+    const hollow = (glyph) => {
+      const filled = [...glyph.matchAll(/<path([^>]*)\/>/g)].map((m) => m[1]).filter((a) => !/fill="none"/.test(a));
+      return filled.every((a) => /fill-rule="evenodd"/.test(a) && (/d="([^"]*)"/.exec(a)[1].match(/[Mm]/g) ?? []).length >= 2);
+    };
+    const flats = (markup) => markup.match(/<g class="accidental"[^>]*>(?:(?!<\/g>).)*<\/g>/g).filter((g) => !/stroke-width="0.3"|stroke-width="0.28"|stroke-width="0.26"/.test(g));
+    let p = pattern([[0, 0, 0]], { melodic: true });
+    p = setPitch(p, 0, 0, 0, { degree: 'b3', octaveOffset: 0 });
+    const inline = items(draw(p))[0].inner;
+    expect(flats(inline)).toHaveLength(1);
+    expect(hollow(flats(inline)[0])).toBe(true);
+    const ks = draw({ ...pattern([[0, 0, 0]], { melodic: true }), key: 'Eb' });
+    const sig = ks.slice(tags(ks, 'key-signature')[0].at, ks.indexOf('<text class="meter"'));
+    expect(flats(sig)).toHaveLength(3);
+    for (const g of flats(sig)) expect(hollow(g)).toBe(true);
+  });
+
   it('AC-12.2.5/5 — A chord-tone Pitch is written at the note it sounds in that pass through the chord in force: the Root under I–IV–V in C is C in pass 1, F in pass 2 and G in pass 3: as drawn', () => {
     let p = pattern([[0, 0, 0]], { melodic: true });
     p = setProgression(p, 'I-IV-V');
