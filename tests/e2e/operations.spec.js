@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 test.use({ launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefined } });
 
@@ -11,6 +12,40 @@ async function stubGitHub(page) {
     route.fulfill({ status: 200, contentType: 'text/html', body: '<p>GitHub, stubbed.</p>' })
   );
 }
+
+/**
+ * The browser's save dialog, answering as the Composer would (AC-12.1.5/1): it
+ * records what it was offered, and the bytes written to the file chosen in it.
+ * `name` is the name typed there; `cancel` dismisses it.
+ */
+async function stubSavePicker(page, { name = null, cancel = false } = {}) {
+  await page.addInitScript(
+    ({ name, cancel }) => {
+      window.__offered = null;
+      window.__saved = null;
+      window.showSaveFilePicker = async (options) => {
+        window.__offered = options;
+        if (cancel) throw new DOMException('The user aborted a request.', 'AbortError');
+        const chosen = name ?? options.suggestedName;
+        const parts = [];
+        return {
+          name: chosen,
+          createWritable: async () => ({
+            write: async (data) => parts.push(data),
+            close: async () => {
+              const bytes = new Uint8Array(await new Blob(parts).arrayBuffer());
+              window.__saved = { name: chosen, bytes: Array.from(bytes) };
+            },
+          }),
+        };
+      };
+    },
+    { name, cancel }
+  );
+}
+
+/** A browser with no save dialog of its own — Safari, Firefox, the apps (AC-12.1.5/2). */
+const noSavePicker = (page) => page.addInitScript(() => (window.showSaveFilePicker = undefined));
 
 /** Create an owned Pattern by editing a shipped one and naming the copy. */
 async function makeOwned(page, name = 'Mine') {
@@ -158,13 +193,99 @@ test('AC-8.1.2 — Append is unavailable once the Pattern is at the Measure cap'
 });
 
 test('AC-12.1.1 — Export MIDI produces a downloadable .mid named after the Pattern', async ({ page }) => {
+  // Without a save dialog the file still downloads, under the suggested name if
+  // it is kept (AC-12.1.5/2).
+  await noSavePicker(page);
   await page.goto('/');
   await makeOwned(page, 'Export Me');
 
   const download = page.waitForEvent('download');
   await page.locator('[data-action="export-midi"]').click();
+  await page.locator('.dialog .dialog-button.primary').click();
   const file = await download;
   expect(file.suggestedFilename()).toBe('export-me.mid');
+});
+
+test('AC-12.1.5/1 — Where the browser offers a save dialog, Export MIDI opens it with the suggested name filled in and MIDI files offered; the file is written to the folder and under the name chosen there', async ({ page }) => {
+  await stubSavePicker(page, { name: 'Take two.mid' });
+  await page.goto('/');
+  await makeOwned(page, 'Export Me');
+  let downloads = 0;
+  page.on('download', () => downloads++);
+
+  await page.locator('[data-action="export-midi"]').click();
+  await expect.poll(() => page.evaluate(() => window.__saved?.name ?? null)).toBe('Take two.mid');
+
+  const offered = await page.evaluate(() => window.__offered);
+  expect(offered.suggestedName).toBe('export-me.mid');
+  expect(offered.types.flatMap((t) => Object.keys(t.accept))).toEqual(['audio/midi']);
+  expect(offered.types.flatMap((t) => Object.values(t.accept).flat())).toEqual(['.mid', '.midi']);
+  // The file chosen holds the MIDI, and nothing went to the downloads folder instead.
+  const bytes = await page.evaluate(() => window.__saved.bytes);
+  expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('MThd');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  expect(downloads).toBe(0);
+});
+
+test('AC-12.1.5/2 — Where it does not (Safari, Firefox, the iOS and Android apps), Export MIDI asks for the filename in the app, with the suggested name filled in, and the file downloads under the name given; the browser chooses the folder, as it does for every download', async ({ page }) => {
+  await noSavePicker(page);
+  await page.goto('/');
+  await makeOwned(page, 'Export Me');
+
+  await page.locator('[data-action="export-midi"]').click();
+  const input = page.locator('.dialog .dialog-input');
+  await expect(input).toHaveValue('export-me.mid');
+  await input.fill('Groove for Tuesday');
+  const download = page.waitForEvent('download');
+  await page.locator('.dialog .dialog-button.primary').click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe('Groove for Tuesday.mid');
+  const bytes = readFileSync(await file.path());
+  expect(bytes.subarray(0, 4).toString('latin1')).toBe('MThd');
+  await expect(page.locator('.dialog')).toHaveCount(0);
+});
+
+test('AC-12.1.5/4 — A name given without `.mid` or `.midi` gets `.mid` added; a name left blank falls back to the suggestion; characters no filesystem accepts in a name — slashes, backslashes, colons and `* ? " < > |` — are dropped: as typed in the app', async ({ page }) => {
+  await noSavePicker(page);
+  await page.goto('/');
+  await makeOwned(page, 'Export Me');
+  const saveAs = async (typed) => {
+    await page.locator('[data-action="export-midi"]').click();
+    await page.locator('.dialog .dialog-input').fill(typed);
+    const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.dialog .dialog-button.primary').click()]);
+    return download.suggestedFilename();
+  };
+  expect(await saveAs('   ')).toBe('export-me.mid');
+  expect(await saveAs('Bossa: take 3?')).toBe('Bossa take 3.mid');
+  expect(await saveAs('verse.midi')).toBe('verse.midi');
+});
+
+test('AC-12.1.5/3 — Cancelling either writes no file and changes nothing', async ({ context }) => {
+  // Each page opens in the test's context, so it keeps the configured base URL and storage.
+  for (const setup of [(page) => stubSavePicker(page, { cancel: true }), noSavePicker]) {
+    const page = await context.newPage();
+    await setup(page);
+    await page.goto('/');
+    await page.evaluate(() => window.__rm.loadBlank('4/4', 'Export Me'));
+    const before = await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern));
+    let downloads = 0;
+    page.on('download', () => downloads++);
+
+    await page.locator('[data-action="export-midi"]').click();
+    const picker = await page.evaluate(() => typeof window.showSaveFilePicker === 'function');
+    if (picker) {
+      await expect.poll(() => page.evaluate(() => window.__offered !== null)).toBe(true);
+    } else {
+      await page.locator('.dialog .dialog-button:not(.primary)').click();
+    }
+    await page.waitForTimeout(300);
+    expect(downloads).toBe(0);
+    if (picker) expect(await page.evaluate(() => window.__saved)).toBeNull();
+    // A cancelled save dialog does not fall back to asking in the app.
+    await expect(page.locator('.dialog')).toHaveCount(0);
+    expect(await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern))).toBe(before);
+    await page.close();
+  }
 });
 
 test('AC-13.1.5 — Submission-tracking is Local Metadata, never part of the export payload: keyed by the Pattern, never written onto it', async ({

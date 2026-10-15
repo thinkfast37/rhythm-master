@@ -186,8 +186,11 @@ export function askNewPatternName(suggestion, validate = null) {
 /**
  * A single free-text prompt. Resolves to the trimmed text, or null if cancelled.
  * Used for adding a Tag, where a full naming dialog would be overkill.
+ *
+ * `value` pre-fills the box; `blank` is what confirming an empty box resolves to
+ * (null, the same as cancelling, unless the caller has a fallback of its own).
  */
-export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
+export function askForText({ message, placeholder = '', confirmLabel = 'OK', value = '', blank = null }) {
   const root = ensureHost();
   return new Promise((resolve) => {
     root.innerHTML = '';
@@ -207,8 +210,10 @@ export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
     input.type = 'text';
     input.className = 'dialog-input';
     input.placeholder = placeholder;
+    input.value = value;
     box.appendChild(input);
 
+    const commit = () => finish(input.value.trim() || blank);
     const finish = (value) => {
       root.innerHTML = '';
       resolve(value);
@@ -221,7 +226,7 @@ export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
     ok.type = 'button';
     ok.className = 'dialog-button primary';
     ok.textContent = confirmLabel;
-    ok.addEventListener('click', () => finish(input.value.trim() || null));
+    ok.addEventListener('click', commit);
 
     const cancel = document.createElement('button');
     cancel.type = 'button';
@@ -231,7 +236,7 @@ export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
 
     // Enter commits, so adding several tags in a row does not need the mouse.
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') finish(input.value.trim() || null);
+      if (e.key === 'Enter') commit();
       if (e.key === 'Escape') finish(null);
     });
 
@@ -240,7 +245,17 @@ export function askForText({ message, placeholder = '', confirmLabel = 'OK' }) {
     backdrop.appendChild(box);
     root.appendChild(backdrop);
     input.focus();
+    input.select();
   });
+}
+
+/**
+ * The filename prompt for a browser with no save dialog of its own (AC-12.1.5/2).
+ * Pre-filled with the suggestion; confirming an empty box keeps the suggestion
+ * (AC-12.1.5/4). Resolves to the text as typed, or null if cancelled.
+ */
+export function askFileName(suggestion) {
+  return askForText({ message: 'Save the MIDI file as:', confirmLabel: 'Save', value: suggestion, blank: suggestion });
 }
 
 /**

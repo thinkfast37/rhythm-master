@@ -57,7 +57,7 @@ import {
   entryAt,
   validateSong,
 } from './core/song.js';
-import { downloadSongMidi, songMidiFilename } from './export/midi.js';
+import { saveSongMidi, songMidiFilename } from './export/midi.js';
 import { renderGrid, renderChordStrip, moveCursor } from './ui/grid.js';
 import { balanceBeatLines, forgetBeatWidths, observeGridWidth } from './ui/beat-layout.js';
 import {
@@ -91,7 +91,7 @@ import { renderGoals, renderGoalBar } from './ui/goals.js';
 import { placeHelp } from './ui/help.js';
 import { LAB, ANY_LEVEL, surfaceFor, pickAtLevel, libraryTagsFor, isPracticeGoal, LEVELS } from './core/goals.js';
 import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
-import { downloadMidi } from './export/midi.js';
+import { saveMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
 import {
   ARPEGGIOS,
@@ -121,6 +121,7 @@ import { downloadBackup } from './export/backup.js';
 import {
   ask,
   askForText,
+  askFileName,
   confirm,
   confirmRecipeChange,
   askApplyToAllMeasures,
@@ -1163,11 +1164,11 @@ const handlers = {
     render();
   },
 
-  /** One MIDI file of the Section once through (AC-18.1.5). */
+  /** One MIDI file of the Section once through, saved where and as asked (AC-18.1.5). */
   onSongExport() {
     const song = composeSong();
     if (song.sections[0].entries.length === 0) return;
-    downloadSongMidi(song, patternById, state.pattern);
+    saveSongMidi(song, patternById, state.pattern, askFileName);
   },
 
   /**
@@ -1678,8 +1679,9 @@ const handlers = {
     apply(condense);
   },
 
+  /** Asks where and as what, from the click itself (AC-12.1.5). */
   onExportMidi() {
-    downloadMidi(state.pattern);
+    saveMidi(state.pattern, askFileName);
   },
 
   /** Every store to one file (AC-7.6.1). Changes nothing in the app. */

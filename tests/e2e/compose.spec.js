@@ -411,6 +411,42 @@ test('AC-18.1.5/2 — The file is named after the Song when it has been saved, a
   expect(savedName).toContain('named-song');
 });
 
+test('AC-18.1.5/5 — Export Song MIDI asks where to save and under what name as Export MIDI does (AC-12.1.5), suggesting the name in /2', async ({ page }) => {
+  // Where the browser has a save dialog (AC-12.1.5/1): offered the Song's name, written where chosen.
+  await page.addInitScript(() => {
+    window.__offered = null;
+    window.__saved = null;
+    window.showSaveFilePicker = async (options) => {
+      window.__offered = options;
+      const parts = [];
+      return {
+        createWritable: async () => ({
+          write: async (data) => parts.push(data),
+          close: async () => (window.__saved = Array.from(new Uint8Array(await new Blob(parts).arrayBuffer()))),
+        }),
+      };
+    };
+  });
+  await keptBlank(page);
+  await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
+  await compose(page).locator('[data-action="song-save"]').click();
+  await nameSong(page, 'Named song');
+  const suggested = await page.evaluate(() => window.__rm.songMidiFilename());
+  await compose(page).locator('[data-action="song-export"]').click();
+  await expect.poll(() => page.evaluate(() => window.__saved !== null)).toBe(true);
+  expect(await page.evaluate(() => window.__offered.suggestedName)).toBe(suggested);
+  expect(String.fromCharCode(...(await page.evaluate(() => window.__saved.slice(0, 4))))).toBe('MThd');
+
+  // Where it does not (AC-12.1.5/2): the same name, offered in the app, and changeable.
+  await page.evaluate(() => (window.showSaveFilePicker = undefined));
+  await compose(page).locator('[data-action="song-export"]').click();
+  const input = page.locator('.dialog .dialog-input');
+  await expect(input).toHaveValue(suggested);
+  await input.fill('song for the band');
+  const [download] = await Promise.all([page.waitForEvent('download'), dialogAccept(page)]);
+  expect(download.suggestedFilename()).toBe('song for the band.mid');
+});
+
 test('AC-18.1.5/4 — Export Song MIDI is unavailable while the Section is empty', async ({ page }) => {
   await keptBlank(page);
   await expect(compose(page).locator('[data-action="song-export"]')).toBeDisabled();
