@@ -953,12 +953,14 @@ const handlers = {
       apply(clearHarmony);
       return;
     }
+    const hadArpeggio = Boolean(state.pattern.harmony?.arpeggio);
     apply(setProgression, id);
     // A progression with no arpeggio changes the chord names and nothing
     // audible, because a stamped degree is fixed by design (AC-2.6.4/4). So
-    // choosing one hands the notes to the plainest reading of a chord and
-    // rewrites no stored Pitch to do it (AC-2.6.1/7).
-    apply(setArpeggio, DEFAULT_ARPEGGIO);
+    // with the arpeggio at None, choosing one hands the notes to the plainest
+    // reading of a chord; a fill already chosen is the Composer's and stays
+    // (AC-2.6.1/7).
+    if (!hadArpeggio) apply(setArpeggio, DEFAULT_ARPEGGIO);
   },
 
   async onChordChange(change) {

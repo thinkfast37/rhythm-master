@@ -130,7 +130,7 @@ describe('core/harmony', () => {
     expect(buildTimeline(baked, 0).map((e) => e.pitch.midiNote)).toEqual(heard);
   });
 
-  it('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so the chords are audible at once, and leaves every stored Pitch exactly as it was: every stored Pitch is left as it was', () => {
+  it('AC-2.6.1/7 — Choosing a progression keeps the arpeggio already chosen, sets Ascending only when the arpeggio is None so the chords are audible at once, and leaves every stored Pitch exactly as it was: every stored Pitch is left as it was', () => {
     // A written melody: two members of a C triad, two notes that are not.
     let p = melodic();
     p = note(p, 0, 0, 0, { degree: '3', octaveOffset: 0 });
@@ -152,6 +152,13 @@ describe('core/harmony', () => {
     // (AC-2.6.4/4): fixed notes and roles mix, they are just never converted.
     const mixed = note(chosen, 0, 3, 0, { tone: 1, octaveOffset: 0 });
     expect([0, 1, 2].map((pass) => buildTimeline(mixed, pass)[3].pitch.midiNote)).toEqual([60, 65, 67]);
+  });
+
+  it('AC-2.6.1/7 — Choosing a progression keeps the arpeggio already chosen, sets Ascending only when the arpeggio is None so the chords are audible at once, and leaves every stored Pitch exactly as it was: a progression chosen over a fill keeps that fill', () => {
+    const alberti = setArpeggio(setProgression(melodic(), 'I-IV-V'), 'alberti');
+    const next = setProgression(alberti, 'I-V-vi-IV');
+    expect(next.harmony.arpeggio).toBe('alberti');
+    expect(next.harmony.chords.map((c) => c.degree)).toEqual(['1', '5', '6', '4']);
   });
 
   // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---
