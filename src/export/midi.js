@@ -187,8 +187,20 @@ export function songMidiFilename(song, pattern) {
   return midiFilename(named ? song : pattern);
 }
 
-function download(bytes, filename) {
-  const blob = new Blob([bytes], { type: 'audio/midi' });
+/**
+ * The name a file is saved under, from what the Composer typed (AC-12.1.5/4):
+ * characters no filesystem accepts are dropped, a blank name falls back to the
+ * suggestion, and `.mid` is added unless the name already ends `.mid`/`.midi`.
+ */
+export function midiSaveName(typed, suggestion) {
+  const name = String(typed ?? '')
+    .replace(/[/\\:*?"<>|\u0000-\u001f]/g, '')
+    .trim();
+  if (name === '' || /^\.+$/.test(name)) return suggestion;
+  return /\.midi?$/i.test(name) ? name : `${name}.mid`;
+}
+
+function download(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -199,10 +211,51 @@ function download(bytes, filename) {
   URL.revokeObjectURL(url);
 }
 
-export function downloadMidi(pattern) {
-  download(buildMidi(pattern), midiFilename(pattern));
+/**
+ * Hand the file to the Composer, asking where and as what (AC-12.1.5).
+ *
+ * The browser's own save dialog is the only way a page can choose a folder, and
+ * only Chromium-based browsers have one (/1). Everywhere else the app asks for
+ * the name and downloads it, leaving the folder to the browser (/2). It must be
+ * called straight from the click: the save dialog refuses to open once the
+ * gesture has passed, so nothing may be awaited before it.
+ *
+ * @param {Uint8Array} bytes
+ * @param {string} suggestion
+ * @param {(suggestion: string) => Promise<string|null>} askName the in-app
+ *   filename prompt, resolving to null when cancelled
+ * @returns {Promise<boolean>} whether a file was written
+ */
+async function save(bytes, suggestion, askName) {
+  const blob = new Blob([bytes], { type: 'audio/midi' });
+  if (typeof window.showSaveFilePicker === 'function') {
+    let handle = null;
+    try {
+      handle = await window.showSaveFilePicker({
+        suggestedName: suggestion,
+        types: [{ description: 'MIDI file', accept: { 'audio/midi': ['.mid', '.midi'] } }],
+      });
+    } catch (err) {
+      // Cancelled (/3). Anything else — blocked in a frame, say — falls back to /2.
+      if (err?.name === 'AbortError') return false;
+    }
+    if (handle) {
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return true;
+    }
+  }
+  const typed = await askName(suggestion);
+  if (typed === null) return false;
+  download(blob, midiSaveName(typed, suggestion));
+  return true;
 }
 
-export function downloadSongMidi(song, patternById, pattern = patternById(song.sections[0]?.patternId)) {
-  download(buildSongMidi(song, patternById), songMidiFilename(song, pattern));
+export function saveMidi(pattern, askName) {
+  return save(buildMidi(pattern), midiFilename(pattern), askName);
+}
+
+export function saveSongMidi(song, patternById, pattern, askName) {
+  return save(buildSongMidi(song, patternById), songMidiFilename(song, pattern), askName);
 }

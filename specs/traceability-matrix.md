@@ -14,14 +14,14 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 706 across 47 User Stories
+**Criteria**: 711 across 47 User Stories
 
-**Coverage**: 517 of 706 criteria proven (73.2%)
+**Coverage**: 522 of 711 criteria proven (73.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 517 | 73.2% |
-| 🔴 Gap — HIGH | 70 | 9.9% |
+| 🟢 Proven | 522 | 73.4% |
+| 🔴 Gap — HIGH | 70 | 9.8% |
 | 🟠 Gap — MEDIUM | 41 | 5.8% |
 | 🟡 Gap — LOW | 78 | 11.0% |
 
@@ -87,7 +87,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟠 US-11.1 | 9 | 8 | · | · | · | 1 | · |
 | 🟢 US-11.2 | 6 | **6** | · | · | · | · | · |
 | 🔴 US-11.3 | 5 | 0 | · | · | 4 | · | 1 |
-| 🔴 US-12.1 | 4 | 0 | · | · | 4 | · | · |
+| 🔴 US-12.1 | 8 | 4 | · | · | 4 | · | · |
 | 🟢 US-13.1 | 11 | **11** | · | · | · | · | · |
 | 🔴 US-15.1 | 46 | 34 | · | · | 1 | 8 | 3 |
 | 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
@@ -100,7 +100,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.7 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-10.2 | 13 | **13** | · | · | · | · | · |
 | 🟢 US-2.8 | 8 | **8** | · | · | · | · | · |
-| 🟢 US-18.1 | 26 | **26** | · | · | · | · | · |
+| 🟢 US-18.1 | 27 | **27** | · | · | · | · | · |
 | 🟢 US-2.9 | 16 | **16** | · | · | · | · | · |
 | 🟢 US-2.10 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-14.1 | 23 | **23** | · | · | · | · | · |
@@ -440,10 +440,14 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-11.3 | `AC-11.3.3` 🖵 | Remove deletes the custom copy | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-11.3 | `AC-11.3.4` 🖵 | Keep retains both, no repeat prompt for that pair | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-11.3 | `AC-11.3.5` | Resolved-pair tracking is Local Metadata | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.1` | MIDI generation is entirely client-side | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.2` | Percussive exports to a drum channel; Melodic exports pitched notes | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.3` | Accent Level maps to a fixed MIDI velocity table | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.4` | Mixed-meter Pattern exports each Measure by its own Time Signature | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-12.1 | `AC-12.1.1` | MIDI generation is entirely client-side | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `export.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-12.1 | `AC-12.1.2` | Percussive exports to a drum channel; Melodic exports pitched notes | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-12.1 | `AC-12.1.3` | Accent Level maps to a fixed MIDI velocity table | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-12.1 | `AC-12.1.4` | Mixed-meter Pattern exports each Measure by its own Time Signature | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-12.1 | `AC-12.1.5/1` 🖵 | Where the browser offers a save dialog, Export MIDI opens it with the suggested name filled in and MIDI files offered; the file is written to the folder and under the name chosen there | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `operations.spec.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.5/2` 🖵 | Where it does not (Safari, Firefox, the iOS and Android apps), Export MIDI asks for the filename in the app, with the suggested name filled in, and the file downloads under the name given; the browser chooses the folder, as it does for every download | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `operations.spec.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.5/3` 🖵 | Cancelling either writes no file and changes nothing | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `operations.spec.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.5/4` 🖵 | A name given without `.mid` or `.midi` gets `.mid` added; a name left blank falls back to the suggestion; characters no filesystem accepts in a name — slashes, backslashes, colons and `* ? " < > \|` — are dropped | P-034 | T109, T358 (2/2 done) | T110, T359 (2/2 done) | `export.test.js`, `operations.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/1` 🖵 | The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/2` 🖵 | Submit presents the URL as a clickable link that opens GitHub's own issue page in a new tab | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/3` 🖵 | No GitHub credential is held and GitHub's API is never called | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
@@ -725,32 +729,33 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.8 | `AC-2.8.1/6` 🖵 | Nothing clears a Keep but the Composer: cycling on, changing the Key, editing the grid, changing the progression and stopping playback all leave every Keep as it was | P-045 | T282 (1/1 done) | T283 (1/1 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.8 | `AC-2.8.2/1` | Keep is reachable while playing, and pressing it stops, restarts and reorders nothing — the loop counter keeps counting and the cycle keeps its place | P-045 | T282 (1/1 done) | T283 (1/1 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.8 | `AC-2.8.2/2` | The Melody group says how many fills are kept for this Pattern, so the Composer knows when there is something to compose with | P-045 | T282 (1/1 done) | T283 (1/1 done) | `harmony.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.1/1` 🖵 | Compose is a fourth workbench group, after Practice, tabbed on mobile with the others, and present only on a Melodic Pattern with a progression | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.1/2` 🖵 | The progression is shown as the chord strip names it and is not editable here; the group says it is set in Melody | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.1/3` 🖵 | The palette lists the kept fills for this Pattern in catalogue order, and says so, naming Keep, when none are kept | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.2/1` 🖵 | Tapping a palette fill appends an entry whose repeats are the cycle Repeats setting at that moment | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.2/2` 🖵 | Each entry's repeats can be set from 1 to 16 in place | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.2/3` 🖵 | An entry can be moved up, moved down and removed; the same fill may appear in the Section more than once | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.2/4` 🖵 | The Section is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.2/5` 🖵 | Unkeeping a fill leaves every entry that uses it in the Section; the palette is a shortlist, not the Section's source of truth | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/1` | Each entry is in force for its repeats, one repeat being one harmonic cycle, and the next entry takes over from the very next pass with nothing stopped or restarted, the loop counter still counting | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/2` | After the last entry the first is in force again; the Section loops until stopped | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/3` 🖵 | Every view follows the fill in force exactly as under cycle mode, and the Compose group marks the entry playing | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/4` | Play song is unavailable while the Section is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/5` | Stop returns the Pattern's own arpeggio, exactly as stopping cycle mode does | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/6` | Play song and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.3/7` | Editing the Section while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/1` | Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Section | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/2` | A saved Song survives a reload and is listed only on the Pattern it was composed over | P-046 | T284 (1/1 done) | T285 (1/1 done) | `songs.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/3` | A Song can be renamed and deleted from the Compose group, deletion asking first | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/4` | Edits to a loaded Song's Section are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/5` | Deleting a Pattern that a Song is composed over is refused with a message naming the Song or Songs, until they are deleted | P-046 | T284 (1/1 done) | T285 (1/1 done) | `songs.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/6` | A Song is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.4/7` | Songs are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Song | P-046 | T284 (1/1 done) | T285 (1/1 done) | `songs.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.5/1` | The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Section once through, not looped | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song-midi.test.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.5/2` | The file is named after the Song when it has been saved, and after the Pattern otherwise | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song-midi.test.js`, `compose.spec.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.5/3` | The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section | P-046 | T284 (1/1 done) | T285 (1/1 done) | `song-midi.test.js` | 🟢 OK |
-| US-18.1 | `AC-18.1.5/4` | Export Song MIDI is unavailable while the Section is empty | P-046 | T284 (1/1 done) | T285 (1/1 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.1/1` 🖵 | Compose is a fourth workbench group, after Practice, tabbed on mobile with the others, and present only on a Melodic Pattern with a progression | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.1/2` 🖵 | The progression is shown as the chord strip names it and is not editable here; the group says it is set in Melody | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.1/3` 🖵 | The palette lists the kept fills for this Pattern in catalogue order, and says so, naming Keep, when none are kept | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.2/1` 🖵 | Tapping a palette fill appends an entry whose repeats are the cycle Repeats setting at that moment | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.2/2` 🖵 | Each entry's repeats can be set from 1 to 16 in place | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.2/3` 🖵 | An entry can be moved up, moved down and removed; the same fill may appear in the Section more than once | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.2/4` 🖵 | The Section is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.2/5` 🖵 | Unkeeping a fill leaves every entry that uses it in the Section; the palette is a shortlist, not the Section's source of truth | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/1` | Each entry is in force for its repeats, one repeat being one harmonic cycle, and the next entry takes over from the very next pass with nothing stopped or restarted, the loop counter still counting | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/2` | After the last entry the first is in force again; the Section loops until stopped | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/3` 🖵 | Every view follows the fill in force exactly as under cycle mode, and the Compose group marks the entry playing | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/4` | Play song is unavailable while the Section is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/5` | Stop returns the Pattern's own arpeggio, exactly as stopping cycle mode does | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/6` | Play song and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.3/7` | Editing the Section while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/1` | Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Section | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/2` | A saved Song survives a reload and is listed only on the Pattern it was composed over | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `songs.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/3` | A Song can be renamed and deleted from the Compose group, deletion asking first | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/4` | Edits to a loaded Song's Section are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/5` | Deleting a Pattern that a Song is composed over is refused with a message naming the Song or Songs, until they are deleted | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `songs.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/6` | A Song is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.4/7` | Songs are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Song | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `songs.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.5/1` | The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Section once through, not looped | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song-midi.test.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.5/2` | The file is named after the Song when it has been saved, and after the Pattern otherwise | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song-midi.test.js`, `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.5/3` | The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `song-midi.test.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.5/4` | Export Song MIDI is unavailable while the Section is empty | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
+| US-18.1 | `AC-18.1.5/5` | Export Song MIDI asks where to save and under what name as Export MIDI does (AC-12.1.5), suggesting the name in /2 | P-046 | T284, T358 (2/2 done) | T285, T359 (2/2 done) | `compose.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.1/1` 🖵 | The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.1/2` 🖵 | The Register is Pattern content: it is saved with the Pattern and survives a reload | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.1/3` 🖵 | Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |

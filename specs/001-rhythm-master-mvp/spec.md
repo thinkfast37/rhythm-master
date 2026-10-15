@@ -2033,7 +2033,7 @@ field survives showing it.)*
 
 *Traceability: `US-12.1` — Export a single Pattern as MIDI*
 
-**As** the Composer, **I want** to download the current Pattern as a `.mid` file, **so that** I can bring it into a DAW without re-transcribing it by ear.
+**As** the Composer, **I want** to save the current Pattern as a `.mid` file, in a folder and under a name I choose *(revised 2026-10-14: read "download"; AC-12.1.5)*, **so that** I can bring it into a DAW without re-transcribing it by ear.
 
 **Independent Test**: Export Percussive and Melodic Patterns and assert channel routing, velocity mapping, and correct mixed-meter timing.
 
@@ -2042,7 +2042,8 @@ field survives showing it.)*
 - **AC-12.1.1** — MIDI generation is entirely client-side
   - **Given** "Samba Break" is loaded
   - **When** the Composer exports it as MIDI
-  - **Then** a `.mid` file is generated entirely in the browser, with no server round-trip, and offered as a download
+  - **Then** a `.mid` file is generated entirely in the browser, with no server round-trip, and offered to save where and as the Composer chooses (AC-12.1.5)
+  - *(Revised 2026-10-14 at the maintainer's request: "a feature that will allow me to choose the folder and the filename when i export a midi file." This read "offered as a download", which saved under a fixed name into the browser's downloads folder. Generation is unchanged; how the file is handed over is AC-12.1.5.)*
 
 - **AC-12.1.2** — Percussive exports to a drum channel; Melodic exports pitched notes
   - **Given** "Samba Break" (Percussive) and "Samba Break (Melodic)" (Melodic, Key C)
@@ -2059,6 +2060,17 @@ field survives showing it.)*
   - **Given** "Shifting Meter" whose Measure 1 is 4/4 and Measure 2 is 6/8
   - **When** it is exported
   - **Then** Measure 1's notes are timed against 4 quarter-note Beats and Measure 2's against 6 eighth-note Beats — not a single Pattern-wide meter applied throughout
+
+- **AC-12.1.5** — The Composer chooses the folder and the filename
+  - **Given** "Samba Break" is loaded
+  - **When** the Composer presses Export MIDI
+  - **Then** they are asked where to save the file and under what name, starting from the name the file would otherwise have (`samba-break.mid`), and the file is written there under that name
+  - **Cases**:
+    - **AC-12.1.5/1** — Where the browser offers a save dialog, Export MIDI opens it with the suggested name filled in and MIDI files offered; the file is written to the folder and under the name chosen there
+    - **AC-12.1.5/2** — Where it does not (Safari, Firefox, the iOS and Android apps), Export MIDI asks for the filename in the app, with the suggested name filled in, and the file downloads under the name given; the browser chooses the folder, as it does for every download
+    - **AC-12.1.5/3** — Cancelling either writes no file and changes nothing
+    - **AC-12.1.5/4** — A name given without `.mid` or `.midi` gets `.mid` added; a name left blank falls back to the suggestion; characters no filesystem accepts in a name — slashes, backslashes, colons and `* ? " < > |` — are dropped
+  - *(Added 2026-10-14 at the maintainer's request, quoted at AC-12.1.1. Decisions taken with the maintainer the same day: both MIDI exports work this way — Export Song MIDI too (AC-18.1.5/5) — and where the browser cannot open a folder picker the app still asks for the filename rather than downloading under the fixed name. The library backup (US-7.6) is not changed. A web page can choose a folder only through the browser's own save dialog, which only Chromium-based browsers offer; elsewhere the folder is the browser's to decide, and a browser set to ask where to save each download will ask.)*
 
 ---
 
@@ -3314,6 +3326,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-18.1.5/2** — The file is named after the Song when it has been saved, and after the Pattern otherwise
     - **AC-18.1.5/3** — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section
     - **AC-18.1.5/4** — Export Song MIDI is unavailable while the Section is empty
+    - **AC-18.1.5/5** — Export Song MIDI asks where to save and under what name as Export MIDI does (AC-12.1.5), suggesting the name in /2
+  - *(Revised 2026-10-14 at the maintainer's request, with AC-12.1.5: /5 added, and /2's name is now the one suggested, which the Composer may change before saving.)*
 
 ### User Story 44 - Place the melody in a register
 

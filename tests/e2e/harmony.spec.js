@@ -1115,13 +1115,24 @@ function midiNoteOns(bytes) {
   return ons;
 }
 
+/**
+ * Export MIDI and keep the suggested name, as a browser with no save dialog does
+ * (AC-12.1.5/2): the download is the file the Composer would get.
+ */
+async function exportMidiFile(page) {
+  await page.evaluate(() => (window.showSaveFilePicker = undefined));
+  await page.locator('[data-action="export-midi"]').click();
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.dialog .dialog-button.primary').click()]);
+  return download;
+}
+
 test("AC-2.7.3/2 — MIDI export carries the Pattern's own arpeggio, never the fill in force: the file is the Pattern's data, and cycling is practice", async ({ page }) => {
   await cyclingBlank(page); // three Roots under the I, no arpeggio of its own
   await page.locator('.fill-cycle').click();
   expect(await fillInForce(page)).toBe('up');
   // The views follow Ascending: C E G. The file does not.
   expect(await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents()).toEqual(['C4', 'E4', 'G4']);
-  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export-midi"]').click()]);
+  const download = await exportMidiFile(page);
   const ons = midiNoteOns(readFileSync(await download.path()));
   expect(ons.slice(0, 3)).toEqual([60, 60, 60]);
   expect('arpeggio' in (await pattern(page)).harmony).toBe(false);
@@ -1492,7 +1503,7 @@ test("AC-2.10.3/2 — MIDI export carries the Pattern's own progression, never t
   expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
   await page.locator('[data-action="stop"]').click();
 
-  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export-midi"]').click()]);
+  const download = await exportMidiFile(page);
   const ons = midiNoteOns(readFileSync(await download.path()));
   // The Pattern's own I chord's root, C4 = 60 — not whatever was in force while cycling.
   expect(ons.slice(0, 1)).toEqual([60]);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { buildMidi, midiFilename, VELOCITY, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
+import { buildMidi, midiFilename, midiSaveName, VELOCITY, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
 import {
   toSubmissionShape,
   buildSubmission,
@@ -423,5 +423,20 @@ describe('export/midi under cycle mode (US-2.7)', () => {
     expect(p.harmony.arpeggio).toBe('up');
     expect(buildMidi(p)).toEqual(own);
     expect(noteOns(own).slice(0, 2).map((e) => e.data[0])).toEqual([60, 64]); // Ascending: Root, 3rd
+  });
+});
+
+describe('export/midi — the name a file is saved under (AC-12.1.5)', () => {
+  it('AC-12.1.5/4 — A name given without `.mid` or `.midi` gets `.mid` added; a name left blank falls back to the suggestion; characters no filesystem accepts in a name — slashes, backslashes, colons and `* ? " < > |` — are dropped', () => {
+    const suggestion = 'samba-break.mid';
+    expect(midiSaveName('Samba take 2', suggestion)).toBe('Samba take 2.mid');
+    expect(midiSaveName('groove.mid', suggestion)).toBe('groove.mid');
+    expect(midiSaveName('groove.MIDI', suggestion)).toBe('groove.MIDI');
+    expect(midiSaveName('groove.mp3', suggestion)).toBe('groove.mp3.mid');
+    expect(midiSaveName('', suggestion)).toBe(suggestion);
+    expect(midiSaveName('   ', suggestion)).toBe(suggestion);
+    expect(midiSaveName('..', suggestion)).toBe(suggestion);
+    expect(midiSaveName('a/b\\c:d*e?f"g<h>i|j', suggestion)).toBe('abcdefghij.mid');
+    expect(midiSaveName('/:*', suggestion)).toBe(suggestion);
   });
 });
