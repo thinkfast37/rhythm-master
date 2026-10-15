@@ -865,7 +865,8 @@ async function playingWithEntries(page) {
 /** Type `value` into `entry` a digit at a time, slowly enough that renders land between keystrokes. */
 async function typeInto(entry, value) {
   await entry.click();
-  await entry.press('Control+a');
+  // Select-all is Cmd+A on macOS, where Control+A only moves to the line start.
+  await entry.press('ControlOrMeta+a');
   for (const character of value) {
     await entry.press(character);
     await entry.page().waitForTimeout(150);

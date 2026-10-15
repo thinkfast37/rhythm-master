@@ -454,7 +454,7 @@ test('AC-2.6.5/2 — While a Pattern has a progression and no arpeggio, the harm
   await expect(page.locator('.harmony-hint')).toHaveCount(0);
 });
 
-test('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so the chords are audible at once, and leaves every stored Pitch exactly as it was', async ({ page }) => {
+test('AC-2.6.1/7 — Choosing a progression keeps the arpeggio already chosen, sets Ascending only when the arpeggio is None so the chords are audible at once, and leaves every stored Pitch exactly as it was', async ({ page }) => {
   await melodicBlank(page);
   // A written melody, none of it in the shape a progression would have rewritten.
   for (const [beat, degree] of [[0, '1'], [1, '3'], [2, '2'], [3, '5']]) {
@@ -484,6 +484,26 @@ test('AC-2.6.1/7 — Choosing a progression sets the arpeggio to Ascending, so t
   await page.locator('.arpeggio-picker').selectOption('none');
   await expect(slotAt(page, 1, 0).locator('.slot-degree')).toHaveText('3');
   await expect(slotAt(page, 2, 0).locator('.slot-degree')).toHaveText('2');
+});
+
+test('AC-2.6.1/7 — Choosing a progression keeps the arpeggio already chosen, sets Ascending only when the arpeggio is None so the chords are audible at once, and leaves every stored Pitch exactly as it was: a fill already chosen survives a new progression', async ({ page }) => {
+  await melodicBlank(page);
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await page.locator('.arpeggio-picker').selectOption('alberti');
+  // Auditioning progressions under one fill: every pick keeps it.
+  for (const id of ['I-V-vi-IV', 'ii-V-I', 'I-IV-V']) {
+    await page.locator('.progression-picker').selectOption(id);
+    await expect(page.locator('.arpeggio-picker')).toHaveValue('alberti');
+    expect(await page.evaluate(() => window.__rm.getState().pattern.harmony.arpeggio)).toBe('alberti');
+  }
+  // The Key is the Composer's too, and no progression choice moves it.
+  await page.locator('.key-picker').selectOption('E');
+  await page.locator('.progression-picker').selectOption('I-V-vi-IV');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.key)).toBe('E');
+  // And a fill choice leaves the progression where it is.
+  await page.locator('.arpeggio-picker').selectOption('down');
+  await expect(page.locator('.progression-picker')).toHaveValue('I-V-vi-IV');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.key)).toBe('E');
 });
 
 // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---

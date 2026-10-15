@@ -786,20 +786,18 @@ export function chordNumeral(chord) {
 
 /**
  * Give the Pattern a catalogue progression, spelled under its Key and scale
- * (AC-2.6.1/2). Every fixed degree that is a member of the first chord becomes
- * that role, so a Pattern of tonics follows the progression at once; degrees
- * that are not members stay fixed, so a written melody is not flattened
+ * (AC-2.6.1/2), keeping the arpeggio in force and every stored Pitch
  * (AC-2.6.1/7).
  */
 export function setProgression(pattern, progressionId) {
   const chords = spellProgression(progressionId, pattern.scale ?? DEFAULT_SCALE);
   // Every stored Pitch is left exactly as it was (AC-2.6.1/7): what makes the
-  // progression audible is the arpeggio set alongside it, not an edit to the
-  // Composer's notes.
-  return {
-    ...clone(pattern),
-    harmony: { change: pattern.harmony?.change ?? DEFAULT_CHANGE, chords },
-  };
+  // progression audible is the arpeggio, not an edit to the Composer's notes.
+  // An arpeggio already chosen is kept, so progressions can be auditioned
+  // under one fill.
+  const harmony = { change: pattern.harmony?.change ?? DEFAULT_CHANGE, chords };
+  if (pattern.harmony?.arpeggio) harmony.arpeggio = pattern.harmony.arpeggio;
+  return { ...clone(pattern), harmony };
 }
 
 /**
