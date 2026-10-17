@@ -298,6 +298,98 @@ test('AC-5.6.4 — the grid labels Slots in the selected counting system', async
   await expect(sounding).toHaveText('1');
 });
 
+/** Every Slot label of Measure 1 under Pulse tracking, as one string of digits. */
+async function pulseCount(page) {
+  const labels = page.locator('.measure[data-measure="0"] .slot-label');
+  const syllables = await labels.evaluateAll((els) => els.map((e) => e.dataset.syllable));
+  return syllables.join('');
+}
+
+test('AC-5.6.7/1 — A 4/4 Measure of Straight 16ths with default accents reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await onTab(page, 'practice');
+  await expect(page.locator('.counting-picker option[value="numbered"]')).toHaveText('Pulse tracking');
+  await page.locator('.counting-picker').selectOption('numbered');
+  expect(await pulseCount(page)).toBe('1234223432344234');
+
+  // Sounding a Slot at its default accent moves nothing (AC-5.6.8/3).
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 0, 0); });
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 3, 3); });
+  expect(await pulseCount(page)).toBe('1234223432344234');
+  await expect(page.locator('.slot[data-beat="3"][data-slot="3"] .slot-label')).toHaveText('4');
+});
+
+test('AC-5.6.7/2 — A 4/4 Measure of Straight 8ths reads 1-2-3-4, 2-2-3-4: two-Slot Beats are not counted alone', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('4/4');
+    for (let b = 0; b < 4; b++) await window.__rm.handlers.onRecipe('straight-8ths', 0, b);
+  });
+  await onTab(page, 'practice');
+  await page.locator('.counting-picker').selectOption('numbered');
+  expect(await pulseCount(page)).toBe('12342234');
+});
+
+test('AC-5.6.7/3 — A 2/4 Measure of Straight 8ths reads 1-2-3-4, one group across both Beats', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('2/4');
+    for (let b = 0; b < 2; b++) await window.__rm.handlers.onRecipe('straight-8ths', 0, b);
+  });
+  await onTab(page, 'practice');
+  await page.locator('.counting-picker').selectOption('numbered');
+  expect(await pulseCount(page)).toBe('1234');
+});
+
+test('AC-5.6.7/4 — The groups restart at 1 for every Measure', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('4/4');
+    await window.__rm.handlers.onAddMeasure();
+  });
+  await onTab(page, 'practice');
+  await page.locator('.counting-picker').selectOption('numbered');
+  expect(await pulseCount(page)).toBe('1234223432344234');
+  const second = page.locator('.measure[data-measure="1"] .slot-label');
+  expect((await second.evaluateAll((els) => els.map((e) => e.dataset.syllable))).join('')).toBe('1234223432344234');
+});
+
+test('AC-5.6.9/1 — A 4/4 Measure of Straight 16ths with pulses 1, 4, 7, 10 and 13 raised reads 1-2-3, 2-2-3, 3-2-3, 4-2-3, 5-2-3-4', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await onTab(page, 'practice');
+  await page.locator('.counting-picker').selectOption('numbered');
+
+  // Pyramid Song: the downbeat, then a second tap on each of four Slots raises
+  // it one level above its default.
+  await page.evaluate(async () => { await window.__rm.handlers.onSlotTap(0, 0, 0); });
+  for (const [beat, slot] of [[0, 3], [1, 2], [2, 1], [3, 0]]) {
+    await page.evaluate(async ([b, s]) => {
+      await window.__rm.handlers.onSlotTap(0, b, s);
+      await window.__rm.handlers.onSlotTap(0, b, s);
+    }, [beat, slot]);
+  }
+  expect(await pulseCount(page)).toBe('1232233234235234');
+  // The labels live on the Slots they count: the group numbers sit on the stressed Slots.
+  await expect(page.locator('.slot[data-beat="1"][data-slot="2"] .slot-label')).toHaveText('3');
+  await expect(page.locator('.slot[data-beat="3"][data-slot="0"] .slot-label')).toHaveText('5');
+});
+
+test('AC-5.6.11 — Pulse tracking counts a mixed-feel Recipe by its halves', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await onTab(page, 'practice');
+  await page.locator('.counting-picker').selectOption('takadimi');
+  await applyRecipe(page, 'straight-triplet-split', 0, 3);
+
+  // The split Beat is the fourth and fifth groups, each half its own, whatever the preference.
+  expect(await pulseCount(page)).toBe('12342234323442523');
+  const split = page.locator('.beat[data-recipe="straight-triplet-split"] .slot-label');
+  await expect(split).toHaveCount(5);
+  expect(await split.evaluateAll((els) => els.map((e) => e.dataset.syllable))).toEqual(['4', '2', '5', '2', '3']);
+});
+
 test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
@@ -333,9 +425,12 @@ test('AC-5.6.2 — a mixed-feel Pattern counts by number whatever the preference
   await page.locator('.counting-picker').selectOption('takadimi');
   await applyRecipe(page, 'triplet-straight-split');
 
+  // Counted by pulse: the triplet half, then the straight half (AC-5.6.11).
   const labels = page.locator('.beat[data-recipe="triplet-straight-split"] .slot-label');
   await expect(labels.nth(0)).toHaveAttribute('data-syllable', '1');
-  await expect(labels.nth(4)).toHaveAttribute('data-syllable', '5');
+  await expect(labels.nth(2)).toHaveAttribute('data-syllable', '3');
+  await expect(labels.nth(3)).toHaveAttribute('data-syllable', '2');
+  await expect(labels.nth(4)).toHaveAttribute('data-syllable', '2');
   // The note sits with the counting picker, on the Practice tab.
   await onTab(page, 'practice');
   await expect(page.locator('[data-forced-numbered]')).toBeVisible();

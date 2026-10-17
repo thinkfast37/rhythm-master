@@ -15,7 +15,7 @@
 import { beatNoteValue } from '../core/meter.js';
 import { slotCount, subdivisionGroups } from '../core/recipes.js';
 import { effectiveAccent, defaultAccent } from '../core/accents.js';
-import { labelsFor, effectiveSystem } from '../core/counting.js';
+import { measureLabels, effectiveSystem } from '../core/counting.js';
 import { noteName, inRegister, registerOf, soundingOctaveOffset } from '../core/pitch.js';
 import {
   hasHarmony,
@@ -234,9 +234,11 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   const noteValue = beatNoteValue(measure.timeSignature);
 
   const chord = pattern.soundMode === 'melodic' ? chordIn(pattern, pass, measureIndex) : null;
+  // Labels are per Measure: pulse tracking groups across Beats (AC-5.6.7).
+  const labels = measureLabels(measure, system);
   measure.beats.forEach((beat, beatIndex) => {
     beats.appendChild(
-      renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly, key, chord, deal)
+      renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, labels[beatIndex], readOnly, key, chord, deal)
     );
   });
 
@@ -244,14 +246,13 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   return row;
 }
 
-function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, system, readOnly, key, chord = null, deal = null) {
+function renderBeat(beat, beatIndex, measure, measureIndex, noteValue, pattern, position, labels, readOnly, key, chord = null, deal = null) {
   const melodic = pattern.soundMode === 'melodic';
   const el = document.createElement('div');
   el.className = 'beat';
   el.dataset.beat = String(beatIndex);
   el.dataset.recipe = beat.recipe;
 
-  const labels = labelsFor(beat.recipe, noteValue, system, beatIndex);
   const groups = subdivisionGroups(beat.recipe, noteValue);
 
   // A mixed Recipe's two halves are separate group elements, so the

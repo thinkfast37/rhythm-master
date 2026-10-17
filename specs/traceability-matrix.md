@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 706 across 47 User Stories
+**Criteria**: 717 across 47 User Stories
 
-**Coverage**: 517 of 706 criteria proven (73.2%)
+**Coverage**: 533 of 717 criteria proven (74.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 517 | 73.2% |
-| 🔴 Gap — HIGH | 70 | 9.9% |
-| 🟠 Gap — MEDIUM | 41 | 5.8% |
-| 🟡 Gap — LOW | 78 | 11.0% |
+| 🟢 Proven | 533 | 74.3% |
+| 🔴 Gap — HIGH | 65 | 9.1% |
+| 🟠 Gap — MEDIUM | 41 | 5.7% |
+| 🟡 Gap — LOW | 78 | 10.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -51,7 +51,7 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (189 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (184 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
@@ -75,7 +75,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-5.2 | 4 | 1 | · | · | 1 | · | 2 |
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
 | 🟠 US-5.5 | 5 | 3 | · | · | · | 1 | 1 |
-| 🔴 US-5.6 | 13 | 2 | · | · | 10 | 1 | · |
+| 🔴 US-5.6 | 24 | 18 | · | · | 5 | 1 | · |
 | 🔴 US-6.1 | 10 | 4 | · | · | 3 | · | 3 |
 | 🟠 US-7.1 | 2 | 0 | · | · | · | 1 | 1 |
 | 🔴 US-7.2 | 3 | 0 | · | · | 2 | · | 1 |
@@ -365,19 +365,30 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.5 | `AC-5.5.3/1` 🖵 | Prev/Next are on screen with the main panel scrolled to its foot | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.spec.js` | 🟢 OK |
 | US-5.5 | `AC-5.5.3/2` 🖵 | The panel holds exactly one Prev/Next control | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.spec.js` | 🟢 OK |
 | US-5.5 | `AC-5.5.3/3` 🖵 | Prev/Next stay reachable without scrolling at mobile width | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-5.6 | `AC-5.6.1` 🖵 | Counting-system toggle updates labels live | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js`, `storage.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-5.6 | `AC-5.6.2` 🖵 | A Pattern containing a mixed-feel Recipe supports Numbered only | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-5.6 | `AC-5.6.3` 🖵 | Pattern-level restriction does not overwrite the global setting | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.4` 🖵 | A Pattern without mixed-feel Recipes supports all three systems | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js`, `grid.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.5` | Adding a mixed-feel Recipe to a Pattern switches it to Numbered immediately | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.6` | Default counting system on first load | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.7` | Numbered scheme, restart per Beat | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.8` | Numbered scheme, continuous across the Measure for 1-Slot Beats | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.9` | Numbered scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.10` | Numbered scheme, no compound grouping (deferred) | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.11` 🖵 | Numbered scheme handles mixed-feel Recipes by position | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.12` | 1-e-&-a scheme, the leading digit is the Beat's own number | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
-| US-5.6 | `AC-5.6.13` | 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162 (3/3 done) | T076, T163 (2/2 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.1` 🖵 | Counting-system toggle updates labels live | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `storage.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-5.6 | `AC-5.6.2` 🖵 | A Pattern containing a mixed-feel Recipe supports Numbered only | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-5.6 | `AC-5.6.3` 🖵 | Pattern-level restriction does not overwrite the global setting | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.6 | `AC-5.6.4` 🖵 | A Pattern without mixed-feel Recipes supports all three systems | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.6 | `AC-5.6.5` | Adding a mixed-feel Recipe to a Pattern switches it to Numbered immediately | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.6 | `AC-5.6.6` | Default counting system on first load | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.6 | `AC-5.6.7/1` 🖵 | A 4/4 Measure of Straight 16ths with default accents reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.7/2` 🖵 | A 4/4 Measure of Straight 8ths reads 1-2-3-4, 2-2-3-4: two-Slot Beats are not counted alone | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.7/3` 🖵 | A 2/4 Measure of Straight 8ths reads 1-2-3-4, one group across both Beats | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.7/4` 🖵 | The groups restart at 1 for every Measure | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.8/1` | A 7/8 Measure of Undivided Beats with nothing stressed reads 1-2-3-4, 2-2-3 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.8/2` | A 5/4 Measure of Straight 8ths with nothing stressed reads 1-2-3-4, 2-2-3-4, 3-2 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.8/3` | Which Slots sound does not change the groups: a 4/4 Measure of Straight 16ths sounding only the downbeat and the last 16th still reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.9/1` | A 4/4 Measure of Straight 16ths with pulses 1, 4, 7, 10 and 13 raised reads 1-2-3, 2-2-3, 3-2-3, 4-2-3, 5-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.9/2` | A 7/8 Measure of Undivided Beats with pulse 4 raised reads 1-2-3, 2-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.9/3` | A raised Slot that is switched off is not a stress: the groups are those of the unstressed Measure | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.9/4` | A lowered accent is not a stress: Beat 3 of a 4/4 Measure of Straight 16ths taken from Medium down to Weak still reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.10/1` | 12/8 in Undivided Beats reads 1-2-3, 2-2-3, 3-2-3, 4-2-3; 6/8 reads 1-2-3, 2-2-3; 9/8 reads 1-2-3, 2-2-3, 3-2-3 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.10/2` | A 4/4 Measure of Triplet 8ths reads 1-2-3, 2-2-3, 3-2-3, 4-2-3: the groups break on the Beats, not in fours | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.10/3` | A 3/4 Measure of Straight 16ths reads 1-2-3-4, 2-2-3-4, 3-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.10/4` | A 7/8 Measure of two-Slot Beats reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.11` 🖵 | Pulse tracking counts a mixed-feel Recipe by its halves | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.12` | 1-e-&-a scheme, the leading digit is the Beat's own number | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.13` | 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
 | US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-6.1 | `AC-6.1.3` 🖵 | Tapping a star sets Rating from zero | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |

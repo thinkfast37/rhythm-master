@@ -1496,7 +1496,7 @@ field survives showing it.)*
 
 *Traceability: `US-5.6` — Counting system toggle*
 
-**As** the Practicing Musician, **I want** to switch between counting systems (Takadimi syllables, numeric 1-e-&-a, or straight Numbered), **so that** the grid matches whichever system I personally count in.
+**As** the Practicing Musician, **I want** to switch between counting systems (Takadimi syllables, numeric 1-e-&-a, or Numbered — shown as Pulse tracking), **so that** the grid matches whichever system I personally count in.
 
 **Independent Test**: Toggle between the three systems and assert live label updates, plus the Numbered-only restriction on Patterns containing a mixed-feel Recipe.
 
@@ -1512,7 +1512,7 @@ field survives showing it.)*
   - **When** the Practicing Musician loads it
   - **Then** its labels render in Numbered, regardless of which counting system is globally selected
   - **And** Takadimi and 1-e-&-a are shown as unavailable for this Pattern, with a brief explanation that they have no syllables for a subdivision group spanning half a Beat
-  - *(This is why the half-Beat syllable question doesn't need answering: rather than inventing Takadimi/1-e-&-a vocabulary that doesn't exist for 2-Slot straight or 3-Slot triplet half-Beat groups, Patterns that create those groups simply use Numbered, which labels by position and needs no rhythmic-feel vocabulary — see AC-5.6.8.)*
+  - *(This is why the half-Beat syllable question doesn't need answering: rather than inventing Takadimi/1-e-&-a vocabulary that doesn't exist for 2-Slot straight or 3-Slot triplet half-Beat groups, Patterns that create those groups simply use Numbered, which labels by position and needs no rhythmic-feel vocabulary — see AC-5.6.11.)*
 
 - **AC-5.6.3** — Pattern-level restriction does not overwrite the global setting
   - **Given** the global counting system is Takadimi, and the Practicing Musician loads "Mixed Feel Groove" (which forces Numbered, per AC-5.6.2)
@@ -1535,30 +1535,54 @@ field survives showing it.)*
   - **When** no counting system has been chosen yet
   - **Then** it defaults to Takadimi *(Assumption: not yet confirmed by you.)*
 
-- **AC-5.6.7** — Numbered scheme, restart per Beat
-  - **Given** a Measure set to 4/4 with every Beat on the Straight 16ths Recipe (4 Slots each), Numbered active
+- **AC-5.6.7** — Pulse tracking: the first pulse of each group carries the group's own number
+  - **Given** a Measure whose Slots, taken in order across every Beat, are its pulses, with Numbered (Pulse tracking) active
   - **When** labels are generated
-  - **Then** each Beat's 4 Slots read 1, 2, 3, 4 — and this repeats fresh at 1 for every Beat in the Measure, rather than continuing to count upward across Beats
+  - **Then** the pulses are counted in groups, and the first pulse of each group reads that group's ordinal within the Measure — 1 for the first group, 2 for the second, and so on — while the pulses after it read their own position within the group, 2, 3, 4; so the number on a group's first pulse says where in the Measure you are, the way the leading digit of 1-e-&-a does (AC-5.6.12)
+  - **Cases**:
+    - **AC-5.6.7/1** — A 4/4 Measure of Straight 16ths with default accents reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4
+    - **AC-5.6.7/2** — A 4/4 Measure of Straight 8ths reads 1-2-3-4, 2-2-3-4: two-Slot Beats are not counted alone
+    - **AC-5.6.7/3** — A 2/4 Measure of Straight 8ths reads 1-2-3-4, one group across both Beats
+    - **AC-5.6.7/4** — The groups restart at 1 for every Measure
+  - *(Revised 2026-10-17 at the maintainer's request. It used to say Numbered restarts at 1 for every Beat, so a 4/4 Measure of 16ths read 1-2-3-4 four times over and a 2/4 Measure of 8ths read 1-2-1-2. "Really that should be 1-2-3-4 … you're basically trying to keep track of numeric patterns in your head", and with each group's first pulse carrying the group's number "now you can keep track of the beats". Numbered is a pulse-tracking scheme: it labels pulses so a musician can hold a count in their head, where the two syllable systems label the metric position. The maintainer liked "pulse tracking" as its name, so the picker shows it as such; the stored value `numbered` and the AC IDs are unchanged.)*
 
-- **AC-5.6.8** — Numbered scheme, continuous across the Measure for 1-Slot Beats
-  - **Given** a Measure set to 7/8 with every Beat on the Undivided Recipe (1 Slot each), Numbered active
+- **AC-5.6.8** — Pulse tracking never counts past 4
+  - **Given** a Measure with more pulses between one group start and the next than fit in one group, Numbered active
   - **When** labels are generated
-  - **Then** the 7 Slots read 1, 2, 3, 4, 5, 6, 7 in one continuous sequence across the whole Measure, not restarting to 1 at each Beat
+  - **Then** that span is divided into groups of 2, 3 or 4 pulses — never more than 4, which is as many as a musician comfortably holds — preferring the division that breaks on Beat starts, then as few groups as that allows, then groups as near equal as that allows, with the larger group first when nothing else separates two divisions
+  - **Cases**:
+    - **AC-5.6.8/1** — A 7/8 Measure of Undivided Beats with nothing stressed reads 1-2-3-4, 2-2-3
+    - **AC-5.6.8/2** — A 5/4 Measure of Straight 8ths with nothing stressed reads 1-2-3-4, 2-2-3-4, 3-2
+    - **AC-5.6.8/3** — Which Slots sound does not change the groups: a 4/4 Measure of Straight 16ths sounding only the downbeat and the last 16th still reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4
+  - *(Revised 2026-10-17 at the maintainer's request. It used to say a Measure of 1-Slot Beats counted straight through — 1 to 7 across 7/8. "Ideally, you don't count more than 4 … once you start going over four, it's tricky." Case /3 is the maintainer's own example: playing only the downbeat and the last 16th, "I wouldn't create one giant group of 16 because that's difficult to keep track of … you'd still create four groupings and you'd have to keep track of the fact in your head that you're gonna play the first one and the last four." With nothing stressed the 7/8 division is, in their words, "kind of arbitrary" — 1-2-3-4, 2-2-3 or 1-2-3, 2-2-3-4 — and the larger-first rule picks the former; a stress chooses the latter (AC-5.6.9/2).)*
 
-- **AC-5.6.9** — Numbered scheme, restart per Beat even at eighth-note-Beat granularity
-  - **Given** a Measure set to 7/8 with every Beat on the Straight 16ths Recipe (2 Slots each), Numbered active
+- **AC-5.6.9** — Pulse tracking: a stress begins a group
+  - **Given** a Measure in which the Composer has raised a sounding Slot's Accent Level above its computed default, Numbered active
   - **When** labels are generated
-  - **Then** each Beat's 2 Slots read 1, 2 — and this repeats fresh at 1 for every one of the 7 Beats, giving 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2 across the Measure — confirming the restart rule (AC-5.6.7) applies whenever a Beat has more than 1 Slot, regardless of the Beat's own note-value
+  - **Then** that Slot begins a group, and the Measure's first pulse always does — it carries the downbeat, the strongest stress there is — while a computed default accent (the Medium on Beat 3 of 4/4, the Medium on every "&"), a lowered accent and a silent Slot are not stresses and begin nothing
+  - **Cases**:
+    - **AC-5.6.9/1** — A 4/4 Measure of Straight 16ths with pulses 1, 4, 7, 10 and 13 raised reads 1-2-3, 2-2-3, 3-2-3, 4-2-3, 5-2-3-4
+    - **AC-5.6.9/2** — A 7/8 Measure of Undivided Beats with pulse 4 raised reads 1-2-3, 2-2-3-4
+    - **AC-5.6.9/3** — A raised Slot that is switched off is not a stress: the groups are those of the unstressed Measure
+    - **AC-5.6.9/4** — A lowered accent is not a stress: Beat 3 of a 4/4 Measure of Straight 16ths taken from Medium down to Weak still reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4
+  - *(Revised 2026-10-17 at the maintainer's request. It used to confirm the per-Beat restart at eighth-note granularity — 1-2 seven times across 7/8 in 16ths. "Wherever there's a stress, the stress is what determines the pattern, because a higher stress would reset the counting, and that's usually how music works … if it's not stress, then it's just whether or not it's sounded, because something that's not sounded, there is no stress to it at all." Case /1 is Radiohead's Pyramid Song as the maintainer counts it: four groups of three and one of four across a 4/4 bar of 16ths. The computed defaults are not stresses because they are the meter's own shape, which the groups already follow (AC-5.6.10); only a stress the Composer placed says the count goes against the meter.)*
 
-- **AC-5.6.10** — Numbered scheme, no compound grouping (deferred)
-  - **Given** a Measure set to 12/8 with every Beat on the Undivided Recipe (1 Slot each), Numbered active
+- **AC-5.6.10** — Pulse tracking groups follow the Beat and the compound meter
+  - **Given** a Measure with nothing stressed, Numbered active
   - **When** labels are generated
-  - **Then** the 12 Slots read 1 through 12 in one straight continuous sequence, **not** grouped as 1-2-3 repeated four times — compound-grouped numbering is explicitly deferred, not part of this version
+  - **Then** group boundaries fall on Beat starts — and within a mixed-feel Beat, on its Subdivision Group start — wherever a division of 2s, 3s and 4s allows it, and a Measure in 6/8, 9/8 or 12/8 is divided in threes
+  - **Cases**:
+    - **AC-5.6.10/1** — 12/8 in Undivided Beats reads 1-2-3, 2-2-3, 3-2-3, 4-2-3; 6/8 reads 1-2-3, 2-2-3; 9/8 reads 1-2-3, 2-2-3, 3-2-3
+    - **AC-5.6.10/2** — A 4/4 Measure of Triplet 8ths reads 1-2-3, 2-2-3, 3-2-3, 4-2-3: the groups break on the Beats, not in fours
+    - **AC-5.6.10/3** — A 3/4 Measure of Straight 16ths reads 1-2-3-4, 2-2-3-4, 3-2-3-4
+    - **AC-5.6.10/4** — A 7/8 Measure of two-Slot Beats reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2
+  - *(Revised 2026-10-17 at the maintainer's request. It used to defer compound grouping explicitly — 12/8 read 1 through 12. This is that deferred work. The Beat structure is still exactly what the Composer authored (Constitution Principle I: 12/8 is twelve Beats); only the count's grouping reads the meter as compound, and a stress overrides it (AC-5.6.9).)*
 
-- **AC-5.6.11** — Numbered scheme handles mixed-feel Recipes by position
-  - **Given** a Beat on the Straight → Triplet split Recipe (5 Slots, per AC-1.3.4) — a Pattern that therefore renders in Numbered per AC-5.6.2
+- **AC-5.6.11** — Pulse tracking counts a mixed-feel Recipe by its halves
+  - **Given** a Beat on the Straight → Triplet split Recipe (5 Slots, per AC-1.3.4) — a Pattern that therefore renders in Numbered per AC-5.6.2 — with nothing stressed
   - **When** labels are generated
-  - **Then** its Slots read 1, 2, 3, 4, 5 straight through, since Numbered labels by position only and needs no rhythmic-feel vocabulary — which is exactly what makes it the safe fallback for these Patterns
+  - **Then** its Slots read 1-2, 2-2-3 — a group for each Subdivision Group, since 5 is more than one group holds — and a Triplet → Straight split reads 1-2-3, 2-2; Numbered needs no rhythmic-feel vocabulary for either half, which is exactly what makes it the safe fallback for these Patterns
+  - *(Revised 2026-10-17 with AC-5.6.7–AC-5.6.10: it used to read 1 through 5 straight. A half-Beat group is a Subdivision Group start, and AC-5.6.10 breaks on those.)*
 
 - **AC-5.6.12** — 1-e-&-a scheme, the leading digit is the Beat's own number
   - **Given** a Measure set to 4/4 with every Beat on the Straight 8ths Recipe (2 Slots each), 1-e-&-a active
