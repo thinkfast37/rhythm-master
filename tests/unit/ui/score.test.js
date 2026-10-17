@@ -3,7 +3,7 @@ import { renderScore } from '../../../src/ui/score.js';
 import { buildScore } from '../../../src/core/notation.js';
 import { create, addMeasure, setTimeSignature, setRecipe, cycleAccent, setPitch, setSwingAmount } from '../../../src/core/pattern.js';
 import { setProgression, setChange, setArpeggio, withArpeggio } from '../../../src/core/harmony.js';
-import { labelsFor } from '../../../src/core/counting.js';
+import { measureLabels } from '../../../src/core/counting.js';
 import { STRONG, MEDIUM } from '../../../src/core/accents.js';
 
 /**
@@ -405,7 +405,7 @@ describe('ui/score — the count and the progression, as drawn (AC-12.2.7, AC-12
     p = setRecipe(p, 0, 2, 'straight-8ths');
     for (const system of ['takadimi', 'one-e-and-a', 'numbered']) {
       const drawn = texts(draw(p, { countingSystem: system }), 'count').map((t) => t.replace(/[()]/g, ''));
-      const expected = p.measures[0].beats.flatMap((beat, b) => labelsFor(beat.recipe, 'quarter', system, b));
+      const expected = measureLabels(p.measures[0], system).flat();
       expect(drawn).toEqual(expected);
     }
   });
@@ -428,7 +428,7 @@ describe('ui/score — the count and the progression, as drawn (AC-12.2.7, AC-12
     const p = setRecipe(pattern([[0, 0, 0]]), 0, 3, 'straight-triplet-split');
     const options = { countingSystem: 'takadimi' };
     expect(texts(draw(p, options), 'count').slice(0, 4)).toEqual(['1', '(2)', '(3)', '(4)']);
-    expect(texts(draw(p, options), 'count').slice(-5)).toEqual(['(1)', '(2)', '(3)', '(4)', '(5)']);
+    expect(texts(draw(p, options), 'count').slice(-5)).toEqual(['(4)', '(2)', '(5)', '(2)', '(3)']);
     expect(options.countingSystem).toBe('takadimi');
   });
 

@@ -22,7 +22,7 @@ import {
 } from '../../../src/core/pattern.js';
 import { setProgression, setChange, setArpeggio, cyclePasses, arpeggioDeal, soundingPitch, stepName, chordIn } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
-import { labelsFor } from '../../../src/core/counting.js';
+import { measureLabels } from '../../../src/core/counting.js';
 import { STRONG, MEDIUM, WEAK } from '../../../src/core/accents.js';
 
 /** A Beat with a Recipe and a list of on/off flags. */
@@ -393,8 +393,9 @@ describe('core/notation — accents and the count (AC-12.2.6, AC-12.2.7)', () =>
     for (const system of ['takadimi', 'one-e-and-a', 'numbered']) {
       const score = buildScore(p, { countingSystem: system });
       expect(score.system).toBe(system);
+      const expected = measureLabels(p.measures[0], system);
       p.measures[0].beats.forEach((beat, b) => {
-        expect(beatOf(score, b).labels.map((l) => l.text)).toEqual(labelsFor(beat.recipe, 'quarter', system, b));
+        expect(beatOf(score, b).labels.map((l) => l.text)).toEqual(expected[b]);
         expect(beatOf(score, b).labels.map((l) => l.slotIndex)).toEqual(beat.slots.map((_, i) => i));
       });
     }
@@ -415,7 +416,8 @@ describe('core/notation — accents and the count (AC-12.2.6, AC-12.2.7)', () =>
     const score = buildScore(p, options);
     expect(score.system).toBe('numbered');
     expect(beatOf(score, 0).labels.map((l) => l.text)).toEqual(['1', '2', '3', '4']);
-    expect(beatOf(score, 3).labels.map((l) => l.text)).toEqual(['1', '2', '3', '4', '5']);
+    // Pulse tracking counts the split Beat by its halves, as the fourth and fifth groups (AC-5.6.11).
+    expect(beatOf(score, 3).labels.map((l) => l.text)).toEqual(['4', '2', '5', '2', '3']);
     expect(options.countingSystem).toBe('takadimi');
   });
 });

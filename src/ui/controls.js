@@ -1486,7 +1486,7 @@ function renderCounting(pattern, state, handlers) {
   // Explain the override rather than silently ignoring the setting (AC-5.6.2).
   if (isForcedNumbered(pattern)) {
     const note = el('p', 'counting-note', {
-      textContent: 'This Pattern mixes straight and triplet feel within a Beat, so it counts by number.',
+      textContent: 'This Pattern mixes straight and triplet feel within a Beat, so it counts by pulse.',
     });
     note.dataset.forcedNumbered = 'true';
     group.appendChild(note);

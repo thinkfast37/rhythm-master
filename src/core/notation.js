@@ -19,7 +19,7 @@
 import { beatNoteValue } from './meter.js';
 import { subdivisionGroups } from './recipes.js';
 import { STRONG } from './accents.js';
-import { labelsFor, effectiveSystem } from './counting.js';
+import { measureLabels, effectiveSystem } from './counting.js';
 import { noteName, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
 import { SCALES, DEFAULT_SCALE } from './scales.js';
 import {
@@ -300,6 +300,7 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
 
     const measures = pattern.measures.map((measure, m) => {
       const noteValue = beatNoteValue(measure.timeSignature);
+      const countLabels = measureLabels(measure, system);
       const beatTicks = noteValue === 'quarter' ? QUARTER : QUARTER / 2;
       const chordIndex = chordAt(pattern, pass, m);
       const chord = chordIndex === null ? null : pattern.harmony.chords[chordIndex];
@@ -362,7 +363,7 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
           }
         }
 
-        const labels = labelsFor(beat.recipe, noteValue, system, b).map((text, s) => ({
+        const labels = countLabels[b].map((text, s) => ({
           slotIndex: s,
           tick: b * beatTicks + slotTick(beat, noteValue, s),
           text,
