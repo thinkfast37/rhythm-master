@@ -16,12 +16,12 @@
 **Feature**: specs/001-rhythm-master-mvp/spec.md
 **Criteria**: 717 across 47 User Stories
 
-**Coverage**: 532 of 717 criteria proven (74.2%)
+**Coverage**: 533 of 717 criteria proven (74.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 532 | 74.2% |
-| 🔴 Gap — HIGH | 66 | 9.2% |
+| 🟢 Proven | 533 | 74.3% |
+| 🔴 Gap — HIGH | 65 | 9.1% |
 | 🟠 Gap — MEDIUM | 41 | 5.7% |
 | 🟡 Gap — LOW | 78 | 10.9% |
 
@@ -51,7 +51,7 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (185 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (184 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
@@ -75,7 +75,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🔴 US-5.2 | 4 | 1 | · | · | 1 | · | 2 |
 | 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
 | 🟠 US-5.5 | 5 | 3 | · | · | · | 1 | 1 |
-| 🔴 US-5.6 | 24 | 17 | · | · | 6 | 1 | · |
+| 🔴 US-5.6 | 24 | 18 | · | · | 5 | 1 | · |
 | 🔴 US-6.1 | 10 | 4 | · | · | 3 | · | 3 |
 | 🟠 US-7.1 | 2 | 0 | · | · | · | 1 | 1 |
 | 🔴 US-7.2 | 3 | 0 | · | · | 2 | · | 1 |
@@ -386,7 +386,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.6 | `AC-5.6.10/2` | A 4/4 Measure of Triplet 8ths reads 1-2-3, 2-2-3, 3-2-3, 4-2-3: the groups break on the Beats, not in fours | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.10/3` | A 3/4 Measure of Straight 16ths reads 1-2-3-4, 2-2-3-4, 3-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.10/4` | A 7/8 Measure of two-Slot Beats reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
-| US-5.6 | `AC-5.6.11` 🖵 | Pulse tracking counts a mixed-feel Recipe by its halves | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-5.6 | `AC-5.6.11` 🖵 | Pulse tracking counts a mixed-feel Recipe by its halves | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.12` | 1-e-&-a scheme, the leading digit is the Beat's own number | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.13` | 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
 | US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200 (2/2 done) | T097, T201 (2/2 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |

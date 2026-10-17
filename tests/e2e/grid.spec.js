@@ -376,6 +376,20 @@ test('AC-5.6.9/1 — A 4/4 Measure of Straight 16ths with pulses 1, 4, 7, 10 and
   await expect(page.locator('.slot[data-beat="3"][data-slot="0"] .slot-label')).toHaveText('5');
 });
 
+test('AC-5.6.11 — Pulse tracking counts a mixed-feel Recipe by its halves', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  await onTab(page, 'practice');
+  await page.locator('.counting-picker').selectOption('takadimi');
+  await applyRecipe(page, 'straight-triplet-split', 0, 3);
+
+  // The split Beat is the fourth and fifth groups, each half its own, whatever the preference.
+  expect(await pulseCount(page)).toBe('12342234323442523');
+  const split = page.locator('.beat[data-recipe="straight-triplet-split"] .slot-label');
+  await expect(split).toHaveCount(5);
+  expect(await split.evaluateAll((els) => els.map((e) => e.dataset.syllable))).toEqual(['4', '2', '5', '2', '3']);
+});
+
 test("AC-5.6.12 — 1-e-&-a scheme, the leading digit is the Beat's own number", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
