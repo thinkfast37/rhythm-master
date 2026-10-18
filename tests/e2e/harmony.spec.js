@@ -25,11 +25,15 @@ async function melodicBlank(page, timeSignature = '4/4') {
  * (AC-2.6.1/7), under which the notes are dealt and the strip cannot stamp; most
  * tests here stamp by hand, so the helper puts the arpeggio back to None. Pass
  * `{ arpeggio: 'up' }` — or a test of the default's own — to leave it standing.
+ * Choosing one also voices it Closest (AC-2.11.3/7); the criteria here are
+ * written for chords over their roots, so the helper puts the Voicing at Root
+ * position too. Pass `{ voicing: 'closest' }` to keep the default.
  */
-async function harmonicBlank(page, progression = 'I-IV-V', { arpeggio = 'none' } = {}) {
+async function harmonicBlank(page, progression = 'I-IV-V', { arpeggio = 'none', voicing = 'root' } = {}) {
   await melodicBlank(page);
   await page.locator('.progression-picker').selectOption(progression);
   await page.locator('.arpeggio-picker').selectOption(arpeggio);
+  await page.locator('.voicing-picker').selectOption(voicing);
 }
 
 const pattern = (page) => page.evaluate(() => window.__rm.getState().pattern);
@@ -79,8 +83,9 @@ test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry un
   expect(grouped).toBe(PROGRESSIONS.length);
   expect(grouped).toBeGreaterThanOrEqual(114);
   await expect(picker).toHaveValue('none');
-  // Choosing one names its chords in the Key.
+  // Choosing one names its chords in the Key (over their roots here; the Closest default is AC-2.11.3/7's).
   await picker.selectOption('I-IV-V');
+  await page.locator('.voicing-picker').selectOption('root');
   expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
   // And Custom is not on offer until the chords stop matching the catalogue.
   expect(await picker.locator('option[value="custom"]').count()).toBe(0);
@@ -106,10 +111,11 @@ async function ownThenSongs(page, heading, own) {
   expect(entries.slice(own.length)).toEqual(songs);
 }
 
-/** Choose an entry and read the chord names on the strip. */
+/** Choose an entry and read the chord names on the strip — over their roots, as these criteria list them (the Closest default is AC-2.11.3/7's). */
 async function chooseAndRead(page, id) {
   await page.locator('.progression-picker').selectOption(id);
   await expect(page.locator('.progression-picker')).toHaveValue(id);
+  await page.locator('.voicing-picker').selectOption('root');
   return chordNames(page);
 }
 
@@ -1360,12 +1366,12 @@ test("AC-2.10.2/4 — The picker shows the progression in force, the note bands 
   await page.locator('.progression-cycle').click();
   await page.locator('[data-action="play"]').click();
 
-  const { PROGRESSIONS, spellProgression, chordName } = await import('../../src/core/harmony.js');
+  const { PROGRESSIONS, spellProgression, chordName, voiceChords } = await import('../../src/core/harmony.js');
   const next = PROGRESSIONS[1].id;
   expect(await untilProgression(page, next, 12000)).toBe(true);
   await expect(page.locator('.progression-picker')).toHaveValue(next, { timeout: 400 });
-  // The chord strip names the next progression's chords, not the last one's.
-  const expected = spellProgression(next, 'ionian').map((c) => chordName(c, 'C'));
+  // The chord strip names the next progression's chords, not the last one's — voiced Closest, as an entry in force is (AC-2.11.3/7).
+  const expected = voiceChords(spellProgression(next, 'ionian'), 'closest').map((c) => chordName(c, 'C'));
   expect(await chordNames(page)).toEqual(expected);
   await page.locator('[data-action="stop"]').click();
 });
@@ -1723,7 +1729,8 @@ test('AC-15.1.16/7 — A panel whose rebuild would change nothing is left untouc
   // progression mid-playback takes, and the chords it lays down follow.
   await page.locator('.progression-picker').selectOption('I-V-vi-IV');
   await expect(page.locator('.progression-picker')).toHaveValue('I-V-vi-IV');
-  await expect.poll(() => chordNames(page)).toEqual(['C', 'G', 'Am', 'F']);
+  // Voiced Closest as it is chosen (AC-2.11.3/7).
+  await expect.poll(() => chordNames(page)).toEqual(['C', 'G/D', 'Am/E', 'F']);
 });
 
 // --- AC-2.6.11 — The picker says which songs use the chosen progression ---
@@ -1798,3 +1805,157 @@ test('AC-2.6.11/3 — Every song credit names a catalogue entry, and every song 
   }
 });
 
+
+// --- US-2.11 — Voice each chord ---
+
+const bassPicker = (page, chord) => page.locator(`.chord-editor[data-chord="${chord}"] .chord-bass`);
+const bassOptions = (page, chord) => bassPicker(page, chord).locator('option').allTextContents();
+
+test("AC-2.11.1/1 — The Bass picker lists the chord's members by note name, the root first and as many as the chord has: C major offers C, E and G; C7 offers C, E, G and B♭; C9 offers C, E, G, B♭ and D", async ({ page }) => {
+  await harmonicBlank(page);
+  expect(await bassOptions(page, 0)).toEqual(['C (root)', 'E', 'G']);
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('7');
+  expect(await bassOptions(page, 0)).toEqual(['C (root)', 'E', 'G', 'Bb']);
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('9');
+  expect(await bassOptions(page, 0)).toEqual(['C (root)', 'E', 'G', 'Bb', 'D']);
+  // The other chords are their own: the IV offers F, A and C.
+  expect(await bassOptions(page, 1)).toEqual(['F (root)', 'A', 'C']);
+});
+
+test('AC-2.11.1/2 — Choosing a bass changes that chord alone, and its name takes the slash form: I–IV–V in C with the V over its 3rd reads C, F, G/B', async ({ page }) => {
+  await harmonicBlank(page);
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
+  await bassPicker(page, 2).selectOption('1');
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G/B']);
+  expect(await page.locator('.chord-chip .chord-numeral').allTextContents()).toEqual(['I', 'IV', 'V/3']);
+  expect(await page.locator('.chord-editor[data-chord="2"] .chord-editor-name').textContent()).toBe('G/B');
+  expect((await pattern(page)).harmony.chords).toEqual([
+    { degree: '1', quality: 'maj' },
+    { degree: '4', quality: 'maj' },
+    { degree: '5', quality: 'maj', inversion: 1 },
+  ]);
+  // Back to the root: the slash goes and nothing is stored for it.
+  await bassPicker(page, 2).selectOption('0');
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
+  expect((await pattern(page)).harmony.chords[2]).toEqual({ degree: '5', quality: 'maj' });
+});
+
+test("AC-2.11.1/3 — A chord over its root is named without a slash and its numeral is unchanged; an inverted chord's numeral names the member in the bass: G/B reads V/3 and C7 over its 7th reads I7/7", async ({ page }) => {
+  await harmonicBlank(page);
+  const numerals = () => page.locator('.chord-chip .chord-numeral').allTextContents();
+  expect(await numerals()).toEqual(['I', 'IV', 'V']);
+  await bassPicker(page, 2).selectOption('1');
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G/B']);
+  expect(await numerals()).toEqual(['I', 'IV', 'V/3']);
+  expect(await page.locator('.chord-editor[data-chord="2"] .chord-editor-numeral').textContent()).toBe('V/3');
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('7');
+  await bassPicker(page, 0).selectOption('3');
+  expect(await chordNames(page)).toEqual(['C7/Bb', 'F', 'G/B']);
+  expect(await numerals()).toEqual(['I7/7', 'IV', 'V/3']);
+});
+
+test("AC-2.11.1/4 — Changing a chord's root or quality keeps its bass member where the new chord has one, and returns it to the root otherwise: Cmaj7 over its 7th made a triad sits over C, and G/B moved to A sits over C♯", async ({ page }) => {
+  await harmonicBlank(page);
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('maj7');
+  await bassPicker(page, 0).selectOption('3');
+  expect(await chordNames(page)).toEqual(['Cmaj7/B', 'F', 'G']);
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('7');
+  expect(await chordNames(page)).toEqual(['C7/Bb', 'F', 'G']);
+  await expect(bassPicker(page, 0)).toHaveValue('3');
+  await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('maj');
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
+  await expect(bassPicker(page, 0)).toHaveValue('0');
+  expect(await bassOptions(page, 0)).toEqual(['C (root)', 'E', 'G']);
+
+  await bassPicker(page, 2).selectOption('1');
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G/B']);
+  await page.locator('.chord-editor[data-chord="2"] .chord-root').selectOption('6');
+  expect(await chordNames(page)).toEqual(['C', 'F', 'A/C#']);
+  await expect(bassPicker(page, 2)).toHaveValue('1');
+});
+
+test('AC-2.11.1/5 — Choosing a bass on a shipped Pattern goes through the naming prompt, as the Key does', async ({ page }) => {
+  await harmonicBlank(page);
+  await loadAsShipped(page);
+  await bassPicker(page, 0).selectOption('1');
+  await expect(page.locator('.dialog-input')).toBeVisible();
+  await page.locator('.dialog-button:not(.primary)', { hasText: 'Cancel' }).click();
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+
+  await bassPicker(page, 0).selectOption('1');
+  await page.locator('.dialog-input').fill('Over the third');
+  await page.locator('.dialog-button.primary').click();
+  expect(await chordNames(page)).toEqual(['C/E', 'F', 'G']);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(true);
+});
+
+test('AC-2.11.3/1 — The Voicing picker offers Root position, Closest, Rising bass, Falling bass and Rising then falling, and names the shape the chords match, or Custom when they match none', async ({ page }) => {
+  await harmonicBlank(page, 'I-V-vi-IV', { voicing: 'closest' });
+  const picker = page.locator('.voicing-picker');
+  expect(await picker.locator('option').allTextContents()).toEqual(['Root position', 'Closest', 'Rising bass', 'Falling bass', 'Rising then falling']);
+  await expect(picker).toHaveValue('closest');
+  await picker.selectOption('falling');
+  await expect(picker).toHaveValue('falling');
+  expect(await chordNames(page)).toEqual(['C', 'G/B', 'Am', 'F']);
+  // A bass chosen by hand matches no shape: the picker says Custom, and offers it only then.
+  await bassPicker(page, 3).selectOption('1');
+  await expect(picker).toHaveValue('custom');
+  expect(await picker.locator('option').allTextContents()).toEqual(['Root position', 'Closest', 'Rising bass', 'Falling bass', 'Rising then falling', 'Custom']);
+  await picker.selectOption('root');
+  expect(await picker.locator('option').allTextContents()).toEqual(['Root position', 'Closest', 'Rising bass', 'Falling bass', 'Rising then falling']);
+});
+
+test('AC-2.11.3/6 — Choosing a shape re-voices every chord at once, and a bass chosen by hand afterwards turns the picker to Custom', async ({ page }) => {
+  await harmonicBlank(page, 'I-V-vi-IV');
+  expect(await chordNames(page)).toEqual(['C', 'G', 'Am', 'F']);
+  await page.locator('.voicing-picker').selectOption('closest');
+  expect(await chordNames(page)).toEqual(['C', 'G/D', 'Am/E', 'F']);
+  await page.locator('.voicing-picker').selectOption('arch');
+  expect(await chordNames(page)).toEqual(['C', 'G/D', 'Am/E', 'F/C']);
+  await bassPicker(page, 0).selectOption('1');
+  expect(await chordNames(page)).toEqual(['C/E', 'G/D', 'Am/E', 'F/C']);
+  await expect(page.locator('.voicing-picker')).toHaveValue('custom');
+  // The notes follow the bass: Ascending over C/E deals E G C′, and the bands name the roles.
+  await page.locator('.arpeggio-picker').selectOption('up');
+  for (const b of [0, 1, 2]) await accentZone(page, b, 0).click();
+  expect(await page.locator('.measure[data-measure="0"] .slot-note-name').allTextContents()).toEqual(['E4', 'G4', 'C5']);
+  expect(await page.locator('.measure[data-measure="0"] .slot-degree').allTextContents()).toEqual(['3', '5', 'R']);
+});
+
+test('AC-2.11.3/8 — Choosing a Voicing on a shipped Pattern goes through the naming prompt, as the Key does', async ({ page }) => {
+  await harmonicBlank(page);
+  await loadAsShipped(page);
+  await page.locator('.voicing-picker').selectOption('closest');
+  await expect(page.locator('.dialog-input')).toBeVisible();
+  await page.locator('.dialog-button:not(.primary)', { hasText: 'Cancel' }).click();
+  expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
+  await expect(page.locator('.voicing-picker')).toHaveValue('root');
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
+
+  await page.locator('.voicing-picker').selectOption('closest');
+  await page.locator('.dialog-input').fill('Voiced close');
+  await page.locator('.dialog-button.primary').click();
+  expect(await chordNames(page)).toEqual(['C', 'F/C', 'G/D']);
+  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(true);
+});
+
+test("AC-2.11.4/1 — A chord's bass is saved with the Pattern and is there after a reload", async ({ page }) => {
+  await harmonicBlank(page); // owned Pattern p_test
+  await bassPicker(page, 1).selectOption('2');
+  await bassPicker(page, 2).selectOption('1');
+  expect(await chordNames(page)).toEqual(['C', 'F/C', 'G/B']);
+  const saved = (await pattern(page)).harmony;
+
+  await page.reload();
+  await page.evaluate(() => window.__rm.handlers.onOpen('p_test', true));
+  expect((await pattern(page)).harmony).toEqual(saved);
+  expect(await chordNames(page)).toEqual(['C', 'F/C', 'G/B']);
+  await expect(bassPicker(page, 1)).toHaveValue('2');
+  await expect(bassPicker(page, 2)).toHaveValue('1');
+  expect(saved.chords).toEqual([
+    { degree: '1', quality: 'maj' },
+    { degree: '4', quality: 'maj', inversion: 2 },
+    { degree: '5', quality: 'maj', inversion: 1 },
+  ]);
+});

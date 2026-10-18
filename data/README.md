@@ -94,3 +94,17 @@ instead of being padded out to a full bar.
 
 [`specs/001-rhythm-master-mvp/data-model.md`](../specs/001-rhythm-master-mvp/data-model.md)
 and [`contracts/file-formats.md`](../specs/001-rhythm-master-mvp/contracts/file-formats.md).
+
+## Voicing the progressions
+
+A chord in a `harmony` may carry an `inversion`: which of its members is in the bass, `0`
+the root (absent means `0`). The shipped library is voiced **Closest** — each chord over the
+bass that moves its notes least from the chord before — by the same function the app's Voicing
+picker uses, so after adding or editing a progression run:
+
+```bash
+node tools/voice-seed.mjs            # write every progression's Closest inversions
+node tools/voice-seed.mjs --check    # exit 1 if any progression is not voiced Closest
+```
+
+`npm run validate:seed` checks every `inversion` is a member of its chord.

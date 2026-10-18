@@ -20,7 +20,14 @@ import {
   setPitch,
   setSwingAmount,
 } from '../../../src/core/pattern.js';
-import { setProgression, setChange, setArpeggio, cyclePasses, arpeggioDeal, soundingPitch, stepName, chordIn } from '../../../src/core/harmony.js';
+import { setProgression as chooseProgression, setVoicing, setChange, setArpeggio, cyclePasses, arpeggioDeal, soundingPitch, stepName, chordIn } from '../../../src/core/harmony.js';
+
+/*
+ * A progression chosen is voiced Closest (AC-2.11.3/7). The criteria proved
+ * here are written for chords over their roots, so each test puts the voicing
+ * at Root position first; the default itself is proved under US-2.11.
+ */
+const setProgression = (p, id) => setVoicing(chooseProgression(p, id), 'root');
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { measureLabels } from '../../../src/core/counting.js';
 import { STRONG, MEDIUM, WEAK } from '../../../src/core/accents.js';

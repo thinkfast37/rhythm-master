@@ -473,6 +473,51 @@ inside the Melody group instead of a fourth workbench group (rejected: hidden st
 length and meter can change between Sections, which is real transport work, and the maintainer's
 first need is one Section over one progression).
 
+## D-014 — Voicing: a bass per chord, the stack it implies, and shapes that write the data
+
+**Decision (2026-10-18)**: a chord carries an optional `inversion` — the index of the member in its bass,
+0 the root. The chord's *stack* is derived from it: the bass's pitch class placed in the armed octave,
+the other members stacked above it in the chord's own cyclic order, so the members below the bass are
+lifted an octave. Every role resolves through the stack — a stored chord-tone Pitch, a fill's dealt
+step, a drone on the chord's root — and the fills deal the stack *positionally*, from the bass up, each
+dealt step still named for the role it is. A Voicing shape is a pure function from the chords to their
+inversions, which the picker writes into the chords the way the catalogue writes concrete chords
+(D-011): the shape is a recipe, the result is the Composer's data, and a hand-picked bass turns the
+picker to Custom in the same way an edited chord stops matching a catalogue entry.
+
+**Why the bass is a member, not any note.** The maintainer's ask was inversions and "slash chords"
+in one breath — "if I was playing a C chord, I could also use an E root or a G root". Limiting the bass
+to the chord's members makes the two the same control, gives a chord exactly as many basses as it has
+members (three for a triad, four for a seventh, five for a ninth), and keeps every stack a rotation of
+the chord so each fill still deals every member. A bass outside the chord (C/D, C/B♭) is a different
+thing — an added note — and was deliberately left out, to be asked for on its own if wanted.
+
+**Why the bass sits in the armed octave.** D-011 anchors a chord's root at the Slot's octave; this
+anchors its bass there instead, which is the same rule when the bass is the root. The alternative —
+keeping the root anchored and only lifting the members below the bass — makes every inversion climb
+above root position, so a "closest" shape could never choose one: under I–V, G/D would sit a fifth
+above G, not a second above C. With the bass anchored, Closest over I–IV–V in C gives C E G, C F A,
+D G B — the keyboard voicing with the common tone held — and over I–V–vi–IV gives a stepwise bass C D E F.
+The cost is a register the shapes cannot cross: a bass is always within one octave above the armed
+tonic, so Falling bass under I–V puts G/B at B4 rather than B3. The Slot's own octave (US-2.9) remains
+the way to move the whole line.
+
+**The shapes.** Closest minimises, for each chord in turn, the sum over its notes of the distance to
+the nearest note of the chord before; ties go to the lower inversion. Rising bass takes the lowest
+bass above the previous bass, wrapping to the lowest of all when none is higher; Falling bass the
+mirror; Rising then falling rises to the middle chord and falls after it. The first chord is always
+over its root, so the shapes describe motion, not a starting point. Rejected: a single
+"smooth voice leading" option only (the maintainer asked for shapes — "ascending … descending … up
+and then down"), and deriving the voicing at play time from a stored shape (two sources of truth once
+a chord is edited by hand; writing the data keeps one).
+
+**Why the shipped library is re-voiced as data, and saved Patterns are not.** Built-in Patterns load
+from the seed file at runtime (§7, US-16.2), so giving all 158 progressions their Closest inversions is
+an edit to that file: ids are seed positions and are unchanged, so no overlay, rating or Tag is
+orphaned. A saved custom Pattern's chords name no bass and so are root position — exactly what they
+were — with no migration and no schema bump: the maintainer's condition was "make sure you don't kill
+all my settings", and a migration that rewrites saved Patterns cannot be undone by a later commit.
+
 ## Open items deliberately left to implementation
 
 These are genuinely low-stakes and do not need a decision before tasks are written:

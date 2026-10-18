@@ -2,7 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { renderScore } from '../../../src/ui/score.js';
 import { buildScore } from '../../../src/core/notation.js';
 import { create, addMeasure, setTimeSignature, setRecipe, cycleAccent, setPitch, setSwingAmount } from '../../../src/core/pattern.js';
-import { setProgression, setChange, setArpeggio, withArpeggio } from '../../../src/core/harmony.js';
+import { setProgression as chooseProgression, setVoicing, setChange, setArpeggio, withArpeggio } from '../../../src/core/harmony.js';
+
+/*
+ * A progression chosen is voiced Closest (AC-2.11.3/7). The criteria proved
+ * here are written for chords over their roots, so each test puts the voicing
+ * at Root position first; the default itself is proved under US-2.11.
+ */
+const setProgression = (p, id) => setVoicing(chooseProgression(p, id), 'root');
 import { measureLabels } from '../../../src/core/counting.js';
 import { STRONG, MEDIUM } from '../../../src/core/accents.js';
 

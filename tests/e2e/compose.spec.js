@@ -19,6 +19,9 @@ async function keptBlank(page) {
   // A progression brings its own fill; the Pattern's own is None here, so the
   // fill in force is always the Section's doing.
   await page.locator('.arpeggio-picker').selectOption('none');
+  // A progression chosen is voiced Closest (AC-2.11.3/7); the criteria here
+  // read the chords over their roots, so the voicing is put at Root position.
+  await page.locator('.voicing-picker').selectOption('root');
   await page.evaluate(() => {
     window.__rm.handlers.onKeepFill('root-fifth');
     window.__rm.handlers.onKeepFill('alberti');
