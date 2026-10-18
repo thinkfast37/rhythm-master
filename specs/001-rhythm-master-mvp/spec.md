@@ -4043,8 +4043,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Given** the Composer mode
   - **When** the Composer opens a percussive Pattern — shipped or owned — from the library
   - **Then** a name for the new composition is asked, unique in the library as every name is (AC-7.3.5), and on confirming the rhythm opens as a Melodic composition in C Ionian with every sounding Slot unpitched; nothing is written to the library until it is saved, and cancelling opens nothing
+  - *(Revised 2026-10-18: the name box started empty. The maintainer: "please prepopulate the text box in advance so I do not have to enter it from scratch." Every name the Composer asks for when opening a library Pattern — here, AC-19.8.2/1, and Save as new and the shipped-melody copy in AC-19.8.3 — is now pre-filled with the Pattern's name followed by "melody" ("Bossa Nova melody"), the wording chosen by the maintainer the same day; when that name is already in the library, the first free of "… melody 2", "… melody 3" and so on. It is a suggestion only: it can be edited or replaced, and the uniqueness check is unchanged. The naming prompts outside the Composer, US-7.3 and US-7.4, are not changed.)*
   - **Cases**:
-    - **AC-19.8.1/1** — Opening a percussive Pattern asks for a name, with no pre-filled default, rejecting a name already in the library
+    - **AC-19.8.1/1** — Opening a percussive Pattern asks for a name, pre-filled with the Pattern's name and "melody" and numbered when that is taken, rejecting a name already in the library
     - **AC-19.8.1/2** — Confirming opens the rhythm as a composition in C Ionian with every sounding Slot unpitched and its accents kept, and the library is unchanged until the first save
     - **AC-19.8.1/3** — Cancelling the prompt opens nothing: whatever composition was open stays, and the original Pattern is untouched
 
@@ -4062,8 +4063,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **When** the Composer opens a Melodic Pattern without a progression
   - **Then** an owned one asks whether to edit it or save it as new — editing it opens it as the composition, already saved, and saving as new asks a name — while a shipped one asks a name only, since a shipped Pattern is never edited (US-7.3); a Register is folded into the notes so what is shown is what sounds
   - **Cases**:
-    - **AC-19.8.3/1** — An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name and opens a copy, unsaved
-    - **AC-19.8.3/2** — A shipped melodic Pattern asks a name only, and opens a copy, unsaved
+    - **AC-19.8.3/1** — An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name, pre-filled as a percussive one's is, and opens a copy, unsaved
+    - **AC-19.8.3/2** — A shipped melodic Pattern asks a name only, pre-filled as a percussive one's is, and opens a copy, unsaved
     - **AC-19.8.3/3** — A Pattern with a Register opens with the Register folded into each note's octave, so the grid, the instrument and playback agree, and the saved composition carries no Register
 
 - **AC-19.8.4** — A saved composition is a melodic Pattern like any other

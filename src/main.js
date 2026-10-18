@@ -713,7 +713,9 @@ async function openInComposer(pattern, owned) {
     }
   }
   const kind = loadKind(pattern);
-  const askName = (message) => askNewPatternName('', uniqueNameValidator(), { message, confirmLabel: 'Open in Composer' });
+  // Pre-filled so the name need not be typed from scratch (AC-19.8.1/1).
+  const askName = (message) =>
+    askNewPatternName(freeName(`${pattern.name} melody`), uniqueNameValidator(), { message, confirmLabel: 'Open in Composer' });
   let draft = null;
   let savedId = null;
   let notice = null;
@@ -855,6 +857,14 @@ function nameTaken(name, exceptId = null) {
   return [...seedStore.loadAll(), ...patternStore.loadAll()].some(
     (p) => p.id !== exceptId && p.name.trim().toLowerCase() === target
   );
+}
+
+/** `base`, or the first of "base 2", "base 3"… the library does not hold (AC-19.8.1/1). */
+function freeName(base) {
+  if (!nameTaken(base)) return base;
+  let n = 2;
+  while (nameTaken(`${base} ${n}`)) n++;
+  return `${base} ${n}`;
 }
 
 const uniqueNameValidator = (exceptId = null) => (name) =>
