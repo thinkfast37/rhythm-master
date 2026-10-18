@@ -9,6 +9,8 @@
 import { describe, it, expect } from 'vitest';
 import { planRender, encodeWav, renderCycle } from '../../../src/audio/backgroundRender.js';
 import { PROGRESSIONS } from '../../../src/core/harmony.js';
+import { create } from '../../../src/core/pattern.js';
+import { loopDurationSeconds } from '../../../src/core/timeline.js';
 
 const SAMPLE_RATE = 44100;
 /** Seconds of 16-bit mono audio that fit in the module's 60 MB ceiling. */
@@ -54,6 +56,49 @@ describe('audio/backgroundRender — how much of the cycle is rendered (AC-4.1.1
     const plan = planRender([600], SAMPLE_RATE);
     expect(plan.passes).toBe(1);
     expect(plan.seconds).toBe(600);
+  });
+});
+
+describe('audio/backgroundRender — a cycle of millions of passes (AC-4.1.15/4, T396)', () => {
+  it('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: a cycle counted short of its end is never whole', () => {
+    // The first passes of a cycle known to run on past them: under the
+    // ceiling as listed, but not the whole cycle, so the fallback applies.
+    const plan = planRender(Array.from({ length: 300 }, () => 3), SAMPLE_RATE, true);
+    expect(plan.whole).toBe(false);
+    expect(plan.seconds).toBeLessThanOrEqual(180);
+    expect(plan.passes).toBe(60);
+  });
+
+  it('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: a cycle of millions of passes stops counting at the ceiling', async () => {
+    // Every progression in the catalogue cycling at once, each turning its own
+    // chords over by the pass, repeats only after millions of passes. Building
+    // each of them before rendering hung the page; only those up to the
+    // ceiling are needed, since the fallback renders fewer still.
+    const pattern = { ...create('Long'), tempo: 80 };
+    const pass = loopDurationSeconds(pattern);
+    let built = 0;
+    const saved = globalThis.OfflineAudioContext;
+    globalThis.OfflineAudioContext = class {
+      constructor() {
+        throw new Error('not rendering in a unit test');
+      }
+    };
+    try {
+      const result = await renderCycle({
+        patternAt: () => {
+          built += 1;
+          return pattern;
+        },
+        passes: 7_308_840,
+        settings: {},
+        sampleRate: SAMPLE_RATE,
+      });
+      expect(result).toBeNull();
+    } finally {
+      if (saved === undefined) delete globalThis.OfflineAudioContext;
+      else globalThis.OfflineAudioContext = saved;
+    }
+    expect(built).toBe(Math.floor(CEILING_SECONDS / pass) + 1);
   });
 });
 

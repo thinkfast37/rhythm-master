@@ -1130,6 +1130,47 @@ export function bassOptions(chord, key) {
   });
 }
 
+/* --- what a cycle steps through (US-2.12) ---------------------------------- */
+
+/**
+ * The catalogue indices a cycle steps through (AC-2.12.3/1): every entry under
+ * All, or under My list the listed ones alone, in the catalogue's order
+ * whatever order they were ticked in. A list holding no id the catalogue knows
+ * steps through the whole catalogue, so a cycle always has something in force.
+ */
+export function cycleOrder(catalogue, { from = 'all', list = [] } = {}) {
+  const all = catalogue.map((_, i) => i);
+  if (from !== 'list' || !Array.isArray(list)) return all;
+  const listed = all.filter((i) => list.includes(catalogue[i].id));
+  return listed.length ? listed : all;
+}
+
+/**
+ * Where a cycle begins when it is turned on or reset (AC-2.12.3/2): the
+ * Pattern's own entry when the order holds it, otherwise the first entry of the
+ * order after it in the catalogue, wrapping round.
+ */
+export function cycleStart(own, order) {
+  if (!order?.length || order.includes(own)) return own;
+  return order.find((i) => i > own) ?? order[0];
+}
+
+/**
+ * `steps` entries on from catalogue index `start` through `order` (null: the
+ * whole catalogue of `n`). A start the order does not hold — a fill chosen by
+ * hand that is not listed (AC-2.12.3/3) — is in force until its first step,
+ * which lands on the first listed entry after it.
+ */
+function stepThrough(start, steps, order, n) {
+  if (!order) return (((start + steps) % n) + n) % n;
+  const m = order.length;
+  const at = order.indexOf(start);
+  if (at >= 0) return order[(at + steps) % m];
+  if (steps === 0) return start;
+  const next = order.findIndex((i) => i > start);
+  return order[((next < 0 ? 0 : next) + steps - 1) % m];
+}
+
 /* --- cycle mode: the fill in force (US-2.7) -------------------------------- */
 
 /** The catalogue index of a Pattern's own fill, or 0 — the first — when it has none (AC-2.7.1/3). */
@@ -1145,11 +1186,10 @@ export function fillIndexOf(pattern) {
  * is never in the cycle. Pure, so the grid, the score and the transport agree
  * about which fill a pass is under by construction.
  */
-export function fillIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4 } = {}, loop = 0) {
+export function fillIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, order = null } = {}, loop = 0) {
   const period = Math.max(1, Math.floor(repeats)) * cyclePasses(pattern);
   const steps = Math.floor(Math.max(0, loop - baseLoop) / period);
-  const n = ARPEGGIOS.length;
-  return (((start + steps) % n) + n) % n;
+  return stepThrough(start, steps, order, ARPEGGIOS.length);
 }
 
 /**
@@ -1185,11 +1225,10 @@ export function progressionIndexOf(pattern) {
  * catalogues that can both be driven by the same `repeats`, stepping forward on
  * the same cadence without being coupled into one combined step (AC-2.10.2/1).
  */
-export function progressionIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4 } = {}, loop = 0) {
+export function progressionIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, order = null } = {}, loop = 0) {
   const period = Math.max(1, Math.floor(repeats)) * cyclePasses(pattern);
   const steps = Math.floor(Math.max(0, loop - baseLoop) / period);
-  const n = PROGRESSIONS.length;
-  return (((start + steps) % n) + n) % n;
+  return stepThrough(start, steps, order, PROGRESSIONS.length);
 }
 
 /**

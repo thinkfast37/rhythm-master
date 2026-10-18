@@ -25,7 +25,7 @@ export function helpOn(state) {
 export const HELP = Object.freeze({
   bar: [
     ['Library', 'Opens the list of every Pattern, shipped and your own, with search and Tag filters.', '.library-toggle'],
-    ['Play / Stop', 'Loops the Pattern from the top until you stop it. Under a cycle, a second Stop starts the cycle over from the Pattern’s own fill.', '.transport'],
+    ['Play / Stop', 'Loops the Pattern from the top until you stop it. Under a cycle, a second Stop starts the cycle over from where turning it on would.', '.transport'],
     ['BPM', 'The exact tempo in beats per minute; type a number, or use the slider and presets in Practice.', '.tempo-unit'],
     ['Prev / Next', 'Steps to the neighbouring Pattern in the library list as it is filtered now.', '[data-action="next-pattern"]'],
     ['Goals', 'Back to the goals screen, to work a different way or leave Lab.', '.goals-button'],
@@ -41,6 +41,7 @@ export const HELP = Object.freeze({
     ['Register', 'Moves every note the Pattern sounds by whole octaves: a bass line, or a fill up high.', '.register-picker'],
     ['Fills / Repeats', 'Plays each fill for that many harmonic cycles, then moves on to the next.', '.fill-cycle-unit'],
     ['Keep', 'Shortlists the fill in force for the Compose group.', '.keep-fill'],
+    ['Fills from / Progressions from', 'Whether each cycle steps through its whole catalogue or only your list; Choose… picks what is on the list.', '.cycle-from-row'],
   ],
   rhythm: [
     ['Subdivision', 'Arm a Recipe, then tap a Beat in the grid to split it that way.', '.recipe-strip .control-label'],

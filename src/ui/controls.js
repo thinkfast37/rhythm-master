@@ -1487,12 +1487,21 @@ function renderFillCycle(pattern, state, handlers, { keep = true } = {}) {
   cycleRow.appendChild(labelled('Repeats', repeats));
   cycleRow.appendChild(el('span', 'fill-cycle-unit', { textContent: 'harmonic cycles each' }));
 
+  // What each cycle steps through (AC-2.12.1/1): a row under the toggles, so
+  // it comes wherever they do — the Melody group and the practice panel alike.
+  const block = el('div', 'fill-cycle-block');
+  block.appendChild(cycleRow);
+  const fromRow = el('div', 'control-group cycle-from-row');
+  fromRow.appendChild(renderCycleFrom('fills', 'Fills', ARPEGGIOS.length, state, handlers));
+  fromRow.appendChild(renderCycleFrom('progressions', 'Progressions', PROGRESSIONS.length, state, handlers));
+  block.appendChild(fromRow);
+
   // Keep (AC-2.8.1): a mark on the fill in force — the one cycling has reached
   // or the picker chose — in the Composer's own records, never the Pattern's.
   // Absent at None, like the picker's own hint: there is nothing to keep.
   const kept = state.keptFills ?? [];
   const inForce = ARPEGGIOS.find((a) => a.id === pattern.harmony?.arpeggio);
-  if (!keep) return labelledGroup('Fills', cycleRow);
+  if (!keep) return labelledGroup('Fills', block);
   if (inForce) {
     const isKept = kept.includes(inForce.id);
     const keep = el('button', `keep-fill${isKept ? ' on' : ''}`, {
@@ -1516,7 +1525,53 @@ function renderFillCycle(pattern, state, handlers, { keep = true } = {}) {
     textContent: kept.length === 0 ? 'Nothing kept yet' : `${kept.length} kept`,
   });
   cycleRow.appendChild(count);
-  return labelledGroup('Fills', cycleRow);
+  return labelledGroup('Fills', block);
+}
+
+/**
+ * One catalogue's All | My list choice and its Choose… (AC-2.12.1/1, /2).
+ * My list names its count and cannot be chosen while the list is empty.
+ */
+function renderCycleFrom(kind, label, total, state, handlers) {
+  const key = kind === 'progressions' ? 'progressionCycle' : 'fillCycle';
+  const list = state.settings[`${key}List`] ?? [];
+  const from = list.length && state.settings[`${key}From`] === 'list' ? 'list' : 'all';
+  const line = el('div', 'cycle-from');
+  line.dataset.kind = kind;
+  line.dataset.from = from;
+  line.appendChild(el('span', 'cycle-from-label', { textContent: `${label} from` }));
+  const choice = el('div', 'cycle-from-choice');
+  choice.setAttribute('role', 'group');
+  choice.setAttribute('aria-label', `What Cycle ${kind} steps through`);
+  const option = (value, text, title) => {
+    const b = el('button', `cycle-from-option${from === value ? ' on' : ''}`, { type: 'button', textContent: text, title });
+    b.dataset.action = 'cycle-from';
+    b.dataset.kind = kind;
+    b.dataset.from = value;
+    b.setAttribute('aria-pressed', String(from === value));
+    b.addEventListener('click', () => handlers.onCycleFrom(kind, value));
+    choice.appendChild(b);
+    return b;
+  };
+  option('all', `All ${total}`, `Cycle through every one of the ${total} ${kind}`);
+  const mine = option(
+    'list',
+    list.length ? `My list · ${list.length}` : 'My list · empty',
+    list.length ? `Cycle through the ${list.length} on your list alone` : `Choose some ${kind} first`
+  );
+  mine.dataset.count = String(list.length);
+  mine.disabled = list.length === 0;
+  line.appendChild(choice);
+  const choose = el('button', 'cycle-list-choose', {
+    type: 'button',
+    textContent: 'Choose…',
+    title: `Pick which ${kind} are on your list`,
+  });
+  choose.dataset.action = 'choose-cycle-list';
+  choose.dataset.kind = kind;
+  choose.addEventListener('click', () => handlers.onChooseCycleList(kind));
+  line.appendChild(choose);
+  return line;
 }
 
 function renderCounting(pattern, state, handlers) {

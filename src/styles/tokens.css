@@ -2611,3 +2611,60 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   color: var(--ink-faint);
 }
 .composer-attribution a { color: var(--ink-dim); }
+
+/* --- what a cycle steps through (US-2.12) -------------------------------- */
+
+.cycle-from-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 12px 8px;
+}
+.cycle-from { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cycle-from-label { min-width: 118px; text-align: left; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.cycle-from-choice { display: inline-flex; }
+.cycle-from-option, .cycle-list-choose {
+  padding: 7px 12px;
+  font: 600 12px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.cycle-from-option:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.cycle-from-option:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-left: none; }
+.cycle-from-option.on { border-color: var(--brand); color: var(--brand); }
+.cycle-from-option.on + .cycle-from-option.on, .cycle-from-option + .cycle-from-option.on { border-left: 1px solid var(--brand); }
+.cycle-from-option:disabled { opacity: 0.5; cursor: default; }
+.cycle-list-choose { border-radius: var(--radius); }
+
+.cycle-list-view { max-width: 520px; display: flex; flex-direction: column; max-height: calc(100vh - 32px); }
+.cycle-list-count { margin: 0 0 10px; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.cycle-list-search { margin-bottom: 10px; }
+.cycle-list-groups {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  border-top: 1px solid var(--line);
+}
+.cycle-list-group { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cycle-list-group[hidden], .cycle-list-item[hidden] { display: none; }
+.cycle-list-group-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.cycle-list-group-label { margin: 0; flex: 1 1 auto; font: 600 12px/1.4 var(--font-ui); color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.cycle-list-group-count { font: 500 11px/1 var(--font-ui); color: var(--ink-dim); }
+.cycle-list-group-button { padding: 5px 9px; font-size: 11px; }
+.cycle-list-items { margin: 0; padding: 0; list-style: none; }
+.cycle-list-item label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 2px;
+  font: 400 14px/1.3 var(--font-ui); color: var(--ink);
+  cursor: pointer;
+}
+.cycle-list-item input { width: 18px; height: 18px; flex: none; accent-color: var(--brand); }
+/* The general rule lets a long picker's actions scroll; here the list does. */
+.cycle-list-actions { max-height: none; overflow: visible; justify-content: flex-end; }
+/* On a phone the label takes its own line, so All, My list and Choose… stay on screen. */
+@media (max-width: 767px) {
+  .cycle-from-label { min-width: 0; flex-basis: 100%; }
+}
