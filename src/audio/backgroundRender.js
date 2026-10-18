@@ -47,10 +47,13 @@ const FALLBACK_SECONDS = 180;
  * The whole cycle when it fits under the ceiling; otherwise the whole passes
  * that fit in FALLBACK_SECONDS, and never fewer than one — a single pass is
  * always worth rendering however long it is.
+ *
+ * `truncated` says `passSeconds` stops short of the cycle — the caller stopped
+ * counting once the ceiling was passed — so it can never be rendered whole.
  */
-export function planRender(passSeconds, sampleRate) {
+export function planRender(passSeconds, sampleRate, truncated = false) {
   const total = passSeconds.reduce((n, s) => n + s, 0);
-  if (total * sampleRate * BYTES_PER_FRAME <= MAX_BYTES) {
+  if (!truncated && total * sampleRate * BYTES_PER_FRAME <= MAX_BYTES) {
     return { passes: passSeconds.length, seconds: total, whole: true };
   }
 
@@ -61,7 +64,7 @@ export function planRender(passSeconds, sampleRate) {
     seconds += s;
     passes += 1;
   }
-  return { passes, seconds, whole: passes === passSeconds.length };
+  return { passes, seconds, whole: !truncated && passes === passSeconds.length };
 }
 
 /** A 16-bit mono WAV of an AudioBuffer's first channel. */
@@ -109,15 +112,27 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate }) {
   const Offline = globalThis.OfflineAudioContext ?? globalThis.webkitOfflineAudioContext;
   if (typeof Offline !== 'function' || passes < 1) return null;
 
+  // A cycle can run to millions of passes — every progression's chord count
+  // joins its period (T390) — so stop counting once it is past the ceiling:
+  // only the passes that fit the fallback are rendered then, and those are
+  // all counted by that point, since the fallback is well under the ceiling.
   const patterns = [];
   const passSeconds = [];
+  let total = 0;
+  let truncated = false;
   for (let pass = 0; pass < passes; pass++) {
     const pattern = patternAt(pass);
+    const seconds = loopDurationSeconds(pattern);
     patterns.push(pattern);
-    passSeconds.push(loopDurationSeconds(pattern));
+    passSeconds.push(seconds);
+    total += seconds;
+    if (pass + 1 < passes && total * sampleRate * BYTES_PER_FRAME > MAX_BYTES) {
+      truncated = true;
+      break;
+    }
   }
 
-  const plan = planRender(passSeconds, sampleRate);
+  const plan = planRender(passSeconds, sampleRate, truncated);
   const frames = Math.ceil(plan.seconds * sampleRate);
   if (frames < 1) return null;
 

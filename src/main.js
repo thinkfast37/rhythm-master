@@ -98,12 +98,16 @@ import { buildScore } from './core/notation.js';
 import {
   ARPEGGIOS,
   PROGRESSIONS,
+  PROGRESSION_GROUPS,
   fillIndexOf,
   fillIndexFor,
   withArpeggio,
   progressionIndexOf,
   progressionIndexFor,
   withProgression,
+  cycleOrder,
+  cycleStart,
+  cyclePasses as harmonicPasses,
 } from './core/harmony.js';
 import * as mediaSession from './audio/mediaSession.js';
 import * as keepAlive from './audio/keepAlive.js';
@@ -130,7 +134,9 @@ import {
   showDuplicates,
   showSubmission,
   copyToClipboard,
+  chooseCycleList,
 } from './ui/dialogs.js';
+import { heardIn } from './core/songbook.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
 import * as guitar from './audio/guitar.js';
@@ -307,7 +313,21 @@ function cycling() {
 /** The catalogue index of the fill in force for a pass, or null outside cycle mode. */
 function fillIndexAt(loop) {
   if (!cycling()) return null;
-  return fillIndexFor(state.pattern, { ...state.fillCycle, repeats: state.settings.fillCycleRepeats }, loop);
+  return fillIndexFor(
+    state.pattern,
+    { ...state.fillCycle, repeats: state.settings.fillCycleRepeats, order: fillOrder() },
+    loop
+  );
+}
+
+/** The catalogue indices Cycle fills steps through: all, or the list alone (AC-2.12.3/1). */
+function fillOrder() {
+  return cycleOrder(ARPEGGIOS, { from: state.settings.fillCycleFrom, list: state.settings.fillCycleList });
+}
+
+/** As `fillOrder`, for Cycle progressions. */
+function progressionOrder() {
+  return cycleOrder(PROGRESSIONS, { from: state.settings.progressionCycleFrom, list: state.settings.progressionCycleList });
 }
 
 /** Whether progression cycling has a progression in force: on, over a Melodic Pattern with one (US-2.10). */
@@ -319,7 +339,11 @@ function progressionCycling() {
 /** The catalogue index of the progression in force for a pass, or null outside progression cycling. */
 function progressionIndexAt(loop) {
   if (!progressionCycling()) return null;
-  return progressionIndexFor(state.pattern, { ...state.progressionCycle, repeats: state.settings.fillCycleRepeats }, loop);
+  return progressionIndexFor(
+    state.pattern,
+    { ...state.progressionCycle, repeats: state.settings.fillCycleRepeats, order: progressionOrder() },
+    loop
+  );
 }
 
 /** The progression in force for a pass, as its catalogue id, or null when the Pattern's own sounds. */
@@ -331,23 +355,35 @@ function progressionIdAt(loop) {
 /**
  * How many passes until everything in force repeats (AC-4.1.15/4).
  *
- * Each overlay cycles independently over its own catalogue at the shared
- * Repeats setting, so the run repeats at the least common multiple of their
- * periods. Nothing cycling is a period of one: the Pattern itself.
+ * Counted in passes. The Pattern itself repeats after one harmonic cycle of
+ * its own progression — I, IV, V changing every pass is three — and a cycle's
+ * Repeats and a Song entry's repeats are harmonic cycles (AC-2.7.2/1,
+ * AC-18.1.3/1), so each counts that many passes per repeat (T390). Each
+ * overlay cycles independently over its own catalogue at the shared Repeats
+ * setting, and a progression in force turns its own chords over by the pass,
+ * so the run repeats at the least common multiple of all of those.
  */
 function cyclePasses() {
+  if (composerActive()) return 1;
   const repeats = Math.max(1, state.settings.fillCycleRepeats ?? 4);
   const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
   const lcm = (a, b) => (a / gcd(a, b)) * b;
+  const harmonic = (p) => (p.soundMode === 'melodic' && hasHarmony(p) ? harmonicPasses(p) : 1);
 
-  let passes = 1;
-  if (cycling()) passes = lcm(passes, ARPEGGIOS.length * repeats);
-  if (progressionCycling()) passes = lcm(passes, PROGRESSIONS.length * repeats);
+  const own = harmonic(state.pattern);
+  let passes = own;
+  // Under My list a catalogue's period is the list's (AC-2.12.3/5).
+  if (cycling()) passes = lcm(passes, fillOrder().length * repeats * own);
+  if (progressionCycling()) {
+    const order = progressionOrder();
+    passes = lcm(passes, order.length * repeats * own);
+    for (const i of order) passes = lcm(passes, harmonic(withProgression(state.pattern, PROGRESSIONS[i].id)));
+  }
   // A Song plays its Section through once per cycle rather than repeating a
   // catalogue, so its own length is its period.
   if (songPlaying()) {
     const entries = state.compose.song?.sections[0]?.entries ?? [];
-    const songPasses = entries.reduce((n, e) => n + Math.max(1, e.repeats ?? 1), 0);
+    const songPasses = entries.reduce((n, e) => n + Math.max(1, e.repeats ?? 1) * own, 0);
     if (songPasses > 0) passes = lcm(passes, songPasses);
   }
   return passes;
@@ -505,6 +541,49 @@ function rebaseProgressionCycle() {
   const index = progressionIndexAt(state.isPlaying ? state.loop : 0);
   state.progressionCycle.start = index ?? progressionIndexOf(state.pattern);
   state.progressionCycle.baseLoop = state.isPlaying ? state.loop : 0;
+}
+
+/**
+ * Change what a cycle steps through (US-2.12). The cycle is rebased first,
+ * under the order still in force, so the entry sounding keeps its place and
+ * plays its repeats from this pass before the new order takes over
+ * (AC-2.12.3/4) — the same as a changed Repeats count (AC-2.7.2/5).
+ */
+function changeCycleSettings(kind, partial) {
+  if (kind === 'progressions') {
+    if (state.progressionCycle.on) rebaseProgressionCycle();
+  } else if (state.fillCycle.on) rebaseCycle();
+  state.settings = settingsStore.save(partial);
+  syncTransport();
+  render();
+}
+
+/** The fills checklist: the catalogue under the picker's own groups, in its order (AC-2.12.2/1). */
+function fillChecklist() {
+  const groups = [];
+  for (const a of ARPEGGIOS) {
+    if (groups.at(-1)?.label !== a.group) groups.push({ label: a.group, items: [] });
+    groups.at(-1).items.push({ id: a.id, label: a.label });
+  }
+  return groups;
+}
+
+/**
+ * The progressions checklist, grouped as the picker is; each entry searchable
+ * by its name and the songs credited to it (AC-2.12.2/3, AC-2.6.11).
+ */
+function progressionChecklist() {
+  return PROGRESSION_GROUPS.map((group) => ({
+    label: group.label,
+    items: PROGRESSIONS.filter((p) => p.group === group.id).map((p) => ({
+      id: p.id,
+      label: p.label,
+      search: [
+        p.label,
+        ...heardIn(p.id).flatMap(({ artist, songs }) => [artist, ...songs.map((song) => song.title)]),
+      ].join(' '),
+    })),
+  }));
 }
 
 function syncTransport() {
@@ -1253,7 +1332,7 @@ const handlers = {
   /** Cycle mode on or off (AC-2.7.1): from the Pattern's own fill, or the first when it has none. */
   onFillCycle(on) {
     state.fillCycle = on
-      ? { on: true, start: fillIndexOf(state.pattern), baseLoop: state.isPlaying ? state.loop : 0 }
+      ? { on: true, start: cycleStart(fillIndexOf(state.pattern), fillOrder()), baseLoop: state.isPlaying ? state.loop : 0 }
       : { on: false, start: 0, baseLoop: 0 };
     // Cycle mode and Play song are exclusive (AC-18.1.3/6).
     if (on) state.compose.on = false;
@@ -1268,12 +1347,55 @@ const handlers = {
    */
   onProgressionCycle(on) {
     state.progressionCycle = on
-      ? { on: true, start: progressionIndexOf(state.pattern), baseLoop: state.isPlaying ? state.loop : 0 }
+      ? {
+          on: true,
+          start: cycleStart(progressionIndexOf(state.pattern), progressionOrder()),
+          baseLoop: state.isPlaying ? state.loop : 0,
+        }
       : { on: false, start: 0, baseLoop: 0 };
     // Progression cycling and Play song are exclusive, the same as Cycle fills (AC-18.1.3/6).
     if (on) state.compose.on = false;
     syncTransport();
     render();
+  },
+
+  /**
+   * What a cycle steps through (AC-2.12.1): 'all' of its catalogue, or its
+   * 'list'. An app preference, never Pattern data (AC-2.12.1/3), so nothing
+   * here guards a shipped Pattern. My list needs something on it (/2).
+   */
+  onCycleFrom(kind, from) {
+    const key = kind === 'progressions' ? 'progressionCycle' : 'fillCycle';
+    const list = state.settings[`${key}List`] ?? [];
+    if (from === 'list' && list.length === 0) return;
+    changeCycleSettings(kind, { [`${key}From`]: from === 'list' ? 'list' : 'all' });
+  },
+
+  /**
+   * The cycle list as ticked (AC-2.12.2). The first entry onto an empty list
+   * puts the cycle on My list, and taking the last off returns it to All (/4).
+   */
+  onCycleList(kind, ids) {
+    const key = kind === 'progressions' ? 'progressionCycle' : 'fillCycle';
+    const before = state.settings[`${key}List`] ?? [];
+    const list = [...new Set(ids)];
+    let from = state.settings[`${key}From`] ?? 'all';
+    if (list.length === 0) from = 'all';
+    else if (before.length === 0) from = 'list';
+    changeCycleSettings(kind, { [`${key}List`]: list, [`${key}From`]: from });
+  },
+
+  /** Choose… (AC-2.12.2): the checklist of a whole catalogue, every tick applied at once. */
+  async onChooseCycleList(kind) {
+    const progressions = kind === 'progressions';
+    const key = progressions ? 'progressionCycleList' : 'fillCycleList';
+    await chooseCycleList({
+      title: progressions ? 'Progressions to cycle through' : 'Fills to cycle through',
+      groups: progressions ? progressionChecklist() : fillChecklist(),
+      picked: () => state.settings[key] ?? [],
+      searchable: progressions,
+      onChange: (ids) => handlers.onCycleList(kind, ids),
+    });
   },
 
   // --- compose (US-18.1) — the Section is the Composer's, never Pattern data ---
@@ -1622,9 +1744,17 @@ const handlers = {
    */
   onResetCycle() {
     if (state.isPlaying) return;
-    if (state.fillCycle.on) state.fillCycle = { on: true, start: fillIndexOf(state.pattern), baseLoop: 0 };
+    // Where turning each on would begin: under My list, the first listed from
+    // the Pattern's own (AC-2.12.3/2).
+    if (state.fillCycle.on) {
+      state.fillCycle = { on: true, start: cycleStart(fillIndexOf(state.pattern), fillOrder()), baseLoop: 0 };
+    }
     if (state.progressionCycle.on) {
-      state.progressionCycle = { on: true, start: progressionIndexOf(state.pattern), baseLoop: 0 };
+      state.progressionCycle = {
+        on: true,
+        start: cycleStart(progressionIndexOf(state.pattern), progressionOrder()),
+        baseLoop: 0,
+      };
     }
     render();
   },

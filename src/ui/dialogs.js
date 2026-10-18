@@ -526,3 +526,155 @@ export function showDuplicates({ groups, isOwned, onRemove }) {
     show();
   });
 }
+
+/**
+ * Choose… for a cycle list (AC-2.12.2): a checklist of a whole catalogue,
+ * under the picker's own group headings and in its order. Every tick is
+ * handed to `onChange` at once — there is nothing to cancel — and Done closes
+ * it. The list is read back through `picked` after each change, so what is
+ * ticked is always what the store holds.
+ *
+ * @param {object} spec
+ * @param {string} spec.title
+ * @param {Array<{label: string, items: Array<{id: string, label: string, search?: string}>}>} spec.groups
+ * @param {() => string[]} spec.picked         the ids on the list now
+ * @param {boolean} [spec.searchable]          a search over each entry's `search` text (/3)
+ * @param {(ids: string[]) => void} spec.onChange  the list as ticked, in catalogue order
+ */
+export function chooseCycleList({ title, groups, picked, searchable = false, onChange }) {
+  const root = ensureHost();
+  const order = groups.flatMap((g) => g.items.map((item) => item.id));
+  const total = order.length;
+
+  return new Promise((resolve) => {
+    root.innerHTML = '';
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    const box = document.createElement('div');
+    box.className = 'dialog cycle-list-view';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', title);
+
+    const close = () => {
+      document.removeEventListener('keydown', onKey);
+      root.innerHTML = '';
+      resolve();
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', onKey);
+
+    box.appendChild(Object.assign(document.createElement('h2'), { className: 'dialog-title', textContent: title }));
+    const count = Object.assign(document.createElement('p'), { className: 'cycle-list-count' });
+    box.appendChild(count);
+
+    // Hand the list on in catalogue order, never ticked order (AC-2.12.3/1).
+    const commit = (ids) => {
+      const set = new Set(ids);
+      onChange(order.filter((id) => set.has(id)));
+      refresh();
+    };
+
+    let search = null;
+    if (searchable) {
+      search = Object.assign(document.createElement('input'), {
+        type: 'search',
+        className: 'dialog-input cycle-list-search',
+        placeholder: 'Search by name or song',
+      });
+      search.setAttribute('aria-label', 'Search the list');
+      search.addEventListener('input', () => filter());
+      box.appendChild(search);
+    }
+
+    const list = document.createElement('div');
+    list.className = 'cycle-list-groups';
+    const rows = [];
+    const sections = [];
+    for (const group of groups) {
+      const section = document.createElement('section');
+      section.className = 'cycle-list-group';
+      section.dataset.group = group.label;
+      const head = document.createElement('div');
+      head.className = 'cycle-list-group-head';
+      head.appendChild(Object.assign(document.createElement('h3'), { className: 'cycle-list-group-label', textContent: group.label }));
+      const groupCount = Object.assign(document.createElement('span'), { className: 'cycle-list-group-count' });
+      head.appendChild(groupCount);
+      const ids = group.items.map((item) => item.id);
+      const groupButton = (action, text, next) => {
+        const b = Object.assign(document.createElement('button'), {
+          type: 'button',
+          className: 'dialog-button cycle-list-group-button',
+          textContent: text,
+        });
+        b.dataset.action = action;
+        b.setAttribute('aria-label', `${text} of ${group.label}`);
+        b.addEventListener('click', () => commit(next(new Set(picked()))));
+        head.appendChild(b);
+      };
+      // Every entry of the group on, or every one off (AC-2.12.2/2).
+      groupButton('group-all', 'All', (set) => [...set, ...ids]);
+      groupButton('group-none', 'None', (set) => [...set].filter((id) => !ids.includes(id)));
+      section.appendChild(head);
+
+      const ul = document.createElement('ul');
+      ul.className = 'cycle-list-items';
+      for (const item of group.items) {
+        const li = document.createElement('li');
+        li.className = 'cycle-list-item';
+        li.dataset.id = item.id;
+        const label = document.createElement('label');
+        const tick = Object.assign(document.createElement('input'), { type: 'checkbox' });
+        tick.dataset.id = item.id;
+        tick.addEventListener('change', () => {
+          const set = new Set(picked());
+          if (tick.checked) set.add(item.id);
+          else set.delete(item.id);
+          commit([...set]);
+        });
+        label.appendChild(tick);
+        label.appendChild(document.createTextNode(` ${item.label}`));
+        li.appendChild(label);
+        ul.appendChild(li);
+        rows.push({ li, tick, text: (item.search ?? item.label).toLowerCase() });
+      }
+      section.appendChild(ul);
+      list.appendChild(section);
+      sections.push({ section, ids, groupCount, rows: rows.slice(-group.items.length) });
+    }
+    box.appendChild(list);
+
+    const actions = document.createElement('div');
+    actions.className = 'dialog-actions cycle-list-actions';
+    const done = Object.assign(document.createElement('button'), {
+      type: 'button',
+      className: 'dialog-button primary',
+      textContent: 'Done',
+    });
+    done.dataset.action = 'cycle-list-done';
+    done.addEventListener('click', close);
+    actions.appendChild(done);
+    box.appendChild(actions);
+
+    // Ticks and counts follow the store; the search only hides (AC-2.12.2/3).
+    function refresh() {
+      const set = new Set(picked());
+      for (const { tick } of rows) tick.checked = set.has(tick.dataset.id);
+      count.textContent = `${order.filter((id) => set.has(id)).length} of ${total} on your list`;
+      for (const { ids, groupCount } of sections) {
+        groupCount.textContent = `${ids.filter((id) => set.has(id)).length} of ${ids.length}`;
+      }
+    }
+    function filter() {
+      const query = (search?.value ?? '').trim().toLowerCase();
+      for (const { li, text } of rows) li.hidden = Boolean(query) && !text.includes(query);
+      for (const { section, rows: own } of sections) section.hidden = own.every(({ li }) => li.hidden);
+    }
+    refresh();
+
+    backdrop.appendChild(box);
+    root.appendChild(backdrop);
+    (search ?? done).focus();
+  });
+}

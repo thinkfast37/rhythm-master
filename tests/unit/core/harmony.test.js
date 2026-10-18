@@ -32,6 +32,7 @@ import {
 } from '../../../src/core/harmony.js';
 import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
 import { fillIndexFor, fillIndexOf, withArpeggio, progressionIndexFor, progressionIndexOf, withProgression } from '../../../src/core/harmony.js';
+import { cycleOrder, cycleStart } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import {
   chordStack,
@@ -613,7 +614,7 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — The order is the catalogue's, through all five groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — Under All the order is the catalogue's, through all five groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
     expect(n).toBe(49);
@@ -664,7 +665,7 @@ describe('core/harmony — cycle mode: the progression in force (US-2.10)', () =
     expect(progressionIndexFor(p, progressionCfg, 12)).toBe(10);
   });
 
-  it("AC-2.10.2/3 — The order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first", () => {
+  it("AC-2.10.2/3 — Under All the order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = PROGRESSIONS.length;
     const one = { start: 0, baseLoop: 0, repeats: 1 };
@@ -678,7 +679,7 @@ describe('core/harmony — cycle mode: the progression in force (US-2.10)', () =
     expect(orderedGroups).toEqual(['three', 'pop', 'minor', 'jazz', 'blues', 'modal', 'classical', 'indie', 'sus']);
   });
 
-  it("AC-2.10.1/3 — Turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none", () => {
+  it("AC-2.10.1/3 — Under All, turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const iivvi = PROGRESSIONS.findIndex((entry) => entry.id === 'I-IV-V');
     expect(progressionIndexOf(p)).toBe(iivvi);
@@ -939,5 +940,86 @@ describe('core/harmony — voice each chord (US-2.11, research.md D-014)', () =>
     }
     // Not root position across the board: the voicing did something.
     expect(shipped.some((p) => p.harmony.chords.some((c) => c.inversion > 0))).toBe(true);
+  });
+});
+
+describe('core/harmony — what a cycle steps through (US-2.12)', () => {
+  const ids = (catalogue, ...picked) => picked.map((k) => catalogue[k].id);
+
+  it("AC-2.12.3/1 — Under My list the cycle steps through the listed entries alone, in the catalogue's order whatever order they were ticked in, wrapping from the last listed to the first; with one entry listed, that one stays in force", () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    const passes = cyclePasses(p);
+    // Ticked out of order: the order is still the catalogue's.
+    const order = cycleOrder(ARPEGGIOS, { from: 'list', list: ids(ARPEGGIOS, 30, 4, 17) });
+    expect(order).toEqual([4, 17, 30]);
+    const one = { start: 4, baseLoop: 0, repeats: 1, order };
+    const sequence = Array.from({ length: 7 }, (_, k) => fillIndexFor(p, one, k * passes));
+    expect(sequence).toEqual([4, 17, 30, 4, 17, 30, 4]);
+
+    // The same for progressions, over their own catalogue.
+    const progressions = cycleOrder(PROGRESSIONS, { from: 'list', list: ids(PROGRESSIONS, 200, 9) });
+    expect(progressions).toEqual([9, 200]);
+    const run = Array.from({ length: 4 }, (_, k) =>
+      progressionIndexFor(p, { start: 9, baseLoop: 0, repeats: 2, order: progressions }, k * 2 * passes)
+    );
+    expect(run).toEqual([9, 200, 9, 200]);
+
+    // One entry listed: it stays in force pass after pass.
+    const single = cycleOrder(ARPEGGIOS, { from: 'list', list: ids(ARPEGGIOS, 12) });
+    for (let loop = 0; loop < 20; loop++) expect(fillIndexFor(p, { start: 12, repeats: 1, order: single }, loop)).toBe(12);
+  });
+
+  it("AC-2.12.3/1 — Under My list the cycle steps through the listed entries alone, in the catalogue's order whatever order they were ticked in, wrapping from the last listed to the first; with one entry listed, that one stays in force: All, an empty list and unknown ids step through the whole catalogue", () => {
+    const all = ARPEGGIOS.map((_, i) => i);
+    expect(cycleOrder(ARPEGGIOS)).toEqual(all);
+    expect(cycleOrder(ARPEGGIOS, { from: 'all', list: ids(ARPEGGIOS, 3) })).toEqual(all);
+    expect(cycleOrder(ARPEGGIOS, { from: 'list', list: [] })).toEqual(all);
+    expect(cycleOrder(ARPEGGIOS, { from: 'list', list: ['no-such-fill'] })).toEqual(all);
+    expect(cycleOrder(ARPEGGIOS, { from: 'list', list: ['no-such-fill', ARPEGGIOS[5].id] })).toEqual([5]);
+    // Under the whole catalogue the order changes nothing about the stepping.
+    const p = setProgression(melodic(), 'I-IV-V');
+    for (let loop = 0; loop < 60; loop += 3) {
+      expect(fillIndexFor(p, { start: 7, repeats: 1, order: all }, loop)).toBe(fillIndexFor(p, { start: 7, repeats: 1 }, loop));
+    }
+  });
+
+  it("AC-2.12.3/2 — Turning a cycle on, or the second Stop, begins it from the Pattern's own fill or progression when that is listed, and otherwise from the first listed entry after it in the catalogue's order, wrapping round", () => {
+    const order = [4, 17, 30];
+    expect(cycleStart(17, order)).toBe(17);
+    expect(cycleStart(5, order)).toBe(17);
+    expect(cycleStart(0, order)).toBe(4);
+    // Past the last listed, it wraps to the first.
+    expect(cycleStart(40, order)).toBe(4);
+    // Under All every entry is listed, so the Pattern's own is where it begins.
+    const all = ARPEGGIOS.map((_, i) => i);
+    expect(cycleStart(22, all)).toBe(22);
+
+    // Seeded from the Pattern itself, as main.js does.
+    const p = setArpeggio(setProgression(melodic(), 'I-IV-V'), 'alberti');
+    const alberti = fillIndexOf(p);
+    const listed = cycleOrder(ARPEGGIOS, { from: 'list', list: ids(ARPEGGIOS, alberti + 2, alberti - 1) });
+    expect(cycleStart(fillIndexOf(p), listed)).toBe(alberti + 2);
+    const iivvi = progressionIndexOf(p);
+    const progressions = cycleOrder(PROGRESSIONS, { from: 'list', list: ids(PROGRESSIONS, iivvi) });
+    expect(cycleStart(progressionIndexOf(p), progressions)).toBe(iivvi);
+  });
+
+  it('AC-2.12.3/3 — A fill or progression chosen by hand in the picker while cycling is where the cycle begins again, listed or not; after its repeats the cycle moves on to the first listed entry after it', () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    const passes = cyclePasses(p);
+    const order = [4, 17, 30];
+    // Chosen by hand: index 20, not listed. In force for its repeats, then 30, then round.
+    const hand = { start: 20, baseLoop: 0, repeats: 2, order };
+    expect(fillIndexFor(p, hand, 0)).toBe(20);
+    expect(fillIndexFor(p, hand, 2 * passes - 1)).toBe(20);
+    expect(fillIndexFor(p, hand, 2 * passes)).toBe(30);
+    expect(fillIndexFor(p, hand, 4 * passes)).toBe(4);
+    expect(fillIndexFor(p, hand, 6 * passes)).toBe(17);
+    // Chosen past the last listed: it moves on to the first.
+    expect(fillIndexFor(p, { start: 45, repeats: 1, order }, passes)).toBe(4);
+    // A progression the same way.
+    expect(progressionIndexFor(p, { start: 100, repeats: 1, order: [9, 200] }, 0)).toBe(100);
+    expect(progressionIndexFor(p, { start: 100, repeats: 1, order: [9, 200] }, passes)).toBe(200);
+    expect(progressionIndexFor(p, { start: 100, repeats: 1, order: [9, 200] }, 2 * passes)).toBe(9);
   });
 });

@@ -31,6 +31,15 @@ export const DEFAULTS = {
   /** Harmonic cycles each fill plays for in cycle mode (AC-2.7.1/2). Cycle mode itself is not stored. */
   fillCycleRepeats: 4,
   /**
+   * What each cycle steps through (US-2.12): 'all' of its catalogue, or 'list',
+   * the ids on its list alone, in catalogue order. One list each, the same on
+   * every Pattern, never Pattern content (AC-2.12.1/3).
+   */
+  fillCycleFrom: 'all',
+  fillCycleList: [],
+  progressionCycleFrom: 'all',
+  progressionCycleList: [],
+  /**
    * The chosen goal's id, or 'lab' (US-14.1). null until one is chosen, and
    * anything but 'lab' opens the goals screen on launch (AC-14.1.1/4). A
    * preference about the interface, never about a Pattern (AC-14.1.2/5).

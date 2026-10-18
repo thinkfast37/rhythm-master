@@ -356,6 +356,10 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "countInEnabled": false,
   "patternView": "grid",          // AC-12.2.1/1 — "grid" | "sheet", the view the main panel shows the Pattern in
   "fillCycleRepeats": 4,          // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
+  "fillCycleFrom": "all",         // AC-2.12.1/3 — "all" | "list", what Cycle fills steps through
+  "fillCycleList": [],            // AC-2.12.1/3 — arpeggio ids on the fills list; played in catalogue order, never ticked order
+  "progressionCycleFrom": "all",  // AC-2.12.1/3 — "all" | "list", what Cycle progressions steps through
+  "progressionCycleList": [],     // AC-2.12.1/3 — catalogue progression ids on the progressions list
   "goal": null,                   // AC-14.1.2/5 — the chosen goal's id, or "lab"; null until one is chosen, which is what opens the goals screen
   "level": "Beginner",            // AC-14.1.4/1 — "Beginner" | "Intermediate" | "Advanced" | "any", the level the dice and Prev/Next draw from; "any" is every level (AC-14.1.4/5)
   "labHelp": false,               // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
@@ -367,6 +371,13 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "composerKeys": 49              // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
 }
 ```
+
+`fillCycleFrom`, `fillCycleList`, `progressionCycleFrom` and `progressionCycleList` were added
+2026-10-18 with US-2.12. They are practice settings, the same on every Pattern and never Pattern
+content (AC-2.12.1/3). A list holds catalogue ids; an id the catalogue no longer has is ignored, and
+`"list"` with no id the catalogue knows plays as `"all"`, so a renamed entry can never leave a cycle
+with nothing to step through. Absent values read as the defaults shown, so no migration runs, and the
+whole-library backup carries them with the rest of the store (US-7.6).
 
 `composerInstrument`, `composerLabelMode`, `composerCapo`, `composerFretRange` and `composerKeys`
 were added 2026-10-18 with US-19.1–US-19.3. They describe the Composer's instrument view and nothing

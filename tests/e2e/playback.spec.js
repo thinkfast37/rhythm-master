@@ -703,6 +703,52 @@ test('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until t
   expect(Math.abs(one.seconds - loopSeconds)).toBeLessThan(0.01);
 });
 
+test('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: a progression counts its passes, not its harmonic cycles', async ({ page }) => {
+  // T390: a progression changing every pass repeats after its chord count,
+  // and a cycle's Repeats count harmonic cycles, not passes (AC-2.7.2/1).
+  // The render counted one pass per entry and one pass for the Pattern, so a
+  // locked phone looped the first chord alone and jumped at every seam.
+  await page.goto('/');
+  await page.evaluate(async () => {
+    window.__rm.loadBlank('4/4');
+    await window.__rm.handlers.onSoundMode('melodic');
+    await window.__rm.handlers.onProgression('I-IV-V');
+    window.__rm.handlers.onTempo(300);
+  });
+  const passes = () => page.evaluate(() => window.__rm.rendered()?.passes ?? null);
+
+  // Nothing cycling: I, IV, V — three passes before the Pattern repeats.
+  await page.locator('[data-action="play"]').click();
+  await expect.poll(passes, { timeout: 8000 }).toBe(3);
+  await page.locator('[data-action="stop"]').click();
+
+  // Cycle fills, Repeats 2: every fill for two harmonic cycles of three passes.
+  const { ARPEGGIOS, PROGRESSIONS } = await import('../../src/core/harmony.js');
+  await page.evaluate(() => {
+    window.__rm.handlers.onFillCycleRepeats(2);
+    window.__rm.handlers.onFillCycle(true);
+  });
+  await page.locator('[data-action="play"]').click();
+  await expect.poll(passes, { timeout: 15000 }).toBe(ARPEGGIOS.length * 2 * 3);
+  await page.locator('[data-action="stop"]').click();
+
+  // Cycle progressions on a list of a two-chord and a four-chord entry: each
+  // is in force for two cycles of the Pattern's own three passes, and their
+  // own chords turn over every two and four passes.
+  const two = PROGRESSIONS.find((p) => p.steps.length === 2);
+  const four = PROGRESSIONS.find((p) => p.steps.length === 4);
+  expect(two && four).toBeTruthy();
+  await page.evaluate(([a, b]) => {
+    window.__rm.handlers.onFillCycle(false);
+    window.__rm.handlers.onCycleList('progressions', [a, b]);
+    window.__rm.handlers.onProgressionCycle(true);
+  }, [two.id, four.id]);
+  await page.locator('[data-action="play"]').click();
+  // lcm(2 entries × 2 repeats × 3 passes, 2, 4) = 12.
+  await expect.poll(passes, { timeout: 8000 }).toBe(12);
+  await page.locator('[data-action="stop"]').click();
+});
+
 test('AC-4.1.15/5 — A change to what is heard — a Pattern edit, a tempo, a swing, a setting — renders again, so the screen-off audio is never the previous run', async ({ page }) => {
   await page.goto('/');
   await loadSimple(page);

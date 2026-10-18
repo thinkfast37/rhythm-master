@@ -860,7 +860,7 @@ test('AC-2.7.1/2 — The Repeats count is remembered as an app preference across
   await expect(page.locator('.fill-cycle-repeats')).toHaveValue('16');
 });
 
-test("AC-2.7.1/3 — Turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it", async ({ page }) => {
+test("AC-2.7.1/3 — Under All, turning cycle mode on with the arpeggio at None puts the first fill of the catalogue in force at once; with a fill set, that fill stays in force and the cycle begins from it", async ({ page }) => {
   await harmonicBlank(page);
   await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
   await page.locator('.fill-cycle').click();
@@ -1058,7 +1058,7 @@ test("AC-2.7.2/7 — Choosing a fill in the picker while cycling is the ordinary
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
 });
 
-test("AC-2.7.2/8 — While stopped under cycle mode the pinned bar shows a Stop beside Play, and pressing it begins the cycle again from the Pattern's own fill — the first of the catalogue when it has None — with cycle mode still on, every view following that fill, the Pattern's own arpeggio untouched and a shipped Pattern never prompted; the next Play runs the cycle from there", async ({ page }) => {
+test("AC-2.7.2/8 — While stopped under cycle mode the pinned bar shows a Stop beside Play, and pressing it begins the cycle again where turning cycle mode on would, with cycle mode still on, every view following that fill, the Pattern's own arpeggio untouched and a shipped Pattern never prompted; the next Play runs the cycle from there", async ({ page }) => {
   const { ARPEGGIOS } = await import('../../src/core/harmony.js');
   await cyclingBlank(page);
   const reset = page.locator('.main-top-bar [data-action="reset-cycle"]');
@@ -1199,7 +1199,7 @@ test("AC-2.10.1/2 — Cycle fills and Cycle progressions are independent control
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test("AC-2.10.1/3 — Turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none", async ({ page }) => {
+test("AC-2.10.1/3 — Under All, turning progression cycling on puts the Pattern's own progression in force at once and begins the cycle from it — matched from the Pattern's own chords, or the first catalogue entry when they match none", async ({ page }) => {
   await harmonicBlank(page);
   await page.locator('.progression-cycle').click();
   expect(await progressionInForce(page)).toBe('I-IV-V');
@@ -1303,7 +1303,7 @@ test("AC-2.10.2/1 — One repeat is one harmonic cycle of the Pattern's own prog
   await page.locator('[data-action="stop"]').click();
 });
 
-test("AC-2.10.2/3 — The order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first: proven live through the real transport", async ({ page }) => {
+test("AC-2.10.2/3 — Under All the order is the catalogue's declared order — Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords — wrapping from the last entry back to the first: proven live through the real transport", async ({ page }) => {
   await cyclingBlank(page); // I-IV-V over one Measure: cyclePasses = 3
   await page.locator('.fill-cycle-repeats').fill('1');
   await page.locator('.fill-cycle-repeats').dispatchEvent('change');
@@ -1428,7 +1428,7 @@ test("AC-2.10.2/6 — Stopping holds the progression in force where it is: every
   expect(await chordNames(page)).toEqual(own);
 });
 
-test("AC-2.10.2/8 — While stopped under progression cycling the pinned bar shows a Stop beside Play, and pressing it begins the cycle again from the Pattern's own progression with progression cycling still on, every view following it and the Pattern's own chords untouched; the one Stop resets Cycle fills and Cycle progressions together, whichever are on", async ({ page }) => {
+test("AC-2.10.2/8 — While stopped under progression cycling the pinned bar shows a Stop beside Play, and pressing it begins the cycle again where turning progression cycling on would, with progression cycling still on, every view following it and the Pattern's own chords untouched; the one Stop resets Cycle fills and Cycle progressions together, whichever are on", async ({ page }) => {
   const { PROGRESSIONS, ARPEGGIOS } = await import('../../src/core/harmony.js');
   await cyclingBlank(page);
   const reset = page.locator('.main-top-bar [data-action="reset-cycle"]');
