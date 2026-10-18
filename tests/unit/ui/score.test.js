@@ -83,7 +83,7 @@ function items(markup) {
     }
     const inner = markup.slice(m.index + m[0].length, i - 4);
     const attrs = Object.fromEntries([...m[2].matchAll(/([\w-]+)="([^"]*)"/g)].map(([, k, v]) => [k, v]));
-    out.push({ kind: m[1].includes('note-item') ? 'note' : 'rest', ...attrs, inner, at: m.index });
+    out.push({ kind: m[1].includes('note-item') ? 'note' : 'rest', classes: m[1], ...attrs, inner, at: m.index });
   }
   return out;
 }
@@ -500,5 +500,187 @@ describe('ui/score — cycle mode, as drawn (AC-2.7.3)', () => {
     const up = draw(withArpeggio(p, 'up'), { fill: 'Ascending' });
     expect(head(up, 'score-fill')).toBe('Fill: Ascending');
     expect(items(up).filter((i) => i.kind === 'note' && i['data-pass'] === '0').map((i) => i['data-step'])).toEqual(['-2', '0', '2', '-2']);
+  });
+});
+
+describe('ui/score — Note aids: names and degree colours (US-12.3)', () => {
+  /** Draw with Note aids on. */
+  const aided = (p, options = {}) => {
+    const root = { innerHTML: '' };
+    renderScore(root, buildScore(p, options), { width: 3000, aids: true });
+    return root.innerHTML;
+  };
+  /** A melodic 4/4 Pattern in `key` with `stamps` as [measure, beat, slot, degree, octaveOffset]. */
+  const melody = (stamps, { key = 'C', scale = null, measures = 1 } = {}) => {
+    let p = pattern([], { measures, melodic: true });
+    p = { ...p, key, ...(scale ? { scale } : {}) };
+    for (const [m, b, s, degree, octaveOffset = 0] of stamps) {
+      p = cycleAccent(p, m, b, s);
+      p = setPitch(p, m, b, s, { degree, octaveOffset });
+    }
+    return p;
+  };
+  const names = (markup) => texts(markup, 'note-name');
+  const nameY = (item) => Number(/<text class="note-name" x="[\d.]+" y="([\d.-]+)"/.exec(item.inner)[1]);
+  const stemY2 = (item) => Number(/<line class="stem" x1="[\d.]+" x2="[\d.]+" y1="[\d.-]+" y2="([\d.-]+)"/.exec(item.inner)[1]);
+  const accentY = (item) => Number(/<path class="accent" d="M [\d.]+ ([\d.-]+)/.exec(item.inner)[1]);
+  const roleClass = (item) => item.classes.split(' ').find((c) => c.startsWith('role-')) ?? null;
+  const outOfScale = (item) => item.classes.split(' ').includes('out-of-scale');
+  const notes = (markup) => items(markup).filter((i) => i.kind === 'note');
+  const cy = (item) => Number(/<ellipse class="notehead" cx="[\d.]+" cy="([\d.-]+)"/.exec(item.inner)[1]);
+
+  it('AC-12.3.1/1 — A Note aids toggle sits with the Grid | Sheet toggle and Print / PDF, shown only while Sheet is showing a Melodic Pattern; it is hidden while Grid is showing and hidden for a Percussive Pattern: as drawn, a Percussive score takes no aids', () => {
+    const markup = aided(pattern([[0, 0, 0], [0, 1, 0]]));
+    expect(markup).not.toContain('note-name');
+    expect(items(markup).every((i) => i['data-role'] === undefined && !roleClass(i))).toBe(true);
+  });
+
+  it("AC-12.3.1/3 — With Note aids off the score is written as it was before this story: every notehead in the staff's black and no note names", () => {
+    const p = melody([[0, 0, 0, '1'], [0, 1, 0, 'b2'], [0, 2, 0, '5']]);
+    const markup = draw(p);
+    expect(markup).not.toContain('note-name');
+    expect(markup).not.toContain('data-role');
+    expect(items(markup).every((i) => !roleClass(i) && !outOfScale(i))).toBe(true);
+    // The noteheads carry no fill of their own: the stylesheet's black is all there is.
+    expect(markup).not.toMatch(/<ellipse class="notehead"[^>]*fill=/);
+  });
+
+  it('AC-12.3.2/1 — Every note carries its name above it, spelled as the pitch strip spells it: ♭3 in C reads E♭, 3 in D♭ reads F, ♯4 in C reads F♯', () => {
+    expect(names(aided(melody([[0, 0, 0, 'b3'], [0, 1, 0, '#4'], [0, 2, 0, '1'], [0, 3, 0, '7']])))).toEqual(['E♭', 'F♯', 'C', 'B']);
+    expect(names(aided(melody([[0, 0, 0, '3'], [0, 1, 0, 'b3'], [0, 2, 0, '1']], { key: 'Db' })))).toEqual(['F', 'F♭', 'D♭']);
+    // Every note is named: four notes, four names, each inside its own note.
+    const all = items(aided(melody([[0, 0, 0, '1'], [0, 1, 0, '2'], [0, 2, 0, '3'], [0, 3, 0, '4']])));
+    expect(all.map((i) => i['data-name'])).toEqual(['C', 'D', 'E', 'F']);
+    expect(all.every((i) => i.inner.includes('class="note-name"'))).toBe(true);
+  });
+
+  it("AC-12.3.2/2 — The name sits above the note's stem end, beam or accent mark, whichever is highest, and above its tuplet numeral; the staff, counting labels and chord names are where they were without it", () => {
+    // A low note, stem up: the name is above the stem's end (a smaller y is higher).
+    let p = melody([[0, 0, 0, '1']]);
+    let note = items(aided(p))[0];
+    expect(nameY(note)).toBeLessThan(stemY2(note));
+    // A high note, stem down: the name is above the head.
+    p = melody([[0, 0, 0, '1', 1]]);
+    note = items(aided(p))[0];
+    expect(nameY(note)).toBeLessThan(cy(note));
+    // Accented, stem up: above the accent mark too.
+    p = melody([[0, 0, 0, '1']]);
+    p.measures[0].beats[0].slots[0] = { ...p.measures[0].beats[0].slots[0], accent: STRONG };
+    note = items(aided(p))[0];
+    expect(note.inner).toContain('class="accent"');
+    expect(nameY(note)).toBeLessThan(accentY(note) - 0.4);
+    // Beamed eighths: every name above the beam.
+    p = melody([]);
+    p = setRecipe(p, 0, 0, 'straight-8ths');
+    for (const [s, d] of [[0, '1'], [1, '2']]) {
+      p = cycleAccent(p, 0, 0, s);
+      p = setPitch(p, 0, 0, s, { degree: d, octaveOffset: 0 });
+    }
+    let markup = aided(p);
+    const beam = tags(markup, 'beam')[0];
+    for (const n of notes(markup)) expect(nameY(n)).toBeLessThan(Number(beam.y));
+    // A triplet: the numeral sits above the names.
+    p = melody([]);
+    p = setRecipe(p, 0, 0, 'triplet-8ths');
+    for (const s of [0, 1, 2]) {
+      p = cycleAccent(p, 0, 0, s);
+      p = setPitch(p, 0, 0, s, { degree: '1', octaveOffset: 0 });
+    }
+    markup = aided(p);
+    const numeral = tags(markup, 'tuplet')[0];
+    for (const n of notes(markup)) expect(Number(numeral.y)).toBeLessThan(nameY(n) - 1);
+    // Nothing else moved: the counting labels, chord names and staff lines are byte for byte the same.
+    p = setProgression(melody([[0, 0, 0, '1'], [0, 2, 0, '5']]), 'I-IV-V');
+    const plain = draw(p);
+    const withAids = aided(p);
+    const pick = (m, cls) => m.match(new RegExp(`<[^>]*class="${cls}[^"]*"[^>]*>`, 'g'));
+    expect(pick(withAids, 'count')).toEqual(pick(plain, 'count'));
+    expect(pick(withAids, 'chord-name')).toEqual(pick(plain, 'chord-name'));
+    expect(pick(withAids, 'staff-line')).toEqual(pick(plain, 'staff-line'));
+  });
+
+  it('AC-12.3.2/3 — The second note of a tie carries no name, as it is the same note held; a rest carries no name', () => {
+    let p = melody([]);
+    p = setRecipe(p, 0, 0, 'straight-triplet-split');
+    p = cycleAccent(p, 0, 0, 0);
+    p = setPitch(p, 0, 0, 0, { degree: '3', octaveOffset: 0 });
+    // Beat 2 sounds nothing: a rest.
+    const all = items(aided(p));
+    const tied = all.filter((i) => i['data-beat'] === '0');
+    expect(tied.map((i) => i['data-value'])).toEqual(['eighth', 'eighth']);
+    expect(tied[0]['data-tie']).toBe('true');
+    expect(tied[0].inner).toContain('class="note-name"');
+    expect(tied[1].inner).not.toContain('class="note-name"');
+    expect(tied[1]['data-name']).toBeUndefined();
+    const rests = all.filter((i) => i.kind === 'rest');
+    expect(rests.length).toBeGreaterThan(0);
+    expect(rests.every((r) => !r.inner.includes('note-name') && r['data-role'] === undefined)).toBe(true);
+  });
+
+  it("AC-12.3.2/4 — A note's name is written in the same colour as its notehead: as drawn, the name is inside the note's own coloured group", () => {
+    const note = items(aided(melody([[0, 0, 0, '5']])))[0];
+    expect(roleClass(note)).toBe('role-5');
+    expect(note.inner).toContain('class="notehead"');
+    expect(note.inner).toContain('class="note-name"');
+  });
+
+  it("AC-12.3.3/1 — A note's notehead and name take the colour of its degree above the Key, so every 1 in a Pattern is one colour and every 5 another whatever the octave; the colour follows the degree, not the letter, so 1 in C and 1 in E♭ are one colour", () => {
+    const inC = items(aided(melody([[0, 0, 0, '1'], [0, 1, 0, '1', 1], [0, 2, 0, '5'], [0, 3, 0, '5', -1]])));
+    expect(inC.map(roleClass)).toEqual(['role-1', 'role-1', 'role-5', 'role-5']);
+    expect(inC.map((i) => i['data-role'])).toEqual(['1', '1', '5', '5']);
+    // The degree, not the letter: G is 5 in C and 3 in E♭.
+    const inEb = notes(aided(melody([[0, 0, 0, '1'], [0, 1, 0, '3']], { key: 'Eb' })));
+    expect(inEb.map(roleClass)).toEqual(['role-1', 'role-3']);
+    expect(inEb[1]['data-name']).toBe('G');
+    expect(inC[2]['data-name']).toBe('G');
+    expect(roleClass(inC[2])).not.toBe(roleClass(inEb[1]));
+  });
+
+  it("AC-12.3.3/2 — A degree in the Pattern's scale takes its colour from the twelve-colour degree scheme of the maintainer's fret-navigator: 1 `#c62828`, ♭2 `#b3541e`, 2 `#8a6d00`, ♭3 `#66790a`, 3 `#2e7d32`, 4 `#00795c`, ♯4/♭5 `#00707e`, 5 `#0b69b7`, ♭6 `#3f51b5`, 6 `#673ab7`, ♭7 `#8e24aa`, 7 `#c2185b`: as drawn, each degree names its role", () => {
+    // Twelve chromatic degrees over three Measures; the role ids are fret-navigator's.
+    const degrees = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7'];
+    const stamps = degrees.map((d, i) => [Math.floor(i / 4), i % 4, 0, d]);
+    const all = items(aided(melody(stamps, { measures: 3 })));
+    expect(all.map((i) => i['data-role'])).toEqual(['1', 'b2', '2', 'b3', '3', '4', '4s5b', '5', 'b6', '6', 'b7', '7']);
+    // ♭5 is the same role as ♯4.
+    expect(items(aided(melody([[0, 0, 0, 'b5']], { scale: 'locrian' })))[0]['data-role']).toBe('4s5b');
+    // In C Ionian the scale's seven are in scale and carry no second-set marking.
+    const inScale = all.filter((i) => i['data-in-scale'] === 'true');
+    expect(inScale.map((i) => i['data-role'])).toEqual(['1', '2', '3', '4', '5', '6', '7']);
+    expect(inScale.every((i) => !outOfScale(i) && !i.inner.includes('note-name-ground'))).toBe(true);
+  });
+
+  it("AC-12.3.3/3 — A degree outside the Pattern's scale takes its colour from a second set of twelve, none of which is in the scheme — 1 `#ff8a80`, ♭2 `#ffab40`, 2 `#ffe57f`, ♭3 `#ccff90`, 3 `#a5d6a7`, 4 `#80cbc4`, ♯4/♭5 `#84ffff`, 5 `#82b1ff`, ♭6 `#9fa8da`, 6 `#b39ddb`, ♭7 `#ea80fc`, 7 `#f48fb1` — with its notehead ringed in the staff's black and its name on a ground of the same tint; so ♭2 in C Ionian is coloured from the second set and ♭3 in C Aeolian from the scheme: as drawn", () => {
+    const ionian = notes(aided(melody([[0, 0, 0, 'b2'], [0, 1, 0, 'b3'], [0, 2, 0, '2']])));
+    expect(ionian.map((i) => i['data-in-scale'])).toEqual(['false', 'false', 'true']);
+    expect(ionian.map(outOfScale)).toEqual([true, true, false]);
+    expect(ionian.map((i) => i.inner.includes('class="note-name-ground"'))).toEqual([true, true, false]);
+    // The ground sits behind the name: drawn first, and about it.
+    const ground = /<rect class="note-name-ground" x="([\d.]+)" y="([\d.-]+)" width="([\d.]+)" height="([\d.]+)"/.exec(ionian[0].inner);
+    const nx = Number(/<text class="note-name" x="([\d.]+)"/.exec(ionian[0].inner)[1]);
+    expect(ionian[0].inner.indexOf('note-name-ground')).toBeLessThan(ionian[0].inner.indexOf('class="note-name"'));
+    expect(Number(ground[1])).toBeLessThan(nx);
+    expect(Number(ground[1]) + Number(ground[3])).toBeGreaterThan(nx);
+    expect(Number(ground[2])).toBeLessThan(nameY(ionian[0]));
+    expect(Number(ground[2]) + Number(ground[4])).toBeGreaterThan(nameY(ionian[0]));
+    // The same ♭3 is in C Aeolian's scale.
+    const aeolian = notes(aided(melody([[0, 0, 0, 'b3'], [0, 1, 0, 'b2']], { scale: 'aeolian' })));
+    expect(aeolian.map((i) => i['data-in-scale'])).toEqual(['true', 'false']);
+    expect(aeolian.map(roleClass)).toEqual(['role-b3', 'role-b2']);
+    // A pentatonic leaves seven degrees outside.
+    const penta = notes(aided(melody([[0, 0, 0, '4'], [0, 1, 0, '7'], [0, 2, 0, '5']], { scale: 'major-pentatonic' })));
+    expect(penta.map((i) => i['data-in-scale'])).toEqual(['false', 'false', 'true']);
+  });
+
+  it('AC-12.3.3/4 — The second note of a tie takes the colour of the note it holds', () => {
+    let p = melody([]);
+    p = setRecipe(p, 0, 0, 'straight-triplet-split');
+    p = cycleAccent(p, 0, 0, 0);
+    p = setPitch(p, 0, 0, 0, { degree: 'b6', octaveOffset: 0 });
+    const tied = items(aided(p)).filter((i) => i['data-beat'] === '0');
+    expect(tied).toHaveLength(2);
+    expect(tied.map(roleClass)).toEqual(['role-b6', 'role-b6']);
+    expect(tied.map((i) => i['data-role'])).toEqual(['b6', 'b6']);
+    expect(tied.map(outOfScale)).toEqual([true, true]);
   });
 });

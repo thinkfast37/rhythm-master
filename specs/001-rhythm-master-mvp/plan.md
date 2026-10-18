@@ -253,6 +253,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352 | T327, T329, T331, T353 |
 | **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
 | **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365 | T366 |
+| **P-052** | US-12.3 — Read the score with note names and colours | AC-12.3.1–AC-12.3.4 | T367 | T368 |
 | **P-053** | US-19.1 — Compose on an instrument | AC-19.1.1–AC-19.1.4 | T369 | T370 |
 | **P-054** | US-19.2 — The guitar view | AC-19.2.1–AC-19.2.4 | T371 | T372 |
 | **P-055** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T373 | T374 |

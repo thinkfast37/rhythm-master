@@ -40,6 +40,8 @@ export const DEFAULTS = {
   level: 'Beginner',
   /** Whether Lab's Help toggle is on (AC-14.1.3/3). */
   labHelp: false,
+  /** Whether the melodic score writes note names and degree colours (AC-12.3.1/2). Off on a first load. */
+  sheetAids: false,
   /**
    * The Composer's instrument view (US-19.1–US-19.3): which instrument is shown,
    * how in-scale notes are labelled, the fretboard's capo and visible frets, and

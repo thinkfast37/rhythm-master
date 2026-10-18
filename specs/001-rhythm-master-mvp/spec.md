@@ -39,7 +39,7 @@ in the evening — but separating them keeps each story honest about whose probl
 |---|---|---|
 | **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.9 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
-| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-15.1, US-15.2, US-16.1, US-17.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
@@ -3629,6 +3629,59 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.11.4/3** — Two Patterns alike but for one chord's bass are not duplicates
     - **AC-2.11.4/4** — Every shipped Pattern with a progression is voiced Closest in the library file
 
+
+---
+
+### User Story 49 - Read the score with note names and colours
+
+*Traceability: `US-12.3` — Read the score with note names and colours*
+
+**As** the Practicing Musician, **I want** the melodic score to name each note above its head and to colour the notes of each degree alike, switched on when I want the help and off when I want plain notation, **so that** I can find a note on my instrument from the page and see the shape of a melody — where it returns to the tonic, where it leaves the scale — at a glance.
+
+*(Added 2026-10-18 at the maintainer's request: "when i am in sheet music mode for a melodic pattern i want additional visual aids for sheet music. first - i want note labels for each note and i also want notes that are the same value to be colour coded. you can use the colour coding scheme that is in fret-navigator. for notes that are out of key you will need to choose different colours that are not in the scheme. the ability to have additional visual aids should be a toggle setting only when i am displaying melodic sheet music." Decisions taken with the maintainer the same day: the name is the note's — E♭, as the pitch strip spells it — not its degree; it sits above the note; a degree outside the scale has a colour of its own, from a second set none of whose colours is in the scheme; one toggle covers both aids; and the change lands Auto. The scheme colours by degree above the root, as fret-navigator does, so the tonic is one colour in every Key. research.md D-015 holds the two palettes and why the second set is tints ringed in black.)*
+
+**Independent Test**: Show a Melodic Pattern in C Ionian as Sheet with notes on 1, 3, 5 and ♭2, turn Note aids on, and assert that every note carries its name above it, that both 1s share one fill and the 3 another, that the ♭2 is filled from the second set with its name on a tinted ground, that the toggle is absent for a Percussive Pattern and in Grid, and that turning it off leaves the plain score.
+
+**Acceptance Scenarios**:
+
+- **AC-12.3.1** — Note aids are a toggle of the melodic score alone
+  - **Given** a Pattern shown as Sheet
+  - **When** the Practicing Musician looks for the Note aids control
+  - **Then** it is there for a Melodic Pattern and nowhere else, its choice is remembered, and off it changes nothing
+  - **Cases**:
+    - **AC-12.3.1/1** — A Note aids toggle sits with the Grid | Sheet toggle and Print / PDF, shown only while Sheet is showing a Melodic Pattern; it is hidden while Grid is showing and hidden for a Percussive Pattern
+    - **AC-12.3.1/2** — The choice is remembered as an app preference across loads, and a first load has it off
+    - **AC-12.3.1/3** — With Note aids off the score is written as it was before this story: every notehead in the staff's black and no note names
+    - **AC-12.3.1/4** — Switching a Melodic Pattern to Percussive while Note aids is on hides the toggle and writes the plain rhythm staff; the preference is kept, and switching back to Melodic shows the aids again
+
+- **AC-12.3.2** — Every note is named above its head
+  - **Given** a Melodic Pattern shown as Sheet with Note aids on
+  - **When** the notes are written
+  - **Then** each carries its name above it, and nothing else on the page moves
+  - **Cases**:
+    - **AC-12.3.2/1** — Every note carries its name above it, spelled as the pitch strip spells it: ♭3 in C reads E♭, 3 in D♭ reads F, ♯4 in C reads F♯
+    - **AC-12.3.2/2** — The name sits above the note's stem end, beam or accent mark, whichever is highest, and above its tuplet numeral; the staff, counting labels and chord names are where they were without it
+    - **AC-12.3.2/3** — The second note of a tie carries no name, as it is the same note held; a rest carries no name
+    - **AC-12.3.2/4** — A note's name is written in the same colour as its notehead
+
+- **AC-12.3.3** — Notes of one degree share one colour
+  - **Given** a Melodic Pattern shown as Sheet with Note aids on
+  - **When** the noteheads are filled
+  - **Then** every note of one degree above the Key is filled alike, in any octave, from a fixed scheme for the scale's degrees and from a second set for degrees outside it
+  - **Cases**:
+    - **AC-12.3.3/1** — A note's notehead and name take the colour of its degree above the Key, so every 1 in a Pattern is one colour and every 5 another whatever the octave; the colour follows the degree, not the letter, so 1 in C and 1 in E♭ are one colour
+    - **AC-12.3.3/2** — A degree in the Pattern's scale takes its colour from the twelve-colour degree scheme of the maintainer's fret-navigator: 1 `#c62828`, ♭2 `#b3541e`, 2 `#8a6d00`, ♭3 `#66790a`, 3 `#2e7d32`, 4 `#00795c`, ♯4/♭5 `#00707e`, 5 `#0b69b7`, ♭6 `#3f51b5`, 6 `#673ab7`, ♭7 `#8e24aa`, 7 `#c2185b`
+    - **AC-12.3.3/3** — A degree outside the Pattern's scale takes its colour from a second set of twelve, none of which is in the scheme — 1 `#ff8a80`, ♭2 `#ffab40`, 2 `#ffe57f`, ♭3 `#ccff90`, 3 `#a5d6a7`, 4 `#80cbc4`, ♯4/♭5 `#84ffff`, 5 `#82b1ff`, ♭6 `#9fa8da`, 6 `#b39ddb`, ♭7 `#ea80fc`, 7 `#f48fb1` — with its notehead ringed in the staff's black and its name on a ground of the same tint; so ♭2 in C Ionian is coloured from the second set and ♭3 in C Aeolian from the scheme
+    - **AC-12.3.3/4** — The second note of a tie takes the colour of the note it holds
+    - **AC-12.3.3/5** — While playing, the current note's mark (AC-12.2.9) shows over its colour, so the position is never lost among the colours
+
+- **AC-12.3.4** — The aids print as they show
+  - **Given** a Melodic Pattern shown as Sheet
+  - **When** the Practicing Musician chooses Print / PDF
+  - **Then** the printed score carries exactly the aids the screen shows
+  - **Cases**:
+    - **AC-12.3.4/1** — With Note aids on, the printed page carries every note's name and colour as the screen does
+    - **AC-12.3.4/2** — With Note aids off, the printed page carries neither
 
 ---
 

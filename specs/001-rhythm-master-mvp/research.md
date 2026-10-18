@@ -527,6 +527,43 @@ orphaned. A saved custom Pattern's chords name no bass and so are root position 
 were — with no migration and no schema bump: the maintainer's condition was "make sure you don't kill
 all my settings", and a migration that rewrites saved Patterns cannot be undone by a later commit.
 
+## D-015 — Note aids on the score: fret-navigator's degree palette, and a second set of tints for notes outside the scale
+
+**Decision**: With the Note aids toggle on (US-12.3), every note of the melodic score is coloured by
+its degree above the Key and named above its head. The twelve in-scale colours are the
+`--role-*` palette of the maintainer's fret-navigator, copied verbatim, keyed by the same role ids
+(`1`, `b2`, `2`, `b3`, `3`, `4`, `4s5b`, `5`, `b6`, `6`, `b7`, `7`). A degree the Pattern's scale does
+not hold takes a colour from a second set of twelve tints, none of which is in the scheme, with its
+notehead ringed in the staff's black and its name set on a ground of the same tint. The role, scale
+membership and written name are computed once in `core/notation.buildScore`; `ui/score.js` only
+emits them as classes and text, and the stylesheet carries the colours.
+
+**Why by degree, not by letter.** fret-navigator colours by semitone above the root, so the tonic is
+one colour whatever the key. Keeping that rule means a musician who learned the colours on the
+fretboard reads the same colours on the staff, which is the point of borrowing the scheme at all.
+
+**Why the second set is tints.** The maintainer asked for out-of-key notes in colours "not in the
+scheme". The scheme already spends the hue wheel — twelve saturated hues at similar lightness — so a
+thirteenth saturated hue would sit between two of them and read as one or the other. Lightness is the
+one axis the scheme leaves free: a tint keeps the hue (so ♭2 out of scale is still recognisably the
+♭2 family) while being plainly not a scheme colour. Two consequences follow and both are in the
+criteria: a tint alone would vanish on white paper, so the notehead takes a black ring; and tint text
+on paper is unreadable, so the name goes dark on a ground of the tint instead (AC-12.3.3/3). The ring
+also means in-scale and out-of-scale read apart by shape, not colour alone, which is the same
+discipline AC-2.5.2/3 holds the pitch strip to.
+
+**Rejected**:
+
+- *One neutral treatment for every out-of-key note* — simplest, and the maintainer declined it: they
+  want each degree to be told apart, in or out of the scale.
+- *Scheme colour, hollow notehead* — keeps twelve colours, but hollow noteheads mean half notes to
+  any reader of standard notation, which the score must never suggest.
+- *A per-degree colour stored on the Pattern* — colour is a reading aid, not a musical fact; nothing
+  about it belongs in the data model (Constitution Principle I).
+
+**Not CVD-gated.** `check:cvd` guards the four Accent states, which carry meaning no other channel
+does. Here the name above each note is the primary channel and the colour is reinforcement, so the
+palette is not added to that gate; it is a design decision the maintainer approved on screen.
 ## D-016 — The Composer: an instrument over the grid, a draft that is not yet a Pattern
 
 **Decision (2026-10-18)**: the Composer (US-19.1–US-19.9) is a second mode of the main panel, beside
