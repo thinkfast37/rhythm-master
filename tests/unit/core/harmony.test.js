@@ -411,7 +411,7 @@ describe('core/harmony', () => {
     expect(dealKey(0, 1, 0)).toBe('0:1:0');
   });
 
-  it('AC-2.6.6/9 — A step is a chord tone at an octave, a drone, or a scale step rooted on the chord: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root', () => {
+  it("AC-2.6.6/9 — A step is a chord tone at an octave, a drone, a scale step rooted on the chord, a scale neighbour of a chord tone, or an interval above the chord's root: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root", () => {
     const p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats
     const under = (id) => notesOf(setArpeggio(p, id));
     expect(under('up-octave')).toEqual([60, 64, 67, 72, 60, 64, 67, 72, 60, 64, 67, 72]);
@@ -429,6 +429,9 @@ describe('core/harmony', () => {
     // The band names them with an octave mark.
     expect(stepLabel({ tone: 1, octave: 1 })).toBe('R↑');
     expect(stepLabel({ tone: 3 })).toBe('3');
+    // The two newer kinds: a scale neighbour of a chord tone, and an interval above the chord's root.
+    expect(arpeggioSequence('upper-neighbour-fifth', p)).toEqual([{ tone: 5 }, { tone: 5 }, { neighbour: 1, of: 5 }, { tone: 5 }]);
+    expect(arpeggioSequence('boogie', p).slice(3, 5)).toEqual([{ interval: '6' }, { interval: 'b7' }]);
     expect(ARPEGGIOS.map((a) => a.id)).toEqual([
       'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave', 'up-over-down',
       'travis', 'travis-down', 'bass-treble-pair', 'backward-roll', 'inside-out', 'outside-in', 'sweep', 'sweep-back',
@@ -439,6 +442,10 @@ describe('core/harmony', () => {
       'pedal-descending', 'pedal-neighbours', 'tanpura-cycle',
       'scale-up-major', 'scale-up-minor', 'scale-up-major-pentatonic', 'scale-up-minor-pentatonic', 'scale-up-pattern',
       'scale-up-down-major', 'scale-up-down-minor', 'scale-up-down-major-pentatonic', 'scale-up-down-minor-pentatonic', 'scale-up-down-pattern',
+      'doubled-up', 'doubled-down', 'doubled-up-back', 'tripled', 'four-each', 'tresillo',
+      'octave-pump', 'octave-pairs', 'three-and-move', 'seven-and-move', 'root-fifth-doubled',
+      'pedal-root-riff', 'root-pedal-below', 'fifth-on-top', 'reciting-fifth', 'reciting-third',
+      'upper-neighbour-fifth', 'lower-neighbour-root', 'upper-neighbour-third', 'neighbours-root', 'boogie',
     ]);
   });
 
@@ -527,6 +534,122 @@ describe('core/harmony', () => {
     }
   });
 
+  it("AC-2.6.6/16 — A repeated-notes fill plays each chord tone several times before it moves: Doubled up sounds Root Root 3rd 3rd 5th 5th, Doubled down the same falling, Doubled up and back Root Root 3rd 3rd 5th 5th 3rd 3rd, Tripled each chord tone three times rising, and Four of each up and back each four times rising then falling without repeating the turn — all five through the 7th over a seventh-chord progression — while Tresillo groups sounds Root Root Root 3rd 3rd 3rd 5th 5th, the note changing on the 3+3+2", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 16); // sixteen Slots: one bar of 16ths, under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('doubled-up')).toEqual([60, 60, 64, 64, 67, 67, 60, 60, 64, 64, 67, 67, 60, 60, 64, 64]);
+    expect(under('doubled-down')).toEqual([67, 67, 64, 64, 60, 60, 67, 67, 64, 64, 60, 60, 67, 67, 64, 64]);
+    expect(under('doubled-up-back')).toEqual([60, 60, 64, 64, 67, 67, 64, 64, 60, 60, 64, 64, 67, 67, 64, 64]);
+    expect(under('tripled')).toEqual([60, 60, 60, 64, 64, 64, 67, 67, 67, 60, 60, 60, 64, 64, 64, 67]);
+    expect(under('four-each')).toEqual([60, 60, 60, 60, 64, 64, 64, 64, 67, 67, 67, 67, 64, 64, 64, 64]);
+    // Tresillo: the note changes on the 3+3+2.
+    expect(under('tresillo')).toEqual([60, 60, 60, 64, 64, 64, 67, 67, 60, 60, 60, 64, 64, 64, 67, 67]);
+    // Over Dm7 the first five reach the 7th; Tresillo groups stays Root, 3rd and 5th.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 16);
+    expect(under('doubled-up', sevenths).slice(0, 8)).toEqual([62, 62, 65, 65, 69, 69, 72, 72]);
+    expect(under('doubled-down', sevenths).slice(0, 8)).toEqual([72, 72, 69, 69, 65, 65, 62, 62]);
+    expect(under('doubled-up-back', sevenths).slice(0, 12)).toEqual([62, 62, 65, 65, 69, 69, 72, 72, 69, 69, 65, 65]);
+    expect(under('tripled', sevenths).slice(0, 12)).toEqual([62, 62, 62, 65, 65, 65, 69, 69, 69, 72, 72, 72]);
+    expect(under('four-each', sevenths)).toEqual([62, 62, 62, 62, 65, 65, 65, 65, 69, 69, 69, 69, 72, 72, 72, 72]);
+    expect(under('tresillo', sevenths).slice(0, 8)).toEqual([62, 62, 62, 65, 65, 65, 69, 69]);
+    // An every-Measure change starts each shape again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 4);
+    expect(under('doubled-up', changing)).toEqual([60, 60, 64, 64, 65, 65, 69, 69, 67, 67, 71, 71]);
+    // The band writes every repeat, so the line reads as the notes sound.
+    expect(arpeggioSequence('doubled-up', p).map(stepLabel)).toEqual(['R', 'R', '3', '3', '5', '5']);
+    // And every one bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['doubled-up', 'four-each', 'tresillo']) {
+      const filled = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
+  });
+
+  it("AC-2.6.6/17 — A pumping, pedal or reciting fill keeps returning to one note: Octave pump sounds Root Root↑; Octave pairs Root Root Root↑ Root↑; Three and a move Root Root Root 5th; Seven and a move the Root seven times then the 5th; Root and 5th doubled Root Root 5th 5th; Pedal root riff Root Root 3rd Root Root 5th; Chord root pedal below sounds the Root an octave down before each rising chord tone; Repeated 5th on top sounds the 5th an octave up after each rising chord tone; Reciting on the 5th sounds 5th 5th 5th 3rd, and Reciting on the 3rd 3rd 3rd 3rd Root", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 8); // eight Slots under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('octave-pump')).toEqual([60, 72, 60, 72, 60, 72, 60, 72]);
+    expect(under('octave-pairs')).toEqual([60, 60, 72, 72, 60, 60, 72, 72]);
+    expect(under('three-and-move')).toEqual([60, 60, 60, 67, 60, 60, 60, 67]);
+    expect(under('seven-and-move')).toEqual([60, 60, 60, 60, 60, 60, 60, 67]);
+    expect(under('root-fifth-doubled')).toEqual([60, 60, 67, 67, 60, 60, 67, 67]);
+    expect(under('pedal-root-riff')).toEqual([60, 60, 64, 60, 60, 67, 60, 60]);
+    expect(under('root-pedal-below')).toEqual([48, 60, 48, 64, 48, 67, 48, 60]);
+    expect(under('fifth-on-top')).toEqual([60, 79, 64, 79, 67, 79, 60, 79]);
+    expect(under('reciting-fifth')).toEqual([67, 67, 67, 64, 67, 67, 67, 64]);
+    expect(under('reciting-third')).toEqual([64, 64, 64, 60, 64, 64, 64, 60]);
+    // The pedal and the held top note go with the chord's rising tones, through the 7th over Dm7.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 8);
+    expect(under('root-pedal-below', sevenths)).toEqual([50, 62, 50, 65, 50, 69, 50, 72]);
+    expect(under('fifth-on-top', sevenths)).toEqual([62, 81, 65, 81, 69, 81, 72, 81]);
+    // An every-Measure change starts each riff again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 6);
+    expect(under('pedal-root-riff', changing)).toEqual([60, 60, 64, 60, 60, 67, 65, 65, 69, 65, 65, 72, 67, 67, 71, 67, 67, 74]);
+    // The band writes the octave the repeated note sits at.
+    expect(arpeggioSequence('octave-pump', p).map(stepLabel)).toEqual(['R', 'R↑']);
+    expect(arpeggioSequence('root-pedal-below', p).map(stepLabel)).toEqual(['R↓', 'R', 'R↓', '3', 'R↓', '5']);
+    // And every one bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['octave-pump', 'root-pedal-below', 'reciting-third']) {
+      const filled = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
+  });
+
+  it("AC-2.6.6/18 — A neighbour-note fill steps from a chord tone to the next note of the Pattern's scale above or below it and back, the neighbour taken from the scale the chords stack from so it never leaves the Key: Upper neighbour on the 5th sounds 5th 5th, the scale note above, 5th — G G A G over C in C major, and B B C B over Em, never C♯; Lower neighbour on the root sounds Root Root, the scale note below, Root — C C B C, and C C B♭ C in natural minor; Upper neighbour on the 3rd sounds 3rd 3rd, the scale note above, 3rd — E E F E; Neighbours around the root sounds Root, the scale note above, Root, the scale note below; the note band marks a neighbour by its chord tone, + above and − below", () => {
+    const under = (id, q) => notesOf(setArpeggio(q, id));
+    // Under C in C major, four Slots.
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 4);
+    expect(under('upper-neighbour-fifth', p)).toEqual([67, 67, 69, 67]); // G G A G
+    expect(under('lower-neighbour-root', p)).toEqual([60, 60, 59, 60]); // C C B C
+    expect(under('upper-neighbour-third', p)).toEqual([64, 64, 65, 64]); // E E F E
+    expect(under('neighbours-root', p)).toEqual([60, 62, 60, 59]); // C D C B
+    // Every chord takes its neighbours from the Key, not from itself: C, G, Am, Em, one a Measure.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 4 }), 'I-V-vi-iii'), 'measure'), 4);
+    expect(under('upper-neighbour-fifth', changing)).toEqual([67, 67, 69, 67, 74, 74, 76, 74, 76, 76, 77, 76, 71, 71, 72, 71]);
+    expect(under('lower-neighbour-root', changing)).toEqual([60, 60, 59, 60, 67, 67, 65, 67, 69, 69, 67, 69, 64, 64, 62, 64]);
+    expect(under('upper-neighbour-third', changing)).toEqual([64, 64, 65, 64, 71, 71, 72, 71, 72, 72, 74, 72, 67, 67, 69, 67]);
+    // Over Em the 5th's upper neighbour is C, never C♯.
+    expect(under('upper-neighbour-fifth', changing).slice(12)).not.toContain(73);
+    // In natural minor the Root's lower neighbour is B♭.
+    const minor = sounding(setProgression(melodic({ scale: 'aeolian' }), 'i-iv-v'), 4);
+    expect(under('lower-neighbour-root', minor)).toEqual([60, 60, 58, 60]);
+    expect(under('neighbours-root', minor)).toEqual([60, 62, 60, 58]);
+    // A pentatonic Pattern takes its neighbours from the major it stacks its chords from.
+    const penta = sounding(setProgression(melodic({ scale: 'major-pentatonic' }), 'I-IV-V'), 4);
+    expect(under('lower-neighbour-root', penta)).toEqual([60, 60, 59, 60]);
+    expect(under('upper-neighbour-third', penta)).toEqual([64, 64, 65, 64]);
+    // The band marks the neighbour by its chord tone.
+    expect(arpeggioSequence('upper-neighbour-fifth', p).map(stepLabel)).toEqual(['5', '5', '5+', '5']);
+    expect(arpeggioSequence('lower-neighbour-root', p).map(stepLabel)).toEqual(['R', 'R', 'R−', 'R']);
+    expect(arpeggioSequence('neighbours-root', p).map(stepLabel)).toEqual(['R', 'R+', 'R', 'R−']);
+    // And every one bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['upper-neighbour-fifth', 'lower-neighbour-root', 'neighbours-root']) {
+      const filled = setArpeggio(changing, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
+  });
+
+  it("AC-2.6.6/19 — Boogie sounds Root 3rd 5th, then the major 6th and minor 7th above the chord's root, then 6th 5th 3rd — C E G A B♭ A G E over C whatever the scale, and D F A B C B A F over Dm — each chord taking its own 6th and ♭7 under an every-Measure change, and the note band marks the two 6 and ♭7", () => {
+    const under = (id, q) => notesOf(setArpeggio(q, id));
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 8);
+    expect(under('boogie', p)).toEqual([60, 64, 67, 69, 70, 69, 67, 64]); // C E G A B♭ A G E
+    // Whatever the scale: in C natural minor the 6th over Cm is still A, the 3rd the chord's own.
+    const minor = sounding(setProgression(melodic({ scale: 'aeolian' }), 'i-iv-v'), 8);
+    expect(under('boogie', minor)).toEqual([60, 63, 67, 69, 70, 69, 67, 63]);
+    // Each chord its own: C, Dm, Em, F, one a Measure.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 4 }), 'I-ii-iii-IV'), 'measure'), 8);
+    expect(under('boogie', changing)).toEqual([
+      60, 64, 67, 69, 70, 69, 67, 64,
+      62, 65, 69, 71, 72, 71, 69, 65, // D F A B C B A F
+      64, 67, 71, 73, 74, 73, 71, 67,
+      65, 69, 72, 74, 75, 74, 72, 69,
+    ]);
+    // The band marks the two intervals.
+    expect(arpeggioSequence('boogie', p).map(stepLabel)).toEqual(['R', '3', '5', '6', '♭7', '6', '5', '3']);
+    // And it bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    const filled = setArpeggio(changing, 'boogie');
+    expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+  });
+
   it("AC-2.6.6/11 — A scale walk steps up the chosen scale from the chord's root, one octave and round again: Scale up in major under F sounds F G A B♭ C D E then F; Scale up and down turns without repeating the turn; the Pattern's scale walks the scale the Pattern carries", () => {
     const p = sounding(setProgression(melodic(), 'I-IV-V'), 12);
     // Under the IV (pass 1): F major from F.
@@ -613,17 +736,17 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — The order is the catalogue's, through all five groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — The order is the catalogue's, through all six groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
-    expect(n).toBe(49);
+    expect(n).toBe(70);
     const one = { start: 0, baseLoop: 0, repeats: 1 };
     const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
     expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
     expect(sequence[n]).toBe(ARPEGGIOS[0].id);
     expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
     expect(sequence).not.toContain('none');
-    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks']);
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes']);
 
     // A Pattern's own fill is where the cycle starts; none means the first.
     expect(fillIndexOf(p)).toBe(0);

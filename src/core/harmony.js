@@ -19,6 +19,7 @@ import {
   degreeSemitones,
   midiToFrequency,
   splitDegree,
+  degreeLabel,
   noteName,
   letterAbove,
   spellFromLetter,
@@ -534,6 +535,8 @@ export const PROGRESSIONS = [
  *   { drone: 'tonic'|'root', octave }   the Key's tonic or the chord's root, fixed
  *   { drone: 'second'|'fifth'|'seventh', octave } the scale's 2nd, 5th or 7th above the Key, fixed
  *   { scale: kind, step, octave? }      the n-th step of a scale rooted on the chord
+ *   { neighbour: 1|-1, of, octave? }    the Pattern's scale note next above or below the chord tone `of`
+ *   { interval, octave? }               a fixed interval above the chord's root, whatever the Key
  * Every catalogue entry builds its sequence from the progression's roles and,
  * for a walk, the scale it names. Nothing here is stored: the deal is derived.
  */
@@ -591,6 +594,12 @@ const walkOverPedal = (pedal, down = false) => (ctx) => {
   const steps = Array.from({ length: n }, (_, i) => ({ scale: 'pattern', step: down ? n + 1 - i : i + 1 }));
   return steps.flatMap((step) => [step, pedal]);
 };
+/** The scale note next above (+1) or below (−1) a chord tone, from the Key (AC-2.6.6/18). */
+const N = (of, neighbour) => ({ neighbour, of });
+/** A fixed interval above the chord's root (AC-2.6.6/19). */
+const above = (interval) => ({ interval });
+/** Each role of `roles` dealt `times` times before the next (AC-2.6.6/16). */
+const repeatEach = (roles, times) => roles.flatMap((r) => Array(times).fill(T(r)));
 const walkUpDown = (kind) => (ctx) => {
   const n = ctx.walk(kind).length;
   const up = Array.from({ length: n }, (_, i) => ({ scale: kind, step: i + 1 }));
@@ -598,7 +607,7 @@ const walkUpDown = (kind) => (ctx) => {
 };
 
 /**
- * The arpeggios a Pattern can follow (AC-2.6.6/1), in five groups. Absent on
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in six groups. Absent on
  * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`.
  */
 export const ARPEGGIOS = [
@@ -658,6 +667,32 @@ export const ARPEGGIOS = [
     group: 'Scale walks',
     steps: walkUpDown(w.id),
   })),
+  { id: 'doubled-up', label: 'Doubled up', group: 'Repeated notes', steps: ({ roles }) => repeatEach(roles, 2) },
+  { id: 'doubled-down', label: 'Doubled down', group: 'Repeated notes', steps: ({ roles }) => repeatEach([...roles].reverse(), 2) },
+  { id: 'doubled-up-back', label: 'Doubled up and back', group: 'Repeated notes', steps: ({ roles }) => repeatEach(upDown(roles), 2) },
+  { id: 'tripled', label: 'Tripled', group: 'Repeated notes', steps: ({ roles }) => repeatEach(roles, 3) },
+  { id: 'four-each', label: 'Four of each, up and back', group: 'Repeated notes', steps: ({ roles }) => repeatEach(upDown(roles), 4) },
+  { id: 'tresillo', label: 'Tresillo groups', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 0, 1, 1, 1, 2, 2])) },
+  { id: 'octave-pump', label: 'Octave pump', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), T(roles[0], 1)] },
+  { id: 'octave-pairs', label: 'Octave pairs', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), T(roles[0]), T(roles[0], 1), T(roles[0], 1)] },
+  { id: 'three-and-move', label: 'Three and a move', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 0, 2])) },
+  { id: 'seven-and-move', label: 'Seven and a move', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 0, 0, 0, 0, 0, 2])) },
+  { id: 'root-fifth-doubled', label: 'Root and 5th, doubled', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 2, 2])) },
+  { id: 'pedal-root-riff', label: 'Pedal root riff', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 1, 0, 0, 2])) },
+  { id: 'root-pedal-below', label: 'Chord root pedal below', group: 'Repeated notes', steps: ({ roles }) => roles.flatMap((r) => [T(roles[0], -1), T(r)]) },
+  { id: 'fifth-on-top', label: 'Repeated 5th on top', group: 'Repeated notes', steps: ({ roles }) => interleave(roles, T(roles[2], 1)) },
+  { id: 'reciting-fifth', label: 'Reciting on the 5th', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [2, 2, 2, 1])) },
+  { id: 'reciting-third', label: 'Reciting on the 3rd', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [1, 1, 1, 0])) },
+  { id: 'upper-neighbour-fifth', label: 'Upper neighbour on the 5th', group: 'Repeated notes', steps: ({ roles }) => [T(roles[2]), T(roles[2]), N(roles[2], 1), T(roles[2])] },
+  { id: 'lower-neighbour-root', label: 'Lower neighbour on the root', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), T(roles[0]), N(roles[0], -1), T(roles[0])] },
+  { id: 'upper-neighbour-third', label: 'Upper neighbour on the 3rd', group: 'Repeated notes', steps: ({ roles }) => [T(roles[1]), T(roles[1]), N(roles[1], 1), T(roles[1])] },
+  { id: 'neighbours-root', label: 'Neighbours around the root', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), N(roles[0], 1), T(roles[0]), N(roles[0], -1)] },
+  {
+    id: 'boogie',
+    label: 'Boogie',
+    group: 'Repeated notes',
+    steps: ({ roles }) => [...tones(at(roles, [0, 1, 2])), above('6'), above('b7'), above('6'), ...tones(at(roles, [2, 1]))],
+  },
 ];
 
 export const CHANGES = ['pass', 'measure'];
@@ -1266,11 +1301,28 @@ function droneSemitones(drone, chord, pattern) {
 
 const DRONE_MARK = { tonic: 'T', root: 'R', second: '2̂', fifth: '5̂', seventh: '7̂' };
 
+/**
+ * The scale note next above or below a chord tone, in semitones above the Key's
+ * tonic: taken from the degrees the scale stacks its chords from, as the scale
+ * drones are, so it is diatonic to the Key whatever the chord (AC-2.6.6/18).
+ */
+function neighbourSemitones(step, chord, pattern) {
+  const from = memberFor(chord, step.of).offset;
+  const scale = stackingDegrees(pattern?.scale ?? DEFAULT_SCALE).map(degreeSemitones);
+  const octave = Math.floor(from / 12) * 12;
+  const candidates = [-12, 0, 12].flatMap((o) => scale.map((d) => octave + o + d));
+  return step.neighbour > 0
+    ? Math.min(...candidates.filter((x) => x > from))
+    : Math.max(...candidates.filter((x) => x < from));
+}
+
 /** Semitones above the Key's tonic a step sounds, before the Slot's own octave. */
 function stepSemitones(step, chord, pattern) {
   const shift = 12 * (step.octave ?? 0);
   if (step.tone !== undefined) return memberFor(chord, step.tone).offset + shift;
   if (step.drone !== undefined) return droneSemitones(step.drone, chord, pattern) + shift;
+  if (step.neighbour !== undefined) return neighbourSemitones(step, chord, pattern) + shift;
+  if (step.interval !== undefined) return memberFor(chord, 1).offset + degreeSemitones(step.interval) + shift;
   if (step.scale !== undefined) {
     const degrees = walkDegrees(step.scale, pattern);
     const i = step.step - 1;
@@ -1299,10 +1351,12 @@ export function stepAsDegree(step, chord, pattern, octaveOffset = 0) {
 
 const OCTAVE_MARK = (octave) => (octave > 0 ? '↑'.repeat(octave) : octave < 0 ? '↓'.repeat(-octave) : '');
 
-/** How the band writes a step: `R↑`, `T↑` for the tonic drone, `5̂↑` for the scale's 5th, `s3` for a scale step (AC-2.6.6/12, /14). */
+/** How the band writes a step: `R↑`, `T↑` for the tonic drone, `5̂↑` for the scale's 5th, `s3` for a scale step, `5+` / `R−` for a neighbour, `♭7` for an interval above the root (AC-2.6.6/12, /14, /18, /19). */
 export function stepLabel(step) {
   if (step.tone !== undefined) return `${toneLabel(step.tone)}${OCTAVE_MARK(step.octave ?? 0)}`;
   if (step.drone !== undefined) return `${DRONE_MARK[step.drone]}${OCTAVE_MARK(step.octave ?? 0)}`;
+  if (step.neighbour !== undefined) return `${toneLabel(step.of)}${step.neighbour > 0 ? '+' : '−'}${OCTAVE_MARK(step.octave ?? 0)}`;
+  if (step.interval !== undefined) return `${degreeLabel(step.interval)}${OCTAVE_MARK(step.octave ?? 0)}`;
   return `s${step.step}`;
 }
 
