@@ -591,6 +591,8 @@ const walkOverPedal = (pedal, down = false) => (ctx) => {
   const steps = Array.from({ length: n }, (_, i) => ({ scale: 'pattern', step: down ? n + 1 - i : i + 1 }));
   return steps.flatMap((step) => [step, pedal]);
 };
+/** Each role of `roles` dealt `times` times before the next (AC-2.6.6/16). */
+const repeatEach = (roles, times) => roles.flatMap((r) => Array(times).fill(T(r)));
 const walkUpDown = (kind) => (ctx) => {
   const n = ctx.walk(kind).length;
   const up = Array.from({ length: n }, (_, i) => ({ scale: kind, step: i + 1 }));
@@ -598,7 +600,7 @@ const walkUpDown = (kind) => (ctx) => {
 };
 
 /**
- * The arpeggios a Pattern can follow (AC-2.6.6/1), in five groups. Absent on
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in six groups. Absent on
  * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`.
  */
 export const ARPEGGIOS = [
@@ -658,6 +660,22 @@ export const ARPEGGIOS = [
     group: 'Scale walks',
     steps: walkUpDown(w.id),
   })),
+  { id: 'doubled-up', label: 'Doubled up', group: 'Repeated notes', steps: ({ roles }) => repeatEach(roles, 2) },
+  { id: 'doubled-down', label: 'Doubled down', group: 'Repeated notes', steps: ({ roles }) => repeatEach([...roles].reverse(), 2) },
+  { id: 'doubled-up-back', label: 'Doubled up and back', group: 'Repeated notes', steps: ({ roles }) => repeatEach(upDown(roles), 2) },
+  { id: 'tripled', label: 'Tripled', group: 'Repeated notes', steps: ({ roles }) => repeatEach(roles, 3) },
+  { id: 'four-each', label: 'Four of each, up and back', group: 'Repeated notes', steps: ({ roles }) => repeatEach(upDown(roles), 4) },
+  { id: 'tresillo', label: 'Tresillo groups', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 0, 1, 1, 1, 2, 2])) },
+  { id: 'octave-pump', label: 'Octave pump', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), T(roles[0], 1)] },
+  { id: 'octave-pairs', label: 'Octave pairs', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), T(roles[0]), T(roles[0], 1), T(roles[0], 1)] },
+  { id: 'three-and-move', label: 'Three and a move', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 0, 2])) },
+  { id: 'seven-and-move', label: 'Seven and a move', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 0, 0, 0, 0, 0, 2])) },
+  { id: 'root-fifth-doubled', label: 'Root and 5th, doubled', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 2, 2])) },
+  { id: 'pedal-root-riff', label: 'Pedal root riff', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 1, 0, 0, 2])) },
+  { id: 'root-pedal-below', label: 'Chord root pedal below', group: 'Repeated notes', steps: ({ roles }) => roles.flatMap((r) => [T(roles[0], -1), T(r)]) },
+  { id: 'fifth-on-top', label: 'Repeated 5th on top', group: 'Repeated notes', steps: ({ roles }) => interleave(roles, T(roles[2], 1)) },
+  { id: 'reciting-fifth', label: 'Reciting on the 5th', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [2, 2, 2, 1])) },
+  { id: 'reciting-third', label: 'Reciting on the 3rd', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [1, 1, 1, 0])) },
 ];
 
 export const CHANGES = ['pass', 'measure'];

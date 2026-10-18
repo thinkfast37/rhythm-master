@@ -439,6 +439,9 @@ describe('core/harmony', () => {
       'pedal-descending', 'pedal-neighbours', 'tanpura-cycle',
       'scale-up-major', 'scale-up-minor', 'scale-up-major-pentatonic', 'scale-up-minor-pentatonic', 'scale-up-pattern',
       'scale-up-down-major', 'scale-up-down-minor', 'scale-up-down-major-pentatonic', 'scale-up-down-minor-pentatonic', 'scale-up-down-pattern',
+      'doubled-up', 'doubled-down', 'doubled-up-back', 'tripled', 'four-each', 'tresillo',
+      'octave-pump', 'octave-pairs', 'three-and-move', 'seven-and-move', 'root-fifth-doubled',
+      'pedal-root-riff', 'root-pedal-below', 'fifth-on-top', 'reciting-fifth', 'reciting-third',
     ]);
   });
 
@@ -522,6 +525,66 @@ describe('core/harmony', () => {
     expect(stepLabel({ drone: 'second' })).toBe('2̂');
     // And every pedal fill bakes back to fixed degrees that sound the same (AC-2.6.1/6).
     for (const id of ['pedal-scale-down', 'pedal-every-third', 'pedal-neighbours']) {
+      const filled = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
+  });
+
+  it("AC-2.6.6/16 — A repeated-notes fill plays each chord tone several times before it moves: Doubled up sounds Root Root 3rd 3rd 5th 5th, Doubled down the same falling, Doubled up and back Root Root 3rd 3rd 5th 5th 3rd 3rd, Tripled each chord tone three times rising, and Four of each up and back each four times rising then falling without repeating the turn — all five through the 7th over a seventh-chord progression — while Tresillo groups sounds Root Root Root 3rd 3rd 3rd 5th 5th, the note changing on the 3+3+2", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 16); // sixteen Slots: one bar of 16ths, under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('doubled-up')).toEqual([60, 60, 64, 64, 67, 67, 60, 60, 64, 64, 67, 67, 60, 60, 64, 64]);
+    expect(under('doubled-down')).toEqual([67, 67, 64, 64, 60, 60, 67, 67, 64, 64, 60, 60, 67, 67, 64, 64]);
+    expect(under('doubled-up-back')).toEqual([60, 60, 64, 64, 67, 67, 64, 64, 60, 60, 64, 64, 67, 67, 64, 64]);
+    expect(under('tripled')).toEqual([60, 60, 60, 64, 64, 64, 67, 67, 67, 60, 60, 60, 64, 64, 64, 67]);
+    expect(under('four-each')).toEqual([60, 60, 60, 60, 64, 64, 64, 64, 67, 67, 67, 67, 64, 64, 64, 64]);
+    // Tresillo: the note changes on the 3+3+2.
+    expect(under('tresillo')).toEqual([60, 60, 60, 64, 64, 64, 67, 67, 60, 60, 60, 64, 64, 64, 67, 67]);
+    // Over Dm7 the first five reach the 7th; Tresillo groups stays Root, 3rd and 5th.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 16);
+    expect(under('doubled-up', sevenths).slice(0, 8)).toEqual([62, 62, 65, 65, 69, 69, 72, 72]);
+    expect(under('doubled-down', sevenths).slice(0, 8)).toEqual([72, 72, 69, 69, 65, 65, 62, 62]);
+    expect(under('doubled-up-back', sevenths).slice(0, 12)).toEqual([62, 62, 65, 65, 69, 69, 72, 72, 69, 69, 65, 65]);
+    expect(under('tripled', sevenths).slice(0, 12)).toEqual([62, 62, 62, 65, 65, 65, 69, 69, 69, 72, 72, 72]);
+    expect(under('four-each', sevenths)).toEqual([62, 62, 62, 62, 65, 65, 65, 65, 69, 69, 69, 69, 72, 72, 72, 72]);
+    expect(under('tresillo', sevenths).slice(0, 8)).toEqual([62, 62, 62, 65, 65, 65, 69, 69]);
+    // An every-Measure change starts each shape again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 4);
+    expect(under('doubled-up', changing)).toEqual([60, 60, 64, 64, 65, 65, 69, 69, 67, 67, 71, 71]);
+    // The band writes every repeat, so the line reads as the notes sound.
+    expect(arpeggioSequence('doubled-up', p).map(stepLabel)).toEqual(['R', 'R', '3', '3', '5', '5']);
+    // And every one bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['doubled-up', 'four-each', 'tresillo']) {
+      const filled = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
+  });
+
+  it("AC-2.6.6/17 — A pumping, pedal or reciting fill keeps returning to one note: Octave pump sounds Root Root↑; Octave pairs Root Root Root↑ Root↑; Three and a move Root Root Root 5th; Seven and a move the Root seven times then the 5th; Root and 5th doubled Root Root 5th 5th; Pedal root riff Root Root 3rd Root Root 5th; Chord root pedal below sounds the Root an octave down before each rising chord tone; Repeated 5th on top sounds the 5th an octave up after each rising chord tone; Reciting on the 5th sounds 5th 5th 5th 3rd, and Reciting on the 3rd 3rd 3rd 3rd Root", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 8); // eight Slots under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('octave-pump')).toEqual([60, 72, 60, 72, 60, 72, 60, 72]);
+    expect(under('octave-pairs')).toEqual([60, 60, 72, 72, 60, 60, 72, 72]);
+    expect(under('three-and-move')).toEqual([60, 60, 60, 67, 60, 60, 60, 67]);
+    expect(under('seven-and-move')).toEqual([60, 60, 60, 60, 60, 60, 60, 67]);
+    expect(under('root-fifth-doubled')).toEqual([60, 60, 67, 67, 60, 60, 67, 67]);
+    expect(under('pedal-root-riff')).toEqual([60, 60, 64, 60, 60, 67, 60, 60]);
+    expect(under('root-pedal-below')).toEqual([48, 60, 48, 64, 48, 67, 48, 60]);
+    expect(under('fifth-on-top')).toEqual([60, 79, 64, 79, 67, 79, 60, 79]);
+    expect(under('reciting-fifth')).toEqual([67, 67, 67, 64, 67, 67, 67, 64]);
+    expect(under('reciting-third')).toEqual([64, 64, 64, 60, 64, 64, 64, 60]);
+    // The pedal and the held top note go with the chord's rising tones, through the 7th over Dm7.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 8);
+    expect(under('root-pedal-below', sevenths)).toEqual([50, 62, 50, 65, 50, 69, 50, 72]);
+    expect(under('fifth-on-top', sevenths)).toEqual([62, 81, 65, 81, 69, 81, 72, 81]);
+    // An every-Measure change starts each riff again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 6);
+    expect(under('pedal-root-riff', changing)).toEqual([60, 60, 64, 60, 60, 67, 65, 65, 69, 65, 65, 72, 67, 67, 71, 67, 67, 74]);
+    // The band writes the octave the repeated note sits at.
+    expect(arpeggioSequence('octave-pump', p).map(stepLabel)).toEqual(['R', 'R↑']);
+    expect(arpeggioSequence('root-pedal-below', p).map(stepLabel)).toEqual(['R↓', 'R', 'R↓', '3', 'R↓', '5']);
+    // And every one bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['octave-pump', 'root-pedal-below', 'reciting-third']) {
       const filled = setArpeggio(p, id);
       expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
     }
@@ -613,17 +676,17 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — The order is the catalogue's, through all five groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — The order is the catalogue's, through all six groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
-    expect(n).toBe(49);
+    expect(n).toBe(65);
     const one = { start: 0, baseLoop: 0, repeats: 1 };
     const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
     expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
     expect(sequence[n]).toBe(ARPEGGIOS[0].id);
     expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
     expect(sequence).not.toContain('none');
-    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks']);
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes']);
 
     // A Pattern's own fill is where the cycle starts; none means the first.
     expect(fillIndexOf(p)).toBe(0);

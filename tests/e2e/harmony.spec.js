@@ -514,11 +514,11 @@ test('AC-2.6.1/7 — Choosing a progression keeps the arpeggio already chosen, s
 
 // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
 
-test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in five groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; fingerpicking: Travis picking, Travis picking with the treble descending, Alternating bass with a treble pair, Backward roll, Inside out, Outside in, Six-string sweep, Six-string sweep up and back; drones: Drone above, Drone below, Chord root drone, Scale root drone, Scale root and octave, Scale 5th drone, Scale 5th above, Scale 5th below, Scale root and 5th, Tanpura, Scale 7th drone, Scale 7th above, Scale 7th below; pedal points: Scale up over a tonic pedal, Scale down over a tonic pedal, Scale up over a 5th pedal, Pedal every third note, Pedal every fourth note, Descending over a tonic pedal, Neighbour notes around the tonic, Tanpura cycle; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale — and is saved with the Pattern", async ({ page }) => {
+test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in six groups — chord tones: Ascending, Descending, Up and down, Up and down repeating the turn, Alberti, Root only, Root and fifth, Up to the octave, Down from the octave, Up over and down; fingerpicking: Travis picking, Travis picking with the treble descending, Alternating bass with a treble pair, Backward roll, Inside out, Outside in, Six-string sweep, Six-string sweep up and back; drones: Drone above, Drone below, Chord root drone, Scale root drone, Scale root and octave, Scale 5th drone, Scale 5th above, Scale 5th below, Scale root and 5th, Tanpura, Scale 7th drone, Scale 7th above, Scale 7th below; pedal points: Scale up over a tonic pedal, Scale down over a tonic pedal, Scale up over a 5th pedal, Pedal every third note, Pedal every fourth note, Descending over a tonic pedal, Neighbour notes around the tonic, Tanpura cycle; scale walks: Scale up and Scale up and down, each in major, natural minor, major pentatonic, minor pentatonic and the Pattern's scale; repeated notes: Doubled up, Doubled down, Doubled up and back, Tripled, Four of each up and back, Tresillo groups, Octave pump, Octave pairs, Three and a move, Seven and a move, Root and 5th doubled, Pedal root riff, Chord root pedal below, Repeated 5th on top, Reciting on the 5th, Reciting on the 3rd — and is saved with the Pattern", async ({ page }) => {
   await harmonicBlank(page); // owned Pattern p_test
   expect(await page.locator('.arpeggio-picker > option').allTextContents()).toEqual(['None (as stamped)']);
   expect(await page.locator('.arpeggio-picker optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual([
-    'Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks',
+    'Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes',
   ]);
   expect(await page.locator('.arpeggio-picker optgroup[label="Chord tones"] option').allTextContents()).toEqual([
     'Ascending', 'Descending', 'Up and down', 'Up and down, repeating the turn', 'Alberti', 'Root only', 'Root and fifth',
@@ -540,6 +540,11 @@ test("AC-2.6.6/1 — The arpeggio setting offers None and a catalogue in five gr
   expect(await page.locator('.arpeggio-picker optgroup[label="Scale walks"] option').allTextContents()).toEqual([
     'Scale up, major', 'Scale up, natural minor', 'Scale up, major pentatonic', 'Scale up, minor pentatonic', "Scale up, the Pattern's scale",
     'Scale up and down, major', 'Scale up and down, natural minor', 'Scale up and down, major pentatonic', 'Scale up and down, minor pentatonic', "Scale up and down, the Pattern's scale",
+  ]);
+  expect(await page.locator('.arpeggio-picker optgroup[label="Repeated notes"] option').allTextContents()).toEqual([
+    'Doubled up', 'Doubled down', 'Doubled up and back', 'Tripled', 'Four of each, up and back', 'Tresillo groups',
+    'Octave pump', 'Octave pairs', 'Three and a move', 'Seven and a move', 'Root and 5th, doubled',
+    'Pedal root riff', 'Chord root pedal below', 'Repeated 5th on top', 'Reciting on the 5th', 'Reciting on the 3rd',
   ]);
   await expect(page.locator('.arpeggio-picker')).toHaveValue('none');
   for (const s of [0, 1, 2, 3]) await accentZone(page, 0, s).click();
