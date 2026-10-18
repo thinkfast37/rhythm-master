@@ -83,6 +83,42 @@ export async function resume() {
   return context;
 }
 
+/**
+ * Replace the context on demand — Reset audio (AC-4.1.16/2). Must be called
+ * from within a user-gesture handler, and stays synchronous throughout: Safari
+ * will not start a context created after an await, so the replacement is made
+ * and resumed here, inside the press. The old context's close() is never
+ * awaited — a frozen context's close() need not ever settle.
+ */
+export function replace() {
+  const old = ctx;
+  try {
+    old?.close?.()?.catch?.(() => {});
+  } catch {
+    // A dead context may refuse even close(); replacement proceeds anyway.
+  }
+  ctx = null;
+  const fresh = getContext();
+  try {
+    fresh.resume?.()?.catch?.(() => {});
+  } catch {
+    // The press has done all it can; the check below reports the outcome.
+  }
+  return fresh;
+}
+
+/**
+ * Whether a context is running with its clock moving, `waitMs` from now
+ * (AC-4.1.16/3). A context can report `running` while no time passes — sound
+ * that has died below the page, which only quitting the app brings back.
+ */
+export function clockIsRunning(context, waitMs = 300) {
+  const start = context.currentTime;
+  return new Promise((done) =>
+    setTimeout(() => done(context.state === 'running' && context.currentTime > start), waitMs)
+  );
+}
+
 /** Notified when the device takes audio away. */
 export function onSuspended(fn) {
   suspendListeners.add(fn);

@@ -7,7 +7,7 @@
  * come back.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { resume, getContext, onSuspended, onResumed, __reset } from '../../../src/audio/context.js';
+import { resume, getContext, onSuspended, onResumed, replace, clockIsRunning, __reset } from '../../../src/audio/context.js';
 import { ensureCompressor, __reset as resetNodes } from '../../../src/audio/nodes.js';
 
 class FakeAudioContext {
@@ -142,5 +142,47 @@ describe('the visibility listener after AC-4.1.5\'s revision', () => {
     globalThis.document.visibilityState = 'visible';
     handler();
     expect(resumes).toEqual([true]);
+  });
+});
+
+/**
+ * Reset audio (AC-4.1.16). A frozen context's close() need not ever settle, and
+ * Safari will not start a context created after an await — so the replacement
+ * is made synchronously, inside the press, and the old close() is never waited on.
+ */
+describe('replace() and clockIsRunning() for Reset audio', () => {
+  it('AC-4.1.16/2 — Pressing it stops playback, replaces the context inside the press without waiting on the old one to close, and sounds a confirmation note on the replacement: the replacement exists synchronously even when close() never settles', () => {
+    const old = getContext();
+    const staleGraph = ensureCompressor(old);
+    let closeCalled = false;
+    old.close = () => {
+      closeCalled = true;
+      return new Promise(() => {});
+    };
+
+    const fresh = replace();
+
+    expect(closeCalled).toBe(true);
+    expect(fresh).not.toBe(old);
+    expect(FakeAudioContext.instances).toHaveLength(2);
+    expect(getContext()).toBe(fresh);
+    expect(fresh.resumeCalls).toBe(1);
+    expect(ensureCompressor(fresh)).not.toBe(staleGraph);
+  });
+
+  it("AC-4.1.16/3 — When the replacement's clock still is not running, a message says to quit and reopen the app, and a reset that works shows no message: the clock check", async () => {
+    const frozen = getContext();
+    frozen.currentTime = 5;
+    expect(await clockIsRunning(frozen, 20)).toBe(false);
+
+    const moving = getContext();
+    moving.currentTime = 5;
+    setTimeout(() => (moving.currentTime = 5.01), 5);
+    expect(await clockIsRunning(moving, 20)).toBe(true);
+
+    const suspended = getContext();
+    suspended.state = 'suspended';
+    setTimeout(() => (suspended.currentTime = 6), 5);
+    expect(await clockIsRunning(suspended, 20)).toBe(false);
   });
 });
