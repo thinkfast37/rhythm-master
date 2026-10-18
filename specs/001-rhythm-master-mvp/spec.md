@@ -971,6 +971,16 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Added 2026-09-07 from the maintainer's iPad report: "if I minimize the app and go to a different app and I come back, the sound is gone … I have to close the app down and restart it." FR-011 always required recovery on the next user gesture, but no AC decomposed that clause, so nothing tested it — and the resume path only handled `'suspended'`, silently skipping the `'interrupted'` state iPadOS actually reports. The suspension *detector* knew about `'interrupted'`; the recovery half did not.)*
   - *(Cross-reference added 2026-09-14 with AC-4.1.5/AC-4.1.6's revision: the Given clause's "transport stopped and reset" now describes only AC-4.1.6/2, the unrecoverable case — AC-4.1.6/1's recoverable suspension pauses and comes back on its own, never reaching a state where a deliberate Play is needed. This AC's gesture-time resume stays exactly as specified for the case where AC-4.1.6's own best-effort auto-resume could not bring the context back; it is the fallback AC-4.1.6/2 falls back to, not a separate path.)*
 
+
+- **AC-4.1.16** — A Reset audio action rebuilds playback on demand
+  - **Given** notes have stopped sounding, whatever the cause
+  - **When** the Practicing Musician presses Reset audio in Pattern actions
+  - **Then** playback stops, the audio context is closed and replaced inside that press, the audio graph is rebuilt against the replacement, and a confirmation note sounds; if shortly afterwards the replacement still is not running with its clock moving, a message says to quit and reopen the app
+  - **Cases**:
+    - **AC-4.1.16/1** — A Reset audio action sits in Pattern actions, ahead of Delete
+    - **AC-4.1.16/2** — Pressing it stops playback, replaces the context inside the press without waiting on the old one to close, and sounds a confirmation note on the replacement
+    - **AC-4.1.16/3** — When the replacement's clock still is not running, a message says to quit and reopen the app, and a reset that works shows no message
+  - *(Added 2026-10-18 at the maintainer's request. With Fret Navigator open alongside on the Mac — both as Safari web apps — switching between them sometimes left one silent, and neither reloading nor reopening its page brought sound back: only quitting that app (⌘Q) did, because only that restarts Safari's audio for the app. AC-4.1.10's recovery only runs on Play and cannot reach that state. The maintainer asked for "a way of reliably being able to reload it", as Fret Navigator's Reset audio (its AC-1.8.7) gives, and placed it in Pattern actions. No page code can restart Safari's audio, so the action checks its own result and says plainly when quitting is the only way back. The replacement is created synchronously and the old context's close() is never awaited: a frozen context's close() need not ever settle, and Safari will not start a context created after an await.)*
 ---
 
 ### User Story 11 - Adjust tempo

@@ -2380,6 +2380,12 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .composer-unsaved { color: var(--brand); }
 .guitar-status.error { color: #ff8a80; }
 .guitar-status .guitar-retry { margin-left: 8px; padding: 5px 10px; }
+.audio-notice {
+  flex-basis: 100%;
+  margin: 0;
+  font: 500 12px/1.4 var(--font-ui);
+  color: #ff8a80;
+}
 .composer-notice {
   flex-basis: 100%;
   margin: 0;

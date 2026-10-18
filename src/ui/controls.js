@@ -647,8 +647,17 @@ function renderActions(pattern, state, handlers) {
   // beside Submit for the same reason Duplicates… does: this is where whole-Pattern
   // operations live, and separating the two Submits would only make the batch harder to find.
   button('submit-all', 'Submit All…', () => handlers.onSubmitAll());
+  // Not about the Pattern at all, but placed here by the maintainer: the low-key spot for
+  // getting sound back when it has gone (AC-4.1.16/1). Ahead of Delete, which stays last.
+  button('reset-audio', 'Reset audio', () => handlers.onResetAudio?.());
   // Last, and set apart: the one action here that cannot be undone (AC-7.5.2).
   if (state.isOwned) button('delete-pattern', 'Delete', () => handlers.onDelete()).classList.add('danger');
+  // Reset audio's verdict when sound could not be brought back (AC-4.1.16/3).
+  if (state.audioNotice) {
+    const notice = el('p', 'audio-notice', { textContent: state.audioNotice });
+    notice.setAttribute('role', 'status');
+    group.appendChild(notice);
+  }
 
   return group;
 }
