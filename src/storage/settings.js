@@ -42,6 +42,18 @@ export const DEFAULTS = {
   labHelp: false,
   /** Whether the melodic score writes note names and degree colours (AC-12.3.1/2). Off on a first load. */
   sheetAids: false,
+  /**
+   * The Composer's instrument view (US-19.1–US-19.3): which instrument is shown,
+   * how in-scale notes are labelled, the fretboard's capo and visible frets, and
+   * the keyboard's key count. Preferences about the view, never about a
+   * Pattern — a composition saved from the Composer records none of them
+   * (AC-19.8.4, data-model §6).
+   */
+  composerInstrument: 'guitar',
+  composerLabelMode: 'notes',
+  composerCapo: 0,
+  composerFretRange: [0, 24],
+  composerKeys: 49,
 };
 
 export function load() {

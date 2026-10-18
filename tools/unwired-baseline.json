@@ -11,8 +11,10 @@
     "src/audio/context.js isReady": "OUTSTANDING. No consumer in src/. Either a leftover from the gesture-gating work or a query the UI ought to be making before it offers transport controls — needs a decision, not a permanent home here.",
     "src/core/similarity.js familyGroups": "OUTSTANDING. US-11.2's Family panel was specified and never built — already known (T147) and already on the burn-down. This gate finds it independently, which is the point.",
     "src/core/meter.js measureDurationSeconds": "OUTSTANDING. No consumer in src/. Plausibly wanted by the loop-duration path, which computes its own; confirm which is right and remove the loser.",
-    "src/core/recipes.js labelFor": "OUTSTANDING. The Recipe picker builds its option labels itself; same question as ACCIDENTALS.",
     "src/ui/responsive.js SIDEBAR_WIDTH": "OUTSTANDING. The widths are declared here and again in CSS. Documented in the module comment as the source of truth, but nothing reads it, so the CSS is the real source.",
-    "src/ui/responsive.js DRAWER_MAX_WIDTH": "OUTSTANDING. The mobile drawer's 320px cap, declared here and again in CSS with nothing reading this copy. Same question as SIDEBAR_WIDTH: pick one source of truth."
+    "src/ui/responsive.js DRAWER_MAX_WIDTH": "OUTSTANDING. The mobile drawer's 320px cap, declared here and again in CSS with nothing reading this copy. Same question as SIDEBAR_WIDTH: pick one source of truth.",
+    "src/audio/guitar.js __reset": "Test seam, as the other audio modules' __reset: clears the per-context load map between tests. Permanent.",
+    "src/audio/guitar.js __setLoader": "Test seam. Stands a stub in for soundfont-player's loader so the loading contract (US-19.7) is proven without fetching samples. Permanent.",
+    "src/audio/guitar.js __sampledPlays": "Test seam. Counts notes the sampled instrument sounded, so AC-19.7.1/2 can tell the samples from the synth fallback. Permanent."
   }
 }

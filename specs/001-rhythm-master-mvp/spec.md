@@ -37,7 +37,7 @@ in the evening — but separating them keeps each story honest about whose probl
 
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
-| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1 |
+| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.9 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
 | **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
@@ -1690,6 +1690,7 @@ field survives showing it.)*
   - **Given** "My Custom Fill" (carrying `custom`) is loaded
   - **When** the Composer toggles a Slot on
   - **Then** that change is saved into "My Custom Fill" immediately — there is no explicit Save action anywhere in the app, and no unsaved/dirty indicator is ever shown
+  - *(Clarified 2026-10-18 with US-19.9: the Composer mode has a Save, for a composition that is not yet a valid Melodic Pattern — a syllable with no note cannot be written (data-model §7) — and an unsaved mark while it is in that state. Once saved and complete it auto-saves on every change exactly as this criterion says. Practice is unchanged: no Save, no dirty indicator.)*
 
 - **AC-7.2.2** — Each edit in a sequence saves individually
   - **Given** "My Custom Fill" is loaded
@@ -2233,6 +2234,7 @@ field survives showing it.)*
   - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle, Play/Stop and the exact tempo entry, and quick navigation — AC-5.5.3, AC-15.1.17): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - **And**, on a wide panel (AC-15.1.18), the same list is split across two panes that sit side by side: the Pattern header, chord strip and grid in the left pane; the tab bar, the groups, Pattern actions and family members in the right — each pane keeping the order above, so no section ever swaps places with another
+  - *(Clarified 2026-10-18 with US-19.1: the pinned bar also carries a Practice | Composer switch (AC-19.1.1), and in Composer mode the Composer's own panel stands in for both panes. This criterion describes Practice, which is unchanged; the Composer's layout is its own (US-19.1–US-19.5).)*
   - *(Revised 2026-09-20 with US-14.1 (T326): the pinned bar carries a second row, the goal bar — the Goals control, the goal's name and, under the practice goals, the level and Give me one and Pick from the library; under Lab, the Help toggle (AC-14.1.1/3, AC-14.1.3/3, AC-14.1.4/1). It sits with the pinned bar above the panes, so the section order this criterion fixes is untouched; and under a goal the groups, Pattern actions and family members it has no use for are absent rather than empty, in exactly the way the Melody group already is in Percussive (AC-14.1.2).)*
   - *(Revised 2026-09-13 with T290: the tab bar is present at every width (AC-15.1.7), and on a wide panel the list is laid out as two panes rather than one column (AC-15.1.18). The order itself is untouched; what changed is that a wide panel reads it as two columns rather than one.)*
   - *(Revised 2026-09-13 with US-2.8 and US-18.1 (T282, T284): fill cycling returns to the Melody group with Keep beside it, and a Compose group follows Practice. See AC-2.7.1 and AC-15.1.7 for the reasoning.)*
@@ -3680,6 +3682,409 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-12.3.4/1** — With Note aids on, the printed page carries every note's name and colour as the screen does
     - **AC-12.3.4/2** — With Note aids off, the printed page carries neither
+
+---
+
+### User Story 50 - Compose on an instrument
+
+*Traceability: `US-19.1` — Compose on an instrument*
+
+**As** the Composer, **I want** a Composer mode of its own, where a rhythm from the library sits under a guitar fretboard or a piano keyboard, **so that** I can write a melody by playing it onto the rhythm, note by note, on the instrument I think in — rather than arming degrees on a strip and stamping them.
+
+*(Added 2026-10-18 at the maintainer's request: "what we can do right now is individually pick notes and paint them on the rhythm pattern, or I can pick a chord progression and a fill pattern … but these are still a bit awkward and I want a guitar composer view and a piano composer view … the first thing the user must do is pick a rhythm from the library." Decisions taken with the maintainer the same day: the Composer is a separate mode beside Practice rather than a fifth workbench tab, because the fretboard or keyboard would otherwise compete with the grid for the one panel; the guitar sounds as fret-navigator's does — the FluidR3 steel-string samples, reinstated for this one voice (US-19.7, Constitution 3.7.0) — and the piano is the melodic voice the app already has; which instrument is shown is a Composer setting and never travels with the saved Pattern; a composition is saved by hand the first time, once every syllable has a note, and auto-saves on every change after that while it stays complete (US-19.9). The maintainer added, the same day: tapping the instrument sounds the note at any time — at rest, while recording, while the melody plays — and playback in this mode is a story of its own (US-19.6). US-18.1's Compose group — sequencing kept fills into a Section — keeps its name and its tab; this epic is the Composer, the view, and its stories say which they mean.)*
+
+**Independent Test**: Switch to Composer, open a Pattern from the library, assert the instrument view, record bar and composing grid stand in for the Pattern pane and workbench, switch Guitar to Piano and back and assert no note changes, switch back to Practice and assert the panes return unchanged.
+
+**Acceptance Scenarios**:
+
+- **AC-19.1.1** — The Composer is a mode of its own, beside Practice
+  - **Given** Lab, at any viewport width
+  - **When** the Composer looks at the pinned bar
+  - **Then** a two-way Practice | Composer switch sits in it, and choosing Composer puts the Composer's own panel — the instrument view, the record bar, the composing grid and the Composer's controls — in place of the Pattern pane and the workbench, the library sidebar and its toggle staying where they are; choosing Practice puts the panes back exactly as they were
+  - **Cases**:
+    - **AC-19.1.1/1** — A Practice | Composer switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal
+    - **AC-19.1.1/2** — Choosing Composer shows the Composer's panel — instrument view, record bar, composing grid, controls — in place of the Pattern pane and the workbench, while the library sidebar and its toggle stay
+    - **AC-19.1.1/3** — Choosing Practice shows the Pattern pane and the workbench again, with the open Pattern as it was
+    - **AC-19.1.1/4** — The mode is a within-session position, not a stored preference: a reload opens in Practice
+
+- **AC-19.1.2** — The Composer starts from a rhythm chosen in the library
+  - **Given** the Composer mode entered with no composition yet
+  - **When** the Composer looks at the panel
+  - **Then** the composing grid's place reads that a rhythm must be chosen from the library first, with the library opened to choose from, the instrument view playable but Record and Save disabled; and opening a Pattern from the library while in Composer loads it into the Composer (US-19.8) rather than into Practice
+  - **Cases**:
+    - **AC-19.1.2/1** — With no composition the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled
+    - **AC-19.1.2/2** — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved
+
+- **AC-19.1.3** — Guitar or piano, switched at any time
+  - **Given** the Composer mode
+  - **When** the Composer looks at the record bar
+  - **Then** a Guitar | Piano switch chooses which instrument view is shown and which voice sounds, Guitar on first use; switching never changes a note of the composition; and the choice is remembered across reloads
+  - **Cases**:
+    - **AC-19.1.3/1** — A Guitar | Piano switch sits in the record bar, Guitar in force on first use
+    - **AC-19.1.3/2** — Switching shows the other instrument view and leaves every recorded note exactly as it was
+    - **AC-19.1.3/3** — The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload
+
+- **AC-19.1.4** — Leaving the Composer with unsaved work asks first
+  - **Given** a composition holding work that is not in the library — never saved, or saved and since given a syllable without a note
+  - **When** the Composer chooses Practice, or opens another Pattern from the library
+  - **Then** a confirmation names what would be lost, and cancelling it leaves the composition open while confirming discards it
+  - **Cases**:
+    - **AC-19.1.4/1** — Choosing Practice, or opening another library Pattern, with unsaved work puts up a confirmation naming the unsaved composition
+    - **AC-19.1.4/2** — Cancelling keeps the composition open and the mode unchanged; confirming discards the unsaved work and proceeds
+    - **AC-19.1.4/3** — With nothing unsaved — no composition, or a saved composition with every syllable pitched — no confirmation is asked
+
+---
+
+### User Story 51 - The guitar view
+
+*Traceability: `US-19.2` — The guitar view*
+
+**As** the Composer, **I want** the fretboard I know from fret-navigator inside the Composer — standard tuning, absolute fret numbers, the notes of the key coloured by degree — with the scale root, scale, label mode, capo and visible frets to hand, **so that** the melody I record is the one I would play, found where I would find it on the neck.
+
+*(Added 2026-10-18. The maintainer asked for "the guitar fretboard view we have in the fret-navigator app … a subset of controls: scale root, scale mode, label mode, capo, visible frets. Some controls will be fixed and you don't need to show these controls: tuning = standard, fret reference = absolute. The fret labels should also be colour coded just like in the fret-navigator app." The board's geometry and its twelve degree-role colours are ported from fret-navigator (research.md D-016); its names and degrees are spelled by this app's own `core/pitch.js` and `core/scales.js`, so the fretboard and the composing grid can never disagree about what a note is called.)*
+
+**Independent Test**: In Guitar view, assert six strings and frets 0–24 with the inlay dots at the marker frets, that every in-scale note carries its degree-role colour and the root its ring, set a capo at 3 and assert frets 0–2 are muted and the lower bound of the visible range follows, narrow the visible frets to 5–12 and assert the board redraws to that range, and tap a fret at rest and during playback and assert it sounds.
+
+**Acceptance Scenarios**:
+
+- **AC-19.2.1** — The fretboard is fret-navigator's, fixed to standard tuning and absolute fret numbers
+  - **Given** the Composer in Guitar view
+  - **When** the fretboard is shown
+  - **Then** it is the fret-navigator board — six strings, high E on top, an open-string column and frets 1–24, the nut, fret wires, inlay dots at the marker frets and fret numbers above and below them — in standard tuning with no tuning control, and numbered by physical fret with no fret-reference control
+  - **Cases**:
+    - **AC-19.2.1/1** — Six strings, high E at the top and low E at the bottom, an open-string column and frets 1 to 24, with single inlay dots at frets 3, 5, 7, 9, 15, 17, 19 and 21 and double dots at 12 and 24
+    - **AC-19.2.1/2** — The strings sound standard tuning — E4 B3 G3 D3 A2 E2 from the top — and no tuning control is shown
+    - **AC-19.2.1/3** — Fret numbers and note names are always absolute: fret 5 is fret 5 whatever the capo, and no fret-reference control is shown
+
+- **AC-19.2.2** — The guitar controls: scale root, scale, label mode, capo and visible frets
+  - **Given** the Composer in Guitar view
+  - **When** the Composer looks for the fretboard's controls
+  - **Then** the scale root and scale are the composition's own Key and scale, the label mode chooses what in-scale notes are labelled with, the capo mutes the frets below it and draws its bar, and the visible frets bound the range the board redraws to
+  - **Cases**:
+    - **AC-19.2.2/1** — The scale root picker offers the twelve Keys and the scale picker the scale catalogue, and choosing either sets the composition's Key or scale — the same values the saved Pattern carries
+    - **AC-19.2.2/2** — The label mode offers Notes, Degrees and Intervals: an in-scale note is labelled with its note name, its scale degree or its interval from the root accordingly, and an out-of-scale note always with its name
+    - **AC-19.2.2/3** — The capo takes 0 to 12: the frets below it are drawn muted and are inert, a capo bar is drawn at the end of the capo fret's cell, distinct from the nut, and the lower bound of the visible frets follows the capo up
+    - **AC-19.2.2/4** — The visible frets are a lower and an upper bound, 0 to 24, and the board redraws to the range at its full width, so fewer frets are wider
+    - **AC-19.2.2/5** — The label mode, capo and visible frets are remembered in `rm.settings.v1` and are in force after a reload
+
+- **AC-19.2.3** — Notes are colour-coded by scale degree, as in fret-navigator
+  - **Given** a composition with a Key and scale, in Guitar view
+  - **When** the Composer reads the board
+  - **Then** every in-scale note is filled with the degree-role colour of its semitone from the root — the twelve fret-navigator colours — with the root ringed, an out-of-scale note is a plain label with no marker, and changing the Key or scale recolours every note at once
+  - **Cases**:
+    - **AC-19.2.3/1** — An in-scale note is filled with the degree-role colour of its semitone above the root, one colour per chromatic degree, and the root carries its ring
+    - **AC-19.2.3/2** — An out-of-scale note is a plain label with no marker behind it
+    - **AC-19.2.3/3** — Changing the Key or the scale recolours and relabels every note at once, with nothing stored on the Pattern beyond the Key and scale themselves
+
+- **AC-19.2.4** — Tapping a fret sounds its note at any time
+  - **Given** the Composer in Guitar view, at rest, while the composition plays, or while recording
+  - **When** the Composer taps a playable fret
+  - **Then** that fret's note sounds with the guitar voice, whatever else is going on; a fret muted by the capo is inert
+  - **Cases**:
+    - **AC-19.2.4/1** — A tap on a playable fret sounds that note with the guitar voice at rest, while the composition plays, and while recording
+    - **AC-19.2.4/2** — A fret below the capo is inert: no sound, no note recorded
+
+---
+
+### User Story 52 - The piano view
+
+*Traceability: `US-19.3` — The piano view*
+
+**As** the Composer, **I want** a piano keyboard in the Composer, sized by how many keys I want around middle C and coloured by scale degree like the fretboard, **so that** a melody I think of on the keys can be played onto the rhythm the same way.
+
+*(Added 2026-10-18. The maintainer asked for "a similar piano composer view … you will be able to show the number of keys and the number of keys will be relative to middle C (unless that does not work math wise). If you need to use two rows of keys to make this fit for 88-key keyboards that is fine … colour code the keys based on the scale and key just like we do in fret-navigator." Where a count cannot be centred on middle C — 37, 61, 76 and 88 keys — it takes the range such a keyboard actually has.)*
+
+**Independent Test**: In Piano view at 49 keys, assert the keyboard runs C2 to C6 with middle C marked, that every in-scale key carries its degree-role colour, switch to 88 keys in a narrow panel and assert two rows split at C4 with no sideways scroll, and tap a key at rest and during playback and assert it sounds.
+
+**Acceptance Scenarios**:
+
+- **AC-19.3.1** — A keyboard sized by key count around middle C
+  - **Given** the Composer in Piano view
+  - **When** the Composer chooses a key count
+  - **Then** the keyboard shows that many keys over the range such a keyboard has — centred on middle C where the count allows — with middle C marked, and the count is remembered
+  - **Cases**:
+    - **AC-19.3.1/1** — The key count control offers 25, 37, 49, 61, 76 and 88 keys, 49 on first use
+    - **AC-19.3.1/2** — Each count spans its range: 25 keys C3–C5 and 49 keys C2–C6, centred on middle C; 37 keys C3–C6, 61 keys C2–C7, 76 keys E1–G7 and 88 keys A0–C8, as such keyboards are built; every range contains middle C, which is marked C4
+    - **AC-19.3.1/3** — The key count is remembered in `rm.settings.v1` and is in force after a reload
+
+- **AC-19.3.2** — Two rows when the keys do not fit
+  - **Given** a key count whose white keys would be narrower than 18 CSS pixels in the panel's width
+  - **When** the keyboard is laid out
+  - **Then** it splits into two rows at the C nearest its middle, the lower half above the upper, each row keeping its black keys in place, and the panel never scrolls sideways
+  - **Cases**:
+    - **AC-19.3.2/1** — When one row would make a white key narrower than 18 CSS pixels, the keyboard is laid out as two rows, split at the C nearest the middle of the range, the lower half in the upper row
+    - **AC-19.3.2/2** — Each row keeps its black keys between the white keys they belong to, and the keyboard never scrolls sideways at any width
+
+- **AC-19.3.3** — Keys are colour-coded by scale degree, as the fretboard is
+  - **Given** a composition with a Key and scale, in Piano view
+  - **When** the Composer reads the keyboard
+  - **Then** every in-scale key, white or black, is filled with its degree-role colour and labelled by the label mode, the root marked, out-of-scale keys stay plain white and black with only the Cs named, and the scale root, scale and label mode are the very controls the guitar view uses
+  - **Cases**:
+    - **AC-19.3.3/1** — An in-scale key, white or black, is filled with the degree-role colour of its semitone above the root and the root key carries its mark
+    - **AC-19.3.3/2** — An in-scale key is labelled by the label mode — note name, degree or interval — and an out-of-scale key is plain, white or black, with only each C carrying its name and octave
+    - **AC-19.3.3/3** — The scale root, scale and label mode controls are shared with the guitar view, so a change made in one view is in force in the other
+
+- **AC-19.3.4** — Tapping a key sounds its note at any time
+  - **Given** the Composer in Piano view, at rest, while the composition plays, or while recording
+  - **When** the Composer taps a key
+  - **Then** that key's note sounds with the piano voice, whatever else is going on
+
+---
+
+### User Story 53 - Record notes onto the rhythm
+
+*Traceability: `US-19.4` — Record notes onto the rhythm*
+
+**As** the Composer, **I want** to press Record and play the melody onto the rhythm one syllable at a time — each tap on the fretboard or keyboard filling the highlighted syllable and moving to the next — **so that** writing a line is playing it, not addressing each note by hand.
+
+*(Added 2026-10-18. The maintainer: "there will be a record button and it will highlight the first note in the rhythm pattern. When the user taps a note on the fretboard or the piano keyboard that note will be applied to the note in the rhythm pattern and the rhythm pattern will go to the next note … once they finish recording all the notes it will automatically go out of record mode … if you are on a highlighted note and you hit delete it will actually delete the note value on the previous note … and now the previous note whose value you deleted will be highlighted … if you go into record mode [with notes already recorded] it will highlight the first pattern syllable that does not have a note value assigned to it.")*
+
+**Independent Test**: Load a four-syllable rhythm, press Record and assert the first syllable is the target, tap four frets and assert each lands on the next syllable and that record mode ends after the fourth, press Record again and assert it is disabled with every syllable pitched; then clear one note, record it back with Delete used once along the way, and assert the stored Pitch resolves to exactly the MIDI note tapped.
+
+**Acceptance Scenarios**:
+
+- **AC-19.4.1** — Record targets the first syllable without a note
+  - **Given** a composition loaded in the Composer
+  - **When** the Composer presses Record
+  - **Then** the first sounding Slot without a note, in playing order, is marked as the target — a mark distinct from the playback cursor and from a selection — and with every sounding Slot already pitched Record is disabled, saying why
+  - **Cases**:
+    - **AC-19.4.1/1** — Pressing Record marks the first sounding Slot with no note, in playing order, as the target, shown in the composing grid by a mark that is neither the playback cursor nor the selection
+    - **AC-19.4.1/2** — With every sounding Slot already pitched, Record is disabled and a hint says every syllable has a note
+    - **AC-19.4.1/3** — With no composition loaded, Record is disabled
+
+- **AC-19.4.2** — A tap on the instrument records the note and moves on
+  - **Given** record mode, with a target
+  - **When** the Composer taps a fret or a key
+  - **Then** the target takes that note — stored as a Pitch of the composition's Key (AC-19.4.4), its name shown in the Slot — the note sounds, the target moves to the next sounding Slot without a note, and recording the last one leaves record mode on its own; pressing Record again meanwhile leaves record mode keeping what was recorded
+  - **Cases**:
+    - **AC-19.4.2/1** — A tap on a fret or key gives the target that note, shown in the Slot's note box, and sounds it with the instrument's voice
+    - **AC-19.4.2/2** — The target then moves to the next sounding Slot after it that has no note, in playing order
+    - **AC-19.4.2/3** — Recording the last sounding Slot without a note leaves record mode, with no target marked
+    - **AC-19.4.2/4** — Pressing Record while recording leaves record mode and keeps every note recorded so far
+
+- **AC-19.4.3** — Delete while recording steps back
+  - **Given** record mode, with a target
+  - **When** the Composer presses Delete — the control in the record bar, or the Delete or Backspace key
+  - **Then** the nearest sounding Slot before the target loses its note and becomes the target, since the target itself holds nothing to delete; at the first sounding Slot nothing happens
+  - **Cases**:
+    - **AC-19.4.3/1** — Delete clears the note of the nearest sounding Slot before the target and makes that Slot the target
+    - **AC-19.4.3/2** — With the target on the first sounding Slot, Delete changes nothing
+    - **AC-19.4.3/3** — The Delete and Backspace keys do what the Delete control does, in and out of record mode
+
+- **AC-19.4.4** — A recorded note is stored as the composition's Key hears it
+  - **Given** a note tapped on the fretboard or keyboard, as a MIDI note number
+  - **When** it is recorded onto a Slot
+  - **Then** it is stored as a scale degree of the composition's Key with an octave offset that resolves back to exactly that MIDI note, spelled by the scale where the scale has a spelling for it and by the default chromatic token otherwise
+  - **Cases**:
+    - **AC-19.4.4/1** — For every fret of the board and every key of the keyboard, the stored Pitch resolves through `core/pitch.js` to exactly the MIDI note tapped — a round trip with no loss
+    - **AC-19.4.4/2** — An in-scale note takes the scale's own degree token — `b5` in Locrian and `#4` in Lydian for the same semitone — and an out-of-scale note the default chromatic token of its semitone above the root
+
+---
+
+### User Story 54 - Edit a composition
+
+*Traceability: `US-19.5` — Edit a composition*
+
+**As** the Composer, **I want** the composing grid to show the notes first and the counting syllables under them, and to let me replace a note, clear it, add or remove syllables, double the length, and set tempo, swing and the counting system, **so that** a recorded line can be reworked in place without leaving the instrument.
+
+*(Added 2026-10-18. The maintainer: "if you are not in record mode you can click on a note in the pattern that is a sounded syllable and it will highlight that note and then you can hit a note on the fretboard or piano keyboard and replace the note … you can also change the tempo and the swing values … you can duplicate the pattern — if you duplicate a pattern that already has notes then the duplicated syllables will sound as percussive until notes are assigned … you can also delete a syllable from the pattern and you can add a new syllable to the pattern by clicking on it just like you would when you compose a pattern … the pattern grid will show the note values in the big box at the top and the syllable counting system values in the smaller boxes below … you will need to show a counting system control for that." Measures and subdivisions are not edited here: a rhythm's shape is made in Practice and brought to the Composer; what the Composer edits is which syllables sound and what they sound.)*
+
+**Independent Test**: Load a recorded composition, assert each sounding Slot shows its note above its syllable, select a Slot and tap a key and assert only that Slot's note changes, press Delete and assert it is cleared, tap a syllable box to turn a Slot on and assert it sounds percussively until recorded, press Double Length and assert the copy carries no notes and that Record starts on its first Slot.
+
+**Acceptance Scenarios**:
+
+- **AC-19.5.1** — The composing grid shows the note first and the syllable under it
+  - **Given** a composition in the Composer
+  - **When** the Composer reads the composing grid
+  - **Then** each sounding Slot shows its note — name and degree — in the large upper box and its counting syllable in the smaller box below, a sounding Slot without a note shows an empty upper box, the counting system is chosen by a control among the Composer's, and the cursor, the record target and the selection are three distinct marks
+  - **Cases**:
+    - **AC-19.5.1/1** — A sounding Slot shows its note name and degree in the large upper box and its counting syllable in the smaller box below; a sounding Slot with no note shows the upper box empty, and a silent Slot shows neither
+    - **AC-19.5.1/2** — A counting system control sits among the Composer's controls, and the syllables follow it exactly as the grid's do (US-5.6)
+    - **AC-19.5.1/3** — The playback cursor, the record target and the selection are each marked differently, so all three can be read at once
+
+- **AC-19.5.2** — Select a sounding Slot and replace its note
+  - **Given** a composition, out of record mode
+  - **When** the Composer taps a sounding Slot's note box
+  - **Then** that Slot alone is selected; a tap on a fret or key replaces its note and sounds it, leaving it selected; Delete clears its note; and tapping it again, or a silent Slot, clears the selection
+  - **Cases**:
+    - **AC-19.5.2/1** — Tapping a sounding Slot's note box selects it, and only one Slot is selected at a time
+    - **AC-19.5.2/2** — A tap on a fret or key replaces the selected Slot's note, sounds it, and leaves the Slot selected
+    - **AC-19.5.2/3** — Delete clears the selected Slot's note, and the Slot sounds percussively until a note is recorded onto it again
+    - **AC-19.5.2/4** — Tapping the selected Slot's note box again, or a silent Slot, clears the selection; pressing Record clears it too
+
+- **AC-19.5.3** — Syllables are added and removed as in the grid
+  - **Given** a composition in the Composer
+  - **When** the Composer taps a Slot's syllable box
+  - **Then** its Accent Level cycles exactly as a grid tap does (US-3.1): a silent Slot comes on with no note yet, sounding percussively until recorded, and a Slot cycled to off loses its note
+  - **Cases**:
+    - **AC-19.5.3/1** — Tapping the syllable box cycles the Slot's Accent Level exactly as the grid does — off, its default, the other two levels, off
+    - **AC-19.5.3/2** — A Slot turned on has no note until one is recorded onto it, and sounds percussively meanwhile
+    - **AC-19.5.3/3** — A Slot cycled to off loses its note, and the count of syllables without a note follows
+
+- **AC-19.5.4** — Double Length copies the rhythm without its notes
+  - **Given** a composition with notes
+  - **When** the Composer presses Double Length
+  - **Then** the Measures are appended again with every note cleared — the originals keep theirs — so the copy sounds percussively until recorded, Record then starting on the copy's first syllable; disabled when doubling would pass 8 Measures
+  - **Cases**:
+    - **AC-19.5.4/1** — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs
+    - **AC-19.5.4/2** — Record then targets the first sounding Slot of the copy
+    - **AC-19.5.4/3** — Double Length is disabled when the result would exceed 8 Measures
+
+- **AC-19.5.5** — Tempo and swing are the composition's own
+  - **Given** a composition in the Composer
+  - **When** the Composer sets the tempo or the swing
+  - **Then** the composition's tempo, swing amount and swing feel change, as the Practice controls change them, and are saved with it
+  - **Cases**:
+    - **AC-19.5.5/1** — The tempo entry sets the composition's tempo, and playback follows it
+    - **AC-19.5.5/2** — The swing amount and feel controls set the composition's swing, and playback follows them
+
+---
+
+### User Story 55 - Play the composition while composing
+
+*Traceability: `US-19.6` — Play the composition while composing*
+
+**As** the Composer, **I want** to play the composition at any point — the notes recorded so far on the instrument shown and the rest as percussive syllables — while I keep recording or editing, **so that** I hear the line take shape without stopping to switch modes.
+
+*(Added 2026-10-18. The maintainer: "you can also play the pattern while you are recording, so while you record you can also hit a play button and it will play the notes you've entered and for the rest it will play percussive syllables … if you are using guitar mode then it should sound like guitar notes; if you are in piano mode it will use piano notes." And later the same day: "there needs to be a story for playing back the melody when it's in this mode.")*
+
+**Independent Test**: Record two of four syllables, press Play and assert the two pitched events sound melodic and the two unpitched percussive, record a third while playing and assert it is heard from the next pass with the target untouched, switch Guitar to Piano and assert the voice changes from the next event.
+
+**Acceptance Scenarios**:
+
+- **AC-19.6.1** — Play sounds the notes recorded so far and the rest percussively
+  - **Given** a composition in the Composer, some of its sounding Slots pitched
+  - **When** the Composer presses Play in the pinned bar
+  - **Then** the composition loops from the top with the cursor running in the composing grid: a pitched Slot sounds with the instrument shown — guitar or piano — and an unpitched sounding Slot sounds as a percussive syllable at its Accent Level
+  - **Cases**:
+    - **AC-19.6.1/1** — Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it
+    - **AC-19.6.1/2** — A pitched Slot sounds with the voice of the instrument shown, guitar or piano, and an unpitched sounding Slot sounds percussively at its Accent Level
+    - **AC-19.6.1/3** — Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart
+
+- **AC-19.6.2** — Recording and editing carry on under playback
+  - **Given** the composition playing
+  - **When** the Composer records a note, replaces one, clears one, or turns a syllable on or off
+  - **Then** the change is heard from the next pass (AC-4.1.9), the record target and the selection are where they were, and playback neither stops nor restarts
+  - **Cases**:
+    - **AC-19.6.2/1** — A note recorded while playing is heard from the next pass, and the target moves on as it does at rest
+    - **AC-19.6.2/2** — Tempo and swing changes while playing take effect as they do in Practice, and no other edit stops or restarts playback
+  - *(AC-19.6.2/2 cites AC-4.2.2 and AC-4.4.5 for what "as they do in Practice" means; the IDs were taken out of the Case's title on 2026-10-18 so a test named for it does not read as claiming them.)*
+
+---
+
+### User Story 56 - Hear a guitar
+
+*Traceability: `US-19.7` — Hear a guitar*
+
+**As** the Composer, **I want** the guitar view to sound like a guitar — the steel-string samples fret-navigator plays — and the piano view to sound like the melodic voice the app already has, **so that** what I hear while composing is the instrument I am looking at.
+
+*(Added 2026-10-18. The maintainer chose the sampled guitar over a synthesised one, told that it reinstates sampled audio this project retired on 2026-08-17: "for guitar — use the one in fret-navigator." That is the FluidR3_GM steel-string guitar served from gleitz/midi-js-soundfonts through soundfont-player, CC BY 3.0, loaded on first need in the Composer's Guitar view and nowhere else, with the synthesised melodic voice standing in while it loads or when it cannot. Constitution 3.7.0 and research.md D-003 record the exception. The piano is the existing melodic voice; no second asset.)*
+
+**Independent Test**: Load the app and assert no sample is requested; enter Composer in Guitar view and assert the samples are requested once, a loading state is shown and a tapped fret still sounds; with the request failing assert a notice with Retry and that frets still sound; with it succeeding assert the sampled voice takes over.
+
+**Acceptance Scenarios**:
+
+- **AC-19.7.1** — The guitar voice is the sampled steel-string guitar fret-navigator plays
+  - **Given** the Composer
+  - **When** the Guitar view is first shown
+  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then and only then, never on page load and never in Practice or Piano view — and every guitar note, tapped or played back, sounds through them once they are ready
+  - **Cases**:
+    - **AC-19.7.1/1** — No sample is requested on page load, in Practice, or in the Piano view; the first showing of the Guitar view requests them once
+    - **AC-19.7.1/2** — Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note
+    - **AC-19.7.1/3** — The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer
+
+- **AC-19.7.2** — Loading never blocks, and failing never silences
+  - **Given** the Guitar view with its samples loading, or failed to load
+  - **When** the Composer taps a fret or plays the composition
+  - **Then** the note sounds through the melodic synth voice meanwhile, a loading state says the samples are on their way, and a failure shows a non-blocking notice with Retry, which requests them again
+  - **Cases**:
+    - **AC-19.7.2/1** — While the samples load, a loading state is shown and every guitar note sounds through the melodic synth voice rather than waiting
+    - **AC-19.7.2/2** — A failed load shows a non-blocking notice with a Retry control, guitar notes keep sounding through the synth voice, and Retry requests the samples again
+    - **AC-19.7.2/3** — The piano voice is the melodic synth voice the app already has, and loads nothing
+
+---
+
+### User Story 57 - Load a rhythm into the Composer
+
+*Traceability: `US-19.8` — Load a rhythm into the Composer*
+
+**As** the Composer, **I want** any Pattern in the library to open in the Composer as something I can record onto — a percussive rhythm as an empty line, a chord-progression Pattern with its fill baked into notes, a melody as itself — named as the rules of ownership require, **so that** every rhythm I have is a starting point.
+
+*(Added 2026-10-18. The maintainer: "if you load a chord progression + fill based pattern from the library when you are in this feature the feature will convert it to a melodic pattern so you can edit it but it will need to be saved under a new name. If you load a melodic pattern it will ask if you want to edit it or save under a new name. If you load a percussive pattern or a chord progression pattern it will ask you what name you want to save it under." A shipped melodic Pattern can only be copied, as US-7.3 already requires. Nothing is written to the library at load time: the name is held for the first save (US-19.9).)*
+
+**Independent Test**: In Composer, open a percussive Pattern and assert a name is asked and the composition opens unpitched in C Ionian with nothing saved; open a Pattern with a two-chord progression over one Measure and assert the composition has two Measures carrying the dealt notes and no progression; open an owned melodic Pattern and assert Edit and Save as new are offered; open a shipped melodic one and assert only a name is asked.
+
+**Acceptance Scenarios**:
+
+- **AC-19.8.1** — A percussive Pattern becomes a new composition under a new name
+  - **Given** the Composer mode
+  - **When** the Composer opens a percussive Pattern — shipped or owned — from the library
+  - **Then** a name for the new composition is asked, unique in the library as every name is (AC-7.3.5), and on confirming the rhythm opens as a Melodic composition in C Ionian with every sounding Slot unpitched; nothing is written to the library until it is saved, and cancelling opens nothing
+  - **Cases**:
+    - **AC-19.8.1/1** — Opening a percussive Pattern asks for a name, with no pre-filled default, rejecting a name already in the library
+    - **AC-19.8.1/2** — Confirming opens the rhythm as a composition in C Ionian with every sounding Slot unpitched and its accents kept, and the library is unchanged until the first save
+    - **AC-19.8.1/3** — Cancelling the prompt opens nothing: whatever composition was open stays, and the original Pattern is untouched
+
+- **AC-19.8.2** — A Pattern with a progression is baked into notes
+  - **Given** the Composer mode
+  - **When** the Composer opens a Melodic Pattern that carries a progression
+  - **Then** a name is asked as for a percussive Pattern, and the composition carries as stored notes what the progression and its fill would sound — one Measure per Measure of each pass, the whole harmonic cycle unrolled when it fits within 8 Measures and the first pass alone otherwise, said so — with no progression on it; the original is untouched
+  - **Cases**:
+    - **AC-19.8.2/1** — Opening a Pattern with a progression asks for a name, as a percussive one does
+    - **AC-19.8.2/2** — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 8 and the first pass alone otherwise, and a notice says which
+    - **AC-19.8.2/3** — The composition carries no progression and no Register — every note is where it sounds — and the original Pattern is unchanged
+
+- **AC-19.8.3** — A melody is edited in place or copied
+  - **Given** the Composer mode
+  - **When** the Composer opens a Melodic Pattern without a progression
+  - **Then** an owned one asks whether to edit it or save it as new — editing it opens it as the composition, already saved, and saving as new asks a name — while a shipped one asks a name only, since a shipped Pattern is never edited (US-7.3); a Register is folded into the notes so what is shown is what sounds
+  - **Cases**:
+    - **AC-19.8.3/1** — An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name and opens a copy, unsaved
+    - **AC-19.8.3/2** — A shipped melodic Pattern asks a name only, and opens a copy, unsaved
+    - **AC-19.8.3/3** — A Pattern with a Register opens with the Register folded into each note's octave, so the grid, the instrument and playback agree, and the saved composition carries no Register
+
+- **AC-19.8.4** — A saved composition is a melodic Pattern like any other
+  - **Given** a composition saved from the Composer
+  - **When** it is opened from the library in Practice
+  - **Then** it is an ordinary Melodic Pattern — Key, scale, per-Slot degrees — played by the melodic voice, with no trace of the instrument it was composed on
+
+---
+
+### User Story 58 - Save a composition
+
+*Traceability: `US-19.9` — Save a composition*
+
+**As** the Composer, **I want** to save a composition once every syllable has a note, and have it auto-save on every change after that, **so that** the library only ever holds melodies that play, and I never lose a finished line.
+
+*(Added 2026-10-18. The maintainer: "you will need to be able to save the composition and it will be added to the library … if you have not assigned notes to all values on the pattern it will not allow you to save it. If it was previously saved and you add a new syllable with no note yet, you will lose that syllable if you close the app." Asked how saving should work while incomplete, they chose: "Save once every note has a value and then auto-save after that on each change." A composition with a syllable that has no note is not a valid Melodic Pattern (data-model §7 rule 6 and the melodic-on-Slot rule), which is why it cannot be written — this is AC-7.2.1's auto-save with one precondition, not a second save model.)*
+
+**Independent Test**: Record three of four syllables and assert Save is disabled saying one note is missing; record the fourth and assert Save is enabled, press it and assert the composition is in the library as an owned Melodic Pattern; change a note and assert it is saved at once; turn a new syllable on and assert the stored Pattern is unchanged and the Composer says it is unsaved; record it and assert it saves; reload and assert the library holds the last complete state.
+
+**Acceptance Scenarios**:
+
+- **AC-19.9.1** — Save is available only when every syllable has a note
+  - **Given** a composition never yet saved
+  - **When** the Composer looks at Save
+  - **Then** it is disabled while any sounding Slot has no note, saying how many are missing, and enabled once none is; pressing it writes the composition to the library as an owned Melodic Pattern under the name chosen at load, and it becomes the open Pattern
+  - **Cases**:
+    - **AC-19.9.1/1** — Save is disabled while any sounding Slot has no note, with the number missing shown beside it
+    - **AC-19.9.1/2** — With every sounding Slot pitched, Save is enabled, and pressing it adds the composition to the library as an owned Melodic Pattern under its name, carrying the `custom` Tag
+    - **AC-19.9.1/3** — After saving, the composition is the open Pattern — Practice shows it, and Prev/Next count from it
+
+- **AC-19.9.2** — After the first save, every change auto-saves while complete
+  - **Given** a saved composition
+  - **When** the Composer changes it
+  - **Then** a change that leaves every sounding Slot pitched is saved at once, as AC-7.2.1 requires; a change that leaves a syllable without a note is not written — the stored Pattern keeps its last complete state and the Composer says it is unsaved — and recording the missing note saves again
+  - **Cases**:
+    - **AC-19.9.2/1** — Replacing a note, clearing and re-recording one, changing tempo, swing, Key or scale, or turning a syllable off saves immediately while every sounding Slot is pitched
+    - **AC-19.9.2/2** — Turning a syllable on, clearing a note or doubling the length leaves the stored Pattern as it was, and an unsaved mark with the number of missing notes is shown
+    - **AC-19.9.2/3** — Recording the missing notes saves the composition again, and the unsaved mark goes
+
+- **AC-19.9.3** — Unsaved syllables do not survive a reload
+  - **Given** a saved composition with a syllable added and not yet recorded
+  - **When** the app is reloaded
+  - **Then** it opens in Practice, and the composition in the library is exactly as it was last saved, without that syllable
+  - *(Revised 2026-10-18, before the implementation landed: this read "opens in Practice on the Pattern as last saved". The app opens on the first owned Pattern (US-16.1), which need not be the composition; the criterion is about what the library holds, not which Pattern is open.)*
 
 ---
 

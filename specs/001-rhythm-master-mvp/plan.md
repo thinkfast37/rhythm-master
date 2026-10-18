@@ -24,9 +24,11 @@ every test named for the AC it proves.
 
 **Language/Version**: JavaScript (ES2022 modules), no TypeScript
 
-**Primary Dependencies**: Vite (dev server + build); `soundfont-player` with an acoustic grand piano
-soundfont for Melodic playback (the constitution's standing sampled-piano exception). No UI
-framework, no state library, no CSS framework.
+**Primary Dependencies**: Vite (dev server + build). No UI framework, no state library, no CSS
+framework. *(Revised 2026-08-17: the sampled piano and `soundfont-player` were removed with
+research.md D-003; both Sound Modes are Web Audio synthesis. Revised 2026-10-18: `soundfont-player`
+returns for one voice only — the Composer's sampled guitar, US-19.7, fetched on first use of the
+Guitar view under Constitution 3.7.0.)*
 
 **Storage**: Browser `localStorage`, split across separate version-stamped keys — `rm.patterns.v1`,
 `rm.localMeta.v1`, `rm.settings.v1` — so FR-006's Local Metadata separation is structural rather
@@ -129,14 +131,21 @@ src/
 │   ├── timeline.js         # Pattern → flat ordered list of scheduled events
 │   ├── pattern.js          # Pattern construction and mutation
 │   ├── similarity.js       # Duplicate and Pattern Family detection
-│   └── counting.js         # Takadimi / 1-e-&-a / Numbered syllable labels
+│   ├── counting.js         # Takadimi / 1-e-&-a / Numbered syllable labels
+│   ├── composer.js         # The Composer's draft: record target, pitch from MIDI, baking, completeness (US-19.4–US-19.9)
+│   ├── fretboard.js        # Fretboard geometry: standard tuning, visible-range layout, marker frets (US-19.2)
+│   └── piano.js            # Keyboard geometry: key ranges by count, two-row split (US-19.3)
 ├── audio/
 │   ├── context.js          # AudioContext lifecycle, gesture unlock, suspend handling
 │   ├── scheduler.js        # Lookahead transport driving core/timeline events
 │   ├── voices.js           # Percussive synthesis + accent dynamics
-│   └── piano.js            # Soundfont loading and Melodic note playback
+│   ├── melodic.js          # Synthesised melodic voice (D-003)
+│   └── guitar.js           # Sampled steel-string guitar, lazy, with the melodic voice as fallback (US-19.7)
 ├── ui/
 │   ├── grid.js             # The one grid view
+│   ├── composer.js         # The Composer mode: record bar, composing grid, controls (US-19.1, US-19.4–US-19.6)
+│   ├── fretboard.js        # The fretboard SVG, ported from fret-navigator (US-19.2)
+│   ├── piano.js            # The keyboard SVG (US-19.3)
 │   ├── score.js            # The sheet music view: SVG engraving of core/notation's score, and printing (US-12.2)
 │   ├── controls.js         # Meter, Recipe, pitch, tempo, swing, counting controls
 │   ├── library.js          # Browse, search, Tag filter, rating, navigation
@@ -245,6 +254,16 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
 | **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365 | T366 |
 | **P-052** | US-12.3 — Read the score with note names and colours | AC-12.3.1–AC-12.3.4 | T367 | T368 |
+| **P-053** | US-19.1 — Compose on an instrument | AC-19.1.1–AC-19.1.4 | T369 | T370 |
+| **P-054** | US-19.2 — The guitar view | AC-19.2.1–AC-19.2.4 | T371 | T372 |
+| **P-055** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T373 | T374 |
+| **P-056** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T375 | T376 |
+| **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.5 | T377 | T378 |
+| **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.2 | T379 | T380 |
+| **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381 | T382 |
+| **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383 | T384 |
+| **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
+| **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of
