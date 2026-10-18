@@ -61,7 +61,7 @@ export function el(tag, className, props = {}) {
   return node;
 }
 
-function labelled(labelText, control) {
+export function labelled(labelText, control) {
   const wrap = el('label', 'control');
   wrap.appendChild(el('span', 'control-label', { textContent: labelText }));
   wrap.appendChild(control);
@@ -72,7 +72,7 @@ function labelled(labelText, control) {
  * Like `labelled`, for a row holding more than one control — a `<label>` may
  * govern only one, so this is a div carrying the same classes.
  */
-function labelledRow(labelText, ...controls) {
+export function labelledRow(labelText, ...controls) {
   const wrap = el('div', 'control');
   wrap.appendChild(el('span', 'control-label', { textContent: labelText }));
   const row = el('div', 'slider-row');
@@ -86,7 +86,7 @@ function labelledRow(labelText, ...controls) {
  * — Enter, or leaving the field — clamped to the bounds; a non-numeric entry
  * puts the current value back rather than applying anything.
  */
-function valueEntry(className, { min, max, value, label, action, onCommit }) {
+export function valueEntry(className, { min, max, value, label, action, onCommit }) {
   const entry = el('input', `value-entry ${className}`, {
     type: 'number',
     inputMode: 'numeric',
@@ -702,7 +702,7 @@ export function renderFamilyMembers(root, family, handlers) {
  * One value for the whole Pattern — the Quarters feel pairs whole Beats, which
  * no single Subdivision Group could own.
  */
-const SWING_FEEL_LABELS = [
+export const SWING_FEEL_LABELS = [
   ['quarter', 'Quarters'],
   ['eighth', '8ths'],
   ['sixteenth', '16ths'],

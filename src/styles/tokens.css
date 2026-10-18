@@ -2220,3 +2220,353 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .shell[data-readonly='true'] [data-action='new-pattern'] { display: none; }
 .pattern-title-static { margin: 0 0 6px; font: 700 20px/1.2 var(--font-ui); color: var(--ink); border-bottom: 1px solid transparent; }
 .practice-panel .panel-note { margin: 0; font: 400 13px/1.45 var(--font-ui); color: var(--ink-dim); }
+
+/* =========================================================================
+ * The Composer (US-19.1–US-19.9)
+ *
+ * A mode of the main panel beside Practice: its panel stands in for both
+ * panes (AC-19.1.1/2). The instrument sits above the composing grid so the two
+ * share the panel's width and nothing else competes with them (D-015).
+ * ========================================================================= */
+
+/* fret-navigator's twelve degree-role colours, one per chromatic degree above
+   the root (AC-19.2.3/1). The same hex values, so a guitarist moving between
+   the two apps reads one palette. */
+:root {
+  --role-1: #c62828;
+  --role-b2: #b3541e;
+  --role-2: #8a6d00;
+  --role-b3: #66790a;
+  --role-3: #2e7d32;
+  --role-4: #00795c;
+  --role-4s5b: #00707e;
+  --role-5: #0b69b7;
+  --role-b6: #3f51b5;
+  --role-6: #673ab7;
+  --role-b7: #8e24aa;
+  --role-7: #c2185b;
+  --role-label: #ffffff;
+  --root-ring: #ffd54a;
+  --capo-indicator: #ffa726;
+  --record: #e53935;
+  --select: #4fc3f7;
+}
+
+/* The mode switch rides the pinned bar beside Prev/Next (AC-19.1.1/1), and the
+   instrument switch the record bar (AC-19.1.3/1): the Sound Mode switch's
+   look, under their own names so a locator for one never finds another. */
+.mode-switch,
+.instrument-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.mode-switch[hidden] { display: none; }
+
+/* In Composer mode the panes go and the Composer's panel takes the room. */
+.shell[data-mode='composer'] .pane-pattern,
+.shell[data-mode='composer'] .pane-workbench { display: none; }
+.composer-panel[hidden] { display: none; }
+.composer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  max-width: none;
+}
+/* The panel scrolls; its sections never shrink to fit it — a flex column's
+   children would otherwise squeeze the fretboard until a string fell off. */
+.composer-panel > * { flex: 0 0 auto; max-width: none; }
+.main-panel[data-layout='wide'] > .composer-panel {
+  grid-column: 1 / -1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* --- the record bar ------------------------------------------------------ */
+.composer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.composer-name {
+  font: 600 14px/1.2 var(--font-ui);
+  color: var(--ink);
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer-bar .record,
+.composer-bar .composer-delete,
+.composer-bar .composer-save,
+.composer-bar .guitar-retry {
+  padding: 9px 14px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.composer-bar button:disabled { opacity: 0.45; cursor: default; }
+.composer-bar .record::before {
+  content: '';
+  display: inline-block;
+  width: 10px; height: 10px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--record);
+  vertical-align: -1px;
+}
+.composer-bar .record.on,
+.composer-bar .record[aria-pressed='true'] {
+  color: #fff;
+  background: var(--record);
+  border-color: var(--record);
+}
+.composer-bar .record.on::before { background: #fff; animation: record-blink 1s steps(2, start) infinite; }
+@keyframes record-blink { to { visibility: hidden; } }
+.composer-bar .composer-save[data-saved='true']:disabled { opacity: 0.7; color: var(--ink-dim); }
+.composer-missing,
+.composer-unsaved,
+.record-hint,
+.guitar-status {
+  font: 500 12px/1.3 var(--font-ui);
+  color: var(--ink-dim);
+}
+.composer-unsaved { color: var(--brand); }
+.guitar-status.error { color: #ff8a80; }
+.guitar-status .guitar-retry { margin-left: 8px; padding: 5px 10px; }
+.composer-notice {
+  flex-basis: 100%;
+  margin: 0;
+  font: 400 12px/1.4 var(--font-ui);
+  color: var(--ink-dim);
+}
+
+/* --- the instrument ------------------------------------------------------ */
+.composer-instrument {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px;
+  overflow: hidden;
+}
+.fretboard {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+}
+.string-line { stroke: var(--ink-dim); stroke-width: 1.5; }
+.nut-line { stroke: var(--ink); stroke-width: 6; }
+.fret-line { stroke: var(--ink-dim); stroke-width: 1; opacity: 0.4; }
+.capo-line { stroke: var(--capo-indicator); stroke-width: 5; }
+.inlay-dot { fill: var(--ink-dim); opacity: 0.3; }
+.fret-number {
+  fill: var(--ink-dim);
+  font: 500 11px var(--font-ui);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  user-select: none;
+}
+.fretboard .note { cursor: pointer; }
+.fretboard .note:focus-visible .note-marker { stroke: var(--brand); stroke-width: 3; }
+.note-marker { fill: #2a2e3d; stroke: none; }
+/* An out-of-scale note is a plain label, no marker (AC-19.2.3/2); the root
+   keeps its ring even when the scale has been changed under it. The circle
+   stays in the tree, transparent, as the note's hit area: the label ignores
+   the pointer, so without it an out-of-scale note could not be tapped at all
+   (AC-19.2.4/1) — fret-navigator's board has exactly that gap. */
+.note:not(.is-diatonic):not(.is-root) .note-marker { fill: transparent; stroke: none; }
+.note-label {
+  fill: var(--ink-dim);
+  font: 500 12px var(--font-ui);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  user-select: none;
+}
+.note.open-string .note-marker { fill: var(--bg); stroke: var(--ink-dim); stroke-width: 2; }
+.note.is-diatonic .note-marker { stroke: var(--ink); stroke-width: 1.5; }
+.note.is-diatonic .note-label { fill: var(--role-label); font-weight: 700; }
+.note.is-root .note-marker { stroke: var(--root-ring); stroke-width: 3; }
+.note.is-root .note-label { font-weight: 700; }
+.note.role-1 .note-marker { fill: var(--role-1); }
+.note.role-b2 .note-marker { fill: var(--role-b2); }
+.note.role-2 .note-marker { fill: var(--role-2); }
+.note.role-b3 .note-marker { fill: var(--role-b3); }
+.note.role-3 .note-marker { fill: var(--role-3); }
+.note.role-4 .note-marker { fill: var(--role-4); }
+.note.role-4s5b .note-marker { fill: var(--role-4s5b); }
+.note.role-5 .note-marker { fill: var(--role-5); }
+.note.role-b6 .note-marker { fill: var(--role-b6); }
+.note.role-6 .note-marker { fill: var(--role-6); }
+.note.role-b7 .note-marker { fill: var(--role-b7); }
+.note.role-7 .note-marker { fill: var(--role-7); }
+/* Muted by the capo: drawn faint and inert (AC-19.2.2/3). */
+.note.is-muted { opacity: 0.25; pointer-events: none; cursor: default; }
+/* Outside the visible range: not drawn at all (AC-19.2.2/4). */
+.note.fret-hidden { display: none; }
+
+.piano { display: flex; flex-direction: column; gap: 8px; }
+.piano-row { display: block; width: 100%; height: auto; max-height: 160px; }
+.piano .key { cursor: pointer; }
+.piano .key-face { fill: #f2f3f7; stroke: #2a2e3d; stroke-width: 1; }
+.piano .key.black .key-face { fill: #15171f; stroke: #000; }
+.piano .key:focus-visible .key-face { stroke: var(--brand); stroke-width: 2.5; }
+.piano .key-role { stroke: none; }
+.piano .key.role-1 .key-role { fill: var(--role-1); }
+.piano .key.role-b2 .key-role { fill: var(--role-b2); }
+.piano .key.role-2 .key-role { fill: var(--role-2); }
+.piano .key.role-b3 .key-role { fill: var(--role-b3); }
+.piano .key.role-3 .key-role { fill: var(--role-3); }
+.piano .key.role-4 .key-role { fill: var(--role-4); }
+.piano .key.role-4s5b .key-role { fill: var(--role-4s5b); }
+.piano .key.role-5 .key-role { fill: var(--role-5); }
+.piano .key.role-b6 .key-role { fill: var(--role-b6); }
+.piano .key.role-6 .key-role { fill: var(--role-6); }
+.piano .key.role-b7 .key-role { fill: var(--role-b7); }
+.piano .key.role-7 .key-role { fill: var(--role-7); }
+.piano .key.is-root .key-role { stroke: var(--root-ring); stroke-width: 2.5; }
+.piano .key-label {
+  font: 700 9px var(--font-ui);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  user-select: none;
+  fill: var(--role-label);
+}
+.piano .key:not(.is-diatonic) .key-label { fill: #5b6072; font-weight: 500; }
+.piano .middle-c-mark { fill: var(--brand); }
+
+/* --- the composing grid --------------------------------------------------- */
+.composer-grid { display: flex; flex-direction: column; gap: 10px; }
+.composer-grid .measure {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.composer-grid .measure-meter { flex: 0 0 auto; font: 600 12px/1 var(--font-ui); color: var(--ink-dim); padding-top: 4px; }
+.composer-grid .beats { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.composer-grid .beat { display: flex; gap: 3px; }
+.composer-grid .group { display: flex; gap: 3px; }
+.composer-grid .group + .group { margin-left: 6px; }
+.cslot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  /* Grows with the line like a grid cell, but never past what a note name
+     needs: on a phone one Beat per line at 90px cells read as a wall. */
+  flex: 1 1 44px;
+  min-width: 44px;
+  max-width: 72px;
+  height: auto;
+  align-self: flex-start;
+  padding: 3px;
+  border: 1px solid var(--grid-slot-line);
+  border-radius: 4px;
+  background: var(--accent-off);
+  overflow: visible;
+}
+.cslot-note,
+.cslot-syllable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #171a24;
+  color: var(--ink);
+  cursor: pointer;
+}
+/* The note box is the large one (AC-19.5.1/1). */
+.cslot-note {
+  flex-direction: column;
+  min-height: 48px;
+  gap: 1px;
+}
+.cslot-note:disabled { opacity: 0.35; cursor: default; }
+.cslot-name { font: 700 15px/1.1 var(--font-ui); }
+.cslot-degree { font: 400 10px/1.1 var(--font-ui); color: var(--ink-dim); }
+.cslot-empty { font: 400 16px/1 var(--font-ui); color: var(--ink-faint); }
+/* The syllable box is the small one, carrying the accent bar. */
+.cslot-syllable {
+  position: relative;
+  min-height: 26px;
+  overflow: hidden;
+}
+/* Fixed size, not the grid's container-relative clamp: the count is the small
+   box here, under a note name that is the large one (AC-19.5.1/1). */
+.composer-grid .cslot .slot-label {
+  font: 600 13px/1.2 var(--font-ui);
+  color: var(--ink-dim);
+  padding-bottom: var(--slot-bar-h);
+  /* Not the grid's square-cell floor (`.slot:not(.has-note) .slot-label`): a
+     silent cell here is the same height as a sounding one. */
+  min-height: 0;
+}
+.cslot-syllable .slot-fill { position: absolute; left: 0; bottom: 0; height: var(--slot-bar-h); display: block; }
+.cslot.accent-weak .slot-fill { background: var(--accent-weak); }
+.cslot.accent-medium .slot-fill { background: var(--accent-medium); }
+.cslot.accent-strong .slot-fill { background: var(--accent-strong); }
+/* Three marks, three channels (AC-19.5.1/3): the cursor fills the cell, the
+   record target has a dashed red ring, the selection a solid blue one. */
+.cslot.playing { background: #3a3f52; }
+.cslot.playing .cslot-syllable { outline: 2px solid var(--ink); outline-offset: -2px; }
+.cslot.target { outline: 3px dashed var(--record); outline-offset: 1px; }
+.cslot.target .cslot-note { border-color: var(--record); }
+.cslot.selected { outline: 3px solid var(--select); outline-offset: 1px; }
+.cslot.selected .cslot-note { border-color: var(--select); }
+.cslot.unpitched .cslot-note { border-style: dashed; }
+
+.composer-empty {
+  margin: 0;
+  padding: 24px 16px;
+  font: 400 14px/1.5 var(--font-ui);
+  color: var(--ink-dim);
+  text-align: center;
+  background: var(--panel);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+/* --- the controls --------------------------------------------------------- */
+.composer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 16px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  max-width: none;
+}
+.composer-controls .control { display: flex; flex-direction: column; gap: 4px; }
+.composer-controls .slider-row { display: flex; align-items: center; gap: 6px; }
+.composer-controls .fret-range .value-entry { width: 4.5em; }
+.composer-controls .range-dash { color: var(--ink-dim); font: 400 12px var(--font-ui); }
+.composer-controls .composer-tempo,
+.composer-controls .composer-swing { width: 140px; }
+.composer-attribution {
+  margin: 0;
+  font: 400 11px/1.4 var(--font-ui);
+  color: var(--ink-faint);
+}
+.composer-attribution a { color: var(--ink-dim); }

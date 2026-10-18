@@ -386,7 +386,7 @@ following change.
   user content (ratings, added tags) and is a different store for that reason. The
   one exception is the whole-library backup (US-7.6, Constitution 3.6.0), which
   copies every store, this one included, as its own store.
-- **No audio assets.** Both Sound Modes are Web Audio synthesis; the reverb
+- **No audio assets, with one exception.** Both Sound Modes are Web Audio synthesis; the reverb
   impulse is generated at runtime.
 - **The store build is the web build.** The App Store / Google Play apps are a
   Capacitor shell (`ios/`, `android/`, `capacitor.config.json`) around the same

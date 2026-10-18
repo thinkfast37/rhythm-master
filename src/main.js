@@ -133,6 +133,29 @@ import {
 } from './ui/dialogs.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
+import * as guitar from './audio/guitar.js';
+import { getContext, resume as resumeAudio } from './audio/context.js';
+import { midiToFrequency } from './core/pitch.js';
+import {
+  recordTarget,
+  nextTarget,
+  previousSounding,
+  recordNote,
+  clearNote,
+  cycleSyllable,
+  duplicateUnpitched,
+  canDuplicate,
+  isComplete,
+  sameSlot,
+  slotAt,
+  loadKind,
+  fromPercussive,
+  bakeHarmony,
+  foldRegister,
+  copyMelody,
+} from './core/composer.js';
+import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
+import { renderComposer, moveComposerCursor, composerUnsaved } from './ui/composer.js';
 import { deriveEntitlement, isEntitled } from './core/entitlement.js';
 import { hasStoreSync, selectBillingAdapter } from './billing/index.js';
 import { showPaywall, hidePaywall, showPurchases } from './ui/paywall.js';
@@ -205,6 +228,26 @@ const state = {
   view: { query: '', tags: [], minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
   /**
+   * The Composer mode (US-19.1–US-19.9, research.md D-015). `mode` is a
+   * within-session position, never stored (AC-19.1.1/4). `draft` is the
+   * composition: a Melodic Pattern that may hold sounding Slots with no Pitch,
+   * held here and written to the store only when complete — `savedId` names
+   * the Pattern it is saved as, or null before the first Save. `target` is
+   * where Record points, `selected` the Slot a tap chose to re-pitch. None of
+   * it is Pattern data.
+   */
+  composer: {
+    mode: 'practice',
+    draft: null,
+    savedId: null,
+    recording: false,
+    target: null,
+    selected: null,
+    notice: null,
+    guitar: guitar.getStatus(),
+    widthPx: 0,
+  },
+  /**
    * The store build's entitlement (US-17.1). `hasStore` is false on the web, where
    * the app is free and none of this exists. Entitlement is re-derived from the
    * store's own answer on every launch and after every purchase, never read back
@@ -251,7 +294,13 @@ export function undo() {
  * from the top (AC-4.2.2). A stopped transport reads state at the next Play.
  */
 /** Whether cycle mode has a fill in force: on, and a progression to deal through. */
+/** Whether the Composer mode is in force with a composition to play (US-19.6). */
+function composerActive() {
+  return state.composer.mode === 'composer' && Boolean(state.composer.draft);
+}
+
 function cycling() {
+  if (composerActive()) return false;
   return state.fillCycle.on && state.pattern.soundMode === 'melodic' && hasHarmony(state.pattern);
 }
 
@@ -263,6 +312,7 @@ function fillIndexAt(loop) {
 
 /** Whether progression cycling has a progression in force: on, over a Melodic Pattern with one (US-2.10). */
 function progressionCycling() {
+  if (composerActive()) return false;
   return state.progressionCycle.on && state.pattern.soundMode === 'melodic' && hasHarmony(state.pattern);
 }
 
@@ -366,6 +416,7 @@ function composeSong() {
 
 /** Whether Play song has a fill in force: on, with entries to play (AC-18.1.3). */
 function songPlaying() {
+  if (composerActive()) return false;
   return (
     state.compose.on &&
     state.pattern.soundMode === 'melodic' &&
@@ -394,6 +445,9 @@ function fillIdAt(loop) {
  * overlays, so either, neither, or both apply without disturbing the other.
  */
 function playingAt(loop) {
+  // In the Composer the transport plays the draft as it stands — pitched Slots
+  // melodic, unpitched ones percussive — with no overlay (AC-19.6.1).
+  if (composerActive()) return state.composer.draft;
   let sounding = state.pattern;
   const progressionId = progressionIdAt(loop);
   if (progressionId !== null) sounding = withProgression(sounding, progressionId);
@@ -474,6 +528,180 @@ function restartTransport() {
   return transport.restart(scheduled(), state.settings);
 }
 
+/* --- the Composer (US-19.1–US-19.9) ---------------------------------------- */
+
+/** What leaving would lose (AC-19.1.4/1). */
+function discardMessage() {
+  const { draft, savedId } = state.composer;
+  const missing = draft ? draft.measures.reduce((n, m) => n + m.beats.reduce((k, b) => k + b.slots.filter((x) => x.on && !x.pitch).length, 0), 0) : 0;
+  if (!savedId) return `"${draft.name}" has not been saved to the library yet. Leave anyway and lose it?`;
+  return `"${draft.name}" has ${missing} ${missing === 1 ? 'syllable' : 'syllables'} without a note, which the library cannot hold. Leave anyway and lose ${missing === 1 ? 'it' : 'them'}?`;
+}
+
+function discardDraft() {
+  state.composer = { ...state.composer, draft: null, savedId: null, recording: false, target: null, selected: null, notice: null };
+}
+
+/**
+ * The melodic voice the transport and the instrument sound with: the sampled
+ * guitar in the Composer's Guitar view, the synth everywhere else (AC-19.6.1/2,
+ * AC-19.7.1/2). Read at every note, so an instrument switch changes the voice
+ * from the next event with no restart (AC-19.6.1/3).
+ */
+const guitarVoice = (ctx, destination, event, when) => guitar.playGuitar(ctx, destination, event, when, melodic.playMelodic);
+function melodicVoice() {
+  return state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? guitarVoice : melodic.playMelodic;
+}
+
+/** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2). */
+const voiceLog = [];
+function logVoice(event, via) {
+  const instrument = state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? 'guitar' : 'piano';
+  voiceLog.push({ instrument, via: via ?? 'synth', midi: event.pitch?.midiNote ?? null });
+  if (voiceLog.length > 500) voiceLog.shift();
+}
+
+/**
+ * Apply a mutation to the draft, write it to the library when it may be written
+ * — saved before, and complete now (AC-19.9.2) — and re-render.
+ */
+function applyDraft(mutator, ...args) {
+  const draft = state.composer.draft;
+  if (!draft) return null;
+  const next = mutator(draft, ...args);
+  state.composer.draft = next;
+  persistDraft();
+  syncTransport();
+  render();
+  return next;
+}
+
+/** The auto-save with its one precondition: a saved composition, complete (AC-19.9.2). */
+function persistDraft() {
+  const { draft, savedId } = state.composer;
+  if (!draft || !savedId || !isComplete(draft)) return false;
+  patternStore.upsert(draft);
+  if (state.pattern.id === draft.id) state.pattern = draft;
+  return true;
+}
+
+/** Ask for the guitar's samples when, and only when, the Guitar view is shown (AC-19.7.1/1). */
+function ensureGuitarLoaded() {
+  if (state.composer.mode !== 'composer' || state.settings.composerInstrument !== 'guitar') return;
+  let ctx;
+  try {
+    ctx = getContext();
+  } catch {
+    return;
+  }
+  guitar.load(ctx).catch(() => {});
+  state.composer.guitar = guitar.getStatus(ctx);
+}
+
+/** Sound a tapped note at once, with the instrument's voice (AC-19.2.4, AC-19.3.4). */
+function previewNote(midi) {
+  let ctx;
+  try {
+    ctx = getContext();
+  } catch {
+    return;
+  }
+  const event = { accent: 2, pitch: { midiNote: midi, frequency: midiToFrequency(midi) } };
+  const sound = (c) => {
+    const via = melodicVoice()(c, c.destination, event, c.currentTime + 0.01);
+    logVoice(event, via);
+  };
+  if (ctx.state === 'running') sound(ctx);
+  else resumeAudio().then(sound).catch(() => {});
+}
+
+/**
+ * A library Pattern into the Composer (US-19.8): a percussive rhythm or a
+ * progression under a new name, a melody edited or copied, a shipped melody
+ * copied. Nothing is written until the first Save (AC-19.8.1/2).
+ */
+async function openInComposer(pattern, owned) {
+  if (composerUnsaved(state.composer)) {
+    const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and open', cancelLabel: 'Keep composing' });
+    if (!ok) {
+      render();
+      return false;
+    }
+  }
+  const kind = loadKind(pattern);
+  const askName = (message) => askNewPatternName('', uniqueNameValidator(), { message, confirmLabel: 'Open in Composer' });
+  let draft = null;
+  let savedId = null;
+  let notice = null;
+
+  if (kind === 'percussive') {
+    const name = await askName(`"${pattern.name}" is a rhythm with no notes yet. Name the composition it becomes.`);
+    if (name === null) {
+      render();
+      return false;
+    }
+    draft = fromPercussive(pattern, name);
+  } else if (kind === 'harmonic') {
+    const name = await askName(
+      `"${pattern.name}" follows a chord progression. Its notes will be written out so you can edit them. Name the composition.`
+    );
+    if (name === null) {
+      render();
+      return false;
+    }
+    const baked = bakeHarmony(pattern, name);
+    draft = baked.pattern;
+    const n = draft.measures.length;
+    notice = baked.unrolled
+      ? `${baked.passes} ${baked.passes === 1 ? 'pass' : 'passes'} of the progression written out as ${n} ${n === 1 ? 'Measure' : 'Measures'}.`
+      : `The progression's ${baked.passes} passes would need ${baked.passes * pattern.measures.length} Measures, more than the 8 a Pattern holds — the first pass alone was kept.`;
+  } else if (owned) {
+    const choice = await ask({
+      message: `"${pattern.name}" is a melody you own. Edit it here — every change saves — or save your changes as a new composition?`,
+      options: [
+        { label: 'Edit', value: 'edit', primary: true },
+        { label: 'Save as new…', value: 'copy' },
+        { label: 'Cancel', value: 'cancel' },
+      ],
+    });
+    if (choice === 'cancel') {
+      render();
+      return false;
+    }
+    if (choice === 'edit') {
+      // The Register folded into the notes, so what the instrument shows is what
+      // sounds (AC-19.8.3/3); the melody is complete, so the fold is saved as any
+      // edit is, sounding exactly as before.
+      const folded = foldRegister(pattern);
+      if (pattern.register) patternStore.upsert(folded);
+      loadPattern(folded, { owned: true });
+      draft = state.pattern;
+      savedId = pattern.id;
+    } else {
+      const name = await askName(`Name the new composition copied from "${pattern.name}".`);
+      if (name === null) {
+        render();
+        return false;
+      }
+      draft = copyMelody(pattern, name);
+    }
+  } else {
+    const name = await askName(`"${pattern.name}" is built in, so your changes need a composition of their own. Name it.`);
+    if (name === null) {
+      render();
+      return false;
+    }
+    draft = copyMelody(pattern, name);
+  }
+
+  if (state.isPlaying) transport.stop();
+  state.composer = { ...state.composer, draft, savedId, recording: false, target: null, selected: null, notice };
+  ensureGuitarLoaded();
+  ui?.hideLibrary();
+  render();
+  return true;
+}
+
 export const getState = () => state;
 
 export function subscribe(fn) {
@@ -503,7 +731,9 @@ export function subscribe(fn) {
 function render(kind = 'full') {
   // The views see the Pattern as it plays — under cycle mode, with the fill in
   // force in place of its own (AC-2.7.2/4). State still carries the real one.
-  const shown = playing();
+  // In the Composer the Practice views keep the open Pattern; the Composer's
+  // own renderer reads the draft from state (US-19.1).
+  const shown = composerActive() ? state.pattern : playing();
   // The Song entry sounding, for the Compose group to mark (AC-18.1.3/3).
   state.songEntryInForce = songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
   for (const fn of listeners) fn(shown, state.transportPosition, state, kind);
@@ -1391,6 +1621,195 @@ const handlers = {
     render();
   },
 
+  // --- the Composer (US-19.1–US-19.9) ---
+
+  /** Practice | Composer (AC-19.1.1). Leaving with unsaved work asks first (AC-19.1.4). */
+  async onComposerMode(mode) {
+    if (mode === state.composer.mode) return;
+    if (mode === 'practice' && composerUnsaved(state.composer)) {
+      const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and leave', cancelLabel: 'Stay' });
+      if (!ok) {
+        render();
+        return;
+      }
+      discardDraft();
+    }
+    // A mode switch is a different thing to play; the run does not carry across.
+    if (state.isPlaying) transport.stop();
+    state.composer = { ...state.composer, mode, recording: false, target: null, selected: null };
+    if (mode === 'composer') {
+      // The first thing to do is choose a rhythm (AC-19.1.2/1).
+      if (!state.composer.draft) ui?.showLibrary();
+      ensureGuitarLoaded();
+    }
+    render();
+  },
+
+  /** Guitar | Piano (AC-19.1.3): a view and a voice, never a note. */
+  onComposerInstrument(instrument) {
+    state.settings = settingsStore.save({ composerInstrument: instrument === 'piano' ? 'piano' : 'guitar' });
+    ensureGuitarLoaded();
+    render();
+  },
+
+  /** The instrument view's remembered settings (AC-19.2.2/5, AC-19.3.1/3). */
+  onComposerSetting(partial) {
+    state.settings = settingsStore.save(partial);
+    render();
+  },
+
+  /** The capo, with the visible range following it up (AC-19.2.2/3). */
+  onComposerCapo(capo) {
+    const c = clampCapo(capo);
+    state.settings = settingsStore.save({
+      composerCapo: c,
+      composerFretRange: rangeAfterCapo(state.settings.composerFretRange ?? [0, 24], c),
+    });
+    render();
+  },
+
+  onComposerFretRange(range) {
+    state.settings = settingsStore.save({ composerFretRange: clampRange(range) });
+    render();
+  },
+
+  /** Ask for the samples again after a failure (AC-19.7.2/2). */
+  onGuitarRetry() {
+    let ctx;
+    try {
+      ctx = getContext();
+    } catch {
+      return;
+    }
+    guitar.retry(ctx);
+    state.composer.guitar = guitar.getStatus(ctx);
+    render();
+  },
+
+  /** Record on: the first syllable without a note is the target; Record off keeps everything (AC-19.4.1, AC-19.4.2/4). */
+  onRecord() {
+    const c = state.composer;
+    if (!c.draft) return;
+    if (c.recording) {
+      state.composer = { ...c, recording: false, target: null };
+      render();
+      return;
+    }
+    const target = recordTarget(c.draft);
+    if (!target) return;
+    state.composer = { ...c, recording: true, target, selected: null };
+    render();
+  },
+
+  /**
+   * A tap on a fret or a key: always heard (AC-19.2.4, AC-19.3.4); recorded onto
+   * the target while recording (AC-19.4.2); onto the selection otherwise
+   * (AC-19.5.2/2).
+   */
+  onInstrumentNote(midi) {
+    previewNote(midi);
+    const c = state.composer;
+    if (!c.draft) return;
+    if (c.recording && c.target) {
+      const at = c.target;
+      applyDraft(recordNote, at, midi);
+      const next = nextTarget(state.composer.draft, at);
+      if (next) state.composer.target = next;
+      else state.composer = { ...state.composer, recording: false, target: null };
+      render();
+    } else if (c.selected && slotAt(c.draft, c.selected)?.on) {
+      applyDraft(recordNote, c.selected, midi);
+    }
+  },
+
+  /** Delete: the Slot before the target while recording (AC-19.4.3); the selection otherwise (AC-19.5.2/3). */
+  onComposerDelete() {
+    const c = state.composer;
+    if (!c.draft) return;
+    if (c.recording) {
+      if (!c.target) return;
+      const before = previousSounding(c.draft, c.target);
+      if (!before) return;
+      applyDraft(clearNote, before);
+      state.composer.target = before;
+      render();
+    } else if (c.selected) {
+      applyDraft(clearNote, c.selected);
+    }
+  },
+
+  /** A tap on a note box selects that Slot, or clears the selection (AC-19.5.2/1, /4). */
+  onComposerSelect(measureIndex, beatIndex, slotIndex) {
+    const c = state.composer;
+    if (!c.draft || c.recording) return;
+    const at = { measureIndex, beatIndex, slotIndex };
+    const slot = slotAt(c.draft, at);
+    state.composer = { ...c, selected: slot?.on && !sameSlot(c.selected, at) ? at : null };
+    render();
+  },
+
+  /** A tap on a syllable box cycles the Slot's accent, as the grid does (AC-19.5.3). */
+  onComposerSyllable(measureIndex, beatIndex, slotIndex) {
+    const c = state.composer;
+    if (!c.draft) return;
+    const at = { measureIndex, beatIndex, slotIndex };
+    applyDraft(cycleSyllable, at);
+    const draft = state.composer.draft;
+    if (state.composer.selected && !slotAt(draft, state.composer.selected)?.on) state.composer.selected = null;
+    if (state.composer.recording && state.composer.target && !slotAt(draft, state.composer.target)?.on) {
+      const target = recordTarget(draft);
+      state.composer = { ...state.composer, target, recording: Boolean(target) };
+    }
+    render();
+  },
+
+  /** Double Length, the copy without its notes (AC-19.5.4). */
+  onComposerDuplicate() {
+    const c = state.composer;
+    if (!c.draft || !canDuplicate(c.draft)) return;
+    applyDraft(duplicateUnpitched);
+  },
+
+  onComposerKey(key) {
+    applyDraft((p) => ({ ...p, key }));
+  },
+
+  onComposerScale(scale) {
+    applyDraft((p) => ({ ...p, scale }));
+  },
+
+  /** Tempo and swing are the composition's own (AC-19.5.5), restarting the run as in Practice. */
+  onComposerTempo(bpm) {
+    applyDraft((p) => ({ ...p, tempo: bpm }));
+    state.settings = settingsStore.save({ lastTempo: bpm });
+    restartTransport();
+  },
+
+  onComposerSwing(amount) {
+    applyDraft(setSwingAmount, amount);
+    restartTransport();
+  },
+
+  onComposerSwingFeel(feel) {
+    applyDraft(setSwingFeel, feel);
+    restartTransport();
+  },
+
+  /** The first Save (AC-19.9.1): the composition joins the library and is the open Pattern. */
+  async onComposerSave() {
+    const c = state.composer;
+    if (!c.draft || c.savedId || !isComplete(c.draft)) return;
+    const saved = { ...structuredClone(c.draft), id: patternStore.nextId() };
+    if (!(await confirmIfDuplicate(saved, { confirmLabel: 'Keep both' }))) {
+      render();
+      return;
+    }
+    patternStore.upsert(saved);
+    loadPattern(saved, { owned: true });
+    state.composer = { ...state.composer, draft: state.pattern, savedId: saved.id };
+    render();
+  },
+
   // --- library ---
 
   /**
@@ -1470,7 +1889,13 @@ const handlers = {
     const pattern = owned
       ? patternStore.findById(id)
       : overlayStore.applyPlaybackTo(overlayStore.applyTo(seedStore.findById(id)));
-    if (pattern) loadPattern(owned ? pattern : structuredClone(pattern), { owned });
+    if (!pattern) return;
+    // In the Composer the library opens into the Composer (AC-19.1.2/2).
+    if (state.composer.mode === 'composer') {
+      void openInComposer(owned ? pattern : structuredClone(pattern), owned);
+      return;
+    }
+    loadPattern(owned ? pattern : structuredClone(pattern), { owned });
   },
 
   /**
@@ -1801,7 +2226,11 @@ const handlers = {
  * cannot drift from the audio (Principle III).
  */
 const transport = createTransport({
-  playMelodic: melodic.playMelodic,
+  // Dispatched per note rather than bound once, so the Composer's instrument
+  // switch changes the voice from the next event (AC-19.6.1/3).
+  playMelodic(ctx, destination, event, when) {
+    logVoice(event, melodicVoice()(ctx, destination, event, when));
+  },
   onPosition(position) {
     // The first sounding event of a pass is the boundary as it is HEARD.
     // `onLoop` below fires when the pass is scheduled, up to the lookahead
@@ -1881,6 +2310,12 @@ const transport = createTransport({
 });
 
 export { transport };
+
+// The guitar's samples arriving, or failing, is a change the record bar shows (AC-19.7.2).
+guitar.onStatus((status) => {
+  state.composer.guitar = status;
+  render();
+});
 
 export { handlers };
 
@@ -2064,6 +2499,29 @@ export function mount(root) {
     navEl.appendChild(b);
   }
 
+  /*
+   * Practice | Composer (AC-19.1.1): in the pinned bar, so the mode is reached
+   * from any scroll offset like the transport beside it. Absent under a
+   * practice goal, which has no Composer.
+   */
+  const modeSwitchEl = document.createElement('div');
+  modeSwitchEl.className = 'mode-switch';
+  modeSwitchEl.setAttribute('role', 'group');
+  modeSwitchEl.setAttribute('aria-label', 'Mode');
+  for (const [mode, label] of [
+    ['practice', 'Practice'],
+    ['composer', 'Composer'],
+  ]) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mode-option';
+    b.dataset.action = 'set-mode';
+    b.dataset.mode = mode;
+    b.textContent = label;
+    b.addEventListener('click', () => handlers.onComposerMode(mode));
+    modeSwitchEl.appendChild(b);
+  }
+
   const topBarEl = document.createElement('div');
   topBarEl.className = 'main-top-bar';
   // The goal bar is the pinned bar's second row (AC-15.1.8, AC-15.1.17): the
@@ -2071,7 +2529,7 @@ export function mount(root) {
   // any scroll offset like the transport beside them.
   const goalBarEl = document.createElement('div');
   // Lab's Help for the pinned bar itself, under the goal bar (AC-14.1.3/3).
-  topBarEl.append(libraryToggle, playEl, navEl, goalBarEl);
+  topBarEl.append(libraryToggle, playEl, navEl, modeSwitchEl, goalBarEl);
 
   // The goals screen (AC-14.1.1): stands in for the library and the main
   // panel together while open, so it is a child of the shell beside them.
@@ -2090,7 +2548,14 @@ export function mount(root) {
   const workbenchPaneEl = document.createElement('div');
   workbenchPaneEl.className = 'pane pane-workbench';
   workbenchPaneEl.append(tabsEl, melodyEl, rhythmEl, practiceEl, composeEl, actionsEl, familyEl);
-  main.append(topBarEl, patternPaneEl, workbenchPaneEl);
+  // The Composer's panel stands in for both panes while its mode is in force
+  // (AC-19.1.1/2); empty and hidden otherwise, so none of its controls can be
+  // found in Practice.
+  const composerEl = document.createElement('section');
+  composerEl.className = 'composer-panel';
+  composerEl.dataset.section = 'composer';
+  composerEl.hidden = true;
+  main.append(topBarEl, patternPaneEl, workbenchPaneEl, composerEl);
   shell.append(goalsEl, sidebar, scrim, main);
   root.appendChild(shell);
   // In the tree now, so the panel has a width to be laid out by (AC-15.1.18).
@@ -2140,6 +2605,39 @@ export function mount(root) {
       handlers.onTimeSignature(m);
     }
   });
+
+  // The composing grid's two boxes per Slot (AC-19.5.1), delegated like the grid's.
+  composerEl.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-action]');
+    if (!target) return;
+    const m = Number(target.dataset.measure);
+    const b = Number(target.dataset.beat);
+    const sl = Number(target.dataset.slot);
+    if (target.dataset.action === 'select-note') handlers.onComposerSelect(m, b, sl);
+    else if (target.dataset.action === 'cycle-syllable') handlers.onComposerSyllable(m, b, sl);
+  });
+
+  // The Delete and Backspace keys do what the Delete control does (AC-19.4.3/3),
+  // unless the musician is typing or a dialog is up.
+  document.addEventListener('keydown', (event) => {
+    if (state.composer.mode !== 'composer' || !state.composer.draft) return;
+    if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+    const tag = event.target?.tagName;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || event.target?.isContentEditable) return;
+    if (document.querySelector('.dialog')) return;
+    event.preventDefault();
+    handlers.onComposerDelete();
+  });
+
+  // The keyboard lays itself out to the width it has (AC-19.3.2), and follows a change of it.
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      const width = composerEl.clientWidth;
+      if (width === state.composer.widthPx) return;
+      state.composer.widthPx = width;
+      if (state.composer.mode === 'composer') render();
+    }).observe(composerEl);
+  }
 
   /*
    * Anything that loads a Pattern into the main panel collapses the library, at
@@ -2291,6 +2789,11 @@ export function mount(root) {
      * sounding event for nothing.
      */
     if (kind === 'cursor') {
+      // In the Composer the cursor runs in the composing grid (AC-19.6.1/1).
+      if (s.composer.mode === 'composer') {
+        moveComposerCursor(composerEl, position);
+        return;
+      }
       if (s.settings.patternView === 'sheet') {
         renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem, fill: fillLabel() }), {
           width: scoreEl.clientWidth || main.clientWidth || 680,
@@ -2338,6 +2841,15 @@ export function mount(root) {
     // A practice goal offers none of it and edits nothing (AC-14.1.5).
     const surface = surfaceFor(s.settings.goal);
     shell.dataset.readonly = String(surface.readOnly);
+    // Practice or Composer (AC-19.1.1): the shell carries the mode so the
+    // panes and the Composer's panel can stand in for each other.
+    shell.dataset.mode = s.composer.mode;
+    for (const b of modeSwitchEl.querySelectorAll('[data-mode]')) {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === s.composer.mode));
+    }
+    modeSwitchEl.hidden = surface.readOnly;
+    if (!state.composer.widthPx && composerEl.clientWidth) state.composer.widthPx = composerEl.clientWidth;
+    renderComposer(composerEl, s, handlers);
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags, readOnly: surface.readOnly }, handlers);
     renderChordStrip(chordStripEl, pattern, position);
@@ -2485,6 +2997,8 @@ export function mount(root) {
     actionsEl,
     navEl,
     familyEl,
+    composerEl,
+    modeSwitchEl,
   };
 }
 
@@ -2724,6 +3238,13 @@ if (typeof window !== 'undefined') {
     /** The progression cycling has in force, as its catalogue id, or null (US-2.10). */
     progressionInForce: () => matchProgression(playing()),
     songStore,
+    /** The Composer's state (US-19.x): mode, draft, target, selection, saved id. */
+    composer: () => state.composer,
+    /** Whether the composition holds work the library does not (AC-19.1.4). */
+    composerUnsaved: () => composerUnsaved(state.composer),
+    /** Which voice sounded each melodic event (AC-19.6.1/2, AC-19.7.1/2). */
+    voiceLog: () => voiceLog.slice(),
+    guitar,
     /** The Song entry in force on the pass on screen, or null (US-18.1). */
     songEntryInForce: () => songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
     /** The name the Section would export under (AC-18.1.5/2). */

@@ -88,6 +88,15 @@ core feature); a vendored soundfont (built, then removed — several MB in the r
 maintainer liked less); a small pitch-shifted sample set (rejected earlier on stretch artefacts, and
 moot now).
 
+**Amended 2026-10-18 (US-19.7, Constitution 3.7.0).** One sampled voice returns, narrowly: the
+Composer's guitar is the FluidR3_GM `acoustic_guitar_steel` that fret-navigator plays, fetched from
+gleitz/midi-js-soundfonts through soundfont-player on first use of the Composer's Guitar view. Both
+Sound Modes in Practice, and the Composer's piano, remain the synthesis above. The CDN objection
+stands and is answered by the fallback rather than by vendoring: the synthesised melodic voice sounds
+for every guitar note while the samples load or when they cannot, so the feature works offline at the
+cost of timbre, never of silence (AC-19.7.2). The maintainer chose this over a synthesised plucked
+string, told of the reversal: "for guitar — use the one in fret-navigator." See D-015.
+
 ---
 
 ## D-004 — Storage structure
@@ -517,6 +526,76 @@ an edit to that file: ids are seed positions and are unchanged, so no overlay, r
 orphaned. A saved custom Pattern's chords name no bass and so are root position — exactly what they
 were — with no migration and no schema bump: the maintainer's condition was "make sure you don't kill
 all my settings", and a migration that rewrites saved Patterns cannot be undone by a later commit.
+
+## D-015 — The Composer: an instrument over the grid, a draft that is not yet a Pattern
+
+**Decision (2026-10-18)**: the Composer (US-19.1–US-19.9) is a second mode of the main panel, beside
+Practice, not a fifth workbench group. It shows an instrument view — fret-navigator's fretboard, or a
+piano keyboard — above a record bar and a *composing grid*, and the library sidebar stays. The
+composition it holds is a **draft**: a Melodic Pattern that may have sounding Slots with no Pitch,
+which data-model §7 forbids in storage. The draft lives in `state.composer` and is written to
+`rm.patterns.v1` only when complete — by hand the first time (Save), and on every change after that
+while it stays complete. That is why US-7.2's auto-save and US-19.9's Save are one rule with a
+precondition rather than two models.
+
+**Why a mode, not a tab.** The fretboard is 24 frets wide and the keyboard up to 88 keys; either
+beside the grid in the workbench pane halves what both get. The maintainer wants to look at the
+instrument and the rhythm together, so they share the panel's width and nothing else does.
+
+**The fretboard is ported, not shared.** fret-navigator has no build step and this app has Vite; a
+shared package would be a third repository for two consumers. `core/fretboard.js` carries the
+geometry (the column layout for a visible range, the marker frets, standard tuning's open notes as
+MIDI) and `ui/fretboard.js` the SVG, both adapted from fret-navigator's `fretboard.js` and
+`theory.js` with the capo-relative mode and the chord view left out. The twelve degree-role colours
+are the same hex values. Names and degrees are **not** ported: `core/pitch.js` and `core/scales.js`
+spell them, so the board and the grid can never disagree — the same reason `core/scales.js` adopted
+fret-navigator's catalogue rather than linking to it (its header note).
+
+**The piano is drawn, not ported.** `core/piano.js` gives the key range for a count — 25 and 49
+centred on middle C; 37, 61, 76 and 88 the ranges such keyboards have — and the two-row split at the
+C nearest the middle when one row would put white keys under 18px. SVG, like the board, so a key is
+one element with one colour and one label.
+
+**A tapped note becomes a degree of the Key.** `core/composer.js` `pitchFromMidi(midi, key, scale)`:
+the semitone above the Key's tonic picks the degree token — the scale's own spelling where it has
+one (`chromaticStrip`), the default chromatic token otherwise — and the octave offset is whatever
+makes `resolve()` give the MIDI note back. A round trip with no loss is AC-19.4.4/1, and it is what
+lets the fretboard, the grid and playback show one note three ways.
+
+**Record is a cursor over the sounding Slots.** The target is the first sounding Slot with no Pitch
+in timeline order; a recorded note moves it to the next such Slot; none left ends record mode.
+Delete acts on the Slot *before* the target because the target holds nothing — the maintainer's own
+description. Out of record mode a selection replaces the target: one Slot, tapped on its note box,
+that the next instrument tap re-pitches.
+
+**Playback of a draft needs no new timeline.** `buildTimeline` already emits `pitch: null` for a
+sounding Slot without one, and the scheduler already plays such an event percussively; the draft
+plays correctly as it is. What the Composer adds is which melodic voice the scheduler is handed —
+guitar or piano, following the view — swapped without a restart.
+
+**The guitar voice.** `audio/guitar.js` wraps soundfont-player exactly as fret-navigator's `audio.js`
+does — instrument cached per AudioContext, loaded lazily, a load failure letting a later tap retry —
+and schedules each note on the transport's clock so it lands with the percussive events around it.
+Until the instrument resolves, or when it rejects, `playMelodic` sounds instead. `soundfont-player`
+is an npm dependency (bundled, MIT); the samples are fetched at play time, never vendored
+(Constitution 3.7.0). The CC BY 3.0 attribution is in the Composer's panel.
+
+**Loading rules are the ownership rules.** A percussive Pattern or one with a progression can only
+become a *new* composition — a percussive one has no notes, a harmonic one's notes are derived at
+play time and become stored degrees here — so both ask a name at load; nothing is written until
+Save. A melodic Pattern the musician owns may be edited in place (already complete, so already
+saved) or copied; a shipped one may only be copied (US-7.3). Baking a progression unrolls the
+harmonic cycle into Measures when it fits within the 8-Measure cap, because a melody that changes
+chord every pass is several bars long, not one bar played differently; past the cap the first pass
+alone is kept, and the Composer says so. A Register is folded into each note's octave so that what
+the instrument shows is what sounds.
+
+**Alternatives considered**: a `voice` field on the Pattern so the library plays a composition as
+guitar (rejected by the maintainer — the instrument is the view, not the data); auto-saving the
+complete Slots of an incomplete draft (rejected — the stored Pattern would differ from the screen);
+a Karplus-Strong guitar with no assets (offered, declined); a fifth workbench tab (rejected — see
+above); writing the draft to a store of its own so it survives a reload (not asked for — the
+maintainer stated the loss explicitly, and a second Pattern store is a schema the app does not need).
 
 ## Open items deliberately left to implementation
 

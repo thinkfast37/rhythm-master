@@ -106,7 +106,7 @@ export function askApplyToAllMeasures(timeSignature) {
  *   null when the name is acceptable. Used to enforce unique names
  *   (AC-7.3.5, AC-7.4.4) without this module knowing what the library holds.
  */
-export function askNewPatternName(suggestion, validate = null) {
+export function askNewPatternName(suggestion, validate = null, { message = null, confirmLabel = 'Create' } = {}) {
   const root = ensureHost();
   return new Promise((resolve) => {
     root.innerHTML = '';
@@ -119,8 +119,10 @@ export function askNewPatternName(suggestion, validate = null) {
 
     const text = document.createElement('p');
     text.className = 'dialog-message';
+    // The Composer names a composition with the same prompt (US-19.8), with
+    // its own wording; the default is the shipped-Pattern flow's.
     text.textContent =
-      'This is a built-in pattern. Give your version a name to start editing it.';
+      message ?? 'This is a built-in pattern. Give your version a name to start editing it.';
     box.appendChild(text);
 
     const input = document.createElement('input');
@@ -135,7 +137,7 @@ export function askNewPatternName(suggestion, validate = null) {
     const save = document.createElement('button');
     save.type = 'button';
     save.className = 'dialog-button primary';
-    save.textContent = 'Create';
+    save.textContent = confirmLabel;
     // Appended, not inserted before `row`: `row` is not a child of `box` yet at
     // this point, and insertBefore against a non-child throws.
     const error = document.createElement('p');

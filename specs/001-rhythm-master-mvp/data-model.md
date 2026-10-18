@@ -358,9 +358,22 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "fillCycleRepeats": 4,          // AC-2.7.1/2 — harmonic cycles each fill plays for in cycle mode, 1–16; cycle mode itself is not stored
   "goal": null,                   // AC-14.1.2/5 — the chosen goal's id, or "lab"; null until one is chosen, which is what opens the goals screen
   "level": "Beginner",            // AC-14.1.4/1 — "Beginner" | "Intermediate" | "Advanced" | "any", the level the dice and Prev/Next draw from; "any" is every level (AC-14.1.4/5)
-  "labHelp": false                // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
+  "labHelp": false,               // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
+  "composerInstrument": "guitar", // AC-19.1.3/3 — "guitar" | "piano", the Composer's instrument view
+  "composerLabelMode": "notes",   // AC-19.2.2/5 — "notes" | "degrees" | "intervals", how in-scale notes are labelled
+  "composerCapo": 0,              // AC-19.2.2/5 — 0–12, the fretboard's capo
+  "composerFretRange": [0, 24],   // AC-19.2.2/5 — lower and upper visible fret, 0–24
+  "composerKeys": 49              // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
 }
 ```
+
+`composerInstrument`, `composerLabelMode`, `composerCapo`, `composerFretRange` and `composerKeys`
+were added 2026-10-18 with US-19.1–US-19.3. They describe the Composer's instrument view and nothing
+about any Pattern: a composition saved from the Composer is an ordinary Melodic Pattern
+(AC-19.8.4), and which instrument it was composed on is not recorded anywhere. Absent values read
+as the defaults shown, so no migration runs. The Composer's *draft* — a composition with syllables
+that have no note yet — is held in memory only and is never written to any store (research.md
+D-015); the stores hold what was last complete.
 
 `goal`, `level` and `labHelp` were added 2026-09-20 with US-14.1. All three are preferences about
 the interface, not about any Pattern: choosing a goal or a level writes nothing to a Pattern, an

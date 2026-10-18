@@ -1,6 +1,33 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.6.0 → 3.7.0
+
+3.7.0 — Principle V's "no audio assets" rule gains one named exception: the Composer's
+  guitar voice (US-19.7) is the FluidR3_GM steel-string guitar — the samples fret-navigator
+  plays — fetched through soundfont-player on first use of the Composer's Guitar view and
+  nowhere else. Both Sound Modes in Practice remain Web Audio synthesis; the piano voice in
+  the Composer is that synthesis; nothing is vendored, and the app still ships no audio file.
+  Principle III's rule that sampled-instrument loading MUST NOT block app usability, written
+  for the sampled piano and left standing when it was retired, now governs this voice: the
+  samples load asynchronously, a loading state is shown, and the synthesised voice sounds in
+  their place while they load or when they cannot (AC-19.7.2).
+
+  Asked for on 2026-10-18. The maintainer was told that "use what fret-navigator uses"
+  reinstates sampled audio this project retired on 2026-08-17 (3.1.0, research.md D-003),
+  that it is someone else's CDN at play time, and that the store apps would need the network
+  for it; offered a synthesised plucked string instead, they chose the samples: "for guitar —
+  use the one in fret-navigator."
+
+  MINOR rather than PATCH: it is a material change to a rule that imposes a new requirement
+  on one code path (lazy, non-blocking, synth fallback). Not MAJOR: no principle is removed
+  or redefined — every artifact that complied with 3.6.0 complies with 3.7.0, since the rule
+  is narrowed by a single named voice rather than reversed.
+
+  Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅. Follow-up:
+  research.md D-003 amended and D-015 added; spec.md US-19.1–US-19.9 added; CLAUDE.md §6
+  amended (T385).
+
 Version change: 3.5.0 → 3.6.0
 
 3.6.0 — The Local Metadata separation rule (Client-Side Architecture Constraints) gains
@@ -467,7 +494,12 @@ Billing — so this adds no backend, no account and no secret. The rules for tha
   Audio synthesis, and the melodic reverb impulse is generated at runtime. A former
   standing exception permitting a sampled piano soundfont was retired on 2026-08-17,
   unused — the maintainer preferred the synthesized engine once both were built and
-  heard (research.md D-003).
+  heard (research.md D-003). **One exception stands (3.7.0):** the Composer's guitar
+  voice (US-19.7) is a sampled steel-string guitar, fetched on first use of the
+  Composer's Guitar view and never on page load, in Practice, or in the Piano view. It is
+  fetched, never vendored; it MUST load without blocking and MUST fall back to the
+  synthesised voice while loading or on failure (Principle III); and it MUST NOT become a
+  second sampled voice without a further amendment.
 - YAGNI applies strictly: do not build configuration hooks, plugin systems, or
   abstractions for hypothetical features. Implement the minimum surface area that
   satisfies current requirements.
@@ -567,4 +599,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.6.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-03
+**Version**: 3.7.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-18
