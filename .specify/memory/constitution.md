@@ -25,8 +25,8 @@ Version change: 3.6.0 → 3.7.0
   is narrowed by a single named voice rather than reversed.
 
   Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅. Follow-up:
-  research.md D-003 amended and D-015 added; spec.md US-19.1–US-19.9 added; CLAUDE.md §6
-  amended (T385).
+  research.md D-003 amended and D-016 added; spec.md US-19.1–US-19.9 added; CLAUDE.md §6
+  amended (T387).
 
 Version change: 3.5.0 → 3.6.0
 

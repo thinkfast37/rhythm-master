@@ -1,5 +1,5 @@
 /**
- * The Composer's draft (US-19.4–US-19.9, research.md D-015).
+ * The Composer's draft (US-19.4–US-19.9, research.md D-016).
  *
  * A draft is a Melodic Pattern that may hold sounding Slots with no Pitch —
  * which `validate` forbids in storage, and which is exactly the state a line

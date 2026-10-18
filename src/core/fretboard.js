@@ -1,6 +1,6 @@
 /**
  * The fretboard's geometry (US-19.2), ported from fret-navigator's `theory.js`
- * and `fretboard.js` (research.md D-015) with everything the Composer fixes
+ * and `fretboard.js` (research.md D-016) with everything the Composer fixes
  * left out: one tuning, absolute fret numbers, no chord view.
  *
  * Pure: what a string and fret sound, which frets a capo mutes, where a fret

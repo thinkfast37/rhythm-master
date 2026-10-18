@@ -3632,7 +3632,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 49 - Compose on an instrument
+### User Story 50 - Compose on an instrument
 
 *Traceability: `US-19.1` — Compose on an instrument*
 
@@ -3682,13 +3682,13 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 50 - The guitar view
+### User Story 51 - The guitar view
 
 *Traceability: `US-19.2` — The guitar view*
 
 **As** the Composer, **I want** the fretboard I know from fret-navigator inside the Composer — standard tuning, absolute fret numbers, the notes of the key coloured by degree — with the scale root, scale, label mode, capo and visible frets to hand, **so that** the melody I record is the one I would play, found where I would find it on the neck.
 
-*(Added 2026-10-18. The maintainer asked for "the guitar fretboard view we have in the fret-navigator app … a subset of controls: scale root, scale mode, label mode, capo, visible frets. Some controls will be fixed and you don't need to show these controls: tuning = standard, fret reference = absolute. The fret labels should also be colour coded just like in the fret-navigator app." The board's geometry and its twelve degree-role colours are ported from fret-navigator (research.md D-015); its names and degrees are spelled by this app's own `core/pitch.js` and `core/scales.js`, so the fretboard and the composing grid can never disagree about what a note is called.)*
+*(Added 2026-10-18. The maintainer asked for "the guitar fretboard view we have in the fret-navigator app … a subset of controls: scale root, scale mode, label mode, capo, visible frets. Some controls will be fixed and you don't need to show these controls: tuning = standard, fret reference = absolute. The fret labels should also be colour coded just like in the fret-navigator app." The board's geometry and its twelve degree-role colours are ported from fret-navigator (research.md D-016); its names and degrees are spelled by this app's own `core/pitch.js` and `core/scales.js`, so the fretboard and the composing grid can never disagree about what a note is called.)*
 
 **Independent Test**: In Guitar view, assert six strings and frets 0–24 with the inlay dots at the marker frets, that every in-scale note carries its degree-role colour and the root its ring, set a capo at 3 and assert frets 0–2 are muted and the lower bound of the visible range follows, narrow the visible frets to 5–12 and assert the board redraws to that range, and tap a fret at rest and during playback and assert it sounds.
 
@@ -3733,7 +3733,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 51 - The piano view
+### User Story 52 - The piano view
 
 *Traceability: `US-19.3` — The piano view*
 
@@ -3778,7 +3778,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 52 - Record notes onto the rhythm
+### User Story 53 - Record notes onto the rhythm
 
 *Traceability: `US-19.4` — Record notes onto the rhythm*
 
@@ -3828,7 +3828,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 53 - Edit a composition
+### User Story 54 - Edit a composition
 
 *Traceability: `US-19.5` — Edit a composition*
 
@@ -3887,7 +3887,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 54 - Play the composition while composing
+### User Story 55 - Play the composition while composing
 
 *Traceability: `US-19.6` — Play the composition while composing*
 
@@ -3919,7 +3919,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 55 - Hear a guitar
+### User Story 56 - Hear a guitar
 
 *Traceability: `US-19.7` — Hear a guitar*
 
@@ -3951,7 +3951,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 56 - Load a rhythm into the Composer
+### User Story 57 - Load a rhythm into the Composer
 
 *Traceability: `US-19.8` — Load a rhythm into the Composer*
 
@@ -3997,7 +3997,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 ---
 
-### User Story 57 - Save a composition
+### User Story 58 - Save a composition
 
 *Traceability: `US-19.9` — Save a composition*
 

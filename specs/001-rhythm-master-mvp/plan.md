@@ -253,16 +253,16 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352 | T327, T329, T331, T353 |
 | **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
 | **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365 | T366 |
-| **P-052** | US-19.1 — Compose on an instrument | AC-19.1.1–AC-19.1.4 | T367 | T368 |
-| **P-053** | US-19.2 — The guitar view | AC-19.2.1–AC-19.2.4 | T369 | T370 |
-| **P-054** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T371 | T372 |
-| **P-055** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T373 | T374 |
-| **P-056** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.5 | T375 | T376 |
-| **P-057** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.2 | T377 | T378 |
-| **P-058** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T379 | T380 |
-| **P-059** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T381 | T382 |
-| **P-060** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T383 | T384 |
-| **P-061** | Governance for the Composer: Constitution 3.7.0, research D-003/D-015, data-model §6 | — | T385 | — |
+| **P-053** | US-19.1 — Compose on an instrument | AC-19.1.1–AC-19.1.4 | T369 | T370 |
+| **P-054** | US-19.2 — The guitar view | AC-19.2.1–AC-19.2.4 | T371 | T372 |
+| **P-055** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T373 | T374 |
+| **P-056** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T375 | T376 |
+| **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.5 | T377 | T378 |
+| **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.2 | T379 | T380 |
+| **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381 | T382 |
+| **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383 | T384 |
+| **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
+| **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

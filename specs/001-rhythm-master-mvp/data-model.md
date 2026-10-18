@@ -373,7 +373,7 @@ about any Pattern: a composition saved from the Composer is an ordinary Melodic 
 (AC-19.8.4), and which instrument it was composed on is not recorded anywhere. Absent values read
 as the defaults shown, so no migration runs. The Composer's *draft* — a composition with syllables
 that have no note yet — is held in memory only and is never written to any store (research.md
-D-015); the stores hold what was last complete.
+D-016); the stores hold what was last complete.
 
 `goal`, `level` and `labHelp` were added 2026-09-20 with US-14.1. All three are preferences about
 the interface, not about any Pattern: choosing a goal or a level writes nothing to a Pattern, an

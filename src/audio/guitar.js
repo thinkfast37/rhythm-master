@@ -1,7 +1,7 @@
 /**
  * The Composer's guitar voice (US-19.7): the FluidR3_GM steel-string guitar
  * fret-navigator plays, through soundfont-player — the one sampled voice the
- * Constitution admits (3.7.0, research.md D-003 as amended, D-015).
+ * Constitution admits (3.7.0, research.md D-003 as amended, D-016).
  *
  * Loaded lazily, once per AudioContext, and only when asked — the Composer
  * asks on the first showing of its Guitar view, never on page load. Until the

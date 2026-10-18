@@ -95,7 +95,7 @@ Sound Modes in Practice, and the Composer's piano, remain the synthesis above. T
 stands and is answered by the fallback rather than by vendoring: the synthesised melodic voice sounds
 for every guitar note while the samples load or when they cannot, so the feature works offline at the
 cost of timbre, never of silence (AC-19.7.2). The maintainer chose this over a synthesised plucked
-string, told of the reversal: "for guitar — use the one in fret-navigator." See D-015.
+string, told of the reversal: "for guitar — use the one in fret-navigator." See D-016.
 
 ---
 
@@ -527,7 +527,7 @@ orphaned. A saved custom Pattern's chords name no bass and so are root position 
 were — with no migration and no schema bump: the maintainer's condition was "make sure you don't kill
 all my settings", and a migration that rewrites saved Patterns cannot be undone by a later commit.
 
-## D-015 — The Composer: an instrument over the grid, a draft that is not yet a Pattern
+## D-016 — The Composer: an instrument over the grid, a draft that is not yet a Pattern
 
 **Decision (2026-10-18)**: the Composer (US-19.1–US-19.9) is a second mode of the main panel, beside
 Practice, not a fifth workbench group. It shows an instrument view — fret-navigator's fretboard, or a

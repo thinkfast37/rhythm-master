@@ -228,7 +228,7 @@ const state = {
   view: { query: '', tags: [], minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
   /**
-   * The Composer mode (US-19.1–US-19.9, research.md D-015). `mode` is a
+   * The Composer mode (US-19.1–US-19.9, research.md D-016). `mode` is a
    * within-session position, never stored (AC-19.1.1/4). `draft` is the
    * composition: a Melodic Pattern that may hold sounding Slots with no Pitch,
    * held here and written to the store only when complete — `savedId` names
