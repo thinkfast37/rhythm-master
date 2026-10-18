@@ -40,6 +40,8 @@ export const DEFAULTS = {
   level: 'Beginner',
   /** Whether Lab's Help toggle is on (AC-14.1.3/3). */
   labHelp: false,
+  /** Whether the melodic score writes note names and degree colours (AC-12.3.1/2). Off on a first load. */
+  sheetAids: false,
 };
 
 export function load() {

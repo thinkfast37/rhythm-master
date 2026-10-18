@@ -1327,9 +1327,17 @@ const handlers = {
     render();
   },
 
-  /** The score through the browser's print dialog, for paper or a PDF (AC-12.2.11). */
+  /** Note names and degree colours on the melodic score, remembered (AC-12.3.1). */
+  onSheetAids(on) {
+    state.settings = settingsStore.save({ sheetAids: Boolean(on) });
+    render();
+  },
+
+  /** The score through the browser's print dialog, for paper or a PDF (AC-12.2.11); the aids print as shown (AC-12.3.4). */
   onPrintScore() {
-    return printScore(buildScore(playing(), { countingSystem: state.settings.countingSystem, fill: fillLabel() }));
+    return printScore(buildScore(playing(), { countingSystem: state.settings.countingSystem, fill: fillLabel() }), {
+      aids: state.settings.sheetAids,
+    });
   },
 
   onSetting(partial) {
@@ -1969,6 +1977,15 @@ export function mount(root) {
     b.addEventListener('click', () => handlers.onPatternView(view));
     viewBar.appendChild(b);
   }
+  // Note aids: names and colours on the melodic score, a toggle shown only
+  // while Sheet shows a Melodic Pattern (AC-12.3.1/1).
+  const aidsButton = document.createElement('button');
+  aidsButton.type = 'button';
+  aidsButton.className = 'aids-button';
+  aidsButton.dataset.action = 'sheet-aids';
+  aidsButton.textContent = 'Note aids';
+  aidsButton.addEventListener('click', () => handlers.onSheetAids(!state.settings.sheetAids));
+  viewBar.appendChild(aidsButton);
   const printButton = document.createElement('button');
   printButton.type = 'button';
   printButton.className = 'print-button';
@@ -2295,6 +2312,7 @@ export function mount(root) {
         renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem, fill: fillLabel() }), {
           width: scoreEl.clientWidth || main.clientWidth || 680,
           transportPosition: position,
+          aids: s.settings.sheetAids,
         });
       } else {
         moveCursor(gridEl, position);
@@ -2347,6 +2365,11 @@ export function mount(root) {
       b.classList.toggle('on', (b.dataset.view === 'sheet') === sheet);
     }
     printButton.hidden = !sheet;
+    // The aids toggle belongs to the melodic score alone (AC-12.3.1/1, /4).
+    const aidsShown = sheet && pattern.soundMode === 'melodic';
+    aidsButton.hidden = !aidsShown;
+    aidsButton.setAttribute('aria-pressed', String(Boolean(s.settings.sheetAids)));
+    aidsButton.classList.toggle('on', Boolean(s.settings.sheetAids));
     gridEl.hidden = sheet;
     scoreEl.hidden = !sheet;
     // The brush line describes grid taps; the score takes none (AC-12.2.9),
@@ -2358,6 +2381,7 @@ export function mount(root) {
       renderScore(scoreEl, buildScore(pattern, { countingSystem: s.settings.countingSystem, fill: fillLabel() }), {
         width: scoreEl.clientWidth || main.clientWidth || 680,
         transportPosition: position,
+        aids: s.settings.sheetAids,
       });
     } else {
       renderGrid(gridEl, pattern, position, {

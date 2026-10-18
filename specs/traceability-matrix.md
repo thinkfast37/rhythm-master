@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 740 across 48 User Stories
+**Criteria**: 755 across 49 User Stories
 
-**Coverage**: 556 of 740 criteria proven (75.1%)
+**Coverage**: 571 of 755 criteria proven (75.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 556 | 75.1% |
-| 🔴 Gap — HIGH | 65 | 8.8% |
-| 🟠 Gap — MEDIUM | 41 | 5.5% |
-| 🟡 Gap — LOW | 78 | 10.5% |
+| 🟢 Proven | 571 | 75.6% |
+| 🔴 Gap — HIGH | 65 | 8.6% |
+| 🟠 Gap — MEDIUM | 41 | 5.4% |
+| 🟡 Gap — LOW | 78 | 10.3% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -106,6 +106,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-14.1 | 23 | **23** | · | · | · | · | · |
 | 🟢 US-7.6 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-2.11 | 23 | **23** | · | · | · | · | · |
+| 🟢 US-12.3 | 15 | **15** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -851,3 +852,18 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.11 | `AC-2.11.4/2` | A saved Pattern whose chords name no bass loads in root position with nothing rewritten: no migration runs and the stores keep their schemaVersion | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
 | US-2.11 | `AC-2.11.4/3` | Two Patterns alike but for one chord's bass are not duplicates | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
 | US-2.11 | `AC-2.11.4/4` | Every shipped Pattern with a progression is voiced Closest in the library file | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.1/1` 🖵 | A Note aids toggle sits with the Grid \| Sheet toggle and Print / PDF, shown only while Sheet is showing a Melodic Pattern; it is hidden while Grid is showing and hidden for a Percussive Pattern | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.1/2` 🖵 | The choice is remembered as an app preference across loads, and a first load has it off | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.1/3` 🖵 | With Note aids off the score is written as it was before this story: every notehead in the staff's black and no note names | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.1/4` 🖵 | Switching a Melodic Pattern to Percussive while Note aids is on hides the toggle and writes the plain rhythm staff; the preference is kept, and switching back to Melodic shows the aids again | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.2/1` 🖵 | Every note carries its name above it, spelled as the pitch strip spells it: ♭3 in C reads E♭, 3 in D♭ reads F, ♯4 in C reads F♯ | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.2/2` 🖵 | The name sits above the note's stem end, beam or accent mark, whichever is highest, and above its tuplet numeral; the staff, counting labels and chord names are where they were without it | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.2/3` 🖵 | The second note of a tie carries no name, as it is the same note held; a rest carries no name | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.2/4` 🖵 | A note's name is written in the same colour as its notehead | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.3/1` 🖵 | A note's notehead and name take the colour of its degree above the Key, so every 1 in a Pattern is one colour and every 5 another whatever the octave; the colour follows the degree, not the letter, so 1 in C and 1 in E♭ are one colour | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.3/2` 🖵 | A degree in the Pattern's scale takes its colour from the twelve-colour degree scheme of the maintainer's fret-navigator: 1 `#c62828`, ♭2 `#b3541e`, 2 `#8a6d00`, ♭3 `#66790a`, 3 `#2e7d32`, 4 `#00795c`, ♯4/♭5 `#00707e`, 5 `#0b69b7`, ♭6 `#3f51b5`, 6 `#673ab7`, ♭7 `#8e24aa`, 7 `#c2185b` | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.3/3` 🖵 | A degree outside the Pattern's scale takes its colour from a second set of twelve, none of which is in the scheme — 1 `#ff8a80`, ♭2 `#ffab40`, 2 `#ffe57f`, ♭3 `#ccff90`, 3 `#a5d6a7`, 4 `#80cbc4`, ♯4/♭5 `#84ffff`, 5 `#82b1ff`, ♭6 `#9fa8da`, 6 `#b39ddb`, ♭7 `#ea80fc`, 7 `#f48fb1` — with its notehead ringed in the staff's black and its name on a ground of the same tint; so ♭2 in C Ionian is coloured from the second set and ♭3 in C Aeolian from the scheme | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js`, `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.3/4` 🖵 | The second note of a tie takes the colour of the note it holds | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.test.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.3/5` 🖵 | While playing, the current note's mark (AC-12.2.9) shows over its colour, so the position is never lost among the colours | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.4/1` 🖵 | With Note aids on, the printed page carries every note's name and colour as the screen does | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
+| US-12.3 | `AC-12.3.4/2` 🖵 | With Note aids off, the printed page carries neither | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
