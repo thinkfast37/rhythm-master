@@ -90,21 +90,73 @@ const TONE_RANGE = { 1: [0, 0], 3: [2, 5], 5: [6, 8], 7: [9, 11], 9: [13, 14] };
    interval it is — the 3rd of D♭ is F, not E (AC-2.2.15/5's rule, per chord). */
 const LETTER_STEPS = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 9: 5, 10: 6, 11: 6, 13: 8, 14: 8 };
 
+/** The role a listed interval of a quality holds: 0 → Root, 2–5 → 3rd, 6–8 → 5th, 9–11 → 7th, 13–14 → 9th. */
+function roleOf(interval) {
+  return TONES.find((role) => interval >= TONE_RANGE[role][0] && interval <= TONE_RANGE[role][1]) ?? 1;
+}
+
+const mod12 = (n) => ((n % 12) + 12) % 12;
+
+/** How many members a chord has — the basses it offers (AC-2.11.1/1). */
+export function memberCount(chord) {
+  return quality(chord.quality).intervals.length;
+}
+
+/** Which member is in the bass: the stored inversion, clamped to the members the chord has; 0 is the root. */
+export function inversionOf(chord) {
+  const k = chord?.inversion ?? 0;
+  if (!Number.isInteger(k) || k < 0) return 0;
+  return Math.min(k, memberCount(chord) - 1);
+}
+
 /**
- * The interval a role sounds on a chord. A role the chord lacks falls back to
- * the chord's next-lower member (AC-2.6.4/2) — never silence, never the scale.
+ * The chord's stack, bass first (US-2.11, research.md D-014): each member's
+ * role, the interval the quality lists it at, and `offset` — semitones above
+ * the Key's tonic at the armed octave. The bass's pitch class sits in the
+ * armed octave and the other members stack above it in the chord's own order,
+ * so the members below the bass are lifted an octave (AC-2.11.2/1, /2). Over
+ * its root a chord is its intervals above its root, exactly as it always was
+ * (AC-2.11.2/6).
  *
- * @returns {{interval: number, tone: number}} the member and the role it is
+ * @returns {Array<{tone: number, interval: number, offset: number}>}
+ */
+export function chordStack(chord) {
+  const { intervals } = quality(chord.quality);
+  const root = degreeSemitones(chord.degree);
+  const k = inversionOf(chord);
+  const stack = [];
+  let previous = -1;
+  for (let j = 0; j < intervals.length; j++) {
+    const interval = intervals[(k + j) % intervals.length];
+    let offset = k === 0 ? root + interval : mod12(root + interval);
+    while (offset <= previous) offset += 12;
+    stack.push({ tone: roleOf(interval), interval, offset });
+    previous = offset;
+  }
+  return stack;
+}
+
+/**
+ * The member a role sounds on a chord, where it sits in the chord's stack. A
+ * role the chord lacks falls back to the chord's next-lower member
+ * (AC-2.6.4/2) — never silence, never the scale.
+ *
+ * @returns {{interval: number, tone: number, offset: number}} the member, the
+ *   role it is, and its semitones above the Key's tonic at the armed octave
  */
 export function memberFor(chord, tone) {
-  const { intervals } = quality(chord.quality);
+  const stack = chordStack(chord);
   const order = TONES.slice(0, TONES.indexOf(tone) + 1).reverse();
   for (const role of order) {
-    const [lo, hi] = TONE_RANGE[role];
-    const interval = intervals.find((i) => i >= lo && i <= hi);
-    if (interval !== undefined) return { interval, tone: role };
+    const member = stack.find((m) => m.tone === role);
+    if (member) return member;
   }
-  return { interval: 0, tone: 1 };
+  return stack[0];
+}
+
+/** The member in the bass. */
+export function bassOf(chord) {
+  return chordStack(chord)[0];
 }
 
 /** Whether a chord has a member of its own in a role's position. */
@@ -490,6 +542,8 @@ const DRONE_UP = { drone: 'tonic', octave: 1 };
 const DRONE_DOWN = { drone: 'tonic', octave: -1 };
 const ROOT_UP = { drone: 'root', octave: 1 };
 const tones = (roles) => roles.map((r) => T(r));
+/** The roles at the given positions of the stack, bass first — a fill's shape is positional (AC-2.11.2/3). */
+const at = (roles, positions) => positions.map((i) => roles[i]);
 const interleave = (roles, between) => roles.flatMap((r) => [T(r), between]);
 /** A scale drone (AC-2.6.6/14): a degree of the Pattern's scale above the Key, whatever the chord. */
 const D = (drone, octave = 0) => (octave ? { drone, octave } : { drone });
@@ -501,9 +555,12 @@ const alternate = (roles, drones) => {
 const upDown = (roles) => (roles.length < 3 ? roles : [...roles, ...roles.slice(1, -1).reverse()]);
 /**
  * A fingerpicking shape (AC-2.6.6/13): `[tone, octave]` pairs, the thumb's bass
- * at the Slot's octave and the fingers' treble an octave up.
+ * at the Slot's octave and the fingers' treble an octave up. Written as the
+ * roles of a chord over its root; under a bass they are the same positions of
+ * the stack (AC-2.11.2/3).
  */
-const picking = (shape) => () => shape.map(([t, o]) => T(t, o));
+const POSITION = { 1: 0, 3: 1, 5: 2 };
+const picking = (shape) => ({ roles }) => shape.map(([t, o]) => T(roles[POSITION[t]], o));
 
 /** The scales a walk can take (AC-2.6.6/11); `pattern` walks the Pattern's own. */
 export const WALK_SCALES = [
@@ -554,16 +611,16 @@ export const ARPEGGIOS = [
     group: 'Chord tones',
     steps: ({ roles }) => tones([...roles, ...[...roles].reverse()]),
   },
-  { id: 'alberti', label: 'Alberti', group: 'Chord tones', steps: ({ roles }) => tones([1, 5, 3, 5].filter((t) => roles.includes(t))) },
-  { id: 'root', label: 'Root only', group: 'Chord tones', steps: () => [T(1)] },
-  { id: 'root-fifth', label: 'Root and fifth', group: 'Chord tones', steps: ({ roles }) => tones(roles.includes(5) ? [1, 5] : [1]) },
-  { id: 'up-octave', label: 'Up to the octave', group: 'Chord tones', steps: ({ roles }) => [...tones(roles), T(1, 1)] },
-  { id: 'down-octave', label: 'Down from the octave', group: 'Chord tones', steps: ({ roles }) => [T(1, 1), ...tones([...roles].reverse())] },
+  { id: 'alberti', label: 'Alberti', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0, 2, 1, 2])) },
+  { id: 'root', label: 'Root only', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0])) },
+  { id: 'root-fifth', label: 'Root and fifth', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0, 2])) },
+  { id: 'up-octave', label: 'Up to the octave', group: 'Chord tones', steps: ({ roles }) => [...tones(roles), T(roles[0], 1)] },
+  { id: 'down-octave', label: 'Down from the octave', group: 'Chord tones', steps: ({ roles }) => [T(roles[0], 1), ...tones([...roles].reverse())] },
   {
     id: 'up-over-down',
     label: 'Up over and down',
     group: 'Chord tones',
-    steps: ({ roles }) => [...tones(roles), T(1, 1), ...tones([...roles].reverse().slice(0, -1))],
+    steps: ({ roles }) => [...tones(roles), T(roles[0], 1), ...tones([...roles].reverse().slice(0, -1))],
   },
   { id: 'travis', label: 'Travis picking', group: 'Fingerpicking', steps: picking([[1], [3, 1], [5], [1, 1]]) },
   { id: 'travis-down', label: 'Travis picking, treble descending', group: 'Fingerpicking', steps: picking([[1], [1, 1], [5], [3, 1]]) },
@@ -742,12 +799,7 @@ export function resolveChordTone(pitch, chord, key) {
   if (!Number.isInteger(octaveOffset)) {
     throw new Error(`octaveOffset must be an integer, got ${octaveOffset}`);
   }
-  const midiNote =
-    BASE_MIDI +
-    keySemitones(key) +
-    degreeSemitones(chord.degree) +
-    memberFor(chord, pitch.tone).interval +
-    12 * octaveOffset;
+  const midiNote = BASE_MIDI + keySemitones(key) + memberFor(chord, pitch.tone).offset + 12 * octaveOffset;
   return { midiNote, frequency: midiToFrequency(midiNote) };
 }
 
@@ -763,10 +815,25 @@ export function chordToneName(pitch, chord, key) {
   return spellFromLetter(midiNote, letterAbove(rootLetter, LETTER_STEPS[interval] ?? 0), `Tone ${pitch.tone} of ${chordName(chord, key)}`);
 }
 
-/** The chord's name in the Key: root letter and accidental, then the quality's suffix (AC-2.6.7/1). */
+/** The note name of the member in the bass, spelled from the chord's root letter as the member it is. */
+function bassName(chord, key) {
+  const bass = bassOf(chord);
+  const [, digits] = splitDegree(chord.degree);
+  const rootLetter = letterAbove(key[0], Number(digits) - 1);
+  const midiNote = BASE_MIDI + keySemitones(key) + bass.offset;
+  const named = spellFromLetter(midiNote, letterAbove(rootLetter, LETTER_STEPS[bass.interval] ?? 0), `The bass of ${chord.degree} ${chord.quality}`);
+  return `${named.letter}${named.accidental}`;
+}
+
+/**
+ * The chord's name in the Key: root letter and accidental, then the quality's
+ * suffix (AC-2.6.7/1) — and, over a member other than its root, the slash form
+ * naming the bass: G/B (AC-2.11.1/2, /3).
+ */
 export function chordName(chord, key) {
   const root = noteName({ degree: chord.degree, octaveOffset: 0 }, key);
-  return `${root.letter}${root.accidental}${quality(chord.quality).suffix}`;
+  const name = `${root.letter}${root.accidental}${quality(chord.quality).suffix}`;
+  return inversionOf(chord) === 0 ? name : `${name}/${bassName(chord, key)}`;
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
@@ -778,7 +845,9 @@ export function chordNumeral(chord) {
   let numeral = ROMAN[(Number(digits) - 1) % 7];
   if (q.intervals[1] === 3) numeral = numeral.toLowerCase();
   const glyph = accidental === 'b' ? '♭' : accidental === '#' ? '♯' : '';
-  return `${glyph}${numeral}${q.numeral}`;
+  const name = `${glyph}${numeral}${q.numeral}`;
+  // Over a member other than the root, the member in the bass: V/3 (AC-2.11.1/3).
+  return inversionOf(chord) === 0 ? name : `${name}/${toneLabel(bassOf(chord).tone)}`;
 }
 
 /* --- mutations (every one returns a new Pattern) -------------------------- */
@@ -790,7 +859,8 @@ export function chordNumeral(chord) {
  * (AC-2.6.1/7).
  */
 export function setProgression(pattern, progressionId) {
-  const chords = spellProgression(progressionId, pattern.scale ?? DEFAULT_SCALE);
+  // Voiced Closest as it is spelled (AC-2.11.3/7).
+  const chords = voiceChords(spellProgression(progressionId, pattern.scale ?? DEFAULT_SCALE), DEFAULT_VOICING);
   // Every stored Pitch is left exactly as it was (AC-2.6.1/7): what makes the
   // progression audible is the arpeggio, not an edit to the Composer's notes.
   // An arpeggio already chosen is kept, so progressions can be auditioned
@@ -828,7 +898,7 @@ export function clearHarmony(pattern) {
           slot.pitch = { degree: '1', octaveOffset: slot.pitch.octaveOffset ?? 0 };
           continue;
         }
-        const semis = degreeSemitones(first.degree) + memberFor(first, slot.pitch.tone).interval;
+        const semis = memberFor(first, slot.pitch.tone).offset;
         slot.pitch = {
           degree: chromaticToken(semis),
           octaveOffset: (slot.pitch.octaveOffset ?? 0) + Math.floor(semis / 12),
@@ -854,17 +924,53 @@ export function setChange(pattern, change) {
   });
 }
 
+/**
+ * The same chord with a new quality or root, its bass member kept where the new
+ * chord still has one and returned to the root otherwise (AC-2.11.1/4). A root
+ * change keeps the quality, so the member is always there; a quality change
+ * looks the role up again.
+ */
+function rechord(chord, changes) {
+  const bass = bassOf(chord).tone;
+  const next = { ...chord, ...changes };
+  delete next.inversion;
+  const k = quality(next.quality).intervals.findIndex((i) => roleOf(i) === bass);
+  if (k > 0) next.inversion = k;
+  return next;
+}
+
 export function setChordQuality(pattern, index, qualityId) {
   if (!isValidQuality(qualityId)) throw new Error(`Unknown chord quality: ${qualityId}`);
   return withHarmony(pattern, (h) => {
-    h.chords[index].quality = qualityId;
+    h.chords[index] = rechord(h.chords[index], { quality: qualityId });
   });
 }
 
 export function setChordDegree(pattern, index, degree) {
   splitDegree(degree); // throws on a malformed token
   return withHarmony(pattern, (h) => {
-    h.chords[index].degree = degree;
+    h.chords[index] = rechord(h.chords[index], { degree });
+  });
+}
+
+/** Put the chord's `inversion`-th member in its bass, 0 the root (AC-2.11.1/2). */
+export function setChordBass(pattern, index, inversion) {
+  return withHarmony(pattern, (h) => {
+    const chord = h.chords[index];
+    if (!chord) throw new Error(`No chord ${index}`);
+    if (!Number.isInteger(inversion) || inversion < 0 || inversion >= memberCount(chord)) {
+      throw new Error(`${chordName(chord, pattern.key ?? 'C')} has ${memberCount(chord)} members; no member ${inversion}`);
+    }
+    if (inversion === 0) delete chord.inversion;
+    else chord.inversion = inversion;
+  });
+}
+
+/** Give every chord the bass the shape chooses (AC-2.11.3). */
+export function setVoicing(pattern, id) {
+  if (!isValidVoicing(id)) throw new Error(`Unknown voicing: ${id}`);
+  return withHarmony(pattern, (h) => {
+    h.chords = voiceChords(h.chords, id);
   });
 }
 
@@ -889,6 +995,103 @@ export function setArpeggio(pattern, id) {
   return withHarmony(pattern, (h) => {
     if (id === null || id === 'none') delete h.arpeggio;
     else h.arpeggio = id;
+  });
+}
+
+/* --- voicing shapes (US-2.11, research.md D-014) ---------------------------- */
+
+/**
+ * The shapes the Voicing picker offers (AC-2.11.3/1), in picker order. Each
+ * `choose(chord, previous)` picks the inversion of `chord` to follow the stack
+ * of the chord before; the first chord is always over its root.
+ */
+export const VOICINGS = [
+  { id: 'root', label: 'Root position', choose: () => 0 },
+  { id: 'closest', label: 'Closest', choose: (chord, previous) => closestTo(chord, previous) },
+  { id: 'rising', label: 'Rising bass', choose: (chord, previous) => nextBass(chord, previous, 1) },
+  { id: 'falling', label: 'Falling bass', choose: (chord, previous) => nextBass(chord, previous, -1) },
+  { id: 'arch', label: 'Rising then falling', choose: (chord, previous, i, n) => nextBass(chord, previous, i <= Math.floor(n / 2) ? 1 : -1) },
+];
+export const DEFAULT_VOICING = 'closest';
+
+export function isValidVoicing(id) {
+  return VOICINGS.some((v) => v.id === id);
+}
+
+/** The bass offsets a chord can take, one per member, indexed by inversion. */
+function bassOffsets(chord) {
+  return Array.from({ length: memberCount(chord) }, (_, k) => bassOf({ ...chord, inversion: k }).offset);
+}
+
+/**
+ * The inversion whose notes move least from the previous stack: the sum, over
+ * the candidate's notes, of the distance to the nearest previous note; a tie
+ * goes to the lower inversion (AC-2.11.3/3).
+ */
+function closestTo(chord, previous) {
+  const from = previous.map((m) => m.offset);
+  let best = 0;
+  let bestCost = Infinity;
+  for (let k = 0; k < memberCount(chord); k++) {
+    const cost = chordStack({ ...chord, inversion: k }).reduce(
+      (sum, m) => sum + Math.min(...from.map((p) => Math.abs(m.offset - p))),
+      0
+    );
+    if (cost < bestCost) {
+      best = k;
+      bestCost = cost;
+    }
+  }
+  return best;
+}
+
+/**
+ * The inversion whose bass is the nearest above (direction 1) or below (−1)
+ * the previous bass, starting again from the far end of the octave when none
+ * is (AC-2.11.3/4).
+ */
+function nextBass(chord, previous, direction) {
+  const bass = previous[0].offset;
+  const offsets = bassOffsets(chord);
+  const beyond = offsets.map((o, k) => [o, k]).filter(([o]) => (direction > 0 ? o > bass : o < bass));
+  const pool = beyond.length ? beyond : offsets.map((o, k) => [o, k]);
+  return pool.reduce((pick, c) => (direction > 0 ? (c[0] < pick[0] ? c : pick) : c[0] > pick[0] ? c : pick))[1];
+}
+
+/** The chords with the inversions a shape chooses (AC-2.11.3/2–/5); the first always over its root. */
+export function voiceChords(chords, id) {
+  const shape = VOICINGS.find((v) => v.id === id);
+  if (!shape) throw new Error(`Unknown voicing: ${id}`);
+  const out = [];
+  let previous = null;
+  chords.forEach((chord, i) => {
+    const bare = { ...chord };
+    delete bare.inversion;
+    const k = previous === null ? 0 : shape.choose(bare, previous, i, chords.length);
+    const voiced = k === 0 ? bare : { ...bare, inversion: k };
+    out.push(voiced);
+    previous = chordStack(voiced);
+  });
+  return out;
+}
+
+/** The shape the chords' basses match, in picker order, or null — Custom — when they match none (AC-2.11.3/1). */
+export function matchVoicing(chords) {
+  if (!chords?.length) return null;
+  const same = (a, b) => a.length === b.length && a.every((c, i) => inversionOf(c) === inversionOf(b[i]));
+  return VOICINGS.find((v) => same(voiceChords(chords, v.id), chords))?.id ?? null;
+}
+
+/**
+ * The basses a chord offers (AC-2.11.1/1): one per member, in the chord's own
+ * order, each with its role and its note name in the Key.
+ *
+ * @returns {Array<{inversion: number, tone: number, name: string}>}
+ */
+export function bassOptions(chord, key) {
+  return Array.from({ length: memberCount(chord) }, (_, k) => {
+    const voiced = { ...chord, inversion: k };
+    return { inversion: k, tone: bassOf(voiced).tone, name: bassName(voiced, key) };
   });
 }
 
@@ -963,21 +1166,32 @@ export function progressionIndexFor(pattern, { start = 0, baseLoop = 0, repeats 
  */
 export function withProgression(pattern, id) {
   if (!hasHarmony(pattern) || matchProgression(pattern) === id) return pattern;
-  const chords = spellProgression(id, pattern.scale ?? DEFAULT_SCALE);
+  // Voiced Closest, as a progression chosen from the catalogue is (AC-2.11.3/7).
+  const chords = voiceChords(spellProgression(id, pattern.scale ?? DEFAULT_SCALE), DEFAULT_VOICING);
   return { ...pattern, harmony: { ...pattern.harmony, chords } };
 }
 
-/** The roles an arpeggio deals: the members of the progression's fullest chord (AC-2.6.6/5). */
-export function arpeggioRoles(pattern) {
+/**
+ * The roles an arpeggio deals: the members of the progression's fullest chord
+ * (AC-2.6.6/5), in the order they sit in the stack of the chord in force — from
+ * the bass up — so a fill's shape is positional (AC-2.11.2/3). Over a root the
+ * order is Root, 3rd, 5th, 7th, 9th as it always was.
+ */
+export function arpeggioRoles(pattern, chord = null) {
   const chords = pattern.harmony?.chords ?? [];
-  return TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
+  const roles = TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
+  if (!chord) return roles;
+  return roles
+    .map((tone, i) => ({ tone, i, offset: memberFor(chord, tone).offset }))
+    .sort((a, b) => a.offset - b.offset || a.i - b.i)
+    .map((m) => m.tone);
 }
 
-/** The step sequence an arpeggio deals for this Pattern. */
-export function arpeggioSequence(order, pattern) {
+/** The step sequence an arpeggio deals for this Pattern, under the chord in force. */
+export function arpeggioSequence(order, pattern, chord = null) {
   const entry = ARPEGGIOS.find((a) => a.id === order);
   if (!entry) throw new Error(`Unknown arpeggio: ${order}`);
-  return entry.steps({ roles: arpeggioRoles(pattern), walk: (kind) => walkDegrees(kind, pattern) });
+  return entry.steps({ roles: arpeggioRoles(pattern, chord), walk: (kind) => walkDegrees(kind, pattern) });
 }
 
 /** The key a dealt role is filed under: Measure, Beat and Slot index. */
@@ -997,13 +1211,17 @@ export function dealKey(measureIndex, beatIndex, slotIndex) {
 export function arpeggioDeal(pattern, pass = 0) {
   const order = pattern?.harmony?.arpeggio;
   if (!order || !hasHarmony(pattern)) return null;
-  const sequence = arpeggioSequence(order, pattern);
   const deal = new Map();
+  let sequence = null;
   let k = 0;
   let previous = null;
   pattern.measures.forEach((measure, m) => {
     const chord = chordAt(pattern, pass, m);
-    if (m === 0 || chord !== previous) k = 0;
+    if (m === 0 || chord !== previous) {
+      // Each chord opens on its own first step, dealt from its own stack (AC-2.11.2/3).
+      k = 0;
+      sequence = arpeggioSequence(order, pattern, pattern.harmony.chords[chord]);
+    }
     previous = chord;
     measure.beats.forEach((beat, b) => {
       beat.slots.forEach((slot, s) => {
@@ -1051,7 +1269,7 @@ const DRONE_MARK = { tonic: 'T', root: 'R', second: '2̂', fifth: '5̂', seventh
 /** Semitones above the Key's tonic a step sounds, before the Slot's own octave. */
 function stepSemitones(step, chord, pattern) {
   const shift = 12 * (step.octave ?? 0);
-  if (step.tone !== undefined) return degreeSemitones(chord.degree) + memberFor(chord, step.tone).interval + shift;
+  if (step.tone !== undefined) return memberFor(chord, step.tone).offset + shift;
   if (step.drone !== undefined) return droneSemitones(step.drone, chord, pattern) + shift;
   if (step.scale !== undefined) {
     const degrees = walkDegrees(step.scale, pattern);

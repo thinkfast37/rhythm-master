@@ -23,6 +23,9 @@ import {
   hasHarmony,
   chordName,
   chordNumeral,
+  bassOptions,
+  VOICINGS,
+  matchVoicing,
   matchProgression,
   PROGRESSIONS,
   PROGRESSION_GROUPS,
@@ -1044,7 +1047,23 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   }
   root.appendChild(change);
 
-  // One editor per chord (AC-2.6.2): root, quality, and the name they make.
+  // The voicing shape (AC-2.11.3): every chord's bass at once. Custom is the
+  // picker naming basses chosen by hand, as the progression picker does for
+  // edited chords.
+  const voicingRow = el('div', 'voicing-row');
+  voicingRow.appendChild(el('span', 'pitch-strip-label', { textContent: 'Voicing', title: 'Which member of each chord sits in the bass' }));
+  const voicing = el('select', 'voicing-picker');
+  voicing.dataset.action = 'set-voicing';
+  voicing.setAttribute('aria-label', 'Voicing');
+  for (const v of VOICINGS) voicing.appendChild(el('option', null, { value: v.id, textContent: v.label }));
+  const matchedVoicing = matchVoicing(pattern.harmony.chords);
+  if (!matchedVoicing) voicing.appendChild(el('option', null, { value: 'custom', textContent: 'Custom' }));
+  voicing.value = matchedVoicing ?? 'custom';
+  voicing.addEventListener('change', (e) => handlers.onVoicing(e.target.value));
+  voicingRow.appendChild(voicing);
+  root.appendChild(voicingRow);
+
+  // One editor per chord (AC-2.6.2): root, quality, bass, and the name they make.
   const editors = el('ol', 'chord-editors');
   pattern.harmony.chords.forEach((chord, index) => {
     const row = el('li', 'chord-editor');
@@ -1078,6 +1097,26 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     qualityPicker.value = chord.quality;
     qualityPicker.addEventListener('change', (e) => handlers.onChordQuality(index, e.target.value));
     row.appendChild(qualityPicker);
+
+    // The bass (AC-2.11.1): the chord's own members, as many as it has, the
+    // root first — the inversion control.
+    const bassPicker = el('select', 'chord-bass');
+    bassPicker.dataset.action = 'set-chord-bass';
+    bassPicker.dataset.chord = String(index);
+    bassPicker.setAttribute('aria-label', `Chord ${index + 1} bass`);
+    let options = [];
+    try {
+      options = bassOptions(chord, key);
+    } catch {
+      /* an unspellable root offers the root alone */
+    }
+    if (options.length === 0) options = [{ inversion: 0, name: 'root' }];
+    for (const { inversion, name: bass } of options) {
+      bassPicker.appendChild(el('option', null, { value: String(inversion), textContent: inversion === 0 ? `${bass} (root)` : bass }));
+    }
+    bassPicker.value = String(Math.min(chord.inversion ?? 0, options.length - 1));
+    bassPicker.addEventListener('change', (e) => handlers.onChordBass(index, Number(e.target.value)));
+    row.appendChild(bassPicker);
 
     let name = chordNumeral(chord);
     try {

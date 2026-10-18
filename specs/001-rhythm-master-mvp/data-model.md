@@ -24,7 +24,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
     "change": "pass",            //   "pass" | "measure" — when the chord in force moves on
     "chords": [                  //   1–16 concrete chords, in order
       { "degree": "1", "quality": "maj7" },
-      { "degree": "4", "quality": "maj7" },
+      { "degree": "4", "quality": "maj7", "inversion": 2 },   // the 5th in the bass (US-2.11); absent means 0, root position
       { "degree": "5", "quality": "7" }
     ],
     "arpeggio": "drone-above"     //   optional; absent means None — the notes are as stamped
@@ -47,7 +47,7 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern. | AC-4.4.7 |
 | `swingAmount` | The Pattern-wide swing amount, 0–100; optional, absent reads as 0. Every straight Subdivision Group without a per-group amount inherits it — which is why a Measure added later swings without any copying. Per-group amounts on a Beat (`beat.swing`, keyed by group index) act as overrides and play as authored. | AC-4.4.12, AC-4.4.13 |
-| `harmony` | Optional, and only when `soundMode === "melodic"`. A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure, and an optional `arpeggio` (an id from `core/harmony.js`'s `ARPEGGIOS`; absent means None) under which every sounding Slot's note is dealt from the arpeggio's step sequence at play time rather than read from its stored Pitch (AC-2.6.6). A step is a chord tone at an octave, a drone on the Key's tonic or the chord's root, or a step of a scale rooted on the chord — never stored, always derived. Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. | US-2.6 |
+| `harmony` | Optional, and only when `soundMode === "melodic"`. A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure, and an optional `arpeggio` (an id from `core/harmony.js`'s `ARPEGGIOS`; absent means None) under which every sounding Slot's note is dealt from the arpeggio's step sequence at play time rather than read from its stored Pitch (AC-2.6.6). A step is a chord tone at an octave, a drone on the Key's tonic or the chord's root, or a step of a scale rooted on the chord — never stored, always derived. Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. Each chord may carry an `inversion` — which of its members is in the bass, 0 the root — written by the Bass picker or a Voicing shape and voiced Closest when a progression is chosen (US-2.11); absent means root position, so a Pattern saved before voicings existed sounds as it did and is never rewritten. | US-2.6, US-2.11 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
 | `measures` | 1–8 entries. The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
@@ -179,7 +179,9 @@ four Patterns use `"8"`, `"9"` and `"10"`.)*
 The second form a Pitch can take, and only on a Pattern with `harmony`. `tone` is a role — `1`
 (Root), `3`, `5`, `7` or `9` — that resolves to a note through the chord in force for the Slot's
 Measure in the pass being played (AC-2.6.3), the Pattern's `key`, and `octaveOffset`: the chord's
-root sits at that octave and its members stack above it (AC-2.6.4/1). A role the chord lacks
+root sits at that octave and its members stack above it (AC-2.6.4/1) — or, when the chord carries an
+`inversion`, its bass sits in that octave and the other members stack above it in the chord's own
+order, the members below the bass lifted an octave (AC-2.11.2). A role the chord lacks
 sounds the chord's next-lower member (AC-2.6.4/2). A Pitch carries `degree` or `tone`, never both;
 either satisfies AC-2.2.8's "non-null Pitch". Removing the progression converts every chord-tone
 Pitch to the degree it sounded under the first chord (AC-2.6.1/6), so no Pattern ever holds a
@@ -233,6 +235,9 @@ produces a Medium Slot (odd *N* has no midpoint), and a 2-Slot Recipe never does
 | Chord name and numeral | `harmony.chords[i]` and `key` | AC-2.6.7/1 |
 | Harmonic cycle length, in passes | `harmony.change`, chord count, Measure count | AC-2.6.10/1 |
 | A chord tone's sounding note | `(tone, octaveOffset)`, the chord in force, `key` | AC-2.6.4 |
+| A chord's stack — each member's role and its semitones above the Key at the armed octave, bass first | `chords[i].quality`, `chords[i].degree`, `chords[i].inversion` | AC-2.11.2 |
+| The basses a chord offers | `chords[i].quality` and `chords[i].degree`, named in `key` | AC-2.11.1/1 |
+| The voicing shape a progression matches, or none | every chord's `inversion` against each shape's own output | AC-2.11.3/1 |
 | The octave a Slot sounds in | the Slot's `octaveOffset` plus the Pattern's `register`, clamped to octaves 1–7 | AC-2.9.2/4 |
 | The step a Slot sounds under an arpeggio | `harmony.arpeggio`, the sounding Slots in time order, the chord in force (the deal restarts on each change), the progression's fullest chord, the walk's scale | AC-2.6.6 |
 
@@ -461,7 +466,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 11. `swingFeel`, where present, is `quarter`, `eighth`, or `sixteenth`.
 12. `swingAmount`, where present, is an integer within 0–100.
 13. `scale`, where present, is a catalogue id from `core/scales.js` — and only when `soundMode` is `melodic`.
-14. `harmony`, where present, only when `soundMode` is `melodic`; its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`.
+14. `harmony`, where present, only when `soundMode` is `melodic`; its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`, and an `inversion`, where present, that is an integer from 0 to one less than the quality's member count (US-2.11; absent means 0).
 15. A Pitch carries exactly one of `degree` (a degree token) or `tone` (1, 3, 5, 7 or 9), with an integer `octaveOffset`.
 16. A Pitch with `tone` only on a Pattern that has `harmony`.
 17. An overlay's `keptFills`, where present, is an array of ids from `core/harmony.js`'s `ARPEGGIOS`;

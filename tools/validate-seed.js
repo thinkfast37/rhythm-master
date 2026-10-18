@@ -50,6 +50,11 @@ const QUALITIES = [
   'maj', 'min', 'dim', 'aug', 'sus2', 'sus4', '6', 'm6', 'maj7', 'm7', '7', 'm7b5', 'dim7',
   'mMaj7', '7sus4', 'add9', '9', 'maj9', 'm9',
 ];
+/** Members per quality, so an `inversion` can be checked against the chord it is on (US-2.11). */
+const QUALITY_SIZES = {
+  maj: 3, min: 3, dim: 3, aug: 3, sus2: 3, sus4: 3, 6: 4, m6: 4, maj7: 4, m7: 4, 7: 4, m7b5: 4, dim7: 4,
+  mMaj7: 4, '7sus4': 4, add9: 4, 9: 5, maj9: 5, m9: 5,
+};
 const TONES = [1, 3, 5, 7, 9];
 const CHANGES = ['pass', 'measure'];
 const ARPEGGIOS = [
@@ -109,6 +114,9 @@ for (const p of raw.patterns) {
       for (const [ci, c] of h.chords.entries()) {
         if (!DEGREE.test(String(c?.degree))) fail(name, `chord ${ci + 1}: degree "${c?.degree}" invalid`);
         if (!QUALITIES.includes(c?.quality)) fail(name, `chord ${ci + 1}: quality "${c?.quality}" unsupported`);
+        else if ('inversion' in c && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= QUALITY_SIZES[c.quality])) {
+          fail(name, `chord ${ci + 1}: inversion ${c.inversion} is not a member of a ${c.quality} chord`);
+        }
       }
     }
   }

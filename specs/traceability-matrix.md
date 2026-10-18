@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 717 across 47 User Stories
+**Criteria**: 740 across 48 User Stories
 
-**Coverage**: 533 of 717 criteria proven (74.3%)
+**Coverage**: 556 of 740 criteria proven (75.1%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 533 | 74.3% |
-| 🔴 Gap — HIGH | 65 | 9.1% |
-| 🟠 Gap — MEDIUM | 41 | 5.7% |
-| 🟡 Gap — LOW | 78 | 10.9% |
+| 🟢 Proven | 556 | 75.1% |
+| 🔴 Gap — HIGH | 65 | 8.8% |
+| 🟠 Gap — MEDIUM | 41 | 5.5% |
+| 🟡 Gap — LOW | 78 | 10.5% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -105,6 +105,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.10 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-14.1 | 23 | **23** | · | · | · | · | · |
 | 🟢 US-7.6 | 11 | **11** | · | · | · | · | · |
+| 🟢 US-2.11 | 23 | **23** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -827,3 +828,26 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.6 | `AC-7.6.3/1` | A file that is not JSON, or not a Rhythm Master backup, is refused with a message and leaves the library as it was | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js`, `backup.spec.js` | 🟢 OK |
 | US-7.6 | `AC-7.6.3/2` | A backup, or any store in it, at a schemaVersion newer than this build understands is refused rather than downgraded, and nothing is written | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
 | US-7.6 | `AC-7.6.3/3` | A backup with a malformed store — Patterns or Songs not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.1/1` 🖵 | The Bass picker lists the chord's members by note name, the root first and as many as the chord has: C major offers C, E and G; C7 offers C, E, G and B♭; C9 offers C, E, G, B♭ and D | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.1/2` 🖵 | Choosing a bass changes that chord alone, and its name takes the slash form: I–IV–V in C with the V over its 3rd reads C, F, G/B | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.1/3` 🖵 | A chord over its root is named without a slash and its numeral is unchanged; an inverted chord's numeral names the member in the bass: G/B reads V/3 and C7 over its 7th reads I7/7 | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.1/4` 🖵 | Changing a chord's root or quality keeps its bass member where the new chord has one, and returns it to the root otherwise: Cmaj7 over its 7th made a triad sits over C, and G/B moved to A sits over C♯ | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js`, `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.1/5` 🖵 | Choosing a bass on a shipped Pattern goes through the naming prompt, as the Key does | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.2/1` | The members below the bass are lifted an octave, keeping the chord's order: under C/E at octave 4 the 3rd sounds E4, the 5th G4 and the Root C5; under C7/B♭ the 7th sounds B♭4, the Root C5, the 3rd E5 and the 5th G5 | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.2/2` | The bass sits in the armed octave whatever the chord's root: in C at octave 4, G/D sounds D4, G4 and B4, and G/B sounds B4, D5 and G5 | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.2/3` | A fill deals the stack from the bass up, each step keeping its role's name: Ascending over C/E sounds E G C′ as 3rd, 5th, Root; Descending C′ G E; Alberti E C′ G C′; Root only E; Up to the octave E G C′ E′; Travis picking E G′ C′ E′ | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.2/4` | A stored chord-tone Pitch resolves through the same stack as a fill, in playback, on the score and in the MIDI file alike: a Root under C/E sounds C5 | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.2/5` | Drones and scale walks are unmoved by the bass: Chord root drone over C/E still sounds the chord's root C′ between the stack's notes, and Scale up still starts on C | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.2/6` | A chord with no bass chosen sounds as it always has — its root in the armed octave, the members above — so a Pattern saved before voicings existed is unchanged | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/1` 🖵 | The Voicing picker offers Root position, Closest, Rising bass, Falling bass and Rising then falling, and names the shape the chords match, or Custom when they match none | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/2` | Root position puts every chord over its root | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/3` | Closest keeps the first chord over its root and gives each chord after it the bass under which its notes move least from the chord before: I–IV–V in C voices C, F/C, G/D and I–V–vi–IV voices C, G/D, Am/E, F | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/4` | Rising bass gives each chord the lowest bass above the one before, starting again from the bottom of the octave when none is higher, and Falling bass the mirror: I–V–vi–IV in C rises C, G/D, Am/E, F and falls C, G/B, Am, F | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/5` | Rising then falling rises to the middle chord and falls after it: I–V–vi–IV in C voices C, G/D, Am/E, F/C | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/6` 🖵 | Choosing a shape re-voices every chord at once, and a bass chosen by hand afterwards turns the picker to Custom | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/7` | Choosing a catalogue progression voices it Closest, and progression cycling puts each catalogue entry in force voiced Closest | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.3/8` 🖵 | Choosing a Voicing on a shipped Pattern goes through the naming prompt, as the Key does | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.4/1` | A chord's bass is saved with the Pattern and is there after a reload | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.4/2` | A saved Pattern whose chords name no bass loads in root position with nothing rewritten: no migration runs and the stores keep their schemaVersion | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.4/3` | Two Patterns alike but for one chord's bass are not duplicates | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |
+| US-2.11 | `AC-2.11.4/4` | Every shipped Pattern with a progression is voiced Closest in the library file | P-051 | T365 (1/1 done) | T366 (1/1 done) | `harmony.test.js` | 🟢 OK |

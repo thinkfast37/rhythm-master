@@ -16,7 +16,7 @@ import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey, MIN_REGISTER, MAX_REGISTER } from './pitch.js';
 import { isValidScale } from './scales.js';
 import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
-import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, isValidArpeggio, hasHarmony } from './harmony.js';
+import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, isValidArpeggio, hasHarmony, memberCount } from './harmony.js';
 import { splitDegree } from './pitch.js';
 
 export const MAX_MEASURES = 8;
@@ -299,6 +299,9 @@ export function validate(pattern) {
           fail(`chord ${i + 1}: degree "${c?.degree}" invalid`);
         }
         if (!isValidQuality(c?.quality)) fail(`chord ${i + 1}: quality "${c?.quality}" unsupported`);
+        if ('inversion' in (c ?? {}) && isValidQuality(c.quality) && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= memberCount(c))) {
+          fail(`chord ${i + 1}: inversion ${c.inversion} is not a member of a ${c.quality} chord (rule 14)`);
+        }
       });
     }
   }

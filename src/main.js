@@ -33,6 +33,8 @@ import {
   setChange,
   setChordQuality,
   setChordDegree,
+  setChordBass,
+  setVoicing,
   addChord,
   removeChord,
   setArpeggio,
@@ -976,6 +978,22 @@ const handlers = {
   async onChordDegree(index, degree) {
     if (!(await guardShipped())) return;
     apply(setChordDegree, index, degree);
+  },
+
+  /** Which member of the chord sits in the bass (AC-2.11.1). */
+  async onChordBass(index, inversion) {
+    if (!(await guardShipped())) return;
+    apply(setChordBass, index, inversion);
+  },
+
+  /** Every chord's bass at once, by shape (AC-2.11.3). "Custom" names what is already there. */
+  async onVoicing(id) {
+    if (id === 'custom') {
+      render();
+      return;
+    }
+    if (!(await guardShipped())) return;
+    apply(setVoicing, id);
   },
 
   async onAddChord() {
