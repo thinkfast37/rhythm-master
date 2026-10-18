@@ -113,7 +113,7 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate }) {
   if (typeof Offline !== 'function' || passes < 1) return null;
 
   // A cycle can run to millions of passes — every progression's chord count
-  // joins its period (T390) — so stop counting once it is past the ceiling:
+  // joins its period (T396) — so stop counting once it is past the ceiling:
   // only the passes that fit the fallback are rendered then, and those are
   // all counted by that point, since the fallback is well under the ceiling.
   const patterns = [];

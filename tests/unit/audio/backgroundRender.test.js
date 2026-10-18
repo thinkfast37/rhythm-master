@@ -59,7 +59,7 @@ describe('audio/backgroundRender — how much of the cycle is rendered (AC-4.1.1
   });
 });
 
-describe('audio/backgroundRender — a cycle of millions of passes (AC-4.1.15/4, T390)', () => {
+describe('audio/backgroundRender — a cycle of millions of passes (AC-4.1.15/4, T396)', () => {
   it('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: a cycle counted short of its end is never whole', () => {
     // The first passes of a cycle known to run on past them: under the
     // ceiling as listed, but not the whole cycle, so the fallback applies.

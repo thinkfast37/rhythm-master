@@ -140,7 +140,7 @@ import { heardIn } from './core/songbook.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
 import * as guitar from './audio/guitar.js';
-import { getContext, resume as resumeAudio } from './audio/context.js';
+import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
   recordTarget,
@@ -166,12 +166,17 @@ import { deriveEntitlement, isEntitled } from './core/entitlement.js';
 import { hasStoreSync, selectBillingAdapter } from './billing/index.js';
 import { showPaywall, hidePaywall, showPurchases } from './ui/paywall.js';
 
+/** AC-4.1.16/3: what Reset audio says when no page code can bring sound back. */
+const STUCK_AUDIO_NOTICE = "Audio is stuck in Safari for this app. Quit the app (⌘Q) and reopen it — reloading won't fix it.";
+
 const state = {
   pattern: create(),
   transportPosition: null,
   /** Provenance: true when the Pattern came from the user's own store (data-model §5). */
   isOwned: false,
   isPlaying: false,
+  /** Reset audio's verdict when the replacement's clock is not moving (AC-4.1.16/3), else null. */
+  audioNotice: null,
   loop: 0,
   /**
    * Cycle mode (US-2.7): step through the fill catalogue while practising. A
@@ -358,7 +363,7 @@ function progressionIdAt(loop) {
  * Counted in passes. The Pattern itself repeats after one harmonic cycle of
  * its own progression — I, IV, V changing every pass is three — and a cycle's
  * Repeats and a Song entry's repeats are harmonic cycles (AC-2.7.2/1,
- * AC-18.1.3/1), so each counts that many passes per repeat (T390). Each
+ * AC-18.1.3/1), so each counts that many passes per repeat (T396). Each
  * overlay cycles independently over its own catalogue at the shared Repeats
  * setting, and a progression in force turns its own chords over by the pass,
  * so the run repeats at the least common multiple of all of those.
@@ -1731,6 +1736,27 @@ const handlers = {
 
   onStop() {
     transport.stop();
+  },
+
+  /**
+   * Reset audio (AC-4.1.16). Nothing here awaits before the replacement exists,
+   * so it is made and started inside the press. Then the result is checked:
+   * a clock that still does not move is sound dead below the page, and only
+   * quitting the app brings it back — the notice says so (AC-4.1.16/3).
+   */
+  onResetAudio() {
+    if (state.isPlaying) transport.stop();
+    const ctx = replaceAudio();
+    ensureGuitarLoaded();
+    const event = { accent: 2, pitch: { midiNote: 64, frequency: midiToFrequency(64) } };
+    logVoice(event, melodicVoice()(ctx, ctx.destination, event, ctx.currentTime + 0.01));
+    state.audioNotice = null;
+    render();
+    clockIsRunning(ctx).then((running) => {
+      if (ctx !== getContext()) return; // a later reset speaks for itself
+      state.audioNotice = running ? null : STUCK_AUDIO_NOTICE;
+      render();
+    });
   },
 
   /**

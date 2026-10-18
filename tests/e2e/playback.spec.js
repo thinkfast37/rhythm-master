@@ -704,7 +704,7 @@ test('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until t
 });
 
 test('AC-4.1.15/4 — What is rendered is the whole cycle — every pass until the fills and progressions in force repeat — so a cycling run keeps cycling with the screen off, up to a memory ceiling past which the whole passes that fit are rendered and repeat: a progression counts its passes, not its harmonic cycles', async ({ page }) => {
-  // T390: a progression changing every pass repeats after its chord count,
+  // T396: a progression changing every pass repeats after its chord count,
   // and a cycle's Repeats count harmonic cycles, not passes (AC-2.7.2/1).
   // The render counted one pass per entry and one pass for the Pattern, so a
   // locked phone looped the first chord alone and jumped at every seam.
