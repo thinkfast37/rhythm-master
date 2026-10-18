@@ -19,13 +19,13 @@ async function makeOwnedMelody(page, register = 0) {
 
 // --- AC-19.8.1: a percussive Pattern ----------------------------------------------
 
-test('AC-19.8.1/1 — Opening a percussive Pattern asks for a name, with no pre-filled default, rejecting a name already in the library', async ({ page }) => {
+test(`AC-19.8.1/1 — Opening a percussive Pattern asks for a name, pre-filled with the Pattern's name and "melody" and numbered when that is taken, rejecting a name already in the library`, async ({ page }) => {
   await openApp(page);
   await makeFourBeats(page, 'Fixture');
   await enterComposer(page);
   await openInComposer(page, 'p_test', true, null);
   await expect(page.locator('.dialog-message')).toContainText('Name');
-  await expect(page.locator('.dialog-input')).toHaveValue('');
+  await expect(page.locator('.dialog-input')).toHaveValue('Fixture melody');
   await page.locator('.dialog-input').fill('fixture');
   await page.locator('.dialog-button.primary').click();
   await expect(page.locator('.dialog-error')).toBeVisible();
@@ -33,12 +33,27 @@ test('AC-19.8.1/1 — Opening a percussive Pattern asks for a name, with no pre-
   await page.locator('.dialog-input').fill('Fixture line');
   await page.locator('.dialog-button.primary').click();
   await expect(page.locator('.composer-grid')).toBeVisible();
-  // A shipped percussive Pattern asks the same.
+  // A shipped percussive Pattern asks the same, pre-filled from its own name.
   const shipped = await seedOf(page, (p) => p.soundMode === 'percussive');
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), shipped.id);
-  // The unsaved composition asks first (AC-19.1.4/1); then the name, empty.
+  // The unsaved composition asks first (AC-19.1.4/1); then the name.
   await page.locator('.dialog-button[data-value="true"]').click();
-  await expect(page.locator('.dialog-input')).toHaveValue('');
+  await expect(page.locator('.dialog-input')).toHaveValue(`${shipped.name} melody`);
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  // Taken, case-insensitively: the first free number follows it.
+  await page.evaluate(() => {
+    const rm = window.__rm;
+    const mine = rm.patternStore.findById('p_test');
+    rm.patternStore.upsert({ ...structuredClone(mine), id: rm.patternStore.nextId(), name: 'fixture MELODY' });
+    rm.patternStore.upsert({ ...structuredClone(mine), id: rm.patternStore.nextId(), name: 'Fixture melody 2' });
+  });
+  await openInComposer(page, 'p_test', true, null);
+  await page.locator('.dialog-button[data-value="true"]').click();
+  await expect(page.locator('.dialog-input')).toHaveValue('Fixture melody 3');
+  // The suggestion confirms as it stands.
+  await page.locator('.dialog-button.primary').click();
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  expect((await composerState(page)).draft.name).toBe('Fixture melody 3');
 });
 
 test('AC-19.8.1/2 — Confirming opens the rhythm as a composition in C Ionian with every sounding Slot unpitched and its accents kept, and the library is unchanged until the first save', async ({ page }) => {
@@ -82,7 +97,7 @@ test('AC-19.8.2/1 — Opening a Pattern with a progression asks for a name, as a
   const harmonic = await seedOf(page, (p) => p.soundMode === 'melodic' && Boolean(p.harmony));
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), harmonic.id);
   await expect(page.locator('.dialog-input')).toBeVisible();
-  await expect(page.locator('.dialog-input')).toHaveValue('');
+  await expect(page.locator('.dialog-input')).toHaveValue(`${harmonic.name} melody`);
   await expect(page.locator('.dialog-message')).toContainText('progression');
   await page.locator('.dialog-input').fill('Baked line');
   await page.locator('.dialog-button.primary').click();
@@ -153,7 +168,7 @@ test('AC-19.8.2/3 — The composition carries no progression and no Register —
 
 // --- AC-19.8.3: a melody ------------------------------------------------------------
 
-test('AC-19.8.3/1 — An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name and opens a copy, unsaved', async ({ page }) => {
+test("AC-19.8.3/1 — An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name, pre-filled as a percussive one's is, and opens a copy, unsaved", async ({ page }) => {
   await openApp(page);
   await makeOwnedMelody(page);
   await enterComposer(page);
@@ -175,7 +190,7 @@ test('AC-19.8.3/1 — An owned melodic Pattern asks Edit or Save as new; Edit op
   // Save as new.
   await page.evaluate(() => window.__rm.handlers.onOpen('p_test', true));
   await page.locator('.dialog-button[data-value="copy"]').click();
-  await expect(page.locator('.dialog-input')).toBeVisible();
+  await expect(page.locator('.dialog-input')).toHaveValue('Tune melody');
   await page.locator('.dialog-input').fill('Tune two');
   await page.locator('.dialog-button.primary').click();
   await expect(page.locator('.composer-grid')).toBeVisible();
@@ -187,7 +202,7 @@ test('AC-19.8.3/1 — An owned melodic Pattern asks Edit or Save as new; Edit op
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().some((p) => p.name === 'Tune two'))).toBe(false);
 });
 
-test('AC-19.8.3/2 — A shipped melodic Pattern asks a name only, and opens a copy, unsaved', async ({ page }) => {
+test("AC-19.8.3/2 — A shipped melodic Pattern asks a name only, pre-filled as a percussive one's is, and opens a copy, unsaved", async ({ page }) => {
   await openApp(page);
   await enterComposer(page);
   const shipped = await seedOf(page, (p) => p.soundMode === 'melodic' && !p.harmony);
@@ -195,6 +210,7 @@ test('AC-19.8.3/2 — A shipped melodic Pattern asks a name only, and opens a co
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), shipped.id);
   await expect(page.locator('.dialog-input')).toBeVisible();
   await expect(page.locator('.dialog-button[data-value="edit"]')).toHaveCount(0);
+  await expect(page.locator('.dialog-input')).toHaveValue(`${shipped.name} melody`);
   await page.locator('.dialog-input').fill('Shipped copy');
   await page.locator('.dialog-button.primary').click();
   await expect(page.locator('.composer-grid')).toBeVisible();

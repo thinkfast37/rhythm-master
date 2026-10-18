@@ -261,7 +261,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.5 | T377 | T378 |
 | **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.2 | T379 | T380 |
 | **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381 | T382 |
-| **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383 | T384 |
+| **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
 | **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
 | **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
 | **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394 | T395 |
