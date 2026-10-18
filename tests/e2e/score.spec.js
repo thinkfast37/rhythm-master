@@ -515,3 +515,219 @@ test('AC-2.9.3/2 — The score writes each note at the octave the Register sound
   // Two octaves is seven staff steps each, and y grows downward.
   expect(atBass - atNormal).toBeCloseTo(7 * space, 1);
 });
+
+/* --- US-12.3 — Note aids: names and degree colours ---------------------------------------- */
+
+const aidsButton = (page) => page.locator('.view-toggle .aids-button');
+const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+const fillOf = (locator) => locator.evaluate((e) => getComputedStyle(e).fill);
+/** Eight sounding 16th Slots on Beats 1 and 2, stamped with `degrees` in order. */
+async function eightNotes(page, degrees) {
+  await page.evaluate(async () => {
+    const h = window.__rm.handlers;
+    await h.onRecipe('straight-16ths', 0, 0);
+    await h.onRecipe('straight-16ths', 0, 1);
+    for (let b = 0; b < 2; b++) for (let s = 0; s < 4; s++) await h.onSlotTap(0, b, s);
+  });
+  for (let i = 0; i < degrees.length; i++) await stamp(page, 0, Math.floor(i / 4), i % 4, degrees[i], 0);
+}
+
+test('AC-12.3.1/1 — A Note aids toggle sits with the Grid | Sheet toggle and Print / PDF, shown only while Sheet is showing a Melodic Pattern; it is hidden while Grid is showing and hidden for a Percussive Pattern', async ({ page }) => {
+  await sheet(page);
+  // Percussive, as Sheet: the toggle is not there.
+  await expect(page.locator('.view-toggle .print-button')).toBeVisible();
+  await expect(aidsButton(page)).toBeHidden();
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
+  await expect(aidsButton(page)).toBeVisible();
+  // With the Grid | Sheet toggle and Print / PDF, in the one bar.
+  await expect(page.locator('.view-toggle > *')).toHaveText(['Grid', 'Sheet', 'Note aids', 'Print / PDF']);
+  await page.locator('[data-action="view-grid"]').click();
+  await expect(page.locator('.grid')).toBeVisible();
+  await expect(aidsButton(page)).toBeHidden();
+  await page.locator('[data-action="view-sheet"]').click();
+  await expect(aidsButton(page)).toBeVisible();
+});
+
+test('AC-12.3.1/2 — The choice is remembered as an app preference across loads, and a first load has it off', async ({ page }) => {
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0]]);
+  await stamp(page, 0, 0, 0, '1', 0);
+  // Off on a first load: the stored settings carry no choice.
+  await expect(aidsButton(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.score .note-name')).toHaveCount(0);
+  await aidsButton(page).click();
+  await expect(aidsButton(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.score .note-name')).toHaveCount(1);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).sheetAids)).toBe(true);
+  // An app preference, not a Pattern's: nothing on the Pattern says so.
+  expect(await patternJson(page)).not.toContain('sheetAids');
+  await page.reload();
+  await expect(page.locator('.score')).toBeVisible();
+  await expect(aidsButton(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.score .note-name')).toHaveCount(1);
+});
+
+test("AC-12.3.1/3 — With Note aids off the score is written as it was before this story: every notehead in the staff's black and no note names", async ({ page }) => {
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0], [0, 1, 0]]);
+  await stamp(page, 0, 0, 0, '1', 0);
+  await stamp(page, 0, 1, 0, 'b2', 0);
+  await expect(aidsButton(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.score .note-name')).toHaveCount(0);
+  await expect(page.locator('.score .note-item[data-role]')).toHaveCount(0);
+  for (const head of await page.locator('.score .notehead').all()) expect(await fillOf(head)).toBe(rgb('#141414'));
+});
+
+test('AC-12.3.1/4 — Switching a Melodic Pattern to Percussive while Note aids is on hides the toggle and writes the plain rhythm staff; the preference is kept, and switching back to Melodic shows the aids again', async ({ page }) => {
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0]]);
+  await stamp(page, 0, 0, 0, '3', 0);
+  await aidsButton(page).click();
+  await expect(page.locator('.score .note-name')).toHaveText(['E']);
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('percussive'));
+  await expect(aidsButton(page)).toBeHidden();
+  await expect(page.locator('.score .note-name')).toHaveCount(0);
+  await expect(page.locator('.score .staff-line')).toHaveCount(1);
+  expect(await fillOf(page.locator('.score .notehead').first())).toBe(rgb('#141414'));
+  expect(await page.evaluate(() => window.__rm.getState().settings.sheetAids)).toBe(true);
+  await page.evaluate(() => window.__rm.handlers.onSoundMode('melodic'));
+  await expect(aidsButton(page)).toBeVisible();
+  await expect(aidsButton(page)).toHaveAttribute('aria-pressed', 'true');
+  // The aids are back: the Slot, re-pitched by the switch, is named and coloured again.
+  await expect(page.locator('.score .note-name')).toHaveCount(1);
+  await expect(page.locator('.score .note-item[data-role]')).toHaveCount(1);
+});
+
+test("AC-12.3.2/4 — A note's name is written in the same colour as its notehead", async ({ page }) => {
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0], [0, 1, 0]]);
+  await stamp(page, 0, 0, 0, '5', 0);
+  await stamp(page, 0, 1, 0, '2', 1);
+  await aidsButton(page).click();
+  for (const note of await page.locator('.score .note-item').all()) {
+    const head = await fillOf(note.locator('.notehead'));
+    expect(head).not.toBe(rgb('#141414'));
+    expect(await fillOf(note.locator('.note-name'))).toBe(head);
+  }
+});
+
+test("AC-12.3.3/2 — A degree in the Pattern's scale takes its colour from the twelve-colour degree scheme of the maintainer's fret-navigator: 1 `#c62828`, ♭2 `#b3541e`, 2 `#8a6d00`, ♭3 `#66790a`, 3 `#2e7d32`, 4 `#00795c`, ♯4/♭5 `#00707e`, 5 `#0b69b7`, ♭6 `#3f51b5`, 6 `#673ab7`, ♭7 `#8e24aa`, 7 `#c2185b`", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  // C Ionian's seven, then an octave of 1.
+  await eightNotes(page, ['1', '2', '3', '4', '5', '6', '7', '1']);
+  await aidsButton(page).click();
+  const heads = page.locator('.score .note-item .notehead');
+  await expect(heads).toHaveCount(8);
+  const fills = [];
+  for (const head of await heads.all()) fills.push(await fillOf(head));
+  expect(fills).toEqual(['#c62828', '#8a6d00', '#2e7d32', '#00795c', '#0b69b7', '#673ab7', '#c2185b', '#c62828'].map(rgb));
+  await expect(page.locator('.score .note-name')).toHaveText(['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C']);
+
+  // The chromatic degrees a scale may hold take the rest of the scheme: C Locrian is 1 ♭2 ♭3 4 ♭5 ♭6 ♭7.
+  await page.evaluate(() => window.__rm.handlers.onScale('locrian'));
+  await stamp(page, 0, 0, 1, 'b2', 0);
+  await stamp(page, 0, 0, 2, 'b3', 0);
+  await stamp(page, 0, 1, 0, 'b5', 0);
+  await stamp(page, 0, 1, 1, 'b6', 0);
+  await stamp(page, 0, 1, 2, 'b7', 0);
+  const chromatic = [];
+  for (const head of await heads.all()) chromatic.push(await fillOf(head));
+  expect(chromatic).toEqual(['#c62828', '#b3541e', '#66790a', '#00795c', '#00707e', '#3f51b5', '#8e24aa', '#c62828'].map(rgb));
+  await expect(page.locator('.score .note-item.out-of-scale')).toHaveCount(0);
+});
+
+test("AC-12.3.3/3 — A degree outside the Pattern's scale takes its colour from a second set of twelve, none of which is in the scheme — 1 `#ff8a80`, ♭2 `#ffab40`, 2 `#ffe57f`, ♭3 `#ccff90`, 3 `#a5d6a7`, 4 `#80cbc4`, ♯4/♭5 `#84ffff`, 5 `#82b1ff`, ♭6 `#9fa8da`, 6 `#b39ddb`, ♭7 `#ea80fc`, 7 `#f48fb1` — with its notehead ringed in the staff's black and its name on a ground of the same tint; so ♭2 in C Ionian is coloured from the second set and ♭3 in C Aeolian from the scheme", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  // C Ionian: the five chromatic degrees outside it, then three of its own.
+  await eightNotes(page, ['b2', 'b3', '#4', 'b6', 'b7', '1', '3', '5']);
+  await aidsButton(page).click();
+  const notes = page.locator('.score .note-item');
+  await expect(notes).toHaveCount(8);
+  const out = page.locator('.score .note-item.out-of-scale');
+  await expect(out).toHaveCount(5);
+  const tints = ['#ffab40', '#ccff90', '#84ffff', '#9fa8da', '#ea80fc'];
+  for (let i = 0; i < 5; i++) {
+    const note = out.nth(i);
+    const head = note.locator('.notehead');
+    expect(await fillOf(head)).toBe(rgb(tints[i]));
+    // Ringed in the staff's black.
+    expect(await head.evaluate((e) => getComputedStyle(e).stroke)).toBe(rgb('#141414'));
+    expect(Number.parseFloat(await head.evaluate((e) => getComputedStyle(e).strokeWidth))).toBeGreaterThan(0);
+    // The name on a ground of the same tint, in the staff's black.
+    await expect(note.locator('.note-name-ground')).toHaveCount(1);
+    expect(await fillOf(note.locator('.note-name-ground'))).toBe(rgb(tints[i]));
+    expect(await fillOf(note.locator('.note-name'))).toBe(rgb('#141414'));
+  }
+  // The scale's own take the scheme, unringed and without a ground.
+  for (let i = 5; i < 8; i++) {
+    const note = notes.nth(i);
+    expect(await fillOf(note.locator('.notehead'))).toBe(rgb(['#c62828', '#2e7d32', '#0b69b7'][i - 5]));
+    expect(await note.locator('.notehead').evaluate((e) => getComputedStyle(e).stroke)).toBe('none');
+    await expect(note.locator('.note-name-ground')).toHaveCount(0);
+  }
+  // Under C Aeolian the ♭3, ♭6 and ♭7 are the scale's; the ♭2, ♯4 and now the 3 are not.
+  await page.evaluate(() => window.__rm.handlers.onScale('aeolian'));
+  await expect(page.locator('.score .note-item.out-of-scale')).toHaveCount(3);
+  expect(await fillOf(notes.nth(6).locator('.notehead'))).toBe(rgb('#a5d6a7'));
+  expect(await fillOf(notes.nth(1).locator('.notehead'))).toBe(rgb('#66790a'));
+  expect(await fillOf(notes.nth(0).locator('.notehead'))).toBe(rgb('#ffab40'));
+});
+
+test("AC-12.3.3/5 — While playing, the current note's mark (AC-12.2.9) shows over its colour, so the position is never lost among the colours", async ({ page }) => {
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0]]);
+  for (const [b, d] of [[0, '1'], [1, 'b2'], [2, '5'], [3, '7']]) await stamp(page, 0, b, 0, d, 0);
+  await aidsButton(page).click();
+  await page.evaluate(() => window.__rm.handlers.onTempo(60));
+  await page.locator('[data-action="play"]').click();
+  const playing = page.locator('.score .item.playing');
+  await expect(playing).toHaveCount(1, { timeout: 4000 });
+  expect(await fillOf(playing.locator('.notehead'))).toBe(rgb('#d4880c'));
+  // The others keep their colours.
+  const others = page.locator('.score .note-item:not(.playing) .notehead');
+  for (const head of await others.all()) expect(await fillOf(head)).not.toBe(rgb('#d4880c'));
+  await page.locator('[data-action="stop"]').click();
+  await expect(playing).toHaveCount(0);
+});
+
+test("AC-12.3.4/1 — With Note aids on, the printed page carries every note's name and colour as the screen does", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  await eightNotes(page, ['1', 'b2', '3', '#4', '5', 'b6', '7', '1']);
+  await aidsButton(page).click();
+  await stubPrint(page);
+  await page.locator('[data-action="print-score"]').click();
+  await page.emulateMedia({ media: 'print' });
+  const facts = (root) =>
+    page.locator(`${root} .note-item`).evaluateAll((els) =>
+      els.map((e) => ({
+        role: e.dataset.role,
+        inScale: e.dataset.inScale,
+        name: e.querySelector('.note-name')?.textContent ?? null,
+        fill: getComputedStyle(e.querySelector('.notehead')).fill,
+        ground: e.querySelector('.note-name-ground') !== null,
+      }))
+    );
+  const printed = await facts('.score-print');
+  expect(printed).toHaveLength(8);
+  expect(printed.map((f) => f.name)).toEqual(['C', 'D♭', 'E', 'F♯', 'G', 'A♭', 'B', 'C']);
+  expect(printed.map((f) => f.fill)).toEqual(['#c62828', '#ffab40', '#2e7d32', '#84ffff', '#0b69b7', '#9fa8da', '#c2185b', '#c62828'].map(rgb));
+  await page.emulateMedia({ media: 'screen' });
+  expect(printed).toEqual(await facts('.score'));
+});
+
+test('AC-12.3.4/2 — With Note aids off, the printed page carries neither', async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  await eightNotes(page, ['1', 'b2', '3', '#4', '5', 'b6', '7', '1']);
+  await expect(aidsButton(page)).toHaveAttribute('aria-pressed', 'false');
+  await stubPrint(page);
+  await page.locator('[data-action="print-score"]').click();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.score-print .note-item')).toHaveCount(8);
+  await expect(page.locator('.score-print .note-name')).toHaveCount(0);
+  await expect(page.locator('.score-print .note-item[data-role]')).toHaveCount(0);
+  for (const head of await page.locator('.score-print .notehead').all()) expect(await fillOf(head)).toBe(rgb('#141414'));
+});

@@ -20,7 +20,7 @@ import { beatNoteValue } from './meter.js';
 import { subdivisionGroups } from './recipes.js';
 import { STRONG } from './accents.js';
 import { measureLabels, effectiveSystem } from './counting.js';
-import { noteName, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
+import { noteName, inRegister, registerOf, soundingOctaveOffset, keySemitones, degreeSemitones } from './pitch.js';
 import { SCALES, DEFAULT_SCALE } from './scales.js';
 import {
   chordAt,
@@ -116,6 +116,19 @@ const PRETTY = { '': '', '#': '♯', b: '♭', '##': '𝄪', bb: '𝄫' };
 /** A Key or chord name as a musician writes it: D♭, B♭m7. */
 export function prettyName(name) {
   return name.replace(/^([A-G])(bb|b|##|#)?/, (_, letter, acc) => letter + PRETTY[acc ?? '']);
+}
+
+/**
+ * The colour role of each chromatic degree above the Key, semitone 0–11 — the
+ * ids the maintainer's fret-navigator colours its fretboard by, so the two
+ * tools paint a degree alike (AC-12.3.3/1). A role names a degree, never a
+ * letter: 1 in C and 1 in E♭ are one role.
+ */
+export const DEGREE_ROLES = ['1', 'b2', '2', 'b3', '3', '4', '4s5b', '5', 'b6', '6', 'b7', '7'];
+
+/** The role of a sounding note in a Key, from its MIDI number. */
+export function degreeRole(midiNote, key) {
+  return DEGREE_ROLES[(((midiNote - keySemitones(key)) % 12) + 12) % 12];
 }
 
 /* --- one Beat --------------------------------------------------------------- */
@@ -276,6 +289,8 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
     pattern.measures.some((m) => m.beats.some((b) => Object.values(b.swing ?? {}).some((v) => v > 0)));
 
   const scale = SCALES.find((s) => s.id === (pattern.scale ?? DEFAULT_SCALE));
+  // The scale's degrees as semitones above the Key, for which notes are in it (AC-12.3.3/3).
+  const inScale = new Set(scale.degrees.map((d) => degreeSemitones(d) % 12));
 
   const score = {
     title: pattern.name,
@@ -330,7 +345,17 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
               const previous = items.at(-1);
               if (item.continuation) {
                 // The same note as the one it is tied from.
-                Object.assign(out, { accent: false, step: previous.step, name: previous.name, midiNote: previous.midiNote, accidental: null });
+                // It keeps the colour of the note it holds and carries no name of its own (AC-12.3.2/3, AC-12.3.3/4).
+                Object.assign(out, {
+                  accent: false,
+                  step: previous.step,
+                  name: previous.name,
+                  midiNote: previous.midiNote,
+                  accidental: null,
+                  role: previous.role ?? null,
+                  inScale: previous.inScale ?? null,
+                  label: null,
+                });
               } else {
                 const event = events.get(eventKey(m, b, item.slotIndex));
                 if (!event) throw new Error(`No timeline event for ${eventKey(m, b, item.slotIndex)}`);
@@ -343,6 +368,11 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
                     out.step = staffStep(name.letter, name.octave);
                     out.accidental = name.accidental === forceOf(name.letter, name.octave) ? null : GLYPH[name.accidental];
                     inForce.set(`${name.letter}${name.octave}`, name.accidental);
+                    // For the score's Note aids (US-12.3): the degree's colour
+                    // role, whether the scale holds it, and the name as written.
+                    out.role = degreeRole(out.midiNote, pattern.key);
+                    out.inScale = inScale.has((((out.midiNote - keySemitones(pattern.key)) % 12) + 12) % 12);
+                    out.label = prettyName(`${name.letter}${name.accidental}`);
                   } else {
                     // A sounding Slot between being turned on and being given
                     // its Pitch (AC-2.2.8's invariant is restored by the next
@@ -350,6 +380,9 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
                     out.name = null;
                     out.step = 4;
                     out.accidental = null;
+                    out.role = null;
+                    out.inScale = null;
+                    out.label = null;
                   }
                 } else {
                   out.step = 0;

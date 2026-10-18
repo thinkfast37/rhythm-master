@@ -1942,6 +1942,15 @@ body {
   cursor: pointer;
 }
 .view-button.on { border-color: var(--brand); color: var(--brand); }
+.aids-button {
+  padding: 8px 14px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.aids-button.on { border-color: var(--brand); color: var(--brand); }
+.aids-button[hidden] { display: none; }
 .print-button { margin-left: auto; }
 .print-button[hidden] { display: none; }
 .grid[hidden] { display: none; }
@@ -1985,7 +1994,33 @@ body {
 .score-line .count { font-family: var(--font-ui); font-weight: 600; }
 .score-line .count.muted { fill: #8a8a8a; font-weight: 500; }
 
-/* The note being played (AC-12.2.9): the app's brand colour, on paper. */
+/*
+ * Note aids (US-12.3): each note's degree above the Key, coloured. The twelve
+ * in-scale colours are fret-navigator's degree-role palette, verbatim, so the
+ * two tools paint a degree alike (AC-12.3.3/2). A degree outside the scale
+ * takes a tint from a second set — none of them in the scheme — ringed in the
+ * staff's black, with its name on a ground of the same tint (AC-12.3.3/3).
+ * research.md D-015.
+ */
+.score-line .note-item.role-1 { --note: #c62828; --note-out: #ff8a80; }
+.score-line .note-item.role-b2 { --note: #b3541e; --note-out: #ffab40; }
+.score-line .note-item.role-2 { --note: #8a6d00; --note-out: #ffe57f; }
+.score-line .note-item.role-b3 { --note: #66790a; --note-out: #ccff90; }
+.score-line .note-item.role-3 { --note: #2e7d32; --note-out: #a5d6a7; }
+.score-line .note-item.role-4 { --note: #00795c; --note-out: #80cbc4; }
+.score-line .note-item.role-4s5b { --note: #00707e; --note-out: #84ffff; }
+.score-line .note-item.role-5 { --note: #0b69b7; --note-out: #82b1ff; }
+.score-line .note-item.role-b6 { --note: #3f51b5; --note-out: #9fa8da; }
+.score-line .note-item.role-6 { --note: #673ab7; --note-out: #b39ddb; }
+.score-line .note-item.role-b7 { --note: #8e24aa; --note-out: #ea80fc; }
+.score-line .note-item.role-7 { --note: #c2185b; --note-out: #f48fb1; }
+.score-line .note-item[class*='role-'] .notehead, .score-line .note-item[class*='role-'] .note-name { fill: var(--note); }
+.score-line .note-item.out-of-scale .notehead { fill: var(--note-out); stroke: #141414; stroke-width: 0.9; }
+.score-line .note-item.out-of-scale .note-name { fill: #141414; }
+.score-line .note-item.out-of-scale .note-name-ground { fill: var(--note-out); }
+.score-line .note-name { font-family: var(--font-ui); }
+
+/* The note being played (AC-12.2.9): the app's brand colour, on paper, over any aid colour (AC-12.3.3/5). */
 .score-line .item.playing .notehead, .score-line .item.playing .rest, .score-line .item.playing .flag { fill: #d4880c; }
 .score-line .item.playing .stem, .score-line .item.playing .accent { stroke: #d4880c; }
 

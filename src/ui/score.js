@@ -11,6 +11,10 @@
  * Rendering is a pure function of (score, width, transportPosition): the model
  * carries every musical fact, and this module only decides where on the page
  * each one goes (FR-013). Nothing here computes a pitch, a value or an accent.
+ *
+ * With Note aids on (US-12.3) a melodic note also carries its name above it and
+ * the colour role of its degree as a class, which the stylesheet fills; the
+ * model says which role and whether the scale holds it.
  */
 import { beamSegments, stemDirection, itemAt } from '../core/notation.js';
 
@@ -149,8 +153,11 @@ export function breakLines(score, measures, available) {
  * every step is half a space (AC-12.2.5/2). On the single-line staff every note
  * sits on the line (AC-12.2.3).
  */
-function drawLine(score, measures, { sp, width, current, finalBar }) {
+function drawLine(score, measures, { sp, width, current, finalBar, aids = false }) {
   const single = score.staff === 'single';
+  // Note aids belong to the melodic score alone (AC-12.3.1/1).
+  const aided = aids && !single;
+  const nameSize = 1.3 * sp;
   const lineY = single ? (STAFF_TOP + 2) * sp : null; // the one line
   const bottomY = (STAFF_TOP + 4) * sp;
   const y = (step) => (single ? lineY : bottomY - (step * sp) / 2);
@@ -245,7 +252,8 @@ function drawLine(score, measures, { sp, width, current, finalBar }) {
         const isCurrent = Boolean(
           current && current.pass === measure.pass && current.measureIndex === measure.measureIndex && current.beatIndex === beat.beatIndex && current.slotIndex === it.slotIndex
         );
-        const attrs = `data-measure="${measure.measureIndex}" data-beat="${beat.beatIndex}" data-slot="${it.slotIndex}" data-pass="${measure.pass}" data-step="${it.step}" data-value="${it.value}${it.dots ? '.' : ''}"${it.tuplet ? ` data-tuplet="${it.tuplet}"` : ''}${it.accidental ? ` data-accidental="${it.accidental}"` : ''}${it.tie ? ' data-tie="true"' : ''}`;
+        const aid = aided && it.kind === 'note' && it.role ? { role: it.role, inScale: Boolean(it.inScale), label: it.label } : null;
+        const attrs = `data-measure="${measure.measureIndex}" data-beat="${beat.beatIndex}" data-slot="${it.slotIndex}" data-pass="${measure.pass}" data-step="${it.step}" data-value="${it.value}${it.dots ? '.' : ''}"${it.tuplet ? ` data-tuplet="${it.tuplet}"` : ''}${it.accidental ? ` data-accidental="${it.accidental}"` : ''}${it.tie ? ' data-tie="true"' : ''}${aid ? ` data-role="${aid.role}" data-in-scale="${aid.inScale}"${aid.label ? ` data-name="${esc(aid.label)}"` : ''}` : ''}`;
 
         if (it.kind === 'rest') {
           const ry = single ? lineY : middleY;
@@ -286,9 +294,23 @@ function drawLine(score, measures, { sp, width, current, finalBar }) {
           if (it.value === 'sixteenth') parts.push(glyph.flag(stemX, end, sp, dir, true));
         }
 
+        // The highest thing the note itself draws: its stem end, or its head.
+        let top = dir === 'up' ? end : cy - 0.6 * sp;
         if (it.accent) {
-          const top = dir === 'up' ? end : cy - 0.6 * sp;
           parts.push(glyph.accent(cx, top - 1.1 * sp, sp));
+          top -= 1.7 * sp;
+        }
+
+        // The note's name, above everything of its own (AC-12.3.2/1, /2); a
+        // tied continuation has none (AC-12.3.2/3). Outside the scale it sits
+        // on a ground of its own tint (AC-12.3.3/3).
+        if (aid && aid.label) {
+          const ny = top - 0.6 * sp;
+          if (!aid.inScale) {
+            const w = (aid.label.length * 0.7 + 0.5) * nameSize;
+            parts.push(`<rect class="note-name-ground" x="${fmt(cx - w / 2)}" y="${fmt(ny - 1.05 * nameSize)}" width="${fmt(w)}" height="${fmt(1.35 * nameSize)}" rx="${fmt(0.25 * nameSize)}"/>`);
+          }
+          parts.push(`<text class="note-name" x="${fmt(cx)}" y="${fmt(ny)}" font-size="${fmt(nameSize)}" text-anchor="middle" font-weight="700">${esc(aid.label)}</text>`);
         }
 
         // A tie to the next item, on the side away from the stem.
@@ -299,7 +321,8 @@ function drawLine(score, measures, { sp, width, current, finalBar }) {
           parts.push(`<path class="tie" d="M ${fmt(cx + 0.35 * sp)} ${fmt(y0)} Q ${fmt((cx + nx) / 2)} ${fmt(y0 + 1.2 * sp * s)} ${fmt(nx - 0.35 * sp)} ${fmt(y0)}" fill="none" stroke-width="${fmt(0.16 * sp)}"/>`);
         }
 
-        out.push(`<g class="item note-item${isCurrent ? ' playing' : ''}" ${attrs}>${parts.join('')}</g>`);
+        const roleClass = aid ? ` role-${aid.role}${aid.inScale ? '' : ' out-of-scale'}` : '';
+        out.push(`<g class="item note-item${isCurrent ? ' playing' : ''}${roleClass}" ${attrs}>${parts.join('')}</g>`);
         notes.push({ kind: 'note', x: cx, cy, current: isCurrent });
       });
 
@@ -348,7 +371,9 @@ function drawLine(score, measures, { sp, width, current, finalBar }) {
           // Room for an accent mark between the stem and the numeral.
           return it.accent && dirs[idx] === 'up' ? end - 1.7 * sp : end;
         });
-        const ty = dir === 'up' ? Math.min(...ends) - 0.6 * sp : Math.max(...ends) + 1.7 * sp;
+        // With Note aids on the names sit where the numeral would, so it moves up past them (AC-12.3.2/2).
+        const lift = aided && dir === 'up' ? 1.9 * sp : 0;
+        const ty = dir === 'up' ? Math.min(...ends) - 0.6 * sp - lift : Math.max(...ends) + 1.7 * sp;
         // A bracket when the tuplet is not one beamed group.
         const bracket = !(noteIdx.length === members.length && noteIdx.every((i) => inBeam.get(i) === inBeam.get(noteIdx[0]) && inBeam.get(i) !== undefined));
         if (bracket) {
@@ -411,9 +436,10 @@ function drawLine(score, measures, { sp, width, current, finalBar }) {
  *
  * @param {HTMLElement} root
  * @param {object} score  from `core/notation.buildScore`
- * @param {{width: number, transportPosition?: object|null, print?: boolean}} options
+ * @param {{width: number, transportPosition?: object|null, print?: boolean, aids?: boolean}} options
+ *   `aids` writes every melodic note's name and degree colour (US-12.3)
  */
-export function renderScore(root, score, { width, transportPosition = null, print = false } = {}) {
+export function renderScore(root, score, { width, transportPosition = null, print = false, aids = false } = {}) {
   const sp = print ? SP_WIDE : staffSpace(width);
   const current = itemAt(score, transportPosition);
   const currentKey = current
@@ -440,6 +466,7 @@ export function renderScore(root, score, { width, transportPosition = null, prin
         width,
         current: currentKey,
         finalBar: lastPass && li === lines.length - 1,
+        aids,
       });
       if (li === 0 && pass.label) body.push(`<div class="score-pass-label" data-pass="${pass.index}">${esc(pass.label)}</div>`);
       body.push(`<div class="score-row" data-pass="${pass.index}" data-line="${li}">${svg}</div>`);
@@ -447,6 +474,7 @@ export function renderScore(root, score, { width, transportPosition = null, prin
   });
 
   root.innerHTML = `<div class="score-head">${head.join('')}</div><div class="score-body">${body.join('')}</div>`;
+  if (root.dataset) root.dataset.aids = String(aids && score.staff === 'treble');
   return root;
 }
 
@@ -460,14 +488,14 @@ export const PRINT_WIDTH = 680;
  * (AC-12.2.11). The score is laid out again to the page's width into a
  * container the print stylesheet alone shows; the document's title is the
  * Pattern's for the dialog's default filename, and both are put back once the
- * dialog closes.
+ * dialog closes. The Note aids print exactly as the screen shows them (AC-12.3.4).
  */
-export function printScore(score) {
+export function printScore(score, { aids = false } = {}) {
   const existing = document.querySelector('.score-print');
   if (existing) existing.remove();
   const el = document.createElement('div');
   el.className = 'score-print';
-  renderScore(el, score, { width: PRINT_WIDTH, print: true });
+  renderScore(el, score, { width: PRINT_WIDTH, print: true, aids });
   document.body.appendChild(el);
 
   const title = document.title;
