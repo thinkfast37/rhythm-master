@@ -5,7 +5,7 @@
  * (Principle II). None of them computes musical values — Slot counts, accents,
  * and Recipe menus all come from core/.
  */
-import { TIME_SIGNATURES, beatNoteValue } from '../core/meter.js';
+import { TIME_SIGNATURES, beatNoteValue, tempoUnitOf } from '../core/meter.js';
 import { recipesFor, isOffered } from '../core/recipes.js';
 import { canCondense } from '../core/condense.js';
 import {
@@ -1284,6 +1284,20 @@ function renderTempoEntry(pattern, handlers) {
       onCommit: (bpm) => handlers.onTempo(bpm),
     })
   );
+  // What the tempo counts per minute (AC-4.2.7/1): one press switches ♩ ↔ ♪.
+  const unit = tempoUnitOf(pattern);
+  const glyph = unit === 'eighth' ? '♪' : '♩';
+  const other = unit === 'eighth' ? 'quarter' : 'eighth';
+  const toggle = el('button', 'tempo-unit-toggle', {
+    type: 'button',
+    textContent: glyph,
+    title: `The tempo counts ${unit} notes; press to count ${other} notes`,
+  });
+  toggle.dataset.action = 'toggle-tempo-unit';
+  toggle.dataset.unit = unit;
+  toggle.setAttribute('aria-label', `Tempo counts ${unit} notes`);
+  toggle.addEventListener('click', () => handlers.onTempoUnit(other));
+  group.appendChild(toggle);
   group.appendChild(el('span', 'tempo-unit', { textContent: 'BPM' }));
   return group;
 }

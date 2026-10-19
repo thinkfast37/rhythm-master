@@ -123,6 +123,30 @@ describe('export/midi', () => {
   });
 });
 
+describe('export/midi at written lengths (AC-4.2.7)', () => {
+  it('AC-4.2.7/3 — A 3/8 Measure and a 5/8 Measure together last exactly as long as one 4/4 Measure at the same tempo, in playback and in the exported MIDI file: in the MIDI file', () => {
+    let p = create('Split');
+    p = addMeasure(addMeasure(p));
+    p = setTimeSignature(p, 0, '3/8');
+    p = setTimeSignature(p, 1, '5/8');
+    p = setTimeSignature(p, 2, '4/4');
+    p = { ...withNote(p, 0, 0), tempoUnit: 'quarter' };
+    const meterTicks = trackEvents(buildMidi(p)).filter((e) => e.status === 0xff && e.type === 0x58).map((e) => e.tick);
+    // 3/8 starts at 0, 5/8 three eighths later, and the 4/4 after eight eighths: one 4/4 bar.
+    expect(meterTicks).toEqual([0, 1.5 * TICKS_PER_QUARTER, 4 * TICKS_PER_QUARTER]);
+  });
+
+  it('AC-4.2.7/2 — At ♩ = 120 a quarter-note Beat lasts 0.5 s and an eighth-note Beat 0.25 s; at ♪ = 120 an eighth-note Beat lasts 0.5 s and a quarter-note Beat 1 s: the MIDI tempo', () => {
+    const tempoOf = (p) => {
+      const { data } = trackEvents(buildMidi(p)).find((e) => e.status === 0xff && e.type === 0x51);
+      return (data[0] << 16) | (data[1] << 8) | data[2];
+    };
+    const p = { ...withNote(create('Tempo')), tempo: 120 };
+    expect(tempoOf({ ...p, tempoUnit: 'quarter' })).toBe(500000);
+    expect(tempoOf({ ...p, tempoUnit: 'eighth' })).toBe(1000000);
+  });
+});
+
 describe('export/submit', () => {
   it("AC-13.1.1/1 — The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters", async () => {
     const { url } = await buildSubmission([withNote(create('Samba Break'))]);

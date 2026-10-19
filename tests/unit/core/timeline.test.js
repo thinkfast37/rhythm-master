@@ -42,8 +42,8 @@ describe('core/timeline', () => {
     let p = { ...create(), tempo: 120 };
     p = addMeasure(p);
     p = setTimeSignature(p, 1, '6/8');
-    // 4 Beats + 6 Beats at 0.5s each.
-    expect(loopDurationSeconds(p)).toBeCloseTo(5.0, 10);
+    // 4 quarter-note Beats at 0.5s + 6 eighth-note Beats at 0.25s (AC-4.2.7/2).
+    expect(loopDurationSeconds(p)).toBeCloseTo(3.5, 10);
   });
 
   it('AC-4.1.1 — Slot onsets are evenly spaced within a Beat', () => {
@@ -387,3 +387,34 @@ describe('core/timeline — the Register (US-2.9)', () => {
     expect(notes({ ...bottom, register: 1 })).toEqual([36]);
   });
 });
+
+describe('core/timeline — every Beat at its written length (AC-4.2.7)', () => {
+  /** Measures of the given meters, empty, at the given tempo and unit. */
+  const meters = (tss, tempo = 120, tempoUnit) => {
+    let p = { ...create(), tempo, ...(tempoUnit ? { tempoUnit } : {}) };
+    for (let i = 1; i < tss.length; i++) p = addMeasure(p);
+    tss.forEach((ts, i) => (p = setTimeSignature(p, i, ts)));
+    return p;
+  };
+
+  it('AC-4.2.7/3 — A 3/8 Measure and a 5/8 Measure together last exactly as long as one 4/4 Measure at the same tempo, in playback and in the exported MIDI file: in playback', () => {
+    for (const unit of ['quarter', 'eighth']) {
+      const bar = loopDurationSeconds(meters(['4/4'], 100, unit));
+      expect(loopDurationSeconds(meters(['3/8', '5/8'], 100, unit)), unit).toBeCloseTo(bar, 10);
+      // Beside a 4/4 bar the pair is one bar long, not two.
+      expect(loopDurationSeconds(meters(['4/4', '3/8', '5/8'], 100, unit)), unit).toBeCloseTo(2 * bar, 10);
+    }
+    // A sounding Slot in the 5/8 lands where the 4/4's fourth eighth would.
+    let p = meters(['3/8', '5/8'], 120, 'quarter');
+    p = cycleAccent(p, 1, 0, 0);
+    expect(buildTimeline(p)[0].timeSeconds).toBeCloseTo(3 * 0.25, 10);
+  });
+
+  it("AC-4.2.7/4 — The metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length: the metronome", () => {
+    const grid = buildBeatGrid(meters(['2/4', '3/8'], 120, 'quarter'));
+    expect(grid.map((b) => b.timeSeconds)).toEqual([0, 0.5, 1, 1.25, 1.5]);
+    const eighths = buildBeatGrid(meters(['2/4', '3/8'], 120, 'eighth'));
+    expect(eighths.map((b) => b.timeSeconds)).toEqual([0, 1, 2, 2.5, 3]);
+  });
+});
+

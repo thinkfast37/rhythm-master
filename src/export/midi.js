@@ -9,7 +9,7 @@
  * Format 0, single track, 480 ticks per quarter note.
  */
 import { buildTimeline, loopDurationSeconds } from '../core/timeline.js';
-import { beatDurationSeconds, beatCount } from '../core/meter.js';
+import { beatDurationSeconds, beatCount, quarterSeconds, tempoUnitOf } from '../core/meter.js';
 import { cyclePasses } from '../core/harmony.js';
 import { totalPasses, entryAt, playingAt } from '../core/song.js';
 
@@ -60,7 +60,7 @@ export function buildMidi(pattern) {
 
   // Seconds are converted to ticks against the Pattern's own tempo, so swing
   // offsets survive the conversion rather than being quantised away.
-  const secondsPerQuarter = 60 / pattern.tempo;
+  const secondsPerQuarter = quarterSeconds(pattern.tempo, tempoUnitOf(pattern));
   const toTicks = (seconds) => Math.round((seconds / secondsPerQuarter) * TICKS_PER_QUARTER);
 
   /** @type {Array<{tick: number, bytes: number[]}>} */
@@ -84,7 +84,7 @@ export function buildMidi(pattern) {
         bytes: [0xff, 0x58, 0x04, numerator, Math.log2(denominator), 24, 8],
       });
       measureStart +=
-        beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo);
+        beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo, tempoUnitOf(pattern));
     }
   }
 
@@ -119,8 +119,8 @@ function assemble(timed, endTick) {
   return new Uint8Array([...header, ...chunk('MTrk', track)]);
 }
 
-const tempoMeta = (tempo) => {
-  const usPerQuarter = Math.round((60 / tempo) * 1e6);
+const tempoMeta = (secondsPerQuarter) => {
+  const usPerQuarter = Math.round(secondsPerQuarter * 1e6);
   return [0xff, 0x51, 0x03, (usPerQuarter >> 16) & 0xff, (usPerQuarter >> 8) & 0xff, usPerQuarter & 0xff];
 };
 
@@ -143,19 +143,20 @@ export function buildSongMidi(song, patternById) {
   for (let loop = 0; loop < passes; loop++) {
     const at = entryAt(song, patternById, loop);
     const pattern = playingAt(song, patternById, loop);
-    const secondsPerQuarter = 60 / pattern.tempo;
+    const secondsPerQuarter = quarterSeconds(pattern.tempo, tempoUnitOf(pattern));
     const toTicks = (seconds) => startTick + Math.round((seconds / secondsPerQuarter) * TICKS_PER_QUARTER);
 
-    if (pattern.tempo !== previousTempo) {
-      timed.push({ tick: startTick, bytes: tempoMeta(pattern.tempo) });
-      previousTempo = pattern.tempo;
+    // Compared as seconds per quarter, so ♪ = 160 after ♩ = 80 is no change (AC-4.2.7).
+    if (secondsPerQuarter !== previousTempo) {
+      timed.push({ tick: startTick, bytes: tempoMeta(secondsPerQuarter) });
+      previousTempo = secondsPerQuarter;
     }
 
     let measureStart = 0;
     for (const measure of pattern.measures) {
       const [numerator, denominator] = measure.timeSignature.split('/').map(Number);
       timed.push({ tick: toTicks(measureStart), bytes: [0xff, 0x58, 0x04, numerator, Math.log2(denominator), 24, 8] });
-      measureStart += beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo);
+      measureStart += beatCount(measure.timeSignature) * beatDurationSeconds(measure.timeSignature, pattern.tempo, tempoUnitOf(pattern));
     }
 
     // The pass within the entry's own harmonic cycles: the progression restarts

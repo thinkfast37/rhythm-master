@@ -27,6 +27,7 @@ export const HELP = Object.freeze({
     ['Library', 'Opens the list of every Pattern, shipped and your own, with search and Tag filters.', '.library-toggle'],
     ['Play / Stop', 'Loops the Pattern from the top until you stop it. Under a cycle, a second Stop starts the cycle over from where turning it on would.', '.transport'],
     ['BPM', 'The exact tempo in beats per minute; type a number, or use the slider and presets in Practice.', '.tempo-unit'],
+    ['♩ / ♪', 'What the tempo counts: quarter notes or eighth notes per minute. Every note lasts its written length either way.', '[data-action="toggle-tempo-unit"]'],
     ['Prev / Next', 'Steps to the neighbouring Pattern in the library list as it is filtered now.', '[data-action="next-pattern"]'],
     ['Goals', 'Back to the goals screen, to work a different way or leave Lab.', '.goals-button'],
   ],
@@ -48,7 +49,7 @@ export const HELP = Object.freeze({
     ['− Measure / + Measure', 'Removes the last Measure, or adds one at the end; a Pattern always keeps one.', '[data-action="add-measure"]'],
     ['Time signature', 'Tap a Measure’s signature in the grid to change it; every Measure can differ.', '.control:has(> .structure-row) > .control-label'],
     ['Double Length', 'Repeats the whole Pattern after itself, to vary the second half.', '[data-action="duplicate-pattern"]'],
-    ['Condense', 'Rewrites the Pattern at the simplest subdivision that still sounds the same.', '[data-action="condense-pattern"]'],
+    ['Condense', 'Rewrites the Pattern at the simplest subdivision that still sounds the same. Mixed meters are regrouped into the time signature you pick, keeping their accents.', '[data-action="condense-pattern"]'],
     ['Append…', 'Adds another Pattern from the library after this one.', '[data-action="append-pattern"]'],
   ],
   practice: [

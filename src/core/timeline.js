@@ -10,7 +10,7 @@
  * Times are relative to the start of a loop pass. The scheduler adds its own
  * absolute audio-clock origin (FR-009).
  */
-import { beatCount, beatDurationSeconds, beatNoteValue } from './meter.js';
+import { beatCount, beatDurationSeconds, beatNoteValue, tempoUnitOf } from './meter.js';
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
 import { resolve, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
@@ -61,7 +61,7 @@ export function buildTimeline(pattern, pass = 0) {
 
   pattern.measures.forEach((measure, measureIndex) => {
     const { timeSignature } = measure;
-    const beatDuration = beatDurationSeconds(timeSignature, pattern.tempo);
+    const beatDuration = beatDurationSeconds(timeSignature, pattern.tempo, tempoUnitOf(pattern));
     const noteValue = beatNoteValue(timeSignature);
     const chordIndex = chordAt(pattern, pass, measureIndex);
     const chord = chordIndex === null ? null : pattern.harmony.chords[chordIndex];
@@ -161,7 +161,7 @@ export function buildTimeline(pattern, pass = 0) {
 /** Seconds for one full pass through every Measure. */
 export function loopDurationSeconds(pattern) {
   return pattern.measures.reduce(
-    (total, m) => total + beatCount(m.timeSignature) * beatDurationSeconds(m.timeSignature, pattern.tempo),
+    (total, m) => total + beatCount(m.timeSignature) * beatDurationSeconds(m.timeSignature, pattern.tempo, tempoUnitOf(pattern)),
     0
   );
 }
@@ -171,7 +171,7 @@ export function buildBeatGrid(pattern) {
   const beats = [];
   let measureStart = 0;
   pattern.measures.forEach((measure, measureIndex) => {
-    const beatDuration = beatDurationSeconds(measure.timeSignature, pattern.tempo);
+    const beatDuration = beatDurationSeconds(measure.timeSignature, pattern.tempo, tempoUnitOf(pattern));
     for (let beatIndex = 0; beatIndex < measure.beats.length; beatIndex++) {
       beats.push({
         timeSeconds: measureStart + beatIndex * beatDuration,

@@ -55,11 +55,15 @@ const beatOf = (score, b, m = 0) => score.passes[0].measures[m].beats[b];
 const notesOf = (score) => score.passes.flatMap((p) => p.measures.flatMap((m) => m.beats.flatMap((b) => b.items.filter((i) => i.kind === 'note'))));
 
 describe('core/notation — the head (AC-12.2.2)', () => {
-  it('AC-12.2.2/2 — The tempo mark is ♩ = tempo when the first Measure has a quarter-note Beat and ♪ = tempo when it has an eighth-note Beat, since tempo is Beats per minute and the Beat is what the denominator names', () => {
+  it("AC-12.2.2/2 — The tempo mark is ♩ = tempo when the Pattern's tempo unit is a quarter note and ♪ = tempo when it is an eighth note, since the unit is what the tempo counts (AC-4.2.7)", () => {
     const quarter = { ...pattern([[0, 0, 0]]), tempo: 96 };
     expect(buildScore(quarter).tempo).toEqual({ bpm: 96, beatValue: 'quarter' });
+    // No unit stated: the first Measure's Beat (AC-4.2.7/5).
     const eighth = { ...setTimeSignature(quarter, 0, '6/8'), tempo: 132 };
     expect(buildScore(eighth).tempo).toEqual({ bpm: 132, beatValue: 'eighth' });
+    // The stated unit wins over the first Measure's Beat, either way round.
+    expect(buildScore({ ...eighth, tempoUnit: 'quarter' }).tempo).toEqual({ bpm: 132, beatValue: 'quarter' });
+    expect(buildScore({ ...quarter, tempoUnit: 'eighth' }).tempo).toEqual({ bpm: 96, beatValue: 'eighth' });
   });
 
   it('AC-12.2.2/3 — The Time Signature is written at the start of the first Measure and again at the start of any Measure whose meter differs from the one before, never on a Measure that repeats it', () => {

@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTransport } from '../../../src/audio/scheduler.js';
 import { __reset as resetContext } from '../../../src/audio/context.js';
 import { __reset as resetNodes } from '../../../src/audio/nodes.js';
-import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pattern.js';
+import { create, cycleAccent, setPitch, addMeasure, setTimeSignature } from '../../../src/core/pattern.js';
 import { setProgression, setChange } from '../../../src/core/harmony.js';
 
 /** Every osc.start() the transport causes: its `when`, and the clock at call time. */
@@ -462,3 +462,20 @@ describe('audio/scheduler visuals under a throttled timer', () => {
     expect(seen.length).toBeGreaterThan(0);
   });
 });
+
+describe('audio/scheduler — the count-in at written lengths (AC-4.2.7)', () => {
+  it("AC-4.2.7/4 — The metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length: the count-in", async () => {
+    // 6/8 then 4/4 at ♩ = 120, nothing sounding: only the count-in clicks.
+    let p = { ...create(), tempo: 120, tempoUnit: 'quarter' };
+    p = addMeasure(p);
+    p = setTimeSignature(p, 0, '6/8');
+    const startP = transport.start(p, { metronomeEnabled: false, countInEnabled: true });
+    await vi.runOnlyPendingTimersAsync?.();
+    await startP;
+    const whens = [...new Set(starts.map((s) => s.when))].sort((a, b) => a - b);
+    expect(whens).toHaveLength(6);
+    // Six eighth-note Beats of 0.25 s — not the loop's average Beat of 0.35 s.
+    whens.slice(1).forEach((w, i) => expect(w - whens[i]).toBeCloseTo(0.25, 6));
+  });
+});
+

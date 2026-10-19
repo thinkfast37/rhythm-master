@@ -4,7 +4,7 @@ import { validate, MAX_MEASURES } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { beatCount, isSupported } from '../../../src/core/meter.js';
 import { SEED_PATTERN_COUNT } from '../../seed-count.js';
-import { canCondense, condense } from '../../../src/core/condense.js';
+import { canHalve, condense } from '../../../src/core/condense.js';
 import { rhythmFingerprint } from '../../../src/core/similarity.js';
 
 const library = seed.loadAll();
@@ -193,23 +193,25 @@ describe('the condensed exercises', () => {
     (p) => (p.tags ?? []).includes('Exercises') && !(p.tags ?? []).includes('Condensed')
   );
 
-  it('there is one for every exercise that Condense can simplify, and no other', () => {
-    expect(condensed).toHaveLength(exercises.filter(canCondense).length);
+  it('there is one for every exercise that Condense can simplify as written, and no other', () => {
+    // As written: a mixed-meter exercise can also be regrouped, but only into a
+    // Time Signature the Composer picks (AC-10.2.6/1), so it has no one twin.
+    expect(condensed).toHaveLength(exercises.filter(canHalve).length);
     expect(condensed.length).toBeGreaterThan(0);
     for (const p of condensed) expect(p.tags).toContain('Exercises');
   });
 
   it('each is exactly what Condense makes of a shipped exercise', () => {
     const sources = new Map(
-      exercises.filter(canCondense).map((p) => [rhythmFingerprint(condense(p)), p])
+      exercises.filter(canHalve).map((p) => [rhythmFingerprint(condense(p)), p])
     );
     for (const p of condensed) {
       expect(sources.has(rhythmFingerprint(p))).toBe(true);
     }
   });
 
-  it('none can be condensed any further', () => {
-    for (const p of condensed) expect(canCondense(p)).toBe(false);
+  it('none can be condensed any further as written', () => {
+    for (const p of condensed) expect(canHalve(p)).toBe(false);
   });
 
   it('each carries its source exercise’s level and meter Tags, and stores no automatic Tag', () => {

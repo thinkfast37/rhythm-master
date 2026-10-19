@@ -11,6 +11,7 @@
  * animation loop, so the highlighted Slot cannot disagree with what is heard.
  */
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
+import { beatDurationSeconds, tempoUnitOf } from '../core/meter.js';
 import { hasHarmony } from '../core/harmony.js';
 import { resume, onSuspended, onResumed } from './context.js';
 import { startTicking } from './tickSource.js';
@@ -264,15 +265,15 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
   function scheduleCountIn() {
     if (!settings.countInEnabled || beatGrid.length === 0) return 0;
     const first = pattern.measures[0];
-    const beatDuration = loopDuration / totalBeats();
+    // The first Measure's own Beat length, not the loop's average: once an
+    // eighth-note Beat is half a quarter-note one, the two differ (AC-4.2.7/4).
+    const beatDuration = beatDurationSeconds(first.timeSignature, pattern.tempo, tempoUnitOf(pattern));
     const count = first.beats.length;
     for (let i = 0; i < count; i++) {
       playClick(ctx, master, { downbeat: i === 0, when: origin + i * beatDuration });
     }
     return count * beatDuration;
   }
-
-  const totalBeats = () => pattern.measures.reduce((n, m) => n + m.beats.length, 0);
 
   // Named rather than returned anonymously, so `tick` can reach the suspend
   // handler that a context found already suspended has to go through.
@@ -449,6 +450,9 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
     _snapshot: () => ({
       pattern,
       loopDuration,
+      /** Each metronome Beat's onset within a pass, and the count-in's length (AC-4.2.7/4). */
+      beatTimes: beatGrid.map((b) => b.timeSeconds),
+      countInSeconds,
       timelineLength: timeline.length,
       pendingEdit: Boolean(pending),
       lookaheadSeconds: lookahead,

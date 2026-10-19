@@ -1837,6 +1837,13 @@ body {
 .main-top-bar .transport { padding: 10px 16px; }
 .tempo-pinned { display: flex; align-items: center; gap: 4px; }
 .tempo-pinned .tempo-entry { width: 64px; }
+/* What the tempo counts, ♩ or ♪ (AC-4.2.7/1): a glyph-sized press beside the entry. */
+.tempo-unit-toggle {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 6px;
+  font: 400 18px/1 var(--font-ui);
+}
 .tempo-unit {
   font: 600 11px/1 var(--font-ui);
   color: var(--ink-dim);
