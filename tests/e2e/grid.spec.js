@@ -187,7 +187,7 @@ test('AC-1.4.1 — Time Signature label is itself the picker control: tapping a 
   await expect(page.locator('.dialog-message')).toHaveText(/Measure 2/);
 });
 
-test('AC-1.4.2 — Picker offers exactly the 11 supported values', async ({ page }) => {
+test('AC-1.4.2 — Picker offers exactly the 14 supported values', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('[data-action="change-time-signature"][data-measure="0"]').click();
@@ -197,7 +197,7 @@ test('AC-1.4.2 — Picker offers exactly the 11 supported values', async ({ page
     .evaluateAll((els) => els.map((e) => e.dataset.value));
   // Cancel is a way out of the picker, not a Time Signature it offers.
   expect(offered.filter((v) => v !== 'null')).toEqual([
-    '1/4', '2/4', '3/4', '4/4', '5/4', '6/4', '7/4', '6/8', '7/8', '9/8', '12/8',
+    '1/4', '2/4', '3/4', '4/4', '5/4', '6/4', '7/4', '2/8', '3/8', '5/8', '6/8', '7/8', '9/8', '12/8',
   ]);
   // 1/4 specifically, so a single-beat drill cell is a valid Pattern in its own right.
   expect(offered).toContain('1/4');

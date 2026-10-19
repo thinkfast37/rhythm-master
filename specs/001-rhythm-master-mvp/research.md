@@ -636,6 +636,34 @@ a Karplus-Strong guitar with no assets (offered, declined); a fifth workbench ta
 above); writing the draft to a store of its own so it survives a reload (not asked for — the
 maintainer stated the loss explicitly, and a second Pattern store is a schema the app does not need).
 
+## D-017 — Tempo counts a stated note value, and every Beat lasts its written length
+
+**Decision (2026-10-18)**: a Pattern's tempo counts its **tempo unit**, a quarter note (♩) or an eighth note
+(♪), per minute (`tempoUnit`, AC-4.2.7). Every Beat lasts its own written length against that unit, so an
+eighth-note Beat is half a quarter-note Beat in every Pattern, at every tempo. `core/meter.js` is the one
+place the arithmetic lives (`beatDurationSeconds` takes the unit); playback, the metronome, the count-in,
+the score's tempo mark and the MIDI file all go through it.
+
+**What this reverses.** Tempo counted *Beats*, whatever the Beat was written as: an eighth-note Beat in 6/8
+at 80 lasted as long as a quarter-note Beat in 4/4 at 80. It was never a numbered decision — it lived in
+`meter.js`'s comment and in AC-12.2.2/2's wording — and it was harmless while no Pattern mixed the two.
+US-10.2's regrouping (AC-10.2.6) is built on Patterns that do: 4/4 then 3/8 then 5/8 is two bars of 4/4
+to a musician, and under the old rule the 3/8 + 5/8 pair played for two. The maintainer: "you cannot have
+quarter notes and 8th notes have the same duration … Usually in music we say what counts as a beat."
+
+**Why a stated unit rather than always ♩.** Saved 6/8, 7/8, 9/8 and 12/8 Patterns were set to a tempo
+that counted eighths. Absent `tempoUnit` reads as the note value of the first Measure's Beat — exactly what
+the old rule counted — so every Pattern whose Measures share a note value plays as it did, with no storage
+migration and no schema bump. Only a Pattern mixing /4 and /8 Measures changes, and it changes to correct.
+No shipped Pattern has an eighth-note Measure. The editor writes the unit on open, so a later change to
+Measure 1's meter cannot silently retime a Pattern through the default.
+
+**Alternatives considered**: tempo always in quarter notes (rejected — every saved /8 Pattern would play
+twice as fast); a dotted-quarter unit for compound feel (declined — a metronome clicking ♩. groups 6/8
+into two Beats, which Constitution Principle I forbids without a governance amendment); a schema-version
+migration writing the unit into every stored Pattern (unnecessary — the read default is the old behaviour,
+and bumping `CURRENT_VERSION` would lock every store out of an older cached build).
+
 ## Open items deliberately left to implementation
 
 These are genuinely low-stakes and do not need a decision before tasks are written:

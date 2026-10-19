@@ -308,10 +308,54 @@ test('AC-10.2.3/4 — Disabled when any quarter-note Straight 16ths Beat has its
   await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
 });
 
-test('AC-10.2.3/5 — Disabled when the two Measures of any pair differ in Time Signature', async ({ page }) => {
+test('AC-10.2.3/5 — When the Measures differ in Time Signature, enabled exactly when they can be halved as written or some Time Signature can regroup them, and disabled for a 3/8 Measure followed by a 4/4 one, which neither can', async ({ page }) => {
   await page.goto('/');
-  await loadShaped(page, [fourQ, ['3/4', [Q, Q, Q]]]);
-  await expect(page.locator('[data-action="condense-pattern"]')).toBeDisabled();
+  const U = ['undivided', [true]];
+  const condense = page.locator('[data-action="condense-pattern"]');
+  await loadShaped(page, [['3/8', [U, U, U]], fourQ]);
+  await expect(condense).toBeDisabled();
+  // Regroupable: 3/4 then 1/4 fill one 4/4.
+  await loadShaped(page, [['3/4', [Q, Q, Q]], ['1/4', [Q]]]);
+  await expect(condense).toBeEnabled();
+  // Halvable as written: the pairs share a meter.
+  await loadShaped(page, [['2/4', [Q, Q]], ['2/4', [Q, Q]], fourQ, fourQ]);
+  await expect(condense).toBeEnabled();
+});
+
+test("AC-10.2.6/1 — Condense asks which Time Signature to land in, listing only those that fit, 4/4 first when it fits, and — when the Measures can be halved as written — an option to keep each Measure's meter; cancelling leaves the Pattern untouched", async ({ page }) => {
+  await page.goto('/');
+  const three = ['3/4', [Q, Q, Q]];
+  const two = ['2/4', [Q, Q]];
+  await loadShaped(page, [three, three, three, three, two, two]);
+  const condense = page.locator('[data-action="condense-pattern"]');
+
+  await condense.click();
+  await expect(page.locator('.dialog-message')).toHaveText('Condense into which time signature?');
+  const labels = await page.locator('.dialog-button').allTextContents();
+  // Sixteen quarters: 4/4 first, then each other meter they fill in fewer than
+  // six Measures once halved; 3/4 does not divide them. Pairs (3/4, 3/4),
+  // (3/4, 3/4), (2/4, 2/4) can also halve in their own meters.
+  expect(labels).toEqual(['4/4', '1/4', '2/4', '2/8', 'Keep each Measure’s meter', 'Cancel']);
+
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  await expect(page.locator('.measure')).toHaveCount(6);
+  const untouched = await page.evaluate(() => window.__rm.getState().pattern.measures.map((m) => m.timeSignature));
+  expect(untouched).toEqual(['3/4', '3/4', '3/4', '3/4', '2/4', '2/4']);
+
+  // Picking 4/4 lands the whole grouping in one bar of sixteenths, and saves it.
+  await condense.click();
+  await page.locator('.dialog-button', { hasText: /^4\/4$/ }).click();
+  await expect(page.locator('.measure')).toHaveCount(1);
+  const saved = await page.evaluate(() => {
+    const p = window.__rm.patternStore.findById('p_test');
+    return { ts: p.measures.map((m) => m.timeSignature), recipes: p.measures[0].beats.map((b) => b.recipe) };
+  });
+  expect(saved).toEqual({ ts: ['4/4'], recipes: Array(4).fill('straight-16ths') });
+  // The grouping is still heard: Slots 1, 4, 7, 10, 13 and 15 render Strong.
+  const strong = await page.locator('.measure[data-measure="0"] .slot').evaluateAll((slots) =>
+    slots.map((s, i) => (s.dataset.accent === '3' ? i + 1 : null)).filter(Boolean)
+  );
+  expect(strong).toEqual([1, 4, 7, 10, 13, 15]);
 });
 
 test('AC-10.2.4 — Condense on an owned Pattern auto-saves', async ({ page }) => {

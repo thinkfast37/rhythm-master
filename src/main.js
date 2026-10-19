@@ -17,6 +17,8 @@ import {
   countActiveSlots,
   setSwingAmount,
   setSwingFeel,
+  setTempoUnit,
+  withTempoUnit,
   setPitch,
   append,
   duplicate,
@@ -24,7 +26,7 @@ import {
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
-import { canCondense, condense } from './core/condense.js';
+import { canCondense, canHalve, condense, condenseTargets } from './core/condense.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
 import {
   hasHarmony,
@@ -277,6 +279,9 @@ const listeners = new Set();
  * complete Pattern, which makes an undo a single atomic revert rather than a
  * replay of inverse operations.
  */
+/** The Condense prompt's choice to halve each Measure in its own meter (AC-10.2.6/1). */
+const AS_WRITTEN = 'as-written';
+
 const HISTORY_LIMIT = 50;
 const history = [];
 
@@ -966,7 +971,9 @@ export function loadPattern(pattern, { owned }) {
   // History belongs to the Pattern being edited; carrying it across a load
   // would let undo resurrect a different Pattern's content.
   history.length = 0;
-  state.pattern = withCarriedPlayback(pattern);
+  // The tempo unit is stated on open, so a later change to Measure 1's meter
+  // cannot retime the Pattern through the default (AC-4.2.7/5).
+  state.pattern = withTempoUnit(withCarriedPlayback(pattern));
   // What the next Pattern carries is what this one is sounding at, whether the
   // Musician chose it or it came with the Pattern (AC-4.2.3/4).
   const inEffect = playbackInEffect(state.pattern);
@@ -2293,8 +2300,27 @@ const handlers = {
   /** Condense to the fewest Measures that hold the same events (US-10.2). Lands as Double Length does. */
   async onCondense() {
     if (!canCondense(state.pattern)) return;
+    // Mixed meters are regrouped into a Time Signature the Composer picks,
+    // from those that fit, 4/4 first — or halved as written when their
+    // Measures pair up by meter (AC-10.2.6/1).
+    const targets = condenseTargets(state.pattern);
+    let target;
+    if (targets.length > 0) {
+      const options = targets.map((ts) => ({ label: ts, value: ts }));
+      if (canHalve(state.pattern)) options.push({ label: 'Keep each Measure’s meter', value: AS_WRITTEN });
+      options.push({ label: 'Cancel', value: null });
+      target = await ask({ message: 'Condense into which time signature?', options });
+      if (target === null || target === 'null') return;
+      if (target === AS_WRITTEN) target = undefined;
+    }
     if (!(await guardShipped())) return;
-    apply(condense);
+    apply(condense, target);
+  },
+
+  /** What the tempo counts per minute, ♩ or ♪ (AC-4.2.7/1). Pattern content, so a shipped one is named first. */
+  async onTempoUnit(unit) {
+    if (!(await guardShipped())) return;
+    apply(setTempoUnit, unit);
   },
 
   onExportMidi() {

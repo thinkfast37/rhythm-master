@@ -11,7 +11,7 @@
  */
 import { effectiveAccent } from './accents.js';
 import { subdivisionGroups } from './recipes.js';
-import { beatNoteValue } from './meter.js';
+import { beatNoteValue, tempoUnitOf } from './meter.js';
 
 /**
  * A stable string over meter, Recipes, Slot on/off and effective accents.
@@ -85,6 +85,8 @@ export function isDuplicate(a, b) {
   return (
     a.soundMode === b.soundMode &&
     a.tempo === b.tempo &&
+    // ♩ = 80 and ♪ = 80 are different speeds (AC-4.2.7).
+    tempoUnitOf(a) === tempoUnitOf(b) &&
     rhythmFingerprint(a) === rhythmFingerprint(b) &&
     pitchFingerprint(a) === pitchFingerprint(b)
   );

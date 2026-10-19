@@ -207,12 +207,12 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-003** | US-16.1 — Ship with a seeded Pattern library | AC-16.1.1–AC-16.1.11 | T032 | T033 |
 | **P-004** | US-16.2 — Add Patterns by editing a data file | AC-16.2.1–AC-16.2.4 | T034 | T035 |
 | **P-005** | US-1.1 — Measure sequence & per-Measure Time Signature | AC-1.1.1–AC-1.1.9 | T036–T037, T274 | T038, T275 |
-| **P-006** | US-1.2 — Time signature support without implied grouping | AC-1.2.1–AC-1.2.4 | T039 | T040 |
+| **P-006** | US-1.2 — Time signature support without implied grouping | AC-1.2.1–AC-1.2.4 | T039, T400 | T040, T401 |
 | **P-007** | US-1.3 — Mixed subdivision within a Beat, via Recipes | AC-1.3.1–AC-1.3.12 | T041–T043, T182, T224, T226, T272 | T044, T183, T225, T227, T273 |
-| **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045 | T046 |
+| **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045, T400 | T046, T401 |
 | **P-009** | US-3.1 — Per-Slot dynamics with musically-normal defaults | AC-3.1.1–AC-3.1.18 | T047–T048, T050, T166, T169 | T049, T166, T169 |
 | **P-010** | US-4.1 — Play a Pattern on loop | AC-4.1.1–AC-4.1.16 | T051–T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 |
-| **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.6 | T057–T058, T204, T234, T244, T272, T279 | T059, T205, T235, T245, T273, T280 |
+| **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.7 | T057–T058, T204, T234, T244, T272, T279, T400 | T059, T205, T235, T245, T273, T280, T401 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.17 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 |
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.6 | T065, T272 | T066, T273 |
@@ -243,9 +243,9 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
 | **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.11 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390 | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391 |
-| **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260 | T261, T262 |
+| **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260, T400 | T261, T262, T401 |
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346, T348, T388, T390, T394 | T264, T273, T283, T324, T333, T335, T347, T349, T389, T391, T395 |
-| **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.5 | T266 | T267 |
+| **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.6 | T266, T402 | T267, T403 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |

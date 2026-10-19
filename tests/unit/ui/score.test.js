@@ -99,11 +99,13 @@ const cx = (item) => Number(/<ellipse class="notehead" cx="([\d.]+)"/.exec(item.
 const ix = (item) => (item.kind === 'note' ? cx(item) : Number(/translate\(([\d.]+) /.exec(item.inner)[1]));
 
 describe('ui/score — the head as drawn (AC-12.2.2)', () => {
-  it('AC-12.2.2/2 — The tempo mark is ♩ = tempo when the first Measure has a quarter-note Beat and ♪ = tempo when it has an eighth-note Beat, since tempo is Beats per minute and the Beat is what the denominator names: as drawn', () => {
+  it("AC-12.2.2/2 — The tempo mark is ♩ = tempo when the Pattern's tempo unit is a quarter note and ♪ = tempo when it is an eighth note, since the unit is what the tempo counts (AC-4.2.7): as drawn", () => {
     const quarter = { ...pattern([[0, 0, 0]]), tempo: 96 };
     expect(head(draw(quarter), 'score-tempo')).toBe('♩ = 96');
     const eighth = { ...setTimeSignature(quarter, 0, '6/8'), tempo: 132 };
     expect(head(draw(eighth), 'score-tempo')).toBe('♪ = 132');
+    expect(head(draw({ ...quarter, tempoUnit: 'eighth' }), 'score-tempo')).toBe('♪ = 96');
+    expect(head(draw({ ...eighth, tempoUnit: 'quarter' }), 'score-tempo')).toBe('♩ = 132');
   });
 
   it('AC-12.2.2/3 — The Time Signature is written at the start of the first Measure and again at the start of any Measure whose meter differs from the one before, never on a Measure that repeats it: as drawn', () => {

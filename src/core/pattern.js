@@ -10,7 +10,7 @@
  * edits (AC-1.3.7, AC-1.3.8, AC-1.1.7) are UI concerns; callers ask
  * `countActiveSlots` first and decide for themselves.
  */
-import { TIME_SIGNATURES, beatCount, beatNoteValue, isSupported } from './meter.js';
+import { TIME_SIGNATURES, TEMPO_UNITS, beatCount, beatNoteValue, isSupported, isValidTempoUnit, tempoUnitOf } from './meter.js';
 import { defaultRecipeFor, isOffered, slotCount } from './recipes.js';
 import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey, MIN_REGISTER, MAX_REGISTER } from './pitch.js';
@@ -217,6 +217,27 @@ export function setSwingFeel(pattern, feel) {
   return { ...clone(pattern), swingFeel: feel };
 }
 
+/** The note value the tempo counts per minute. AC-4.2.7/1 */
+export function setTempoUnit(pattern, unit) {
+  if (!isValidTempoUnit(unit)) {
+    throw new Error(`Tempo unit must be one of ${TEMPO_UNITS.join(', ')}, got ${unit}`);
+  }
+  return { ...clone(pattern), tempoUnit: unit };
+}
+
+/**
+ * The Pattern with its tempo unit stated, when it was only implied. AC-4.2.7/5
+ *
+ * An absent unit reads as Measure 1's Beat, so a later change to Measure 1's
+ * meter would retime the whole Pattern through the default. Stating it when the
+ * Pattern is opened is what stops that; the same object comes back when it is
+ * already stated, so nothing is written for a Pattern that needs nothing.
+ */
+export function withTempoUnit(pattern) {
+  if (isValidTempoUnit(pattern.tempoUnit)) return pattern;
+  return { ...pattern, tempoUnit: tempoUnitOf(pattern) };
+}
+
 // --- whole-Pattern operations -----------------------------------------------
 
 /** Append another Pattern's Measures after this one's. US-8.1 */
@@ -308,6 +329,9 @@ export function validate(pattern) {
 
   if (!Number.isInteger(pattern?.tempo) || pattern.tempo < MIN_TEMPO || pattern.tempo > MAX_TEMPO) {
     fail(`tempo ${pattern?.tempo} outside ${MIN_TEMPO}–${MAX_TEMPO}`);
+  }
+  if ('tempoUnit' in (pattern ?? {}) && !isValidTempoUnit(pattern.tempoUnit)) {
+    fail(`tempoUnit "${pattern.tempoUnit}" is not one of ${TEMPO_UNITS.join(', ')} (rule 20)`);
   }
   if (!Number.isInteger(pattern?.rating) || pattern.rating < 0 || pattern.rating > 5) {
     fail(`rating ${pattern?.rating} outside 0–5`);

@@ -16,7 +16,7 @@
  * smallest unit every Recipe divides into exactly: a sixteenth is 3, a triplet
  * eighth 4, an eighth 6, a triplet sixteenth 2.
  */
-import { beatNoteValue } from './meter.js';
+import { beatNoteValue, tempoUnitOf } from './meter.js';
 import { subdivisionGroups } from './recipes.js';
 import { STRONG } from './accents.js';
 import { measureLabels, effectiveSystem } from './counting.js';
@@ -294,7 +294,8 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
 
   const score = {
     title: pattern.name,
-    tempo: { bpm: pattern.tempo, beatValue: beatNoteValue(pattern.measures[0].timeSignature) },
+    // The mark names what the tempo counts (AC-12.2.2/2, AC-4.2.7).
+    tempo: { bpm: pattern.tempo, beatValue: tempoUnitOf(pattern) },
     swing,
     keyLabel: melodic ? `${prettyName(pattern.key)} ${scale.label}` : null,
     // Named only while cycle mode has a fill in force (AC-2.7.3/1).

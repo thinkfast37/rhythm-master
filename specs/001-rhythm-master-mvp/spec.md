@@ -153,7 +153,7 @@ from this view.)*
   - **Then** the 5/4 Measure has 5 Beats of one quarter note each, and the 6/8 Measure has 6 Beats of one eighth note each
   - **And** neither Measure's Beat count nor note-value depends on any other Measure in the Pattern
 
-- **AC-1.2.2** — Beat count/note-value table for all 10 Time Signatures
+- **AC-1.2.2** — Beat count/note-value table for all 14 Time Signatures
   - **Given** a Measure is set to time signature `<signature>`
   - **When** its Beats are generated
   - **Then** the Measure has exactly `<beat count>` Beats, each one `<note value>` long
@@ -167,10 +167,15 @@ from this view.)*
   | 5/4 | 5 | quarter note |
   | 6/4 | 6 | quarter note |
   | 7/4 | 7 | quarter note |
+  | 2/8 | 2 | eighth note |
+  | 3/8 | 3 | eighth note |
+  | 5/8 | 5 | eighth note |
   | 6/8 | 6 | eighth note |
   | 7/8 | 7 | eighth note |
   | 9/8 | 9 | eighth note |
   | 12/8 | 12 | eighth note |
+
+  - *(Revised 2026-10-18 at the maintainer's request: "I want to be able to break down common time signatures into compound time signatures … break down 4/4 into 3/8 and 5/8." 2/8, 3/8 and 5/8 added — the eighth-note groupings of two and three, and the 3+5 split of a 4/4 bar. 4/8 was left out as 2/4 in practice. The title said "10" while the table held eleven; it now counts fourteen.)*
 
 - **AC-1.2.3** — 7/8 is 7 ungrouped Beats
   - **Given** a Measure is set to 7/8
@@ -341,10 +346,10 @@ from this view.)*
   - **Then** each of the 3 Measures displays its own Time Signature label showing that Measure's current Time Signature
   - **And** that label is itself the control — tapping it opens that Measure's Time Signature picker
 
-- **AC-1.4.2** — Picker offers exactly the 11 supported values
+- **AC-1.4.2** — Picker offers exactly the 14 supported values
   - **Given** the Composer taps a Measure's Time Signature label
   - **When** the picker opens
-  - **Then** exactly these eleven values are offered: 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8, 9/8, 12/8
+  - **Then** exactly these fourteen values are offered: 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 2/8, 3/8, 5/8, 6/8, 7/8, 9/8, 12/8
   - **And** 1/4 is offered specifically so a single-beat drill cell can be a valid Pattern in its own
     right, looping every beat, rather than being padded or repeated to fill a longer Measure
   - **And** no free-text entry is possible
@@ -352,6 +357,7 @@ from this view.)*
     held eleven — 1/4 was added without the title following. The count matters beyond tidiness:
     T5 matches a test name against the AC **title**, so a test named verbatim would have
     claimed ten while proving eleven.)*
+  - *(Revised 2026-10-18 with AC-1.2.2: 2/8, 3/8 and 5/8 added at the maintainer's request, for splitting a bar into groupings of two, three and five eighths.)*
 
 - **AC-1.4.3** — Each Measure's label reflects only its own Time Signature
   - **Given** a Pattern whose Measure 1 is 4/4 and Measure 2 is 3/4
@@ -1054,6 +1060,18 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
     - **AC-4.2.6/2** — Tapping the 300 preset sets the tempo to the ceiling
   - *(Added 2026-09-07: T202 raised the ceiling from 220 to 300 but left the preset row at 220, so the top of the range was slider-only — and the maintainer asked for "more preselector buttons". The four additions continue the 20 BPM spacing the top of the old row already used.)*
   - *(Wording revised 2026-09-13 with T272: "the playback settings" became the Practice group. Every preset stays — the maintainer: "I do like having a lot of those toggle switches … trying at different speeds.")*
+
+- **AC-4.2.7** — A Pattern says which note its tempo counts, and every note lasts its written length
+  - **Given** a Pattern whose Measures may mix quarter-note and eighth-note Beats
+  - **When** it plays, clicks, counts in, prints or exports at a tempo
+  - **Then** the tempo counts the Pattern's tempo unit — a quarter note (♩) or an eighth note (♪) — per minute, and every Beat lasts its own written length against it: an eighth-note Beat is half a quarter-note Beat, whatever the unit
+  - **Cases**:
+    - **AC-4.2.7/1** — A tempo-unit control beside the BPM entry reads ♩ or ♪ and switches between them; on a shipped Pattern it asks for a name first, as any edit does
+    - **AC-4.2.7/2** — At ♩ = 120 a quarter-note Beat lasts 0.5 s and an eighth-note Beat 0.25 s; at ♪ = 120 an eighth-note Beat lasts 0.5 s and a quarter-note Beat 1 s
+    - **AC-4.2.7/3** — A 3/8 Measure and a 5/8 Measure together last exactly as long as one 4/4 Measure at the same tempo, in playback and in the exported MIDI file
+    - **AC-4.2.7/4** — The metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length
+    - **AC-4.2.7/5** — A Pattern that does not state a unit counts the note value of its first Measure's Beat, so one saved before the unit existed plays as it did whenever its Measures share a note value; opening it in the editor states that unit, so changing the first Measure's meter later does not retime it
+  - *(Added 2026-10-18 at the maintainer's request. Until now tempo counted Beats, and an eighth-note Beat lasted as long as a quarter-note one — so a 3/8 + 5/8 pair beside a 4/4 bar played for twice the bar's length. The maintainer: "you cannot have quarter notes and 8th notes have the same duration. The playback engine needs to calculate the duration of each note accurately. Usually in music we say what counts as a beat." The ♩/♪ choice, and leaving ♩. out (Constitution Principle I), chosen the same day. No shipped Pattern has an eighth-note Measure, so none is retimed. research.md D-017.)*
 
 ---
 
@@ -3063,10 +3081,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - *(Clarified 2026-09-12 with US-2.7: while cycle mode is on the head also names the fill in force, AC-2.7.3/1. Off, nothing here changes.)*
   - **Cases**:
     - **AC-12.2.2/1** — The Pattern's name is the title
-    - **AC-12.2.2/2** — The tempo mark is ♩ = tempo when the first Measure has a quarter-note Beat and ♪ = tempo when it has an eighth-note Beat, since tempo is Beats per minute and the Beat is what the denominator names
+    - **AC-12.2.2/2** — The tempo mark is ♩ = tempo when the Pattern's tempo unit is a quarter note and ♪ = tempo when it is an eighth note, since the unit is what the tempo counts (AC-4.2.7)
     - **AC-12.2.2/3** — The Time Signature is written at the start of the first Measure and again at the start of any Measure whose meter differs from the one before, never on a Measure that repeats it
     - **AC-12.2.2/4** — A Melodic Pattern's head says its Key and scale by name, E♭ Aeolian (Natural Minor); a Percussive Pattern's head says neither
     - **AC-12.2.2/5** — When any swing amount is above zero the head says "Swing" beneath the tempo mark, and the notes are still written straight, as swing is a feel and not a rhythm
+  - *(AC-12.2.2/2 revised 2026-10-18 with AC-4.2.7: the mark followed the first Measure's Beat because tempo counted Beats. It now follows the tempo unit, which for a Pattern that states none is that same first Measure's Beat.)*
 
 - **AC-12.2.3** — A Percussive Pattern is written on a single-line rhythm staff
   - **Given** a Percussive Pattern shown as Sheet
@@ -3221,6 +3240,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-09-12 at the maintainer's request: "a lowest common denominator type feature … a lot of the rhythms in my library are just using quarter notes, or quarter notes and eighth notes, and as a result they end up being four measures, but really they could be one measure with sixteenth notes … I want a button to do that, and that should detect if it's even possible." Decisions taken with the maintainer the same day: one press condenses as far as it can rather than one halving at a time; the result lands the way Double Length lands — in place on an owned Pattern, through the naming prompt on a shipped one; the Time Signature is kept, so a halving needs an even number of Measures; per-Group swing overrides are dropped and the Pattern-wide swing kept; Pitches and harmony travel across unchanged; tempo is unchanged, so the condensed Pattern plays the same events denser. The opposite direction — stretching every Slot to twice its length — is a follow-up, not part of this Story.)*
 
+*(Extended 2026-10-18 at the maintainer's request: "I want to be able to create groupings of 3/4 and 2/4 to create the pattern but at the end I want to be able to condense it all into a 4/4 measure with 16th notes." A Pattern whose Measures differ in meter is regrouped into a Time Signature the Composer picks — 4/4 first — and then halved as before (AC-10.2.6). Every Slot now keeps the Accent it sounded with, so the grouping is still heard once the barlines are gone (AC-10.2.1/4 revised). A Pattern of one meter condenses in that meter, as before, and one whose Measures pair up by meter can still be halved as written. Triplets travel unchanged when regrouping and still stop a halving; a 16th-triplet Recipe is a follow-up. Decisions taken with the maintainer the same day.)*
+
 **Independent Test**: Load four 4/4 Measures of Straight 8ths with only the first Slot of every Beat on, press Condense, and assert one Measure of Straight 16ths with every Slot on; then assert the control is disabled for an odd Measure count, a triplet Recipe, and a sixteenth that is on.
 
 **Acceptance Scenarios**:
@@ -3233,8 +3254,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-10.2.1/1** — Two 4/4 Measures of Straight 8ths become one 4/4 Measure of Straight 16ths: new Beat 1 holds old Beat 1 then old Beat 2, new Beat 2 holds old Beats 3 and 4, and so on through the eighth old Beat
     - **AC-10.2.1/2** — A quarter-note Straight 16ths Beat whose second and fourth Slots are off is halvable, and contributes its first and third Slots
     - **AC-10.2.1/3** — On an eighth-note Beat, Undivided Beats pack in pairs into Straight 16ths, and a Straight 16ths Beat whose second Slot is off counts as Undivided
-    - **AC-10.2.1/4** — Every Slot's on state, its stored Accent override and its Pitch travel with it to its new position; Accent defaults are computed for the new positions, as always
+    - **AC-10.2.1/4** — Every Slot's on state, the Accent it sounded with and its Pitch travel with it to its new position; the Accent is stored as an override only where it differs from the new position's computed default
     - **AC-10.2.1/5** — Per-Group swing overrides are dropped; the Pattern's name, id, tempo, Sound Mode, Key, scale, Pattern-wide swing amount and feel, harmony, Tags and rating are unchanged
+  - *(AC-10.2.1/4 revised 2026-10-18: Accent defaults were recomputed for the new positions, so condensing a 3+3+2 grouping into one 4/4 bar accented Beats 1–4 and erased the grouping. The maintainer chose to keep each Slot's Accent, for every Condense.)*
 
 - **AC-10.2.2** — Condense halves as far as it can in one press
   - **Given** four 4/4 Measures of Straight 8ths with only the first Slot of every Beat on
@@ -3244,13 +3266,14 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-10.2.3** — Condense is available only when a halving is possible
   - **Given** a Pattern loaded in the editor
   - **When** the Composer looks at the Condense control beside Double Length
-  - **Then** it is enabled exactly when one halving is possible
+  - **Then** it is enabled exactly when one halving is possible, or — when the Measures differ in Time Signature — when at least one Time Signature can regroup them (AC-10.2.6)
   - **Cases**:
     - **AC-10.2.3/1** — Enabled for two 4/4 Measures of Straight 8ths
     - **AC-10.2.3/2** — Disabled for an odd number of Measures, a single Measure included
     - **AC-10.2.3/3** — Disabled when any Beat carries a triplet or split Recipe
     - **AC-10.2.3/4** — Disabled when any quarter-note Straight 16ths Beat has its second or fourth Slot on, or any eighth-note Straight 16ths Beat its second
-    - **AC-10.2.3/5** — Disabled when the two Measures of any pair differ in Time Signature
+    - **AC-10.2.3/5** — When the Measures differ in Time Signature, enabled exactly when they can be halved as written or some Time Signature can regroup them, and disabled for a 3/8 Measure followed by a 4/4 one, which neither can
+  - *(AC-10.2.3 and AC-10.2.3/5 revised 2026-10-18 with AC-10.2.6: mixed meters disabled Condense outright.)*
 
 - **AC-10.2.4** — Condense on an owned Pattern auto-saves
   - **Given** an owned Pattern of two Measures of Straight 8ths is loaded
@@ -3261,6 +3284,20 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Given** a shipped Pattern that can be condensed is loaded
   - **When** the Composer presses Condense
   - **Then** the naming prompt from US-7.3 appears before anything is applied, and cancelling it leaves the shipped Pattern untouched
+
+- **AC-10.2.6** — Condense regroups mixed meters into the Time Signature the Composer picks
+  - **Given** a Pattern whose Measures differ in Time Signature
+  - **When** the Composer presses Condense and picks a Time Signature
+  - **Then** every Beat is taken in order as one sequence, regardless of barlines, written into Measures of the picked Time Signature, and halved as far as it can be (AC-10.2.2)
+  - **Cases**:
+    - **AC-10.2.6/1** — Condense asks which Time Signature to land in, listing only those that fit, 4/4 first when it fits, and — when the Measures can be halved as written — an option to keep each Measure's meter; cancelling leaves the Pattern untouched
+    - **AC-10.2.6/2** — 3/4, 3/4, 3/4, 3/4, 2/4, 2/4 of Straight 8ths with only each Measure's first Slot on become one 4/4 Measure of Straight 16ths with Slots 1, 4, 7, 10, 13 and 15 on
+    - **AC-10.2.6/3** — With the first Slot of every Beat on instead, every Slot of the result is on and Slots 1, 4, 7, 10, 13 and 15 are Strong, so the 3+3+3+3+2+2 grouping is still accented
+    - **AC-10.2.6/4** — Eighth-note Beats pair into quarter-note Beats: two Undivided Beats into Straight 8ths, otherwise into Straight 16ths with an Undivided Beat contributing its Slot then an off one — so 3/8 then 5/8 become one 4/4 Measure, and 4/4, 3/8, 5/8 become two before any halving
+    - **AC-10.2.6/5** — Into an eighth-note meter a quarter-note Beat splits in two: Straight 8ths into two Undivided Beats, Straight 16ths into two Straight 16ths Beats
+    - **AC-10.2.6/6** — A Time Signature fits only when the Beats fill whole Measures of it, every run of eighth-note Beats pairs evenly between quarter-note Beats, no triplet or split Beat must split, and the result holds fewer Measures than the Pattern did — so 3/4 then 2/4 offer 5/4 and not 4/4, and 4/4, 4/4, 2/4, 2/4, 2/4 offer no 2/4, which would make seven
+    - **AC-10.2.6/7** — Triplet and split Beats travel unchanged into a quarter-note meter: 3/4 then 1/4 holding a Triplet 8ths Beat become one 4/4 Measure holding it, and halving stops there, as a triplet Beat always stops it
+  - *(Added 2026-10-18 at the maintainer's request; see the Story's dated note.)*
 
 ---
 
@@ -4212,8 +4249,8 @@ specified in the Acceptance Scenarios above.
   optional Key, Tags, and a Rating.
 - **Measure**: One instance of a Time Signature at a position in a Pattern. A Pattern is an ordered
   sequence of Measures, each carrying its own Time Signature, capped at 6 per Pattern.
-- **Time Signature**: One of eleven supported values — 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 6/8, 7/8,
-  9/8, 12/8. A per-Measure property. Determines Beat count (the numerator) and each Beat's note-value
+- **Time Signature**: One of fourteen supported values — 1/4, 2/4, 3/4, 4/4, 5/4, 6/4, 7/4, 2/8, 3/8,
+  5/8, 6/8, 7/8, 9/8, 12/8. A per-Measure property. Determines Beat count (the numerator) and each Beat's note-value
   (the denominator).
 - **Beat**: One pulse within a Measure, one note-value long.
 - **Recipe**: A named subdivision template applied to a Beat, defining its Slot count and the feel

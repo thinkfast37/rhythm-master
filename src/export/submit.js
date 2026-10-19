@@ -26,6 +26,8 @@ export function toSubmissionShape(pattern) {
     name: pattern.name,
     soundMode: pattern.soundMode,
     tempo: pattern.tempo,
+    // What the tempo counts (AC-4.2.7); absent reads as the first Measure's Beat.
+    ...(pattern.tempoUnit ? { tempoUnit: pattern.tempoUnit } : {}),
     tags: pattern.tags ?? [],
     rating: 0,
     measures: structuredClone(pattern.measures),

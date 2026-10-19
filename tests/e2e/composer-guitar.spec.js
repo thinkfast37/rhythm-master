@@ -211,6 +211,8 @@ test('AC-19.2.3/3 — Changing the Key or the scale recolours and relabels every
   await openApp(page);
   await loadFourBeats(page);
   await expect(fret(page, 0, 2)).not.toHaveClass(/is-diatonic/);
+  // What the draft held before: the Key and scale changes may add nothing to it.
+  const before = await page.evaluate(() => Object.keys(window.__rm.composer().draft));
   await page.locator('.composer-key').selectOption('D');
   await expect(fret(page, 0, 2)).toHaveClass(/is-diatonic/);
   await expect(fret(page, 0, 2)).toHaveClass(/role-3/);
@@ -222,7 +224,8 @@ test('AC-19.2.3/3 — Changing the Key or the scale recolours and relabels every
   const draft = await page.evaluate(() => window.__rm.composer().draft);
   expect(draft.key).toBe('D');
   expect(draft.scale).toBe('minor-pentatonic');
-  expect(Object.keys(draft).sort()).toEqual(['key', 'measures', 'name', 'rating', 'scale', 'soundMode', 'swingAmount', 'swingFeel', 'tags', 'tempo'].filter((k) => k in draft).sort());
+  expect(Object.keys(draft).sort()).toEqual(['key', 'measures', 'name', 'rating', 'scale', 'soundMode', 'swingAmount', 'swingFeel', 'tags', 'tempo', 'tempoUnit'].filter((k) => k in draft).sort());
+  expect(Object.keys(draft).filter((k) => !before.includes(k)).every((k) => k === 'key' || k === 'scale')).toBe(true);
 });
 
 // --- AC-19.2.4: free play ---------------------------------------------------------
