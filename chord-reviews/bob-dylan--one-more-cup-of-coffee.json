@@ -1,0 +1,65 @@
+{
+  "artist": "Bob Dylan",
+  "title": "One More Cup of Coffee",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "G",
+        "F",
+        "E"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "F",
+        "E"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/one-more-cup-of-coffee-chords-14911"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/one-more-cup-of-coffee-chords-14911",
+    "votes": 1695,
+    "rating": 4.87538,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

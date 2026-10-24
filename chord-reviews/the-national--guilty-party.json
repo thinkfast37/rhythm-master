@@ -1,0 +1,166 @@
+{
+  "artist": "The National",
+  "title": "Guilty Party",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "D",
+        "Bm",
+        "F#m",
+        "A",
+        "Bm",
+        "Em",
+        "Em7",
+        "G",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "D",
+        "F#m",
+        "Bm",
+        "Em7",
+        "D",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "D",
+        "A",
+        "Bm",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "post-chorus",
+      "chords": [
+        "Bm",
+        "A",
+        "Em",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/guilty-party-chords-2073679"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/guilty-party-chords-2073679",
+    "votes": 102,
+    "rating": 4.89912,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

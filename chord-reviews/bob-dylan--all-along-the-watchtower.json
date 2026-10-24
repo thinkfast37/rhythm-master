@@ -1,0 +1,47 @@
+{
+  "artist": "Bob Dylan",
+  "title": "All Along the Watchtower",
+  "key": "E major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "C#m",
+        "B",
+        "A",
+        "B"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key E major; capo 4 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/all-along-the-watchtower-chords-152504"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/all-along-the-watchtower-chords-152504",
+    "votes": 1528,
+    "rating": 4.79127,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

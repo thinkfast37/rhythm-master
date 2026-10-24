@@ -1,0 +1,139 @@
+{
+  "artist": "Radiohead",
+  "title": "No Surprises",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "D",
+        "Gm"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "D",
+        "Gmaj7/B",
+        "Em",
+        "A",
+        "Asus4",
+        "D",
+        "Gm"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "min"
+        }
+      ],
+      "note": "Gmaj7/B: bass B dropped"
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "D",
+        "Gmaj7/B"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": "Gmaj7/B: bass B dropped"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Em",
+        "A",
+        "Asus4"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "A",
+        "Gm"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "min"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    }
+  ],
+  "confidence": "medium",
+  "note": "key D major; page says key F; capo 3 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/no-surprises-chords-183884"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/no-surprises-chords-183884",
+    "votes": 8490,
+    "rating": 4.89865,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

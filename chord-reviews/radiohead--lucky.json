@@ -1,0 +1,126 @@
+{
+  "artist": "Radiohead",
+  "title": "Lucky",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "Em",
+        "Am",
+        "G",
+        "Bm",
+        "Em",
+        "C",
+        "G",
+        "Bm"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "A",
+        "Em"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "Emadd9",
+        "G5/D",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "Emadd9: minor add9 read as minor; G5/D: power chord read as major; bass D dropped"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "Emadd9",
+        "G5/D"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "Emadd9: minor add9 read as minor; G5/D: power chord read as major; bass D dropped"
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/lucky-chords-41315"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/lucky-chords-41315",
+    "votes": 1475,
+    "rating": 4.87308,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

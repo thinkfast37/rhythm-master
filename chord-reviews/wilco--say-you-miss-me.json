@@ -1,0 +1,217 @@
+{
+  "artist": "Wilco",
+  "title": "Say You Miss Me",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "Am",
+        "G",
+        "F",
+        "C",
+        "G",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C",
+        "E",
+        "Am",
+        "F",
+        "G",
+        "E",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "Am",
+        "E",
+        "F",
+        "C",
+        "Ab"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge 2",
+      "chords": [
+        "C",
+        "Am",
+        "G",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "finale",
+      "chords": [
+        "C",
+        "E",
+        "Am",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "finale 2",
+      "chords": [
+        "E",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 3 places"
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/wilco/say-you-miss-me-chords-724294"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/wilco/say-you-miss-me-chords-724294",
+    "votes": 60,
+    "rating": 4.87943,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

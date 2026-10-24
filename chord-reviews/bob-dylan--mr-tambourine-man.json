@@ -1,0 +1,403 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Mr. Tambourine Man",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "D",
+        "Dsus2"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "G",
+        "A",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "G",
+        "A",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "G",
+        "A",
+        "Asus4",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "D",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 4 places"
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "G",
+        "A",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "G",
+        "A",
+        "Asus4",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "longer than 16 chords — trim before adding"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "G",
+        "A",
+        "B",
+        "D",
+        "E",
+        "Dsus2",
+        "Esus2",
+        "Asus4",
+        "Bsus4"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        },
+        {
+          "degree": "2",
+          "quality": "sus2"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "6",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 3",
+      "chords": [
+        "G",
+        "F",
+        "A",
+        "G",
+        "D",
+        "C",
+        "Dsus2",
+        "Csus2",
+        "Asus4",
+        "Gsus4"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        },
+        {
+          "degree": "b7",
+          "quality": "sus2"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 4",
+      "chords": [
+        "G",
+        "D",
+        "A",
+        "E",
+        "D",
+        "A",
+        "Dsus2",
+        "Asus2",
+        "Asus4",
+        "Esus4"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        },
+        {
+          "degree": "5",
+          "quality": "sus2"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "2",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major; page says key F; capo 3 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/mr-tambourine-man-chords-1092233"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/mr-tambourine-man-chords-1092233",
+    "votes": 4289,
+    "rating": 4.84883,
+    "version": 3
+  },
+  "read": "2026-10-24"
+}

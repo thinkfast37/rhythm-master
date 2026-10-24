@@ -26,6 +26,16 @@
  *   npm run chords -- report
  *       Rewrite chord-reviews/REPORT.md from the reviews on disk, fetching nothing.
  *
+ *   npm run chords -- respell [--dry-run]
+ *       Rebuild every song entry and credit by AC-2.6.1/19 — each song spelled
+ *       from the Ionian tonic of its key signature — from the shipped credits and
+ *       the corrections in chord-reviews/overrides.json, and write the ids that
+ *       disappear to src/storage/progressionRenames.js (AC-2.12.1/4).
+ *
+ *   npm run chords -- rekey
+ *       Re-spell the review files on disk by AC-2.6.1/19 from the chords they
+ *       hold, fetching nothing, then rewrite the report.
+ *
  * Ultimate Guitar's terms do not allow automated access. The maintainer chose
  * on 2026-10-23 to re-read the songbook's songs this way anyway — personal use,
  * about two requests a song, paced, never more than the songbook — so `songbook`
@@ -35,6 +45,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 
 import { execFileSync } from 'node:child_process';
 import { reviewSheet } from './chord-sheet/parse.mjs';
 import { planAdditions, compareReview, applyPlan, ARTIST_HEADINGS } from './chord-sheet/catalogue.mjs';
+import { respell, mergeRenames } from './chord-sheet/respell.mjs';
+import { parseChord, sectionKeys, toNumeral } from './chord-sheet/parse.mjs';
 import { REVIEW_DIR, reviewPath, songbookSongs, searchUrl, pickChords, buildReport } from './chord-sheet/songbook-run.mjs';
 
 const HARMONY = new URL('../src/core/harmony.js', import.meta.url);
@@ -86,7 +98,7 @@ const sleep = (s) => new Promise((done) => setTimeout(done, s * 1000));
 function writeReport(cat) {
   const reviews = existsSync(REVIEW_DIR)
     ? readdirSync(REVIEW_DIR)
-        .filter((f) => f.endsWith('.json'))
+        .filter((f) => f.endsWith('.json') && f !== 'overrides.json')
         .map((f) => JSON.parse(readFileSync(`${REVIEW_DIR}/${f}`, 'utf8')))
     : [];
   const file = `${REVIEW_DIR}/REPORT.md`;
@@ -139,6 +151,69 @@ async function songbook(opts, cat) {
   }
 }
 
+const RENAMES = new URL('../src/storage/progressionRenames.js', import.meta.url);
+const OVERRIDES = `${REVIEW_DIR}/overrides.json`;
+
+async function respellCommand(opts, cat) {
+  const overrides = existsSync(OVERRIDES) ? JSON.parse(readFileSync(OVERRIDES, 'utf8')).songs : [];
+  const result = respell({
+    catalogue: cat,
+    sources: { harmony: readFileSync(HARMONY, 'utf8'), songbook: readFileSync(SONGBOOK, 'utf8') },
+    overrides,
+    headings: ARTIST_HEADINGS,
+  });
+  for (const p of result.plan.problems) console.log(`PROBLEM  ${p}`);
+  if (result.plan.problems.length) {
+    process.exitCode = 1;
+    return;
+  }
+  const label = (id) => cat.PROGRESSIONS.find((p) => p.id === id)?.label.replace(/\s*\([^)]*\)$/, '') ?? id;
+  const fresh = new Map(result.plan.entries.map((e) => [e.id, e.label.replace(/\s*\([^)]*\)$/, '')]));
+  for (const c of result.plan.credits) {
+    const before = cat.SONGBOOK.find((b) => b.artist === c.artist && b.title === c.title && b.section === c.section);
+    const now = fresh.get(c.progression) ?? label(c.progression);
+    const was = before ? label(before.progression) : '(new section)';
+    console.log(`${was === now ? '  ' : '→ '}${c.artist} — ${c.title} (${c.section}): ${was === now ? now : `${was}  →  ${now}`}`);
+  }
+  console.log(`\n${result.plan.entries.length} song entries, ${result.plan.credits.length} credits; ${Object.keys(result.renames).length} ids renamed.`);
+  if (opts['dry-run']) return;
+  writeFileSync(HARMONY, result.sources.harmony);
+  writeFileSync(SONGBOOK, result.sources.songbook);
+  const { PROGRESSION_RENAMES } = await import(RENAMES.href);
+  const ids = new Set([...cat.PROGRESSIONS.filter((p) => !p.fromSongs).map((p) => p.id), ...result.plan.entries.map((e) => e.id)]);
+  const merged = mergeRenames(PROGRESSION_RENAMES, result.renames, (id) => ids.has(id));
+  const text = readFileSync(RENAMES, 'utf8').replace(
+    /export const PROGRESSION_RENAMES = \{[\s\S]*?\n?\};/,
+    `export const PROGRESSION_RENAMES = {\n${Object.entries(merged)
+      .map(([from, to]) => `  '${from}': [${to.map((id) => `'${id}'`).join(', ')}],`)
+      .join('\n')}\n};`
+  );
+  writeFileSync(RENAMES, text);
+  console.log('Wrote harmony.js, songbook.js and progressionRenames.js. Now: regenerate the matrix and run every gate (CLAUDE.md §4).');
+}
+
+async function rekey(cat) {
+  for (const f of readdirSync(REVIEW_DIR).filter((f) => f.endsWith('.json') && f !== 'overrides.json')) {
+    const file = `${REVIEW_DIR}/${f}`;
+    const r = JSON.parse(readFileSync(file, 'utf8'));
+    if (r.notFound || !r.sections?.length) continue;
+    const loops = r.sections.map((s) => s.chords.map(parseChord));
+    const { song, keys } = sectionKeys(loops);
+    r.key = song.name;
+    r.sections = r.sections.map((s, i) => ({
+      ...s,
+      numerals: loops[i].map((c) => toNumeral(c, keys[i].tonic)),
+      note:
+        [keys[i].tonic !== song.tonic ? `spelled in ${keys[i].name}, the key this section lies in` : null, ...(s.note ?? '').split('; ').filter((n) => n && !n.startsWith('spelled in '))]
+          .filter(Boolean)
+          .join('; ') || null,
+    }));
+    r.note = r.note?.replace(/^key [A-G][b#]? (major|minor), \d+% of chords diatonic/, `key ${song.name}`) ?? null;
+    writeFileSync(file, JSON.stringify(r, null, 2) + '\n');
+  }
+  writeReport(cat);
+}
+
 async function main() {
   const [command, ...rest] = process.argv.slice(2);
   const opts = args(rest);
@@ -160,6 +235,8 @@ async function main() {
 
   if (command === 'songbook') return songbook(opts, await catalogue());
   if (command === 'report') return writeReport(await catalogue());
+  if (command === 'respell') return respellCommand(opts, await catalogue());
+  if (command === 'rekey') return rekey(await catalogue());
 
   const files = opts._;
   if (!files.length) throw new Error(`${command ?? 'a command'} needs review files`);

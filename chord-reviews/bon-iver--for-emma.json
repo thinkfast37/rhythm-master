@@ -1,0 +1,108 @@
+{
+  "artist": "Bon Iver",
+  "title": "For Emma",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C/G",
+        "Fmaj7/C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": "C/G: bass G dropped; Fmaj7/C: bass C dropped"
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "C/G",
+        "Em"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        }
+      ],
+      "note": "C/G: bass G dropped"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C/G",
+        "Fmaj7/C",
+        "C/G",
+        "Fmaj7/C",
+        "C/G",
+        "Em",
+        "Fmaj7/C",
+        "C/G",
+        "Em"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        }
+      ],
+      "note": "C/G: bass G dropped; Fmaj7/C: bass C dropped"
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bon-iver/for-emma-chords-822704"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bon-iver/for-emma-chords-822704",
+    "votes": 751,
+    "rating": 4.87059,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

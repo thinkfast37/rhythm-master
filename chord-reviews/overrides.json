@@ -1,0 +1,104 @@
+{
+  "about": "Song sections corrected from their chord sheets, approved by the maintainer 2026-10-24 (T428). Chords are as each sheet writes them (capo shapes where the sheet uses a capo; the numerals are the same). `npm run chords -- respell` spells every song from these where given, and from the shipped credits otherwise, by AC-2.6.1/19. A song listed here has all its credits taken from here.",
+  "songs": [
+    {
+      "artist": "Radiohead",
+      "title": "Reckoner",
+      "why": "Bridge: the sheet has C Em B, nothing like the shipped iii–i–iv–♭VImaj7–V.",
+      "sections": [
+        { "section": "verse", "chords": ["Em", "D", "C", "Em", "C"] },
+        { "section": "bridge", "chords": ["C", "Em", "B"] }
+      ]
+    },
+    {
+      "artist": "The National",
+      "title": "I Need My Girl",
+      "why": "The sheet's verse is Am F C and its chorus F Am G; the shipped loop added a fourth chord to both.",
+      "sections": [
+        { "section": "verse", "chords": ["Am", "F", "C"] },
+        { "section": "chorus", "chords": ["F", "Am", "G"] }
+      ]
+    },
+    {
+      "artist": "The National",
+      "title": "England",
+      "why": "The sheet has Dm7, which puts the loop in C, and its fourth chord minor.",
+      "sections": [{ "section": "main loop", "chords": ["G", "Am7", "C", "Dm7", "C", "Am7"] }]
+    },
+    {
+      "artist": "The National",
+      "title": "Terrible Love",
+      "why": "Bridge: the sheet has Em G Bm D.",
+      "sections": [
+        { "section": "verse", "chords": ["G", "C"] },
+        { "section": "bridge", "chords": ["Em", "G", "Bm", "D"] }
+      ]
+    },
+    {
+      "artist": "The National",
+      "title": "Guilty Party",
+      "why": "Verse: the sheet has D F#m Bm Em7 D A.",
+      "sections": [
+        { "section": "verse", "chords": ["D", "F#m", "Bm", "Em7", "D", "A"] },
+        { "section": "chorus", "chords": ["D", "A", "Bm", "G"] }
+      ]
+    },
+    {
+      "artist": "The National",
+      "title": "Conversation 16",
+      "why": "Chorus: the sheet has Bm D G.",
+      "sections": [
+        { "section": "verse", "chords": ["Bm", "D", "Em", "A"] },
+        { "section": "chorus", "chords": ["Bm", "D", "G"] }
+      ]
+    },
+    {
+      "artist": "Wilco",
+      "title": "Jesus, Etc.",
+      "why": "Chorus: the sheet has C Am Am(maj7) F C G, a falling line where the shipped loop had a III.",
+      "sections": [
+        { "section": "verse", "chords": ["Am", "Em", "F", "C", "Dm", "G"] },
+        { "section": "chorus", "chords": ["C", "Am", "AmMaj7", "F", "C", "G"] }
+      ]
+    },
+    {
+      "artist": "Bon Iver",
+      "title": "Holocene",
+      "why": "Verse: the sheet has G Em D Em C, with the vi returning before the IV.",
+      "sections": [{ "section": "verse", "chords": ["G", "Em", "D", "Em", "C"] }]
+    },
+    {
+      "artist": "Coldplay",
+      "title": "The Scientist",
+      "why": "Verse: the sheet (capo 3) has Bm7 G D Dsus2, so the last chord is the tonic suspended, not the V.",
+      "sections": [
+        { "section": "verse", "chords": ["Bm7", "G", "D", "Dsus2"] },
+        { "section": "chorus", "chords": ["Gadd9", "D", "A"] }
+      ]
+    },
+    {
+      "artist": "Coldplay",
+      "title": "My Universe",
+      "why": "The sheet (capo 2) has G D A throughout, IV–I–V, not IV–vi–V.",
+      "sections": [{ "section": "verse and chorus", "chords": ["G", "D", "A"] }]
+    },
+    {
+      "artist": "Coldplay",
+      "title": "Clocks",
+      "why": "Outro: the sheet (capo 1) has Fmaj7 C G, which lies in its own key.",
+      "sections": [
+        { "section": "riff and verse", "chords": ["D", "Am", "Am", "Em"] },
+        { "section": "outro", "chords": ["Fmaj7", "C", "G"] }
+      ]
+    },
+    {
+      "artist": "Bob Dylan",
+      "title": "It Ain’t Me Babe",
+      "why": "Verse: the sheet has G C G D.",
+      "sections": [
+        { "section": "verse", "chords": ["G", "C", "G", "D"] },
+        { "section": "chorus", "chords": ["C", "D", "G"] }
+      ]
+    }
+  ]
+}

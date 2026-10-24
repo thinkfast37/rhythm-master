@@ -1,0 +1,116 @@
+{
+  "artist": "Radiohead",
+  "title": "Everything in Its Right Place",
+  "key": "Ab major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "F",
+        "C",
+        "Db",
+        "Eb"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "C",
+        "Db",
+        "Eb"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Db",
+        "C",
+        "Eb"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "Eb",
+        "Db",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key Ab major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/everything-in-its-right-place-chords-1670513"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/everything-in-its-right-place-chords-1670513",
+    "votes": 107,
+    "rating": 4.82188,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

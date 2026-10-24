@@ -1,0 +1,108 @@
+{
+  "artist": "Radiohead",
+  "title": "Weird Fishes/Arpeggi",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Em7",
+        "F#m7",
+        "A",
+        "A7",
+        "A6",
+        "Gmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "3",
+          "quality": "m7"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "part",
+      "chords": [
+        "A6",
+        "Gmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "part 2",
+      "chords": [
+        "Bm",
+        "C",
+        "Bm",
+        "A6",
+        "Gmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major; page says key Em",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/weird-fishes-arpeggi-chords-632943"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/weird-fishes-arpeggi-chords-632943",
+    "votes": 808,
+    "rating": 4.86612,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

@@ -1,0 +1,88 @@
+{
+  "artist": "Bob Dylan",
+  "title": "It Ain’t Me Babe",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "G",
+        "C",
+        "G",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 3 places"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "G",
+        "C",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "Bm",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": "the sheet strays from this loop in 3 places"
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key G",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/it-aint-me-babe-chords-14882"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/it-aint-me-babe-chords-14882",
+    "votes": 4786,
+    "rating": 4.87415,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

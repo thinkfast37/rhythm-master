@@ -13,7 +13,20 @@ npm run chords -- compare chord-reviews/*.json                           # again
 npm run chords -- add chord-reviews/x.json [--replace] [--heading pop] [--dry-run]
 npm run chords -- songbook [--artist A] [--song T] [--refresh] [--delay 8]   # re-read every shipped song
 npm run chords -- report                                                  # rewrite REPORT.md, no fetching
+npm run chords -- rekey                                                   # re-spell the reviews on disk, no fetching
+npm run chords -- respell [--dry-run]                                     # rebuild every song entry by AC-2.6.1/19
 ```
+
+**Keys are Ionian (AC-2.6.1/19).** Every song is spelled from the tonic of the major key
+whose signature holds most of its chords — Am F C G is vi–IV–I–V, and a Dm7 puts a loop
+in C rather than G. Ties go to the key whose tonic chord is played most, then the one the
+loop opens on. A section of three or more chords lying wholly in another major key gets
+that key (Clocks' outro). A loop that starts on a minor vi files under Minor (AC-2.6.1/18).
+
+**Correcting a shipped song** means adding it to `chord-reviews/overrides.json` (the sheet's
+chord symbols, with a `why`) and running `respell`. It rebuilds every song entry and
+credit, and writes any id that disappears to `src/storage/progressionRenames.js` so a
+tick on My list follows the song (AC-2.12.1/4). Never edit that file by hand.
 
 `read` fetches with curl, so it honours the proxy. When a host is blocked, save the page
 and pass the file. The words on a sheet are dropped as each line is read. A review file
@@ -38,8 +51,9 @@ command and the files come back with the branch.
    credits or the maintainer names, paced, never a crawl of search results or an
    artist's catalogue.
 2. **Review before adding.** Print the review. Look hard at:
-   - **The key.** Relative major and minor are the common miss (`vi–IV–I–V` versus
-     `i–♭VI–♭III–♭VII`). The page's own key is in the note when it disagrees.
+   - **The key.** Always the Ionian key by signature (above), never the relative minor.
+     When a loop fits two major keys equally (no 4th or 7th degree to tell them
+     apart), the tie-break decides; say so in the PR. The page's own key is in the note.
    - **The loops.** A sheet shows where chords change, not how long each lasts, so a
      chord held for two bars is written once. Where the maintainer would hear I–I–IV–V,
      edit the numerals by hand.
@@ -47,7 +61,9 @@ command and the files come back with the branch.
      keep, but say so in the PR.
    - `confidence: low` means the chords fit no key well. **Ask the maintainer**; don't
      guess.
-3. **Compare** re-reads of shipped songs (`compare`, or the report). `DIFFERS` / ❌ is a
+3. **Compare** re-reads of shipped songs (`compare`, or the report). The report ignores a
+   chord held over, a loop started at another chord (🔁), a 7th/sus/add9 of difference,
+   the key the reader chose, and a loop played inside a longer passage (all 🟨). `DIFFERS` / ❌ is a
    question for the maintainer before any `--replace`: the shipped credit may be the
    better reading. A sheet that labels only Intro and Verse is read stanza by stanza
    (blank lines), so its later parts come out as `verse 2`, `verse 3`: name them from

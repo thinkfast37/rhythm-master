@@ -9,6 +9,7 @@
  */
 import { readStore, writeStore } from './keyValue.js';
 import { NO_CARRY } from '../core/playback-defaults.js';
+import { renameProgressions } from './progressionRenames.js';
 
 export const KEY = 'rm.settings.v1';
 
@@ -79,7 +80,9 @@ export const DEFAULTS = {
 };
 
 export function load() {
-  return { ...DEFAULTS, ...readStore(KEY, DEFAULTS) };
+  const stored = { ...DEFAULTS, ...readStore(KEY, DEFAULTS) };
+  // A ticked song progression follows its song when the catalogue renames it (AC-2.12.1/4).
+  return { ...stored, progressionCycleList: renameProgressions(stored.progressionCycleList) };
 }
 
 export function save(partial) {

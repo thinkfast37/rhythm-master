@@ -1,0 +1,75 @@
+{
+  "artist": "The National",
+  "title": "Light Years",
+  "key": "E major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "F#m",
+        "A",
+        "E",
+        "B"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "A",
+        "E",
+        "A",
+        "B"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key E major; page says key E",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/light-years-chords-2655684"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/light-years-chords-2655684",
+    "votes": 183,
+    "rating": 4.95374,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

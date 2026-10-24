@@ -287,38 +287,60 @@ const FAMILY = {
   sus2: 's', sus4: 's', '7sus4': 's',
 };
 const MAJOR_KEY = { 0: 'M', 2: 'm', 4: 'm', 5: 'M', 7: 'M', 9: 'm', 11: 'd' };
-const MINOR_KEY = { 0: 'm', 2: 'd', 3: 'M', 5: 'm', 7: 'm', 8: 'M', 10: 'M' };
 
-/** Whether a chord belongs to a key; a suspended chord fits any root in it. */
-function fits(chord, tonic, mode) {
-  const table = mode === 'major' ? MAJOR_KEY : MINOR_KEY;
+/** Whether a chord belongs to a major key; a suspended chord fits any root in it. */
+function fits(chord, tonic) {
   const interval = (chord.root - tonic + 12) % 12;
   const family = FAMILY[chord.quality];
-  if (mode === 'minor' && interval === 7 && family === 'M') return true; // harmonic-minor V
-  return interval in table && (family === 's' || table[interval] === family);
+  return interval in MAJOR_KEY && (family === 's' || MAJOR_KEY[interval] === family);
 }
 
 const NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 
 /**
- * The key that explains the most chords, with how well it fits. Opening and
- * closing on the tonic count as evidence, and a major key beats its relative
- * minor unless the song opens on the minor chord.
+ * The major key whose signature holds the most of these chords (AC-2.6.1/19):
+ * a chord counts when its root is in the key and its type is the one the key
+ * stacks there, so a Dm7 rules out G. Ties go to `prefer` (the song's key, when
+ * reading one section of it), then to the key whose tonic chord is played most
+ * often, then to the key whose tonic the loop opens on, then the one it closes on. Songs are always spelled from an Ionian tonic, so
+ * a song in A minor reads in C.
  */
-export function detectKey(chords) {
+export function ionianKey(chords, { prefer = null } = {}) {
   const first = chords[0];
   const last = chords[chords.length - 1];
   let best = null;
   for (let tonic = 0; tonic < 12; tonic++) {
-    for (const mode of ['major', 'minor']) {
-      const inKey = chords.filter((c) => fits(c, tonic, mode)).length;
-      const tonicFamily = mode === 'major' ? 'M' : 'm';
-      const isTonic = (c) => c && c.root === tonic && (FAMILY[c.quality] === tonicFamily || FAMILY[c.quality] === 's');
-      const score = inKey + (isTonic(first) ? 1.5 : 0) + (isTonic(last) ? 1 : 0) + (mode === 'major' ? 0.1 : 0);
-      if (!best || score > best.score) best = { tonic, mode, score, fit: inKey / chords.length };
-    }
+    const inKey = chords.filter((c) => fits(c, tonic)).length;
+    const tonicChords = chords.filter((c) => c.root === tonic && FAMILY[c.quality] === 'M').length;
+    const score = [inKey, tonic === prefer ? 1 : 0, tonicChords, first?.root === tonic ? 1 : 0, last?.root === tonic ? 1 : 0];
+    const i = best ? score.findIndex((v, k) => v !== best.score[k]) : 0;
+    if (!best || (i >= 0 && score[i] > best.score[i])) best = { tonic, score, fit: chords.length ? inKey / chords.length : 0 };
   }
-  return { tonic: best.tonic, mode: best.mode, name: `${NAMES[best.tonic]} ${best.mode}`, fit: best.fit };
+  return { tonic: best.tonic, mode: 'major', name: `${NAMES[best.tonic]} major`, fit: best.fit };
+}
+
+/** Back-compatible name: the key a run of chords is read in is always its Ionian key. */
+export const detectKey = (chords) => ionianKey(chords);
+
+/**
+ * The tonic each section of a song is spelled from: the song's Ionian key, or,
+ * for a section of three or more different chords lying wholly in another major
+ * key and not in the song's, that one (Clocks' outro). Sections are arrays of
+ * parsed chords.
+ */
+export function sectionKeys(sections) {
+  const song = ionianKey(sections.flat());
+  return {
+    song,
+    keys: sections.map((chords) => {
+      if (chords.every((c) => fits(c, song.tonic))) return song;
+      // Two chords are too few to say a section has changed key: D–C is a
+      // borrowed chord in D, not a move to G.
+      if (new Set(chords.map((c) => `${c.root}:${c.quality}`)).size < 3) return song;
+      const own = ionianKey(chords, { prefer: song.tonic });
+      return own.fit === 1 ? own : song;
+    }),
+  };
 }
 
 /** A chord as a scale degree of the key, its quality kept. */
@@ -344,9 +366,9 @@ export function reviewSheet(input, { artist = null, title = null, source = null 
   const sections = raw.map((s) => ({ section: s.section, stanzas: s.stanzas.map((st) => st.map(parse)) }));
   const all = sections.flatMap((s) => s.stanzas.flat(2));
   if (!all.length) throw new Error('No chords found on the sheet');
-  const key = detectKey(all);
 
-  const out = [];
+  // Each distinct loop first, then the keys they are spelled in (AC-2.6.1/19).
+  const loops = [];
   const seen = new Set();
   for (const s of sections) {
     for (const stanza of s.stanzas) {
@@ -355,30 +377,37 @@ export function reviewSheet(input, { artist = null, title = null, source = null 
       const sig = signature(loop);
       if (seen.has(sig)) continue; // a later verse repeating the first
       seen.add(sig);
-      const count = out.filter((o) => o.section === s.section || o.section.startsWith(`${s.section} `)).length;
-      const name = count ? `${s.section} ${count + 1}` : s.section;
-      const notes = [...new Set(loop.map((c) => c.note && `${c.symbol}: ${c.note}`).filter(Boolean))];
-      out.push({
-        section: name,
-        chords: loop.map((c) => c.symbol),
-        numerals: loop.map((c) => toNumeral(c, key.tonic)),
-        note:
-          [
-            loop.length > 16 ? 'longer than 16 chords — trim before adding' : null,
-            strays ? `the sheet strays from this loop in ${strays} place${strays === 1 ? '' : 's'}` : null,
-            ...notes,
-          ]
-            .filter(Boolean)
-            .join('; ') || null,
-      });
+      const count = loops.filter((o) => o.section === s.section || o.section.startsWith(`${s.section} `)).length;
+      loops.push({ section: count ? `${s.section} ${count + 1}` : s.section, loop, strays });
     }
   }
+  const { song: key, keys } = sectionKeys(loops.length ? loops.map((l) => l.loop) : [all]);
+
+  const out = loops.map(({ section, loop, strays }, i) => {
+    const notes = [...new Set(loop.map((c) => c.note && `${c.symbol}: ${c.note}`).filter(Boolean))];
+    const own = keys[i];
+    return {
+      section,
+      chords: loop.map((c) => c.symbol),
+      numerals: loop.map((c) => toNumeral(c, own.tonic)),
+      note:
+        [
+          own.tonic !== key.tonic ? `spelled in ${own.name}, the key this section lies in` : null,
+          loop.length > 16 ? 'longer than 16 chords — trim before adding' : null,
+          strays ? `the sheet strays from this loop in ${strays} place${strays === 1 ? '' : 's'}` : null,
+          ...notes,
+        ]
+          .filter(Boolean)
+          .join('; ') || null,
+    };
+  });
+  key.fit = all.filter((c) => fits(c, key.tonic)).length / all.length;
 
   const confidence = unknown.length === 0 && key.fit >= 0.85 ? 'high' : key.fit >= 0.7 ? 'medium' : 'low';
   const reasons = [
     `key ${key.name}, ${Math.round(key.fit * 100)}% of chords diatonic`,
     unknown.length ? `unread symbols: ${[...new Set(unknown)].join(' ')}` : null,
-    sheet.tonality && sheet.tonality.replace(/m$/, ' minor') !== key.name ? `page says key ${sheet.tonality}` : null,
+    sheet.tonality ? `page says key ${sheet.tonality}` : null,
     sheet.capo ? `capo ${sheet.capo} (numerals are unaffected)` : null,
   ].filter(Boolean);
 

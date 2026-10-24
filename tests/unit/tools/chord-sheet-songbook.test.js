@@ -87,7 +87,9 @@ describe('tools/chord-sheet — loops in sheets that label only some parts', () 
       ...['C Em B', 'C Em B Bm Em', 'C Em B'].flatMap((l) => [`[tab]${l.split(' ').map((c) => `[ch]${c}[/ch]`).join(' ')}`, `${WORDS}[/tab]`]),
     ].join('\n');
     const r = reviewSheet(ugPage(sheet), { artist: 'Test Band', title: 'Test Song' });
-    expect(r.key).toBe('E minor');
+    // Em, D, C and B sit in G's signature but for B: the song reads in G (AC-2.6.1/19).
+    expect(r.key).toBe('G major');
+    expect(r.sections[1].numerals.map((x) => x.degree)).toEqual(['6', '5', '4', '6', '4']);
     expect(r.sections.map((s) => [s.section, s.chords.join(' ')])).toEqual([
       ['intro', 'C Em D C Em'],
       ['verse', 'Em D C Em C'],
@@ -180,8 +182,8 @@ describe('tools/chord-sheet — re-reading the songbook', () => {
       { artist: 'Radiohead', title: 'Lucky' },
     ];
     const verse = fromShipped(shippedReckoner[0]);
-    const extra = { section: 'verse 2', chords: ['C', 'Em', 'B'], numerals: [{ degree: 'b6', quality: 'maj' }, { degree: '1', quality: 'min' }, { degree: '5', quality: 'maj' }], note: null };
-    const rotated = { ...verse, section: 'intro', chords: ['C', 'Em', 'D', 'C', 'Em'], numerals: [...verse.numerals.slice(2), ...verse.numerals.slice(0, 2)] };
+    const extra = { section: 'outro', chords: ['G', 'D'], numerals: [{ degree: '1', quality: 'maj' }, { degree: '5', quality: 'maj' }], note: null };
+    const rotated = { ...verse, section: 'intro', chords: ['C', 'Em', 'D', 'C', 'Em'], numerals: [...verse.numerals.slice(3), ...verse.numerals.slice(0, 3)] };
     const reviews = [
       asReview([verse, extra]),
       { artist: 'Radiohead', title: 'Lucky', notFound: true, searched: 'https://x.test/search' },
@@ -193,15 +195,15 @@ describe('tools/chord-sheet — re-reading the songbook', () => {
     expect(md).toMatch(/not read yet \| 1 \|/);
     expect(md).toContain('## ❌ Radiohead — Reckoner');
     expect(md).toContain('[source](https://x.test/v1) · version 1 · 287 ratings · ★4.66 · key E minor');
-    expect(md).toMatch(/✅ shipped, on the sheet \(verse\) \| verse \| i–♭VII–♭VI–i–♭VI/);
+    expect(md).toMatch(/✅ on the sheet \(verse\) \| verse \| vi–V–IV–vi–IV/);
     expect(md).toMatch(/❌ shipped, not on the sheet \| bridge \|/);
-    expect(md).toContain('| ➕ on the sheet only | verse 2 | ♭VI–i–V | C Em B |');
+    expect(md).toContain('| ➕ on the sheet only | outro | I–V | G D |');
     expect(md).toContain('## ❔ Radiohead — Lucky');
     expect(md).toContain('Searched: https://x.test/search');
     expect(md).toMatch(/Not read yet\n\n- Radiohead — Creep/);
 
     // A shipped loop the sheet starts at another chord is shown as that, not as missing.
     const md2 = buildReport(songs.slice(0, 1), [asReview([rotated])], catalogue);
-    expect(md2).toMatch(/🔁 shipped, the sheet starts it elsewhere \(intro\) \| verse \|[^\n]*\| C Em D C Em \|/);
+    expect(md2).toMatch(/🔁 on the sheet, started at another chord \(intro\) \| verse \|[^\n]*\| C Em D C Em \|/);
   });
 });

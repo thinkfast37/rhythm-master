@@ -1,0 +1,227 @@
+{
+  "artist": "Radiohead",
+  "title": "Fake Plastic Trees",
+  "key": "A major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "A",
+        "Asus4",
+        "Dmaj9/F#",
+        "E6",
+        "Dsus2",
+        "Bm7add11",
+        "Amaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "maj9"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "sus2"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        }
+      ],
+      "note": "Dmaj9/F#: bass F# dropped; Bm7add11: m11/m13 read as m7"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "A",
+        "Asus4",
+        "Dmaj9/F#",
+        "E6",
+        "Dsus2",
+        "A",
+        "Dsus2"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "maj9"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "sus2"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "sus2"
+        }
+      ],
+      "note": "Dmaj9/F#: bass F# dropped"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Bm7add11",
+        "A",
+        "Bm7add11",
+        "A",
+        "Asus4"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        }
+      ],
+      "note": "Bm7add11: m11/m13 read as m7"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "Bm7add11",
+        "A",
+        "Bm7add11",
+        "Asus4",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "Bm7add11: m11/m13 read as m7"
+    },
+    {
+      "section": "chorus 3",
+      "chords": [
+        "Bm7add11",
+        "A",
+        "Bm7add11",
+        "A",
+        "Amaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        }
+      ],
+      "note": "Bm7add11: m11/m13 read as m7"
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "Bm7add11",
+        "A",
+        "E6"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        }
+      ],
+      "note": "Bm7add11: m11/m13 read as m7"
+    }
+  ],
+  "confidence": "high",
+  "note": "key A major; page says key A",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/fake-plastic-trees-chords-140939"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/fake-plastic-trees-chords-140939",
+    "votes": 5601,
+    "rating": 4.90676,
+    "version": 3
+  },
+  "read": "2026-10-24"
+}

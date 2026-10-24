@@ -1,0 +1,227 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Girl from the North Country",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "Bm",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "G",
+        "F",
+        "Bm",
+        "Am",
+        "C",
+        "Bb"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 3",
+      "chords": [
+        "G",
+        "E",
+        "Bm",
+        "G#m",
+        "C",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "b2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 4",
+      "chords": [
+        "G",
+        "D",
+        "Bm",
+        "F#m",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "7",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 5",
+      "chords": [
+        "G",
+        "A",
+        "Bm",
+        "C#m",
+        "C",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "#4",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 6",
+      "chords": [
+        "G",
+        "C",
+        "Bm",
+        "Em",
+        "C",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key G",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/girl-from-the-north-country-chords-1087317"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/girl-from-the-north-country-chords-1087317",
+    "votes": 2602,
+    "rating": 4.86045,
+    "version": 3
+  },
+  "read": "2026-10-24"
+}

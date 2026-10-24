@@ -1,0 +1,98 @@
+{
+  "artist": "Coldplay",
+  "title": "Viva La Vida",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "Dadd11",
+        "G",
+        "Em"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": "Dadd11: add11 read as major"
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "C",
+        "Em",
+        "Dadd11"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "Dadd11: add11 read as major"
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "C",
+        "Dadd11",
+        "Bm",
+        "Em"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": "Dadd11: add11 read as major"
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key Ab; capo 1 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/viva-la-vida-chords-675427"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/viva-la-vida-chords-675427",
+    "votes": 21703,
+    "rating": 4.88354,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

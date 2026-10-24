@@ -1,0 +1,174 @@
+{
+  "artist": "Wilco",
+  "title": "Impossible Germany",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "Cmaj7",
+        "Asus4",
+        "C",
+        "G",
+        "Em",
+        "Asus2",
+        "Em9"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        },
+        {
+          "degree": "6",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "sus2"
+        },
+        {
+          "degree": "3",
+          "quality": "m9"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "Am",
+        "Cmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 3",
+      "chords": [
+        "Asus4",
+        "Am",
+        "Cmaj7",
+        "C",
+        "G",
+        "Em",
+        "Am",
+        "Asus2"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "sus4"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "sus2"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 4",
+      "chords": [
+        "Cmaj7",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj7"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": "the sheet strays from this loop in 3 places"
+    },
+    {
+      "section": "intro 5",
+      "chords": [
+        "G",
+        "Em9",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "m9"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/wilco/impossible-germany-chords-1458060"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/wilco/impossible-germany-chords-1458060",
+    "votes": 181,
+    "rating": 4.79567,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

@@ -1,0 +1,47 @@
+{
+  "artist": "The National",
+  "title": "Start a War",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "F",
+        "C",
+        "G",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/start-a-war-chords-2271891"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/start-a-war-chords-2271891",
+    "votes": 39,
+    "rating": 4.60487,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

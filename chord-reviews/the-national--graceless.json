@@ -1,0 +1,121 @@
+{
+  "artist": "The National",
+  "title": "Graceless",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "C",
+        "Fmaj7",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "G",
+        "Am",
+        "C",
+        "Fmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "C",
+        "Fmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": "the sheet strays from this loop in 3 places"
+    },
+    {
+      "section": "chorus 3",
+      "chords": [
+        "C",
+        "Fmaj7",
+        "C",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; capo 4 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/graceless-chords-1483949"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/graceless-chords-1483949",
+    "votes": 173,
+    "rating": 4.92271,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

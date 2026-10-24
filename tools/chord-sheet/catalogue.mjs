@@ -36,8 +36,9 @@ export const ARTIST_HEADINGS = {
 /** The heading a song loop files under (AC-2.6.1/18). */
 export function headingFor(numerals, artist, headings = ARTIST_HEADINGS) {
   if (numerals.some((n) => SUSPENDED.has(n.quality))) return 'sus';
-  const tonic = numerals.find((n) => n.degree === '1');
-  if (tonic && LOWER.has(tonic.quality)) return 'minor';
+  // Songs are spelled from an Ionian tonic (AC-2.6.1/19), so a minor-key loop
+  // is one that starts on a minor vi.
+  if (numerals[0]?.degree === '6' && LOWER.has(numerals[0].quality)) return 'minor';
   if (numerals.some((n) => OUTSIDE.has(n.degree))) return 'modal';
   return headings[artist] ?? null;
 }

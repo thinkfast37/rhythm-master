@@ -188,6 +188,26 @@ test('AC-2.12.1/3 — Both lists and both choices are app preferences — one fi
   expect((await settings(page)).fillCycleList).toEqual([fill(5), fill(6)]);
 });
 
+test("AC-2.12.1/4 — When the catalogue re-spells a song progression, its tick on My list moves to the entry that now holds that song's section, so the list keeps the same songs", async ({ page }) => {
+  const { SONGBOOK } = await import('../../src/core/songbook.js');
+  const verse = SONGBOOK.find((c) => c.title === 'Reckoner' && c.section === 'verse').progression;
+  // A list saved before AC-2.6.1/19, holding Reckoner's verse under its old spelling.
+  await harmonicBlank(page);
+  await page.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem('rm.settings.v1'));
+    localStorage.setItem(
+      'rm.settings.v1',
+      JSON.stringify({ ...stored, progressionCycleFrom: 'list', progressionCycleList: ['I-IV-V', 'i-bVII-bVI-i-bVI'] })
+    );
+  });
+  await harmonicBlank(page);
+  await expect(option(page, 'progressions', 'list')).toHaveText('My list · 2');
+  await choose(page, 'progressions');
+  await expect(tick(page, verse)).toBeChecked();
+  await expect(tick(page, 'I-IV-V')).toBeChecked();
+  await expect(checklist(page).locator('.cycle-list-item[data-id="i-bVII-bVI-i-bVI"]')).toHaveCount(0);
+});
+
 // --- AC-2.12.2 — Choose builds the list from a checklist of the catalogue ---
 
 test("AC-2.12.2/1 — The checklist holds every entry of its catalogue under the picker's own group headings and in the picker's order, each with a tick that puts it on the list or takes it off at once, and says how many of how many are on the list", async ({ page }) => {

@@ -1,0 +1,262 @@
+{
+  "artist": "Radiohead",
+  "title": "Just",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "Eb",
+        "D",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Am",
+        "Ab",
+        "Eb",
+        "F",
+        "Am",
+        "Ab",
+        "Eb",
+        "Bb",
+        "Am",
+        "Ab",
+        "G",
+        "Gb",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "#4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "C",
+        "Gb"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "#4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 4 places"
+    },
+    {
+      "section": "solo",
+      "chords": [
+        "E",
+        "D",
+        "A6",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "6"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "Am",
+        "Ab",
+        "Eb",
+        "F",
+        "Am",
+        "Ab",
+        "G",
+        "Gb",
+        "F",
+        "C",
+        "Gb",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "#4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "#4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "C",
+        "Bb",
+        "F",
+        "Eb"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "low",
+  "note": "key C major; page says key C",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/just-chords-196011"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/just-chords-196011",
+    "votes": 1004,
+    "rating": 4.84248,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

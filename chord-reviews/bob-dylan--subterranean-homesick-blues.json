@@ -1,0 +1,176 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Subterranean Homesick Blues",
+  "key": "E major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "E7",
+        "E"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "E7",
+        "A7",
+        "E",
+        "A",
+        "A7",
+        "D7",
+        "B7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "7"
+        },
+        {
+          "degree": "4",
+          "quality": "7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "7"
+        },
+        {
+          "degree": "b7",
+          "quality": "7"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 3",
+      "chords": [
+        "E7",
+        "G7",
+        "E",
+        "G",
+        "A7",
+        "C7",
+        "B7",
+        "D7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "7"
+        },
+        {
+          "degree": "b3",
+          "quality": "7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "7"
+        },
+        {
+          "degree": "b6",
+          "quality": "7"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        },
+        {
+          "degree": "b7",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 4",
+      "chords": [
+        "E7",
+        "F7",
+        "E",
+        "F",
+        "A7",
+        "Bb7",
+        "B7",
+        "C7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "7"
+        },
+        {
+          "degree": "b2",
+          "quality": "7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "b2",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "7"
+        },
+        {
+          "degree": "#4",
+          "quality": "7"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        },
+        {
+          "degree": "b6",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key E major; capo 5 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/subterranean-homesick-blues-chords-1053530"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/subterranean-homesick-blues-chords-1053530",
+    "votes": 519,
+    "rating": 4.86093,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

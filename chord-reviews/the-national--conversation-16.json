@@ -1,0 +1,136 @@
+{
+  "artist": "The National",
+  "title": "Conversation 16",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Bm",
+        "D/B",
+        "Em",
+        "A",
+        "G",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "D/B: bass B dropped"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Bm",
+        "D/B",
+        "Em",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "D/B: bass B dropped"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Bm",
+        "D",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "D",
+        "Bm",
+        "F#m",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/conversation-16-chords-999704"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/conversation-16-chords-999704",
+    "votes": 133,
+    "rating": 4.87062,
+    "version": 4
+  },
+  "read": "2026-10-24"
+}

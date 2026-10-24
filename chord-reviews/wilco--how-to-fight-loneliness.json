@@ -1,0 +1,136 @@
+{
+  "artist": "Wilco",
+  "title": "How to Fight Loneliness",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Bm",
+        "A6",
+        "G",
+        "F#"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Em",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "Bm",
+        "A6",
+        "G",
+        "F#",
+        "Em",
+        "A",
+        "Em",
+        "A",
+        "A#dim7"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "6"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "b6",
+          "quality": "dim7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "D",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/wilco/how-to-fight-loneliness-chords-136293"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/wilco/how-to-fight-loneliness-chords-136293",
+    "votes": 510,
+    "rating": 4.876,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

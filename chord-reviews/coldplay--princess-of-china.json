@@ -1,0 +1,159 @@
+{
+  "artist": "Coldplay",
+  "title": "Princess of China",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "Am7",
+        "Em7",
+        "Am7",
+        "Cadd9"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "Em7",
+        "G",
+        "Am7",
+        "Cadd9"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "G",
+        "Am7",
+        "Cadd9"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "Am7",
+        "Cadd9",
+        "Em7",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 3",
+      "chords": [
+        "Am",
+        "Cadd9",
+        "Em7",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; capo 5 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/princess-of-china-chords-1163872"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/princess-of-china-chords-1163872",
+    "votes": 207,
+    "rating": 4.87333,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

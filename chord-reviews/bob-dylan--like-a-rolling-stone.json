@@ -1,0 +1,157 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Like a Rolling Stone",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "chords",
+      "chords": [
+        "Fmaj7/C",
+        "Dm7"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        }
+      ],
+      "note": "Fmaj7/C: bass C dropped"
+    },
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "Fmaj7/C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": "Fmaj7/C: bass C dropped"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C",
+        "Dm7",
+        "Em",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 3",
+      "chords": [
+        "F",
+        "Em",
+        "Dm7",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "C",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; page says key C",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/like-a-rolling-stone-chords-371756"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/like-a-rolling-stone-chords-371756",
+    "votes": 4484,
+    "rating": 4.86214,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}
