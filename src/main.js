@@ -377,6 +377,17 @@ function cyclePasses() {
 /** The rendered cycle currently loaded into the keep-alive element, or null. */
 let rendered = null;
 
+/** How long the screen-off render waits for a sampled voice still loading. */
+const VOICE_WAIT_MS = 3000;
+
+/** Whether the live voice is a sampled one whose samples are still loading. */
+function sampledVoiceLoading() {
+  const voice = currentVoice();
+  if (voice === 'piano') return piano.getStatus().status === 'loading';
+  if (voice === 'guitar') return guitar.getStatus().status === 'loading';
+  return false;
+}
+
 /**
  * The voice the screen-off render sounds melodic notes with: the live one,
  * loaded on the render's own context once its samples are ready on the live
@@ -411,6 +422,15 @@ async function refreshBackgroundAudio() {
     if (rendered) URL.revokeObjectURL(rendered.url);
     rendered = null;
     return;
+  }
+  // While the voice's samples are on their way, give them a moment: their
+  // arrival renders again at once (the status listeners below), superseding
+  // this one, so a quick load costs one render rather than the synth's and
+  // then the whole cycle again — minutes of audio scheduled on the main
+  // thread. A slow load still gets the synth render it is owed (AC-2.13.5).
+  if (sampledVoiceLoading()) {
+    await new Promise((resolve) => setTimeout(resolve, VOICE_WAIT_MS));
+    if (token !== renderToken || !state.isPlaying) return;
   }
   const next = await renderCycle({
     patternAt: (pass) => playingAt(pass),
@@ -2606,8 +2626,8 @@ export { transport };
 // The guitar's samples arriving, or failing, is a change the record bar shows (AC-19.7.2).
 guitar.onStatus((status) => {
   state.composer.guitar = status;
-  // Arriving, they are what the screen-off render should hear (AC-2.13.5/2).
-  if (status.status === 'ready' && state.isPlaying) refreshBackgroundAudio();
+  // Arrived or failed, the render waiting on them runs now (AC-2.13.5/2).
+  if ((status.status === 'ready' || status.status === 'error') && state.isPlaying) refreshBackgroundAudio();
   render();
 });
 
@@ -2616,7 +2636,7 @@ guitar.onStatus((status) => {
 // hear (AC-2.13.5/1).
 piano.onStatus((status) => {
   state.pianoStatus = status;
-  if (status.status === 'ready' && state.isPlaying) refreshBackgroundAudio();
+  if ((status.status === 'ready' || status.status === 'error') && state.isPlaying) refreshBackgroundAudio();
   render();
 });
 
