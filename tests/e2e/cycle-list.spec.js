@@ -420,21 +420,39 @@ test('AC-2.12.3/4 — Changing the list, or switching between All and My list, w
   const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
 
   // A list that does not hold the fill in force: it keeps its place…
-  await pick(page, 'fills', [fill(10), fill(20)]);
-  expect(await fillInForce(page)).toBe(fill(1));
+  // The ticks and the readings either side of them run in one task, so no
+  // pass boundary can fall between them: "keeps its place" is about the
+  // change, and a fill that moves on by itself between two round-trips at
+  // 300 BPM on a slow runner is not a violation of it (T426).
+  await choose(page, 'fills');
+  const [held, kept] = await page.evaluate((ids) => {
+    const before = window.__rm.fillInForce();
+    for (const id of ids) document.querySelector(`.cycle-list-view .cycle-list-item[data-id="${id}"] input`).click();
+    return [before, window.__rm.fillInForce()];
+  }, [fill(10), fill(20)]);
+  expect([fill(10), fill(20)]).not.toContain(held);
+  expect(kept).toBe(held);
+  expect((await settings(page)).fillCycleList).toEqual([fill(10), fill(20)]);
+  await checklist(page).locator('[data-action="cycle-list-done"]').click();
+  await expect(checklist(page)).toHaveCount(0);
   const after = await page.evaluate(() => ({ loop: window.__rm.getState().loop, playing: window.__rm.getState().isPlaying }));
   // …without a restart: still playing, and the loop counter did not go back.
   expect(after.playing).toBe(true);
   expect(after.loop).toBeGreaterThanOrEqual(loopBefore);
-  // …then moves on through the list.
+  // …then moves on through the list: the held fill (if still in force), then
+  // the listed fills in catalogue order.
   const seen = await watchFills(page, 7000);
-  expect(seen[0]).toBe(fill(1));
-  expect(seen.slice(1, 3)).toEqual([fill(10), fill(20)]);
+  const onward = seen[0] === held ? seen.slice(1) : seen;
+  expect(onward.slice(0, 2)).toEqual([fill(10), fill(20)]);
 
   // Back to All while playing: the fill in force keeps its place, then the catalogue's next.
-  const inForce = await fillInForce(page);
-  await option(page, 'fills', 'all').click();
-  expect(await fillInForce(page)).toBe(inForce);
+  const [inForce, stillInForce] = await page.evaluate(() => {
+    const before = window.__rm.fillInForce();
+    document.querySelector('[data-section="melody"] .cycle-from[data-kind="fills"] [data-action="cycle-from"][data-from="all"]').click();
+    return [before, window.__rm.fillInForce()];
+  });
+  expect(stillInForce).toBe(inForce);
+  expect((await settings(page)).fillCycleFrom).toBe('all');
   const next = ARPEGGIOS[(ARPEGGIOS.findIndex((a) => a.id === inForce) + 1) % ARPEGGIOS.length].id;
   expect(await untilFill(page, next)).toBe(true);
   expect(await page.evaluate(() => window.__rm.getState().isPlaying)).toBe(true);
