@@ -339,11 +339,14 @@ test('AC-14.1.2/6 — Choosing Play it in opens the Composer in the work surface
   await expect(goals(page)).toBeHidden();
   expect((await settings(page)).goal).toBe('play-in');
   await expect(strip(page).locator('.goal-name')).toHaveText('Play it in');
-  // The Composer, as the switch would open it: its panel in the frame, the
-  // library offered for the first step (AC-19.1.2/1).
+  // The Composer, as the switch would open it: its panel in the frame, the open
+  // Pattern offered as the composition (AC-19.1.2/2) and, declined, the library
+  // offered for the first step (AC-19.1.2/3).
   await expect(page.locator('.shell')).toHaveAttribute('data-mode', 'composer');
   await expect(page.locator('.composer-panel')).toBeVisible();
   await expect(page.locator('.rhythm-band')).toBeHidden();
+  await expect(page.locator('.dialog')).toBeVisible();
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'open');
   const sw = strip(page).locator('.mode-switch');
   await expect(sw).toBeVisible();
@@ -363,6 +366,8 @@ test('AC-14.1.2/6 — Choosing Play it in opens the Composer in the work surface
   await showGoals(page);
   await chooseGoal(page, 'play-in');
   await expect(page.locator('.shell')).toHaveAttribute('data-mode', 'composer');
+  await expect(page.locator('.dialog')).toBeVisible();
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
   // And Practise a rhythm, which has no Composer, leaves it.
   await showGoals(page);
   await chooseGoal(page, 'practise');

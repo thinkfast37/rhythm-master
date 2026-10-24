@@ -59,9 +59,61 @@ test('AC-19.1.1/4 — The mode is a within-session position, not a stored prefer
   expect('composerMode' in settings || 'mode' in settings).toBe(false);
 });
 
-// --- AC-19.1.2: starts from the library ----------------------------------------
+// --- AC-19.1.2: starts from the Pattern already open ------------------------------
 
-test("AC-19.1.2/1 — With no composition the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled", async ({ page }) => {
+test('AC-19.1.2/1 — Entering the Composer opens the Pattern open in Practice as the composition: an owned melody directly, as a saved composition with no ask', async ({ page }) => {
+  await openApp(page);
+  await makeFourBeats(page, 'Tune');
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await expect.poll(() => page.evaluate(() => window.__rm.patternStore.findById('p_test')?.soundMode)).toBe('melodic');
+  await enterComposer(page, { load: 'none' });
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  const c = await composerState(page);
+  expect(c.draft.name).toBe('Tune');
+  expect(c.savedId).toBe('p_test');
+  await expect(page.locator('.composer-save')).toHaveAttribute('data-saved', 'true');
+  await expect(page.locator('.composer-unsaved')).toHaveCount(0);
+});
+
+test('AC-19.1.2/2 — A percussive, progression-carrying or shipped Pattern open in Practice is offered through its US-19.8 naming prompt on entry, exactly as if opened from the library', async ({ page }) => {
+  await openApp(page);
+  // An owned percussive rhythm: the percussive prompt, pre-filled (AC-19.8.1/1).
+  await makeFourBeats(page, 'Fixture');
+  await page.locator('.mode-switch [data-mode="composer"]').click();
+  await expect(page.locator('.dialog')).toBeVisible();
+  await expect(page.locator('.dialog-message')).toContainText('no notes yet');
+  await expect(page.locator('.dialog-input')).toHaveValue('Fixture melody');
+  await page.locator('.dialog-button.primary').click();
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  expect((await composerState(page)).draft.name).toBe('Fixture melody');
+  // A progression-carrying melody: the baking prompt (AC-19.8.2/1).
+  await leaveComposer(page);
+  await page.locator('.dialog-button[data-value="true"]').click(); // discard the unsaved line
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.evaluate(async () => {
+    await window.__rm.handlers.onProgression('I-IV-V');
+    await window.__rm.handlers.onArpeggio('up');
+  });
+  await page.locator('.mode-switch [data-mode="composer"]').click();
+  await expect(page.locator('.dialog-message')).toContainText('progression');
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  await leaveComposer(page);
+  // A shipped melody: a name only, since a shipped Pattern is never edited (AC-19.8.3/2).
+  const shipped = await page.evaluate(() => {
+    const found = window.__rm.seedStore.loadAll().find((p) => p.soundMode === 'melodic' && !p.harmony);
+    window.__rm.handlers.onOpen(found.id, false);
+    return found.name;
+  });
+  await page.locator('.mode-switch [data-mode="composer"]').click();
+  await expect(page.locator('.dialog-input')).toHaveValue(`${shipped} melody`);
+  await expect(page.locator('.dialog-button[data-value="edit"]')).toHaveCount(0);
+  await page.locator('.dialog-button.primary').click();
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  expect((await composerState(page)).draft.name).toBe(`${shipped} melody`);
+  expect((await composerState(page)).savedId).toBeNull();
+});
+
+test("AC-19.1.2/3 — Declining the prompt leaves no composition: the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled", async ({ page }) => {
   await openApp(page);
   await page.locator('.library-toggle').click();
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
@@ -76,7 +128,21 @@ test("AC-19.1.2/1 — With no composition the grid's place shows a prompt to cho
   await expect(page.locator('.fretboard')).toBeVisible();
 });
 
-test('AC-19.1.2/2 — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved', async ({ page }) => {
+test('AC-19.1.2/4 — Re-entering the Composer while the composition is the open Pattern keeps it: no prompt, no reload', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page, 'Kept line');
+  await recordAll(page);
+  await page.locator('.composer-save').click();
+  await expect(page.locator('.composer-save')).toHaveAttribute('data-saved', 'true');
+  const before = await page.evaluate(() => JSON.stringify(window.__rm.composer().draft));
+  await leaveComposer(page);
+  await expect(page.locator('.shell')).toHaveAttribute('data-mode', 'practice');
+  await enterComposer(page, { load: 'none' });
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify(window.__rm.composer().draft))).toBe(before);
+});
+
+test('AC-19.1.2/5 — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved', async ({ page }) => {
   await openApp(page);
   await makeFourBeats(page);
   const practiceId = (await appState(page)).pattern.id;

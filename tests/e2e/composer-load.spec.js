@@ -170,7 +170,7 @@ test('AC-19.8.2/3 — The composition carries no progression and no Register —
 test("AC-19.8.3/1 — An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name, pre-filled as a percussive one's is, and opens a copy, unsaved", async ({ page }) => {
   await openApp(page);
   await makeOwnedMelody(page);
-  await enterComposer(page);
+  await enterComposer(page, { load: 'none' });
   await page.evaluate(() => window.__rm.handlers.onOpen('p_test', true));
   await expect(page.locator('.dialog')).toBeVisible();
   await expect(page.locator('.dialog-button[data-value="edit"]')).toBeVisible();
@@ -226,7 +226,7 @@ test("AC-19.8.3/3 — A Pattern with a Register opens with the Register folded i
   await makeOwnedMelody(page, -1);
   const heard = await page.evaluate(() => window.__rmTimeline.buildTimeline(window.__rm.getState().pattern, 0).map((e) => e.pitch.midiNote));
   expect(heard).toEqual([48, 48, 48, 48]);
-  await enterComposer(page);
+  await enterComposer(page, { load: 'none' });
   await page.evaluate(() => window.__rm.handlers.onOpen('p_test', true));
   await page.locator('.dialog-button[data-value="edit"]').click();
   await expect(page.locator('.composer-grid')).toBeVisible();

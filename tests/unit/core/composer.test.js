@@ -13,6 +13,7 @@ import {
   clearNote,
   cycleSyllable,
   duplicateUnpitched,
+  hasAnyNote,
   canDuplicate,
   loadKind,
   fromPercussive,
@@ -22,7 +23,7 @@ import {
 } from '../../../src/core/composer.js';
 import { resolve, KEYS } from '../../../src/core/pitch.js';
 import { SCALES } from '../../../src/core/scales.js';
-import { create, setPitch, cycleAccent, validate, addMeasure } from '../../../src/core/pattern.js';
+import { create, setPitch, cycleAccent, validate, addMeasure, duplicate } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, setChange } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { noteAt, STRING_COUNT, FRET_COUNT } from '../../../src/core/fretboard.js';
@@ -171,7 +172,14 @@ describe('core/composer — editing a draft', () => {
     expect(missingCount(r)).toBe(4);
   });
 
-  it('AC-19.5.4/1 — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs', () => {
+  it('AC-19.5.4/1 — With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged: hasAnyNote decides whether there is anything to ask about', () => {
+    let p = blankDraft();
+    expect(hasAnyNote(p)).toBe(false);
+    p = recordNote(p, at(0, 0), 60);
+    expect(hasAnyNote(p)).toBe(true);
+  });
+
+  it('AC-19.5.4/2 — Starting percussive appends a copy of every Measure with its notes cleared, and the original Measures keep theirs', () => {
     let p = blankDraft();
     for (let b = 0; b < 4; b++) p = recordNote(p, at(0, b), 60 + b);
     const d = duplicateUnpitched(p);
@@ -183,7 +191,17 @@ describe('core/composer — editing a draft', () => {
     expect(recordTarget(d)).toEqual(at(1, 0));
   });
 
-  it('AC-19.5.4/3 — Double Length is disabled when the result would exceed 32 Measures: canDuplicate', () => {
+  it('AC-19.5.4/4 — Keeping the notes appends a copy of every Measure carrying the same notes as the originals: duplicate from core/pattern.js', () => {
+    let p = blankDraft();
+    for (let b = 0; b < 4; b++) p = recordNote(p, at(0, b), 60 + b);
+    const d = duplicate(p);
+    expect(d.measures).toHaveLength(2);
+    expect(d.measures[1]).toEqual(d.measures[0]);
+    expect(d.measures[1].beats.map((b) => b.slots[0].pitch?.degree)).toEqual(['1', 'b2', '2', 'b3']);
+    expect(missingCount(d)).toBe(0);
+  });
+
+  it('AC-19.5.4/6 — Double Length is disabled when the result would exceed 32 Measures: canDuplicate', () => {
     let p = blankDraft();
     expect(canDuplicate(p)).toBe(true);
     for (let i = 0; i < 15; i++) p = addMeasure(p);

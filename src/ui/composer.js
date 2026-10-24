@@ -231,8 +231,8 @@ function renderInstrument(instrument, key, scale, state, handlers) {
 
 /**
  * The composing grid: the note first, the syllable under it (AC-19.5.1).
- * Measures stack as the grid's do; a Slot's two boxes are two buttons, so each
- * has its own hit area and accessible name.
+ * Measures flow left to right and wrap, centred (tokens.css); a Slot's two
+ * boxes are two buttons, so each has its own hit area and accessible name.
  */
 function renderComposingGrid(draft, composer, state) {
   const grid = el('div', 'composer-grid');
@@ -483,7 +483,7 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     wrap.appendChild(labelledRow(`Swing ${amount}`, swingEntry, swing));
 
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
-    dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself; the copy has no notes yet' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
+    dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself, keeping the notes or starting percussive' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     dup.addEventListener('click', () => handlers.onComposerDuplicate?.());
     wrap.appendChild(labelled('Measures', dup));
   }

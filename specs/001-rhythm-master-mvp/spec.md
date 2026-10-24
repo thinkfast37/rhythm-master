@@ -3812,7 +3812,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-10-18 at the maintainer's request: "what we can do right now is individually pick notes and paint them on the rhythm pattern, or I can pick a chord progression and a fill pattern … but these are still a bit awkward and I want a guitar composer view and a piano composer view … the first thing the user must do is pick a rhythm from the library." Decisions taken with the maintainer the same day: the Composer is a separate mode beside Practice rather than a fifth workbench tab, because the fretboard or keyboard would otherwise compete with the grid for the one panel; the guitar sounds as fret-navigator's does — the FluidR3 steel-string samples, reinstated for this one voice (US-19.7, Constitution 3.7.0) — and the piano is the melodic voice the app already has; which instrument is shown is a Composer setting and never travels with the saved Pattern; a composition is saved by hand the first time, once every syllable has a note, and auto-saves on every change after that while it stays complete (US-19.9). The maintainer added, the same day: tapping the instrument sounds the note at any time — at rest, while recording, while the melody plays — and playback in this mode is a story of its own (US-19.6). US-18.1's Compose group — sequencing kept fills into a Section — keeps its name and its tab; this epic is the Composer, the view, and its stories say which they mean.)*
 
-**Independent Test**: Switch to Composer, open a Pattern from the library, assert the instrument view, record bar and composing grid stand in for the Pattern pane and workbench, switch Guitar to Piano and back and assert no note changes, switch back to Practice and assert the panes return unchanged.
+**Independent Test**: With a percussive Pattern open, switch to Composer and assert that Pattern is offered by name, decline and assert the empty state with the library opened, open a Pattern from the library, assert the instrument view, record bar and composing grid stand in for the Pattern pane and workbench, switch Guitar to Piano and back and assert no note changes, switch back to Practice and assert the panes return unchanged.
 
 **Acceptance Scenarios**:
 
@@ -3827,13 +3827,17 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.1.1/4** — The mode is a within-session position, not a stored preference: a reload opens in Practice
   - *(Clarified 2026-10-24 with T410, D-018 phase 2: the switch sits in the goal strip, the pinned bar's second row, under every goal but Practise a rhythm (AC-15.1.20/2); "the Pattern pane and the workbench" are the frame's rhythm band and work surface (AC-15.1.20/4), which the Composer's panel still stands in for. The mode goes altogether when Play it in becomes the Composer's own screen in phase 6 (AC-14.1.2/6); until then this criterion describes the app as built.)*
 
-- **AC-19.1.2** — The Composer starts from a rhythm chosen in the library
-  - **Given** the Composer mode entered with no composition yet
+- **AC-19.1.2** — The Composer starts from the Pattern already open, or one chosen in the library
+  - **Given** the Composer mode entered — by the switch, or by choosing Play it in (AC-14.1.2/6)
   - **When** the Composer looks at the panel
-  - **Then** the composing grid's place reads that a rhythm must be chosen from the library first, with the library opened to choose from, the instrument view playable but Record and Save disabled; and opening a Pattern from the library while in Composer loads it into the Composer (US-19.8) rather than into Practice
+  - **Then** the Pattern open in Practice is offered as the composition through US-19.8's own rules — an owned melody opened for editing directly, with no ask; every other kind through its naming prompt — so a rhythm just practised is composed on without choosing it again; declining the prompt leaves the Composer empty, the library opened to choose from, Record and Save disabled; a composition already made from the open Pattern is simply kept; and opening a Pattern from the library while in Composer loads it into the Composer (US-19.8) rather than into Practice
+  - *(Revised 2026-10-24: entering the Composer used to start empty, demanding a library pick every time. The maintainer: "sometimes i practice a pattern and then want to switch to composer … I think it should maintain that pattern." The loading rules are unchanged — they are US-19.8's, applied to the open Pattern on entry: a melody edits directly where owned and copies under a name where shipped (US-7.3), a percussive one becomes a new composition, a progression is baked. The old /1 — the empty state with the library opened — survives as the declined prompt's outcome, /3.)*
   - **Cases**:
-    - **AC-19.1.2/1** — With no composition the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled
-    - **AC-19.1.2/2** — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved
+    - **AC-19.1.2/1** — Entering the Composer opens the Pattern open in Practice as the composition: an owned melody directly, as a saved composition with no ask
+    - **AC-19.1.2/2** — A percussive, progression-carrying or shipped Pattern open in Practice is offered through its US-19.8 naming prompt on entry, exactly as if opened from the library
+    - **AC-19.1.2/3** — Declining the prompt leaves no composition: the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled
+    - **AC-19.1.2/4** — Re-entering the Composer while the composition is the open Pattern keeps it: no prompt, no reload
+    - **AC-19.1.2/5** — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved
 
 - **AC-19.1.3** — Guitar or piano, switched at any time
   - **Given** the Composer mode
@@ -4041,14 +4045,18 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.5.3/2** — A Slot turned on has no note until one is recorded onto it, and sounds percussively meanwhile
     - **AC-19.5.3/3** — A Slot cycled to off loses its note, and the count of syllables without a note follows
 
-- **AC-19.5.4** — Double Length copies the rhythm without its notes
+- **AC-19.5.4** — Double Length asks whether the copy keeps the notes
   - **Given** a composition with notes
   - **When** the Composer presses Double Length
-  - **Then** the Measures are appended again with every note cleared — the originals keep theirs — so the copy sounds percussively until recorded, Record then starting on the copy's first syllable; disabled when doubling would pass 32 Measures *(Revised 2026-10-23: was 8, following AC-1.1.3.)*
+  - **Then** a prompt asks whether the appended Measures carry the same notes or start percussive: keeping the notes appends a copy of every Measure, notes and all; starting percussive appends the copy with every note cleared — the originals keep theirs — so it sounds percussively until recorded, Record then starting on the copy's first syllable; cancelling changes nothing; with no note recorded yet there is nothing to carry, so the copy is appended percussive with no ask; disabled when doubling would pass 32 Measures *(Revised 2026-10-23: was 8, following AC-1.1.3.)*
+  - *(Revised 2026-10-24: the copy was always appended with its notes cleared. The maintainer: "When I hit double length it should ask me if the notes should be populated with what is already there in the existing pattern or if it wants the notes to be just percussive and I will fill them in from scratch." The percussive choice is exactly the old behaviour.)*
   - **Cases**:
-    - **AC-19.5.4/1** — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs
-    - **AC-19.5.4/2** — Record then targets the first sounding Slot of the copy
-    - **AC-19.5.4/3** — Double Length is disabled when the result would exceed 32 Measures
+    - **AC-19.5.4/1** — With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged
+    - **AC-19.5.4/2** — Starting percussive appends a copy of every Measure with its notes cleared, and the original Measures keep theirs
+    - **AC-19.5.4/3** — After a percussive copy, Record targets the first sounding Slot of the copy
+    - **AC-19.5.4/4** — Keeping the notes appends a copy of every Measure carrying the same notes as the originals
+    - **AC-19.5.4/5** — With no note recorded yet, the copy is appended percussive with no ask
+    - **AC-19.5.4/6** — Double Length is disabled when the result would exceed 32 Measures
 
 - **AC-19.5.5** — Tempo and swing are the composition's own
   - **Given** a composition in the Composer
