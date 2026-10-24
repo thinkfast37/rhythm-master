@@ -197,6 +197,10 @@ contradicted — a denser worst case makes per-Measure rows more necessary, not 
 per-row Slot count is fixed by the Time Signature and does not move with the cap. What does move is
 the page's total length, which is why AC-15.1.11's auto-scroll carries more weight now than it did.)*
 
+*(Figures updated again 2026-10-23: the cap is 32 (AC-1.1.3, D-011 reversed), so the worst case is
+768 Slots. Same reasoning, same conclusion — per-row Slot count is unchanged, and the page is four
+times as long at the extreme.)*
+
 **Alternatives considered**:
 - *Horizontal scroll inside the grid region* — what AC-15.1.10 originally specified. Preserves the
   single-timeline reading, but you can never see the whole Pattern and sideways scrolling mid-
@@ -396,6 +400,16 @@ the transport at each boundary (which resets the loop counter, AC-4.2.2).
 **Not a longer grid.** The maintainer floated raising the 8-Measure cap for long progressions. Kept
 at 8: the chord strip carries the progression across passes, and the cap is what every phone-layout
 criterion (AC-15.1.10, AC-2.2.12) is measured against.
+
+*(Reversed 2026-10-23 (T406): the cap is 32 (AC-1.1.3). The maintainer asked for it outright — a
+tune's whole form in one Pattern, a twelve-bar or 32-bar chorus written out bar by bar, not only
+carried across passes by the chord strip. The chord strip still works as it did; a longer grid is
+now a choice alongside it rather than ruled out. The phone-layout objection does not hold up: the
+layout criteria are per Measure (D-006 — Slot width is fixed by the Time Signature and never by the
+cap), so 32 Measures make a longer page and not smaller Slots, and AC-15.1.11's auto-scroll is what
+keeps a long page readable while it plays. The cost accepted is page length on a phone, which the
+maintainer judges by playing it, and a Composer bake (AC-19.8.2) that now writes out whole cycles a
+Pattern of 8 could only start.)*
 
 **Alternatives considered**: per-chord Pattern copies chained by Append (rejected — eight Measures
 cannot hold a twelve-bar blues, and the melody would be re-authored per chord); a global "chord
@@ -624,7 +638,7 @@ become a *new* composition — a percussive one has no notes, a harmonic one's n
 play time and become stored degrees here — so both ask a name at load; nothing is written until
 Save. A melodic Pattern the musician owns may be edited in place (already complete, so already
 saved) or copied; a shipped one may only be copied (US-7.3). Baking a progression unrolls the
-harmonic cycle into Measures when it fits within the 8-Measure cap, because a melody that changes
+harmonic cycle into Measures when it fits within the Measure cap (32 since 2026-10-23), because a melody that changes
 chord every pass is several bars long, not one bar played differently; past the cap the first pass
 alone is kept, and the Composer says so. A Register is folded into each note's octave so that what
 the instrument shows is what sounds.

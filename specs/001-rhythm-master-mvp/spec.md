@@ -58,7 +58,7 @@ from this view.)*
 
 **As** the Composer, **I want** different Measures within one Pattern to use different time signatures, **so that** I can transcribe pieces that genuinely shift meter (e.g. a bar of 4/4 followed by a bar of 2/4) instead of being forced into one meter for the whole piece.
 
-**Independent Test**: Create a Pattern, add and remove Measures, change a Measure's Time Signature, and confirm inheritance, the 8-Measure cap, and reset behaviour — all verifiable without audio or any other epic.
+**Independent Test**: Create a Pattern, add and remove Measures, change a Measure's Time Signature, and confirm inheritance, the 32-Measure cap, and reset behaviour — all verifiable without audio or any other epic.
 
 **Acceptance Scenarios**:
 
@@ -73,10 +73,16 @@ from this view.)*
   - **Then** a third Measure is appended at the end, set to 3/4, with default Recipe Beats and all Slots off
   - **And** no control exists to insert a Measure anywhere other than the end
 
-- **AC-1.1.3** — 8-Measure cap disables +Measure
-  - **Given** a Pattern with exactly 8 Measures
+- **AC-1.1.3** — 32-Measure cap disables +Measure
+  - **Given** a Pattern with exactly 32 Measures
   - **When** the Composer looks at the +Measure control
-  - **Then** it is disabled — a Pattern cannot exceed 8 Measures
+  - **Then** it is disabled — a Pattern cannot exceed 32 Measures
+  - *(Revised 2026-10-23. The cap was 8. The maintainer asked for 32 — a whole tune's form, a
+    32-bar AABA or a twelve-bar blues written out with its turnaround, in one Pattern rather than
+    a chain or a chord strip carrying it across passes. This reverses D-011's "Kept at 8". 32 is
+    even, so Duplicate stays useful up to 16 Measures. The worst-case density AC-15.1.10 pins
+    rises from 192 Slots to 768; per-Measure rows (D-006) are why that is a longer page rather
+    than smaller Slots.)*
   - *(Revised 2026-08-17. The cap was 6. Transcribing a graded reading book found lines of 7 Measures
     — 2/4 exercises whose phrases run seven bars — which 6 could only represent by splitting one
     exercise into two Patterns. 8 covers the longest line found with a Measure to spare, and being
@@ -244,7 +250,7 @@ from this view.)*
     picker was ever built: the only Recipe control was one dropdown hardwired to Measure 1,
     Beat 1, so no Beat but that one could be given a Recipe at all. Rather than build a menu
     on every Beat — which the grid cannot afford, since AC-15.1.14/1 requires every Beat in a
-    Measure to be the same width and AC-15.1.10 forbids sideways scroll at 192 Slots — Recipes
+    Measure to be the same width and AC-15.1.10 forbids sideways scroll at 192 Slots (768 since the 2026-10-23 cap) — Recipes
     are now armed on a strip and painted onto Beats, the idiom the pitch strip already uses.
     A Pattern may mix 4/4 and 6/8 Measures, so one strip necessarily shows Recipes that some
     visible Beats cannot take; these ACs now say which Recipes *apply* to a Beat and that the
@@ -542,7 +548,7 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - *(Added 2026-08-17, replacing the behaviour AC-2.2.5 used to carry. A Slot turned on in Melodic mode previously always took degree 1 at the base octave, ignoring the strip — so arming a pitch and building a line meant re-pitching every Slot after sounding it.)*
 
 - **AC-2.2.12** — Both zones stay tappable at the smallest supported Slot
-  - **Given** a 390px-wide (mobile) viewport and the largest supported Pattern — 8 Measures of 12/8 at Straight 16ths, per AC-15.1.10 — in Melodic mode
+  - **Given** a 390px-wide (mobile) viewport and the largest supported Pattern — 32 Measures of 12/8 at Straight 16ths, per AC-15.1.10 — in Melodic mode
   - **When** the Composer aims at either zone of any Slot
   - **Then** the note band and the accent zone are each at least 24 CSS pixels in both dimensions, which the Slot's height accommodates rather than the note band being squeezed to a sliver
   - **And** the Slot stays at least 24 CSS pixels wide, so AC-15.1.10 continues to hold and the grid still never scrolls sideways
@@ -1873,20 +1879,22 @@ field survives showing it.)*
   - **When** the Composer combines them
   - **Then** concatenation succeeds — there is no meter-matching restriction, since each Measure retains its own Time Signature independently
 
-- **AC-8.1.2** — Combine picker excludes Patterns that would exceed the 8-Measure cap
+- **AC-8.1.2** — Combine picker excludes Patterns that would exceed the 32-Measure cap
   - **Given** "Groove A" has 3 Measures currently loaded, and the Combine picker is open
   - **When** the Composer looks at the list of Patterns offered
-  - **Then** any Pattern with more than 5 Measures is excluded from the picker entirely — since appending it would push "Groove A" over the 8-Measure cap (AC-1.1.3) — leaving only Patterns with 1, 2, 3, 4, or 5 Measures selectable
+  - **Then** any Pattern with more than 29 Measures is excluded from the picker entirely — since appending it would push "Groove A" over the 32-Measure cap (AC-1.1.3) — leaving only Patterns of 1 to 29 Measures selectable
   - *(Revised 2026-08-17 for the 8-Measure cap; the threshold was "more than 3." The rule is unchanged —
     exclude what would not fit — only the arithmetic moved.)*
+  - *(Revised 2026-10-23 for the 32-Measure cap; the threshold was "more than 5." Arithmetic only, as before.)*
 
-- **AC-8.1.3** — Combining to exactly 8 Measures succeeds
-  - **Given** "Groove A" (3 Measures) and the Composer selects "Fill B" (5 Measures) from the (already-filtered) Combine picker
+- **AC-8.1.3** — Combining to exactly 32 Measures succeeds
+  - **Given** "Groove A" (3 Measures) and the Composer selects "Fill B" (29 Measures) from the (already-filtered) Combine picker
   - **When** they confirm
-  - **Then** "Fill B"'s full Measure sequence is inserted immediately after "Groove A"'s last Measure, producing exactly 8 Measures total — after first showing a preview before that confirmation
-  - **And** this confirms the cap is "cannot exceed 8," not "must stay strictly below 8" — combining to exactly 8 succeeds
+  - **Then** "Fill B"'s full Measure sequence is inserted immediately after "Groove A"'s last Measure, producing exactly 32 Measures total — after first showing a preview before that confirmation
+  - **And** this confirms the cap is "cannot exceed 32," not "must stay strictly below 32" — combining to exactly 32 succeeds
   - *(Revised 2026-08-17 for the 8-Measure cap. "Fill B" grew from 3 Measures to 5 so the scenario still
     lands exactly on the boundary, which is the whole point of this criterion.)*
+  - *(Revised 2026-10-23 for the 32-Measure cap. "Fill B" grew from 5 Measures to 29, for the same reason.)*
 
 - **AC-8.1.4** — Combine into an owned Pattern auto-saves
   - **Given** "My Custom Fill" (custom) is loaded and the Composer combines it with another Pattern
@@ -1899,11 +1907,12 @@ field survives showing it.)*
   - **Then** the Combine action itself is treated as the first edit to a shipped Pattern, triggering the naming prompt from US-7.3 before the combined result is applied anywhere
 
 - **AC-8.1.6** — Combine picker re-filters correctly on repeated use
-  - **Given** a Pattern that already has one appended Pattern, now at 7 Measures total (below the 8-Measure cap)
+  - **Given** a Pattern that already has one appended Pattern, now at 31 Measures total (below the 32-Measure cap)
   - **When** the Composer wants to append a third Pattern
   - **Then** they invoke Combine again against the already-combined result, with the picker again filtered per AC-8.1.2 — now excluding any Pattern with more than 1 Measure
   - *(Revised 2026-08-17 for the 8-Measure cap; the starting total was 5. Held at one Measure of headroom
     so the re-filter is still exercised at its tightest.)*
+  - *(Revised 2026-10-23 for the 32-Measure cap; the starting total was 7. Still one Measure of headroom.)*
 
 ---
 
@@ -1931,20 +1940,23 @@ field survives showing it.)*
   - **When** the editor updates
   - **Then** editing focus moves to the first Slot of the newly-added second half
 
-- **AC-10.1.3** — Duplicate is enabled within the 8-Measure cap
-  - **Given** "Groove A" has exactly 4 Measures
+- **AC-10.1.3** — Duplicate is enabled within the 32-Measure cap
+  - **Given** "Groove A" has exactly 16 Measures
   - **When** the Composer looks at the Duplicate control
-  - **Then** it is enabled, since doubling to 8 Measures stays within the 8-Measure cap (AC-1.1.3)
+  - **Then** it is enabled, since doubling to 32 Measures stays within the 32-Measure cap (AC-1.1.3)
   - *(Revised 2026-08-17 for the 8-Measure cap; the Given was 3 Measures. Raised to 4 so this criterion
     still proves the boundary case — doubling to exactly the cap — rather than a case comfortably inside it.)*
+  - *(Revised 2026-10-23 for the 32-Measure cap; the Given was 4 Measures, now 16 — still exactly half the cap.)*
 
 - **AC-10.1.4** — Duplicate is disabled when doubling would exceed the cap
-  - **Given** "Groove B" has 5 Measures
+  - **Given** "Groove B" has 17 Measures
   - **When** the Composer looks at the Duplicate control
-  - **Then** it is disabled, since doubling to 10 Measures would exceed the 8-Measure cap — Duplicate is only available when a Pattern has 4 or fewer Measures
+  - **Then** it is disabled, since doubling to 34 Measures would exceed the 32-Measure cap — Duplicate is only available when a Pattern has 16 or fewer Measures
   - *(Revised 2026-08-17 for the 8-Measure cap. This is a behaviour reversal, not a rewording: a
     4-Measure Pattern could not be duplicated under the old cap and now can. The Given moved to 5
     Measures, the smallest size for which Duplicate is still refused.)*
+  - *(Revised 2026-10-23 for the 32-Measure cap. Another reversal of the same kind: Patterns of 5 to 16
+    Measures can now be duplicated. The Given moved to 17, again the smallest size still refused.)*
 
 - **AC-10.1.5** — Duplicate into an owned Pattern auto-saves
   - **Given** "My Custom Fill" (custom, 2 Measures) is loaded and the Composer duplicates it
@@ -2172,6 +2184,10 @@ field survives showing it.)*
     survives as the last resort, because a large enough batch can still exceed the limit
     compressed. Reviewing a compressed submission needs the `pattern-intake` skill, which
     decodes either form — the reason that skill is part of the same change.)*
+  - *(Note 2026-10-23, the 32-Measure cap (AC-1.1.3): the criterion is unchanged, but "every 4/4
+    Pattern at the full cap" no longer sends readable JSON — a 32-Measure Pattern goes compressed.
+    Measured on T406: the densest single Pattern, 32 Measures of 12/8 at Straight 16ths with random
+    Accents, is a 1,793-character compressed URL, so one Pattern still always prefills.)*
   - **Cases**:
     - **AC-13.1.3/1** — A submission too large to prefill readably prefills the same content compressed
     - **AC-13.1.3/2** — A submission within the limit prefills title, label and body in full
@@ -2302,13 +2318,14 @@ field survives showing it.)*
   - **Then** each renders fully usable within that width, and the page body itself never scrolls horizontally — any internal scrolling is contained to the individual control
 
 - **AC-15.1.10** — Grid remains usable for the largest supported Pattern on mobile
-  - **Given** a 390px-wide (mobile) viewport and a Pattern at the maximum size: 8 Measures of 12/8, every Beat on the Straight 16ths Recipe (192 Slots total)
+  - **Given** a 390px-wide (mobile) viewport and a Pattern at the maximum size: 32 Measures of 12/8, every Beat on the Straight 16ths Recipe (768 Slots total)
   - **When** the Practicing Musician views it
-  - **Then** each Measure occupies its own bounded block, the eight blocks stack vertically, and the musician reads down the page
+  - **Then** each Measure occupies its own bounded block, the thirty-two blocks stack vertically, and the musician reads down the page
   - **And** no Slot is narrower than 24 CSS pixels, so every Slot stays tappable
   - **And** where a Measure's Beats cannot fit one line at that Slot width, they wrap onto further lines *within* that Measure's block, and a single Beat is never split across a line break — so the subdivision of a Beat always reads as one unit
   - **And** neither the page body nor the grid scrolls horizontally at any point
   - *(A Measure cannot always be literally one line: 12/8 at Straight 16ths is 24 Slots, which needs 576 px at the 24 px tap minimum — wider than a 390 px phone. The Measure stays the unit of layout; its Beats wrap inside it.)*
+  - *(Revised 2026-10-23 for the 32-Measure cap (AC-1.1.3): the Given was 8 Measures and 192 Slots, and eight blocks stacked. Every per-Measure rule is unchanged; only the page grows.)*
 
 - **AC-15.1.11** — Playback keeps the sounding Measure in view on mobile
   - **Given** the Pattern from AC-15.1.10 playing on a 390px viewport, with Measure 1 visible and Measure 5 below the fold
@@ -2515,7 +2532,7 @@ present, correctly structured, and immediately playable without any authoring st
   - **Given** the complete seeded library
   - **When** it is validated against this specification
   - **Then** every Measure holds exactly its Time Signature's numerator in Beats (AC-1.2.2), every
-    Pattern is within the 8-Measure cap (AC-1.1.3), every Time Signature is one of the eleven supported
+    Pattern is within the 32-Measure cap (AC-1.1.3), every Time Signature is one of the eleven supported
     values (AC-1.2.1), and every Melodic Slot that is on carries a Pitch while every off Slot
     carries none (AC-2.2.8)
 
@@ -2702,8 +2719,8 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
   retiming the loop in place (AC-4.2.2).
 - **Melodic playback before samples finish loading.** Play shows a loading state and waits;
   Percussive playback is unaffected and remains immediately available (AC-2.4.3).
-- **The densest supported Pattern on the smallest supported screen.** 8 Measures of 12/8 at Straight
-  16ths is 192 Slots on a 390 px viewport. Rather than shrinking Slots below a tappable size or
+- **The densest supported Pattern on the smallest supported screen.** 32 Measures of 12/8 at Straight
+  16ths is 768 Slots on a 390 px viewport. Rather than shrinking Slots below a tappable size or
   scrolling sideways, each Measure takes its own block and the Pattern is read down the page, with
   playback auto-scrolling the sounding Measure into view (AC-15.1.10, AC-15.1.11). A Measure whose
   Beats exceed one line wraps them inside its own block rather than overflowing — 24 Slots at the
@@ -4000,11 +4017,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.5.4** — Double Length copies the rhythm without its notes
   - **Given** a composition with notes
   - **When** the Composer presses Double Length
-  - **Then** the Measures are appended again with every note cleared — the originals keep theirs — so the copy sounds percussively until recorded, Record then starting on the copy's first syllable; disabled when doubling would pass 8 Measures
+  - **Then** the Measures are appended again with every note cleared — the originals keep theirs — so the copy sounds percussively until recorded, Record then starting on the copy's first syllable; disabled when doubling would pass 32 Measures *(Revised 2026-10-23: was 8, following AC-1.1.3.)*
   - **Cases**:
     - **AC-19.5.4/1** — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs
     - **AC-19.5.4/2** — Record then targets the first sounding Slot of the copy
-    - **AC-19.5.4/3** — Double Length is disabled when the result would exceed 8 Measures
+    - **AC-19.5.4/3** — Double Length is disabled when the result would exceed 32 Measures
 
 - **AC-19.5.5** — Tempo and swing are the composition's own
   - **Given** a composition in the Composer
@@ -4105,11 +4122,12 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.8.2** — A Pattern with a progression is baked into notes
   - **Given** the Composer mode
   - **When** the Composer opens a Melodic Pattern that carries a progression
-  - **Then** a name is asked as for a percussive Pattern, and the composition carries as stored notes what the progression and its fill would sound — one Measure per Measure of each pass, the whole harmonic cycle unrolled when it fits within 8 Measures and the first pass alone otherwise, said so — with no progression on it; the original is untouched
+  - **Then** a name is asked as for a percussive Pattern, and the composition carries as stored notes what the progression and its fill would sound — one Measure per Measure of each pass, the whole harmonic cycle unrolled when it fits within 32 Measures and the first pass alone otherwise, said so — with no progression on it; the original is untouched
   - **Cases**:
     - **AC-19.8.2/1** — Opening a Pattern with a progression asks for a name, as a percussive one does
-    - **AC-19.8.2/2** — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 8 and the first pass alone otherwise, and a notice says which
+    - **AC-19.8.2/2** — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 32 and the first pass alone otherwise, and a notice says which
     - **AC-19.8.2/3** — The composition carries no progression and no Register — every note is where it sounds — and the original Pattern is unchanged
+  - *(Revised 2026-10-23: "within 8" became "within 32", following AC-1.1.3. A behaviour change, not a rewording — a one-Measure Pattern under the twelve-bar blues now bakes to its whole twelve-Measure cycle where it used to keep the first pass alone.)*
 
 - **AC-19.8.3** — A melody is edited in place or copied
   - **Given** the Composer mode

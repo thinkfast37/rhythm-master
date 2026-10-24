@@ -580,8 +580,8 @@ test('AC-2.2.15/3 — The two are shown on one line within the band, so the band
 
   // The AC-15.1.10 worst case, in the Key producing the widest name any Key
   // can spell: b2 in Gb is Abb, a double accidental at four characters.
-  // Built as data and loaded once: 192 Slots tapped through the handlers is
-  // 192 full re-renders, which the layout under test does not need.
+  // Built as data and loaded once: 768 Slots tapped through the handlers is
+  // 768 full re-renders, which the layout under test does not need.
   await page.evaluate(() => {
     const blank = window.__rm.loadBlank('12/8');
     // Every Slot sounds and carries a pitch, as tapping each one in Melodic
@@ -598,12 +598,12 @@ test('AC-2.2.15/3 — The two are shown on one line within the band, so the band
         ...blank,
         soundMode: 'melodic',
         key: 'Gb',
-        measures: [measure('b2'), ...Array.from({ length: 7 }, () => measure('1'))],
+        measures: [measure('b2'), ...Array.from({ length: 31 }, () => measure('1'))],
       },
       { owned: true }
     );
   });
-  await expect(page.locator('.measure')).toHaveCount(8);
+  await expect(page.locator('.measure')).toHaveCount(32);
   await expect(page.locator('.slot-note-name').first()).toHaveText('Abb4');
 
   const report = await page.evaluate(() => {
@@ -733,21 +733,28 @@ test.describe('touchscreen', () => {
 test('AC-2.2.12 — both zones stay tappable on the largest Pattern at 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  // The AC-15.1.10 worst case: 8 Measures of 12/8 at Straight 16ths, Melodic.
-  // A new Measure inherits the previous one's meter, and a blank Beat changes
-  // Recipe without prompting, so this needs no dialog handling.
+  // The AC-15.1.10 worst case: 32 Measures of 12/8 at Straight 16ths, Melodic.
+  // Built as data and loaded once: at 32 Measures, adding each Measure and
+  // painting each of 384 Beats through the handlers is over 400 full
+  // re-renders of a 768-Slot grid, which the layout under test does not need.
   await page.evaluate(async () => {
     window.__rm.loadBlank('12/8');
     await window.__rm.handlers.onSoundMode('melodic');
-    for (let i = 0; i < 7; i++) await window.__rm.handlers.onAddMeasure();
     const p = window.__rm.getState().pattern;
-    for (let m = 0; m < p.measures.length; m++) {
-      for (let b = 0; b < p.measures[m].beats.length; b++) {
-        await window.__rm.handlers.onRecipe('straight-16ths', m, b);
-      }
-    }
+    const measure = {
+      timeSignature: '12/8',
+      beats: Array.from({ length: 12 }, () => ({
+        recipe: 'straight-16ths',
+        slots: [{ on: false }, { on: false }],
+      })),
+    };
+    window.__rm.loadPattern(
+      { ...structuredClone(p), measures: Array.from({ length: 32 }, () => structuredClone(measure)) },
+      { owned: true }
+    );
   });
-  await expect(page.locator('.measure')).toHaveCount(8);
+  await expect(page.locator('.slot')).toHaveCount(768);
+  await expect(page.locator('.measure')).toHaveCount(32);
 
   const boxes = await page.evaluate(() =>
     [...document.querySelectorAll('.slot')].map((s) => ({

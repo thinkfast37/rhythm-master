@@ -16,29 +16,29 @@ test('AC-1.1.1 — the app opens with a Pattern in the grid, not an empty page',
   await expect(page.locator('.slot').first()).toBeVisible();
 });
 
-test('AC-1.1.3 — 8-Measure cap disables +Measure', async ({ page }) => {
+test('AC-1.1.3 — 32-Measure cap disables +Measure', async ({ page }) => {
   await page.goto('/');
   const add = page.locator('[data-action="add-measure"]');
 
-  // Seven Measures: one short of the cap, so the control is still live.
+  // Thirty-one Measures: one short of the cap, so the control is still live.
   await page.evaluate(() => {
     const base = window.__rm.getState().pattern;
     window.__rm.loadPattern(
       {
         ...structuredClone(base),
-        id: 'p_seven',
-        name: 'Seven',
-        measures: Array.from({ length: 7 }, () => structuredClone(base.measures[0])),
+        id: 'p_thirty_one',
+        name: 'Thirty-one',
+        measures: Array.from({ length: 31 }, () => structuredClone(base.measures[0])),
       },
       { owned: true }
     );
   });
-  await expect(page.locator('.measure')).toHaveCount(7);
+  await expect(page.locator('.measure')).toHaveCount(31);
   await expect(add).toBeEnabled();
 
   // Taking it to the cap disables it — proving the disable is the cap, not the control.
   await add.click();
-  await expect(page.locator('.measure')).toHaveCount(8);
+  await expect(page.locator('.measure')).toHaveCount(32);
   await expect(add).toBeDisabled();
 });
 
@@ -544,7 +544,7 @@ test('AC-15.1.10 — Grid remains usable for the largest supported Pattern on mo
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
 
-  // 8 Measures of 12/8 at Straight 16ths — 192 Slots.
+  // 32 Measures of 12/8 at Straight 16ths — 768 Slots.
   await page.evaluate(() => {
     const measure = {
       timeSignature: '12/8',
@@ -561,20 +561,20 @@ test('AC-15.1.10 — Grid remains usable for the largest supported Pattern on mo
         tempo: 80,
         tags: [],
         rating: 0,
-        measures: Array.from({ length: 8 }, () => structuredClone(measure)),
+        measures: Array.from({ length: 32 }, () => structuredClone(measure)),
       },
       { owned: true }
     );
   });
 
-  await expect(page.locator('.measure')).toHaveCount(8);
-  await expect(page.locator('.slot')).toHaveCount(192);
+  await expect(page.locator('.measure')).toHaveCount(32);
+  await expect(page.locator('.slot')).toHaveCount(768);
 
   // One Measure per row: each row starts at a distinct vertical offset.
   const tops = await page.locator('.measure').evaluateAll((els) =>
     els.map((e) => Math.round(e.getBoundingClientRect().top))
   );
-  expect(new Set(tops).size).toBe(8);
+  expect(new Set(tops).size).toBe(32);
 
   // Nothing scrolls sideways — not the body, not the grid.
   const overflow = await page.evaluate(() => ({
@@ -634,7 +634,7 @@ const FOUR_FOUR = {
   ],
 };
 
-/** The AC-15.1.10 worst case: 8 Measures of 12/8 at Straight 16ths, 192 Slots. */
+/** The AC-15.1.10 worst case: 32 Measures of 12/8 at Straight 16ths, 768 Slots. */
 const DENSEST = {
   id: 'p_densest',
   name: 'Densest',
@@ -642,7 +642,7 @@ const DENSEST = {
   tempo: 80,
   tags: [],
   rating: 0,
-  measures: Array.from({ length: 8 }, () => ({
+  measures: Array.from({ length: 32 }, () => ({
     timeSignature: '12/8',
     beats: Array.from({ length: 12 }, () => ({
       recipe: 'straight-16ths',
@@ -740,7 +740,7 @@ test('AC-15.1.14/2 — No Beat is narrower than its own Slots need at the 24px m
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
-  await expect(page.locator('.slot')).toHaveCount(192);
+  await expect(page.locator('.slot')).toHaveCount(768);
 
   const widths = await page
     .locator('.slot')
@@ -1314,7 +1314,7 @@ test('AC-15.2.7/5 — Where the Beats do not fit at the preferred size, cells sh
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
-  await expect(page.locator('.slot')).toHaveCount(192);
+  await expect(page.locator('.slot')).toHaveCount(768);
 
   const { perLine, widths, beatsOverflow } = await beatLayout(page);
   expect(perLine.length).toBeGreaterThan(1);
@@ -1561,7 +1561,7 @@ test('AC-15.2.8/3 — On a 390px viewport the densest supported Pattern’s boxe
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.evaluate((p) => window.__rm.loadPattern(p, { owned: true }), DENSEST);
-  await expect(page.locator('.slot')).toHaveCount(192);
+  await expect(page.locator('.slot')).toHaveCount(768);
 
   const geometry = await page.evaluate(() => {
     const grid = document.querySelector('.grid');

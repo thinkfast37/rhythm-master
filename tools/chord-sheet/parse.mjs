@@ -96,10 +96,15 @@ function decodeEntities(s) {
  * Guitar page is read from its embedded store; anything else is taken to be the
  * sheet itself.
  */
+/** The data an Ultimate Guitar page embeds in its `js-store` element, or null. */
+export function readStore(html) {
+  const store = /class="js-store"\s+data-content="([^"]*)"/.exec(html);
+  return store ? JSON.parse(decodeEntities(store[1])) : null;
+}
+
 export function extractSheet(input) {
-  const store = /class="js-store"\s+data-content="([^"]*)"/.exec(input);
-  if (!store) return { content: input, artist: null, title: null, tonality: null, capo: null };
-  const data = JSON.parse(decodeEntities(store[1]));
+  const data = readStore(input);
+  if (!data) return { content: input, artist: null, title: null, tonality: null, capo: null };
   const view = data?.store?.page?.data;
   const content = view?.tab_view?.wiki_tab?.content;
   if (typeof content !== 'string') throw new Error('The page holds no chord sheet (is it a Chords page?)');
@@ -156,29 +161,47 @@ export function chordsOnLine(line) {
 }
 
 /**
- * The sheet as sections in order, each its label and the chord symbols in it.
- * Chords before the first header are an intro. Words are discarded line by line.
+ * The sheet as sections in order, each its label and its stanzas: the runs of
+ * chord lines a blank line separates, each line kept as its own phrase. Many
+ * sheets label only some parts — Intro, Verse — and mark the rest with nothing
+ * but a blank line, so a stanza is the unit a loop is looked for in. Chords
+ * before the first header are an intro. Words are discarded line by line.
  */
-export function readSections(content) {
+export function readParts(content) {
   const sections = [];
   let current = null;
+  let stanza = null;
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.replace(/\[\/?tab\]/g, '');
     const name = sectionName(line);
     if (name) {
-      current = { section: name, symbols: [] };
+      current = { section: name, stanzas: [] };
       sections.push(current);
+      stanza = null;
+      continue;
+    }
+    if (!line.trim()) {
+      stanza = null;
       continue;
     }
     const symbols = chordsOnLine(line);
     if (!symbols.length) continue;
     if (!current) {
-      current = { section: 'intro', symbols: [] };
+      current = { section: 'intro', stanzas: [] };
       sections.push(current);
     }
-    current.symbols.push(...symbols);
+    if (!stanza) {
+      stanza = [];
+      current.stanzas.push(stanza);
+    }
+    stanza.push(symbols);
   }
-  return sections.filter((s) => s.symbols.length);
+  return sections.filter((s) => s.stanzas.length);
+}
+
+/** The sheet as sections in order, each its label and the chord symbols in it. */
+export function readSections(content) {
+  return readParts(content).map((s) => ({ section: s.section, symbols: s.stanzas.flat(2) }));
 }
 
 /* --- the loop, the key, the numerals --------------------------------------- */
@@ -191,6 +214,11 @@ const same = (a, b) => a.root === b.root && a.quality === b.quality;
  * shortest period the sequence repeats at, a partial last pass allowed.
  */
 export function findLoop(chords) {
+  return loopOf(chords).loop;
+}
+
+/** The loop, and whether the sequence goes on to repeat it rather than merely being it. */
+function loopOf(chords) {
   const seq = chords.filter((c, i) => i === 0 || !same(c, chords[i - 1]));
   // A chord repeated across the loop's seam is the same chord held over.
   while (seq.length > 1 && same(seq[0], seq[seq.length - 1])) {
@@ -198,7 +226,10 @@ export function findLoop(chords) {
     if (p < seq.length - 1) break;
     seq.pop();
   }
-  return seq.slice(0, periodOf(seq));
+  const period = periodOf(seq);
+  // At least half a second pass, or a long one-off phrase whose opening
+  // happens to recur at its end would count as a loop.
+  return { loop: seq.slice(0, period), repeats: 2 * (seq.length - period) >= period };
 }
 
 function periodOf(seq) {
@@ -206,6 +237,47 @@ function periodOf(seq) {
     if (seq.every((c, i) => same(c, seq[i % p]))) return p;
   }
   return seq.length;
+}
+
+const dedupe = (chords) => chords.filter((c, i) => i === 0 || !same(c, chords[i - 1]));
+const signature = (loop) => loop.map((c) => `${c.root}:${c.quality}`).join(' ');
+
+/**
+ * A stanza's loop, from its chord lines (each an array of parsed chords), and
+ * how many places the stanza strays from it. Tried in order:
+ *   1. the loop the whole stanza repeats exactly (findLoop);
+ *   2. the shortest period of two to eight chords that three in four chords
+ *      follow — a loop with a passing chord or a turnaround in it;
+ *   3. the loop most of its lines play, when at least two lines play it;
+ *   4. the whole stanza, as it stands.
+ */
+export function stanzaLoop(lines) {
+  const all = lines.flat();
+  const seq = dedupe(all);
+  const { loop: exact, repeats } = loopOf(all);
+  if (repeats || seq.length <= 2) return { loop: exact, strays: 0 };
+
+  for (let p = 2; p <= 8 && 2 * p <= seq.length; p++) {
+    let agree = 0;
+    for (let i = p; i < seq.length; i++) if (same(seq[i], seq[i - p])) agree++;
+    if (agree / (seq.length - p) >= 0.75) return { loop: seq.slice(0, p), strays: seq.length - p - agree };
+  }
+
+  const tally = new Map();
+  for (const line of lines) {
+    const loop = findLoop(line);
+    if (loop.length < 2) continue;
+    const sig = signature(loop);
+    const t = tally.get(sig) ?? { loop, count: 0 };
+    t.count++;
+    tally.set(sig, t);
+  }
+  const best = [...tally.values()].reduce((a, b) => (b.count > a.count ? b : a), { count: 0 });
+  if (best.count >= 2) return { loop: best.loop, strays: lines.length - best.count };
+
+  // No loop: the stanza as it stands, a last chord that returns to the first dropped.
+  const whole = seq.length > 1 && same(seq[0], seq[seq.length - 1]) ? seq.slice(0, -1) : seq;
+  return { loop: whole, strays: 0 };
 }
 
 const FAMILY = {
@@ -261,38 +333,45 @@ export function toNumeral(chord, tonic) {
  */
 export function reviewSheet(input, { artist = null, title = null, source = null } = {}) {
   const sheet = extractSheet(input);
-  const raw = readSections(sheet.content);
+  const raw = readParts(sheet.content);
   const unknown = [];
-  const sections = raw.map((s) => {
-    const chords = [];
-    for (const symbol of s.symbols) {
+  const parse = (symbols) =>
+    symbols.flatMap((symbol) => {
       const c = parseChord(symbol);
-      if (c) chords.push(c);
-      else unknown.push(symbol);
-    }
-    return { section: s.section, chords };
-  });
-  const all = sections.flatMap((s) => s.chords);
+      if (!c) unknown.push(symbol);
+      return c ? [c] : [];
+    });
+  const sections = raw.map((s) => ({ section: s.section, stanzas: s.stanzas.map((st) => st.map(parse)) }));
+  const all = sections.flatMap((s) => s.stanzas.flat(2));
   if (!all.length) throw new Error('No chords found on the sheet');
   const key = detectKey(all);
 
   const out = [];
-  const seen = new Map();
+  const seen = new Set();
   for (const s of sections) {
-    const loop = findLoop(s.chords);
-    if (loop.length < 2) continue; // one chord is not a progression
-    const sig = loop.map((c) => `${c.root}:${c.quality}`).join(' ');
-    if (seen.has(sig)) continue; // a later verse repeating the first
-    const count = out.filter((o) => o.section === s.section || o.section.startsWith(`${s.section} `)).length;
-    const name = count ? `${s.section} ${count + 1}` : s.section;
-    seen.set(sig, name);
-    const notes = [...new Set(loop.map((c) => c.note && `${c.symbol}: ${c.note}`).filter(Boolean))];
-    out.push({
-      section: name,
-      chords: loop.map((c) => c.symbol),
-      numerals: loop.map((c) => toNumeral(c, key.tonic)),
-      note: [loop.length > 16 ? 'longer than 16 chords — trim before adding' : null, ...notes].filter(Boolean).join('; ') || null,
-    });
+    for (const stanza of s.stanzas) {
+      const { loop, strays } = stanzaLoop(stanza);
+      if (loop.length < 2) continue; // one chord is not a progression
+      const sig = signature(loop);
+      if (seen.has(sig)) continue; // a later verse repeating the first
+      seen.add(sig);
+      const count = out.filter((o) => o.section === s.section || o.section.startsWith(`${s.section} `)).length;
+      const name = count ? `${s.section} ${count + 1}` : s.section;
+      const notes = [...new Set(loop.map((c) => c.note && `${c.symbol}: ${c.note}`).filter(Boolean))];
+      out.push({
+        section: name,
+        chords: loop.map((c) => c.symbol),
+        numerals: loop.map((c) => toNumeral(c, key.tonic)),
+        note:
+          [
+            loop.length > 16 ? 'longer than 16 chords — trim before adding' : null,
+            strays ? `the sheet strays from this loop in ${strays} place${strays === 1 ? '' : 's'}` : null,
+            ...notes,
+          ]
+            .filter(Boolean)
+            .join('; ') || null,
+      });
+    }
   }
 
   const confidence = unknown.length === 0 && key.fit >= 0.85 ? 'high' : key.fit >= 0.7 ? 'medium' : 'low';

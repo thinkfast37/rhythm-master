@@ -19,7 +19,7 @@ import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
 import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, isValidArpeggio, hasHarmony, memberCount } from './harmony.js';
 import { splitDegree } from './pitch.js';
 
-export const MAX_MEASURES = 8;
+export const MAX_MEASURES = 32;
 export const MIN_TEMPO = 18;
 export const MAX_TEMPO = 300;
 export const DEFAULT_TEMPO = 80;

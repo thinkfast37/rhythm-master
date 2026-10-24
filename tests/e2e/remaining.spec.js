@@ -588,25 +588,25 @@ test('AC-7.4.6 — Make Copy is unavailable on a shipped Pattern', async ({ page
 
 // --- US-8.1 / US-10.1: append and duplicate --------------------------------
 
-test('AC-8.1.3 — Combining to exactly 8 Measures succeeds', async ({ page }) => {
+test('AC-8.1.3 — Combining to exactly 32 Measures succeeds', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Three Bars');
   for (let i = 0; i < 2; i++) await page.locator('[data-action="add-measure"]').click();
   await expect(page.locator('.measure')).toHaveCount(3);
 
-  // Build a 5-Measure Pattern to append — 3 + 5 lands exactly on the cap.
+  // Build a 29-Measure Pattern to append — 3 + 29 lands exactly on the cap.
   await page.evaluate(() => {
     const base = window.__rm.getState().pattern;
-    const five = structuredClone(base);
-    five.measures = [...five.measures, ...structuredClone(base.measures.slice(0, 2))];
-    window.__rm.patternStore.upsert({ ...five, id: 'p_five', name: 'Another Five' });
+    const fill = structuredClone(base);
+    fill.measures = Array.from({ length: 29 }, () => structuredClone(base.measures[0]));
+    window.__rm.patternStore.upsert({ ...fill, id: 'p_fill_b', name: 'Fill B' });
   });
 
   await page.locator('[data-action="append-pattern"]').click();
-  await page.locator('.dialog-button', { hasText: 'Another Five' }).click();
+  await page.locator('.dialog-button', { hasText: 'Fill B' }).click();
 
-  // The cap is "cannot exceed 8", not "must stay under 8".
-  await expect(page.locator('.measure')).toHaveCount(8);
+  // The cap is "cannot exceed 32", not "must stay under 32".
+  await expect(page.locator('.measure')).toHaveCount(32);
 });
 
 test('AC-8.1.4 — appending into an owned Pattern auto-saves with no save step', async ({ page }) => {
@@ -636,9 +636,9 @@ test('AC-8.1.5 — appending into a shipped Pattern triggers the naming prompt f
 test('AC-8.1.6 — the append picker re-filters to what still fits', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Growing');
-  // Grow to 7 Measures: only 1-Measure Patterns can still be appended.
-  for (let i = 0; i < 6; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(7);
+  // Grow to 31 Measures: only 1-Measure Patterns can still be appended.
+  for (let i = 0; i < 30; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(31);
 
   await page.locator('[data-action="append-pattern"]').click();
   const offered = await page.locator('.dialog-actions .dialog-button').allTextContents();
@@ -657,21 +657,21 @@ test('AC-8.1.6 — the append picker re-filters to what still fits', async ({ pa
   for (const size of sizes) expect(size).toBe(1);
 });
 
-test('AC-10.1.3 — Duplicate is enabled within the 8-Measure cap', async ({ page }) => {
+test('AC-10.1.3 — Duplicate is enabled within the 32-Measure cap', async ({ page }) => {
   await page.goto('/');
-  await makeOwned(page, 'Four');
-  for (let i = 0; i < 3; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(4);
-  // Doubling reaches exactly 8 — the boundary the cap admits.
+  await makeOwned(page, 'Sixteen');
+  for (let i = 0; i < 15; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(16);
+  // Doubling reaches exactly 32 — the boundary the cap admits.
   await expect(page.locator('[data-action="duplicate-pattern"]')).toBeEnabled();
 });
 
 test('AC-10.1.4 — Duplicate is disabled when doubling would exceed the cap', async ({ page }) => {
   await page.goto('/');
-  await makeOwned(page, 'Five');
-  for (let i = 0; i < 4; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(5);
-  // Doubling would reach 10 — five is the smallest size still refused.
+  await makeOwned(page, 'Seventeen');
+  for (let i = 0; i < 16; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(17);
+  // Doubling would reach 34 — seventeen is the smallest size still refused.
   await expect(page.locator('[data-action="duplicate-pattern"]')).toBeDisabled();
 });
 

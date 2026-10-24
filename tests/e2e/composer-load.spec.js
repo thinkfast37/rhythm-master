@@ -105,7 +105,7 @@ test('AC-19.8.2/1 — Opening a Pattern with a progression asks for a name, as a
   expect((await composerState(page)).draft.name).toBe('Baked line');
 });
 
-test("AC-19.8.2/2 — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 8 and the first pass alone otherwise, and a notice says which", async ({ page }) => {
+test("AC-19.8.2/2 — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 32 and the first pass alone otherwise, and a notice says which", async ({ page }) => {
   await openApp(page);
   // A one-Measure owned Pattern over I–IV–V, Ascending: three passes, unrolled to three Measures.
   await makeFourBeats(page, 'Tune');
@@ -128,18 +128,17 @@ test("AC-19.8.2/2 — The composition's Slots carry, as stored degrees, the note
   await expect(page.locator('.composer-grid .measure')).toHaveCount(3);
   await expect(page.locator('.composer-notice')).toContainText('3 passes');
   await expect(page.locator('.composer-missing')).toHaveCount(0);
-  // Too long to unroll: three Measures over four chords changing every pass.
+  // Too long to unroll: nine Measures over four chords changing every pass is 36.
   await leaveComposer(page);
   await page.locator('.dialog-button[data-value="true"]').click();
   await page.evaluate(async () => {
-    await window.__rm.handlers.onAddMeasure();
-    await window.__rm.handlers.onAddMeasure();
+    for (let i = 0; i < 8; i++) await window.__rm.handlers.onAddMeasure();
     await window.__rm.handlers.onProgression('I-V-vi-IV');
     await window.__rm.handlers.onChordChange('pass');
   });
   await enterComposer(page);
   await openInComposer(page, 'p_test', true, 'Baked long');
-  await expect(page.locator('.composer-grid .measure')).toHaveCount(3);
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(9);
   await expect(page.locator('.composer-notice')).toContainText('first pass');
 });
 

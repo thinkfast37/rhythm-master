@@ -124,7 +124,7 @@ fail the build, and it is outstanding work — never a settled decision.
 |---|---|---|---|---|---|---|---|
 | US-1.1 | `AC-1.1.1` | New Pattern defaults | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-1.1 | `AC-1.1.3` 🖵 | 8-Measure cap disables +Measure | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.3` 🖵 | 32-Measure cap disables +Measure | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-1.1 | `AC-1.1.5/1` 🖵 | The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.5/2` 🖵 | A Measure other than the first changes alone, with no prompt | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
@@ -409,20 +409,20 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.6 | `AC-5.6.11` 🖵 | Pulse tracking counts a mixed-feel Recipe by its halves | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.12` | 1-e-&-a scheme, the leading digit is the Beat's own number | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.13` | 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.3` 🖵 | Tapping a star sets Rating from zero | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-6.1 | `AC-6.1.4` 🖵 | Tapping the current star clears Rating | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.5` 🖵 | Tapping a different star changes Rating rather than clearing it | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-6.1 | `AC-6.1.6` 🖵 | Rating filter narrows an already-filtered list | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-6.1 | `AC-6.1.7/1` 🖵 | The header shows the open Pattern's current Rating, and rating that Pattern from its library row updates the header's stars | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.7/2` 🖵 | Tapping a star in the header sets the open Pattern's Rating, and its library row shows the same value | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.7/3` 🖵 | Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.7/4` 🖵 | On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.8/1` 🖵 | Selecting Unrated shows only the Patterns whose Rating is 0 | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.test.js`, `remaining.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.8/2` 🖵 | The Rating filter's options read All, Unrated, 3★+, 4★+, 5★ in that order | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `remaining.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.8/3` 🖵 | Rating a Pattern while Unrated is selected takes it off the list | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `remaining.spec.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.8/4` 🖵 | Unrated narrows an already search-filtered list rather than replacing it | P-028 | T096, T200, T406 (3/3 done) | T097, T201, T407 (3/3 done) | `library.test.js`, `remaining.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.3` 🖵 | Tapping a star sets Rating from zero | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.4` 🖵 | Tapping the current star clears Rating | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.5` 🖵 | Tapping a different star changes Rating rather than clearing it | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.6` 🖵 | Rating filter narrows an already-filtered list | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-6.1 | `AC-6.1.7/1` 🖵 | The header shows the open Pattern's current Rating, and rating that Pattern from its library row updates the header's stars | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.7/2` 🖵 | Tapping a star in the header sets the open Pattern's Rating, and its library row shows the same value | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.7/3` 🖵 | Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.7/4` 🖵 | On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.8/1` 🖵 | Selecting Unrated shows only the Patterns whose Rating is 0 | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.test.js`, `remaining.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.8/2` 🖵 | The Rating filter's options read All, Unrated, 3★+, 4★+, 5★ in that order | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `remaining.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.8/3` 🖵 | Rating a Pattern while Unrated is selected takes it off the list | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `remaining.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.8/4` 🖵 | Unrated narrows an already search-filtered list rather than replacing it | P-028 | T096, T200, T411 (3/3 done) | T097, T201, T412 (3/3 done) | `library.test.js`, `remaining.spec.js` | 🟢 OK |
 | US-7.1 | `AC-7.1.1` 🖵 | New Pattern name default and validation | P-019 | T077 (1/1 done) | T078 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-7.1 | `AC-7.1.2` | A newly created Pattern is immediately in the library | P-019 | T077 (1/1 done) | T078 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.2 | `AC-7.2.1` 🖵 | Edits to an owned Pattern save immediately, no Save action | P-020 | T079 (1/1 done) | T080 (1/1 done) | `storage.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -444,14 +444,14 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.5 | `AC-7.5.3` 🖵 | Only owned Patterns can be deleted | P-023 | T085 (1/1 done) | T086 (1/1 done) | `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.5 | `AC-7.5.4` 🖵 | Deleting one Family member doesn't affect the other | P-023 | T085 (1/1 done) | T086 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.1` | Combine has no meter-matching restriction | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 8-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 8 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 32-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 32 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-8.1 | `AC-8.1.4` | Combine into an owned Pattern auto-saves | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.5` 🖵 | Combine into a shipped Pattern triggers the naming prompt | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.6` 🖵 | Combine picker re-filters correctly on repeated use | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.1` | Duplicate copies the full Measure sequence exactly | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-10.1 | `AC-10.1.2` | Duplicate focuses the newly-added second half | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 8-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟢 OK |
+| US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 32-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟢 OK |
 | US-10.1 | `AC-10.1.4` 🖵 | Duplicate is disabled when doubling would exceed the cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `operations.spec.js`, `remaining.spec.js` | 🟢 OK |
 | US-10.1 | `AC-10.1.5` | Duplicate into an owned Pattern auto-saves | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.6` 🖵 | Duplicate into a shipped Pattern triggers the naming prompt | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -958,7 +958,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.5 | `AC-19.5.3/3` 🖵 | A Slot cycled to off loses its note, and the count of syllables without a note follows | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.4/1` 🖵 | Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.4/2` 🖵 | Record then targets the first sounding Slot of the copy | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.4/3` 🖵 | Double Length is disabled when the result would exceed 8 Measures | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/3` 🖵 | Double Length is disabled when the result would exceed 32 Measures | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.5/1` | The tempo entry sets the composition's tempo, and playback follows it | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.5/2` | The swing amount and feel controls set the composition's swing, and playback follows them | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.1/1` 🖵 | Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
@@ -976,7 +976,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.8 | `AC-19.8.1/2` | Confirming opens the rhythm as a composition in C Ionian with every sounding Slot unpitched and its accents kept, and the library is unchanged until the first save | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.1/3` 🖵 | Cancelling the prompt opens nothing: whatever composition was open stays, and the original Pattern is untouched | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.2/1` | Opening a Pattern with a progression asks for a name, as a percussive one does | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
-| US-19.8 | `AC-19.8.2/2` | The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 8 and the first pass alone otherwise, and a notice says which | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
+| US-19.8 | `AC-19.8.2/2` | The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 32 and the first pass alone otherwise, and a notice says which | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.2/3` | The composition carries no progression and no Register — every note is where it sounds — and the original Pattern is unchanged | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.3/1` 🖵 | An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name, pre-filled as a percussive one's is, and opens a copy, unsaved | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.3/2` 🖵 | A shipped melodic Pattern asks a name only, pre-filled as a percussive one's is, and opens a copy, unsaved | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
