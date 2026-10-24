@@ -11,17 +11,32 @@ description: Add songs' chord progressions to the catalogue from their chord she
 npm run chords -- read <url|file> [--artist A] [--title T] [--out file]   # → chord-reviews/<artist>--<title>.json
 npm run chords -- compare chord-reviews/*.json                           # against the shipped credits
 npm run chords -- add chord-reviews/x.json [--replace] [--heading pop] [--dry-run]
+npm run chords -- songbook [--artist A] [--song T] [--refresh] [--delay 8]   # re-read every shipped song
+npm run chords -- report                                                  # rewrite REPORT.md, no fetching
 ```
 
 `read` fetches with curl, so it honours the proxy. When a host is blocked, save the page
 and pass the file. The words on a sheet are dropped as each line is read. A review file
-holds chords, numerals and notes only, and `chord-reviews/` is gitignored.
+holds chords, numerals, notes and its source only.
+
+**`chord-reviews/` is committed.** One file per song, so every shipped song carries a
+record of where its chords came from. `chord-reviews/REPORT.md` is generated: each shipped
+credit beside the most-rated sheet, marked ✅ on the sheet, 🔁 on it but started at another
+chord, or ❌ not on it, plus the sheet's loops the songbook lacks (➕). Never edit it by hand.
+
+**Where it runs.** Ultimate Guitar is reachable from a Claude Code session on the
+maintainer's Mac and blocked from the cloud. In the cloud, the maintainer runs the
+command and the files come back with the branch.
 
 ## The workflow
 
-1. **Read** each song. Take the "Chords" version with the most ratings, not a tab or
-   a bass tab. One song at a time: Ultimate Guitar's terms do not allow bulk
-   automated access, so never loop over search results.
+1. **Read** each song. Take the "Chords" version with the most ratings, not a tab, a
+   bass tab, or a live or acoustic arrangement — `songbook` picks it that way.
+   Ultimate Guitar's terms do not allow automated access; the maintainer chose on
+   2026-10-23 to re-read the songbook's songs with the paced `songbook` run anyway
+   (personal use, about two requests a song). Keep it to that: songs the songbook
+   credits or the maintainer names, paced, never a crawl of search results or an
+   artist's catalogue.
 2. **Review before adding.** Print the review. Look hard at:
    - **The key.** Relative major and minor are the common miss (`vi–IV–I–V` versus
      `i–♭VI–♭III–♭VII`). The page's own key is in the note when it disagrees.
@@ -32,8 +47,12 @@ holds chords, numerals and notes only, and `chord-reviews/` is gitignored.
      keep, but say so in the PR.
    - `confidence: low` means the chords fit no key well. **Ask the maintainer**; don't
      guess.
-3. **Compare** re-reads of shipped songs. `DIFFERS` is a question for the maintainer
-   before any `--replace`: the shipped credit may be the better reading.
+3. **Compare** re-reads of shipped songs (`compare`, or the report). `DIFFERS` / ❌ is a
+   question for the maintainer before any `--replace`: the shipped credit may be the
+   better reading. A sheet that labels only Intro and Verse is read stanza by stanza
+   (blank lines), so its later parts come out as `verse 2`, `verse 3`: name them from
+   the song before adding. A note that the sheet "strays from this loop" means a passing
+   chord or turnaround was left out of the loop; say so if it matters.
 4. **Add**, then regenerate the matrix and run every gate (CLAUDE.md §4).
 
 ## What the gates will say

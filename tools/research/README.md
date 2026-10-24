@@ -43,3 +43,19 @@ each, open the top-rated **Chords** version, and pass its URL the same way:
 ### 3. Send back
 
 `research-out/bennett-harmony.md` and the `chord-reviews/` folder.
+
+## Re-checking the songbook against real chord sheets (T408)
+
+Every song the songbook credits, re-read from its most-rated Ultimate Guitar
+Chords version. Paced (one request every 8 seconds) and resumable: run it
+again after a failure and it picks up where it stopped. About 25 minutes for
+the whole songbook.
+
+```bash
+npm run chords -- songbook
+```
+
+Or one artist at a time: `npm run chords -- songbook --artist Radiohead`.
+Writes `chord-reviews/<artist>--<song>.json` per song and
+`chord-reviews/REPORT.md`. Commit the folder, or let a local Claude Code
+session read it.
