@@ -20,8 +20,9 @@
  *
  * The audio comes from the same voices the transport plays — `playPercussive`,
  * `playMelodic`, `playClick`, each taking its context as an argument — so what
- * is heard with the screen off is the same synthesis, not an approximation of
- * it. `core/timeline` decides when every event sounds, here as everywhere
+ * is heard with the screen off is the same sound, not an approximation of it.
+ * A sampled melodic voice is loaded on the render's own context for the
+ * purpose (AC-2.13.5). `core/timeline` decides when every event sounds, here as everywhere
  * (Constitution: one timeline).
  */
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
@@ -102,13 +103,14 @@ export function encodeWav(buffer) {
 /**
  * Render `patternAt(pass)` for each pass of the cycle into a WAV Blob.
  *
- * Returns `{ url, seconds, passes, whole }`, or null when this browser has no
+ * Returns `{ url, seconds, passes, whole, voice }` — `voice` the melodic voice
+ * the render used — or null when this browser has no
  * OfflineAudioContext or the render fails — in which case the run simply does
  * without the handover, exactly as it did before this module existed.
  *
  * The caller revokes `url` when it is done with it.
  */
-export async function renderCycle({ patternAt, passes, settings, sampleRate }) {
+export async function renderCycle({ patternAt, passes, settings, sampleRate, prepareMelodic = null }) {
   const Offline = globalThis.OfflineAudioContext ?? globalThis.webkitOfflineAudioContext;
   if (typeof Offline !== 'function' || passes < 1) return null;
 
@@ -137,14 +139,20 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate }) {
   if (frames < 1) return null;
 
   let buffer;
+  let voice = 'synth';
   try {
     const ctx = new Offline(1, frames, sampleRate);
+    // The melodic voice the live transport is using, loaded on this context,
+    // or the synth when its samples are not ready (AC-2.13.5).
+    const sampled = prepareMelodic ? await prepareMelodic(ctx) : null;
+    const melodicVoice = sampled?.play ?? playMelodic;
+    voice = sampled?.voice ?? 'synth';
     let at = 0;
     for (let pass = 0; pass < plan.passes; pass++) {
       const pattern = patterns[pass];
       for (const event of buildTimeline(pattern, pass)) {
         const when = at + event.timeSeconds;
-        if (event.pitch) playMelodic(ctx, null, event, when);
+        if (event.pitch) melodicVoice(ctx, null, event, when);
         else playPercussive(ctx, null, event.accent, when);
       }
       if (settings.metronomeEnabled) {
@@ -162,5 +170,5 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate }) {
   }
 
   const url = URL.createObjectURL(new Blob([encodeWav(buffer)], { type: 'audio/wav' }));
-  return { url, seconds: plan.seconds, passes: plan.passes, whole: plan.whole };
+  return { url, seconds: plan.seconds, passes: plan.passes, whole: plan.whole, voice };
 }

@@ -10,7 +10,9 @@ import { describe, it, expect } from 'vitest';
 import { planRender, encodeWav, renderCycle } from '../../../src/audio/backgroundRender.js';
 import { PROGRESSIONS } from '../../../src/core/harmony.js';
 import { create } from '../../../src/core/pattern.js';
-import { loopDurationSeconds } from '../../../src/core/timeline.js';
+import { loopDurationSeconds, buildTimeline } from '../../../src/core/timeline.js';
+import seed from '../../../data/seed-patterns.json';
+import { fakeContext } from './fakeAudio.js';
 
 const SAMPLE_RATE = 44100;
 /** Seconds of 16-bit mono audio that fit in the module's 60 MB ceiling. */
@@ -139,5 +141,63 @@ describe('audio/backgroundRender — a browser that cannot render (AC-4.1.15/6)'
     await expect(
       renderCycle({ patternAt: () => null, passes: 1, settings: {}, sampleRate: SAMPLE_RATE })
     ).resolves.toBeNull();
+  });
+});
+
+describe('audio/backgroundRender — the melodic voice (AC-2.13.5)', () => {
+  /** A melodic Pattern from the shipped library, so every sounding Slot is pitched. */
+  const melodic = seed.patterns.find((p) => p.soundMode === 'melodic');
+
+  async function renderWith(prepareMelodic) {
+    const saved = globalThis.OfflineAudioContext;
+    const contexts = [];
+    globalThis.OfflineAudioContext = class {
+      constructor(channels, frames, rate) {
+        Object.assign(this, fakeContext());
+        this.frames = frames;
+        this.sampleRate = rate;
+        contexts.push(this);
+      }
+      startRendering() {
+        const samples = new Float32Array(this.frames);
+        return Promise.resolve({ sampleRate: this.sampleRate, getChannelData: () => samples });
+      }
+    };
+    try {
+      const result = await renderCycle({ patternAt: () => melodic, passes: 1, settings: {}, sampleRate: 8000, prepareMelodic });
+      return { result, ctx: contexts[0] };
+    } finally {
+      if (saved === undefined) delete globalThis.OfflineAudioContext;
+      else globalThis.OfflineAudioContext = saved;
+    }
+  }
+
+  it('AC-2.13.5/1 — With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth: the render plays through what prepareMelodic returns, on its own context', async () => {
+    const played = [];
+    const { result, ctx } = await renderWith(async () => ({ voice: 'piano', play: (pc, d, e, w) => played.push({ pc, midi: e.pitch.midiNote, w }) }));
+    expect(result.voice).toBe('piano');
+    expect(played.length).toBe(buildTimeline(melodic, 0).filter((e) => e.pitch).length);
+    expect(played.every((p) => p.pc === ctx)).toBe(true);
+    // No synth note was built: the synth's oscillators are absent.
+    expect(ctx.nodes.some((n) => n.kind === 'oscillator' && n.detune)).toBe(false);
+    URL.revokeObjectURL(result.url);
+  });
+
+  it('AC-2.13.5/1 — With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth: a voice not ready renders the synth', async () => {
+    const { result, ctx } = await renderWith(async () => null);
+    expect(result.voice).toBe('synth');
+    expect(ctx.nodes.filter((n) => n.kind === 'oscillator').length).toBeGreaterThan(0);
+    URL.revokeObjectURL(result.url);
+  });
+
+  it('AC-2.13.5/2 — With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth: the render reports the voice it used', async () => {
+    const played = [];
+    const { result } = await renderWith(async () => ({ voice: 'guitar', play: (_c, _d, e) => played.push(e.pitch.midiNote) }));
+    expect(result.voice).toBe('guitar');
+    expect(played.length).toBeGreaterThan(0);
+    URL.revokeObjectURL(result.url);
+    const synth = await renderWith(null);
+    expect(synth.result.voice).toBe('synth');
+    URL.revokeObjectURL(synth.result.url);
   });
 });

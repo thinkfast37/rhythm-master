@@ -97,6 +97,40 @@ for every guitar note while the samples load or when they cannot, so the feature
 cost of timbre, never of silence (AC-19.7.2). The maintainer chose this over a synthesised plucked
 string, told of the reversal: "for guitar — use the one in fret-navigator." See D-016.
 
+**Amended 2026-10-24 (US-2.13, Constitution 3.9.0): the synth becomes a choice rather than the only
+melodic voice.** A global setting picks Piano, Synth or Guitar for melodic playback, and Piano is the
+default. The Composer plays the instrument on screen. The Guitar view is always the guitar. The Piano
+view plays the synth when Synth is chosen and the piano otherwise, including when Guitar is chosen.
+
+- *The piano is the Salamander Grand Piano* (Alexander Holm, CC BY 3.0). These are the recordings
+  fret-navigator plays: 29 MP3s from A0 to A7, a minor third apart. Each key plays the nearest
+  recording, re-pitched by `playbackRate = 2^(semitones/12)`. That is at most 1.5 semitones of
+  stretch, below where re-pitching artefacts become audible. This is not the soundfont piano
+  rejected on 2026-08-17. That was a General MIDI patch the maintainer liked less than the
+  synth. This is a concert-grand multisample they asked for by name: "real piano (look at what we
+  did in fret-navigator project)".
+- *Bundled, not fetched.* The guitar's CDN objection was answered by its synth fallback. For the
+  default voice, though, falling back would mean the app sounds wrong whenever it is offline,
+  which includes the store builds on a plane. About 2 MB in `public/audio/piano/` is an acceptable
+  cost for that, and the maintainer chose it. The recordings are still requested lazily, on the
+  first need after a gesture, never on page load. Until a recording is decoded, its notes sound
+  through the synth.
+- *Accent* scales the recording's gain by the percussive voice's `ACCENT_AMPS`, so the three
+  levels stay audibly distinct (Constitution, Audio clarity). *Re-striking* a key damps the voice
+  it was already sounding, as a piano's damper does. Without that, a repeated note at practice
+  tempo would stack three seconds of ring into mud.
+- *Routing*: the sampled voices share the melodic chain's compressor. The synth keeps its own
+  reverb send, and the recordings carry their own room, so the piano gets none.
+- *The screen-off render* (AC-4.1.15) decodes the voice's recordings on the offline context, so a
+  locked screen hears the piano rather than the synth. The guitar's render reuses the live
+  instrument's decoded buffers. An AudioBuffer is not bound to the context that decoded it, so
+  the CDN is asked only once (AC-19.7.1/1).
+
+Alternatives considered: fetching Salamander from a CDN (rejected: the default voice would break
+offline); a soundfont piano through soundfont-player (rejected: it is the voice retired on
+2026-08-17); keeping the choice inside the Composer (offered; the maintainer wanted Practice to
+follow it as well).
+
 ---
 
 ## D-004 — Storage structure

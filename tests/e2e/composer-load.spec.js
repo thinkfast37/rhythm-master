@@ -263,6 +263,11 @@ test('AC-19.8.4 — A saved composition is a melodic Pattern like any other', as
   const melodic = await page.evaluate(() => window.__rm.voiceLog().length);
   await page.locator('.transport').first().click();
   await expect.poll(() => page.evaluate(() => window.__rm.voiceLog().length), { timeout: 8000 }).toBeGreaterThan(melodic);
-  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toMatchObject({ instrument: 'piano', via: 'synth' });
+  // It plays through the melodic voice as any melodic Pattern does — the
+  // piano, by default, once its recordings are in (AC-2.13.2/1).
+  await expect.poll(() => page.evaluate(() => window.__rm.piano.getStatus().status), { timeout: 15000 }).toBe('ready');
+  const loaded = await page.evaluate(() => window.__rm.voiceLog().length);
+  await expect.poll(() => page.evaluate(() => window.__rm.voiceLog().length), { timeout: 8000 }).toBeGreaterThan(loaded);
+  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toMatchObject({ instrument: 'piano', voice: 'piano', via: 'sampled' });
   await page.locator('.transport').first().click();
 });

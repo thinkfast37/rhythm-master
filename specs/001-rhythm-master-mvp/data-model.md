@@ -370,7 +370,8 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "composerLabelMode": "notes",   // AC-19.2.2/5 — "notes" | "degrees" | "intervals", how in-scale notes are labelled
   "composerCapo": 0,              // AC-19.2.2/5 — 0–12, the fretboard's capo
   "composerFretRange": [0, 24],   // AC-19.2.2/5 — lower and upper visible fret, 0–24
-  "composerKeys": 49              // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
+  "composerKeys": 49,             // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
+  "melodicVoice": "piano"         // AC-2.13.1/2 — "piano" | "synth" | "guitar", the voice melodic notes sound with
 }
 ```
 
@@ -388,6 +389,12 @@ about any Pattern: a composition saved from the Composer is an ordinary Melodic 
 as the defaults shown, so no migration runs. The Composer's *draft* — a composition with syllables
 that have no note yet — is held in memory only and is never written to any store (research.md
 D-016); the stores hold what was last complete.
+
+`melodicVoice` was added 2026-10-24 with US-2.13. It is a preference about how melodic notes
+sound, never about a Pattern: no Pattern records it, and no Pattern export carries it (AC-2.13.1/2).
+The Composer reads it only in the Piano view (AC-2.13.3). An absent value, which is every store
+written before that date, reads as `"piano"`, so no migration runs. An unrecognised value also reads
+as `"piano"`.
 
 `goal`, `level` and `labHelp` were added 2026-09-20 with US-14.1. All three are preferences about
 the interface, not about any Pattern: choosing a goal or a level writes nothing to a Pattern, an

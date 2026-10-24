@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 892 across 59 User Stories
+**Criteria**: 907 across 60 User Stories
 
-**Coverage**: 708 of 892 criteria proven (79.4%)
+**Coverage**: 723 of 907 criteria proven (79.7%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 708 | 79.4% |
-| 🔴 Gap — HIGH | 65 | 7.3% |
-| 🟠 Gap — MEDIUM | 41 | 4.6% |
-| 🟡 Gap — LOW | 78 | 8.7% |
+| 🟢 Proven | 723 | 79.7% |
+| 🔴 Gap — HIGH | 65 | 7.2% |
+| 🟠 Gap — MEDIUM | 41 | 4.5% |
+| 🟡 Gap — LOW | 78 | 8.6% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -117,6 +117,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.8 | 10 | **10** | · | · | · | · | · |
 | 🟢 US-19.9 | 7 | **7** | · | · | · | · | · |
 | 🟢 US-2.12 | 13 | **13** | · | · | · | · | · |
+| 🟢 US-2.13 | 15 | **15** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -211,11 +212,11 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.3 | `AC-2.3.1` | Default Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.2` | Changing Key re-transposes without altering stored data | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.3` 🖵 | Percussive Patterns have no Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.1` | Melodic playback uses the ported synthesis chain | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.2` | No audio asset is ever fetched | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-2.4 | `AC-2.4.4` | Melodic notes share one reverb and one compressor | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072 (2/2 done) | T073 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.4 | `AC-2.4.1` | The Synth voice uses the ported synthesis chain | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `voice.test.js`, `melodic.spec.js`, `voice.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.4 | `AC-2.4.2` | Percussive and Synth fetch no audio asset | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.4 | `AC-2.4.4` | Synth notes share one reverb and one compressor | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -978,12 +979,12 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.6 | `AC-19.6.1/3` 🖵 | Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.2/1` | A note recorded while playing is heard from the next pass, and the target moves on as it does at rest | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.2/2` | Tempo and swing changes while playing take effect as they do in Practice, and no other edit stops or restarts playback | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
-| US-19.7 | `AC-19.7.1/1` 🖵 | No sample is requested on page load, in Practice, or in the Piano view; the first showing of the Guitar view requests them once | P-059 | T381 (1/1 done) | T382 (1/1 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
-| US-19.7 | `AC-19.7.1/2` 🖵 | Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note | P-059 | T381 (1/1 done) | T382 (1/1 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
-| US-19.7 | `AC-19.7.1/3` 🖵 | The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer | P-059 | T381 (1/1 done) | T382 (1/1 done) | `composer-guitar.spec.js` | 🟢 OK |
-| US-19.7 | `AC-19.7.2/1` 🖵 | While the samples load, a loading state is shown and every guitar note sounds through the melodic synth voice rather than waiting | P-059 | T381 (1/1 done) | T382 (1/1 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
-| US-19.7 | `AC-19.7.2/2` 🖵 | A failed load shows a non-blocking notice with a Retry control, guitar notes keep sounding through the synth voice, and Retry requests the samples again | P-059 | T381 (1/1 done) | T382 (1/1 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
-| US-19.7 | `AC-19.7.2/3` 🖵 | The piano voice is the melodic synth voice the app already has, and loads nothing | P-059 | T381 (1/1 done) | T382 (1/1 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
+| US-19.7 | `AC-19.7.1/1` 🖵 | No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
+| US-19.7 | `AC-19.7.1/2` 🖵 | Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
+| US-19.7 | `AC-19.7.1/3` 🖵 | The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
+| US-19.7 | `AC-19.7.2/1` 🖵 | While the samples load, a loading state is shown and every guitar note sounds through the melodic synth voice rather than waiting | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
+| US-19.7 | `AC-19.7.2/2` 🖵 | A failed load shows a non-blocking notice with a Retry control, guitar notes keep sounding through the synth voice, and Retry requests the samples again | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
+| US-19.7 | `AC-19.7.2/3` 🖵 | The Piano view's sampled piano falls back the same way: while its recordings load, or when they cannot, each note sounds through the synth | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `pianoSamples.test.js`, `composer-guitar.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.1/1` | Opening a percussive Pattern asks for a name, pre-filled with the Pattern's name and "melody" and numbered when that is taken, rejecting a name already in the library | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.1/2` | Confirming opens the rhythm as a composition in C Ionian with every sounding Slot unpitched and its accents kept, and the library is unchanged until the first save | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.1/3` 🖵 | Cancelling the prompt opens nothing: whatever composition was open stays, and the original Pattern is untouched | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
@@ -1014,3 +1015,18 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.12 | `AC-2.12.3/3` 🖵 | A fill or progression chosen by hand in the picker while cycling is where the cycle begins again, listed or not; after its repeats the cycle moves on to the first listed entry after it | P-063 | T394, T410 (2/2 done) | T395, T411 (2/2 done) | `harmony.test.js`, `cycle-list.spec.js` | 🟢 OK |
 | US-2.12 | `AC-2.12.3/4` | Changing the list, or switching between All and My list, while playing applies without a restart: the entry in force keeps its place and plays its repeats from the pass it is on before the cycle moves on through what it now steps through | P-063 | T394, T410 (2/2 done) | T395, T411 (2/2 done) | `cycle-list.spec.js` | 🟢 OK |
 | US-2.12 | `AC-2.12.3/5` 🖵 | What is rendered for the screen off is the whole cycle of the list: a cycle on My list repeats after as many entries as the list holds | P-063 | T394, T410 (2/2 done) | T395, T411 (2/2 done) | `cycle-list.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.1/1` 🖵 | While the Pattern is Melodic, the Pattern header shows a three-way voice switch — Piano, Synth, Guitar — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.1/2` 🖵 | Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.1/3` 🖵 | Choosing a voice while playing changes it from the next melodic note, with no restart | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.2/1` | Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.2/2` | Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1 | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.2/3` | Under Guitar, a melodic note sounds through the sampled guitar of US-19.7 | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.2/4` 🖵 | Percussive notes and the metronome click sound the same whatever the voice | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.3/1` 🖵 | In the Guitar view every melodic note sounds through the guitar, whatever voice is chosen | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.3/2` 🖵 | In the Piano view every melodic note sounds through the synth when Synth is the chosen voice, and through the sampled piano when Piano or Guitar is | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.4/1` 🖵 | The recordings are served from the app's own origin, and none is requested on page load; the first moment the piano could sound — Play, a note sounded at once, or choosing Piano — requests them, each once | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.4/2` 🖵 | While a note's recording is not ready, the note sounds through the synth instead, and the voice switch shows the piano loading | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.4/3` 🖵 | A failed load shows a non-blocking notice with Retry beside the voice switch; notes keep sounding through the synth, and Retry requests the recordings again | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.4/4` 🖵 | The piano's credit — Salamander Grand Piano by Alexander Holm, CC BY 3.0 — is shown in the Composer's attribution line beside the guitar's, and as the Piano option's description | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.5/1` 🖵 | With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `backgroundRender.test.js`, `pianoSamples.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.5/2` 🖵 | With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `backgroundRender.test.js`, `guitar.test.js`, `voice.spec.js` | 🟢 OK |

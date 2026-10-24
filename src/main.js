@@ -111,6 +111,8 @@ import { heardIn } from './core/songbook.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
 import * as guitar from './audio/guitar.js';
+import * as piano from './audio/pianoSamples.js';
+import { resolveVoice, normaliseVoice } from './core/voice.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
@@ -231,6 +233,8 @@ const state = {
     guitar: guitar.getStatus(),
     widthPx: 0,
   },
+  /** The piano's recordings: idle, loading, ready or error (AC-2.13.4). */
+  pianoStatus: piano.getStatus(),
   /**
    * The store build's entitlement (US-17.1). `hasStore` is false on the web, where
    * the app is free and none of this exists. Entitlement is re-derived from the
@@ -374,6 +378,25 @@ function cyclePasses() {
 let rendered = null;
 
 /**
+ * The voice the screen-off render sounds melodic notes with: the live one,
+ * loaded on the render's own context once its samples are ready on the live
+ * context, and the synth until then (AC-2.13.5).
+ */
+function renderVoice(voice) {
+  if (voice === 'piano') {
+    return async (ctx) =>
+      (await piano.prepare(ctx)) ? { voice: 'piano', play: (c, d, e, w) => piano.playPiano(c, d, e, w, melodic.playMelodic) } : null;
+  }
+  if (voice === 'guitar') {
+    return async (ctx) => {
+      const instrument = await guitar.prepare(ctx);
+      return instrument ? { voice: 'guitar', play: (c, d, e, w) => guitar.playOn(instrument, e, w) } : null;
+    };
+  }
+  return null;
+}
+
+/**
  * Render the run as it now stands, for the element to carry when the screen
  * goes off (AC-4.1.15/1). Called at Play and whenever what is heard changes.
  *
@@ -394,6 +417,7 @@ async function refreshBackgroundAudio() {
     passes: cyclePasses(),
     settings: state.settings,
     sampleRate: 44100,
+    prepareMelodic: renderVoice(currentVoice()),
   });
   // A later render started while this one ran: that one owns the element.
   if (token !== renderToken || !next) {
@@ -603,21 +627,38 @@ function discardDraft() {
 }
 
 /**
- * The melodic voice the transport and the instrument sound with: the sampled
- * guitar in the Composer's Guitar view, the synth everywhere else (AC-19.6.1/2,
- * AC-19.7.1/2). Read at every note, so an instrument switch changes the voice
- * from the next event with no restart (AC-19.6.1/3).
+ * The voice a melodic note sounds with (US-2.13): the chosen one in Practice;
+ * in the Composer the instrument on screen — the guitar in the Guitar view,
+ * the piano or the synth in the Piano view (AC-2.13.3, AC-19.6.1/2).
  */
-const guitarVoice = (ctx, destination, event, when) => guitar.playGuitar(ctx, destination, event, when, melodic.playMelodic);
-function melodicVoice() {
-  return state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? guitarVoice : melodic.playMelodic;
+function currentVoice() {
+  return resolveVoice({
+    composer: state.composer.mode === 'composer',
+    instrument: state.settings.composerInstrument,
+    voice: state.settings.melodicVoice,
+  });
 }
 
-/** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2). */
+/**
+ * Each voice behind `playMelodic`'s signature. The sampled ones sound through
+ * the synth while their samples are not ready (AC-2.13.4/2, AC-19.7.2/1).
+ * Read at every note, so a switch changes the voice from the next event with
+ * no restart (AC-2.13.1/3, AC-19.6.1/3).
+ */
+const VOICE_PLAYERS = {
+  guitar: (ctx, destination, event, when) => guitar.playGuitar(ctx, destination, event, when, melodic.playMelodic),
+  piano: (ctx, destination, event, when) => piano.playPiano(ctx, destination, event, when, melodic.playMelodic),
+  synth: melodic.playMelodic,
+};
+function melodicVoice() {
+  return VOICE_PLAYERS[currentVoice()];
+}
+
+/** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2, AC-2.13.2). */
 const voiceLog = [];
 function logVoice(event, via) {
   const instrument = state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? 'guitar' : 'piano';
-  voiceLog.push({ instrument, via: via ?? 'synth', midi: event.pitch?.midiNote ?? null });
+  voiceLog.push({ instrument, voice: currentVoice(), via: via ?? 'synth', midi: event.pitch?.midiNote ?? null });
   if (voiceLog.length > 500) voiceLog.shift();
 }
 
@@ -645,6 +686,25 @@ function persistDraft() {
   return true;
 }
 
+/**
+ * Ask for the piano's recordings at a moment it could sound — Play, a note
+ * sounded at once, choosing Piano — and never on page load (AC-2.13.4/1).
+ * Always inside a gesture, since it may create the context. The guitar's
+ * request stays with the Guitar view and its first note (AC-19.7.1/1).
+ */
+function ensurePianoLoaded() {
+  if (currentVoice() !== 'piano') return;
+  if (state.composer.mode !== 'composer' && state.pattern.soundMode !== 'melodic') return;
+  let ctx;
+  try {
+    ctx = getContext();
+  } catch {
+    return;
+  }
+  piano.load(ctx).catch(() => {});
+  state.pianoStatus = piano.getStatus(ctx);
+}
+
 /** Ask for the guitar's samples when, and only when, the Guitar view is shown (AC-19.7.1/1). */
 function ensureGuitarLoaded() {
   if (state.composer.mode !== 'composer' || state.settings.composerInstrument !== 'guitar') return;
@@ -666,6 +726,7 @@ function previewNote(midi) {
   } catch {
     return;
   }
+  ensurePianoLoaded();
   const event = { accent: 2, pitch: { midiNote: midi, frequency: midiToFrequency(midi) } };
   const sound = (c) => {
     const via = melodicVoice()(c, c.destination, event, c.currentTime + 0.01);
@@ -1451,6 +1512,7 @@ const handlers = {
     state.isPlaying = true;
     state.loop = 0;
     render();
+    ensurePianoLoaded();
     state.soundStatus = melodic.getStatus();
     await transport.start(scheduled(), state.settings);
   },
@@ -1715,8 +1777,10 @@ const handlers = {
     state.compose.on = false;
     render();
 
-    // Both Sound Modes are pure Web Audio synthesis, so neither waits on an
-    // asset — nothing to load, nothing to block on (AC-2.4.3).
+    // Nothing waits on an asset (AC-2.4.3): a sampled voice is asked for here,
+    // inside the gesture, and sounds through the synth until it is ready
+    // (AC-2.13.4/1, /2).
+    ensurePianoLoaded();
     state.soundStatus = melodic.getStatus();
     await transport.start(scheduled(), state.settings);
     // Best-effort: lets a browser that supports it keep the audio session
@@ -1742,6 +1806,7 @@ const handlers = {
     if (state.isPlaying) transport.stop();
     const ctx = replaceAudio();
     ensureGuitarLoaded();
+    ensurePianoLoaded();
     const event = { accent: 2, pitch: { midiNote: 64, frequency: midiToFrequency(64) } };
     logVoice(event, melodicVoice()(ctx, ctx.destination, event, ctx.currentTime + 0.01));
     state.audioNotice = null;
@@ -1814,6 +1879,32 @@ const handlers = {
   onComposerInstrument(instrument) {
     state.settings = settingsStore.save({ composerInstrument: instrument === 'piano' ? 'piano' : 'guitar' });
     ensureGuitarLoaded();
+    render();
+  },
+
+  /**
+   * Piano | Synth | Guitar (AC-2.13.1): an app preference, never Pattern
+   * content, so no shipped-Pattern guard and nothing saved to the Pattern
+   * (/2). Heard from the next note (/3); the screen-off render is redone so a
+   * locked screen hears the new voice too (AC-2.13.5).
+   */
+  onMelodicVoice(voice) {
+    state.settings = settingsStore.save({ melodicVoice: normaliseVoice(voice) });
+    ensurePianoLoaded();
+    if (state.isPlaying) refreshBackgroundAudio();
+    render();
+  },
+
+  /** Ask for the piano's recordings again after a failure (AC-2.13.4/3). */
+  onPianoRetry() {
+    let ctx;
+    try {
+      ctx = getContext();
+    } catch {
+      return;
+    }
+    piano.retry(ctx);
+    state.pianoStatus = piano.getStatus(ctx);
     render();
   },
 
@@ -2515,6 +2606,17 @@ export { transport };
 // The guitar's samples arriving, or failing, is a change the record bar shows (AC-19.7.2).
 guitar.onStatus((status) => {
   state.composer.guitar = status;
+  // Arriving, they are what the screen-off render should hear (AC-2.13.5/2).
+  if (status.status === 'ready' && state.isPlaying) refreshBackgroundAudio();
+  render();
+});
+
+// The piano's recordings arriving, or failing, is a change the voice switch
+// shows (AC-2.13.4/2, /3) — and, arriving, one the screen-off render should
+// hear (AC-2.13.5/1).
+piano.onStatus((status) => {
+  state.pianoStatus = status;
+  if (status.status === 'ready' && state.isPlaying) refreshBackgroundAudio();
   render();
 });
 
@@ -2772,7 +2874,7 @@ if (typeof window !== 'undefined') {
     /** Test seam: the keep-alive element, once one exists (AC-4.1.12). */
     keepAlive: () => keepAlive.current(),
     /** Test seam: the rendered cycle the element carries, or null (AC-4.1.15). */
-    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole },
+    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole, voice: rendered.voice },
     /** Test seam: whether the carrier has the sound rather than the transport. */
     carrying: () => keepAlive.isCarrying(),
     /** Test seam: the carrier element holding the render, or null (AC-4.1.15). */
@@ -2789,6 +2891,9 @@ if (typeof window !== 'undefined') {
     /** Which voice sounded each melodic event (AC-19.6.1/2, AC-19.7.1/2). */
     voiceLog: () => voiceLog.slice(),
     guitar,
+    piano,
+    /** The voice a melodic note would sound with now (US-2.13). */
+    currentVoice,
     /** The Song entry in force on the pass on screen, or null (US-18.1). */
     songEntryInForce: () => songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
     /** The name the Section would export under (AC-18.1.5/2). */

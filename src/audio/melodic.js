@@ -11,7 +11,8 @@
  * (AC-3.1.15). Pitch arrives already resolved by core/pitch.js — the same
  * resolution MIDI export uses, so the two cannot disagree.
  *
- * This replaces an earlier sampled-piano implementation. See US-2.4.
+ * The Synth voice of US-2.13 (and the fallback the sampled voices sound
+ * through while loading). See US-2.4.
  */
 import { ensureCompressor, ensureReverb } from './nodes.js';
 

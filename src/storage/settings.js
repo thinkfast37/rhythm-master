@@ -63,6 +63,13 @@ export const DEFAULTS = {
   composerCapo: 0,
   composerFretRange: [0, 24],
   composerKeys: 49,
+  /**
+   * The voice melodic notes sound with (US-2.13): 'piano', 'synth' or
+   * 'guitar'. An app preference, never Pattern content (AC-2.13.1/2); the
+   * Composer reads it in the Piano view alone (AC-2.13.3). Read through
+   * `core/voice.normaliseVoice`, so a stored value it does not know is Piano.
+   */
+  melodicVoice: 'piano',
 };
 
 export function load() {
