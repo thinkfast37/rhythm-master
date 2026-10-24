@@ -48,7 +48,7 @@ describe('tools/check-unwired — reading exports', () => {
 
 describe('tools/check-unwired — the gate', () => {
   // The real tree is scanned once and shared: the scan is deterministic, and three
-  // tests repeating it timed out on a busy machine (T413).
+  // tests repeating it timed out on a busy machine (T415).
   let realFindings;
   const findingsInSrc = () => (realFindings ??= findUnwired(jsFiles('src')));
 

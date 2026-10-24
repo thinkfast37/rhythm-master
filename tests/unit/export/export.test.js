@@ -235,7 +235,7 @@ describe('export/submit', () => {
     // A Slot tapped k times lands in the same state whatever its neighbours hold, so
     // each Slot's states are tapped out once, on one Pattern, and every noisy Pattern
     // is assembled from them: the same Patterns as tapping each one out directly,
-    // without 7,500 whole-Pattern clones that timed out on a busy machine (T413).
+    // without 7,500 whole-Pattern clones that timed out on a busy machine (T415).
     const tapped = [fourBars('Taps')];
     for (let k = 1; k < 4; k++) {
       let p = tapped[k - 1];

@@ -46,7 +46,7 @@ describe('core/composer — a tapped note as a Pitch of the Key (AC-19.4.4)', ()
     expect(midis.size).toBe(88); // the board's E2–E6 lies within the 88 keys
     // Every case is checked; the misses are gathered and asserted once, because
     // 33,792 separate expect() calls cost thirty times the arithmetic they guard
-    // and timed out on a busy machine (T413). An empty list is all 16,896 passing.
+    // and timed out on a busy machine (T415). An empty list is all 16,896 passing.
     const lossy = [];
     let checked = 0;
     for (const key of KEYS) {

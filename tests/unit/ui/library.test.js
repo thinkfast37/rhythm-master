@@ -7,6 +7,7 @@ import {
   neighbours,
   toggleTag,
   selectedTags,
+  UNRATED,
 } from '../../../src/ui/library.js';
 import { create } from '../../../src/core/pattern.js';
 
@@ -230,6 +231,33 @@ describe('ui/library — filtering by several Tags', () => {
       query: 'bossa',
       minRating: 4,
     });
+    expect(result.map((e) => e.pattern.name)).toEqual(['Bossa Groove']);
+  });
+
+  it('AC-6.1.8/1 — Selecting Unrated shows only the Patterns whose Rating is 0', () => {
+    const entries = buildEntries(
+      [
+        { ...p('Bossa Groove'), rating: 5 },
+        { ...p('Samba Break'), rating: 0 },
+        { ...p('Simple Fill'), rating: 0 },
+        { ...p('Clave Two'), rating: 1 },
+      ],
+      []
+    );
+    const names = filterEntries(entries, { minRating: UNRATED }).map((e) => e.pattern.name);
+    expect(names.sort()).toEqual(['Samba Break', 'Simple Fill']);
+  });
+
+  it('AC-6.1.8/4 — Unrated narrows an already search-filtered list rather than replacing it', () => {
+    const entries = buildEntries(
+      [
+        { ...withTags('Bossa Groove', ['Latin']), rating: 0 },
+        { ...withTags('Bossa Fill', ['Latin']), rating: 3 },
+        { ...withTags('Samba Groove', ['Latin']), rating: 0 },
+      ],
+      []
+    );
+    const result = filterEntries(entries, { tags: ['Latin'], query: 'bossa', minRating: UNRATED });
     expect(result.map((e) => e.pattern.name)).toEqual(['Bossa Groove']);
   });
 

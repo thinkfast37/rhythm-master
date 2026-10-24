@@ -202,6 +202,56 @@ test('AC-6.1.6 — the rating filter narrows the already-filtered list', async (
   expect(name.toLowerCase()).toContain('clave');
 });
 
+test('AC-6.1.8/1 — Selecting Unrated shows only the Patterns whose Rating is 0', async ({ page }) => {
+  await page.goto('/');
+  const rows = page.locator('.pattern-item');
+  const total = await rows.count();
+  const rated = rows.first();
+  const ratedId = await rated.getAttribute('data-pattern-id');
+  await rated.locator('.star').nth(4).click();
+
+  await page.locator('.rating-option', { hasText: 'Unrated' }).click();
+
+  await expect(rows).toHaveCount(total - 1);
+  await expect(page.locator(`.pattern-item[data-pattern-id="${ratedId}"]`)).toHaveCount(0);
+  const ratings = await rows.locator('.rating').evaluateAll((els) => els.map((e) => e.dataset.rating));
+  expect(new Set(ratings)).toEqual(new Set(['0']));
+});
+
+test("AC-6.1.8/2 — The Rating filter's options read All, Unrated, 3★+, 4★+, 5★ in that order", async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.rating-option')).toHaveText(['All', 'Unrated', '3★+', '4★+', '5★']);
+});
+
+test('AC-6.1.8/3 — Rating a Pattern while Unrated is selected takes it off the list', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.rating-option', { hasText: 'Unrated' }).click();
+  const rows = page.locator('.pattern-item');
+  const before = await rows.count();
+  const ratedId = await rows.first().getAttribute('data-pattern-id');
+
+  await rows.first().locator('.star').nth(2).click();
+
+  await expect(rows).toHaveCount(before - 1);
+  await expect(page.locator(`.pattern-item[data-pattern-id="${ratedId}"]`)).toHaveCount(0);
+  await expect(page.locator('.rating-option.on')).toHaveText('Unrated');
+});
+
+test('AC-6.1.8/4 — Unrated narrows an already search-filtered list rather than replacing it', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.library-search').fill('clave');
+  const rows = page.locator('.pattern-item');
+  const filtered = await rows.count();
+  expect(filtered).toBeGreaterThan(1);
+
+  await rows.first().locator('.star').nth(4).click();
+  await page.locator('.rating-option', { hasText: 'Unrated' }).click();
+
+  await expect(rows).toHaveCount(filtered - 1);
+  const names = await page.locator('.pattern-name').allTextContents();
+  for (const name of names) expect(name.toLowerCase()).toContain('clave');
+});
+
 // --- US-7.5 / US-11.2: independence ----------------------------------------
 
 test('AC-7.5.4 — deleting one Family member leaves the other untouched', async ({ page }) => {
