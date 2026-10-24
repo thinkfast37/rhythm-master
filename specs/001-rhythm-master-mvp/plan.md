@@ -237,7 +237,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.19 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.20 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T408 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T409 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186, T290 | T161, T169, T185, T187, T291 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
@@ -250,7 +250,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |
 | **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334, T348, T394 | T311, T324, T335, T349, T395 |
-| **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352 | T327, T329, T331, T353 |
+| **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352, T408 | T327, T329, T331, T353, T409 |
 | **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
 | **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365 | T366 |
 | **P-052** | US-12.3 — Read the score with note names and colours | AC-12.3.1–AC-12.3.4 | T367 | T368 |
@@ -264,7 +264,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
 | **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
 | **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
-| **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394 | T395 |
+| **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394, T408 | T395, T409 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

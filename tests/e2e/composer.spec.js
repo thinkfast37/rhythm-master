@@ -15,7 +15,7 @@ test('AC-19.1.1/1 — A Practice | Composer switch sits in the pinned bar at eve
     await expect(sw.locator('[data-mode="composer"]')).toHaveAttribute('aria-pressed', 'false');
   }
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.evaluate(() => window.__rm.handlers.onGoal('play'));
+  await page.evaluate(() => window.__rm.handlers.onGoal('practise'));
   await expect(page.locator('.mode-switch')).toBeHidden();
 });
 

@@ -1,13 +1,14 @@
 /**
- * Goals (US-14.1): what the musician came to do, and which of the workbench's
- * groups that job is for.
+ * Goals (US-14.1): what the musician came to do. A goal is a screen inside one
+ * shared frame (research.md D-018, AC-15.1.20), and names its own controls.
  *
- * Two kinds of goal. A **practice** goal is read-only playback (AC-14.1.5):
- * no workbench, no edits, one panel of the playback settings that goal is
- * about. A **compose** goal decides which workbench groups the tab bar offers
- * and whether Pattern actions and the family members are present, and never
- * hides a control inside a group. Lab offers everything, and is the cockpit
- * the app had before goals existed (AC-14.1.3/1).
+ * Two kinds of goal. **Practise a rhythm** is read-only playback (AC-14.1.5):
+ * no workbench, no edits, a goal strip and one settings rail of playback
+ * settings. A **making** goal decides which workbench groups its work surface
+ * offers and whether Pattern actions and the family members are present —
+ * until its own screen lands (D-018 phases 3–7), each rides along with the
+ * controls it has today. Lab offers everything, and is the cockpit the app had
+ * before goals existed (AC-14.1.3/1).
  *
  * Pure: the catalogue, the surface a goal id resolves to, and the draw that
  * hands out a shipped Pattern at a level. Randomness is a parameter — `core/`
@@ -23,103 +24,109 @@ export const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 
 /**
  * The level setting that means every level (AC-14.1.4/5): the dice and
- * Prev/Next then range over the whole library in the goal's Mode, so a
- * musician can see how hard things get.
+ * Prev/Next then range over the whole library, so a musician can see how hard
+ * things get.
  */
 export const ANY_LEVEL = 'any';
 
 export const LAB = 'lab';
 
-/** The playback settings a practice panel can hold, in the order it shows them (AC-14.1.5/4). */
+/** The one practice goal (AC-14.1.1/2, D-018: "if so not sure if we need four boxes"). */
+export const PRACTISE = 'practise';
+
+/** The Composer as a goal (AC-14.1.2/6): until phase 6 draws its screen, it opens the Composer. */
+export const PLAY_IT_IN = 'play-in';
+
+/** The playback settings the Practise rail can hold, in the order it shows them (AC-14.1.5/4). */
 export const PANEL_ITEMS = ['click', 'tempo', 'counting', 'swing', 'cycle'];
 
 /**
- * The seven goals, then Lab. `practice` marks the four that hand out a rhythm
- * by level (AC-14.1.4) and edit nothing (AC-14.1.5); `panel` is what their one
- * panel holds; `soundMode` is the Mode they draw from, or null for either.
- * `tabs` are listed in the order the tab bar shows them, and are empty under
- * a practice goal, which has no workbench.
+ * The goals screen's groups, in order, as storyboard board 1 draws them
+ * (AC-14.1.1/2): one practice goal, the making goals as the stages the app
+ * grew in, keeping, and Lab set apart.
+ */
+export const GOAL_GROUPS = Object.freeze([
+  Object.freeze({ id: 'practise', title: 'Hear it and practise it' }),
+  Object.freeze({ id: 'make', title: 'Make something', numbered: true }),
+  Object.freeze({ id: 'keep', title: 'Keep it' }),
+  Object.freeze({ id: LAB, title: 'Everything at once' }),
+]);
+
+/**
+ * The seven goals, in the order the screen lists them. `practice` marks the
+ * one that hands out a rhythm by level (AC-14.1.4) and edits nothing
+ * (AC-14.1.5); `panel` is what its strip and rail hold; `tabs` are listed in
+ * the order the tab bar shows them, and are empty under Practise, which has no
+ * workbench; `composer` marks the goal that opens the Composer (AC-14.1.2/6).
  */
 export const GOALS = Object.freeze([
   {
-    id: 'play',
-    title: 'Play a rhythm',
-    blurb: 'Loop one at your level, set the tempo, count yourself in. Nothing to edit.',
+    id: PRACTISE,
+    title: 'Practise a rhythm',
+    blurb: 'Loop a rhythm at your level. Clap it, count it in syllables, swing it, play along. Nothing to edit.',
     group: 'practise',
     practice: true,
-    soundMode: null,
-    panel: ['click', 'tempo'],
+    composer: false,
+    panel: PANEL_ITEMS,
     tabs: [],
     actions: false,
     family: false,
   },
   {
-    id: 'vocalise',
-    title: 'Vocalise or clap it',
-    blurb: 'Count it out loud in syllables, or clap it, over a percussive sound.',
-    group: 'practise',
-    practice: true,
-    soundMode: 'percussive',
-    panel: ['click', 'tempo', 'counting'],
-    tabs: [],
-    actions: false,
-    family: false,
-  },
-  {
-    id: 'groove',
-    title: 'Feel the groove',
-    blurb: 'Swing it, and hear how the accents fall at different feels.',
-    group: 'practise',
-    practice: true,
-    soundMode: null,
-    panel: ['click', 'tempo', 'swing'],
-    tabs: [],
-    actions: false,
-    family: false,
-  },
-  {
-    id: 'melody',
-    title: 'Play melodies over it',
-    blurb: 'Cycle fills and chord progressions over a melodic rhythm, and play along.',
-    group: 'practise',
-    practice: true,
-    soundMode: 'melodic',
-    panel: ['click', 'tempo', 'cycle'],
-    tabs: [],
-    actions: false,
-    family: false,
-  },
-  {
-    id: 'compose-rhythm',
-    title: 'Compose a rhythm',
-    blurb: 'Build Measures and Beats, choose subdivisions, shape the accents, and save it.',
-    group: 'compose',
+    id: 'build',
+    title: 'Build a rhythm',
+    blurb: 'Measures, meter, subdivision, accents. Build it and save it.',
+    group: 'make',
     practice: false,
-    soundMode: null,
+    composer: false,
     panel: [],
     tabs: ['rhythm', 'practice'],
     actions: true,
     family: false,
   },
   {
-    id: 'add-melody',
-    title: 'Add a melody to it',
-    blurb: 'Stamp pitches by hand, keep the fills you like, and build them into a Section.',
-    group: 'compose',
+    id: 'melodic',
+    title: 'Make it melodic',
+    blurb: 'Pick a key and scale, and choose the notes the rhythm plays.',
+    group: 'make',
     practice: false,
-    soundMode: null,
+    composer: false,
+    panel: [],
+    tabs: ['melody', 'practice'],
+    actions: true,
+    family: false,
+  },
+  {
+    id: 'combine',
+    title: 'Combine patterns',
+    blurb: 'Rhythm, chord progression, fill pattern. Try combinations, keep what works, arrange it.',
+    group: 'make',
+    practice: false,
+    composer: false,
     panel: [],
     tabs: ['melody', 'practice', 'compose'],
     actions: true,
     family: false,
   },
   {
-    id: 'share',
-    title: 'Keep and share',
-    blurb: 'Rate, copy, find duplicates and Families, export MIDI, print sheet music, submit.',
-    group: 'compose',
+    id: PLAY_IT_IN,
+    title: 'Play it in',
+    blurb: 'Guitar or piano on screen. The rhythm loops; you play, it records.',
+    group: 'make',
     practice: false,
-    soundMode: null,
+    composer: true,
+    panel: [],
+    tabs: ALL_TABS,
+    actions: true,
+    family: false,
+  },
+  {
+    id: 'share',
+    title: 'Share and tidy up',
+    blurb: 'Rate, tag, print, export MIDI, submit. Duplicates, families, backup.',
+    group: 'keep',
+    practice: false,
+    composer: false,
     panel: [],
     tabs: ['practice'],
     actions: true,
@@ -128,10 +135,10 @@ export const GOALS = Object.freeze([
   {
     id: LAB,
     title: 'Lab',
-    blurb: 'Every control at once, for experimenting. Remembered: the app opens here next time.',
+    blurb: 'Every control on one screen, for experimenting. Remembered: the app opens here next time.',
     group: LAB,
     practice: false,
-    soundMode: null,
+    composer: false,
     panel: [],
     tabs: ALL_TABS,
     actions: true,
@@ -139,16 +146,30 @@ export const GOALS = Object.freeze([
   },
 ]);
 
-/** A goal by id, or Lab for an id that is not one — the cockpit is the safe default. */
+/**
+ * The goal ids of 2026-09-20, read as the goals they became (AC-14.1.1/2's
+ * note): a remembered goal in `rm.settings.v1` is never lost to a rename.
+ */
+export const LEGACY_GOALS = Object.freeze({
+  play: PRACTISE,
+  vocalise: PRACTISE,
+  groove: PRACTISE,
+  melody: PRACTISE,
+  'compose-rhythm': 'build',
+  'add-melody': 'melodic',
+});
+
+/** A goal by id — a legacy id resolving to its successor — or Lab for an id that is not one: the cockpit is the safe default. */
 export function goalById(id) {
-  return GOALS.find((g) => g.id === id) ?? GOALS.find((g) => g.id === LAB);
+  const resolved = LEGACY_GOALS[id] ?? id;
+  return GOALS.find((g) => g.id === resolved) ?? GOALS.find((g) => g.id === LAB);
 }
 
 /**
- * What the main panel offers under a goal: the tabs in AC-15.1.8's order and
+ * What the work surface offers under a goal: the tabs in AC-15.1.8's order and
  * whether Pattern actions and the family members are present (AC-14.1.2) —
- * or, under a practice goal, nothing of the workbench and one read-only panel
- * of playback settings in PANEL_ITEMS' order (AC-14.1.5).
+ * or, under Practise a rhythm, nothing of the workbench and the playback
+ * settings in PANEL_ITEMS' order for the strip and the rail (AC-14.1.5).
  */
 export function surfaceFor(id) {
   const goal = goalById(id);
@@ -158,25 +179,26 @@ export function surfaceFor(id) {
     family: goal.family,
     practice: goal.practice,
     readOnly: goal.practice,
+    composer: goal.composer,
     panel: PANEL_ITEMS.filter((item) => goal.panel.includes(item)),
-    soundMode: goal.soundMode,
+    /** The frame's proportion (AC-15.1.20/5): the music's room, or the tools'. */
+    layout: goal.practice ? 'playback' : 'design',
   };
 }
 
-/** True for the four practice goals — the ones the level and Give me one belong to. */
+/** True for Practise a rhythm — the goal the level and Give me one belong to. */
 export function isPracticeGoal(id) {
   return goalById(id).practice;
 }
 
-/** The Tags Pick from the library filters to under a practice goal (AC-14.1.4/3). */
+/** The Tags Pick from the library filters to under Practise a rhythm (AC-14.1.4/3): the level alone. */
 export function libraryTagsFor(id, level) {
   const goal = goalById(id);
   if (!goal.practice) return [];
-  const tags = level === ANY_LEVEL ? [] : [level];
-  return goal.soundMode ? [...tags, goal.soundMode] : tags;
+  return level === ANY_LEVEL ? [] : [level];
 }
 
-/** The Patterns Give me one may draw from: at the level, in the goal's Mode, never the one open. */
+/** The Patterns Give me one may draw from: at the level, in a Mode when one is asked for, never the one open. */
 export function candidatesAtLevel(patterns, { level, soundMode = null, excludeId = null } = {}) {
   return patterns.filter(
     (p) =>
