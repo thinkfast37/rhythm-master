@@ -9,9 +9,9 @@
 import {
   STRING_COUNT,
   FRET_COUNT,
-  BOARD_WIDTH,
   BOARD_HEIGHT,
   MARGIN,
+  MARGIN_X,
   OPEN_COL_WIDTH,
   NOTE_RADIUS,
   ROW_HEIGHT,
@@ -21,6 +21,7 @@ import {
   isPlayable,
   isMarkerFret,
   layoutFor,
+  boardWidthFor,
   clampCapo,
 } from '../core/fretboard.js';
 import { describeNote, labelFor } from '../core/composer.js';
@@ -40,12 +41,16 @@ function svgEl(tag, attrs = {}) {
  */
 export function renderFretboard(root, model, handlers = {}) {
   const capo = clampCapo(model.capo ?? 0);
-  const layout = layoutFor(model.range ?? [0, FRET_COUNT]);
+  // Stretched to the panel's width at the height cap (core/fretboard
+  // `boardWidthFor`), so a wide panel widens the fret columns rather than
+  // letterboxing the board.
+  const boardWidth = boardWidthFor(model.widthPx ?? 0);
+  const layout = layoutFor(model.range ?? [0, FRET_COUNT], boardWidth);
   const { showOpenColumn, firstFret, lastFret, wireX, noteX, stringY } = layout;
 
   const svg = svgEl('svg', {
     class: 'fretboard',
-    viewBox: `0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`,
+    viewBox: `0 0 ${boardWidth} ${BOARD_HEIGHT}`,
     role: 'group',
     'aria-label': 'Fretboard, standard tuning',
   });
@@ -61,9 +66,9 @@ export function renderFretboard(root, model, handlers = {}) {
       svgEl('line', {
         class: 'string-line',
         'data-string': s,
-        x1: MARGIN + (showOpenColumn ? OPEN_COL_WIDTH : 0),
+        x1: MARGIN_X + (showOpenColumn ? OPEN_COL_WIDTH : 0),
         y1: stringY(s),
-        x2: BOARD_WIDTH - MARGIN,
+        x2: boardWidth - MARGIN_X,
         y2: stringY(s),
       })
     );

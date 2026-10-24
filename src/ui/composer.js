@@ -222,7 +222,11 @@ function renderInstrument(instrument, key, scale, state, handlers) {
   const model = { key, scale, labelMode: state.settings.composerLabelMode ?? 'notes' };
   const onNote = (midi) => handlers.onInstrumentNote?.(midi);
   if (instrument === 'guitar') {
-    renderFretboard(wrap, { ...model, capo: state.settings.composerCapo ?? 0, range: state.settings.composerFretRange ?? [0, FRET_COUNT] }, { onNote });
+    renderFretboard(
+      wrap,
+      { ...model, capo: state.settings.composerCapo ?? 0, range: state.settings.composerFretRange ?? [0, FRET_COUNT], widthPx: state.composer.widthPx ?? 0 },
+      { onNote }
+    );
   } else {
     renderPiano(wrap, { ...model, count: state.settings.composerKeys ?? 49, widthPx: state.composer.widthPx ?? 0 }, { onNote });
   }
