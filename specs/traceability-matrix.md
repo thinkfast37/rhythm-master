@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 886 across 59 User Stories
+**Criteria**: 892 across 59 User Stories
 
-**Coverage**: 702 of 886 criteria proven (79.2%)
+**Coverage**: 708 of 892 criteria proven (79.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 702 | 79.2% |
+| 🟢 Proven | 708 | 79.4% |
 | 🔴 Gap — HIGH | 65 | 7.3% |
 | 🟠 Gap — MEDIUM | 41 | 4.6% |
-| 🟡 Gap — LOW | 78 | 8.8% |
+| 🟡 Gap — LOW | 78 | 8.7% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -107,11 +107,11 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-7.6 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-2.11 | 23 | **23** | · | · | · | · | · |
 | 🟢 US-12.3 | 15 | **15** | · | · | · | · | · |
-| 🟢 US-19.1 | 12 | **12** | · | · | · | · | · |
+| 🟢 US-19.1 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-19.2 | 13 | **13** | · | · | · | · | · |
 | 🟢 US-19.3 | 9 | **9** | · | · | · | · | · |
 | 🟢 US-19.4 | 12 | **12** | · | · | · | · | · |
-| 🟢 US-19.5 | 15 | **15** | · | · | · | · | · |
+| 🟢 US-19.5 | 18 | **18** | · | · | · | · | · |
 | 🟢 US-19.6 | 5 | **5** | · | · | · | · | · |
 | 🟢 US-19.7 | 6 | **6** | · | · | · | · | · |
 | 🟢 US-19.8 | 10 | **10** | · | · | · | · | · |
@@ -906,18 +906,21 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-12.3 | `AC-12.3.3/5` 🖵 | While playing, the current note's mark (AC-12.2.9) shows over its colour, so the position is never lost among the colours | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
 | US-12.3 | `AC-12.3.4/1` 🖵 | With Note aids on, the printed page carries every note's name and colour as the screen does | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
 | US-12.3 | `AC-12.3.4/2` 🖵 | With Note aids off, the printed page carries neither | P-052 | T367 (1/1 done) | T368 (1/1 done) | `score.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.1/1` 🖵 | A Practice \| Composer switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.1/2` 🖵 | Choosing Composer shows the Composer's panel — instrument view, record bar, composing grid, controls — in place of the Pattern pane and the workbench, while the library sidebar and its toggle stay | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.1/3` 🖵 | Choosing Practice shows the Pattern pane and the workbench again, with the open Pattern as it was | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.1/4` 🖵 | The mode is a within-session position, not a stored preference: a reload opens in Practice | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.2/1` 🖵 | With no composition the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.2/2` 🖵 | Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.3/1` 🖵 | A Guitar \| Piano switch sits in the record bar, Guitar in force on first use | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.3/2` 🖵 | Switching shows the other instrument view and leaves every recorded note exactly as it was | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.3/3` 🖵 | The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.4/1` | Choosing Practice, or opening another library Pattern, with unsaved work puts up a confirmation naming the unsaved composition | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.4/2` | Cancelling keeps the composition open and the mode unchanged; confirming discards the unsaved work and proceeds | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.4/3` | With nothing unsaved — no composition, or a saved composition with every syllable pitched — no confirmation is asked | P-053 | T369 (1/1 done) | T370 (1/1 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.1/1` 🖵 | A Practice \| Composer switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.1/2` 🖵 | Choosing Composer shows the Composer's panel — instrument view, record bar, composing grid, controls — in place of the Pattern pane and the workbench, while the library sidebar and its toggle stay | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.1/3` 🖵 | Choosing Practice shows the Pattern pane and the workbench again, with the open Pattern as it was | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.1/4` 🖵 | The mode is a within-session position, not a stored preference: a reload opens in Practice | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.2/1` 🖵 | Entering the Composer opens the Pattern open in Practice as the composition: an owned melody directly, as a saved composition with no ask | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.2/2` 🖵 | A percussive, progression-carrying or shipped Pattern open in Practice is offered through its US-19.8 naming prompt on entry, exactly as if opened from the library | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.2/3` 🖵 | Declining the prompt leaves no composition: the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.2/4` 🖵 | Re-entering the Composer while the composition is the open Pattern keeps it: no prompt, no reload | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.2/5` 🖵 | Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.3/1` 🖵 | A Guitar \| Piano switch sits in the record bar, Guitar in force on first use | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.3/2` 🖵 | Switching shows the other instrument view and leaves every recorded note exactly as it was | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.3/3` 🖵 | The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.4/1` | Choosing Practice, or opening another library Pattern, with unsaved work puts up a confirmation naming the unsaved composition | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.4/2` | Cancelling keeps the composition open and the mode unchanged; confirming discards the unsaved work and proceeds | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.4/3` | With nothing unsaved — no composition, or a saved composition with every syllable pitched — no confirmation is asked | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
 | US-19.2 | `AC-19.2.1/1` 🖵 | Six strings, high E at the top and low E at the bottom, an open-string column and frets 1 to 24, with single inlay dots at frets 3, 5, 7, 9, 15, 17, 19 and 21 and double dots at 12 and 24 | P-054 | T371 (1/1 done) | T372 (1/1 done) | `composer-guitar.spec.js` | 🟢 OK |
 | US-19.2 | `AC-19.2.1/2` 🖵 | The strings sound standard tuning — E4 B3 G3 D3 A2 E2 from the top — and no tuning control is shown | P-054 | T371 (1/1 done) | T372 (1/1 done) | `fretboard.test.js`, `composer-guitar.spec.js` | 🟢 OK |
 | US-19.2 | `AC-19.2.1/3` 🖵 | Fret numbers and note names are always absolute: fret 5 is fret 5 whatever the capo, and no fret-reference control is shown | P-054 | T371 (1/1 done) | T372 (1/1 done) | `composer-guitar.spec.js` | 🟢 OK |
@@ -952,21 +955,24 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.4 | `AC-19.4.3/3` 🖵 | The Delete and Backspace keys do what the Delete control does, in and out of record mode | P-056 | T375 (1/1 done) | T376 (1/1 done) | `composer-record.spec.js` | 🟢 OK |
 | US-19.4 | `AC-19.4.4/1` 🖵 | For every fret of the board and every key of the keyboard, the stored Pitch resolves through `core/pitch.js` to exactly the MIDI note tapped — a round trip with no loss | P-056 | T375 (1/1 done) | T376 (1/1 done) | `composer.test.js`, `composer-record.spec.js` | 🟢 OK |
 | US-19.4 | `AC-19.4.4/2` 🖵 | An in-scale note takes the scale's own degree token — `b5` in Locrian and `#4` in Lydian for the same semitone — and an out-of-scale note the default chromatic token of its semitone above the root | P-056 | T375 (1/1 done) | T376 (1/1 done) | `composer.test.js`, `composer-record.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.1/1` 🖵 | A sounding Slot shows its note name and degree in the large upper box and its counting syllable in the smaller box below; a sounding Slot with no note shows the upper box empty, and a silent Slot shows neither | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.1/2` 🖵 | A counting system control sits among the Composer's controls, and the syllables follow it exactly as the grid's do (US-5.6) | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.1/3` 🖵 | The playback cursor, the record target and the selection are each marked differently, so all three can be read at once | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.2/1` 🖵 | Tapping a sounding Slot's note box selects it, and only one Slot is selected at a time | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.2/2` 🖵 | A tap on a fret or key replaces the selected Slot's note, sounds it, and leaves the Slot selected | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.2/3` 🖵 | Delete clears the selected Slot's note, and the Slot sounds percussively until a note is recorded onto it again | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.2/4` 🖵 | Tapping the selected Slot's note box again, or a silent Slot, clears the selection; pressing Record clears it too | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.3/1` 🖵 | Tapping the syllable box cycles the Slot's Accent Level exactly as the grid does — off, its default, the other two levels, off | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.3/2` 🖵 | A Slot turned on has no note until one is recorded onto it, and sounds percussively meanwhile | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.3/3` 🖵 | A Slot cycled to off loses its note, and the count of syllables without a note follows | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.4/1` 🖵 | Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.4/2` 🖵 | Record then targets the first sounding Slot of the copy | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.4/3` 🖵 | Double Length is disabled when the result would exceed 32 Measures | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.5/1` | The tempo entry sets the composition's tempo, and playback follows it | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.5/2` | The swing amount and feel controls set the composition's swing, and playback follows them | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.1/1` 🖵 | A sounding Slot shows its note name and degree in the large upper box and its counting syllable in the smaller box below; a sounding Slot with no note shows the upper box empty, and a silent Slot shows neither | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.1/2` 🖵 | A counting system control sits among the Composer's controls, and the syllables follow it exactly as the grid's do (US-5.6) | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.1/3` 🖵 | The playback cursor, the record target and the selection are each marked differently, so all three can be read at once | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.2/1` 🖵 | Tapping a sounding Slot's note box selects it, and only one Slot is selected at a time | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.2/2` 🖵 | A tap on a fret or key replaces the selected Slot's note, sounds it, and leaves the Slot selected | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.2/3` 🖵 | Delete clears the selected Slot's note, and the Slot sounds percussively until a note is recorded onto it again | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.2/4` 🖵 | Tapping the selected Slot's note box again, or a silent Slot, clears the selection; pressing Record clears it too | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.3/1` 🖵 | Tapping the syllable box cycles the Slot's Accent Level exactly as the grid does — off, its default, the other two levels, off | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.3/2` 🖵 | A Slot turned on has no note until one is recorded onto it, and sounds percussively meanwhile | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.3/3` 🖵 | A Slot cycled to off loses its note, and the count of syllables without a note follows | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/1` 🖵 | With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/2` 🖵 | Starting percussive appends a copy of every Measure with its notes cleared, and the original Measures keep theirs | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/3` 🖵 | After a percussive copy, Record targets the first sounding Slot of the copy | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/4` 🖵 | Keeping the notes appends a copy of every Measure carrying the same notes as the originals | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/5` 🖵 | With no note recorded yet, the copy is appended percussive with no ask | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/6` 🖵 | Double Length is disabled when the result would exceed 32 Measures | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.5/1` | The tempo entry sets the composition's tempo, and playback follows it | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.5/2` | The swing amount and feel controls set the composition's swing, and playback follows them | P-057 | T377, T418 (2/2 done) | T378, T419 (2/2 done) | `composer-edit.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.1/1` 🖵 | Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.1/2` 🖵 | A pitched Slot sounds with the voice of the instrument shown, guitar or piano, and an unpitched sounding Slot sounds percussively at its Accent Level | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.1/3` 🖵 | Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |

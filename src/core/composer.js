@@ -105,6 +105,11 @@ export function missingCount(pattern) {
   return soundingSlots(pattern).filter((at) => !hasNote(slotAt(pattern, at))).length;
 }
 
+/** Whether any note is recorded at all — what Double Length has to ask about (AC-19.5.4/1, /5). */
+export function hasAnyNote(pattern) {
+  return soundingSlots(pattern).some((at) => hasNote(slotAt(pattern, at)));
+}
+
 /** Complete when every sounding Slot has a note — the condition for being a Pattern again. */
 export function isComplete(pattern) {
   return missingCount(pattern) === 0;
@@ -158,7 +163,7 @@ export function cycleSyllable(pattern, at) {
   return cycleAccent(pattern, at.measureIndex, at.beatIndex, at.slotIndex);
 }
 
-/** Double Length, the copy without its notes (AC-19.5.4/1). */
+/** Double Length, starting percussive: the copy without its notes (AC-19.5.4/2). */
 export function duplicateUnpitched(pattern) {
   const copy = clone(pattern);
   for (const measure of copy.measures) {
@@ -166,6 +171,9 @@ export function duplicateUnpitched(pattern) {
   }
   return append(pattern, copy);
 }
+
+// Double Length keeping the notes is `duplicate` from core/pattern.js (US-10.1):
+// a clone carries every Pitch, which is exactly AC-19.5.4/4.
 
 export function canDuplicate(pattern) {
   return pattern.measures.length * 2 <= MAX_MEASURES;

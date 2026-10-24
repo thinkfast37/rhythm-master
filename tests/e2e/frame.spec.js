@@ -215,6 +215,8 @@ test('AC-15.1.20/4 — One work surface under the band holds what the goal is fo
   await expect(page.locator('.main-panel > .composer-panel')).toBeVisible();
   await expect(page.locator('.main-panel > .rhythm-band')).toBeHidden();
   await expect(surface).toBeHidden();
+  // Entering offered the open Pattern (AC-19.1.2/2); this test is about the frame.
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
   await page.locator('.goal-strip .mode-switch [data-mode="practice"]').click();
   await expect(page.locator('.main-panel > .rhythm-band')).toBeVisible();
   await expect(surface).toBeVisible();

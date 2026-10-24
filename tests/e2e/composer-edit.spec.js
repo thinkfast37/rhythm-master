@@ -182,11 +182,27 @@ test('AC-19.5.3/3 — A Slot cycled to off loses its note, and the count of syll
 
 // --- AC-19.5.4: Double Length ---------------------------------------------------------
 
-test('AC-19.5.4/1 — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs', async ({ page }) => {
+test('AC-19.5.4/1 — With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  const before = await page.evaluate(() => JSON.stringify(window.__rm.composer().draft));
+  await page.locator('.composer-duplicate').click();
+  await expect(page.locator('.dialog')).toBeVisible();
+  await expect(page.locator('.dialog-button[data-value="keep"]')).toBeVisible();
+  await expect(page.locator('.dialog-button[data-value="percussive"]')).toBeVisible();
+  await page.locator('.dialog-button[data-value="cancel"]').click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(1);
+  expect(await page.evaluate(() => JSON.stringify(window.__rm.composer().draft))).toBe(before);
+});
+
+test('AC-19.5.4/2 — Starting percussive appends a copy of every Measure with its notes cleared, and the original Measures keep theirs', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await recordAll(page);
   await page.locator('.composer-duplicate').click();
+  await page.locator('.dialog-button[data-value="percussive"]').click();
   await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
   for (let b = 0; b < 4; b++) {
     expect(await noteAt(page, b, 0)).not.toBeNull();
@@ -196,17 +212,42 @@ test('AC-19.5.4/1 — Double Length appends a copy of every Measure with its not
   await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '4');
 });
 
-test('AC-19.5.4/2 — Record then targets the first sounding Slot of the copy', async ({ page }) => {
+test('AC-19.5.4/3 — After a percussive copy, Record targets the first sounding Slot of the copy', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await recordAll(page);
   await page.locator('.composer-duplicate').click();
+  await page.locator('.dialog-button[data-value="percussive"]').click();
   await page.locator('.record').click();
   expect((await composerState(page)).target).toEqual({ measureIndex: 1, beatIndex: 0, slotIndex: 0 });
   await expect(cslot(page, 1, 0)).toHaveClass(/target/);
 });
 
-test('AC-19.5.4/3 — Double Length is disabled when the result would exceed 32 Measures', async ({ page }) => {
+test('AC-19.5.4/4 — Keeping the notes appends a copy of every Measure carrying the same notes as the originals', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  await page.locator('.composer-duplicate').click();
+  await page.locator('.dialog-button[data-value="keep"]').click();
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
+  for (let b = 0; b < 4; b++) {
+    const original = await noteAt(page, b, 0);
+    expect(original).not.toBeNull();
+    expect(await noteAt(page, b, 1)).toEqual(original);
+  }
+  await expect(page.locator('.composer-missing')).toHaveCount(0);
+});
+
+test('AC-19.5.4/5 — With no note recorded yet, the copy is appended percussive with no ask', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await page.locator('.composer-duplicate').click();
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '8');
+});
+
+test('AC-19.5.4/6 — Double Length is disabled when the result would exceed 32 Measures', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await expect(page.locator('.composer-duplicate')).toBeEnabled();

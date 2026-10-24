@@ -286,7 +286,7 @@ test('AC-19.7.1/1 — No sample is requested on page load, in Practice, or in th
   await page.locator('.transport').first().click();
   expect(requests).toHaveLength(0);
   // The Piano view: still nothing.
-  await enterComposer(page);
+  await enterComposer(page, { load: 'none' });
   await expect(page.locator('.piano')).toBeVisible();
   await page.locator('.piano .key[data-midi="60"]').click();
   expect(requests).toHaveLength(0);

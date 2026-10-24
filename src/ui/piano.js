@@ -8,11 +8,15 @@ import { rangeFor, keysIn, splitRows, whiteKeyCount, keyName, MIDDLE_C, DEFAULT_
 import { describeNote, labelFor } from '../core/composer.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
-/** Drawn units: a white key's width and the two heights. */
+/** Drawn units: a white key's width and the two heights. The keys are drawn
+ * tall — close to a real keyboard's width-to-length proportion — so the
+ * keyboard stands as high as the fretboard does and a key is a target, not a
+ * sliver; the two-row split (AC-19.3.2) is decided by rendered width alone and
+ * is untouched by the height. */
 const WHITE_W = 24;
-const WHITE_H = 110;
+const WHITE_H = 220;
 const BLACK_W = 14;
-const BLACK_H = 68;
+const BLACK_H = 140;
 
 function svgEl(tag, attrs = {}) {
   const node = document.createElementNS(SVG, tag);

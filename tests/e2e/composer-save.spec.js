@@ -103,6 +103,7 @@ test('AC-19.9.2/2 — Turning a syllable on, clearing a note or doubling the len
   expect(JSON.stringify(await stored(page, 'My line'))).toBe(before);
   await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '2');
   await page.locator('.composer-duplicate').click();
+  await page.locator('.dialog-button[data-value="percussive"]').click();
   expect(JSON.stringify(await stored(page, 'My line'))).toBe(before);
   // Two missing, and the copy's five sounding Slots all unpitched.
   await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '7');

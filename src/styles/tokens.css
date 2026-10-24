@@ -2518,7 +2518,8 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .note.fret-hidden { display: none; }
 
 .piano { display: flex; flex-direction: column; gap: 8px; }
-.piano-row { display: block; width: 100%; height: auto; max-height: 160px; }
+/* As tall as the fretboard is allowed to be, so the keys are playable targets. */
+.piano-row { display: block; width: 100%; height: auto; max-height: 420px; }
 .piano .key { cursor: pointer; }
 .piano .key-face { fill: #f2f3f7; stroke: #2a2e3d; stroke-width: 1; }
 .piano .key.black .key-face { fill: #15171f; stroke: #000; }
@@ -2549,10 +2550,15 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .piano .middle-c-mark { fill: var(--brand); }
 
 /* --- the composing grid --------------------------------------------------- */
-.composer-grid { display: flex; flex-direction: column; gap: 10px; }
+/* Measures flow left to right and wrap, centred in the panel — a line of
+   music, not a stack of rows — so a short Pattern does not leave the right
+   half of a wide panel empty. */
+.composer-grid { display: flex; flex-flow: row wrap; justify-content: center; align-items: flex-start; gap: 10px; }
 .composer-grid .measure {
   display: flex;
   align-items: flex-start;
+  flex: 0 1 auto;
+  max-width: 100%;
   gap: 8px;
   padding: 8px;
   background: var(--panel);
@@ -2560,7 +2566,7 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   border-radius: var(--radius);
 }
 .composer-grid .measure-meter { flex: 0 0 auto; font: 600 12px/1 var(--font-ui); color: var(--ink-dim); padding-top: 4px; }
-.composer-grid .beats { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.composer-grid .beats { flex: 0 1 auto; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .composer-grid .beat { display: flex; gap: 3px; }
 .composer-grid .group { display: flex; gap: 3px; }
 .composer-grid .group + .group { margin-left: 6px; }

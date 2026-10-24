@@ -121,6 +121,7 @@ import {
   clearNote,
   cycleSyllable,
   duplicateUnpitched,
+  hasAnyNote,
   canDuplicate,
   isComplete,
   sameSlot,
@@ -678,8 +679,12 @@ function previewNote(midi) {
  * A library Pattern into the Composer (US-19.8): a percussive rhythm or a
  * progression under a new name, a melody edited or copied, a shipped melody
  * copied. Nothing is written until the first Save (AC-19.8.1/2).
+ *
+ * `editOwned` is the mode switch's path (AC-19.1.2/1): the Pattern was not
+ * chosen, it is simply the one open, so an owned melody skips the Edit-or-copy
+ * ask and opens for editing directly.
  */
-async function openInComposer(pattern, owned) {
+async function openInComposer(pattern, owned, { editOwned = false } = {}) {
   if (composerUnsaved(state.composer)) {
     const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and open', cancelLabel: 'Keep composing' });
     if (!ok) {
@@ -717,14 +722,16 @@ async function openInComposer(pattern, owned) {
       ? `${baked.passes} ${baked.passes === 1 ? 'pass' : 'passes'} of the progression written out as ${n} ${n === 1 ? 'Measure' : 'Measures'}.`
       : `The progression's ${baked.passes} passes would need ${baked.passes * pattern.measures.length} Measures, more than the 8 a Pattern holds — the first pass alone was kept.`;
   } else if (owned) {
-    const choice = await ask({
-      message: `"${pattern.name}" is a melody you own. Edit it here — every change saves — or save your changes as a new composition?`,
-      options: [
-        { label: 'Edit', value: 'edit', primary: true },
-        { label: 'Save as new…', value: 'copy' },
-        { label: 'Cancel', value: 'cancel' },
-      ],
-    });
+    const choice = editOwned
+      ? 'edit'
+      : await ask({
+          message: `"${pattern.name}" is a melody you own. Edit it here — every change saves — or save your changes as a new composition?`,
+          options: [
+            { label: 'Edit', value: 'edit', primary: true },
+            { label: 'Save as new…', value: 'copy' },
+            { label: 'Cancel', value: 'cancel' },
+          ],
+        });
     if (choice === 'cancel') {
       render();
       return false;
@@ -1789,9 +1796,16 @@ const handlers = {
     if (state.isPlaying) transport.stop();
     state.composer = { ...state.composer, mode, recording: false, target: null, selected: null };
     if (mode === 'composer') {
-      // The first thing to do is choose a rhythm (AC-19.1.2/1).
-      if (!state.composer.draft) ui?.showLibrary();
       ensureGuitarLoaded();
+      // The Pattern open in Practice is the composition, unless it already is
+      // (AC-19.1.2/1, /4). Declining falls back to choosing from the library
+      // (AC-19.1.2/3).
+      const keep = Boolean(state.composer.draft) && state.composer.savedId === state.pattern.id;
+      if (!keep) {
+        render();
+        const opened = await openInComposer(state.pattern, state.isOwned, { editOwned: true });
+        if (!opened && !state.composer.draft) ui?.showLibrary();
+      }
     }
     render();
   },
@@ -1914,11 +1928,28 @@ const handlers = {
     render();
   },
 
-  /** Double Length, the copy without its notes (AC-19.5.4). */
-  onComposerDuplicate() {
+  /** Double Length asks whether the copy keeps the notes (AC-19.5.4). */
+  async onComposerDuplicate() {
     const c = state.composer;
     if (!c.draft || !canDuplicate(c.draft)) return;
-    applyDraft(duplicateUnpitched);
+    // With nothing recorded there is nothing to carry (AC-19.5.4/5).
+    if (!hasAnyNote(c.draft)) {
+      applyDraft(duplicateUnpitched);
+      return;
+    }
+    const choice = await ask({
+      message: 'Double the length: should the new Measures carry the same notes, or start percussive for you to record from scratch?',
+      options: [
+        { label: 'Keep the notes', value: 'keep', primary: true },
+        { label: 'Start percussive', value: 'percussive' },
+        { label: 'Cancel', value: 'cancel' },
+      ],
+    });
+    if (choice === 'cancel') {
+      render();
+      return;
+    }
+    applyDraft(choice === 'keep' ? duplicate : duplicateUnpitched);
   },
 
   onComposerKey(key) {
