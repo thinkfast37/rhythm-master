@@ -37,7 +37,7 @@ in the evening — but separating them keeps each story honest about whose probl
 
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
-| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.9 |
+| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.10 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
 | **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-2.13, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
@@ -4326,6 +4326,67 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-2.13.5/1** — With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth
     - **AC-2.13.5/2** — With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth
+
+---
+
+### User Story 61 - Play a MIDI instrument into the Composer
+
+*Traceability: `US-19.10` — Play a MIDI instrument into the Composer*
+
+**As** the Composer, **I want** a MIDI keyboard or MIDI guitar connected to the computer to play the Composer's instrument view exactly as tapping it does, **so that** I can record a melody on the instrument in my hands instead of clicking each note on the screen — and still tap when that is quicker, with nothing to switch.
+
+*(Added 2026-10-24 at the maintainer's request: "If I have a midi device connected, is it feasible for the keyboard or guitar in Compose mode … to actually take input from the midi device instead of me needing to click the note on the screen?" Decisions taken with the maintainer the same day: input is monophonic for now — every note-on is one note, and several voices in layers may come later; a MIDI note behaves exactly as a tap on that note, so it advances to the next syllable only in record mode; taps and MIDI work interchangeably with no setting; with several devices a picker chooses among them, disabled otherwise; a note the instrument on screen has no place for flashes "out of range"; the browser's MIDI permission is asked for on entering the Composer. Web first: Web MIDI exists in Chrome, Edge and Firefox but not in Safari or any iOS browser, so this story says what those browsers show, and the store builds' native MIDI is a later layer behind the same seam (research.md D-019).)*
+
+**Independent Test**: With a fake MIDI device connected, enter the Composer and assert MIDI access was asked for once; load a four-syllable rhythm, press Record, and send four note-ons, asserting each lands on the next syllable exactly as a tap would, sounds, and lights its key or fret; send a note the keyboard does not have and assert nothing is recorded and the record bar says it is out of range; connect a second device and assert the picker is enabled offering All devices and both names, choose one and assert the other's notes are ignored; switch to Practice and assert MIDI notes do nothing; and with no Web MIDI at all assert the picker is disabled saying why while taps still record.
+
+**Acceptance Scenarios**:
+
+- **AC-19.10.1** — A MIDI note plays the Composer exactly as a tap does
+  - **Given** the Composer, with a MIDI device connected and access allowed
+  - **When** the device sends a note-on
+  - **Then** that note is taken exactly as a tap on the instrument view's key or fret for it would be — heard at rest, while playing and while recording (AC-19.2.4, AC-19.3.4), recorded onto the target and moving on in record mode (AC-19.4.2), re-pitching the selection out of it (AC-19.5.2) — one note per note-on, with taps still working alongside and no setting between them; and in Practice a MIDI note does nothing
+  - **Cases**:
+    - **AC-19.10.1/1** — A note-on sounds that note with the instrument view's voice, at rest, while the composition plays and while recording, as a tap on it does
+    - **AC-19.10.1/2** — In record mode a note-on gives the target that note and moves it to the next syllable without one, leaving record mode after the last; out of record mode it re-pitches the selected Slot and moves nothing
+    - **AC-19.10.1/3** — Input is monophonic: each note-on is one note, notes played together are taken one after another in the order they arrive, a note-off or a note-on at velocity 0 does nothing, and how hard a key is struck does not change the note taken
+    - **AC-19.10.1/4** — Taps and MIDI notes can be mixed freely in one recording, with no setting to change between them
+    - **AC-19.10.1/5** — Outside the Composer a MIDI note does nothing: no sound, and no change to any Pattern
+
+- **AC-19.10.2** — The instrument view shows where a MIDI note landed
+  - **Given** a MIDI note taken by the Composer (AC-19.10.1)
+  - **When** the Composer looks at the instrument view
+  - **Then** the place that note is played lights briefly, so a note played without looking at the screen can be seen
+  - **Cases**:
+    - **AC-19.10.2/1** — In the Piano view the key for the note lights, and goes out again within a second
+    - **AC-19.10.2/2** — In the Guitar view every visible, playable fret that sounds the note lights, and goes out again within a second
+
+- **AC-19.10.3** — A note the instrument view has no place for is out of range
+  - **Given** the Composer
+  - **When** a MIDI note arrives that the instrument view on screen has no key or fret for
+  - **Then** it is neither heard nor recorded — as a fret under the capo is inert (AC-19.2.4/2) — the target and the selection stay where they were, and the record bar flashes the note's name and that it is out of range
+  - **Cases**:
+    - **AC-19.10.3/1** — In the Piano view a note outside the key count's range is neither heard nor recorded, and the record bar shows its name, out of range for that many keys
+    - **AC-19.10.3/2** — In the Guitar view a note with no visible, playable fret — below the capo, beyond the lowest or highest note of the board, or outside the visible frets — is neither heard nor recorded, and the record bar shows its name, not on the visible frets
+    - **AC-19.10.3/3** — An out-of-range note leaves the target, the selection and every recorded note as they were, and the flash clears on its own
+
+- **AC-19.10.4** — A device picker when there is more than one device
+  - **Given** the Composer, with MIDI access allowed
+  - **When** the Composer looks at the Composer's controls
+  - **Then** a MIDI input picker sits among them: disabled with no device or one, saying which; enabled with two or more, offering All devices — the default — and each device by name; the choice remembered, and the list following devices as they are connected and disconnected
+  - **Cases**:
+    - **AC-19.10.4/1** — With no device connected the picker is disabled and says none is connected; with one it is disabled and names that device, whose notes are taken
+    - **AC-19.10.4/2** — With two or more devices the picker is enabled, offering All devices and each device by name, All devices on first use; with one device chosen, notes from the others are ignored
+    - **AC-19.10.4/3** — The choice is remembered in `rm.settings.v1` and is in force after a reload; while the chosen device is not connected, notes from every device are taken
+    - **AC-19.10.4/4** — A device connected or disconnected while the Composer is open is added to or removed from the picker at once, with no reload
+
+- **AC-19.10.5** — MIDI access is asked for on entering the Composer, and never blocks it
+  - **Given** a browser
+  - **When** the Composer is entered
+  - **Then** MIDI access is asked for then, and only once in a page load; where the browser has no Web MIDI, or access is refused, the picker is disabled and says why, and the instrument view, taps and recording work exactly as without a device
+  - **Cases**:
+    - **AC-19.10.5/1** — Entering the Composer asks the browser for MIDI access, without system-exclusive messages; leaving and entering again in the same page load does not ask again
+    - **AC-19.10.5/2** — Where the browser has no Web MIDI — Safari, and every browser on iPhone and iPad — the picker is disabled and says MIDI input needs Chrome, Edge or Firefox, and tapping records as before
+    - **AC-19.10.5/3** — Where access is refused, the picker is disabled and says MIDI access was not allowed, and tapping records as before
 
 ---
 

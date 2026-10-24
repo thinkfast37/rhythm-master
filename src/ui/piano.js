@@ -46,7 +46,7 @@ function svgEl(tag, attrs = {}) {
 
 /**
  * @param {HTMLElement} root
- * @param {{key: string, scale: string, labelMode: string, count: number, widthPx: number}} model
+ * @param {{key: string, scale: string, labelMode: string, count: number, widthPx: number, lit?: number|null}} model
  * @param {{onNote?: (midi: number) => void}} handlers
  */
 export function renderPiano(root, model, handlers = {}) {
@@ -86,6 +86,8 @@ export function renderPiano(root, model, handlers = {}) {
         if (note.isRoot) classes.push('is-root');
         if (note.inScale) classes.push('is-diatonic', `role-${note.roleId}`);
         if (k.midi === MIDDLE_C) classes.push('middle-c');
+        // A MIDI note just played lights its key (AC-19.10.2/1).
+        if (k.midi === model.lit) classes.push('lit');
         const g = svgEl('g', {
           class: classes.join(' '),
           'data-midi': k.midi,

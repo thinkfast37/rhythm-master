@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 907 across 60 User Stories
+**Criteria**: 924 across 61 User Stories
 
-**Coverage**: 723 of 907 criteria proven (79.7%)
+**Coverage**: 740 of 924 criteria proven (80.1%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 723 | 79.7% |
-| 🔴 Gap — HIGH | 65 | 7.2% |
-| 🟠 Gap — MEDIUM | 41 | 4.5% |
-| 🟡 Gap — LOW | 78 | 8.6% |
+| 🟢 Proven | 740 | 80.1% |
+| 🔴 Gap — HIGH | 65 | 7.0% |
+| 🟠 Gap — MEDIUM | 41 | 4.4% |
+| 🟡 Gap — LOW | 78 | 8.4% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -118,6 +118,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.9 | 7 | **7** | · | · | · | · | · |
 | 🟢 US-2.12 | 13 | **13** | · | · | · | · | · |
 | 🟢 US-2.13 | 15 | **15** | · | · | · | · | · |
+| 🟢 US-19.10 | 17 | **17** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1030,3 +1031,20 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.13 | `AC-2.13.4/4` 🖵 | The piano's credit — Salamander Grand Piano by Alexander Holm, CC BY 3.0 — is shown in the Composer's attribution line beside the guitar's, and as the Piano option's description | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.5/1` 🖵 | With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `backgroundRender.test.js`, `pianoSamples.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.5/2` 🖵 | With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `backgroundRender.test.js`, `guitar.test.js`, `voice.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.1/1` 🖵 | A note-on sounds that note with the instrument view's voice, at rest, while the composition plays and while recording, as a tap on it does | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.1/2` 🖵 | In record mode a note-on gives the target that note and moves it to the next syllable without one, leaving record mode after the last; out of record mode it re-pitches the selected Slot and moves nothing | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.1/3` 🖵 | Input is monophonic: each note-on is one note, notes played together are taken one after another in the order they arrive, a note-off or a note-on at velocity 0 does nothing, and how hard a key is struck does not change the note taken | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.1/4` 🖵 | Taps and MIDI notes can be mixed freely in one recording, with no setting to change between them | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.1/5` 🖵 | Outside the Composer a MIDI note does nothing: no sound, and no change to any Pattern | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.2/1` 🖵 | In the Piano view the key for the note lights, and goes out again within a second | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.2/2` 🖵 | In the Guitar view every visible, playable fret that sounds the note lights, and goes out again within a second | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.3/1` 🖵 | In the Piano view a note outside the key count's range is neither heard nor recorded, and the record bar shows its name, out of range for that many keys | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.3/2` 🖵 | In the Guitar view a note with no visible, playable fret — below the capo, beyond the lowest or highest note of the board, or outside the visible frets — is neither heard nor recorded, and the record bar shows its name, not on the visible frets | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.3/3` 🖵 | An out-of-range note leaves the target, the selection and every recorded note as they were, and the flash clears on its own | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.4/1` 🖵 | With no device connected the picker is disabled and says none is connected; with one it is disabled and names that device, whose notes are taken | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.4/2` 🖵 | With two or more devices the picker is enabled, offering All devices and each device by name, All devices on first use; with one device chosen, notes from the others are ignored | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.4/3` 🖵 | The choice is remembered in `rm.settings.v1` and is in force after a reload; while the chosen device is not connected, notes from every device are taken | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.4/4` 🖵 | A device connected or disconnected while the Composer is open is added to or removed from the picker at once, with no reload | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.5/1` 🖵 | Entering the Composer asks the browser for MIDI access, without system-exclusive messages; leaving and entering again in the same page load does not ask again | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.5/2` 🖵 | Where the browser has no Web MIDI — Safari, and every browser on iPhone and iPad — the picker is disabled and says MIDI input needs Chrome, Edge or Firefox, and tapping records as before | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-19.10 | `AC-19.10.5/3` 🖵 | Where access is refused, the picker is disabled and says MIDI access was not allowed, and tapping records as before | P-065 | T425 (1/1 done) | T426 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |

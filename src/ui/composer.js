@@ -21,6 +21,7 @@ import { subdivisionGroups } from '../core/recipes.js';
 import { effectiveAccent, defaultAccent } from '../core/accents.js';
 import { LABEL_MODES, LABEL_MODE_LABELS, MAX_CAPO, FRET_COUNT } from '../core/fretboard.js';
 import { KEY_COUNTS, rangeFor, keyName } from '../core/piano.js';
+import { pickerFor } from '../core/midi.js';
 import {
   describeNote,
   recordTarget,
@@ -220,6 +221,14 @@ function renderBar(composer, draft, instrument, state, handlers) {
     }
   }
 
+  // A MIDI note the instrument view has no place for (AC-19.10.3).
+  if (composer.midiFlash) {
+    const f = el('span', 'midi-out-of-range', { textContent: composer.midiFlash.message });
+    f.dataset.midiFlash = 'true';
+    f.setAttribute('role', 'status');
+    bar.appendChild(f);
+  }
+
   if (composer.notice) {
     const n = el('p', 'composer-notice', { textContent: composer.notice });
     n.dataset.notice = 'true';
@@ -231,7 +240,8 @@ function renderBar(composer, draft, instrument, state, handlers) {
 function renderInstrument(instrument, key, scale, state, handlers) {
   const wrap = el('div', 'composer-instrument');
   wrap.dataset.instrument = instrument;
-  const model = { key, scale, labelMode: state.settings.composerLabelMode ?? 'notes' };
+  // The MIDI note just played lights where it landed (AC-19.10.2).
+  const model = { key, scale, labelMode: state.settings.composerLabelMode ?? 'notes', lit: state.composer.midiLit?.midi ?? null };
   const onNote = (midi) => handlers.onInstrumentNote?.(midi);
   if (instrument === 'guitar') {
     renderFretboard(
@@ -437,6 +447,8 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     wrap.appendChild(labelled('Keys', keys));
   }
 
+  wrap.appendChild(renderMidiPicker(state, handlers));
+
   const counting = el('select', 'composer-counting');
   counting.dataset.action = 'composer-counting';
   counting.setAttribute('aria-label', 'Counting');
@@ -504,6 +516,26 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     wrap.appendChild(labelled('Measures', dup));
   }
   return wrap;
+}
+
+/** The MIDI input picker (AC-19.10.4, AC-19.10.5): usable only with two or more devices. */
+function renderMidiPicker(state, handlers) {
+  const midi = state.midi ?? { status: 'idle', devices: [] };
+  const model = pickerFor(midi.status, midi.devices, state.settings.composerMidiInput);
+  const picker = el('select', 'midi-input-picker', { disabled: model.disabled });
+  picker.dataset.action = 'composer-midi-input';
+  picker.dataset.status = midi.status;
+  picker.setAttribute('aria-label', 'MIDI input');
+  picker.setAttribute('title', model.reason);
+  for (const o of model.options) picker.appendChild(el('option', null, { value: o.value, textContent: o.label }));
+  picker.value = model.value;
+  picker.addEventListener('change', (e) => handlers.onComposerMidiInput?.(e.target.value));
+  const field = labelled('MIDI input', picker);
+  field.classList.add('midi-input');
+  const reason = el('span', 'midi-input-reason', { textContent: model.reason });
+  reason.dataset.reason = 'true';
+  field.appendChild(reason);
+  return field;
 }
 
 /** Move the playback cursor in the composing grid without rebuilding it. */
