@@ -401,7 +401,7 @@ the transport at each boundary (which resets the loop counter, AC-4.2.2).
 at 8: the chord strip carries the progression across passes, and the cap is what every phone-layout
 criterion (AC-15.1.10, AC-2.2.12) is measured against.
 
-*(Reversed 2026-10-23 (T404): the cap is 32 (AC-1.1.3). The maintainer asked for it outright — a
+*(Reversed 2026-10-23 (T406): the cap is 32 (AC-1.1.3). The maintainer asked for it outright — a
 tune's whole form in one Pattern, a twelve-bar or 32-bar chorus written out bar by bar, not only
 carried across passes by the chord strip. The chord strip still works as it did; a longer grid is
 now a choice alongside it rather than ruled out. The phone-layout objection does not hold up: the
@@ -684,3 +684,73 @@ These are genuinely low-stakes and do not need a decision before tasks are writt
 
 - The exact accent palette values, beyond passing the CVD check.
 - The metronome click timbre, beyond being audibly separable from Pattern voices.
+
+---
+
+## D-018 — The goal screens: one frame, a goal names its controls, two layouts
+
+**Decision (2026-10-23)**: the main panel is rebuilt as **one frame** shared by every goal — a pinned
+bar (Goals, Library, Related, Play/Stop, tempo with its unit, Prev/Next), a **goal strip** holding the
+goal's own quick controls, the **rhythm** as grid or sheet across the full width and as many lines as it
+needs, and one **work surface** holding only the controls that goal is for. There is no tab bar and no
+Practice | Composer mode switch: **a goal is a screen.** The frame has two proportions — a **Design
+layout**, where the rhythm is a band and the tools take the room, and a **Playback layout**, where the
+music takes the room and the tools shrink to one rail — and any goal drops into Playback when Play is
+pressed and the musician sits back. The goals are the stages the app grew in: Practise a rhythm (one goal,
+read-only), then Build a rhythm, Make it melodic, Combine patterns, Play it in, then Share and tidy up,
+with Lab keeping today's cockpit inside the frame. Each making screen hands on to the next stage itself.
+The library is one drawer in every goal, every rhythm in it, Percussive / Melodic an ordinary filter;
+Related opens the family of the rhythm on screen from the bar. The design is the maintainer's storyboard,
+reviewed board by board on 2026-10-18 to 2026-10-20: <https://claude.ai/artifact/HEepj3uBW3KoP1UdXxBvBa>,
+whose board 11 maps all 59 User Stories to a screen.
+
+**Why.** The maintainer, 2026-10-18: "It is like this huge mishmash of different features and then the
+controls are hidden in different places all of which interrupts flow … we need an inventory of controls
+and what goals need which controls and then based on the goal we create a tailored view … ideally there
+is some overall consistency across tailored views so the user is not feeling like they are using 10
+different apps." The Composer (D-016) had just landed as a second axis beside the goals, so the app had
+goals times modes; three ways of making a rhythm melodic lived in a tab, a pair of tabs and a mode; tempo
+was set in three places and swing and counting in two; and the library's few hundred rhythms and dozens of
+tags met every goal the same way. The frame answers the consistency ask, the per-goal work surface the
+tailoring ask, and the quick strip the "I have to jump to a different menu to change the tempo" ask.
+
+**What this reverses, by the book.**
+- US-14.1's rule of 2026-09-20 — "a goal decides which workbench groups are offered, and never hides a
+  control inside a group; one rule, not a matrix" — becomes its opposite: a goal names its controls. The
+  practice panels (AC-14.1.5) had already crossed that line for the practice goals; this extends it to all.
+- The four practice goals of 2026-09-20 become one: they differed only in which settings sat on the panel.
+  Chosen by the maintainer 2026-10-19 ("if so not sure if we need four boxes").
+- The tabbed workbench and the two panes (AC-15.1.7, AC-15.1.8, AC-15.1.18) go; the pinned bar
+  (AC-15.1.17) stays and grows. The breakpoints, the drawer, one Measure per row on a phone (D-006) and the
+  autoscroll are unchanged.
+- D-016's *mechanism* — the Composer as a mode beside Practice — becomes a goal, Play it in. Its *reason*,
+  that the instrument needs the panel's full width, is met by a goal owning its screen. The guitar, the
+  piano, the draft and the Save rule are untouched.
+- AC-4.1.16, Reset audio, is dropped: the maintainer, 2026-10-19, "we can drop reset audio as it doesn't
+  work."
+
+**What does not change.** `core/` is not touched. Rendering stays a pure function of the Pattern and the
+transport position; the render functions, the handlers and the one state object survive, and only the
+composition of them moves. The sheet engraver renders exactly as today, on a white page, the single-line
+staff for percussive rhythms; the redesign changes the frame around it and how much room it gets. The
+store build and its paywall (US-17.1) stay as they are and are not redrawn: web first, the App Store build
+and a VST plugin are **layers** to add later (spec.md Assumptions).
+
+**How it lands.** In phases, each one PR with its criteria, tests and code together, since AC coverage
+must stay at 100%: (0) this record; (1) the shell extracted from `main.js` into `ui/shell.js` with no
+visible change, proving the decoupling; (2) the frame, with Practise in the Playback layout and Lab's
+workbench inside it, every other goal riding along with its current controls; then (3) Build and Append,
+(4) Make it melodic, (5) Combine patterns and Arrange, (6) Play it in, (7) Share and Related, (8) the
+phone, (9) clean-up. The spec stays in this folder: both gates name its `spec.md` directly, and every
+change since the MVP, the Composer included, has landed here as new stories and dated revisions.
+
+**Alternatives considered**:
+- *Tidy the Composer view alone* — what the first report asked for on its face. Rejected: the Composer
+  looked convoluted because it was the third home for "make it melodic", not because of its own layout.
+- *A second shell beside the old one, goal by goal* — rejected: two frames on one screen is the mishmash
+  again; the frame lands once, in phase 2, and the goals fill it one at a time.
+- *A new feature folder, `specs/002-…`* — rejected for now: `spec-trace.config.json` and
+  `tests/ac-coverage.js` both name `specs/001-rhythm-master-mvp/spec.md`, and nothing is gained by teaching
+  them a second folder before the first is exhausted.
+- *A global settings sheet* — drawn, then dropped on 2026-10-19: once each goal's quick strip carried
+  tempo, swing, click and counting it held nothing that was not already one tap away.
