@@ -62,18 +62,32 @@ export function exportsOf(text) {
  * which is a far cheaper mistake than a false FAIL that gets the gate disabled.
  */
 export function mentionsBesidesDeclaration(text, name) {
+  return mentions(text, matchersFor(name));
+}
+
+/** The two patterns `mentionsBesidesDeclaration` needs, compiled once per name. */
+function matchersFor(name) {
   const word = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
   const decl = new RegExp(`^\\s*export\\s+(?:async\\s+)?(?:function|const|class|let)\\s+${name}\\b`);
+  return { word, decl };
+}
+
+function mentions(text, { word, decl }) {
+  // Most files never mention a given name at all; one pass over the whole text
+  // settles those without splitting it into lines. Same answer, since a word
+  // absent from the text is absent from every line of it.
+  if (!word.test(text)) return false;
   return text.split('\n').some((line) => !decl.test(line) && word.test(line));
 }
 
 /** Every export in `files` that nothing in `files` mentions. */
 export function findUnwired(files) {
-  const texts = new Map(files.map((f) => [f, readFileSync(f, 'utf8')]));
+  const texts = files.map((f) => [f, readFileSync(f, 'utf8')]);
   const findings = [];
   for (const [file, text] of texts) {
     for (const name of exportsOf(text)) {
-      const used = [...texts].some(([, t]) => mentionsBesidesDeclaration(t, name));
+      const matchers = matchersFor(name);
+      const used = texts.some(([, t]) => mentions(t, matchers));
       if (!used) findings.push({ name, file: relative('.', file), key: `${relative('.', file)} ${name}` });
     }
   }
