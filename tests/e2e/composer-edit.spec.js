@@ -206,15 +206,18 @@ test('AC-19.5.4/2 — Record then targets the first sounding Slot of the copy', 
   await expect(cslot(page, 1, 0)).toHaveClass(/target/);
 });
 
-test('AC-19.5.4/3 — Double Length is disabled when the result would exceed 8 Measures', async ({ page }) => {
+test('AC-19.5.4/3 — Double Length is disabled when the result would exceed 32 Measures', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await expect(page.locator('.composer-duplicate')).toBeEnabled();
   await page.locator('.composer-duplicate').click(); // 2
   await page.locator('.composer-duplicate').click(); // 4
-  await expect(page.locator('.composer-duplicate')).toBeEnabled();
   await page.locator('.composer-duplicate').click(); // 8
-  await expect(page.locator('.composer-grid .measure')).toHaveCount(8);
+  await page.locator('.composer-duplicate').click(); // 16
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(16);
+  await expect(page.locator('.composer-duplicate')).toBeEnabled();
+  await page.locator('.composer-duplicate').click(); // 32
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(32);
   await expect(page.locator('.composer-duplicate')).toBeDisabled();
 });
 

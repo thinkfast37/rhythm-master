@@ -63,11 +63,11 @@ describe('core/pattern — Measures', () => {
     expect(p.measures[1].beats).toHaveLength(7);
   });
 
-  it('AC-1.1.3 — 8-Measure cap disables +Measure: core refuses the ninth Measure', () => {
+  it('AC-1.1.3 — 32-Measure cap disables +Measure: core refuses the thirty-third Measure', () => {
     let p = create();
     for (let i = 1; i < MAX_MEASURES; i++) p = addMeasure(p);
-    expect(p.measures).toHaveLength(8);
-    expect(() => addMeasure(p)).toThrow(/at most 8 Measures/);
+    expect(p.measures).toHaveLength(32);
+    expect(() => addMeasure(p)).toThrow(/at most 32 Measures/);
   });
 
   it('AC-1.1.6 — changing one Measure’s meter resets only that Measure', () => {
@@ -215,12 +215,15 @@ describe('core/pattern — whole-Pattern operations', () => {
     expect(joined.measures.map((m) => m.timeSignature)).toEqual(['3/4', '6/8']);
   });
 
-  it('AC-8.1.2 — Combine picker excludes Patterns that would exceed the 8-Measure cap: append refuses the combination the picker would have hidden', () => {
+  it('AC-8.1.2 — Combine picker excludes Patterns that would exceed the 32-Measure cap: append refuses the combination the picker would have hidden', () => {
     let a = create();
     for (let i = 1; i < 4; i++) a = addMeasure(a); // 4 Measures
     let b = create();
-    for (let i = 1; i < 6; i++) b = addMeasure(b); // 6 Measures — one over the room left
-    expect(() => append(a, b)).toThrow(/over the 8 cap/);
+    for (let i = 1; i < 29; i++) b = addMeasure(b); // 29 Measures — one over the room left
+    expect(() => append(a, b)).toThrow(/over the 32 cap/);
+    b = create();
+    for (let i = 1; i < 28; i++) b = addMeasure(b); // 28 — exactly the room left
+    expect(append(a, b).measures).toHaveLength(32);
   });
 
   it('AC-10.1.1 — duplicate doubles a Pattern’s length with its own Measures', () => {

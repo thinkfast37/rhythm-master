@@ -1,6 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.7.0 → 3.8.0
+
+3.8.0 — Principle III's grid bar names the largest Pattern the app permits as 32 Measures of
+  12/8 at Straight 16ths, 768 Slots, on a 390 px viewport. It read 6 Measures and 144 Slots —
+  stale since the cap rose to 8 on 2026-08-17 (192 Slots), which amended the spec and D-006 but
+  not this figure. The Measure cap is now 32 (AC-1.1.3, T406), asked for by the maintainer on
+  2026-10-23 with the knock-on changes set out beforehand, reversing research.md D-011's
+  "Kept at 8".
+
+  MINOR rather than PATCH: the bar's wording is unchanged, but the case it must hold for is four
+  times the size, which is a new requirement on the grid. Not MAJOR: nothing is removed or
+  redefined, and per-Measure rows (D-006) already meet it — Slot width is set by the Time
+  Signature, never by the cap.
+
+  Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅ (none name the cap).
+  Follow-up: spec.md AC-1.1.3, AC-2.2.12, AC-8.1.2, AC-8.1.3, AC-8.1.6, AC-10.1.3, AC-10.1.4,
+  AC-15.1.10, AC-16.1.10, AC-19.5.4/3 and AC-19.8.2 revised; research.md D-011 reversed and
+  D-006's figures updated; data-model.md `measures` range (T406).
+
 Version change: 3.6.0 → 3.7.0
 
 3.7.0 — Principle V's "no audio assets" rule gains one named exception: the Composer's
@@ -311,7 +330,7 @@ instances.
 - Slot on/off state, and the distinction between straight-feel and triplet-feel
   Subdivision Groups within a mixed Recipe, MUST meet the same standard.
 - The grid MUST remain readable and tappable at the largest Pattern the app permits
-  (6 Measures of 12/8 at Straight 16ths = 144 Slots) on a 390 px-wide viewport. Overflow
+  (32 Measures of 12/8 at Straight 16ths = 768 Slots) on a 390 px-wide viewport. Overflow
   is contained to the grid's own scroll region; the page body MUST NOT scroll
   horizontally.
 
@@ -599,4 +618,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.7.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-18
+**Version**: 3.8.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-23
