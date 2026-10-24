@@ -2456,13 +2456,17 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 6px;
+  /* A quarter of the side padding the top and bottom get: the width goes to the board. */
+  padding: 6px 1.5px;
   overflow: hidden;
 }
 .fretboard {
   display: block;
   width: 100%;
   height: auto;
+  /* High enough that a wide panel stays width-constrained: below the cap the
+     board fills the panel's width, so the frets are as wide as the panel allows
+     instead of letterboxing behind a 420px ceiling. */
   max-height: 420px;
 }
 .string-line { stroke: var(--ink-dim); stroke-width: 1.5; }
@@ -2518,7 +2522,9 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .note.fret-hidden { display: none; }
 
 .piano { display: flex; flex-direction: column; gap: 8px; }
-/* As tall as the fretboard is allowed to be, so the keys are playable targets. */
+/* As tall as the fretboard is allowed to be, so the keys are playable targets;
+   the cap matches the fretboard's so a wide panel widens the keys instead of
+   letterboxing them. */
 .piano-row { display: block; width: 100%; height: auto; max-height: 420px; }
 .piano .key { cursor: pointer; }
 .piano .key-face { fill: #f2f3f7; stroke: #2a2e3d; stroke-width: 1; }

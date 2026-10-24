@@ -33,16 +33,38 @@ export const INTERVAL_LABELS = ['R', 'm2', 'M2', 'm3', 'M3', 'P4', 'TT', 'P5', '
 export const LABEL_MODES = ['notes', 'degrees', 'intervals'];
 export const LABEL_MODE_LABELS = { notes: 'Notes', degrees: 'Degrees', intervals: 'Intervals' };
 
-/** The board's drawn size, fixed whatever range is visible (fret-navigator FR-043). */
+/** The board's drawn size, fixed whatever range is visible (fret-navigator FR-043).
+ * The side margin is a quarter of the vertical one — the maintainer asked
+ * twice for the side space to go to the fret columns; the vertical margin
+ * still holds the fret numbers above and below the board. */
 export const MARGIN = 24;
+export const MARGIN_X = 6;
 export const OPEN_COL_WIDTH = 56;
 export const FRET_COL_WIDTH = 44;
 export const ROW_HEIGHT = 48;
 export const NOTE_RADIUS = 14;
-export const BOARD_WIDTH = MARGIN * 2 + OPEN_COL_WIDTH + FRET_COUNT * FRET_COL_WIDTH;
+export const BOARD_WIDTH = MARGIN_X * 2 + OPEN_COL_WIDTH + FRET_COUNT * FRET_COL_WIDTH;
 export const BOARD_HEIGHT = MARGIN * 2 + STRING_COUNT * ROW_HEIGHT;
 
 const mod12 = (n) => ((n % 12) + 12) % 12;
+
+/** The board's on-screen height cap — tokens.css `.fretboard { max-height }` mirrors it. */
+const BOARD_CAP_PX = 420;
+
+/**
+ * The drawn width for a panel `widthPx` wide: never narrower than the fixed
+ * board, and stretched halfway to the width that would fill the panel at the
+ * height cap — so the letterboxed dead margin a wide panel shows is cut in
+ * half, at the same height, while the board's proportions stay close to the
+ * fixed drawing's (the maintainer's choice, 2026-10-24: wider, not taller, and
+ * not the full stretch). An unknown width keeps the fixed board.
+ */
+export function boardWidthFor(widthPx) {
+  if (!Number.isFinite(widthPx) || widthPx <= 0) return BOARD_WIDTH;
+  const fillsWidthAtCap = (BOARD_HEIGHT * widthPx) / BOARD_CAP_PX;
+  if (fillsWidthAtCap <= BOARD_WIDTH) return BOARD_WIDTH;
+  return Math.round((BOARD_WIDTH + fillsWidthAtCap) / 2);
+}
 
 /** The MIDI note at a string (0 = high E) and fret (0 = open). AC-19.2.1/2 */
 export function noteAt(stringIndex, fret) {
@@ -99,20 +121,20 @@ export function rangeAfterCapo(range, capo) {
  * only when fret 0 is in range, and the fretted columns sharing the rest of
  * the fixed width equally, so fewer visible frets are wider.
  */
-export function layoutFor(range) {
+export function layoutFor(range, boardWidth = BOARD_WIDTH) {
   const [lowerBound, upperBound] = clampRange(range);
   const showOpenColumn = lowerBound === 0;
   const firstFret = showOpenColumn ? 1 : lowerBound;
   const lastFret = Math.max(upperBound, firstFret - 1);
   const visibleFrettedCount = Math.max(0, lastFret - firstFret + 1);
   const openWidth = showOpenColumn ? OPEN_COL_WIDTH : 0;
-  const availableWidth = BOARD_WIDTH - MARGIN * 2 - openWidth;
+  const availableWidth = boardWidth - MARGIN_X * 2 - openWidth;
   const colWidth = visibleFrettedCount > 0 ? availableWidth / visibleFrettedCount : availableWidth;
 
   /** x of the wire ending fret f (f = 0 is the nut when the open column shows). */
-  const wireX = (f) => MARGIN + openWidth + (f - (firstFret - 1)) * colWidth;
+  const wireX = (f) => MARGIN_X + openWidth + (f - (firstFret - 1)) * colWidth;
   /** x of the centre of fret f's cell. */
-  const noteX = (fret) => (fret === 0 ? MARGIN + OPEN_COL_WIDTH / 2 : wireX(fret - 1) + colWidth / 2);
+  const noteX = (fret) => (fret === 0 ? MARGIN_X + OPEN_COL_WIDTH / 2 : wireX(fret - 1) + colWidth / 2);
   const stringY = (stringIndex) => MARGIN + stringIndex * ROW_HEIGHT + ROW_HEIGHT / 2;
   const isVisible = (fret) => fret >= lowerBound && fret <= upperBound;
 

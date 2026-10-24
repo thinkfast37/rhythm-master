@@ -4,8 +4,9 @@ import {
   STRING_COUNT,
   FRET_COUNT,
   BOARD_WIDTH,
-  MARGIN,
+  MARGIN_X,
   OPEN_COL_WIDTH,
+  boardWidthFor,
   noteAt,
   isPlayable,
   isMarkerFret,
@@ -55,22 +56,38 @@ describe('core/fretboard', () => {
     expect(whole.firstFret).toBe(1);
     expect(whole.lastFret).toBe(24);
     // Every fret of the whole board shares the width beyond the open column.
-    expect(whole.colWidth).toBeCloseTo((BOARD_WIDTH - MARGIN * 2 - OPEN_COL_WIDTH) / 24, 6);
-    expect(whole.noteX(0)).toBeCloseTo(MARGIN + OPEN_COL_WIDTH / 2, 6);
-    expect(whole.wireX(24)).toBeCloseTo(BOARD_WIDTH - MARGIN, 6);
+    expect(whole.colWidth).toBeCloseTo((BOARD_WIDTH - MARGIN_X * 2 - OPEN_COL_WIDTH) / 24, 6);
+    expect(whole.noteX(0)).toBeCloseTo(MARGIN_X + OPEN_COL_WIDTH / 2, 6);
+    expect(whole.wireX(24)).toBeCloseTo(BOARD_WIDTH - MARGIN_X, 6);
 
     const narrow = layoutFor([5, 12]);
     expect(narrow.showOpenColumn).toBe(false);
     expect(narrow.firstFret).toBe(5);
     expect(narrow.lastFret).toBe(12);
     // Eight frets across the full width: each is three times wider than on the whole board.
-    expect(narrow.colWidth).toBeCloseTo((BOARD_WIDTH - MARGIN * 2) / 8, 6);
+    expect(narrow.colWidth).toBeCloseTo((BOARD_WIDTH - MARGIN_X * 2) / 8, 6);
     expect(narrow.colWidth).toBeGreaterThan(whole.colWidth * 2.9);
     expect(narrow.isVisible(4)).toBe(false);
     expect(narrow.isVisible(5)).toBe(true);
     expect(narrow.isVisible(12)).toBe(true);
     expect(narrow.isVisible(13)).toBe(false);
-    expect(narrow.wireX(12)).toBeCloseTo(BOARD_WIDTH - MARGIN, 6);
+    expect(narrow.wireX(12)).toBeCloseTo(BOARD_WIDTH - MARGIN_X, 6);
+  });
+
+  it('the board stretches halfway toward filling a wide panel at the height cap, and not at all on a narrow one', () => {
+    expect(boardWidthFor(0)).toBe(BOARD_WIDTH);
+    expect(boardWidthFor(NaN)).toBe(BOARD_WIDTH);
+    // Narrow: the fixed board is already wider than the panel needs.
+    expect(boardWidthFor(1000)).toBe(BOARD_WIDTH);
+    // Wide: halfway between the fixed board and the width that fills at 420px,
+    // which cuts the letterboxed side margin in half.
+    const widthPx = 1900;
+    const fills = (336 * widthPx) / 420;
+    expect(boardWidthFor(widthPx)).toBe(Math.round((BOARD_WIDTH + fills) / 2));
+    // The stretch goes to the fret columns, not the margins.
+    const stretched = layoutFor([0, 24], boardWidthFor(widthPx));
+    expect(stretched.colWidth).toBeGreaterThan(layoutFor([0, 24]).colWidth);
+    expect(stretched.wireX(24)).toBeCloseTo(boardWidthFor(widthPx) - MARGIN_X, 6);
   });
 
   it("marker frets and colour roles are fret-navigator's", () => {
