@@ -44,15 +44,23 @@ describe('core/composer — a tapped note as a Pitch of the Key (AC-19.4.4)', ()
     const r88 = rangeFor(88);
     for (let m = r88.low; m <= r88.high; m++) midis.add(m);
     expect(midis.size).toBe(88); // the board's E2–E6 lies within the 88 keys
+    // Every case is checked; the misses are gathered and asserted once, because
+    // 33,792 separate expect() calls cost thirty times the arithmetic they guard
+    // and timed out on a busy machine (T413). An empty list is all 16,896 passing.
+    const lossy = [];
+    let checked = 0;
     for (const key of KEYS) {
       for (const scale of SCALES) {
         for (const midi of midis) {
           const pitch = pitchFromMidi(midi, key, scale.id);
-          expect(resolve(pitch, key).midiNote).toBe(midi);
-          expect(Number.isInteger(pitch.octaveOffset)).toBe(true);
+          const back = resolve(pitch, key).midiNote;
+          if (back !== midi || !Number.isInteger(pitch.octaveOffset)) lossy.push({ key, scale: scale.id, midi, pitch, back });
+          checked++;
         }
       }
     }
+    expect(checked).toBe(KEYS.length * SCALES.length * 88);
+    expect(lossy).toEqual([]);
   });
 
   it("AC-19.4.4/2 — An in-scale note takes the scale's own degree token — `b5` in Locrian and `#4` in Lydian for the same semitone — and an out-of-scale note the default chromatic token of its semitone above the root", () => {

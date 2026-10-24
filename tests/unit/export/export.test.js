@@ -227,17 +227,37 @@ describe('export/submit', () => {
     // what it takes to defeat the compressed tier rather than merely the readable one.
     let seed = 1;
     const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
-    const noisy = (i) => {
-      let p = create(`Take ${i}`);
+    const fourBars = (name) => {
+      let p = create(name);
       for (let m = 1; m < 4; m++) p = addMeasure(p);
+      return p;
+    };
+    // A Slot tapped k times lands in the same state whatever its neighbours hold, so
+    // each Slot's states are tapped out once, on one Pattern, and every noisy Pattern
+    // is assembled from them: the same Patterns as tapping each one out directly,
+    // without 7,500 whole-Pattern clones that timed out on a busy machine (T413).
+    const tapped = [fourBars('Taps')];
+    for (let k = 1; k < 4; k++) {
+      let p = tapped[k - 1];
       for (let m = 0; m < 4; m++) {
         for (let b = 0; b < 4; b++) {
-          for (let s = 0; s < p.measures[m].beats[b].slots.length; s++) {
-            for (let t = 0, times = Math.floor(rand() * 4); t < times; t++) p = cycleAccent(p, m, b, s);
+          for (let s = 0; s < p.measures[m].beats[b].slots.length; s++) p = cycleAccent(p, m, b, s);
+        }
+      }
+      tapped.push(p);
+    }
+    const noisy = (i) => {
+      const p = fourBars(`Take ${i}`);
+      const measures = structuredClone(p.measures);
+      for (let m = 0; m < 4; m++) {
+        for (let b = 0; b < 4; b++) {
+          for (let s = 0; s < measures[m].beats[b].slots.length; s++) {
+            const times = Math.floor(rand() * 4);
+            measures[m].beats[b].slots[s] = structuredClone(tapped[times].measures[m].beats[b].slots[s]);
           }
         }
       }
-      return p;
+      return { ...p, measures };
     };
     const many = Array.from({ length: 80 }, (_, i) => noisy(i));
     const { url, body, truncated, compressed } = await buildSubmission(many);
