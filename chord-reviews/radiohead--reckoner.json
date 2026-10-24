@@ -1,0 +1,108 @@
+{
+  "artist": "Radiohead",
+  "title": "Reckoner",
+  "key": "E minor",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "Em",
+        "D",
+        "C",
+        "Em"
+      ],
+      "numerals": [
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "min"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Em",
+        "D",
+        "C",
+        "Em",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "min"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "C",
+        "Em",
+        "B"
+      ],
+      "numerals": [
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    }
+  ],
+  "confidence": "high",
+  "note": "key E minor, 96% of chords diatonic",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/reckoner-chords-588700"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/reckoner-chords-588700",
+    "votes": 287,
+    "rating": 4.65653,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}
