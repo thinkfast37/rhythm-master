@@ -1,0 +1,75 @@
+{
+  "artist": "Bon Iver",
+  "title": "Holocene",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "G",
+        "Em",
+        "D",
+        "Em",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "C",
+        "Em",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; capo 6 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bon-iver/holocene-chords-1090674"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bon-iver/holocene-chords-1090674",
+    "votes": 924,
+    "rating": 4.87528,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

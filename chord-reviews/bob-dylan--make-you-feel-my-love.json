@@ -1,0 +1,85 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Make You Feel My Love",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "C",
+        "G",
+        "Bb",
+        "F",
+        "Fm",
+        "C",
+        "D9",
+        "G7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "9"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "F",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    }
+  ],
+  "confidence": "low",
+  "note": "key C major; page says key Db; capo 1 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/make-you-feel-my-love-chords-1189445"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/make-you-feel-my-love-chords-1189445",
+    "votes": 2739,
+    "rating": 4.87435,
+    "version": 3
+  },
+  "read": "2026-10-24"
+}

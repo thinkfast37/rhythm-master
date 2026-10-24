@@ -1,0 +1,65 @@
+{
+  "artist": "The National",
+  "title": "Terrible Love",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "Em",
+        "G",
+        "Bm",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/terrible-love-chords-931592"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/terrible-love-chords-931592",
+    "votes": 132,
+    "rating": 4.85481,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

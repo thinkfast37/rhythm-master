@@ -202,3 +202,28 @@ describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)
     expect(applied.swingFeel).toBeUndefined();
   });
 });
+
+describe('storage/settings — My list across a re-spelled catalogue', () => {
+  it('AC-2.12.1/4 — When the catalogue re-spells a song progression, its tick on My list moves to the entry that now holds that song’s section, so the list keeps the same songs', async () => {
+    const { PROGRESSION_RENAMES, renameProgressions } = await import('../../../src/storage/progressionRenames.js');
+    const { PROGRESSIONS } = await import('../../../src/core/harmony.js');
+    const { SONGBOOK } = await import('../../../src/core/songbook.js');
+    const ids = new Set(PROGRESSIONS.map((p) => p.id));
+    // Reckoner's verse was i–♭VII–♭VI–i–♭VI before AC-2.6.1/19; ticked under that
+    // id, it is ticked under the entry that holds the verse now.
+    const verse = SONGBOOK.find((c) => c.title === 'Reckoner' && c.section === 'verse').progression;
+    expect(PROGRESSION_RENAMES['i-bVII-bVI-i-bVI']).toEqual([verse]);
+    settings.save({ progressionCycleFrom: 'list', progressionCycleList: ['I-IV-V', 'i-bVII-bVI-i-bVI'] });
+    expect(settings.load().progressionCycleList).toEqual(['I-IV-V', verse]);
+    // An id that was never renamed, or is already current, is left as it is, once.
+    expect(renameProgressions([verse, 'i-bVII-bVI-i-bVI', 'ii-V-I'])).toEqual([verse, 'ii-V-I']);
+    // Every rename is from an id the catalogue no longer has to ids it does.
+    for (const [from, to] of Object.entries(PROGRESSION_RENAMES)) {
+      expect(ids.has(from), from).toBe(false);
+      for (const id of to) expect(ids.has(id), `${from} → ${id}`).toBe(true);
+    }
+    // The fills list is not a progressions list and is never renamed.
+    settings.save({ fillCycleList: ['i-bVII-bVI-i-bVI'] });
+    expect(settings.load().fillCycleList).toEqual(['i-bVII-bVI-i-bVI']);
+  });
+});

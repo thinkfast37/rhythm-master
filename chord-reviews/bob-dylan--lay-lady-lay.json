@@ -1,0 +1,163 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Lay, Lady, Lay",
+  "key": "A major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "A",
+        "C#m",
+        "G",
+        "Bm"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "C#m",
+        "E",
+        "F#m",
+        "A",
+        "Asus4",
+        "A",
+        "C#m",
+        "A",
+        "Asus4",
+        "A",
+        "C#m",
+        "E",
+        "F#m",
+        "A",
+        "C#m",
+        "Bm"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "A",
+        "Bm",
+        "C#m",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "medium",
+  "note": "key A major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/lay-lady-lay-chords-135659"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/lay-lady-lay-chords-135659",
+    "votes": 2120,
+    "rating": 4.82729,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

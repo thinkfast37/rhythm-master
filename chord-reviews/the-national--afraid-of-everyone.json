@@ -1,0 +1,47 @@
+{
+  "artist": "The National",
+  "title": "Afraid of Everyone",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "Am",
+        "C",
+        "F",
+        "Dm"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/afraid-of-everyone-chords-943621"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/afraid-of-everyone-chords-943621",
+    "votes": 116,
+    "rating": 4.86055,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

@@ -1,0 +1,345 @@
+{
+  "artist": "Coldplay",
+  "title": "The Scientist",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Bm7",
+        "Dm7",
+        "G",
+        "Bb",
+        "Gadd9",
+        "Bbadd9",
+        "A",
+        "C",
+        "A7",
+        "C7"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "b6",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "b6",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "b7",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        },
+        {
+          "degree": "b7",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "Bm7",
+        "G",
+        "Gadd9",
+        "D",
+        "Dsus2"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "G",
+        "Gadd9",
+        "D",
+        "Dsus2",
+        "G",
+        "Gadd9",
+        "D",
+        "A",
+        "A7",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "D",
+        "G",
+        "Gadd9",
+        "D",
+        "Dmaj7",
+        "Bm7",
+        "G",
+        "D",
+        "Dsus2"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "G",
+        "Gadd9",
+        "D",
+        "Dsus2",
+        "G",
+        "Gadd9",
+        "D",
+        "Dsus2",
+        "A",
+        "A7",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "interlude 2",
+      "chords": [
+        "D",
+        "G",
+        "D",
+        "Bm7",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "Bm7",
+        "G",
+        "D",
+        "Dsus2"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus2"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "medium",
+  "note": "key D major; unread symbols: D6sus2 Daddb6; capo 3 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/the-scientist-chords-180849"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/the-scientist-chords-180849",
+    "votes": 13520,
+    "rating": 4.88091,
+    "version": 4
+  },
+  "read": "2026-10-24"
+}

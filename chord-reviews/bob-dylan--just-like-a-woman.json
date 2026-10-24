@@ -1,0 +1,403 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Just Like a Woman",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 4 places"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "C",
+        "Em",
+        "Dm",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "F",
+        "C",
+        "F",
+        "G",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "C",
+        "E7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 3",
+      "chords": [
+        "C",
+        "F",
+        "G",
+        "C",
+        "F",
+        "G",
+        "C",
+        "F",
+        "G",
+        "F",
+        "G",
+        "F",
+        "Em",
+        "Dm",
+        "C",
+        "G",
+        "Am",
+        "C",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "longer than 16 chords — trim before adding"
+    },
+    {
+      "section": "chorus 4",
+      "chords": [
+        "C",
+        "D",
+        "F",
+        "G",
+        "A",
+        "Em",
+        "F#m",
+        "Dm",
+        "Em",
+        "Am",
+        "Bm",
+        "E7",
+        "F#7",
+        "F#"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "#4",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "7",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "7"
+        },
+        {
+          "degree": "#4",
+          "quality": "7"
+        },
+        {
+          "degree": "#4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 5",
+      "chords": [
+        "C",
+        "E",
+        "F",
+        "A",
+        "G",
+        "B",
+        "Em",
+        "Abm",
+        "Dm",
+        "F#m",
+        "Am",
+        "C#m",
+        "E7",
+        "Ab7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "7",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "b6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "#4",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "b2",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "7"
+        },
+        {
+          "degree": "b6",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; page says key E; capo 4 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/just-like-a-woman-chords-1048012"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/just-like-a-woman-chords-1048012",
+    "votes": 538,
+    "rating": 4.83436,
+    "version": 5
+  },
+  "read": "2026-10-24"
+}

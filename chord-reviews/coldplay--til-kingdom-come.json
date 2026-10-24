@@ -1,0 +1,78 @@
+{
+  "artist": "Coldplay",
+  "title": "Til Kingdom Come",
+  "key": "F major",
+  "sections": [
+    {
+      "section": "bridge",
+      "chords": [
+        "Am",
+        "F5",
+        "C5"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "F5: power chord read as major; C5: power chord read as major"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "F2",
+        "C5"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places; C5: power chord read as major"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "C/G",
+        "F5/D"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 3 places; C/G: bass G dropped; F5/D: power chord read as major; bass D dropped"
+    }
+  ],
+  "confidence": "medium",
+  "note": "key F major; unread symbols: CMaj7",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/til-kingdom-come-chords-793817"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/til-kingdom-come-chords-793817",
+    "votes": 568,
+    "rating": 4.86938,
+    "version": 3
+  },
+  "read": "2026-10-24"
+}

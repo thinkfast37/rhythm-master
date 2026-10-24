@@ -1,0 +1,55 @@
+{
+  "artist": "Bon Iver",
+  "title": "Skinny Love",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "C/B",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 5 places; C/B: bass B dropped"
+    }
+  ],
+  "confidence": "medium",
+  "note": "key C major; unread symbols: D6sus2",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bon-iver/skinny-love-chords-835053"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bon-iver/skinny-love-chords-835053",
+    "votes": 4319,
+    "rating": 4.78258,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

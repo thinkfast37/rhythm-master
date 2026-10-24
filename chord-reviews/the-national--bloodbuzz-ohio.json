@@ -1,0 +1,55 @@
+{
+  "artist": "The National",
+  "title": "Bloodbuzz Ohio",
+  "key": "A major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "A",
+        "F#m"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "pre-chorus",
+      "chords": [
+        "D",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key A major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/bloodbuzz-ohio-chords-935871"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/bloodbuzz-ohio-chords-935871",
+    "votes": 495,
+    "rating": 4.8482,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

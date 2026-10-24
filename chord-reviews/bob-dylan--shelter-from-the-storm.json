@@ -1,0 +1,42 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Shelter from the Storm",
+  "key": "E major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "E",
+        "B",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key E major; page says key E",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/shelter-from-the-storm-chords-697872"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/shelter-from-the-storm-chords-697872",
+    "votes": 1520,
+    "rating": 4.83288,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

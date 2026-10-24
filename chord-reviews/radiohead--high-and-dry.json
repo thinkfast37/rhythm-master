@@ -1,0 +1,75 @@
+{
+  "artist": "Radiohead",
+  "title": "High and Dry",
+  "key": "E major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "F#m7add11",
+        "Asus2",
+        "E",
+        "Esus4",
+        "E"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "sus2"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "F#m7add11: m11/m13 read as m7"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "F#m7add11",
+        "Asus2",
+        "E"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "sus2"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "F#m7add11: m11/m13 read as m7"
+    }
+  ],
+  "confidence": "high",
+  "note": "key E major; page says key E",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/high-and-dry-chords-1067552"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/high-and-dry-chords-1067552",
+    "votes": 2977,
+    "rating": 4.88298,
+    "version": 5
+  },
+  "read": "2026-10-24"
+}

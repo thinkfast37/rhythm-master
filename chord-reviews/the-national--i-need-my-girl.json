@@ -1,0 +1,83 @@
+{
+  "artist": "The National",
+  "title": "I Need My Girl",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "F",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "F",
+        "Am",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "Am",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; capo 3 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/i-need-my-girl-chords-1197424"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/i-need-my-girl-chords-1197424",
+    "votes": 788,
+    "rating": 4.86907,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

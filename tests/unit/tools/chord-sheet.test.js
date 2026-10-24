@@ -98,11 +98,13 @@ describe('tools/chord-sheet — reading', () => {
     expect(names(findLoop(c('C')))).toEqual(['C']);
   });
 
-  it('finds the key the chords belong to, major or minor', () => {
+  it('finds the Ionian key whose signature holds the chords — a minor-key song reads in its relative major', () => {
     const c = (s) => s.split(' ').map(parseChord);
     expect(detectKey(c('G D Em C G D C G'))).toMatchObject({ tonic: 7, mode: 'major' });
-    expect(detectKey(c('Am F C G Am F C G Am'))).toMatchObject({ tonic: 9, mode: 'minor' });
-    expect(detectKey(c('Em C G D Em'))).toMatchObject({ tonic: 4, mode: 'minor' });
+    expect(detectKey(c('Am F C G Am F C G Am'))).toMatchObject({ tonic: 0, mode: 'major' });
+    expect(detectKey(c('Em C G D Em'))).toMatchObject({ tonic: 7, mode: 'major' });
+    // Dm7 rules out G.
+    expect(detectKey(c('G Am7 C Dm7 C Am7'))).toMatchObject({ tonic: 0, mode: 'major' });
     expect(detectKey(c('C F G C')).fit).toBe(1);
   });
 
@@ -145,7 +147,10 @@ const review = (artist, title, sections) => ({
 describe('tools/chord-sheet — filing into the catalogue', () => {
   it('files a loop under the heading its chords and artist give it', () => {
     expect(headingFor(n('1 4:sus2 5'), 'Wilco')).toBe('sus');
-    expect(headingFor(n('1:min b7 b6'), 'Coldplay')).toBe('minor');
+    // A minor-key loop starts on a minor vi (AC-2.6.1/18, revised 2026-10-24).
+    expect(headingFor(n('6:min 5 4'), 'Coldplay')).toBe('minor');
+    expect(headingFor(n('4 6:min 5'), 'Coldplay')).toBe('pop');
+    expect(headingFor(n('1:min b7 b6'), 'Coldplay')).toBe('modal');
     expect(headingFor(n('1 b7 4'), 'Bob Dylan')).toBe('modal');
     expect(headingFor(n('1 5 6:min 4'), 'Coldplay')).toBe('pop');
     expect(headingFor(n('1 5 6:min 4'), 'Bob Dylan')).toBe('classical');

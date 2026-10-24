@@ -1,0 +1,80 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Knockin’ on Heaven’s Door",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "D",
+        "Am",
+        "G",
+        "D",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "G",
+        "D",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key G",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/knockin-on-heavens-door-chords-66559"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/knockin-on-heavens-door-chords-66559",
+    "votes": 17659,
+    "rating": 4.85253,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

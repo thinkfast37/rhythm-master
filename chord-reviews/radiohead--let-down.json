@@ -1,0 +1,88 @@
+{
+  "artist": "Radiohead",
+  "title": "Let Down",
+  "key": "A major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "A",
+        "E",
+        "F#m",
+        "E"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "D",
+        "Dsus2",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "sus2"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "Asus4",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key A major; page says key A",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/let-down-chords-596727"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/let-down-chords-596727",
+    "votes": 1968,
+    "rating": 4.83075,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

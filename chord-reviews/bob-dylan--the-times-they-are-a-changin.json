@@ -1,0 +1,133 @@
+{
+  "artist": "Bob Dylan",
+  "title": "The Times They Are A-Changin’",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "verse",
+      "chords": [
+        "G",
+        "Em",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 4 places"
+    },
+    {
+      "section": "harmonica",
+      "chords": [
+        "G",
+        "D",
+        "C",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "harmonica 2",
+      "chords": [
+        "G",
+        "Em",
+        "C",
+        "G",
+        "D",
+        "C",
+        "G",
+        "D",
+        "G",
+        "C",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key G",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/the-times-they-are-a-changin-chords-14943"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/the-times-they-are-a-changin-chords-14943",
+    "votes": 7199,
+    "rating": 4.88653,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

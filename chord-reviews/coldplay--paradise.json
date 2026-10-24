@@ -1,0 +1,197 @@
+{
+  "artist": "Coldplay",
+  "title": "Paradise",
+  "key": "F major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Gm",
+        "C",
+        "Dm",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 7 places"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Dm",
+        "Bb",
+        "F",
+        "C/E"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "C/E: bass E dropped"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Gm",
+        "Bb",
+        "F",
+        "C/E"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "C/E: bass E dropped"
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "Bb",
+        "F/A",
+        "C",
+        "Bb",
+        "F/A",
+        "C",
+        "Gm"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": "F/A: bass A dropped"
+    },
+    {
+      "section": "pre-chorus",
+      "chords": [
+        "Bb",
+        "F",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "Bb",
+        "C",
+        "Dm",
+        "Bdim"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "#4",
+          "quality": "dim"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key F major; page says key Bb",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/paradise-chords-1092837"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/paradise-chords-1092837",
+    "votes": 1179,
+    "rating": 4.69073,
+    "version": 3
+  },
+  "read": "2026-10-24"
+}

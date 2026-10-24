@@ -1,0 +1,293 @@
+{
+  "artist": "Bon Iver",
+  "title": "Hey, Ma",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "C",
+        "Am",
+        "C",
+        "F",
+        "G",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C",
+        "F",
+        "Am",
+        "G",
+        "C",
+        "Em",
+        "F",
+        "G",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Am",
+        "F",
+        "Am",
+        "F",
+        "Am",
+        "G",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "F",
+        "Am",
+        "G",
+        "C",
+        "Em",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "Am",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "chorus 3",
+      "chords": [
+        "F",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 4",
+      "chords": [
+        "F",
+        "Am",
+        "F",
+        "Am",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; page says key C",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bon-iver/hey-ma-chords-2715150"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bon-iver/hey-ma-chords-2715150",
+    "votes": 437,
+    "rating": 4.87818,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

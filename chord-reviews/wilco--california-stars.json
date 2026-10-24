@@ -1,0 +1,42 @@
+{
+  "artist": "Wilco",
+  "title": "California Stars",
+  "key": "A major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "A",
+        "E",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key A major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/wilco/california-stars-chords-136289"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/wilco/california-stars-chords-136289",
+    "votes": 757,
+    "rating": 4.77419,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

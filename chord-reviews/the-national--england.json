@@ -1,0 +1,143 @@
+{
+  "artist": "The National",
+  "title": "England",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "Am7",
+        "C",
+        "Dm7",
+        "C",
+        "Am7"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Dm7",
+        "C",
+        "Am7",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "Dm7",
+        "C",
+        "Am7",
+        "G",
+        "Dm7",
+        "C",
+        "Am7",
+        "G",
+        "F",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; capo 3 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/the-national/england-chords-1496302"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/the-national/england-chords-1496302",
+    "votes": 99,
+    "rating": 4.88632,
+    "version": 4
+  },
+  "read": "2026-10-24"
+}

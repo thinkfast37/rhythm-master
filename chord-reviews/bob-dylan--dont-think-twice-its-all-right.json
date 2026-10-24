@@ -1,0 +1,88 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Don’t Think Twice, It’s All Right",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C",
+        "G",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": "the sheet strays from this loop in 6 places"
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "C",
+        "G",
+        "Am",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; page says key C; capo 4 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/dont-think-twice-its-all-right-chords-178850"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/dont-think-twice-its-all-right-chords-178850",
+    "votes": 9679,
+    "rating": 4.88447,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

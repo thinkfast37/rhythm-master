@@ -9,7 +9,7 @@
  * chords, numerals and the source only; no word of a sheet survives reading.
  */
 import { readStore } from './parse.mjs';
-import { compareReview, numeral, songbookTitle } from './catalogue.mjs';
+import { numeral, songbookTitle } from './catalogue.mjs';
 
 export const REVIEW_DIR = 'chord-reviews';
 
@@ -92,12 +92,83 @@ export function isRotation(a, b) {
   return x.some((_, i) => [...x.slice(i), ...x.slice(0, i)].join(' ') === y.join(' '));
 }
 
-/** One song's standing: confirmed, differs, not found, or not yet read. */
+const DEGREES = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7'];
+const FAMILY = (q) => (/^(min|m6|m7|m9|mMaj7)$/.test(q) ? 'm' : /^(dim|dim7|m7b5)$/.test(q) ? 'o' : /sus/.test(q) ? 's' : 'M');
+
+/**
+ * A loop as it sounds round and round: a chord held over (written twice in a
+ * row, or across the seam) is one chord, and a loop written out twice is once.
+ */
+export function collapse(numerals) {
+  const seq = numerals.filter((n, i) => i === 0 || n.degree !== numerals[i - 1].degree || n.quality !== numerals[i - 1].quality);
+  while (seq.length > 1 && seq[0].degree === seq.at(-1).degree && seq[0].quality === seq.at(-1).quality) seq.pop();
+  const t = token(seq);
+  for (let p = 1; p < t.length; p++) if (t.length % p === 0 && t.every((x, i) => x === t[i % p])) return seq.slice(0, p);
+  return seq;
+}
+
+const rotationsOf = (t) => t.map((_, i) => [...t.slice(i), ...t.slice(0, i)].join(' '));
+const shape = (numerals, shift = 0) =>
+  numerals.map((n) => `${(DEGREES.indexOf(n.degree) + shift) % 12}${FAMILY(n.quality)}`);
+
+/**
+ * How closely a shipped loop is on the sheet, best first:
+ *   exact    — the same chords, a held chord counted once;
+ *   rotation — the same chords, the sheet starting the loop at another one;
+ *   colour   — the same roots and chord types, one side adding a 7th, a sus or an add9;
+ *   key      — the same chords relative to each other, the reader having put
+ *              the song in another key (the numerals all shift together);
+ *   within   — the loop played straight through inside a longer passage the
+ *              reader found no loop in (in the sheet's key or, shifted, in another);
+ * or null when no loop on the sheet is it.
+ */
+export function matchLoop(steps, sections) {
+  const want = collapse(steps);
+  const exact = token(want).join(' ');
+  const tries = [
+    ['exact', (s) => token(collapse(s.numerals)).join(' ') === exact],
+    ['rotation', (s) => rotationsOf(token(collapse(s.numerals))).includes(exact)],
+    ['colour', (s) => rotationsOf(shape(collapse(s.numerals))).includes(shape(want).join(' '))],
+    [
+      'key',
+      (s) => {
+        const have = collapse(s.numerals);
+        return DEGREES.some((_, k) => rotationsOf(shape(have, k)).includes(shape(want).join(' ')));
+      },
+    ],
+    [
+      'within',
+      (s) => {
+        const have = collapse(s.numerals);
+        if (have.length <= want.length) return false;
+        const w = ` ${shape(want).join(' ')} `;
+        return DEGREES.some((_, k) => ` ${shape(have, k).join(' ')} `.includes(w));
+      },
+    ],
+  ];
+  for (const [level, test] of tries) {
+    const hit = sections.find(test);
+    if (hit) return { level, section: hit };
+  }
+  return null;
+}
+
+/** One song's standing: confirmed, close (colour, key or within only), differs, not found, or not yet read. */
 export function songStatus(review, catalogue) {
   if (!review) return { status: 'not read' };
   if (review.notFound) return { status: 'not found' };
-  const c = compareReview(review, catalogue);
-  return { status: c.unmatchedShipped.length ? 'differs' : 'confirmed', compare: c };
+  const { SONGBOOK, spellProgression } = catalogue;
+  const title = songbookTitle(review.title ?? '');
+  const matches = SONGBOOK.filter((c) => c.artist === review.artist && c.title === title).map((c) => ({
+    credit: c,
+    match: matchLoop(spellProgression(c.progression), review.sections),
+  }));
+  const status = matches.some((m) => !m.match)
+    ? 'differs'
+    : matches.every((m) => m.match.level === 'exact' || m.match.level === 'rotation')
+      ? 'confirmed'
+      : 'close';
+  return { status, matches };
 }
 
 /**
@@ -106,7 +177,7 @@ export function songStatus(review, catalogue) {
  * sheet's own loops as chords and numerals, with the source to check by ear.
  */
 export function buildReport(songs, reviews, catalogue) {
-  const { SONGBOOK, PROGRESSIONS, spellProgression, QUALITIES } = catalogue;
+  const { PROGRESSIONS, QUALITIES } = catalogue;
   const byPath = new Map(reviews.map((r) => [reviewPath(r.artist, r.title), r]));
   const rows = songs.map((s) => {
     const review = byPath.get(reviewPath(s.artist, s.title)) ?? null;
@@ -124,12 +195,20 @@ export function buildReport(songs, reviews, catalogue) {
     `| Status | Songs |`,
     `|---|---|`,
     `| ✅ confirmed — every shipped credit is on the sheet | ${count('confirmed')} |`,
+    `| 🟨 close — on the sheet but for a 7th, a sus, the key the reader chose, or inside a longer passage | ${count('close')} |`,
     `| ❌ differs — a shipped credit is not on the sheet | ${count('differs')} |`,
     `| ❔ not found — no Chords version on Ultimate Guitar | ${count('not found')} |`,
     `| ⏳ not read yet | ${count('not read')} |`,
     '',
   ];
-  const mark = { confirmed: '✅', differs: '❌', 'not found': '❔', 'not read': '⏳' };
+  const mark = { confirmed: '✅', close: '🟨', differs: '❌', 'not found': '❔', 'not read': '⏳' };
+  const verdicts = {
+    exact: (s) => `✅ on the sheet (${s})`,
+    rotation: (s) => `🔁 on the sheet, started at another chord (${s})`,
+    colour: (s) => `🟨 on the sheet but for a 7th, sus or add9 (${s})`,
+    key: (s) => `🟨 on the sheet, read in another key (${s})`,
+    within: (s) => `🟨 inside a longer passage on the sheet (${s})`,
+  };
 
   for (const r of rows) {
     if (r.status === 'not read') continue;
@@ -151,20 +230,16 @@ export function buildReport(songs, reviews, catalogue) {
     lines.push(about.join(' · '), '');
     if (v.note) lines.push(`> ${v.note}`, '');
 
-    const read = v.sections.map((s) => ({ ...s, sig: token(s.numerals).join(' ') }));
-    const shipped = SONGBOOK.filter((c) => c.artist === r.artist && c.title === r.title);
     lines.push('| | Section | Numerals | Chords on the sheet |', '|---|---|---|---|');
-    for (const c of shipped) {
-      const steps = spellProgression(c.progression);
-      const hit = read.find((s) => s.sig === token(steps).join(' '));
-      const rot = !hit && read.find((s) => isRotation(s.numerals, steps));
+    const used = new Set();
+    for (const { credit: c, match } of r.matches) {
       const plain = PROGRESSIONS.find((p) => p.id === c.progression)?.label.replace(/\s*\([^)]*\)$/, '') ?? c.progression;
-      const verdict = hit ? `✅ shipped, on the sheet (${hit.section})` : rot ? `🔁 shipped, the sheet starts it elsewhere (${rot.section})` : '❌ shipped, not on the sheet';
-      lines.push(`| ${verdict} | ${c.section} | ${plain} | ${hit ? hit.chords.join(' ') : rot ? rot.chords.join(' ') : ''} |`);
+      if (match) used.add(match.section);
+      const verdict = match ? verdicts[match.level](match.section.section) : '❌ shipped, not on the sheet';
+      lines.push(`| ${verdict} | ${c.section} | ${plain} | ${match ? match.section.chords.join(' ') : ''} |`);
     }
-    for (const s of read) {
-      const shippedHit = shipped.some((c) => token(spellProgression(c.progression)).join(' ') === s.sig);
-      if (shippedHit) continue;
+    for (const s of v.sections) {
+      if (used.has(s)) continue;
       lines.push(`| ➕ on the sheet only | ${s.section} | ${label(s.numerals, QUALITIES)} | ${s.chords.join(' ')}${s.note ? ` — ${s.note}` : ''} |`);
     }
     lines.push('');

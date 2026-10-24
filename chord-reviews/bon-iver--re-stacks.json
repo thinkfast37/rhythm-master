@@ -1,0 +1,234 @@
+{
+  "artist": "Bon Iver",
+  "title": "re: Stacks",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Dsus4",
+        "G",
+        "Cadd9",
+        "D7sus4",
+        "Cadd9",
+        "Dsus4",
+        "D",
+        "Dsus4",
+        "Cadd9",
+        "G",
+        "Cadd9",
+        "G",
+        "Cadd9",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "7sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Dsus4",
+        "G",
+        "Cadd9",
+        "Dsus4",
+        "Cadd9"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": "the sheet strays from this loop in 1 place"
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "G",
+        "Cadd9"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Dsus4",
+        "Em7",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "Dsus4",
+        "G",
+        "Cadd9",
+        "Dsus4",
+        "Cadd9",
+        "Dsus4",
+        "G",
+        "Cadd9",
+        "Dsus4",
+        "Em7",
+        "Am7"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key A; capo 2 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bon-iver/re-stacks-chords-661006"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bon-iver/re-stacks-chords-661006",
+    "votes": 1443,
+    "rating": 4.90759,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

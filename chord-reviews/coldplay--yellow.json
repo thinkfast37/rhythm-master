@@ -1,0 +1,177 @@
+{
+  "artist": "Coldplay",
+  "title": "Yellow",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "D",
+        "C"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "G",
+        "D",
+        "Cmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse 2",
+      "chords": [
+        "G",
+        "D",
+        "Cmaj7",
+        "G",
+        "Gsus4"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "Cmaj7",
+        "Em7",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj7"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "G",
+        "D",
+        "C",
+        "G",
+        "Gsus4"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "outro",
+      "chords": [
+        "G",
+        "Dm7",
+        "Cmaj7"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj7"
+        }
+      ],
+      "note": "spelled in C major, the key this section lies in"
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key G; capo 4 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/yellow-chords-114080"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/yellow-chords-114080",
+    "votes": 25381,
+    "rating": 4.87325,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

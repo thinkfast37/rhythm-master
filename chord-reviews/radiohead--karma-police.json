@@ -1,0 +1,231 @@
+{
+  "artist": "Radiohead",
+  "title": "Karma Police",
+  "key": "G major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Am",
+        "D/F#",
+        "Em",
+        "G",
+        "Am",
+        "Fadd9",
+        "Em",
+        "G",
+        "Am",
+        "D",
+        "G",
+        "D/F#",
+        "C",
+        "Bm",
+        "Am",
+        "Bm",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "b7",
+          "quality": "add9"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "longer than 16 chords — trim before adding; D/F#: bass F# dropped"
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "C",
+        "D",
+        "G",
+        "F#7"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "7",
+          "quality": "7"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "bridge",
+      "chords": [
+        "Bm",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "Eadd9",
+        "E7"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "add9"
+        },
+        {
+          "degree": "6",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "interlude",
+      "chords": [
+        "Bm",
+        "D",
+        "G",
+        "D",
+        "G",
+        "D",
+        "E7"
+      ],
+      "numerals": [
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "7"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key G major; page says key Am",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/radiohead/karma-police-chords-103398"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/radiohead/karma-police-chords-103398",
+    "votes": 11166,
+    "rating": 4.89648,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

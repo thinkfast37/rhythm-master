@@ -1,0 +1,287 @@
+{
+  "artist": "Coldplay",
+  "title": "Hymn for the Weekend",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Dm",
+        "G",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "Dm",
+        "G",
+        "Am",
+        "Dm",
+        "G",
+        "Am",
+        "Dm",
+        "G",
+        "Am",
+        "Dm",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "pre-chorus",
+      "chords": [
+        "Am",
+        "G",
+        "Am",
+        "F",
+        "Em",
+        "Dm",
+        "Am",
+        "G",
+        "Am",
+        "Dm"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "F",
+        "G",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "pre-chorus 2",
+      "chords": [
+        "Am",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": "the sheet strays from this loop in 2 places"
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "F",
+        "G",
+        "Am",
+        "F",
+        "G",
+        "Am",
+        "F",
+        "G",
+        "Am",
+        "F",
+        "G",
+        "Am",
+        "F",
+        "Dm",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; page says key Fm; capo 3 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/hymn-for-the-weekend-chords-1787495"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/hymn-for-the-weekend-chords-1787495",
+    "votes": 1801,
+    "rating": 4.84946,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

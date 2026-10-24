@@ -1,0 +1,85 @@
+{
+  "artist": "Coldplay",
+  "title": "My Universe",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "G",
+        "D",
+        "A",
+        "G",
+        "D",
+        "A",
+        "D"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "G",
+        "D",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major; page says key E; capo 2 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/my-universe-chords-3817577"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/my-universe-chords-3817577",
+    "votes": 146,
+    "rating": 4.84838,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

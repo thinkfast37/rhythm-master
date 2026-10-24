@@ -6,106 +6,1031 @@ A sheet is one guitarist’s reading, not the record: **differs** is a question 
 
 | Status | Songs |
 |---|---|
-| ✅ confirmed — every shipped credit is on the sheet | 0 |
-| ❌ differs — a shipped credit is not on the sheet | 1 |
-| ❔ not found — no Chords version on Ultimate Guitar | 0 |
-| ⏳ not read yet | 82 |
+| ✅ confirmed — every shipped credit is on the sheet | 34 |
+| 🟨 close — on the sheet but for a 7th, a sus, the key the reader chose, or inside a longer passage | 20 |
+| ❌ differs — a shipped credit is not on the sheet | 22 |
+| ❔ not found — no Chords version on Ultimate Guitar | 7 |
+| ⏳ not read yet | 0 |
 
-## ❌ Radiohead — Reckoner
+## ✅ Radiohead — Creep
 
-[source](https://tabs.ultimate-guitar.com/tab/radiohead/reckoner-chords-588700) · version 1 · 287 ratings · ★4.66 · key E minor · confidence high
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/creep-chords-4169) · version 1 · 44676 ratings · ★4.87 · key G major · confidence medium
 
-> key E minor, 96% of chords diatonic
+> key G major; page says key G
 
 | | Section | Numerals | Chords on the sheet |
 |---|---|---|---|
-| ✅ shipped, on the sheet (verse) | verse | i–♭VII–♭VI–i–♭VI | Em D C Em C |
-| ❌ shipped, not on the sheet | bridge | iii–i–iv–♭VImaj7–V |  |
-| ➕ on the sheet only | intro | ♭VI–i–♭VII–♭VI–i | C Em D C Em |
-| ➕ on the sheet only | verse 2 | ♭VI–i–V | C Em B — the sheet strays from this loop in 1 place |
+| ✅ on the sheet (intro) | verse and chorus | I–III–IV–iv | G B C Cm |
+| ➕ on the sheet only | verse | iv–I–III–IV | Cm G B C |
 
-## ⏳ Not read yet
+## ❌ Radiohead — No Surprises
 
-- Radiohead — Creep
-- Radiohead — No Surprises
-- Radiohead — Karma Police
-- Radiohead — Let Down
-- Radiohead — High and Dry
-- Radiohead — Fake Plastic Trees
-- Radiohead — Exit Music
-- Radiohead — Weird Fishes/Arpeggi
-- Radiohead — Everything in Its Right Place
-- Radiohead — Street Spirit
-- Radiohead — Lucky
-- Radiohead — Just
-- The National — I Need My Girl
-- The National — Light Years
-- The National — Bloodbuzz Ohio
-- The National — Fake Empire
-- The National — Sorrow
-- The National — About Today
-- The National — Runaway
-- The National — Pink Rabbits
-- The National — England
-- The National — Graceless
-- The National — Terrible Love
-- The National — Mr. November
-- The National — Guilty Party
-- The National — Conversation 16
-- The National — Start a War
-- The National — Afraid of Everyone
-- Wilco — Jesus, Etc.
-- Wilco — California Stars
-- Wilco — How to Fight Loneliness
-- Wilco — Impossible Germany
-- Wilco — Heavy Metal Drummer
-- Wilco — Say You Miss Me
-- Wilco — Poor Places
-- Wilco — Kamera
-- Wilco — War on War
-- Wilco — Handshake Drugs
-- Wilco — Via Chicago
-- Wilco — Hate It Here
-- Wilco — Box Full of Letters
-- Bon Iver — Skinny Love
-- Bon Iver — Holocene
-- Bon Iver — re: Stacks
-- Bon Iver — Hey, Ma
-- Bon Iver — Blood Bank
-- Bon Iver — 8 (circle)
-- Bon Iver — 22 (OVER S∞∞N)
-- Bon Iver — For Emma
-- Coldplay — Yellow
-- Coldplay — Something Just Like This
-- Coldplay — Viva La Vida
-- Coldplay — The Scientist
-- Coldplay — Hymn for the Weekend
-- Coldplay — Sparks
-- Coldplay — A Sky Full of Stars
-- Coldplay — Fix You
-- Coldplay — Paradise
-- Coldplay — My Universe
-- Coldplay — Adventure of a Lifetime
-- Coldplay — Clocks
-- Coldplay — Every Teardrop Is a Waterfall
-- Coldplay — Til Kingdom Come
-- Coldplay — Up&Up
-- Coldplay — Princess of China
-- Bob Dylan — Knockin’ on Heaven’s Door
-- Bob Dylan — Like a Rolling Stone
-- Bob Dylan — The Times They Are A-Changin’
-- Bob Dylan — Blowin’ in the Wind
-- Bob Dylan — Make You Feel My Love
-- Bob Dylan — Don’t Think Twice, It’s All Right
-- Bob Dylan — Lay, Lady, Lay
-- Bob Dylan — Hurricane
-- Bob Dylan — Mr. Tambourine Man
-- Bob Dylan — Subterranean Homesick Blues
-- Bob Dylan — All Along the Watchtower
-- Bob Dylan — It Ain’t Me Babe
-- Bob Dylan — Tangled Up in Blue
-- Bob Dylan — Just Like a Woman
-- Bob Dylan — Girl from the North Country
-- Bob Dylan — One More Cup of Coffee
-- Bob Dylan — Shelter from the Storm
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/no-surprises-chords-183884) · version 1 · 8490 ratings · ★4.90 · key D major · confidence medium
+
+> key D major; page says key F; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse | I–vi7–ii–V–I–iv |  |
+| 🟨 inside a longer passage on the sheet (verse) | chorus | ii–V | D Gmaj7/B Em A Asus4 D Gm |
+| ➕ on the sheet only | intro | I–iv | D Gm |
+| ➕ on the sheet only | verse 2 | I–IVmaj7 | D Gmaj7/B — Gmaj7/B: bass B dropped |
+| ➕ on the sheet only | chorus | ii–V–Vsus4 | Em A Asus4 — the sheet strays from this loop in 2 places |
+| ➕ on the sheet only | interlude | V–iv | A Gm — the sheet strays from this loop in 1 place |
+
+## 🟨 Radiohead — Karma Police
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/karma-police-chords-103398) · version 2 · 11166 ratings · ★4.90 · key G major · confidence high
+
+> key G major; page says key Am
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (intro) | verse | ii–V–vi–I–ii–♭VII–vi–I | Am D/F# Em G Am Fadd9 Em G Am D G D/F# C Bm Am Bm D |
+| ✅ on the sheet (chorus) | chorus | IV–V–I–VII7 | C D G F#7 |
+| ✅ on the sheet (interlude) | outro | iii–V–I–V–I–V–VI7 | Bm D G D G D E7 |
+| ➕ on the sheet only | bridge | iii–V–I–V–I–V–VIadd9–VI7 | Bm D G D G D Eadd9 E7 |
+
+## 🟨 Radiohead — Let Down
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/let-down-chords-596727) · version 1 · 1968 ratings · ★4.83 · key A major · confidence high
+
+> key A major; page says key A
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | I–V–vi–V | A E F#m E |
+| 🟨 inside a longer passage on the sheet (verse) | chorus | IV–I | A E F#m E |
+| ➕ on the sheet only | chorus | IV–IVsus2–I | D Dsus2 A — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | outro | Isus4–I | Asus4 A |
+
+## ❌ Radiohead — High and Dry
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/high-and-dry-chords-1067552) · version 5 · 2977 ratings · ★4.88 · key E major · confidence high
+
+> key E major; page says key E
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse and chorus | ii7–IV–I–I |  |
+| ➕ on the sheet only | verse | ii7–IVsus2–I–Isus4–I | F#m7add11 Asus2 E Esus4 E — F#m7add11: m11/m13 read as m7 |
+| ➕ on the sheet only | chorus | ii7–IVsus2–I | F#m7add11 Asus2 E — F#m7add11: m11/m13 read as m7 |
+
+## ❌ Radiohead — Fake Plastic Trees
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/fake-plastic-trees-chords-140939) · version 3 · 5601 ratings · ★4.91 · key A major · confidence high
+
+> key A major; page says key A
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse | I–vi–V–IV |  |
+| 🟨 inside a longer passage on the sheet (intro) | chorus | ii7–I | A Asus4 Dmaj9/F# E6 Dsus2 Bm7add11 Amaj7 |
+| ➕ on the sheet only | verse | I–Isus4–IVmaj9–V6–IVsus2–I–IVsus2 | A Asus4 Dmaj9/F# E6 Dsus2 A Dsus2 — Dmaj9/F#: bass F# dropped |
+| ➕ on the sheet only | chorus | ii7–I–ii7–I–Isus4 | Bm7add11 A Bm7add11 A Asus4 — Bm7add11: m11/m13 read as m7 |
+| ➕ on the sheet only | chorus 2 | ii7–I–ii7–Isus4–I | Bm7add11 A Bm7add11 Asus4 A — Bm7add11: m11/m13 read as m7 |
+| ➕ on the sheet only | chorus 3 | ii7–I–ii7–I–Imaj7 | Bm7add11 A Bm7add11 A Amaj7 — Bm7add11: m11/m13 read as m7 |
+| ➕ on the sheet only | outro | ii7–I–V6 | Bm7add11 A E6 — Bm7add11: m11/m13 read as m7 |
+
+## ❔ Radiohead — Exit Music
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=Radiohead%20Exit%20Music
+
+## 🟨 Radiohead — Weird Fishes/Arpeggi
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/weird-fishes-arpeggi-chords-632943) · version 1 · 808 ratings · ★4.87 · key D major · confidence high
+
+> key D major; page says key Em
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (intro) | main loop | ii7–iii7–V | Em7 F#m7 A A7 A6 Gmaj7 |
+| ➕ on the sheet only | part | V6–IVmaj7 | A6 Gmaj7 |
+| ➕ on the sheet only | part 2 | vi–♭VII–vi–V6–IVmaj7 | Bm C Bm A6 Gmaj7 |
+
+## 🟨 Radiohead — Everything in Its Right Place
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/everything-in-its-right-place-chords-1670513) · version 1 · 107 ratings · ★4.82 · key Ab major · confidence high
+
+> key Ab major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (interlude) | main loop | III–IVmaj7–V | C Db Eb |
+| ➕ on the sheet only | intro | VI–III–IV–V | F C Db Eb |
+| ➕ on the sheet only | verse | IV–III–V | Db C Eb |
+| ➕ on the sheet only | verse 2 | V–IV–III | Eb Db C |
+
+## ❔ Radiohead — Street Spirit
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=Radiohead%20Street%20Spirit
+
+## ✅ Radiohead — Reckoner
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/reckoner-chords-588700) · version 1 · 287 ratings · ★4.66 · key G major · confidence high
+
+> key G major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | vi–V–IV–vi–IV | Em D C Em C |
+| ✅ on the sheet (verse 2) | bridge | IV–vi–III | C Em B |
+| ➕ on the sheet only | intro | IV–vi–V–IV–vi | C Em D C Em |
+
+## ❌ Radiohead — Lucky
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/lucky-chords-41315) · version 1 · 1475 ratings · ★4.87 · key G major · confidence high
+
+> key G major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | vi–ii–I–iii–vi–IV–I–iii | Em Am G Bm Em C G Bm |
+| ❌ shipped, not on the sheet | chorus | II–vi–II–vi–II–vi–IV–III7 |  |
+| ➕ on the sheet only | chorus | II–vi | A Em — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | bridge | vi–I–IV | Emadd9 G5/D C — Emadd9: minor add9 read as minor; G5/D: power chord read as major; bass D dropped |
+| ➕ on the sheet only | chorus 2 | vi–I | Emadd9 G5/D — Emadd9: minor add9 read as minor; G5/D: power chord read as major; bass D dropped |
+
+## 🟨 Radiohead — Just
+
+[source](https://tabs.ultimate-guitar.com/tab/radiohead/just-chords-196011) · version 1 · 1004 ratings · ★4.84 · key C major · confidence low
+
+> key C major; page says key C
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (verse) | verse | vi–♭VI–V–♯IV–IV | Am Ab Eb F Am Ab Eb Bb Am Ab G Gb F |
+| ✅ on the sheet (intro) | chorus | I–♭III–II–IV | C Eb D F |
+| ➕ on the sheet only | chorus | I–♯IV | C Gb — the sheet strays from this loop in 4 places |
+| ➕ on the sheet only | solo | III–II–VI6–V | E D A6 G |
+| ➕ on the sheet only | bridge | vi–♭VI–♭III–IV–vi–♭VI–V–♯IV–IV–I–♯IV–IV | Am Ab Eb F Am Ab G Gb F C Gb F |
+| ➕ on the sheet only | outro | I–♭VII–IV–♭III | C Bb F Eb |
+
+## ✅ The National — I Need My Girl
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/i-need-my-girl-chords-1197424) · version 1 · 788 ratings · ★4.87 · key C major · confidence high
+
+> key C major; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | vi–IV–I | Am F C |
+| ✅ on the sheet (chorus) | chorus | IV–vi–V | F Am G |
+| ➕ on the sheet only | outro | vi–IV | Am F |
+
+## ❌ The National — Light Years
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/light-years-chords-2655684) · version 1 · 183 ratings · ★4.95 · key E major · confidence high
+
+> key E major; page says key E
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | intro and verse | ii–IV–I–Vsus4 |  |
+| ➕ on the sheet only | intro | ii–IV–I–V | F#m A E B |
+| ➕ on the sheet only | chorus | IV–I–IV–V | A E A B |
+
+## ✅ The National — Bloodbuzz Ohio
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/bloodbuzz-ohio-chords-935871) · version 1 · 495 ratings · ★4.85 · key A major · confidence high
+
+> key A major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | I–vi | A F#m |
+| ✅ on the sheet (pre-chorus) | pre-chorus and chorus | IV–I | D A |
+
+## ✅ The National — Fake Empire
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/fake-empire-chords-830846) · version 1 · 312 ratings · ★4.82 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | I–IV–V | C F G |
+| ✅ on the sheet (chorus) | chorus | vi–IV–V | Am F G |
+| ➕ on the sheet only | interlude | IV–vi–V | F Am G |
+| ➕ on the sheet only | interlude 2 | vi–V | Am G |
+
+## ✅ The National — Sorrow
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/sorrow-chords-993498) · version 2 · 188 ratings · ★4.92 · key A major · confidence high
+
+> key A major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | I–iii–vi–V | A C#m F#m E |
+| ➕ on the sheet only | chorus | V–I–iii–vi | E A C#m F#m |
+
+## ✅ The National — About Today
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/about-today-chords-1458561) · version 2 · 152 ratings · ★4.89 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro 2) | main loop | IV–vi–vi–V | F Am G |
+| ➕ on the sheet only | intro | vi–I–iii–IV–V | Am C Em F G |
+| ➕ on the sheet only | outro | I–iii–IV–V | C Em F G |
+
+## ❔ The National — Runaway
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=The%20National%20Runaway
+
+## ✅ The National — Pink Rabbits
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/pink-rabbits-chords-1248205) · version 1 · 564 ratings · ★4.92 · key G major · confidence high
+
+> key G major; capo 2 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | intro | ii–V–I–vi | Am D G Em |
+| ✅ on the sheet (verse) | verse and chorus | ii–V–I–IV | Am D G C |
+| ➕ on the sheet only | verse 2 | vi–IV | Em C |
+| ➕ on the sheet only | verse 3 | vi–IV–vi–IV | Em C Em C — the sheet strays from this loop in 3 places |
+| ➕ on the sheet only | outro | I–V–ii–IV | G D Am C |
+
+## ✅ The National — England
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/england-chords-1496302) · version 4 · 99 ratings · ★4.89 · key C major · confidence high
+
+> key C major; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | main loop | V–vi7–I–ii7–I–vi7 | G Am7 C Dm7 C Am7 |
+| ➕ on the sheet only | chorus | ii7–I–vi7–V | Dm7 C Am7 G — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | interlude | ii7–I–vi7–V–ii7–I–vi7–V–IV–V | Dm7 C Am7 G Dm7 C Am7 G F G |
+
+## ❌ The National — Graceless
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/graceless-chords-1483949) · version 1 · 173 ratings · ★4.92 · key C major · confidence high
+
+> key C major; capo 4 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (intro) | intro and verse | vi–I–IV–I | Am C Fmaj7 C |
+| ❌ shipped, not on the sheet | chorus | I–IV–I–IV–I–IV–I–V |  |
+| ➕ on the sheet only | chorus | V–vi–I–IVmaj7 | G Am C Fmaj7 — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | chorus 2 | I–IVmaj7 | C Fmaj7 — the sheet strays from this loop in 3 places |
+| ➕ on the sheet only | chorus 3 | I–IVmaj7–I–V | C Fmaj7 C G |
+
+## ✅ The National — Terrible Love
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/terrible-love-chords-931592) · version 1 · 132 ratings · ★4.85 · key G major · confidence high
+
+> key G major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | I–IV | G C |
+| ✅ on the sheet (bridge) | bridge | vi–I–iii–V | Em G Bm D |
+
+## ❔ The National — Mr. November
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=The%20National%20Mr.%20November
+
+## ✅ The National — Guilty Party
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/guilty-party-chords-2073679) · version 1 · 102 ratings · ★4.90 · key D major · confidence high
+
+> key D major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro 2) | verse | I–iii–vi–ii7–I–V | D F#m Bm Em7 D A |
+| ✅ on the sheet (chorus) | chorus | I–V–vi–IV | D A Bm G |
+| ➕ on the sheet only | intro | I–vi–iii–V–vi–ii–ii7–IV–V | D Bm F#m A Bm Em Em7 G A |
+| ➕ on the sheet only | post-chorus | vi–V–ii–IV | Bm A Em G |
+
+## ✅ The National — Conversation 16
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/conversation-16-chords-999704) · version 4 · 133 ratings · ★4.87 · key D major · confidence high
+
+> key D major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | vi–I–ii–V | Bm D/B Em A |
+| ✅ on the sheet (chorus) | chorus | vi–I–IV | Bm D G |
+| ➕ on the sheet only | intro | vi–I–ii–V–IV–I | Bm D/B Em A G D — D/B: bass B dropped |
+| ➕ on the sheet only | bridge | I–vi–iii–V | D Bm F#m A |
+
+## ✅ The National — Start a War
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/start-a-war-chords-2271891) · version 1 · 39 ratings · ★4.60 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse and chorus | IV–I–V–vi | F C G Am |
+
+## ✅ The National — Afraid of Everyone
+
+[source](https://tabs.ultimate-guitar.com/tab/the-national/afraid-of-everyone-chords-943621) · version 1 · 116 ratings · ★4.86 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse and interlude | vi–I–IV–ii | Am C F Dm |
+
+## 🟨 Wilco — Jesus, Etc.
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/jesus-etc-chords-581246) · version 4 · 2137 ratings · ★4.91 · key C major · confidence high
+
+> key C major; capo 5 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (intro) | verse | vi–iii–IV–I–ii–V | Am Em F C Dm G Ammaj7 |
+| ✅ on the sheet (chorus) | chorus | I–vi–vimMaj7–IV–I–V | C Am Ammaj7 F C G |
+| ➕ on the sheet only | intro 2 | vi–iii | Am Em |
+| ➕ on the sheet only | verse | vi–iii–vi–IV–I–ii–V | Am Em Am F C Dm G — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | bridge | IV–I–IV–I–IV–I–vi–vimMaj7–IV–I–V | F C F C F C Am Ammaj7 F C G |
+| ➕ on the sheet only | outro | IV–I | F C |
+| ➕ on the sheet only | outro 2 | I–vi–vimMaj7–IV–I–IV–I–IV–I–IV–iii–IV | C Am Ammaj7 F C F C F C F Em F |
+
+## ✅ Wilco — California Stars
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/california-stars-chords-136289) · version 1 · 757 ratings · ★4.77 · key A major · confidence high
+
+> key A major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | whole song | I–V–IV–I | A E D |
+
+## ❌ Wilco — How to Fight Loneliness
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/how-to-fight-loneliness-chords-136293) · version 1 · 510 ratings · ★4.88 · key D major · confidence high
+
+> key D major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | intro and verse | vi–V6–IV–III | Bm A6 G F# |
+| ❌ shipped, not on the sheet | chorus | ii–V–♭vi°7–vi |  |
+| ✅ on the sheet (bridge) | bridge | I–IV | D G |
+| ➕ on the sheet only | chorus | ii–V | Em A — the sheet strays from this loop in 2 places |
+| ➕ on the sheet only | interlude | vi–V6–IV–III–ii–V–ii–V–♭vi°7 | Bm A6 G F# Em A Em A A#dim7 |
+
+## ❌ Wilco — Impossible Germany
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/impossible-germany-chords-1458060) · version 1 · 181 ratings · ★4.80 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (intro 2) | intro | vi7–Imaj7 | Am Cmaj7 |
+| ❌ shipped, not on the sheet | verse | vi7–Imaj7–V–iii7 |  |
+| ➕ on the sheet only | intro | vi–Imaj7–VIsus4–I–V–iii–VIsus2–iii9 | Am Cmaj7 Asus4 C G Em Asus2 Em9 |
+| ➕ on the sheet only | intro 3 | VIsus4–vi–Imaj7–I–V–iii–vi–VIsus2 | Asus4 Am Cmaj7 C G Em Am Asus2 |
+| ➕ on the sheet only | intro 4 | Imaj7–vi | Cmaj7 Am — the sheet strays from this loop in 3 places |
+| ➕ on the sheet only | intro 5 | V–iii9–vi | G Em9 Am |
+
+## ✅ Wilco — Heavy Metal Drummer
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/heavy-metal-drummer-chords-1414336) · version 1 · 211 ratings · ★4.84 · key D major · confidence medium
+
+> key D major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | intro and verse | I–I–♭VII–V | D C A |
+| ➕ on the sheet only | chorus | IV–V–I | G A D — the sheet strays from this loop in 1 place |
+
+## 🟨 Wilco — Say You Miss Me
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/say-you-miss-me-chords-724294) · version 1 · 60 ratings · ★4.88 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (bridge 2) | intro and verse | I–I–vi–V–IV | C Am G F |
+| 🟨 inside a longer passage on the sheet (verse) | chorus | III–vi–IV | C E Am F G E F |
+| ➕ on the sheet only | intro | I–vi–V–IV–I–V–IV–V | C Am G F C G F G |
+| ➕ on the sheet only | bridge | vi–III–IV–I–♭VI | Am E F C Ab |
+| ➕ on the sheet only | finale | I–III–vi–IV | C E Am F |
+| ➕ on the sheet only | finale 2 | III–IV | E F — the sheet strays from this loop in 3 places |
+
+## ❌ Wilco — Poor Places
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/poor-places-chords-1454552) · version 1 · 89 ratings · ★4.88 · key G major · confidence medium
+
+> key G major; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro 2) | first part | I–V–vi–IV–II7–IV | G D Em C/G A7 C/G |
+| 🟨 inside a longer passage on the sheet (intro 3) | second part | I–V–vi–I7 | G D Em G7 C/G Cm/G G A7 C/G Cm/G G C |
+| ❌ shipped, not on the sheet | second part, later | IV–ii7–I–II |  |
+| ❌ shipped, not on the sheet | second part, end | IV–iv–I–♭VI–IV–I |  |
+| ➕ on the sheet only | intro | I–V–vi–IV–II7–I7–iv–IV | G D Em C/G A7 G7 Cm/G C — C/G: bass G dropped; Cm/G: bass G dropped |
+| ➕ on the sheet only | intro 4 | IV–I | C G |
+
+## ❌ Wilco — Kamera
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/kamera-chords-877477) · version 1 · 194 ratings · ★4.81 · key D major · confidence high
+
+> key D major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse | I–IV–V–IV–I–V |  |
+| ➕ on the sheet only | verse | V–IV–I | A G D — the sheet strays from this loop in 8 places |
+| ➕ on the sheet only | interlude | I–IV–V–IV–V | D G A G A |
+
+## ✅ Wilco — War on War
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/war-on-war-chords-923639) · version 2 · 114 ratings · ★4.87 · key A major · confidence high
+
+> key A major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🔁 on the sheet, started at another chord (verse) | chorus | V–ii–V–I | A E Bm E |
+| ➕ on the sheet only | intro | I–V–ii | A E Bm |
+| ➕ on the sheet only | verse 2 | I–V–ii–V–ii | A E Bm E Bm |
+| ➕ on the sheet only | verse 3 | V–ii–V–ii–I | E Bm E Bm A |
+
+## 🟨 Wilco — Handshake Drugs
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/handshake-drugs-chords-991644) · version 2 · 224 ratings · ★4.84 · key G major · confidence medium
+
+> key G major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (intro) | intro and verse | I–IV–♭III–I | D G F D G C |
+
+## ✅ Wilco — Via Chicago
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/via-chicago-chords-1852154) · version 2 · 144 ratings · ★4.87 · key C major · confidence high
+
+> key C major; capo 2 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | whole song | Imaj7–I–V–IV | Cmaj7/G C/G G F |
+| ➕ on the sheet only | verse | I–V–IV | C/G G F — C/G: bass G dropped |
+| ➕ on the sheet only | solo | V–IV–I | G F C/G — C/G: bass G dropped |
+
+## ✅ Wilco — Hate It Here
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/hate-it-here-chords-1676733) · version 2 · 122 ratings · ★4.89 · key A major · confidence medium
+
+> key A major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro 2) | intro and verse | I–IV–iii–IV | A D C#m D |
+| ➕ on the sheet only | intro | I–iii–i°7–iiø7–I7–V7–IV7 | A C#m Adim7 Bm7b5 A7 E7 D7 |
+| ➕ on the sheet only | verse | I–IV–iii–IV–I–i°7–iiø7 | A D C#m D A Adim7 Bm7b5 |
+| ➕ on the sheet only | verse 2 | I–IV–iii–IV–I–i°7–iiø7–I–I7 | A D C#m D A Adim7 Bm7b5 A A7 |
+| ➕ on the sheet only | chorus | V7–IV7–I | E7 D7 A |
+
+## ✅ Wilco — Box Full of Letters
+
+[source](https://tabs.ultimate-guitar.com/tab/wilco/box-full-of-letters-chords-136288) · version 1 · 93 ratings · ★4.72 · key D major · confidence high
+
+> key D major; capo 2 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | intro and verse | I–V–IV–ii–IV | D A G Em G |
+| ➕ on the sheet only | intro | I–Isus4 | D Dsus4 |
+| ➕ on the sheet only | chorus | I–V–IV–I–Isus4–I–Isus4–V–I–IV–V–I–IV–V | D A G D Dsus4 D Dsus4 A D G A D G A |
+| ➕ on the sheet only | chorus 2 | I–V–IV–I–Isus4–I–Isus4 | D A G D Dsus4 D Dsus4 |
+| ➕ on the sheet only | chorus 3 | V–I–IV | A D G |
+
+## ✅ Bon Iver — Skinny Love
+
+[source](https://tabs.ultimate-guitar.com/tab/bon-iver/skinny-love-chords-835053) · version 2 · 4319 ratings · ★4.78 · key C major · confidence medium
+
+> key C major; unread symbols: D6sus2
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | vi–I | Am C |
+| ✅ on the sheet (chorus) | chorus and bridge | I–I–IV | C/B F |
+
+## ✅ Bon Iver — Holocene
+
+[source](https://tabs.ultimate-guitar.com/tab/bon-iver/holocene-chords-1090674) · version 2 · 924 ratings · ★4.88 · key G major · confidence high
+
+> key G major; capo 6 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | I–vi–V–vi–IV | G Em D Em C |
+| ➕ on the sheet only | chorus | IV–vi–V | C Em D — the sheet strays from this loop in 2 places |
+
+## 🟨 Bon Iver — re: Stacks
+
+[source](https://tabs.ultimate-guitar.com/tab/bon-iver/re-stacks-chords-661006) · version 1 · 1443 ratings · ★4.91 · key G major · confidence high
+
+> key G major; page says key A; capo 2 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (intro) | verse | IIsus4–V–Iadd9 | Dsus4 G Cadd9 D7sus4 Cadd9 Dsus4 D Dsus4 Cadd9 G Cadd9 G Cadd9 G |
+| 🟨 on the sheet, read in another key (chorus) | chorus | IIsus4–iii7–I | Dsus4 Em7 C |
+| ➕ on the sheet only | verse | Vsus4–I–IVadd9–Vsus4–IVadd9 | Dsus4 G Cadd9 Dsus4 Cadd9 — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | interlude | I–IVadd9 | G Cadd9 |
+| ➕ on the sheet only | chorus 2 | Vsus4–I–IVadd9–Vsus4–IVadd9–Vsus4–I–IVadd9–Vsus4–vi7–ii7 | Dsus4 G Cadd9 Dsus4 Cadd9 Dsus4 G Cadd9 Dsus4 Em7 Am7 |
+
+## 🟨 Bon Iver — Hey, Ma
+
+[source](https://tabs.ultimate-guitar.com/tab/bon-iver/hey-ma-chords-2715150) · version 1 · 437 ratings · ★4.88 · key C major · confidence high
+
+> key C major; page says key C
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | intro | vi–I–vi–I–IV–V–IV–V | Am C Am C F G F G |
+| 🟨 inside a longer passage on the sheet (verse) | verse | I–IV–vi–V–I–iii–IV–V | C F Am G C Em F G F |
+| ✅ on the sheet (chorus) | chorus | vi–IV–vi–IV–vi–V–I | Am F Am F Am G C |
+| ➕ on the sheet only | verse 2 | IV–vi–V–I–iii–IV–V | F Am G C Em F G |
+| ➕ on the sheet only | chorus 2 | vi–IV | Am F — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | interlude | IV–V | F G — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | chorus 3 | IV–vi | F Am |
+| ➕ on the sheet only | chorus 4 | IV–vi–IV–vi–V | F Am F Am G |
+
+## 🟨 Bon Iver — Blood Bank
+
+[source](https://tabs.ultimate-guitar.com/tab/bon-iver/blood-bank-chords-766524) · version 1 · 1412 ratings · ★4.89 · key G major · confidence high
+
+> key G major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (verse) | intro and verse | vi7–V–IV | Em D C |
+| 🟨 on the sheet but for a 7th, sus or add9 (verse 2) | second part | I–V–vi7–IV | G D/F# Em C |
+| ➕ on the sheet only | intro | I–vi–V–IV | G Em D C |
+| ➕ on the sheet only | verse 3 | IV–vi–V | C Em D |
+| ➕ on the sheet only | chorus | I–V–I–V–vi–IV | G D/F# G D/F# Em C — D/F#: bass F# dropped |
+
+## ❔ Bon Iver — 8 (circle)
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=Bon%20Iver%208
+
+## ❔ Bon Iver — 22 (OVER S∞∞N)
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=Bon%20Iver%2022
+
+## 🟨 Bon Iver — For Emma
+
+[source](https://tabs.ultimate-guitar.com/tab/bon-iver/for-emma-chords-822704) · version 1 · 751 ratings · ★4.87 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (verse) | intro and verse | I–iii–IV–I | C/G Fmaj7/C C/G Fmaj7/C C/G Em Fmaj7/C C/G Em |
+| ➕ on the sheet only | intro | I–IVmaj7 | C/G Fmaj7/C — C/G: bass G dropped; Fmaj7/C: bass C dropped |
+| ➕ on the sheet only | intro 2 | I–iii | C/G Em — C/G: bass G dropped |
+
+## 🟨 Coldplay — Yellow
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/yellow-chords-114080) · version 2 · 25381 ratings · ★4.87 · key G major · confidence high
+
+> key G major; page says key G; capo 4 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (intro) | verse | I–V6–IVmaj7 | G D C |
+| 🟨 on the sheet but for a 7th, sus or add9 (chorus) | chorus | IV–vi–V | Cmaj7 Em7 D |
+| ➕ on the sheet only | verse | I–V–IVmaj7 | G D Cmaj7 |
+| ➕ on the sheet only | verse 2 | I–V–IVmaj7–I–Isus4 | G D Cmaj7 G Gsus4 |
+| ➕ on the sheet only | interlude | I–V–IV–I–Isus4 | G D C G Gsus4 |
+| ➕ on the sheet only | outro | V–ii7–Imaj7 | G Dm7 Cmaj7 — spelled in C major, the key this section lies in |
+
+## ❔ Coldplay — Something Just Like This
+
+No Chords version found. Searched: https://www.ultimate-guitar.com/search.php?search_type=title&value=Coldplay%20Something%20Just%20Like%20This
+
+## ✅ Coldplay — Viva La Vida
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/viva-la-vida-chords-675427) · version 2 · 21703 ratings · ★4.88 · key G major · confidence high
+
+> key G major; page says key Ab; capo 1 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | IV–V–I–vi | C Dadd11 G Em |
+| ✅ on the sheet (outro) | chorus | IV–V–iii–vi | C Dadd11 Bm Em |
+| ➕ on the sheet only | interlude | IV–vi–V | C Em Dadd11 — Dadd11: add11 read as major |
+
+## 🟨 Coldplay — The Scientist
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/the-scientist-chords-180849) · version 4 · 13520 ratings · ★4.88 · key D major · confidence medium
+
+> key D major; unread symbols: D6sus2 Daddb6; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (outro) | verse | vi7–IV–I–Isus2 | Bm7 G D Dsus2 |
+| 🟨 inside a longer passage on the sheet (chorus) | chorus | IVadd9–I–V | G Gadd9 D Dsus2 G Gadd9 D A A7 D |
+| ➕ on the sheet only | intro | vi7–i7–IV–♭VI–IVadd9–♭VIadd9–V–♭VII–V7–♭VII7 | Bm7 Dm7 G Bb Gadd9 Bbadd9 A C A7 C7 |
+| ➕ on the sheet only | intro 2 | vi7–IV–IVadd9–I–Isus2 | Bm7 G Gadd9 D Dsus2 |
+| ➕ on the sheet only | interlude | I–IV–IVadd9–I–Imaj7–vi7–IV–I–Isus2 | D G Gadd9 D Dmaj7 Bm7 G D Dsus2 |
+| ➕ on the sheet only | chorus 2 | IV–IVadd9–I–Isus2–IV–IVadd9–I–Isus2–V–V7–I | G Gadd9 D Dsus2 G Gadd9 D Dsus2 A A7 D |
+| ➕ on the sheet only | interlude 2 | I–IV–I–vi7–IV | D G D Bm7 G |
+
+## ❌ Coldplay — Hymn for the Weekend
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/hymn-for-the-weekend-chords-1787495) · version 1 · 1801 ratings · ★4.85 · key C major · confidence high
+
+> key C major; page says key Fm; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | ii–V–vi | Dm G Am |
+| ❌ shipped, not on the sheet | pre-chorus | vi–IV–ii–V |  |
+| ✅ on the sheet (chorus) | chorus | IV–V–vi | F G Am |
+| ➕ on the sheet only | verse | ii–V–vi–ii–V–vi–ii–V–vi–ii–vi | Dm G Am Dm G Am Dm G Am Dm Am |
+| ➕ on the sheet only | pre-chorus | vi–V–vi–IV–iii–ii–vi–V–vi–ii | Am G Am F Em Dm Am G Am Dm |
+| ➕ on the sheet only | pre-chorus 2 | vi–V | Am G — the sheet strays from this loop in 2 places |
+| ➕ on the sheet only | chorus 2 | IV–V–vi–IV–V–vi–IV–V–vi–IV–V–vi–IV–ii–vi | F G Am F G Am F G Am F G Am F Dm Am |
+
+## ❌ Coldplay — Sparks
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/sparks-chords-394880) · version 2 · 5207 ratings · ★4.88 · key C major · confidence high
+
+> key C major; page says key Bbm; capo 1 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (intro 3) | verse | Imaj7–vi | C Am7 |
+| ❌ shipped, not on the sheet | chorus | vi–vimMaj7–vi9–vi6–IVmaj7 |  |
+| ➕ on the sheet only | intro | I–vi7–IVadd9 | C Am7 Fadd9/A — Fadd9/A: bass A dropped |
+| ➕ on the sheet only | intro 2 | vi–vimMaj7–vi–I7–vi6–IVmaj7 | Am Ammaj7 Am C7 Am6 Fmaj7/A — Fmaj7/A: bass A dropped |
+| ➕ on the sheet only | verse | I–vi7–I–vi7–IVadd9 | C Am7 C Am7 Fadd9/A — Fadd9/A: bass A dropped |
+
+## ✅ Coldplay — A Sky Full of Stars
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/a-sky-full-of-stars-chords-1480593) · version 2 · 3448 ratings · ★4.84 · key C major · confidence high
+
+> key C major; page says key Ebm; capo 6 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse and chorus | vi–IV–I–iii | Am F C Em |
+| ➕ on the sheet only | chorus | vi–IV–I–iii–vi–IV–iii | Am F C Em Am F Em |
+| ➕ on the sheet only | interlude | vi–IV–I–iii–IV–V–vi–I | Am F C Em F G Am C |
+| ➕ on the sheet only | outro | IV–V–vi–I | F G Am C |
+
+## 🟨 Coldplay — Fix You
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/fix-you-chords-202594) · version 2 · 13681 ratings · ★4.87 · key C major · confidence high
+
+> key C major; page says key Eb; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (interlude) | verse | I–iii–vi–V | C Em Am7 G |
+| 🟨 inside a longer passage on the sheet (chorus) | chorus | IV–I–V–IV | F C G Gsus4 |
+| ✅ on the sheet (bridge) | bridge | I–IV–I–V | C F C G |
+| ➕ on the sheet only | intro | I–iii–vi7–iii | C Em Am7 Em/G — Em/G: bass G dropped |
+| ➕ on the sheet only | solo | I–IV–I–V–vi7–IV–I–V | C F C G Am7 F C G |
+| ➕ on the sheet only | bridge 2 | I–IV–I–iii–vi7–IV–I–V | C F C Em Am7 F C G |
+
+## ✅ Coldplay — Paradise
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/paradise-chords-1092837) · version 3 · 1179 ratings · ★4.69 · key F major · confidence high
+
+> key F major; page says key Bb
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | intro | ii–V–vi–I | Gm C Dm F |
+| ✅ on the sheet (verse) | verse | vi–IV–I–V | Dm Bb F C/E |
+| ✅ on the sheet (chorus) | chorus | ii–IV–I–V | Gm Bb F C/E |
+| ➕ on the sheet only | verse 2 | IV–I–V–IV–I–V–ii | Bb F/A C Bb F/A C Gm — F/A: bass A dropped |
+| ➕ on the sheet only | pre-chorus | IV–I–V | Bb F C |
+| ➕ on the sheet only | outro | IV–V–vi–♯iv° | Bb C Dm Bdim |
+
+## ✅ Coldplay — My Universe
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/my-universe-chords-3817577) · version 1 · 146 ratings · ★4.85 · key D major · confidence high
+
+> key D major; page says key E; capo 2 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse and chorus | IV–I–V | G D A |
+| ➕ on the sheet only | intro | IV–I–V–IV–I–V–I | G D A G D A D |
+
+## ✅ Coldplay — Adventure of a Lifetime
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/adventure-of-a-lifetime-chords-1779286) · version 1 · 655 ratings · ★4.80 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse and chorus | ii–V–vi | Dm G Am |
+
+## ✅ Coldplay — Clocks
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/clocks-chords-494642) · version 1 · 5020 ratings · ★4.88 · key G major · confidence high
+
+> key G major; page says key Fm; capo 1 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | riff and verse | V–ii–ii–vi | D Am Em |
+| ✅ on the sheet (bridge) | outro | IVmaj7–I–V | Fmaj7 C G |
+
+## ❌ Coldplay — Every Teardrop Is a Waterfall
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/every-teardrop-is-a-waterfall-chords-1065079) · version 3 · 520 ratings · ★4.84 · key G major · confidence high
+
+> key G major; capo 2 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse | IVsus2–I |  |
+| ❌ shipped, not on the sheet | chorus | IVsus2–I–vi–V |  |
+| ➕ on the sheet only | intro | IVadd9–I | Cadd9 G |
+| ➕ on the sheet only | verse | IVadd9–I–vi7 | Cadd9 G Em7 |
+| ➕ on the sheet only | solo | I–IVadd9 | G Cadd9 |
+| ➕ on the sheet only | bridge | V–IVadd9–vi7–IVadd9 | D Cadd9 Em7 Cadd9 |
+
+## ❌ Coldplay — Til Kingdom Come
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/til-kingdom-come-chords-793817) · version 3 · 568 ratings · ★4.87 · key F major · confidence medium
+
+> key F major; unread symbols: CMaj7
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | chorus | vi–IVmaj7–I–V6 |  |
+| ➕ on the sheet only | bridge | iii–I–V | Am F5 C5 — F5: power chord read as major; C5: power chord read as major |
+| ➕ on the sheet only | chorus | Iadd9–V | F2 C5 — the sheet strays from this loop in 2 places; C5: power chord read as major |
+| ➕ on the sheet only | chorus 2 | V–I | C/G F5/D — the sheet strays from this loop in 3 places; C/G: bass G dropped; F5/D: power chord read as major; bass D dropped |
+
+## ✅ Coldplay — Up&Up
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/up-and-up-chords-1785180) · version 1 · 596 ratings · ★4.86 · key G major · confidence medium
+
+> key G major; unread symbols: C6sus2
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | I–V–vi–IV | G D Em C |
+| ✅ on the sheet (chorus 2) | chorus | I–V–♭VII–IV | G D F C |
+| ➕ on the sheet only | verse | I–V–vi | G D Em |
+| ➕ on the sheet only | chorus | I–V–♭VII | G D F |
+
+## 🟨 Coldplay — Princess of China
+
+[source](https://tabs.ultimate-guitar.com/tab/coldplay/princess-of-china-chords-1163872) · version 1 · 207 ratings · ★4.87 · key G major · confidence high
+
+> key G major; capo 5 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet, read in another key (intro 2) | verse and chorus | iii–V–vi–I | Em7 G Am7 Cadd9 |
+| ➕ on the sheet only | intro | I–ii7–vi7–ii7–IVadd9 | G Am7 Em7 Am7 Cadd9 |
+| ➕ on the sheet only | chorus | I–ii7–IVadd9 | G Am7 Cadd9 |
+| ➕ on the sheet only | chorus 2 | ii7–IVadd9–vi7–I | Am7 Cadd9 Em7 G |
+| ➕ on the sheet only | intro 3 | ii–IVadd9–vi7–I | Am Cadd9 Em7 G |
+
+## ✅ Bob Dylan — Knockin’ on Heaven’s Door
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/knockin-on-heavens-door-chords-66559) · version 2 · 17659 ratings · ★4.85 · key G major · confidence high
+
+> key G major; page says key G
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse and chorus | I–V–ii–ii–I–V–IV–IV | G D Am G D C |
+| ➕ on the sheet only | outro | I–V–ii | G D Am |
+
+## ❌ Bob Dylan — Like a Rolling Stone
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/like-a-rolling-stone-chords-371756) · version 1 · 4484 ratings · ★4.86 · key C major · confidence high
+
+> key C major; page says key C
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet but for a 7th, sus or add9 (verse) | verse | I–ii–iii–IV–V | C Dm7 Em F G |
+| ❌ shipped, not on the sheet | pre-chorus | IV–iii–ii–I–ii–IV–V |  |
+| ✅ on the sheet (chorus) | chorus | I–IV–V–V | C F G |
+| ➕ on the sheet only | chords | IVmaj7–ii7 | Fmaj7/C Dm7 — Fmaj7/C: bass C dropped |
+| ➕ on the sheet only | intro | I–IVmaj7 | C Fmaj7/C — Fmaj7/C: bass C dropped |
+| ➕ on the sheet only | verse 2 | IV–V | F G |
+| ➕ on the sheet only | verse 3 | IV–iii–ii7–I | F Em Dm7 C — the sheet strays from this loop in 1 place |
+
+## ❌ Bob Dylan — The Times They Are A-Changin’
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/the-times-they-are-a-changin-chords-14943) · version 1 · 7199 ratings · ★4.89 · key G major · confidence high
+
+> key G major; page says key G
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse, opening lines | I–vi–IV–I–I–ii–IV–V |  |
+| ❌ shipped, not on the sheet | verse, closing lines | I–ii–V–I–V–IV–V–I–IV–V–I |  |
+| ➕ on the sheet only | verse | I–vi–IV | G Em C — the sheet strays from this loop in 4 places |
+| ➕ on the sheet only | harmonica | I–V–IV–V | G D C D |
+| ➕ on the sheet only | harmonica 2 | I–vi–IV–I–V–IV–I–V–I–IV–V | G Em C G D C G D G C D |
+
+## ❌ Bob Dylan — Blowin’ in the Wind
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/blowin-in-the-wind-chords-14835) · version 1 · 9728 ratings · ★4.83 · key G major · confidence high
+
+> key G major; page says key D; capo 7 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🔁 on the sheet, started at another chord (chorus) | verse | I–IV–V–I–I–IV–V | C D G |
+| ❌ shipped, not on the sheet | chorus | IV–V–I–vi–IV–V–I |  |
+| ➕ on the sheet only | verse | I–IV–V–I–IV–I–IV–V–I–IV–V | G C D G C G C D G C D |
+
+## ❌ Bob Dylan — Make You Feel My Love
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/make-you-feel-my-love-chords-1189445) · version 3 · 2739 ratings · ★4.87 · key C major · confidence low
+
+> key C major; page says key Db; capo 1 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse | I–V–I7–IV–iv–I–II9–V7sus4 |  |
+| ➕ on the sheet only | verse | I–V–♭VII–IV–iv–I–II9–V7 | C G Bb F Fm C D9 G7 |
+| ➕ on the sheet only | bridge | IV–I | F C — the sheet strays from this loop in 2 places |
+
+## ❌ Bob Dylan — Don’t Think Twice, It’s All Right
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/dont-think-twice-its-all-right-chords-178850) · version 2 · 9679 ratings · ★4.88 · key C major · confidence high
+
+> key C major; page says key C; capo 4 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse, first half | I–V–vi–IV–I–V |  |
+| ❌ shipped, not on the sheet | verse, second half | IV–I–ii–V7–I–I7 |  |
+| ❌ shipped, not on the sheet | verse turnaround | I–I7–IV–II7–I–V–I |  |
+| ➕ on the sheet only | intro | I–V | C G — the sheet strays from this loop in 1 place |
+| ➕ on the sheet only | verse | I–V–vi | C G Am — the sheet strays from this loop in 6 places |
+| ➕ on the sheet only | verse 2 | I–V–vi–IV | C G Am F |
+
+## 🟨 Bob Dylan — Lay, Lady, Lay
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/lay-lady-lay-chords-135659) · version 1 · 2120 ratings · ★4.83 · key A major · confidence medium
+
+> key A major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | I–iii–♭VII–ii | A C#m G Bm |
+| 🟨 inside a longer passage on the sheet (bridge) | refrain | V–vi–I | C#m E F#m A Asus4 A C#m A Asus4 A C#m E F#m A C#m Bm |
+| 🟨 inside a longer passage on the sheet (bridge) | bridge | iii–V–vi–I | C#m E F#m A Asus4 A C#m A Asus4 A C#m E F#m A C#m Bm |
+| ➕ on the sheet only | outro | I–ii–iii–IV | A Bm C#m D |
+
+## 🟨 Bob Dylan — Hurricane
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/hurricane-chords-14871) · version 1 · 1405 ratings · ★4.83 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | vi–IV | Am F |
+| 🟨 inside a longer passage on the sheet (verse) | refrain | iii–vi–IV–I–V | C F G C F Dm C Dm C Em Am F C G |
+
+## ❌ Bob Dylan — Mr. Tambourine Man
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/mr-tambourine-man-chords-1092233) · version 3 · 4289 ratings · ★4.85 · key D major · confidence high
+
+> key D major; page says key F; capo 3 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | chorus | IV–V–I–IV–I–IV–V |  |
+| ❌ shipped, not on the sheet | verse | IV–V–I–IV–I–IV–ii–V |  |
+| ➕ on the sheet only | intro | I–Isus2 | D Dsus2 |
+| ➕ on the sheet only | chorus | IV–V–I | G A D — the sheet strays from this loop in 2 places |
+| ➕ on the sheet only | verse | IV–V–I–IV–I–IV–I–IV–V–Vsus4–V | G A D G D G D G A Asus4 A |
+| ➕ on the sheet only | verse 2 | I–IV | D G — the sheet strays from this loop in 4 places |
+| ➕ on the sheet only | bridge | IV–V–I–IV–I–IV–I–IV–I–IV–I–IV–I–IV–V–Vsus4–V | G A D G D G D G D G D G D G A Asus4 A — longer than 16 chords — trim before adding |
+| ➕ on the sheet only | chorus 2 | IV–V–VI–I–II–Isus2–IIsus2–Vsus4–VIsus4 | G A B D E Dsus2 Esus2 Asus4 Bsus4 |
+| ➕ on the sheet only | chorus 3 | IV–♭III–V–IV–I–♭VII–Isus2–♭VIIsus2–Vsus4–IVsus4 | G F A G D C Dsus2 Csus2 Asus4 Gsus4 |
+| ➕ on the sheet only | chorus 4 | IV–I–V–II–I–V–Isus2–Vsus2–Vsus4–IIsus4 | G D A E D A Dsus2 Asus2 Asus4 Esus4 |
+
+## 🟨 Bob Dylan — Subterranean Homesick Blues
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/subterranean-homesick-blues-chords-1053530) · version 1 · 519 ratings · ★4.86 · key E major · confidence high
+
+> key E major; capo 5 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 inside a longer passage on the sheet (intro 2) | verse | I7–IV7–I7 | E7 A7 E A A7 D7 B7 |
+| 🟨 inside a longer passage on the sheet (intro 2) | refrain | V7–I7 | E7 A7 E A A7 D7 B7 |
+| ➕ on the sheet only | intro | I7–I | E7 E |
+| ➕ on the sheet only | intro 3 | I7–♭III7–I–♭III–IV7–♭VI7–V7–♭VII7 | E7 G7 E G A7 C7 B7 D7 |
+| ➕ on the sheet only | intro 4 | I7–♭II7–I–♭II–IV7–♯IV7–V7–♭VI7 | E7 F7 E F A7 Bb7 B7 C7 |
+
+## ✅ Bob Dylan — All Along the Watchtower
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/all-along-the-watchtower-chords-152504) · version 1 · 1528 ratings · ★4.79 · key E major · confidence high
+
+> key E major; capo 4 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse and interludes | vi–V–IV–V | C#m B A B |
+
+## ✅ Bob Dylan — It Ain’t Me Babe
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/it-aint-me-babe-chords-14882) · version 1 · 4786 ratings · ★4.87 · key G major · confidence high
+
+> key G major; page says key G
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse | I–IV–I–V | G C G D |
+| 🔁 on the sheet, started at another chord (chorus) | chorus | IV–V–I | G C D |
+| ➕ on the sheet only | verse 2 | iii–ii | Bm Am — the sheet strays from this loop in 3 places |
+
+## 🟨 Bob Dylan — Tangled Up in Blue
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/tangled-up-in-blue-chords-456793) · version 1 · 3087 ratings · ★4.85 · key D major · confidence high
+
+> key D major; page says key A
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| 🟨 on the sheet, read in another key (verse) | verse | I–♭VII | A G6 |
+| 🟨 inside a longer passage on the sheet (chords) | verse, second half | V–vi–I–IV–V | A G6 A G6 A G6 D E F#m A D E F#m A D E G D A Asus |
+| 🟨 on the sheet, read in another key (verse) | refrain | ♭VII–I | A G6 |
+| ➕ on the sheet only | intro | V–Vsus4 | A Asus4 |
+
+## ✅ Bob Dylan — Just Like a Woman
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/just-like-a-woman-chords-1048012) · version 5 · 538 ratings · ★4.83 · key C major · confidence high
+
+> key C major; page says key E; capo 4 (numerals are unaffected)
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | I–IV–V–I | C F G |
+| ✅ on the sheet (chorus) | refrain | I–iii–ii–IV | C Em Dm F |
+| ➕ on the sheet only | verse | IV–V | F G — the sheet strays from this loop in 4 places |
+| ➕ on the sheet only | chorus 2 | IV–I–IV–V–I | F C F G C |
+| ➕ on the sheet only | bridge | I–III7 | C E7 |
+| ➕ on the sheet only | chorus 3 | I–IV–V–I–IV–V–I–IV–V–IV–V–IV–iii–ii–I–V–vi–I–IV–V | C F G C F G C F G F G F Em Dm C G Am C F G — longer than 16 chords — trim before adding |
+| ➕ on the sheet only | chorus 4 | I–II–IV–V–VI–iii–♯iv–ii–iii–vi–vii–III7–♯IV7–♯IV | C D F G A Em F#m Dm Em Am Bm E7 F#7 F# |
+| ➕ on the sheet only | chorus 5 | I–III–IV–VI–V–VII–iii–♭vi–ii–♯iv–vi–♭ii–III7–♭VI7 | C E F A G B Em Abm Dm F#m Am C#m E7 Ab7 |
+
+## ❌ Bob Dylan — Girl from the North Country
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/girl-from-the-north-country-chords-1087317) · version 3 · 2602 ratings · ★4.86 · key G major · confidence high
+
+> key G major; page says key G
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ❌ shipped, not on the sheet | verse | I–iii–IV–I–IV–I–V–I |  |
+| ➕ on the sheet only | intro | I–iii–IV | G Bm C |
+| ➕ on the sheet only | intro 2 | I–♭VII–iii–ii–IV–♭III | G F Bm Am C Bb |
+| ➕ on the sheet only | intro 3 | I–VI–iii–♭ii–IV–II | G E Bm G#m C A |
+| ➕ on the sheet only | intro 4 | I–V–iii–vii–IV | G D Bm F#m C |
+| ➕ on the sheet only | intro 5 | I–II–iii–♯iv–IV–V | G A Bm C#m C D |
+| ➕ on the sheet only | intro 6 | I–IV–iii–vi–IV–♭VII | G C Bm Em C F |
+
+## ❌ Bob Dylan — One More Cup of Coffee
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/one-more-cup-of-coffee-chords-14911) · version 1 · 1695 ratings · ★4.88 · key C major · confidence high
+
+> key C major
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (intro) | verse | vi–V–IV–III | Am G F E |
+| ❌ shipped, not on the sheet | chorus | IV–III–vi |  |
+| ➕ on the sheet only | chorus | IV–III | F E — the sheet strays from this loop in 1 place |
+
+## ✅ Bob Dylan — Shelter from the Storm
+
+[source](https://tabs.ultimate-guitar.com/tab/bob-dylan/shelter-from-the-storm-chords-697872) · version 2 · 1520 ratings · ★4.83 · key E major · confidence high
+
+> key E major; page says key E
+
+| | Section | Numerals | Chords on the sheet |
+|---|---|---|---|
+| ✅ on the sheet (verse) | verse and refrain | I–V–IV–I | E B A |
 

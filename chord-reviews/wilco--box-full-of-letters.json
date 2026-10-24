@@ -1,0 +1,214 @@
+{
+  "artist": "Wilco",
+  "title": "Box Full of Letters",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "D",
+        "Dsus4"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "D",
+        "A",
+        "G",
+        "Em",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus",
+      "chords": [
+        "D",
+        "A",
+        "G",
+        "D",
+        "Dsus4",
+        "D",
+        "Dsus4",
+        "A",
+        "D",
+        "G",
+        "A",
+        "D",
+        "G",
+        "A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 2",
+      "chords": [
+        "D",
+        "A",
+        "G",
+        "D",
+        "Dsus4",
+        "D",
+        "Dsus4"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "chorus 3",
+      "chords": [
+        "A",
+        "D",
+        "G"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major; capo 2 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/wilco/box-full-of-letters-chords-136288"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/wilco/box-full-of-letters-chords-136288",
+    "votes": 93,
+    "rating": 4.72297,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

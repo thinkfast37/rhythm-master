@@ -1,0 +1,163 @@
+{
+  "artist": "Bob Dylan",
+  "title": "Tangled Up in Blue",
+  "key": "D major",
+  "sections": [
+    {
+      "section": "chords",
+      "chords": [
+        "A",
+        "G6",
+        "A",
+        "G6",
+        "A",
+        "G6",
+        "D",
+        "E",
+        "F#m",
+        "A",
+        "D",
+        "E",
+        "F#m",
+        "A",
+        "D",
+        "E",
+        "G",
+        "D",
+        "A",
+        "Asus"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "6"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "6"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "6"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "3",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "2",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        }
+      ],
+      "note": "longer than 16 chords — trim before adding"
+    },
+    {
+      "section": "intro",
+      "chords": [
+        "A",
+        "Asus4"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "sus4"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "A",
+        "G6"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "6"
+        }
+      ],
+      "note": "the sheet strays from this loop in 7 places"
+    }
+  ],
+  "confidence": "high",
+  "note": "key D major; page says key A",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/bob-dylan/tangled-up-in-blue-chords-456793"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/bob-dylan/tangled-up-in-blue-chords-456793",
+    "votes": 3087,
+    "rating": 4.84543,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

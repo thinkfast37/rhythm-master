@@ -1,7 +1,7 @@
 {
   "artist": "Radiohead",
   "title": "Reckoner",
-  "key": "E minor",
+  "key": "G major",
   "sections": [
     {
       "section": "intro",
@@ -14,23 +14,23 @@
       ],
       "numerals": [
         {
-          "degree": "b6",
+          "degree": "4",
           "quality": "maj"
         },
         {
-          "degree": "1",
+          "degree": "6",
           "quality": "min"
         },
         {
-          "degree": "b7",
+          "degree": "5",
           "quality": "maj"
         },
         {
-          "degree": "b6",
+          "degree": "4",
           "quality": "maj"
         },
         {
-          "degree": "1",
+          "degree": "6",
           "quality": "min"
         }
       ],
@@ -47,23 +47,23 @@
       ],
       "numerals": [
         {
-          "degree": "1",
+          "degree": "6",
           "quality": "min"
         },
         {
-          "degree": "b7",
+          "degree": "5",
           "quality": "maj"
         },
         {
-          "degree": "b6",
+          "degree": "4",
           "quality": "maj"
         },
         {
-          "degree": "1",
+          "degree": "6",
           "quality": "min"
         },
         {
-          "degree": "b6",
+          "degree": "4",
           "quality": "maj"
         }
       ],
@@ -78,15 +78,15 @@
       ],
       "numerals": [
         {
-          "degree": "b6",
+          "degree": "4",
           "quality": "maj"
         },
         {
-          "degree": "1",
+          "degree": "6",
           "quality": "min"
         },
         {
-          "degree": "5",
+          "degree": "3",
           "quality": "maj"
         }
       ],
@@ -94,7 +94,7 @@
     }
   ],
   "confidence": "high",
-  "note": "key E minor, 96% of chords diatonic",
+  "note": "key G major",
   "sources": [
     "https://tabs.ultimate-guitar.com/tab/radiohead/reckoner-chords-588700"
   ],

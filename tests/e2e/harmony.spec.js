@@ -325,7 +325,7 @@ test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2,
   expect(await chooseAndRead(page, 'I-IVadd9-vi7-V')).toEqual(['C', 'Fadd9', 'Am7', 'G']);
 });
 
-test("AC-2.6.1/18 — Every song progression files after its heading's own entries, under the heading its chords fit: a suspended or add9 chord under Sus and open chords, else a minor tonic under Minor, else a root from outside the major scale under Modal and rock, else Pop for Coldplay, Classical and folk for Bob Dylan, and Indie and alt for Radiohead, The National, Wilco and Bon Iver", async ({ page }) => {
+test("AC-2.6.1/18 — Every song progression files after its heading's own entries, under the heading its chords fit: a suspended or add9 chord under Sus and open chords, else a loop that starts on a minor vi under Minor, else a root from outside the major scale under Modal and rock, else Pop for Coldplay, Classical and folk for Bob Dylan, and Indie and alt for Radiohead, The National, Wilco and Bon Iver", async ({ page }) => {
   await melodicBlank(page);
   const { PROGRESSIONS, PROGRESSION_GROUPS } = await import('../../src/core/harmony.js');
   const { SONGBOOK } = await import('../../src/core/songbook.js');
@@ -333,8 +333,7 @@ test("AC-2.6.1/18 — Every song progression files after its heading's own entri
   const OUTSIDE = ['b2', 'b3', '#4', 'b6', 'b7'];
   const expected = (p) => {
     if (p.steps.some((x) => ['sus2', 'sus4', 'add9', '7sus4'].includes(x.quality))) return 'Sus and open chords';
-    const tonic = p.steps.find((x) => x.degree === '1');
-    if (tonic && MINOR.includes(tonic.quality)) return 'Minor';
+    if (p.steps[0].degree === '6' && MINOR.includes(p.steps[0].quality)) return 'Minor';
     if (p.steps.some((x) => OUTSIDE.includes(x.degree))) return 'Modal and rock';
     const { artist } = SONGBOOK.find((c) => c.progression === p.id);
     if (artist === 'Coldplay') return 'Pop';
@@ -359,7 +358,9 @@ test("AC-2.6.1/18 — Every song progression files after its heading's own entri
   }
   // A song entry is what the song plays, whatever the scale would have stacked.
   expect(await chooseAndRead(page, 'I-vi7-ii-V-I-iv')).toEqual(['C', 'Am7', 'Dm', 'G', 'C', 'Fm']);
-  expect(await chooseAndRead(page, 'i-bVII-bVI-i-bVI')).toEqual(['Cm', 'Bb', 'Ab', 'Cm', 'Ab']);
+  expect(await chooseAndRead(page, 'vi-V-IV-vi-IV')).toEqual(['Am', 'G', 'F', 'Am', 'F']);
+  // A minor-key song files under Minor by starting on vi.
+  expect(placed.get('vi-V-IV-vi-IV')).toBe('Minor');
 });
 
 // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---

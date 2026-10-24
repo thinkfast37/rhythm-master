@@ -1,0 +1,42 @@
+{
+  "artist": "Coldplay",
+  "title": "Adventure of a Lifetime",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Dm",
+        "G",
+        "Am"
+      ],
+      "numerals": [
+        {
+          "degree": "2",
+          "quality": "min"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        }
+      ],
+      "note": null
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/adventure-of-a-lifetime-chords-1779286"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/adventure-of-a-lifetime-chords-1779286",
+    "votes": 655,
+    "rating": 4.7954,
+    "version": 1
+  },
+  "read": "2026-10-24"
+}

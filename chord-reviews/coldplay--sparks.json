@@ -1,0 +1,131 @@
+{
+  "artist": "Coldplay",
+  "title": "Sparks",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "C",
+        "Am7",
+        "Fadd9/A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": "Fadd9/A: bass A dropped"
+    },
+    {
+      "section": "intro 2",
+      "chords": [
+        "Am",
+        "Ammaj7",
+        "Am",
+        "C7",
+        "Am6",
+        "Fmaj7/A"
+      ],
+      "numerals": [
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "6",
+          "quality": "mMaj7"
+        },
+        {
+          "degree": "6",
+          "quality": "min"
+        },
+        {
+          "degree": "1",
+          "quality": "7"
+        },
+        {
+          "degree": "6",
+          "quality": "m6"
+        },
+        {
+          "degree": "4",
+          "quality": "maj7"
+        }
+      ],
+      "note": "Fmaj7/A: bass A dropped"
+    },
+    {
+      "section": "intro 3",
+      "chords": [
+        "C",
+        "Am7"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        }
+      ],
+      "note": null
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C",
+        "Am7",
+        "C",
+        "Am7",
+        "Fadd9/A"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "6",
+          "quality": "m7"
+        },
+        {
+          "degree": "4",
+          "quality": "add9"
+        }
+      ],
+      "note": "Fadd9/A: bass A dropped"
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; page says key Bbm; capo 1 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/coldplay/sparks-chords-394880"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/coldplay/sparks-chords-394880",
+    "votes": 5207,
+    "rating": 4.87766,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}

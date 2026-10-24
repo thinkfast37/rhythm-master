@@ -1,0 +1,93 @@
+{
+  "artist": "Wilco",
+  "title": "Via Chicago",
+  "key": "C major",
+  "sections": [
+    {
+      "section": "intro",
+      "chords": [
+        "Cmaj7/G",
+        "C/G",
+        "G",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj7"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "Cmaj7/G: bass G dropped; C/G: bass G dropped"
+    },
+    {
+      "section": "verse",
+      "chords": [
+        "C/G",
+        "G",
+        "F"
+      ],
+      "numerals": [
+        {
+          "degree": "1",
+          "quality": "maj"
+        },
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        }
+      ],
+      "note": "C/G: bass G dropped"
+    },
+    {
+      "section": "solo",
+      "chords": [
+        "G",
+        "F",
+        "C/G"
+      ],
+      "numerals": [
+        {
+          "degree": "5",
+          "quality": "maj"
+        },
+        {
+          "degree": "4",
+          "quality": "maj"
+        },
+        {
+          "degree": "1",
+          "quality": "maj"
+        }
+      ],
+      "note": "C/G: bass G dropped"
+    }
+  ],
+  "confidence": "high",
+  "note": "key C major; capo 2 (numerals are unaffected)",
+  "sources": [
+    "https://tabs.ultimate-guitar.com/tab/wilco/via-chicago-chords-1852154"
+  ],
+  "found": {
+    "url": "https://tabs.ultimate-guitar.com/tab/wilco/via-chicago-chords-1852154",
+    "votes": 144,
+    "rating": 4.87345,
+    "version": 2
+  },
+  "read": "2026-10-24"
+}
