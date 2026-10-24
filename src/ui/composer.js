@@ -31,6 +31,7 @@ import {
   sameSlot,
 } from '../core/composer.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
+import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 
 const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
 
@@ -91,6 +92,17 @@ export function renderComposer(root, state, handlers) {
       '.'
     );
     fresh.appendChild(credit);
+    // The piano's credit beside the guitar's (AC-2.13.4/4).
+    const pianoCredit = el('p', 'composer-attribution');
+    pianoCredit.dataset.attribution = 'piano-samples';
+    pianoCredit.append(
+      'Piano samples: ',
+      el('a', null, { href: PIANO_ATTRIBUTION.sourceUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'Salamander Grand Piano' }),
+      ' by Alexander Holm, licensed ',
+      el('a', null, { href: PIANO_ATTRIBUTION.licenseUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'CC BY 3.0' }),
+      '.'
+    );
+    fresh.appendChild(pianoCredit);
   });
 }
 

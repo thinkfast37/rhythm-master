@@ -852,7 +852,7 @@ test('AC-2.4.3 — Melodic playback starts immediately too, with no loading stat
   expect(await page.evaluate(() => window.__rm.melodic.getStatus().status)).toBe('ready');
 });
 
-test('AC-2.4.2 — playing either Sound Mode fetches no audio asset at all', async ({ page }) => {
+test('AC-2.4.2 — Percussive and Synth fetch no audio asset: playing both Sound Modes under Synth', async ({ page }) => {
   const audioRequests = [];
   page.on('request', (r) => {
     const url = r.url();
@@ -869,10 +869,11 @@ test('AC-2.4.2 — playing either Sound Mode fetches no audio asset at all', asy
   await page.locator('[data-action="stop"]').click();
 
   await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.locator('.voice-switch [data-voice="synth"]').click();
   await page.locator('[data-action="play"]').click();
   await expect(page.locator('.slot.playing')).toHaveCount(1, { timeout: 3000 });
 
-  // Both Modes are pure synthesis; the reverb impulse is generated, not loaded.
+  // Percussive and Synth are pure synthesis; the reverb impulse is generated, not loaded.
   expect(audioRequests, `unexpected audio requests: ${audioRequests.join(', ')}`).toEqual([]);
 });
 

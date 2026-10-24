@@ -64,10 +64,15 @@ test('AC-19.6.1/2 — A pitched Slot sounds with the voice of the instrument sho
   expect(guitarRun.map((v) => v.midi).every((m) => m === 60 || m === 62)).toBe(true);
   await play(page);
   await page.locator('.instrument-switch [data-instrument="piano"]').click();
-  const logMid = (await voiceLog(page)).length;
   await play(page);
+  // The piano view's voice is the sampled piano under the default voice
+  // (AC-2.13.3/2): every pitched Slot through its recordings once they are in.
+  await expect.poll(() => page.evaluate(() => window.__rm.piano.getStatus().status), { timeout: 15000 }).toBe('ready');
+  const logMid = (await voiceLog(page)).length;
   await expect.poll(async () => (await voiceLog(page)).length, { timeout: 8000 }).toBeGreaterThan(logMid + 1);
-  expect((await voiceLog(page)).slice(logMid).every((v) => v.instrument === 'piano' && v.via === 'synth')).toBe(true);
+  const pianoRun = (await voiceLog(page)).slice(logMid);
+  expect(pianoRun.every((v) => v.instrument === 'piano' && v.voice === 'piano' && v.via === 'sampled')).toBe(true);
+  expect(pianoRun.map((v) => v.midi).every((m) => m === 60 || m === 62)).toBe(true);
   await play(page);
 });
 

@@ -15,6 +15,9 @@
     "src/ui/responsive.js DRAWER_MAX_WIDTH": "OUTSTANDING. The mobile drawer's 320px cap, declared here and again in CSS with nothing reading this copy. Same question as SIDEBAR_WIDTH: pick one source of truth.",
     "src/audio/guitar.js __reset": "Test seam, as the other audio modules' __reset: clears the per-context load map between tests. Permanent.",
     "src/audio/guitar.js __setLoader": "Test seam. Stands a stub in for soundfont-player's loader so the loading contract (US-19.7) is proven without fetching samples. Permanent.",
-    "src/audio/guitar.js __sampledPlays": "Test seam. Counts notes the sampled instrument sounded, so AC-19.7.1/2 can tell the samples from the synth fallback. Permanent."
+    "src/audio/guitar.js __sampledPlays": "Test seam. Counts notes the sampled instrument sounded, so AC-19.7.1/2 can tell the samples from the synth fallback. Permanent.",
+    "src/audio/pianoSamples.js __reset": "Test seam, as the other audio modules' __reset: clears the fetched bytes and per-context decodes between tests. Permanent.",
+    "src/audio/pianoSamples.js __setFetcher": "Test seam. Stands a stub in for fetch so the piano's loading contract (AC-2.13.4) is proven without the network or real MP3 decoding. Permanent.",
+    "src/audio/pianoSamples.js __sampledPlays": "Test seam. Counts notes the piano's recordings sounded, so AC-2.13.2/1 can tell the recordings from the synth fallback. Permanent."
   }
 }

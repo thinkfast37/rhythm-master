@@ -39,7 +39,7 @@ in the evening — but separating them keeps each story honest about whose probl
 |---|---|---|
 | **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.9 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
-| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-2.13, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
@@ -664,27 +664,29 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 
 *(Revised 2026-08-17. This story originally specified a sampled piano, on the assumption that synthesis sounded insufficiently musical. Built and heard, the maintainer preferred the predecessor's synthesised engine for both Modes. That engine is now ported verbatim — see research.md D-003. The sampled-piano path and its soundfont dependency were removed.)*
 
+*(Revised 2026-10-24 with US-2.13, Constitution 3.9.0. The synth is now one of three melodic voices, alongside a bundled Salamander Grand piano and the sampled guitar, and is no longer the only one. Piano is the default. This story now governs the Synth voice and Percussive mode. US-2.13 governs the choice and the sampled voices. AC-2.4.1, AC-2.4.2 and AC-2.4.4 are retitled to say which voice they govern, and AC-2.4.3 is revised so that a sampled voice still loading falls back to the synth rather than waiting. The maintainer asked: "I don't like the current synth sounds as the only option for piano.")*
+
 **Independent Test**: Play both Sound Modes and assert each routes through the ported chain, that no network request is made for audio, and that neither Mode waits on an asset.
 
 **Acceptance Scenarios**:
 
-- **AC-2.4.1** — Melodic playback uses the ported synthesis chain
-  - **Given** a Melodic Pattern during playback
+- **AC-2.4.1** — The Synth voice uses the ported synthesis chain
+  - **Given** a Melodic Pattern during playback, with Synth the melodic voice (AC-2.13.1)
   - **When** any note sounds
   - **Then** it is produced by three detuned sine oscillators through a shared gain envelope, a low-pass filter sweeping 2000 Hz down to 600 Hz across the note's decay, and both a dry path and a reverb send — the predecessor's chain, unchanged
 
-- **AC-2.4.2** — No audio asset is ever fetched
-  - **Given** the app is opened and both Sound Modes are played
+- **AC-2.4.2** — Percussive and Synth fetch no audio asset
+  - **Given** the app is opened with Synth the melodic voice, and both Sound Modes are played
   - **When** network activity is observed
-  - **Then** no request is made for any audio asset, from this origin or any other — both Modes are pure Web Audio synthesis, and the reverb impulse is generated at runtime rather than loaded
+  - **Then** no request is made for any audio asset, from this origin or any other — Percussive and the Synth voice are pure Web Audio synthesis, and the reverb impulse is generated at runtime rather than loaded. The sampled voices' requests are governed by AC-2.13.4 and AC-19.7.1
 
 - **AC-2.4.3** — Neither Sound Mode waits on anything to load
   - **Given** the app has just opened
   - **When** the Composer presses Play on a Melodic Pattern, or on a Percussive one
-  - **Then** each sounds immediately, with no loading state — there is nothing to load, so Melodic has no dependency Percussive lacks
+  - **Then** each sounds immediately, whatever the melodic voice: Percussive and Synth have nothing to load, and a sampled voice whose recordings are not yet ready sounds each note through the synth rather than waiting (AC-2.13.4/2) — Play is never held for a load
 
-- **AC-2.4.4** — Melodic notes share one reverb and one compressor
-  - **Given** several Melodic notes sounding at once
+- **AC-2.4.4** — Synth notes share one reverb and one compressor
+  - **Given** several Melodic notes sounding at once through the Synth voice
   - **When** they play
   - **Then** they route through a single shared convolver and a single shared dynamics compressor rather than one per note, so overlapping notes cost nothing extra and stacked notes cannot clip
 
@@ -4088,6 +4090,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.6.1/1** — Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it
     - **AC-19.6.1/2** — A pitched Slot sounds with the voice of the instrument shown, guitar or piano, and an unpitched sounding Slot sounds percussively at its Accent Level
     - **AC-19.6.1/3** — Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart
+  - *(Cross-reference added 2026-10-24: the piano's voice is the sampled piano or the synth according to the global melodic voice, AC-2.13.3/2.)*
 
 - **AC-19.6.2** — Recording and editing carry on under playback
   - **Given** the composition playing
@@ -4108,6 +4111,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-10-18. The maintainer chose the sampled guitar over a synthesised one, told that it reinstates sampled audio this project retired on 2026-08-17: "for guitar — use the one in fret-navigator." That is the FluidR3_GM steel-string guitar served from gleitz/midi-js-soundfonts through soundfont-player, CC BY 3.0, loaded on first need in the Composer's Guitar view and nowhere else, with the synthesised melodic voice standing in while it loads or when it cannot. Constitution 3.7.0 and research.md D-003 record the exception. The piano is the existing melodic voice; no second asset.)*
 
+*(Revised 2026-10-24 with US-2.13, Constitution 3.9.0. The guitar is no longer confined to the Guitar view: Practice also plays it when Guitar is the chosen melodic voice, so AC-19.7.1 and its Case /1 now name that second place it may load. The Piano view's voice is now the sampled Salamander piano, or the synth when Synth is chosen (AC-2.13.3/2). AC-19.7.2/3, which said that view loads nothing, now says its piano falls back to the synth exactly as the guitar does.)*
+
 **Independent Test**: Load the app and assert no sample is requested; enter Composer in Guitar view and assert the samples are requested once, a loading state is shown and a tapped fret still sounds; with the request failing assert a notice with Retry and that frets still sound; with it succeeding assert the sampled voice takes over.
 
 **Acceptance Scenarios**:
@@ -4115,9 +4120,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.7.1** — The guitar voice is the sampled steel-string guitar fret-navigator plays
   - **Given** the Composer
   - **When** the Guitar view is first shown
-  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then and only then, never on page load and never in Practice or Piano view — and every guitar note, tapped or played back, sounds through them once they are ready
+  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then, or at the first melodic note in Practice with Guitar the chosen voice (AC-2.13.2/3), and never on page load, in the Piano view, or in Practice under Piano or Synth — and every guitar note, tapped or played back, sounds through them once they are ready
   - **Cases**:
-    - **AC-19.7.1/1** — No sample is requested on page load, in Practice, or in the Piano view; the first showing of the Guitar view requests them once
+    - **AC-19.7.1/1** — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once
     - **AC-19.7.1/2** — Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note
     - **AC-19.7.1/3** — The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer
 
@@ -4128,7 +4133,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-19.7.2/1** — While the samples load, a loading state is shown and every guitar note sounds through the melodic synth voice rather than waiting
     - **AC-19.7.2/2** — A failed load shows a non-blocking notice with a Retry control, guitar notes keep sounding through the synth voice, and Retry requests the samples again
-    - **AC-19.7.2/3** — The piano voice is the melodic synth voice the app already has, and loads nothing
+    - **AC-19.7.2/3** — The Piano view's sampled piano falls back the same way: while its recordings load, or when they cannot, each note sounds through the synth
 
 ---
 
@@ -4262,6 +4267,65 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.12.3/5** — What is rendered for the screen off is the whole cycle of the list: a cycle on My list repeats after as many entries as the list holds
   - *(Cross-references, kept out of the Case wording so each Case's criterion stays its own: /3 is the hand choice of AC-2.7.2/7 and AC-2.10.2/7, now able to land off the list; /5 is AC-4.1.15/4's whole cycle, counted over the list; AC-2.12.2/3's credited songs are AC-2.6.11's. AC-2.7.2/8 and AC-2.10.2/8's "where turning the cycle on would" is AC-2.7.1/3 and AC-2.10.1/3 under All and /2 here under My list.)*
 
+
+---
+
+### User Story 60 - Choose the melodic voice
+
+*Traceability: `US-2.13` — Choose the melodic voice*
+
+**As** the Practicing Musician, **I want** to choose whether melodic notes sound as a real piano, the synth, or the guitar, **so that** what I practise and compose against sounds like an instrument I want to hear, without losing the synth on days I prefer it.
+
+*(Added 2026-10-24 at the maintainer's request: "I don't like the current synth sounds as the only option for piano. I would like a setting that lets me toggle the sound - real piano (look at what we did in fret-navigator project), synth and guitar … for the composer mode it will use the instrument displayed. but if i am in piano the setting will play piano or synth based on what the global setting is. if the global setting is guitar it will play piano." Before any work they were told what else this changes: it reverses the 2026-08-17 retirement of sampled piano audio (research.md D-003) and the 3.7.0 limit of one sampled voice, and it revises US-2.4 and US-19.7. They then decided four things. The piano is fret-navigator's Salamander Grand, **bundled** with the app rather than fetched, so it works offline and in the store builds. The choice applies in Practice as well as in the Composer. Piano is the default. The switch sits beside the Sound Mode switch. Constitution 3.9.0 records the second sampled voice.)*
+
+**Independent Test**: Open a Melodic Pattern and assert the voice switch sits beside the Sound Mode switch with Piano pressed. Press Play and assert the piano's recordings are requested from the app's own origin, that the first notes sound through the synth if the recordings are not yet ready, and that later notes sound through the piano. Choose Synth while playing and assert the next note is synthesised, then Guitar and assert it is the guitar. Reload and assert the choice is remembered and that no Pattern changed. In the Composer, assert the Guitar view always plays the guitar, and that the Piano view plays the synth under Synth and the piano otherwise.
+
+**Acceptance Scenarios**:
+
+- **AC-2.13.1** — The voice switch offers Piano, Synth and Guitar beside the Sound Mode switch
+  - **Given** a Melodic Pattern open in Practice
+  - **When** the Practicing Musician looks at the Pattern header
+  - **Then** beside the Sound Mode switch a voice switch offers Piano, Synth and Guitar, with the voice in force pressed; the choice is an app preference, never Pattern content, and takes effect at once
+  - **Cases**:
+    - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a three-way voice switch — Piano, Synth, Guitar — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
+    - **AC-2.13.1/2** — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
+    - **AC-2.13.1/3** — Choosing a voice while playing changes it from the next melodic note, with no restart
+
+- **AC-2.13.2** — Practice plays the voice chosen
+  - **Given** a Melodic Pattern in Practice
+  - **When** a melodic note sounds — played back, or sounded at once
+  - **Then** it sounds through the chosen voice, and nothing else about playback changes with it
+  - **Cases**:
+    - **AC-2.13.2/1** — Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level
+    - **AC-2.13.2/2** — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1
+    - **AC-2.13.2/3** — Under Guitar, a melodic note sounds through the sampled guitar of US-19.7
+    - **AC-2.13.2/4** — Percussive notes and the metronome click sound the same whatever the voice
+
+- **AC-2.13.3** — The Composer plays the instrument on screen
+  - **Given** the Composer
+  - **When** a melodic note sounds — tapped on the instrument, or played back
+  - **Then** the Guitar view sounds the guitar, and the Piano view sounds the piano unless Synth is the chosen voice
+  - **Cases**:
+    - **AC-2.13.3/1** — In the Guitar view every melodic note sounds through the guitar, whatever voice is chosen
+    - **AC-2.13.3/2** — In the Piano view every melodic note sounds through the synth when Synth is the chosen voice, and through the sampled piano when Piano or Guitar is
+
+- **AC-2.13.4** — The piano ships with the app, and loading it never blocks or silences
+  - **Given** the piano is the voice a note would sound with
+  - **When** its recordings have not been requested, are on their way, or have failed
+  - **Then** they are requested from the app's own origin at the first moment the piano could sound and never on page load, every note sounds through the synth until its recording is ready, and a failure shows a notice with Retry
+  - **Cases**:
+    - **AC-2.13.4/1** — The recordings are served from the app's own origin, and none is requested on page load; the first moment the piano could sound — Play, a note sounded at once, or choosing Piano — requests them, each once
+    - **AC-2.13.4/2** — While a note's recording is not ready, the note sounds through the synth instead, and the voice switch shows the piano loading
+    - **AC-2.13.4/3** — A failed load shows a non-blocking notice with Retry beside the voice switch; notes keep sounding through the synth, and Retry requests the recordings again
+    - **AC-2.13.4/4** — The piano's credit — Salamander Grand Piano by Alexander Holm, CC BY 3.0 — is shown in the Composer's attribution line beside the guitar's, and as the Piano option's description
+
+- **AC-2.13.5** — The screen-off render plays the chosen voice
+  - **Given** a Melodic Pattern playing, on a browser that renders the run ahead for a locked screen (AC-4.1.15)
+  - **When** the run is rendered
+  - **Then** its melodic notes sound through the voice the live transport is using, loaded on the render's own context, or through the synth when that voice's samples are not ready
+  - **Cases**:
+    - **AC-2.13.5/1** — With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth
+    - **AC-2.13.5/2** — With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth
 
 ---
 

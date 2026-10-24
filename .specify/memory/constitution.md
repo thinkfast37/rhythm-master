@@ -1,6 +1,37 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.8.0 → 3.9.0
+
+3.9.0 — Principle V's audio rule admits a second sampled voice, the piano, and lets the
+  guitar sound outside the Composer. Melodic playback gains a global voice choice — Piano,
+  Synth or Guitar (US-2.13) — Piano by default. The piano is the Salamander Grand Piano
+  (Alexander Holm, CC BY 3.0) that fret-navigator ships, 29 recordings a minor third apart,
+  about 2 MB, **bundled** in `public/audio/piano/` rather than fetched. So "the app ships no
+  audio file" is retired, and the rule names the two sampled voices instead. The guitar stays
+  fetched, but no longer only in the Composer's Guitar view: it also plays in Practice when
+  Guitar is chosen. Principle III's non-blocking, synth-fallback rule governs both voices
+  unchanged.
+
+  Asked for on 2026-10-24: "I don't like the current synth sounds as the only option for
+  piano. I would like a setting that lets me toggle the sound - real piano (look at what we
+  did in fret-navigator project), synth and guitar." Before any work the maintainer was told
+  that this reverses the 2026-08-17 retirement (3.1.0, research.md D-003), the 3.7.0 limit of
+  one sampled voice, and parts of US-2.4 and US-19.7. They chose to bundle the piano rather
+  than fetch it, to apply the choice in Practice too, and to default to Piano.
+
+  MINOR rather than MAJOR: no principle is removed or redefined. The audio rule still
+  constrains assets to named, maintainer-approved voices, now two of them, under the same
+  loading discipline. It is not PATCH because the rule's substance changes: an audio file
+  now ships in the build.
+
+  Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅ (none name audio
+  assets).
+  Follow-up: spec.md US-2.13 added (AC-2.13.1–AC-2.13.5); US-2.4 revised (AC-2.4.1, AC-2.4.2
+  and AC-2.4.4 retitled, AC-2.4.3 revised); US-19.7 revised (AC-19.7.1 and AC-19.7.1/1
+  revised, AC-19.7.2/3 retitled); AC-19.6.1/2 revised; research.md D-003 amended;
+  data-model §6 `melodicVoice`; plan.md P-064 (T422–T424).
+
 Version change: 3.7.0 → 3.8.0
 
 3.8.0 — Principle III's grid bar names the largest Pattern the app permits as 32 Measures of
@@ -509,16 +540,24 @@ Billing — so this adds no backend, no account and no secret. The rules for tha
 - The dependency footprint MUST be kept minimal. Prefer native Web APIs (Web Audio,
   Canvas, SVG) over heavyweight UI frameworks. A new dependency requires explicit
   justification that it cannot reasonably be replaced with a modest amount of direct
-  DOM/API code. The app ships **no audio assets at all**: both Sound Modes are Web
-  Audio synthesis, and the melodic reverb impulse is generated at runtime. A former
-  standing exception permitting a sampled piano soundfont was retired on 2026-08-17,
-  unused — the maintainer preferred the synthesized engine once both were built and
-  heard (research.md D-003). **One exception stands (3.7.0):** the Composer's guitar
-  voice (US-19.7) is a sampled steel-string guitar, fetched on first use of the
-  Composer's Guitar view and never on page load, in Practice, or in the Piano view. It is
-  fetched, never vendored; it MUST load without blocking and MUST fall back to the
-  synthesised voice while loading or on failure (Principle III); and it MUST NOT become a
-  second sampled voice without a further amendment.
+  DOM/API code. Audio is Web Audio synthesis — Percussive, the click, and the Synth
+  melodic voice, with the reverb impulse generated at runtime — **with exactly two
+  sampled voices, both chosen by the maintainer by ear and named here (3.9.0):**
+  - *The piano* (US-2.13): the Salamander Grand Piano recordings fret-navigator plays,
+    **bundled** with the app and served from its own origin, so it works offline and in
+    the store builds. It is the default melodic voice, and the voice of the Composer's
+    Piano view unless Synth is chosen.
+  - *The guitar* (US-19.7): the FluidR3_GM steel-string guitar, **fetched** through
+    soundfont-player, never vendored. It sounds in the Composer's Guitar view, and in
+    Practice when Guitar is the chosen melodic voice.
+
+  Neither is requested on page load; each is requested no earlier than the first moment
+  it could sound. Both MUST load without blocking and MUST fall back to the synthesised
+  voice while loading or on failure (Principle III). Synthesis stays one choice away
+  wherever a sampled voice plays. No third sampled voice, and no other audio file, may
+  ship without a further amendment. (A sampled piano soundfont was retired on
+  2026-08-17 when the maintainer preferred the synthesised engine to it, research.md
+  D-003; the Salamander recordings are a different instrument, asked for by name.)
 - YAGNI applies strictly: do not build configuration hooks, plugin systems, or
   abstractions for hypothetical features. Implement the minimum surface area that
   satisfies current requirements.
@@ -618,4 +657,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.8.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-23
+**Version**: 3.9.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-24

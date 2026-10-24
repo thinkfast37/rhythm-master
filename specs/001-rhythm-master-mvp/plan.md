@@ -28,7 +28,9 @@ every test named for the AC it proves.
 framework. *(Revised 2026-08-17: the sampled piano and `soundfont-player` were removed with
 research.md D-003; both Sound Modes are Web Audio synthesis. Revised 2026-10-18: `soundfont-player`
 returns for one voice only — the Composer's sampled guitar, US-19.7, fetched on first use of the
-Guitar view under Constitution 3.7.0.)*
+Guitar view under Constitution 3.7.0. Revised 2026-10-24: melodic playback chooses Piano, Synth or
+Guitar (US-2.13); the piano is the Salamander Grand, bundled as 29 MP3s in `public/audio/piano/`
+and played through Web Audio with no new dependency, under Constitution 3.9.0.)*
 
 **Storage**: Browser `localStorage`, split across separate version-stamped keys — `rm.patterns.v1`,
 `rm.localMeta.v1`, `rm.settings.v1` — so FR-006's Local Metadata separation is structural rather
@@ -134,13 +136,15 @@ src/
 │   ├── counting.js         # Takadimi / 1-e-&-a / Numbered syllable labels
 │   ├── composer.js         # The Composer's draft: record target, pitch from MIDI, baking, completeness (US-19.4–US-19.9)
 │   ├── fretboard.js        # Fretboard geometry: standard tuning, visible-range layout, marker frets (US-19.2)
-│   └── piano.js            # Keyboard geometry: key ranges by count, two-row split (US-19.3)
+│   ├── piano.js            # Keyboard geometry: key ranges by count, two-row split (US-19.3)
+│   └── voice.js            # Which melodic voice sounds, and the piano recording per note (US-2.13)
 ├── audio/
 │   ├── context.js          # AudioContext lifecycle, gesture unlock, suspend handling
 │   ├── scheduler.js        # Lookahead transport driving core/timeline events
 │   ├── voices.js           # Percussive synthesis + accent dynamics
 │   ├── melodic.js          # Synthesised melodic voice (D-003)
-│   └── guitar.js           # Sampled steel-string guitar, lazy, with the melodic voice as fallback (US-19.7)
+│   ├── guitar.js           # Sampled steel-string guitar, lazy, with the melodic voice as fallback (US-19.7)
+│   └── pianoSamples.js     # Bundled Salamander Grand piano, lazy, with the synth as fallback (US-2.13)
 ├── ui/
 │   ├── grid.js             # The one grid view
 │   ├── composer.js         # The Composer mode: record bar, composing grid, controls (US-19.1, US-19.4–US-19.6)
@@ -218,7 +222,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.6 | T065, T272 | T066, T273 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
 | **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 |
-| **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072 | T073 |
+| **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072, T423 | T073, T424 |
 | **P-018** | US-5.6 — Counting system toggle | AC-5.6.1–AC-5.6.13 | T074–T075, T162, T363 | T076, T163, T364 |
 | **P-019** | US-7.1 — Build a Pattern from scratch | AC-7.1.1–AC-7.1.2 | T077 | T078 |
 | **P-020** | US-7.2 — Continuous auto-save for a Pattern you own | AC-7.2.1–AC-7.2.3 | T079 | T080 |
@@ -260,11 +264,12 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-056** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T375 | T376 |
 | **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.5 | T377, T418 | T378, T419 |
 | **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.2 | T379 | T380 |
-| **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381 | T382 |
+| **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381, T423 | T382, T424 |
 | **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
 | **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
 | **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
 | **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394, T410 | T395, T411 |
+| **P-064** | US-2.13 — Choose the melodic voice | AC-2.13.1–AC-2.13.5 | T422, T423 | T424 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

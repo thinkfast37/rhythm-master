@@ -1887,6 +1887,37 @@ body {
 .mode-option[aria-pressed='true'] { color: #0b0c15; background: var(--brand); }
 .mode-option:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
 
+/*
+ * The melodic voice beside it (AC-2.13.1/1): Piano | Synth | Guitar, drawn as
+ * the Sound Mode switch is, with the piano's loading state or its failure and
+ * Retry after it (AC-2.13.4/2, /3).
+ */
+.melodic-voice {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 6px 0 0 8px;
+  vertical-align: top;
+}
+.voice-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.voice-status { font: 500 11px/1.3 var(--font-ui); color: var(--ink-dim); }
+.voice-status.error { color: #ff8a80; }
+.voice-retry {
+  padding: 5px 10px;
+  font: 600 12px/1 var(--font-ui);
+  color: var(--ink);
+  background: #1c1f2b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
 /* A group is a column of control rows. Its name is its tab. */
 .workbench-group {
   flex-direction: column;
