@@ -94,7 +94,7 @@ import { renderComposeGroup } from './ui/compose.js';
 import { renderGoals, renderGoalBar } from './ui/goals.js';
 import { placeHelp } from './ui/help.js';
 import { LAB, ANY_LEVEL, surfaceFor, pickAtLevel, libraryTagsFor, isPracticeGoal, LEVELS } from './core/goals.js';
-import { renderLibrary, buildEntries, neighbours, toggleTag } from './ui/library.js';
+import { renderLibrary, buildEntries, neighbours, toggleTag, UNRATED } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
 import {
@@ -2044,9 +2044,9 @@ const handlers = {
     });
   },
 
-  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6). */
+  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6, AC-6.1.8). */
   onRatingFilter(minRating) {
-    state.view = { ...state.view, minRating: Number(minRating) || 0 };
+    state.view = { ...state.view, minRating: minRating === UNRATED ? UNRATED : Number(minRating) || 0 };
     render();
   },
 
