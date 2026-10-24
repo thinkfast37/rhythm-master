@@ -371,7 +371,8 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "composerCapo": 0,              // AC-19.2.2/5 — 0–12, the fretboard's capo
   "composerFretRange": [0, 24],   // AC-19.2.2/5 — lower and upper visible fret, 0–24
   "composerKeys": 49,             // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
-  "melodicVoice": "piano"         // AC-2.13.1/2 — "piano" | "synth" | "guitar", the voice melodic notes sound with
+  "melodicVoice": "piano",        // AC-2.13.1/2 — "piano" | "synth" | "guitar", the voice melodic notes sound with
+  "composerMidiInput": "all"      // AC-19.10.4/3 — "all", or the name of the one MIDI input device whose notes the Composer takes
 }
 ```
 
@@ -395,6 +396,12 @@ sound, never about a Pattern: no Pattern records it, and no Pattern export carri
 The Composer reads it only in the Piano view (AC-2.13.3). An absent value, which is every store
 written before that date, reads as `"piano"`, so no migration runs. An unrecognised value also reads
 as `"piano"`.
+
+`composerMidiInput` was added 2026-10-24 with US-19.10. It names a MIDI device by the name the
+browser reports for it, since a device's id is not promised to survive a reconnection; `"all"`, or a
+name no connected device has, takes notes from every device (AC-19.10.4/3). It is a preference about
+the computer's hardware, never about a Pattern, and no Pattern export carries it. An absent value
+reads as `"all"`, so no migration runs.
 
 `goal`, `level` and `labHelp` were added 2026-09-20 with US-14.1. All three are preferences about
 the interface, not about any Pattern: choosing a goal or a level writes nothing to a Pattern, an

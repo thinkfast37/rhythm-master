@@ -270,6 +270,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
 | **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394, T410 | T395, T411 |
 | **P-064** | US-2.13 — Choose the melodic voice | AC-2.13.1–AC-2.13.5 | T422, T423 | T424 |
+| **P-065** | US-19.10 — Play a MIDI instrument into the Composer | AC-19.10.1–AC-19.10.5 | T426 | T427 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

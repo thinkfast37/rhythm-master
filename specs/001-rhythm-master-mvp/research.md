@@ -788,3 +788,37 @@ change since the MVP, the Composer included, has landed here as new stories and 
   them a second folder before the first is exhausted.
 - *A global settings sheet* — drawn, then dropped on 2026-10-19: once each goal's quick strip carried
   tempo, swing, click and counting it held nothing that was not already one tap away.
+
+## D-019 — MIDI input: Web MIDI on the web, a seam for the store builds
+
+**Decision (2026-10-24)**: the Composer takes notes from a MIDI device through the browser's **Web
+MIDI API** (`navigator.requestMIDIAccess`, without system-exclusive messages), read by one small
+module, `src/midi/input.js`, which hands each note-on to the very handler a tap on the instrument view
+calls. Decoding a MIDI message, deciding whether the instrument on screen has a place for a note, and
+working out what the device picker offers are pure functions in `core/midi.js`; the module that touches
+`navigator` is only plumbing. Nothing downstream can tell a MIDI note from a tap, so recording, the
+selection and the voices need no MIDI-specific path (US-19.10).
+
+**Why.** The maintainer asked for it on 2026-10-24 and asked first whether the store builds would need
+a native app to have it. They would not: the Capacitor shell's WKWebView has no Web MIDI, but a
+Capacitor plugin over CoreMIDI (and Android's `android.media.midi`) can pass note-ons to the same
+JavaScript seam, exactly as `src/billing/` puts a native adapter behind the web one (D-010). The web is
+built first; the native adapter is a later change and gets its own entry when it is made.
+
+**Consequences.**
+- Web MIDI is in Chrome, Edge and Firefox, and not in Safari or any browser on iPhone and iPad, all of
+  which use WebKit. Those browsers show the picker disabled with the reason (AC-19.10.5/2); nothing else
+  about the Composer changes, so plan.md's target platforms are not narrowed — one capability is absent.
+- Access is asked for on entering the Composer, once a page load (AC-19.10.5/1). Asking at load would put
+  a permission prompt in front of every visitor, most of whom have no device; a button would add a step
+  every first time. The browser remembers the answer, so in practice it is asked once.
+- A device is remembered by name, not id: Web MIDI does not promise an id survives reconnecting.
+- Input is monophonic (AC-19.10.1/3). The Composer records one note per syllable; layered voices, if they
+  come, are a change to the composition model before they are a change here.
+
+**Alternatives considered**:
+- *A native app for the store builds* — rejected: the gap is one API, and a plugin closes it without
+  forking the app.
+- *A Web MIDI polyfill over a browser extension or helper app (Jazz-Plugin and the like)* — rejected:
+  it asks the musician to install software for a feature Chrome and Firefox already have.
+- *Taking MIDI in Practice too, to stamp degrees* — not asked for; Practice ignores MIDI (AC-19.10.1/5).

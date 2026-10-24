@@ -36,7 +36,7 @@ function svgEl(tag, attrs = {}) {
 
 /**
  * @param {HTMLElement} root
- * @param {{key: string, scale: string, labelMode: string, capo: number, range: number[]}} model
+ * @param {{key: string, scale: string, labelMode: string, capo: number, range: number[], lit?: number|null}} model
  * @param {{onNote?: (midi: number) => void}} handlers
  */
 export function renderFretboard(root, model, handlers = {}) {
@@ -132,6 +132,8 @@ export function renderFretboard(root, model, handlers = {}) {
       if (note.inScale) classes.push('is-diatonic', `role-${note.roleId}`);
       if (!playable) classes.push('is-muted');
       if (!visible) classes.push('fret-hidden');
+      // A MIDI note just played lights every place it can be played (AC-19.10.2/2).
+      if (model.lit === midi && playable && visible) classes.push('lit');
 
       const g = svgEl('g', {
         class: classes.join(' '),

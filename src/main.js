@@ -136,6 +136,8 @@ import {
 } from './core/composer.js';
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
 import { composerUnsaved } from './ui/composer.js';
+import { placeFor, acceptsFrom, ALL_DEVICES } from './core/midi.js';
+import { createMidiInput } from './midi/input.js';
 import { mountShell } from './ui/shell.js';
 import { deriveEntitlement, isEntitled } from './core/entitlement.js';
 import { hasStoreSync, selectBillingAdapter } from './billing/index.js';
@@ -232,7 +234,16 @@ const state = {
     notice: null,
     guitar: guitar.getStatus(),
     widthPx: 0,
+    /** The MIDI note just played, lit on the instrument view for a moment (AC-19.10.2). */
+    midiLit: null,
+    /** A MIDI note the instrument view has no place for, flashed in the record bar (AC-19.10.3). */
+    midiFlash: null,
   },
+  /**
+   * MIDI input (US-19.10): whether the browser allowed it, and the devices
+   * connected. Never stored; the device chosen is a setting (AC-19.10.4/3).
+   */
+  midi: { status: 'idle', devices: [] },
   /** The piano's recordings: idle, loading, ready or error (AC-2.13.4). */
   pianoStatus: piano.getStatus(),
   /**
@@ -245,6 +256,37 @@ const state = {
 };
 
 const listeners = new Set();
+
+/** How long a MIDI note stays lit, and an out-of-range flash stays up (AC-19.10.2, AC-19.10.3/3). */
+const MIDI_LIT_MS = 350;
+const MIDI_FLASH_MS = 2000;
+let midiSeq = 0;
+
+/** Clear a transient MIDI mark, unless a later note has replaced it meanwhile. */
+function clearMidiMarkLater(field, ms) {
+  const seq = state.composer[field]?.seq;
+  setTimeout(() => {
+    if (state.composer[field]?.seq !== seq) return;
+    state.composer = { ...state.composer, [field]: null };
+    render();
+  }, ms);
+}
+
+/** The instrument view on screen, as `core/midi.placeFor` reads it. */
+function currentInstrumentView() {
+  const s = state.settings;
+  return s.composerInstrument === 'piano'
+    ? { instrument: 'piano', count: s.composerKeys ?? 49 }
+    : { instrument: 'guitar', capo: s.composerCapo ?? 0, range: s.composerFretRange ?? [0, 24] };
+}
+
+const midiInput = createMidiInput({
+  onNote: (midi, deviceName) => handlers.onMidiNote(midi, deviceName),
+  onChange: (status, devices) => {
+    state.midi = { status, devices };
+    render();
+  },
+});
 
 /**
  * Undo history. A bounded stack of previous Pattern states.
@@ -1882,6 +1924,8 @@ const handlers = {
     state.composer = { ...state.composer, mode, recording: false, target: null, selected: null };
     if (mode === 'composer') {
       ensureGuitarLoaded();
+      // Asked for here, once a page load (AC-19.10.5/1).
+      void midiInput.request();
       // The Pattern open in Practice is the composition, unless it already is
       // (AC-19.1.2/1, /4). Declining falls back to choosing from the library
       // (AC-19.1.2/3).
@@ -1996,6 +2040,35 @@ const handlers = {
     } else if (c.selected && slotAt(c.draft, c.selected)?.on) {
       applyDraft(recordNote, c.selected, midi);
     }
+  },
+
+  /**
+   * A note-on from a MIDI device (US-19.10): taken exactly as a tap on its key
+   * or fret (AC-19.10.1), lit where it landed (AC-19.10.2), or refused when the
+   * instrument on screen has no place for it (AC-19.10.3). Ignored outside the
+   * Composer (AC-19.10.1/5) and from a device other than the one chosen
+   * (AC-19.10.4/2).
+   */
+  onMidiNote(midi, deviceName) {
+    if (state.composer.mode !== 'composer') return;
+    if (!acceptsFrom(state.midi.devices, state.settings.composerMidiInput, deviceName)) return;
+    const place = placeFor(midi, currentInstrumentView());
+    if (!place.inRange) {
+      state.composer = { ...state.composer, midiFlash: { message: place.message, seq: ++midiSeq } };
+      clearMidiMarkLater('midiFlash', MIDI_FLASH_MS);
+      render();
+      return;
+    }
+    state.composer = { ...state.composer, midiLit: { midi, seq: ++midiSeq } };
+    clearMidiMarkLater('midiLit', MIDI_LIT_MS);
+    handlers.onInstrumentNote(midi);
+    render();
+  },
+
+  /** The MIDI device the Composer takes notes from, or every device (AC-19.10.4/2, /3). */
+  onComposerMidiInput(name) {
+    state.settings = settingsStore.save({ composerMidiInput: name || ALL_DEVICES });
+    render();
   },
 
   /** Delete: the Slot before the target while recording (AC-19.4.3); the selection otherwise (AC-19.5.2/3). */
