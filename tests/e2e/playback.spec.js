@@ -169,7 +169,9 @@ test('AC-4.1.2 — Visual highlight stays in sync with audio: playback moves the
   });
 
   // Sample where the cursor is, to prove it really advanced over the window
-  // rather than the grid simply sitting still.
+  // rather than the grid simply sitting still. The loop counter brackets the
+  // window, so the rebuild bound below is counted in passes, not in seconds.
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
   const seen = new Set();
   for (let i = 0; i < 20; i++) {
     const cell = await page.evaluate(() => {
@@ -180,13 +182,19 @@ test('AC-4.1.2 — Visual highlight stays in sync with audio: playback moves the
     await page.waitForTimeout(50);
   }
   const rebuilds = await page.evaluate(() => window.__rmRebuilds);
+  const passes = (await page.evaluate(() => window.__rm.getState().loop)) - loopBefore;
 
   // The cursor visited several Slots over the window...
   expect(seen.size).toBeGreaterThanOrEqual(3);
-  // ...while the grid was rebuilt only at pass boundaries. One pass is 0.8s at
-  // this tempo and the window is about a second, so at most a couple. Before
-  // this fix the grid was rebuilt on EVERY sounding event, which is 4 per Beat.
-  expect(rebuilds).toBeLessThanOrEqual(3);
+  // ...while the grid was rebuilt only at pass boundaries. Each boundary
+  // renders in full twice — once when the pass is scheduled (`onLoop`) and once
+  // when it is heard (AC-2.7.2/4) — so the bound is two per boundary crossed,
+  // plus one boundary scheduled just before the window and heard inside it.
+  // It is counted in passes because the window is wall-clock: under load the
+  // twenty samples stretch it, and a fixed count failed as soon as it spanned
+  // a second boundary (T410). Rebuilding on EVERY sounding event, as before
+  // this fix, is four more per pass on top and still fails it.
+  expect(rebuilds).toBeLessThanOrEqual(2 * (passes + 1));
 });
 
 test('AC-4.1.3 — the loop counter increments once per full pass, not per Measure', async ({ page }) => {
