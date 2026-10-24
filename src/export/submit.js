@@ -50,9 +50,11 @@ export function toSubmissionShape(pattern) {
  * encoded — so it fell into AC-13.1.3's fallback, which describes an oversized *bulk*
  * submission, while AC-13.1.1 puts no size caveat on submitting one Pattern at all.
  *
- * Compact, the densest Pattern the app can represent (8 Measures of 12/8 at Straight
- * 16ths) encodes to well under the limit, so the fallback is now reachable only by a
- * batch of many Patterns — which is the only case the criterion describes.
+ * Compact, a 4/4 Pattern of 8 Measures still fits readably; past that it goes compressed,
+ * and the densest Pattern the app can represent (32 Measures of 12/8 at Straight 16ths,
+ * random Accents) is about 1,800 characters compressed — so the paste-it-yourself
+ * fallback is reachable only by a batch of many Patterns, the only case the criterion
+ * describes.
  */
 export function buildIssueBody(patterns) {
   const blocks = patterns.map(

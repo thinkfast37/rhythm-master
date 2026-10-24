@@ -14,7 +14,7 @@ import { renderPiano } from './piano.js';
 import { KEYS, resolve } from '../core/pitch.js';
 import { SCALES, DEFAULT_SCALE } from '../core/scales.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, measureLabels, effectiveSystem, isForcedNumbered } from '../core/counting.js';
-import { MIN_TEMPO, MAX_TEMPO } from '../core/pattern.js';
+import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { MIN_SWING, MAX_SWING, DEFAULT_SWING_FEEL } from '../core/swing.js';
 import { beatNoteValue } from '../core/meter.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -483,7 +483,7 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     wrap.appendChild(labelledRow(`Swing ${amount}`, swingEntry, swing));
 
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
-    dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself; the copy has no notes yet' : 'A Pattern may hold at most 8 Measures');
+    dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself; the copy has no notes yet' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     dup.addEventListener('click', () => handlers.onComposerDuplicate?.());
     wrap.appendChild(labelled('Measures', dup));
   }

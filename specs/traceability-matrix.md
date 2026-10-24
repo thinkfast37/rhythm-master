@@ -124,7 +124,7 @@ fail the build, and it is outstanding work — never a settled decision.
 |---|---|---|---|---|---|---|---|
 | US-1.1 | `AC-1.1.1` | New Pattern defaults | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-1.1 | `AC-1.1.3` 🖵 | 8-Measure cap disables +Measure | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.3` 🖵 | 32-Measure cap disables +Measure | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-1.1 | `AC-1.1.5/1` 🖵 | The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.5/2` 🖵 | A Measure other than the first changes alone, with no prompt | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
@@ -440,14 +440,14 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.5 | `AC-7.5.3` 🖵 | Only owned Patterns can be deleted | P-023 | T085 (1/1 done) | T086 (1/1 done) | `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.5 | `AC-7.5.4` 🖵 | Deleting one Family member doesn't affect the other | P-023 | T085 (1/1 done) | T086 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.1` | Combine has no meter-matching restriction | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 8-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 8 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 32-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 32 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-8.1 | `AC-8.1.4` | Combine into an owned Pattern auto-saves | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.5` 🖵 | Combine into a shipped Pattern triggers the naming prompt | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.6` 🖵 | Combine picker re-filters correctly on repeated use | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.1` | Duplicate copies the full Measure sequence exactly | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-10.1 | `AC-10.1.2` | Duplicate focuses the newly-added second half | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 8-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟢 OK |
+| US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 32-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟢 OK |
 | US-10.1 | `AC-10.1.4` 🖵 | Duplicate is disabled when doubling would exceed the cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `operations.spec.js`, `remaining.spec.js` | 🟢 OK |
 | US-10.1 | `AC-10.1.5` | Duplicate into an owned Pattern auto-saves | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.6` 🖵 | Duplicate into a shipped Pattern triggers the naming prompt | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -954,7 +954,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.5 | `AC-19.5.3/3` 🖵 | A Slot cycled to off loses its note, and the count of syllables without a note follows | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.4/1` 🖵 | Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.4/2` 🖵 | Record then targets the first sounding Slot of the copy | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
-| US-19.5 | `AC-19.5.4/3` 🖵 | Double Length is disabled when the result would exceed 8 Measures | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
+| US-19.5 | `AC-19.5.4/3` 🖵 | Double Length is disabled when the result would exceed 32 Measures | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer.test.js`, `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.5/1` | The tempo entry sets the composition's tempo, and playback follows it | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.5/2` | The swing amount and feel controls set the composition's swing, and playback follows them | P-057 | T377 (1/1 done) | T378 (1/1 done) | `composer-edit.spec.js` | 🟢 OK |
 | US-19.6 | `AC-19.6.1/1` 🖵 | Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it | P-058 | T379 (1/1 done) | T380 (1/1 done) | `composer-play.spec.js` | 🟢 OK |
@@ -972,7 +972,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.8 | `AC-19.8.1/2` | Confirming opens the rhythm as a composition in C Ionian with every sounding Slot unpitched and its accents kept, and the library is unchanged until the first save | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.1/3` 🖵 | Cancelling the prompt opens nothing: whatever composition was open stays, and the original Pattern is untouched | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.2/1` | Opening a Pattern with a progression asks for a name, as a percussive one does | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
-| US-19.8 | `AC-19.8.2/2` | The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 8 and the first pass alone otherwise, and a notice says which | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
+| US-19.8 | `AC-19.8.2/2` | The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 32 and the first pass alone otherwise, and a notice says which | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.2/3` | The composition carries no progression and no Register — every note is where it sounds — and the original Pattern is unchanged | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer.test.js`, `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.3/1` 🖵 | An owned melodic Pattern asks Edit or Save as new; Edit opens it as a saved composition that auto-saves (US-19.9), and Save as new asks a name, pre-filled as a percussive one's is, and opens a copy, unsaved | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |
 | US-19.8 | `AC-19.8.3/2` 🖵 | A shipped melodic Pattern asks a name only, pre-filled as a percussive one's is, and opens a copy, unsaved | P-060 | T383, T398 (2/2 done) | T384, T399 (2/2 done) | `composer-load.spec.js` | 🟢 OK |

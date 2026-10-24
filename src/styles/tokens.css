@@ -844,7 +844,7 @@ body {
  * this Key (AC-2.2.15).
  *
  * Stacked because side by side does not fit. Measured on a 390px viewport at
- * the densest supported Pattern (8 Measures of 12/8 at Straight 16ths) the band
+ * the densest supported Pattern (12/8 at Straight 16ths, at any Measure count) the band
  * is 29.2px wide. The widest name any Key can produce is a double accidental —
  * `Abb4`, the flattened second of G♭ — four characters needing 24.1px stacked,
  * against 36.1px for the same Pitch written on one line. Neither line may be

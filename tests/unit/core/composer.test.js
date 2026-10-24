@@ -175,11 +175,14 @@ describe('core/composer — editing a draft', () => {
     expect(recordTarget(d)).toEqual(at(1, 0));
   });
 
-  it('AC-19.5.4/3 — Double Length is disabled when the result would exceed 8 Measures: canDuplicate', () => {
+  it('AC-19.5.4/3 — Double Length is disabled when the result would exceed 32 Measures: canDuplicate', () => {
     let p = blankDraft();
     expect(canDuplicate(p)).toBe(true);
-    for (let i = 0; i < 4; i++) p = addMeasure(p);
-    expect(p.measures).toHaveLength(5);
+    for (let i = 0; i < 15; i++) p = addMeasure(p);
+    expect(p.measures).toHaveLength(16);
+    expect(canDuplicate(p)).toBe(true); // doubling to exactly 32
+    p = addMeasure(p);
+    expect(p.measures).toHaveLength(17);
     expect(canDuplicate(p)).toBe(false);
     expect(() => duplicateUnpitched(p)).toThrow();
   });
@@ -203,7 +206,7 @@ describe('core/composer — from the library (US-19.8)', () => {
     expect(p.measures[0].beats[0].slots[0].pitch).toBeUndefined();
   });
 
-  it("AC-19.8.2/2 — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 8 and the first pass alone otherwise, and a notice says which", () => {
+  it("AC-19.8.2/2 — The composition's Slots carry, as stored degrees, the notes the progression and fill would have sounded, pass by pass, the harmonic cycle unrolled into Measures when it fits within 32 and the first pass alone otherwise, and a notice says which", () => {
     let p = { ...blankDraft('C', 'ionian'), id: 'p_h' };
     p = setProgression(p, 'I-IV-V');
     p = setArpeggio(p, 'up');
@@ -222,16 +225,24 @@ describe('core/composer — from the library (US-19.8)', () => {
     expect(buildTimeline(baked, 0).map((e) => e.pitch.midiNote)).not.toEqual(buildTimeline(p, 1).map((e) => e.pitch.midiNote));
     expect(validate(baked).valid).toBe(true);
 
-    // Too long to unroll: a 3-Measure Pattern over four chords is 12 Measures.
+    // Fits: a 3-Measure Pattern over four chords changing every pass is 12 Measures, within 32.
+    let mid = addMeasure(addMeasure(p));
+    mid = setProgression(mid, 'I-V-vi-IV');
+    mid = setChange(mid, 'pass');
+    const whole = bakeHarmony(mid, 'Mid');
+    expect(whole.unrolled).toBe(true);
+    expect(whole.passes).toBe(4);
+    expect(whole.pattern.measures).toHaveLength(12);
+
+    // Too long to unroll: a 9-Measure Pattern over the same four chords is 36 Measures.
     let long = p;
-    long = addMeasure(long);
-    long = addMeasure(long);
+    for (let i = 0; i < 8; i++) long = addMeasure(long);
     long = setProgression(long, 'I-V-vi-IV');
     long = setChange(long, 'pass');
     const truncated = bakeHarmony(long, 'Long');
     expect(truncated.unrolled).toBe(false);
     expect(truncated.passes).toBe(4);
-    expect(truncated.pattern.measures).toHaveLength(3);
+    expect(truncated.pattern.measures).toHaveLength(9);
   });
 
   it('AC-19.8.2/3 — The composition carries no progression and no Register — every note is where it sounds — and the original Pattern is unchanged', () => {

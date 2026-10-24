@@ -129,9 +129,9 @@ test('AC-10.1.4 — Duplicate is disabled when doubling would exceed the cap: th
 }) => {
   await page.goto('/');
   await makeOwned(page, 'Big');
-  // Grow to 5 Measures; doubling would make 10, over the cap of 8.
-  for (let i = 0; i < 4; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(5);
+  // Grow to 17 Measures; doubling would make 34, over the cap of 32.
+  for (let i = 0; i < 16; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(17);
   await expect(page.locator('[data-action="duplicate-pattern"]')).toBeDisabled();
 });
 
@@ -151,8 +151,8 @@ test('AC-8.1.1 — Append adds another Pattern’s Measures after this one', asy
 test('AC-8.1.2 — Append is unavailable once the Pattern is at the Measure cap', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Full');
-  for (let i = 0; i < 7; i++) await page.locator('[data-action="add-measure"]').click();
-  await expect(page.locator('.measure')).toHaveCount(8);
+  for (let i = 0; i < 31; i++) await page.locator('[data-action="add-measure"]').click();
+  await expect(page.locator('.measure')).toHaveCount(32);
   await expect(page.locator('[data-action="append-pattern"]')).toBeDisabled();
   await expect(page.locator('[data-action="add-measure"]')).toBeDisabled();
 });
