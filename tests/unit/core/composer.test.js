@@ -13,6 +13,7 @@ import {
   clearNote,
   cycleSyllable,
   duplicateUnpitched,
+  hasAnyNote,
   canDuplicate,
   loadKind,
   fromPercussive,
@@ -22,7 +23,7 @@ import {
 } from '../../../src/core/composer.js';
 import { resolve, KEYS } from '../../../src/core/pitch.js';
 import { SCALES } from '../../../src/core/scales.js';
-import { create, setPitch, cycleAccent, validate, addMeasure } from '../../../src/core/pattern.js';
+import { create, setPitch, cycleAccent, validate, addMeasure, duplicate } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, setChange } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { noteAt, STRING_COUNT, FRET_COUNT } from '../../../src/core/fretboard.js';
@@ -44,15 +45,23 @@ describe('core/composer — a tapped note as a Pitch of the Key (AC-19.4.4)', ()
     const r88 = rangeFor(88);
     for (let m = r88.low; m <= r88.high; m++) midis.add(m);
     expect(midis.size).toBe(88); // the board's E2–E6 lies within the 88 keys
+    // Every case is checked; the misses are gathered and asserted once, because
+    // 33,792 separate expect() calls cost thirty times the arithmetic they guard
+    // and timed out on a busy machine (T415). An empty list is all 16,896 passing.
+    const lossy = [];
+    let checked = 0;
     for (const key of KEYS) {
       for (const scale of SCALES) {
         for (const midi of midis) {
           const pitch = pitchFromMidi(midi, key, scale.id);
-          expect(resolve(pitch, key).midiNote).toBe(midi);
-          expect(Number.isInteger(pitch.octaveOffset)).toBe(true);
+          const back = resolve(pitch, key).midiNote;
+          if (back !== midi || !Number.isInteger(pitch.octaveOffset)) lossy.push({ key, scale: scale.id, midi, pitch, back });
+          checked++;
         }
       }
     }
+    expect(checked).toBe(KEYS.length * SCALES.length * 88);
+    expect(lossy).toEqual([]);
   });
 
   it("AC-19.4.4/2 — An in-scale note takes the scale's own degree token — `b5` in Locrian and `#4` in Lydian for the same semitone — and an out-of-scale note the default chromatic token of its semitone above the root", () => {
@@ -163,7 +172,14 @@ describe('core/composer — editing a draft', () => {
     expect(missingCount(r)).toBe(4);
   });
 
-  it('AC-19.5.4/1 — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs', () => {
+  it('AC-19.5.4/1 — With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged: hasAnyNote decides whether there is anything to ask about', () => {
+    let p = blankDraft();
+    expect(hasAnyNote(p)).toBe(false);
+    p = recordNote(p, at(0, 0), 60);
+    expect(hasAnyNote(p)).toBe(true);
+  });
+
+  it('AC-19.5.4/2 — Starting percussive appends a copy of every Measure with its notes cleared, and the original Measures keep theirs', () => {
     let p = blankDraft();
     for (let b = 0; b < 4; b++) p = recordNote(p, at(0, b), 60 + b);
     const d = duplicateUnpitched(p);
@@ -175,7 +191,17 @@ describe('core/composer — editing a draft', () => {
     expect(recordTarget(d)).toEqual(at(1, 0));
   });
 
-  it('AC-19.5.4/3 — Double Length is disabled when the result would exceed 32 Measures: canDuplicate', () => {
+  it('AC-19.5.4/4 — Keeping the notes appends a copy of every Measure carrying the same notes as the originals: duplicate from core/pattern.js', () => {
+    let p = blankDraft();
+    for (let b = 0; b < 4; b++) p = recordNote(p, at(0, b), 60 + b);
+    const d = duplicate(p);
+    expect(d.measures).toHaveLength(2);
+    expect(d.measures[1]).toEqual(d.measures[0]);
+    expect(d.measures[1].beats.map((b) => b.slots[0].pitch?.degree)).toEqual(['1', 'b2', '2', 'b3']);
+    expect(missingCount(d)).toBe(0);
+  });
+
+  it('AC-19.5.4/6 — Double Length is disabled when the result would exceed 32 Measures: canDuplicate', () => {
     let p = blankDraft();
     expect(canDuplicate(p)).toBe(true);
     for (let i = 0; i < 15; i++) p = addMeasure(p);

@@ -128,6 +128,40 @@ export function playGuitar(ctx, destination, event, when, fallback) {
   return 'fallback';
 }
 
+/**
+ * The guitar on a context of the caller's own — the screen-off render's
+ * OfflineAudioContext (AC-2.13.5/2). It plays the live instrument's decoded
+ * buffers, keyed by MIDI note: an AudioBuffer is not bound to the context that
+ * decoded it, so the render needs no second request to the CDN, which would
+ * break AC-19.7.1/1's "once". Resolves null while the live context has no
+ * instrument, and the render uses the synth. Touches no status.
+ */
+export async function prepare(ctx) {
+  const live = current && loads.get(current);
+  if (live?.status !== 'ready' || !live.instrument?.buffers) return null;
+  const buffers = live.instrument.buffers;
+  return {
+    play(midiNote, when, { gain }) {
+      const buffer = buffers[midiNote];
+      if (!buffer) return;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      const level = ctx.createGain();
+      level.gain.setValueAtTime(gain, when);
+      source.connect(level);
+      level.connect(ensureCompressor(ctx));
+      source.start(when);
+    },
+  };
+}
+
+/** One note on an instrument `prepare` returned, at the live voice's gain. */
+export function playOn(instrument, event, when) {
+  const gain = ACCENT_AMPS[event.accent] ?? ACCENT_AMPS[2];
+  instrument.play(event.pitch.midiNote, when, { gain });
+  return 'sampled';
+}
+
 /** Test seams. */
 export function __setLoader(fn) {
   loader = fn;

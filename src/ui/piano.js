@@ -8,11 +8,35 @@ import { rangeFor, keysIn, splitRows, whiteKeyCount, keyName, MIDDLE_C, DEFAULT_
 import { describeNote, labelFor } from '../core/composer.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
-/** Drawn units: a white key's width and the two heights. */
+/** Drawn units: a white key's width, and the bounds of its height. The keys are
+ * drawn tall so the keyboard stands near the fretboard's height and a key is a
+ * target, not a sliver. On a panel wide enough that the tall proportion would
+ * hit the on-screen height cap and letterbox between dead side margins, the
+ * drawn height shrinks — never past a real keyboard's width-to-length
+ * proportion — so half of that dead margin goes to wider keys at the same
+ * height. The two-row split (AC-19.3.2) is decided by rendered width alone and
+ * is untouched. */
 const WHITE_W = 24;
-const WHITE_H = 110;
+const WHITE_H_MAX = 220;
+/** ~6.3 times the width — a real piano's white key is ~6.4. */
+const WHITE_H_MIN = 150;
 const BLACK_W = 14;
-const BLACK_H = 68;
+/** A real piano's black key is ~0.64 of the white key's length. */
+const BLACK_RATIO = 0.64;
+/** The row's on-screen height cap — tokens.css `.piano-row { max-height }` mirrors it. */
+const ROW_CAP_PX = 420;
+
+/** The drawn white-key height for the widest row at the panel's width: halfway
+ * from the tall proportion toward the one that would fill the panel at the
+ * height cap, so a wide panel's letterboxed dead margin is cut in half at the
+ * same height (the maintainer's choice, 2026-10-24: wider, not taller, and not
+ * the full stretch), floored at a real keyboard's proportion. */
+function whiteHeightFor(maxRowUnits, widthPx) {
+  if (!Number.isFinite(widthPx) || widthPx <= 0) return WHITE_H_MAX;
+  const fillsWidthAtCap = (ROW_CAP_PX * maxRowUnits) / widthPx;
+  if (fillsWidthAtCap >= WHITE_H_MAX) return WHITE_H_MAX;
+  return Math.max(WHITE_H_MIN, Math.round((WHITE_H_MAX + fillsWidthAtCap) / 2));
+}
 
 function svgEl(tag, attrs = {}) {
   const node = document.createElementNS(SVG, tag);
@@ -22,7 +46,7 @@ function svgEl(tag, attrs = {}) {
 
 /**
  * @param {HTMLElement} root
- * @param {{key: string, scale: string, labelMode: string, count: number, widthPx: number}} model
+ * @param {{key: string, scale: string, labelMode: string, count: number, widthPx: number, lit?: number|null}} model
  * @param {{onNote?: (midi: number) => void}} handlers
  */
 export function renderPiano(root, model, handlers = {}) {
@@ -38,6 +62,9 @@ export function renderPiano(root, model, handlers = {}) {
   wrap.dataset.rows = String(rows.length);
   wrap.setAttribute('role', 'group');
   wrap.setAttribute('aria-label', `Piano keyboard, ${count} keys, ${keyName(range.low)} to ${keyName(range.high)}`);
+
+  const WHITE_H = whiteHeightFor(Math.max(...rows.map((r) => whiteKeyCount(r))) * WHITE_W, model.widthPx);
+  const BLACK_H = Math.round(WHITE_H * BLACK_RATIO);
 
   rows.forEach((row, rowIndex) => {
     const keys = keysIn(row);
@@ -59,6 +86,8 @@ export function renderPiano(root, model, handlers = {}) {
         if (note.isRoot) classes.push('is-root');
         if (note.inScale) classes.push('is-diatonic', `role-${note.roleId}`);
         if (k.midi === MIDDLE_C) classes.push('middle-c');
+        // A MIDI note just played lights its key (AC-19.10.2/1).
+        if (k.midi === model.lit) classes.push('lit');
         const g = svgEl('g', {
           class: classes.join(' '),
           'data-midi': k.midi,

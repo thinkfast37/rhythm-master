@@ -9,9 +9,9 @@
 import {
   STRING_COUNT,
   FRET_COUNT,
-  BOARD_WIDTH,
   BOARD_HEIGHT,
   MARGIN,
+  MARGIN_X,
   OPEN_COL_WIDTH,
   NOTE_RADIUS,
   ROW_HEIGHT,
@@ -21,6 +21,7 @@ import {
   isPlayable,
   isMarkerFret,
   layoutFor,
+  boardWidthFor,
   clampCapo,
 } from '../core/fretboard.js';
 import { describeNote, labelFor } from '../core/composer.js';
@@ -35,17 +36,21 @@ function svgEl(tag, attrs = {}) {
 
 /**
  * @param {HTMLElement} root
- * @param {{key: string, scale: string, labelMode: string, capo: number, range: number[]}} model
+ * @param {{key: string, scale: string, labelMode: string, capo: number, range: number[], lit?: number|null}} model
  * @param {{onNote?: (midi: number) => void}} handlers
  */
 export function renderFretboard(root, model, handlers = {}) {
   const capo = clampCapo(model.capo ?? 0);
-  const layout = layoutFor(model.range ?? [0, FRET_COUNT]);
+  // Stretched to the panel's width at the height cap (core/fretboard
+  // `boardWidthFor`), so a wide panel widens the fret columns rather than
+  // letterboxing the board.
+  const boardWidth = boardWidthFor(model.widthPx ?? 0);
+  const layout = layoutFor(model.range ?? [0, FRET_COUNT], boardWidth);
   const { showOpenColumn, firstFret, lastFret, wireX, noteX, stringY } = layout;
 
   const svg = svgEl('svg', {
     class: 'fretboard',
-    viewBox: `0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`,
+    viewBox: `0 0 ${boardWidth} ${BOARD_HEIGHT}`,
     role: 'group',
     'aria-label': 'Fretboard, standard tuning',
   });
@@ -61,9 +66,9 @@ export function renderFretboard(root, model, handlers = {}) {
       svgEl('line', {
         class: 'string-line',
         'data-string': s,
-        x1: MARGIN + (showOpenColumn ? OPEN_COL_WIDTH : 0),
+        x1: MARGIN_X + (showOpenColumn ? OPEN_COL_WIDTH : 0),
         y1: stringY(s),
-        x2: BOARD_WIDTH - MARGIN,
+        x2: boardWidth - MARGIN_X,
         y2: stringY(s),
       })
     );
@@ -127,6 +132,8 @@ export function renderFretboard(root, model, handlers = {}) {
       if (note.inScale) classes.push('is-diatonic', `role-${note.roleId}`);
       if (!playable) classes.push('is-muted');
       if (!visible) classes.push('fret-hidden');
+      // A MIDI note just played lights every place it can be played (AC-19.10.2/2).
+      if (model.lit === midi && playable && visible) classes.push('lit');
 
       const g = svgEl('g', {
         class: classes.join(' '),

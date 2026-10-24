@@ -25,11 +25,13 @@ export function helpOn(state) {
 export const HELP = Object.freeze({
   bar: [
     ['Library', 'Opens the list of every Pattern, shipped and your own, with search and Tag filters.', '.library-toggle'],
+    ['Related', 'Will open the family of the rhythm on screen — its duplicates and variations. Not yet wired.', '.related-button'],
     ['Play / Stop', 'Loops the Pattern from the top until you stop it. Under a cycle, a second Stop starts the cycle over from where turning it on would.', '.transport'],
     ['BPM', 'The exact tempo in beats per minute; type a number, or use the slider and presets in Practice.', '.tempo-unit'],
     ['♩ / ♪', 'What the tempo counts: quarter notes or eighth notes per minute. Every note lasts its written length either way.', '[data-action="toggle-tempo-unit"]'],
     ['Prev / Next', 'Steps to the neighbouring Pattern in the library list as it is filtered now.', '[data-action="next-pattern"]'],
     ['Goals', 'Back to the goals screen, to work a different way or leave Lab.', '.goals-button'],
+    ['Practice / Composer', 'Practice is the grid and the workbench; Composer puts a guitar or piano over the rhythm to play a melody in. Play it in will be its own goal.', '.mode-switch'],
   ],
   melody: [
     ['Pitch strip', 'Arm a scale degree, then tap a note’s upper band in the grid to give it that pitch.', '.pitch-strip > .pitch-strip-label:first-child'],

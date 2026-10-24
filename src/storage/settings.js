@@ -64,6 +64,19 @@ export const DEFAULTS = {
   composerCapo: 0,
   composerFretRange: [0, 24],
   composerKeys: 49,
+  /**
+   * The voice melodic notes sound with (US-2.13): 'piano', 'synth' or
+   * 'guitar'. An app preference, never Pattern content (AC-2.13.1/2); the
+   * Composer reads it in the Piano view alone (AC-2.13.3). Read through
+   * `core/voice.normaliseVoice`, so a stored value it does not know is Piano.
+   */
+  melodicVoice: 'piano',
+  /**
+   * The MIDI device the Composer takes notes from, by name, or 'all' (US-19.10,
+   * AC-19.10.4/3). A preference about the computer's hardware, never about a
+   * Pattern; a name no connected device has takes every device's notes.
+   */
+  composerMidiInput: 'all',
 };
 
 export function load() {

@@ -1,5 +1,5 @@
 {
-  "about": "Song sections corrected from their chord sheets, approved by the maintainer 2026-10-24 (T410). Chords are as each sheet writes them (capo shapes where the sheet uses a capo; the numerals are the same). `npm run chords -- respell` spells every song from these where given, and from the shipped credits otherwise, by AC-2.6.1/19. A song listed here has all its credits taken from here.",
+  "about": "Song sections corrected from their chord sheets, approved by the maintainer 2026-10-24 (T428). Chords are as each sheet writes them (capo shapes where the sheet uses a capo; the numerals are the same). `npm run chords -- respell` spells every song from these where given, and from the shipped credits otherwise, by AC-2.6.1/19. A song listed here has all its credits taken from here.",
   "songs": [
     {
       "artist": "Radiohead",

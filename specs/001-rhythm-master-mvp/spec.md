@@ -37,9 +37,9 @@ in the evening — but separating them keeps each story honest about whose probl
 
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
-| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.9 |
+| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.10 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
-| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-2.13, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
@@ -664,27 +664,29 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 
 *(Revised 2026-08-17. This story originally specified a sampled piano, on the assumption that synthesis sounded insufficiently musical. Built and heard, the maintainer preferred the predecessor's synthesised engine for both Modes. That engine is now ported verbatim — see research.md D-003. The sampled-piano path and its soundfont dependency were removed.)*
 
+*(Revised 2026-10-24 with US-2.13, Constitution 3.9.0. The synth is now one of three melodic voices, alongside a bundled Salamander Grand piano and the sampled guitar, and is no longer the only one. Piano is the default. This story now governs the Synth voice and Percussive mode. US-2.13 governs the choice and the sampled voices. AC-2.4.1, AC-2.4.2 and AC-2.4.4 are retitled to say which voice they govern, and AC-2.4.3 is revised so that a sampled voice still loading falls back to the synth rather than waiting. The maintainer asked: "I don't like the current synth sounds as the only option for piano.")*
+
 **Independent Test**: Play both Sound Modes and assert each routes through the ported chain, that no network request is made for audio, and that neither Mode waits on an asset.
 
 **Acceptance Scenarios**:
 
-- **AC-2.4.1** — Melodic playback uses the ported synthesis chain
-  - **Given** a Melodic Pattern during playback
+- **AC-2.4.1** — The Synth voice uses the ported synthesis chain
+  - **Given** a Melodic Pattern during playback, with Synth the melodic voice (AC-2.13.1)
   - **When** any note sounds
   - **Then** it is produced by three detuned sine oscillators through a shared gain envelope, a low-pass filter sweeping 2000 Hz down to 600 Hz across the note's decay, and both a dry path and a reverb send — the predecessor's chain, unchanged
 
-- **AC-2.4.2** — No audio asset is ever fetched
-  - **Given** the app is opened and both Sound Modes are played
+- **AC-2.4.2** — Percussive and Synth fetch no audio asset
+  - **Given** the app is opened with Synth the melodic voice, and both Sound Modes are played
   - **When** network activity is observed
-  - **Then** no request is made for any audio asset, from this origin or any other — both Modes are pure Web Audio synthesis, and the reverb impulse is generated at runtime rather than loaded
+  - **Then** no request is made for any audio asset, from this origin or any other — Percussive and the Synth voice are pure Web Audio synthesis, and the reverb impulse is generated at runtime rather than loaded. The sampled voices' requests are governed by AC-2.13.4 and AC-19.7.1
 
 - **AC-2.4.3** — Neither Sound Mode waits on anything to load
   - **Given** the app has just opened
   - **When** the Composer presses Play on a Melodic Pattern, or on a Percussive one
-  - **Then** each sounds immediately, with no loading state — there is nothing to load, so Melodic has no dependency Percussive lacks
+  - **Then** each sounds immediately, whatever the melodic voice: Percussive and Synth have nothing to load, and a sampled voice whose recordings are not yet ready sounds each note through the synth rather than waiting (AC-2.13.4/2) — Play is never held for a load
 
-- **AC-2.4.4** — Melodic notes share one reverb and one compressor
-  - **Given** several Melodic notes sounding at once
+- **AC-2.4.4** — Synth notes share one reverb and one compressor
+  - **Given** several Melodic notes sounding at once through the Synth voice
   - **When** they play
   - **Then** they route through a single shared convolver and a single shared dynamics compressor rather than one per note, so overlapping notes cost nothing extra and stacked notes cannot clip
 
@@ -1505,7 +1507,7 @@ field survives showing it.)*
   - **Given** the Tag filter "warmup" is active, matching exactly "Bossa Groove," "Samba Break," and "Simple Fill," in that list order
   - **When** the Practicing Musician has "Bossa Groove" loaded and taps Next
   - **Then** "Samba Break" loads — the second item in the filtered list, not the second item in the full unfiltered library
-  - *(Clarified 2026-09-20 with US-14.1 (T328): under a practice goal the list is the filtered list narrowed further by the level and Mode the goal bar shows (AC-14.1.4/6) — still a filtered list, never the full library. Under Any level, and under every other goal, it is exactly the list this criterion describes.)*
+  - *(Clarified 2026-09-20 with US-14.1 (T328): under a practice goal the list is the filtered list narrowed further by the level and Mode the goal bar shows (AC-14.1.4/6) — still a filtered list, never the full library. Under Any level, and under every other goal, it is exactly the list this criterion describes. 2026-10-24 with T410: the one Practise goal has no Mode, so the narrowing is the level alone.)*
 
 - **AC-5.5.2** — Prev/Next doesn't wrap at list boundaries
   - **Given** the same filtered list as AC-5.5.1, with "Simple Fill" (the last item) currently loaded
@@ -1637,7 +1639,7 @@ field survives showing it.)*
 
 **As** the Practicing Musician, **I want** to rate any Pattern 0–5 stars, **so that** I can remember which ones I like and quickly find my best-rated material later.
 
-**Independent Test**: Set, change, and clear a Rating and assert the minimum-rating filter combines with existing filters.
+**Independent Test**: Set, change, and clear a Rating and assert the Rating filter — a minimum, or Unrated — combines with existing filters.
 
 **Acceptance Scenarios**:
 
@@ -1684,6 +1686,20 @@ field survives showing it.)*
     - **AC-6.1.7/3** — Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it
     - **AC-6.1.7/4** — On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload
   - *(Added 2026-08-22. Requested by the maintainer: the Rating should be settable and visible on the playback/composer panel, not only in the library review. Mirrors AC-5.3.10, which moved Tags onto the header for the same reason: rating is something you do while looking at — and playing — the Pattern.)*
+
+- **AC-6.1.8** — The Unrated filter shows only Patterns not yet rated
+  - **Given** the library contains "Bossa Groove" (Rating 5), "Samba Break" (Rating 0), and "Simple Fill" (Rating 0)
+  - **When** the Practicing Musician selects the "Unrated" Rating filter
+  - **Then** the list shows only "Samba Break" and "Simple Fill" — Unrated matches a Rating of exactly 0, where every other option is a minimum
+  - **And** the Rating filter's options read All, Unrated, 3★+, 4★+, 5★, in that order — 5★ carries no "+", since nothing rates above it
+  - **And** rating a Pattern while Unrated is selected takes it off the list, since it has now been reviewed
+  - **And** Unrated narrows an already-filtered list exactly as the other options do (AC-6.1.6)
+  - **Cases**:
+    - **AC-6.1.8/1** — Selecting Unrated shows only the Patterns whose Rating is 0
+    - **AC-6.1.8/2** — The Rating filter's options read All, Unrated, 3★+, 4★+, 5★ in that order
+    - **AC-6.1.8/3** — Rating a Pattern while Unrated is selected takes it off the list
+    - **AC-6.1.8/4** — Unrated narrows an already search-filtered list rather than replacing it
+  - *(Added 2026-10-23. Requested by the maintainer: "sometimes i want to see what i have not already reviewed. i usually assign a rating after reviewing." The filter offered only minimums, so the unreviewed Patterns could not be picked out. The "5★+" label became "5★" in the same change, at the maintainer's prompting.)*
 
 ---
 
@@ -2259,7 +2275,7 @@ field survives showing it.)*
   - **Given** the four workbench groups — Melody (US-2.2, US-2.6, US-2.7, US-2.8; Melodic only), Rhythm (US-1.1, US-1.3, US-8.1, US-10.1, US-10.2), Practice (US-4.2–US-4.4, US-5.6) and Compose (US-18.1; Melodic with a progression only)
   - **When** the Practicing Musician views them at any viewport width — 390px (mobile), 900px (tablet) or 1400px (desktop)
   - **Then** a tab bar names the groups and exactly one group is on screen at a time: Melody when a Melodic Pattern loads, Rhythm when a Percussive one does, and thereafter whichever tab was last tapped — until the next Pattern loads or the Mode changes, which reset it
-  - **And** on a wide panel the tab bar and its groups sit beside the grid rather than under it (AC-15.1.18); on a narrower one they sit under it — tabbed either way, in the order AC-15.1.8 fixes
+  - **And** the tab bar and its groups are Lab's work surface (AC-15.1.20/4), under the rhythm band at every width; on a wide panel the surface scrolls on its own under the band (AC-15.1.18) — tabbed either way, in the order AC-15.1.8 fixes
   - **And** the Pattern actions section (US-7.4, US-7.5, US-11.1, US-12.1, US-13.1) renders as an accordion, collapsed by default, on mobile, and expanded rather than as an accordion on desktop
   - **Cases**:
     - **AC-15.1.7/1** — On mobile a tab bar names the workbench groups and exactly one group is on screen
@@ -2267,6 +2283,7 @@ field survives showing it.)*
     - **AC-15.1.7/3** — A Melodic Pattern opens on the Melody tab and a Percussive one on the Rhythm tab, and switching Mode selects the tab for the new Mode
     - **AC-15.1.7/4** — Tapping a tab shows that group and hides the others, and the Melody and Compose tabs are absent on a Percussive Pattern, Compose also on a Melodic one without a progression
     - **AC-15.1.7/5** — Pattern actions is a collapsed accordion on mobile and an expanded section on desktop
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: the tabbed workbench is no longer the main panel's own shape but what Lab — and, until their own screens land, the making goals — put on the frame's one work surface (AC-15.1.20). It sits under the rhythm band rather than beside it; the And-clause above said "beside the grid", which the two panes of AC-15.1.18 provided and the frame does not. The Cases are unchanged: they describe the tab bar, which is unchanged.)*
   - *(Revised 2026-09-20 with US-14.1 (T326): a chosen goal offers only the groups it is for, so a tab can also be absent because the goal has no use for it (AC-14.1.2). This criterion describes Lab, where every group is offered; the reset rule — Melody or Rhythm on load, whichever is first offered — reads "the first offered group that applies to the Pattern" under any goal.)*
   - *(Revised 2026-09-13 with T290, reversing the second And-clause and Case /2 of the same day's rewrite below. Measured on the built app: with the groups stacked open above mobile, an eight-bar Melodic Pattern with a progression made the main panel 2562px tall on a 1920×1080 TV and 2602px on a 1180×820 tablet — 2.4 and 3.2 screens — of which about 1280px was the four groups stacked under the grid. The maintainer, 2026-09-13: "I don't want scrolling to become the norm … having tabs for the control sections even on tablet is totally fine." One tab is on screen at every width; a wide panel puts it beside the grid (AC-15.1.18), so on a TV nothing in the workbench is ever scrolled to. The rewrite's own reasoning — "above mobile there is room to stack" — was true of the four-bar Pattern it measured and false of an eight-bar one.)*
   - *(Revised 2026-09-13 with US-2.8 and US-18.1 (T282, T284): a fourth group, Compose, after Practice; fill cycling moves from Practice to Melody (AC-2.7.1). Three groups became four because sequencing kept fills into a Section is a different job from auditioning them, and a mode inside Melody would be the hidden state this criterion's rewrite the same day was removing.)*
@@ -2275,9 +2292,10 @@ field survives showing it.)*
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom, below the pinned bar (the library toggle, Play/Stop and the exact tempo entry, and quick navigation — AC-5.5.3, AC-15.1.17): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
+  - **Then** the order is fixed top to bottom, below the pinned bar (‹ Goals, the library toggle, Related, Play/Stop with the exact tempo entry and its ♩/♪ unit, and quick navigation — AC-5.5.3, AC-15.1.17, AC-15.1.20/1) and the goal strip under it (AC-15.1.20/2): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the View control, Grid | Sheet, at its head (AC-12.2.1) and the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
-  - **And**, on a wide panel (AC-15.1.18), the same list is split across two panes that sit side by side: the Pattern header, chord strip and grid in the left pane; the tab bar, the groups, Pattern actions and family members in the right — each pane keeping the order above, so no section ever swaps places with another
+  - **And** the same list is the frame's two parts, one above the other (AC-15.1.20): the Pattern header, chord strip and grid with its View control are the rhythm band; the tab bar, the groups, Pattern actions and family members are the work surface — each keeping the order above, so no section ever swaps places with another, and on a wide panel each scrolling on its own (AC-15.1.18)
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: the two side-by-side panes of 2026-09-13 become the rhythm band above the work surface, the frame of the maintainer's storyboard (board 0); the pinned bar gains ‹ Goals at its left and Related beside the library toggle, and the goal bar of 2026-09-20 becomes the goal strip under it. The ordered list itself is untouched.)*
   - *(Clarified 2026-10-18 with US-19.1: the pinned bar also carries a Practice | Composer switch (AC-19.1.1), and in Composer mode the Composer's own panel stands in for both panes. This criterion describes Practice, which is unchanged; the Composer's layout is its own (US-19.1–US-19.5).)*
   - *(Revised 2026-09-20 with US-14.1 (T326): the pinned bar carries a second row, the goal bar — the Goals control, the goal's name and, under the practice goals, the level and Give me one and Pick from the library; under Lab, the Help toggle (AC-14.1.1/3, AC-14.1.3/3, AC-14.1.4/1). It sits with the pinned bar above the panes, so the section order this criterion fixes is untouched; and under a goal the groups, Pattern actions and family members it has no use for are absent rather than empty, in exactly the way the Melody group already is in Percussive (AC-14.1.2).)*
   - *(Revised 2026-09-13 with T290: the tab bar is present at every width (AC-15.1.7), and on a wide panel the list is laid out as two panes rather than one column (AC-15.1.18). The order itself is untouched; what changed is that a wide panel reads it as two columns rather than one.)*
@@ -2392,30 +2410,32 @@ field survives showing it.)*
 - **AC-15.1.17** — Play and the exact tempo entry are pinned with the navigation
   - **Given** a Pattern is loaded and the main panel is scrolled away from its top — down the grid, or to the foot of the panel
   - **When** the Practicing Musician reaches for Play, Stop or the tempo
-  - **Then** Play/Stop and the exact tempo entry (AC-4.2.5) are on screen: they ride in the pinned bar of AC-5.5.3, beside the library toggle and Prev/Next, at every viewport width
+  - **Then** Play/Stop and the exact tempo entry (AC-4.2.5), with its ♩/♪ unit (AC-4.2.7), are on screen: they ride in the pinned bar of AC-5.5.3, between ‹ Goals, the library toggle and Related on their left and Prev/Next on their right (AC-15.1.20/1), at every viewport width
   - **And** there is exactly one Play/Stop control in the panel
   - **Cases**:
     - **AC-15.1.17/1** — Play is on screen with the main panel scrolled to its foot, and starts playback from there
     - **AC-15.1.17/2** — The tempo entry is on screen with the main panel scrolled to its foot, and a tempo typed there applies
     - **AC-15.1.17/3** — Play and the tempo entry stay reachable without scrolling at mobile width
     - **AC-15.1.17/4** — The panel holds exactly one Play/Stop control; the only other transport button is the Stop a stopped cycle adds beside Play, and it is absent whenever no cycle is on or the Pattern is playing
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: the bar is the frame's pinned bar, "identical everywhere" in the maintainer's storyboard — ‹ Goals, Library, Related, Play/Stop, BPM with its unit, Prev/Next — so this criterion names its neighbours; what it guarantees, Play and the tempo one reach away at any scroll offset, is unchanged. The goal strip is the bar's second row, as the goal bar was.)*
   - *(Case /4 revised 2026-09-20 with AC-2.7.2/8 and AC-2.10.2/8 (T334): the second Stop rides in the same pinned transport, since it is a transport gesture, and it is the one exception to "exactly one" — present only while a cycle is on and the transport is stopped, so the ordinary Pattern still shows a single button.)*
   - *(Revised 2026-09-20 with US-14.1 (T326): the bar gains a second row for the goal controls (AC-15.1.8). Play and the tempo entry keep the first row, so nothing here moves; the second row wraps under it at every width.)*
   - *(Added 2026-09-13 with T272. Measured in the usability review of the same day: on a four-bar Melodic Pattern Play sat 780px down a 900px desktop window and 882px down an 800px phone, while the bar above it pinned only Library and Prev/Next. Play is the one control every session uses, and tempo the one most adjusted mid-practice; the slider and the preset row stay in the Practice group, where there is room for them, and the entry field is the pinned door to the same value.)*
 
-- **AC-15.1.18** — On a wide panel the grid and the workbench sit side by side, each scrolling on its own
+- **AC-15.1.18** — On a wide panel the rhythm band and the work surface each scroll on their own
   - **Given** the main panel at least 1024px wide — a TV or desktop window, or a tablet in landscape with the library collapsed — and a Pattern whose grid is taller than the window, eight Measures of 4/4
   - **When** the Practicing Musician looks at the panel
-  - **Then** below the pinned bar (AC-15.1.17) two panes sit side by side: the grid pane on the left with the Pattern header, chord strip and grid, and the workbench pane on the right with the tab bar, the groups, Pattern actions and family members
-  - **And** the workbench is on screen without scrolling, however long the Pattern is, and each pane scrolls on its own: scrolling the grid pane leaves the workbench where it was, and the main panel itself never scrolls
-  - **And** the split follows the panel's width rather than the viewport's, so opening the library beside a 1200px window drops the workbench under the grid and collapsing it restores the panes; below 1024px of panel width the workbench sits under the grid, tabbed, and the main panel scrolls as one (AC-15.1.12)
-  - **And** playback keeps the sounding Measure in view within the grid pane, as AC-15.1.11 provides on mobile, and the workbench pane does not move for it
+  - **Then** below the pinned bar and the goal strip (AC-15.1.17, AC-15.1.20) the rhythm band holds the Pattern header, the chord strip and the grid with its View control, and the work surface under it holds the tab bar, the groups, Pattern actions and family members — or the goal's own surface (AC-15.1.20/4)
+  - **And** the work surface is on screen without scrolling, however long the Pattern is, and each part scrolls on its own: scrolling the band leaves the surface where it was, and the main panel itself never scrolls
+  - **And** the split follows the panel's width rather than the viewport's, so opening the library beside a 1200px window makes the panel scroll as one and collapsing it restores the two scrolls; below 1024px of panel width the band and the surface are plain blocks and the main panel scrolls as one (AC-15.1.12)
+  - **And** playback keeps the sounding Measure in view within the band, as AC-15.1.11 provides on mobile, and the work surface does not move for it
   - **Cases**:
-    - **AC-15.1.18/1** — With the panel 1024px or wider the grid pane and the workbench pane sit side by side under the pinned bar, and the workbench is on screen without scrolling however long the Pattern is
-    - **AC-15.1.18/2** — The grid pane scrolls on its own: scrolled to the foot of an eight-Measure Pattern, the workbench has not moved and the main panel's own scroll offset is still zero
-    - **AC-15.1.18/3** — Below 1024px of panel width the workbench sits under the grid, tabbed, and the main panel scrolls as one
-    - **AC-15.1.18/4** — The split follows the panel's width, not the viewport's: opening the library beside a 1200px window drops the workbench under the grid, and collapsing it restores the panes
-    - **AC-15.1.18/5** — During playback in the two-pane layout the sounding Measure is scrolled into view within the grid pane and the workbench pane does not move
+    - **AC-15.1.18/1** — With the panel 1024px or wider the rhythm band sits under the pinned bar and the work surface under the band, and the work surface is on screen without scrolling however long the Pattern is
+    - **AC-15.1.18/2** — The rhythm band scrolls on its own: scrolled to the foot of an eight-Measure Pattern, the work surface has not moved and the main panel's own scroll offset is still zero
+    - **AC-15.1.18/3** — Below 1024px of panel width the band and the surface are plain blocks and the main panel scrolls as one
+    - **AC-15.1.18/4** — The split follows the panel's width, not the viewport's: opening the library beside a 1200px window makes the panel scroll as one, and collapsing it restores the two scrolls
+    - **AC-15.1.18/5** — During playback on a wide panel the sounding Measure is scrolled into view within the rhythm band and the work surface does not move
+  - *(Revised 2026-10-24 with T410, D-018 phase 2. The two panes side by side become the frame's rhythm band above its work surface: the maintainer's storyboard (board 0) puts the rhythm "across the full width and as many lines as it needs" and the tools under it, and D-018 records the tabbed workbench and the two panes going while "the breakpoints, the drawer, one Measure per row on a phone (D-006) and the autoscroll are unchanged." What the two panes were for — the controls on screen without scrolling however long the Pattern is, since the maintainer "wanna keep everything into one screen wherever possible" (2026-09-13) — is kept by the band and the surface each scrolling on their own, with the band capped in the Design layout and the surface capped in the Playback layout (AC-15.1.20/5). The 1024px threshold is kept: it still separates a desk or a landscape tablet from a phone or a portrait tablet, which is what one scroll or two is about. How much room the band takes — "zoomed to fill its width and shrinking as measures are added" on board 0b — is the making screens' business, in their phases.)*
   - *(Added 2026-09-13 with T290. The maintainer, after the same day's regrouping: "in the TV and the tablet view, now it looks like there's a lot more scrolling required … I wanna keep everything into one screen wherever possible." Measured on the built app, an eight-bar Melodic Pattern was 2.4 screens on a 1920×1080 TV. Three layouts were put to them: tabs alone in one column, which still left 1.7 screens because the grid is 984px of them; the grid on top with a scrollable control strip beneath, which on that Pattern leaves the strip under 100px; and this — the grid beside the controls, each scrolling on its own, chosen 2026-09-13. The split keys on the panel's width, not the viewport's, because the library takes 240–300px beside it: the same window is wide enough for two panes with the library collapsed and not with it open. 1024px is the narrowest panel whose grid pane still holds a plain 4/4 Measure on one line — 548px of box beside the workbench pane's 400px floor — so a tablet in landscape with the library collapsed gets the panes and a tablet in portrait does not; a 4/4 Measure on Straight 16ths — 910px of box — wraps its Beats in the grid pane below about 1320px, which is AC-15.1.10's provision and was preferred to scrolling; from 1366px, the smallest tablet in landscape that shows it, it has its line.)*
 
 - **AC-15.1.19** — Measures flow left to right and wrap by whole Measure
@@ -2429,6 +2449,19 @@ field survives showing it.)*
     - **AC-15.1.19/3** — A Measure wider than the grid takes the whole row and wraps its Beats inside it, so at 390px the densest supported Pattern still stacks one Measure per row
     - **AC-15.1.19/4** — The rows re-flow when the grid's width changes: collapsing the library beside the grid can put on one row two Measures that were on separate rows before
   - *(Added 2026-09-13 with T290, amending D-006's "one Measure per row". On a 1920×1080 TV an eight-bar 4/4 Pattern was 984px of grid with about 1000px of empty panel to the right of every row. The maintainer's rule, 2026-09-13: "design to support a certain number of cells wide and then fit based on how many cells are available to fit the beats and measures as they are configured in terms of time signatures and subdivision. but don't split a measure across two rows." The cell is one size (AC-15.2.7) and a Measure box hugs its Beats (AC-15.2.8/2), so how many Measures fit a row follows from each Measure's own Slot count — its Time Signature and Recipes — and the width the grid has; nothing is configured.)*
+
+- **AC-15.1.20** — One frame for every goal
+  - **Given** any goal chosen, at any viewport width
+  - **When** the main panel is shown
+  - **Then** it is one frame: a pinned bar that is the same under every goal, a goal strip under it holding the goal's own quick controls, the rhythm band — the Pattern header, the chord strip and the grid or sheet with its View control — across the panel's full width, and one work surface holding only what the goal is for; there is no tab bar of the panel's own and no Practice | Composer mode switch in the pinned bar
+  - **And** the frame has two proportions: the **Playback layout**, where the music takes the room and the tools are one rail, which is Practise a rhythm's; and the **Design layout**, where the band is capped and the tools take the rest, which is every other goal's
+  - **Cases**:
+    - **AC-15.1.20/1** — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; Related is a placeholder, disabled and saying so, until Share and tidy up lands
+    - **AC-15.1.20/2** — The goal strip under the pinned bar names the goal and holds its own quick controls: Practise a rhythm's level, Give me one, Pick from the library, Click and Count-in; Lab's Help toggle; and, on every goal but Practise a rhythm, the Practice | Composer switch until Play it in's own screen lands
+    - **AC-15.1.20/3** — The rhythm band holds the Pattern header, the chord strip, and the grid or sheet with the View control at its head — Grid | Sheet, with Note aids and Print / PDF while Sheet shows — and the brush line under it, across the panel's full width under every goal
+    - **AC-15.1.20/4** — One work surface under the band holds what the goal is for — the tabbed workbench with Pattern actions and the family members under Lab and the making goals, the settings rail under Practise a rhythm, and the Composer's panel in Composer mode — and nothing sits beside the band
+    - **AC-15.1.20/5** — The panel is marked with the layout in force: Playback under Practise a rhythm, where on a wide panel the band takes at least the height the rail does and the rail is capped; Design under every other goal, where on a wide panel the band is capped and the work surface takes the rest
+  - *(Added 2026-10-24 with T410, research.md D-018 phase 2, from the maintainer's storyboard (boards 0 and 0b): "Every goal is this frame. ① never changes: Play, BPM with its ♩/♪ unit, Prev/Next, Related. ③ is the rhythm as grid or sheet, with the sheet's note aids under Aids. ② and ④ change with the goal." and "Same frame, two proportions. Design gives the tools room; Playback gives the music room, as sheet or as grid." The reason is D-018's: one frame answers the maintainer's consistency ask — "ideally there is some overall consistency across tailored views so the user is not feeling like they are using 10 different apps" — and the per-goal surface the tailoring ask. Two things wait for later phases and are said here so they are not mistaken for dropped: Related opens the family of the rhythm on screen in phase 7, and a making goal dropping into the Playback layout when Play is pressed is each screen's own decision in its phase, since Lab's controls are adjusted while listening (AC-15.1.16) and must not shrink away under it. The Practice | Composer switch is carried in the strip rather than the pinned bar so that nothing the Composer offers is lost before phase 6 makes it the Play it in screen (AC-14.1.2/6).)*
 
 ---
 ### User Story 33 - Ship with a seeded Pattern library
@@ -2650,6 +2683,7 @@ Slot's zone divider from a rendered grid, and assert each clears 3:1 against the
     - **AC-15.2.8/2** — A Measure box is as wide as its Beats and label: a 3/4 Measure's box is narrower than a 4/4 Measure's, and neither reaches the column's edge
     - **AC-15.2.8/3** — On a 390px viewport the densest supported Pattern's boxes take the width available and nothing scrolls sideways
     - **AC-15.2.8/4** — The Subdivision strip sits on the panel's left edge with the sections around it, not centred in the panel
+  - *(Clarified 2026-10-24 with T410, D-018 phase 2: the two panes are now the rhythm band and the work surface, one above the other (AC-15.1.20); "the pane holding it" in /1 reads as whichever of the two a section is in. The band's sections are bounded by the band, which takes the panel's full width (AC-15.1.19); the surface's keep the content column.)*
   - *(Revised 2026-09-13 with T290. Case /1 said one column and one left edge for the whole panel; on a wide panel there are now two panes (AC-15.1.18), and each is the column this criterion describes. The grid pane's sections are bounded by the pane rather than by the 1120px content column, since the pane is already the bound and Measures now flow across the width it has (AC-15.1.19). Case /2's test also asserted that two Measure boxes share one left edge, which this criterion never said and AC-15.1.19 contradicts; that assertion is gone and the Case's own wording is untouched.)*
   - *(Added 2026-08-17, the same day as AC-15.2.7 and because of it: once the cells stopped filling the line, the maintainer reported that "each section including the pattern cells has a very wide box it's in that looks awkward." The panel was as wide as the window and every section a band across it; the Measure box drew a border around the emptiness. Left-aligned rather than centred so that nothing moves when the library takes or gives back its column.)*
 
@@ -3546,30 +3580,35 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Direction set 2026-10-23, research.md D-018: this story's rule — a goal decides which groups are offered and never hides a control inside a group — is being reversed. A goal becomes a screen that names its own controls inside one shared frame; the four practice goals become one; the Composer (US-19.1) becomes a goal rather than a mode. The criteria below are revised phase by phase as each screen lands, not ahead of it, so that each revision ships with its test; until a criterion is revised it still describes the app as built.)*
 
-**Independent Test**: On a first launch, assert the goals screen is shown in place of the main panel; choose Play a rhythm and assert the tab bar offers Practice alone, that Beginner is the level, that Give me one loads a shipped Pattern tagged Beginner other than the one open, and that Pick from the library opens the library filtered to Beginner. Reload and assert the goals screen returns with Play a rhythm marked. Choose Lab and assert every group, Pattern actions and the family members are offered as AC-15.1.7 and AC-15.1.8 describe; reload and assert the app opens straight into Lab; press Goals and assert the screen returns with Lab marked.
+*(Revised 2026-10-24, research.md D-018 phase 2 (T410). **A goal is a screen**: every goal opens inside one shared frame (AC-15.1.20) — the pinned bar, a goal strip of the goal's own quick controls, the rhythm band and one work surface — and names its own controls there. The maintainer's reasons, from D-018: "It is like this huge mishmash of different features and then the controls are hidden in different places all of which interrupts flow … we need an inventory of controls and what goals need which controls and then based on the goal we create a tailored view … ideally there is some overall consistency across tailored views so the user is not feeling like they are using 10 different apps." The four practice goals of 2026-09-20 become **one, Practise a rhythm**: they differed only in which settings sat on the panel and which half of the library opened — the maintainer, 2026-10-19, "if so not sure if we need four boxes" — so its rail holds all of those settings and the library shows every rhythm, Percussive and Melodic being ordinary filter chips. The goals screen's groups and order follow storyboard board 1: Hear it and practise it; Make something, as the stages the app grew in — Build a rhythm, Make it melodic, Combine patterns, Play it in; Keep it — Share and tidy up; Everything at once — Lab. In this phase Practise a rhythm and Lab have their screens; the making goals ride along inside the frame with the controls they have today and each gets its own screen in a later phase — Play it in, the Composer as a goal rather than a mode, in phase 6, so until then it opens the Composer and keeps the Practice | Composer switch in its strip. The 2026-09-20 rule — "a goal decides which workbench groups are offered, and never hides a control inside a group" — is reversed, as D-018 records; the 2026-09-20 rule that the practice goal is read-only playback stands.)*
+
+**Independent Test**: On a first launch, assert the goals screen is shown in place of the main panel in board 1's four groups; choose Practise a rhythm and assert the frame shows no tab bar, that Beginner is the level, that Give me one loads a shipped Pattern tagged Beginner other than the one open, and that Pick from the library opens the library filtered to Beginner. Reload and assert the goals screen returns with Practise a rhythm marked. Choose Lab and assert every group, Pattern actions and the family members are offered in its work surface as AC-15.1.7 and AC-15.1.8 describe; reload and assert the app opens straight into Lab; press Goals and assert the screen returns with Lab marked.
 
 **Acceptance Scenarios**:
 
 - **AC-14.1.1** — The goals screen
   - **Given** the app is launched
   - **When** no goal has been chosen, or the remembered goal is not Lab
-  - **Then** a goals screen is shown in place of the main panel and the library, naming each goal with a line on what it is for, and choosing one opens the main panel
+  - **Then** a goals screen is shown in place of the main panel and the library, naming each goal with a line on what it is for in the four groups of storyboard board 1, and choosing one opens the main panel
   - **Cases**:
     - **AC-14.1.1/1** — On a first launch the goals screen is shown in place of the main panel and the library, and choosing a goal opens the main panel
-    - **AC-14.1.1/2** — The screen names every goal with a one-line description: the four practice goals first, then the three compose goals, then Lab set apart
+    - **AC-14.1.1/2** — The screen names every goal with a one-line description, in four groups: Hear it and practise it holds Practise a rhythm; Make something holds Build a rhythm, Make it melodic, Combine patterns and Play it in, numbered as stages; Keep it holds Share and tidy up; Everything at once holds Lab
     - **AC-14.1.1/3** — A Goals control in the pinned bar returns to the goals screen from any goal, Lab included, with the current goal marked
     - **AC-14.1.1/4** — The app opens on the goals screen on every launch unless the remembered goal is Lab, and the remembered goal is marked as current
+  - *(Revised 2026-10-24 with T410: Case /2 names board 1's four groups and the seven goals in them, one practice goal where there were four. A goal id remembered from before — `play`, `vocalise`, `groove`, `melody`, `compose-rhythm`, `add-melody` — is read as the goal it became, so nobody's remembered goal is lost.)*
 
 - **AC-14.1.2** — A goal offers its own controls
   - **Given** a goal is chosen
-  - **When** the main panel is shown
-  - **Then** under a compose goal the tab bar offers only the workbench groups that goal is for, the rest absent, and Pattern actions and the family members likewise absent where the goal has no use for them; under a practice goal there is no workbench at all (AC-14.1.5)
+  - **When** the frame is shown
+  - **Then** under a making goal the work surface's tab bar offers only the workbench groups that goal is for, the rest absent, and Pattern actions and the family members likewise absent where the goal has no use for them; under Practise a rhythm there is no workbench at all (AC-14.1.5)
   - **Cases**:
     - **AC-14.1.2/1** — The tab bar offers exactly the groups the chosen goal names, in the main panel's fixed order, and the group on screen is the first of them that applies to the Pattern
-    - **AC-14.1.2/2** — The four practice goals offer no workbench group: the tab bar is absent, and one practice panel stands in its place
-    - **AC-14.1.2/3** — Compose a rhythm offers Rhythm and Practice with Pattern actions and the grid's accent brush; Add a melody to it offers Melody, Practice and Compose with Pattern actions; Keep and share offers Practice with Pattern actions and the family members
-    - **AC-14.1.2/4** — Pattern actions and the family members are absent under the four practice goals
+    - **AC-14.1.2/2** — Practise a rhythm offers no workbench group: the tab bar is absent, and its settings rail stands in the work surface's place
+    - **AC-14.1.2/3** — Build a rhythm offers Rhythm and Practice with Pattern actions and the grid's accent brush; Make it melodic offers Melody and Practice with Pattern actions; Combine patterns offers Melody, Practice and Compose with Pattern actions; Share and tidy up offers Practice with Pattern actions and the family members
+    - **AC-14.1.2/4** — Pattern actions and the family members are absent under Practise a rhythm
     - **AC-14.1.2/5** — The chosen goal is remembered as an app preference, applied on the next launch, and changes nothing on any Pattern
+    - **AC-14.1.2/6** — Choosing Play it in opens the Composer in the work surface, with the Practice | Composer switch in its goal strip to step out of it; on its Practice side it offers what Lab offers, until its own screen lands
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: the goals are renamed and regrouped to board 1 — Compose a rhythm is Build a rhythm, Add a melody to it is split into Make it melodic and Combine patterns, Keep and share is Share and tidy up — and each rides along inside the frame with the controls it has today until its own phase draws its screen; /2 and /4 name the one Practise goal; /6 is added for Play it in, which is the Composer as a goal (D-016 reversed) and lands as a screen in phase 6. Nothing a making goal offered on 2026-10-23 is taken away here.)*
   - *(Revised 2026-09-20 with T330: Cases /2 and /3 rewritten — the practice goals no longer offer a Practice group but a read-only panel of their own (AC-14.1.5), and accents are named as Compose a rhythm's. See the story's parenthetical.)*
 
 - **AC-14.1.3** — Lab
@@ -3579,33 +3618,36 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-14.1.3/1** — Lab offers every workbench group, Pattern actions and the family members, exactly as the tabbed workbench and the main panel's fixed order already describe
     - **AC-14.1.3/2** — Once Lab is chosen the app opens straight into it on every later launch, until another goal is chosen from the goals screen
-    - **AC-14.1.3/3** — A Help toggle in the pinned bar, present in Lab alone, puts a ? beside each control in the group on screen and in the pinned bar that pops up its one-line description when tapped, takes the ?s away again, and is remembered
+    - **AC-14.1.3/3** — A Help toggle in the goal strip, present in Lab alone, puts a ? beside each control in the group on screen and in the pinned bar that pops up its one-line description when tapped, takes the ?s away again, and is remembered
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: Lab keeps today's cockpit — the four tabs, Pattern actions, the family members — inside the frame's work surface, under the shared pinned bar and the rhythm band; the maintainer's storyboard, board 10, "Lab keeps today's cockpit, four tabs and all, inside the new frame … It is the one goal that changes nothing in substance." Its Help toggle moves from the goal bar to the goal strip that replaces it (/3); what the ?s describe is unchanged.)*
   - *(Revised 2026-10-03 with T352, from the maintainer the same day: on a Melodic Pattern in Lab "there's a lot of help text on the right panel and it seems to overlap the controls … I'd rather be like pop outs where I click like a … little question mark." The descriptions were laid out as a block at the head of each group and a second block in the pinned bar, which pushed the controls down and, pinned, sat over the content as it scrolled. The toggle stays, so Help is still off by default and one tap away; what it shows is a ? per control instead of the text, and the text is a pop-up that sits over the page until it is dismissed, taking no room while closed. Pop-up style chosen by the maintainer the same day.)*
 
-- **AC-14.1.5** — Practice goals are read-only
-  - **Given** one of the four practice goals
-  - **When** the main panel is shown
-  - **Then** nothing on it can write to a Pattern: the grid is looked at and played, the header shows and does not edit, and one panel holds only the playback settings that goal is about
+- **AC-14.1.5** — Practise a rhythm is read-only
+  - **Given** Practise a rhythm
+  - **When** the frame is shown
+  - **Then** nothing on it can write to a Pattern: the grid is looked at and played, the header shows and does not edit, and the goal strip and one settings rail hold only playback settings
   - **Cases**:
-    - **AC-14.1.5/1** — Under a practice goal the grid takes no edit: tapping a Slot, a note band or a Time Signature changes nothing and prompts nothing, and the brush line is absent
+    - **AC-14.1.5/1** — Under Practise a rhythm the grid takes no edit: tapping a Slot, a note band or a Time Signature changes nothing and prompts nothing, and the brush line is absent
     - **AC-14.1.5/2** — The header offers no Sound Mode switch, rename, tag editing or Undo; the name, Rating, Tags and meter are shown, and the Rating still works
-    - **AC-14.1.5/3** — The workbench tab bar, its groups, Pattern actions and the family members are absent; in their place one practice panel holds the goal's own playback settings, and the library offers no New Pattern
-    - **AC-14.1.5/4** — Play a rhythm's panel holds Click and Count-in and Tempo; Vocalise or clap it adds Counting; Feel the groove adds Swing; Play melodies over it adds Cycle fills, Cycle progressions and Repeats, without Keep
-    - **AC-14.1.5/5** — Every setting in the panel is a playback setting that writes nothing to the Pattern: a shipped Pattern is never asked for a name under a practice goal, and the Pattern store is unchanged by any of them
+    - **AC-14.1.5/3** — The workbench tab bar, its groups, Pattern actions and the family members are absent; in their place the goal strip holds Click and Count-in and one settings rail holds the other playback settings, and the library offers no New Pattern
+    - **AC-14.1.5/4** — The strip holds Click and Count-in; the rail holds Tempo, Counting and Swing, and on a Melodic rhythm with a chord progression Cycle fills, Cycle progressions and Repeats, without Keep
+    - **AC-14.1.5/5** — Every setting in the strip and the rail is a playback setting that writes nothing to the Pattern: a shipped Pattern is never asked for a name under Practise a rhythm, and the Pattern store is unchanged by any of them
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: one practice goal in the Playback layout (AC-15.1.20/5), so the four panels of 2026-09-20 become one rail holding every setting they held between them, with Click and Count-in in the goal strip as the storyboard's board 2 draws them. Read-only stands exactly as the maintainer set it on 2026-09-20.)*
   - *(2026-10-18 with US-2.12: the cycling row in Play melodies over it's panel carries what each cycle steps through — All or My list, and Choose (AC-2.12.1/1). Both are playback settings that write nothing to a Pattern, so /5 holds and /4's list of settings is unchanged.)*
   - *(Added 2026-09-20 with T330. Tempo, click, count-in, counting and swing are already app or overlay settings (AC-4.2.4, AC-4.4.6, AC-5.6.1), and fill and progression cycling are practice settings that never touch Pattern data (AC-2.7.1/4, AC-2.10.1/4) — which is exactly why these, and nothing else, can be on a panel that promises to edit nothing.)*
 
 - **AC-14.1.4** — A rhythm at your level
-  - **Given** one of the four practice goals
+  - **Given** Practise a rhythm
   - **When** the Practicing Musician sets a level and asks for a rhythm
-  - **Then** the pinned bar offers Beginner, Intermediate, Advanced and Any level; Give me one — the dice — loads a shipped Pattern carrying that level's Tag, or any at Any level; Pick from the library opens the library filtered to it; and Prev and Next step through the same rhythms
+  - **Then** the goal strip offers Beginner, Intermediate, Advanced and Any level; Give me one — the dice — loads a shipped Pattern carrying that level's Tag, or any at Any level, in either Mode; Pick from the library opens the library filtered to it; and Prev and Next step through the same rhythms
   - **Cases**:
-    - **AC-14.1.4/1** — The pinned bar offers the three levels and Any level under the four practice goals alone, Beginner to begin with, and the level is remembered as an app preference
-    - **AC-14.1.4/2** — Give me one loads a shipped Pattern carrying the level's Tag other than the one open — Percussive under Vocalise or clap it, Melodic under Play melodies over it — exactly as opening it from the library would
-    - **AC-14.1.4/3** — Pick from the library opens the library filtered to the level's Tag, with the Mode Tag added under the two goals that have one, and the filter can be changed or cleared as any other
+    - **AC-14.1.4/1** — The goal strip offers the three levels and Any level under Practise a rhythm alone, Beginner to begin with, and the level is remembered as an app preference
+    - **AC-14.1.4/2** — Give me one loads a shipped Pattern carrying the level's Tag other than the one open, Percussive or Melodic, exactly as opening it from the library would
+    - **AC-14.1.4/3** — Pick from the library opens the library filtered to the level's Tag alone, and the filter can be changed or cleared as any other, the Mode Tags among them
     - **AC-14.1.4/4** — Give me one draws from the whole level: fed every position in turn it reaches every shipped Pattern at that level and never the one open, and yields nothing when the level has no other
-    - **AC-14.1.4/5** — Under Any level the dice draws from every shipped Pattern in the goal's Mode, whatever its level, and Pick from the library filters to the Mode Tag alone, or to nothing under a goal without one
-    - **AC-14.1.4/6** — Under a practice goal Prev and Next step through the rhythms the dice draws from — the level's Tag and the goal's Mode, within whatever filter the library already has — in the library's order; under Any level, and under the other goals, they step through the library as filtered, as before
+    - **AC-14.1.4/5** — Under Any level the dice draws from every shipped Pattern, whatever its level or Mode, and Pick from the library filters to nothing
+    - **AC-14.1.4/6** — Under Practise a rhythm Prev and Next step through the rhythms the dice draws from — the level's Tag, within whatever filter the library already has — in the library's order; under Any level, and under the other goals, they step through the library as filtered, as before
+  - *(Revised 2026-10-24 with T410, D-018 phase 2: one Practise goal has no Mode of its own, so the dice, Pick from the library and Prev/Next range over both Modes, and Percussive and Melodic are filter chips in the library like any other Tag — the maintainer's ruling on the storyboard, 2026-10-19. Cases /2, /3, /5 and /6 lose their Mode clauses; /1 names the goal strip, which replaces the goal bar; /4 is unchanged.)*
   - *(Revised 2026-09-20 with T328, from the maintainer the same day: "being able to easily cycle through the different rhythms or also being able to randomly pick rhythms, like having a dice … ideally you can choose whether to do it in the level you set … or you could do it across all levels if you want, just to give yourself a chance to see how hard things might be." Give me one wears the dice and keeps its name; Any level joins the level choice; and Prev/Next, already pinned beside it, are the cycling — narrowed to the level under a practice goal rather than doubled, since two Nexts that disagree about what is next would be worse than one that follows the level set.)*
 
 ---
@@ -3774,7 +3816,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-10-18 at the maintainer's request: "what we can do right now is individually pick notes and paint them on the rhythm pattern, or I can pick a chord progression and a fill pattern … but these are still a bit awkward and I want a guitar composer view and a piano composer view … the first thing the user must do is pick a rhythm from the library." Decisions taken with the maintainer the same day: the Composer is a separate mode beside Practice rather than a fifth workbench tab, because the fretboard or keyboard would otherwise compete with the grid for the one panel; the guitar sounds as fret-navigator's does — the FluidR3 steel-string samples, reinstated for this one voice (US-19.7, Constitution 3.7.0) — and the piano is the melodic voice the app already has; which instrument is shown is a Composer setting and never travels with the saved Pattern; a composition is saved by hand the first time, once every syllable has a note, and auto-saves on every change after that while it stays complete (US-19.9). The maintainer added, the same day: tapping the instrument sounds the note at any time — at rest, while recording, while the melody plays — and playback in this mode is a story of its own (US-19.6). US-18.1's Compose group — sequencing kept fills into a Section — keeps its name and its tab; this epic is the Composer, the view, and its stories say which they mean.)*
 
-**Independent Test**: Switch to Composer, open a Pattern from the library, assert the instrument view, record bar and composing grid stand in for the Pattern pane and workbench, switch Guitar to Piano and back and assert no note changes, switch back to Practice and assert the panes return unchanged.
+**Independent Test**: With a percussive Pattern open, switch to Composer and assert that Pattern is offered by name, decline and assert the empty state with the library opened, open a Pattern from the library, assert the instrument view, record bar and composing grid stand in for the Pattern pane and workbench, switch Guitar to Piano and back and assert no note changes, switch back to Practice and assert the panes return unchanged.
 
 **Acceptance Scenarios**:
 
@@ -3787,14 +3829,19 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.1.1/2** — Choosing Composer shows the Composer's panel — instrument view, record bar, composing grid, controls — in place of the Pattern pane and the workbench, while the library sidebar and its toggle stay
     - **AC-19.1.1/3** — Choosing Practice shows the Pattern pane and the workbench again, with the open Pattern as it was
     - **AC-19.1.1/4** — The mode is a within-session position, not a stored preference: a reload opens in Practice
+  - *(Clarified 2026-10-24 with T410, D-018 phase 2: the switch sits in the goal strip, the pinned bar's second row, under every goal but Practise a rhythm (AC-15.1.20/2); "the Pattern pane and the workbench" are the frame's rhythm band and work surface (AC-15.1.20/4), which the Composer's panel still stands in for. The mode goes altogether when Play it in becomes the Composer's own screen in phase 6 (AC-14.1.2/6); until then this criterion describes the app as built.)*
 
-- **AC-19.1.2** — The Composer starts from a rhythm chosen in the library
-  - **Given** the Composer mode entered with no composition yet
+- **AC-19.1.2** — The Composer starts from the Pattern already open, or one chosen in the library
+  - **Given** the Composer mode entered — by the switch, or by choosing Play it in (AC-14.1.2/6)
   - **When** the Composer looks at the panel
-  - **Then** the composing grid's place reads that a rhythm must be chosen from the library first, with the library opened to choose from, the instrument view playable but Record and Save disabled; and opening a Pattern from the library while in Composer loads it into the Composer (US-19.8) rather than into Practice
+  - **Then** the Pattern open in Practice is offered as the composition through US-19.8's own rules — an owned melody opened for editing directly, with no ask; every other kind through its naming prompt — so a rhythm just practised is composed on without choosing it again; declining the prompt leaves the Composer empty, the library opened to choose from, Record and Save disabled; a composition already made from the open Pattern is simply kept; and opening a Pattern from the library while in Composer loads it into the Composer (US-19.8) rather than into Practice
+  - *(Revised 2026-10-24: entering the Composer used to start empty, demanding a library pick every time. The maintainer: "sometimes i practice a pattern and then want to switch to composer … I think it should maintain that pattern." The loading rules are unchanged — they are US-19.8's, applied to the open Pattern on entry: a melody edits directly where owned and copies under a name where shipped (US-7.3), a percussive one becomes a new composition, a progression is baked. The old /1 — the empty state with the library opened — survives as the declined prompt's outcome, /3.)*
   - **Cases**:
-    - **AC-19.1.2/1** — With no composition the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled
-    - **AC-19.1.2/2** — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved
+    - **AC-19.1.2/1** — Entering the Composer opens the Pattern open in Practice as the composition: an owned melody directly, as a saved composition with no ask
+    - **AC-19.1.2/2** — A percussive, progression-carrying or shipped Pattern open in Practice is offered through its US-19.8 naming prompt on entry, exactly as if opened from the library
+    - **AC-19.1.2/3** — Declining the prompt leaves no composition: the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled
+    - **AC-19.1.2/4** — Re-entering the Composer while the composition is the open Pattern keeps it: no prompt, no reload
+    - **AC-19.1.2/5** — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved
 
 - **AC-19.1.3** — Guitar or piano, switched at any time
   - **Given** the Composer mode
@@ -4002,14 +4049,18 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.5.3/2** — A Slot turned on has no note until one is recorded onto it, and sounds percussively meanwhile
     - **AC-19.5.3/3** — A Slot cycled to off loses its note, and the count of syllables without a note follows
 
-- **AC-19.5.4** — Double Length copies the rhythm without its notes
+- **AC-19.5.4** — Double Length asks whether the copy keeps the notes
   - **Given** a composition with notes
   - **When** the Composer presses Double Length
-  - **Then** the Measures are appended again with every note cleared — the originals keep theirs — so the copy sounds percussively until recorded, Record then starting on the copy's first syllable; disabled when doubling would pass 32 Measures *(Revised 2026-10-23: was 8, following AC-1.1.3.)*
+  - **Then** a prompt asks whether the appended Measures carry the same notes or start percussive: keeping the notes appends a copy of every Measure, notes and all; starting percussive appends the copy with every note cleared — the originals keep theirs — so it sounds percussively until recorded, Record then starting on the copy's first syllable; cancelling changes nothing; with no note recorded yet there is nothing to carry, so the copy is appended percussive with no ask; disabled when doubling would pass 32 Measures *(Revised 2026-10-23: was 8, following AC-1.1.3.)*
+  - *(Revised 2026-10-24: the copy was always appended with its notes cleared. The maintainer: "When I hit double length it should ask me if the notes should be populated with what is already there in the existing pattern or if it wants the notes to be just percussive and I will fill them in from scratch." The percussive choice is exactly the old behaviour.)*
   - **Cases**:
-    - **AC-19.5.4/1** — Double Length appends a copy of every Measure with its notes cleared, and the original Measures keep theirs
-    - **AC-19.5.4/2** — Record then targets the first sounding Slot of the copy
-    - **AC-19.5.4/3** — Double Length is disabled when the result would exceed 32 Measures
+    - **AC-19.5.4/1** — With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged
+    - **AC-19.5.4/2** — Starting percussive appends a copy of every Measure with its notes cleared, and the original Measures keep theirs
+    - **AC-19.5.4/3** — After a percussive copy, Record targets the first sounding Slot of the copy
+    - **AC-19.5.4/4** — Keeping the notes appends a copy of every Measure carrying the same notes as the originals
+    - **AC-19.5.4/5** — With no note recorded yet, the copy is appended percussive with no ask
+    - **AC-19.5.4/6** — Double Length is disabled when the result would exceed 32 Measures
 
 - **AC-19.5.5** — Tempo and swing are the composition's own
   - **Given** a composition in the Composer
@@ -4041,6 +4092,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.6.1/1** — Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it
     - **AC-19.6.1/2** — A pitched Slot sounds with the voice of the instrument shown, guitar or piano, and an unpitched sounding Slot sounds percussively at its Accent Level
     - **AC-19.6.1/3** — Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart
+  - *(Cross-reference added 2026-10-24: the piano's voice is the sampled piano or the synth according to the global melodic voice, AC-2.13.3/2.)*
 
 - **AC-19.6.2** — Recording and editing carry on under playback
   - **Given** the composition playing
@@ -4061,6 +4113,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-10-18. The maintainer chose the sampled guitar over a synthesised one, told that it reinstates sampled audio this project retired on 2026-08-17: "for guitar — use the one in fret-navigator." That is the FluidR3_GM steel-string guitar served from gleitz/midi-js-soundfonts through soundfont-player, CC BY 3.0, loaded on first need in the Composer's Guitar view and nowhere else, with the synthesised melodic voice standing in while it loads or when it cannot. Constitution 3.7.0 and research.md D-003 record the exception. The piano is the existing melodic voice; no second asset.)*
 
+*(Revised 2026-10-24 with US-2.13, Constitution 3.9.0. The guitar is no longer confined to the Guitar view: Practice also plays it when Guitar is the chosen melodic voice, so AC-19.7.1 and its Case /1 now name that second place it may load. The Piano view's voice is now the sampled Salamander piano, or the synth when Synth is chosen (AC-2.13.3/2). AC-19.7.2/3, which said that view loads nothing, now says its piano falls back to the synth exactly as the guitar does.)*
+
 **Independent Test**: Load the app and assert no sample is requested; enter Composer in Guitar view and assert the samples are requested once, a loading state is shown and a tapped fret still sounds; with the request failing assert a notice with Retry and that frets still sound; with it succeeding assert the sampled voice takes over.
 
 **Acceptance Scenarios**:
@@ -4068,9 +4122,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.7.1** — The guitar voice is the sampled steel-string guitar fret-navigator plays
   - **Given** the Composer
   - **When** the Guitar view is first shown
-  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then and only then, never on page load and never in Practice or Piano view — and every guitar note, tapped or played back, sounds through them once they are ready
+  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then, or at the first melodic note in Practice with Guitar the chosen voice (AC-2.13.2/3), and never on page load, in the Piano view, or in Practice under Piano or Synth — and every guitar note, tapped or played back, sounds through them once they are ready
   - **Cases**:
-    - **AC-19.7.1/1** — No sample is requested on page load, in Practice, or in the Piano view; the first showing of the Guitar view requests them once
+    - **AC-19.7.1/1** — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once
     - **AC-19.7.1/2** — Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note
     - **AC-19.7.1/3** — The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer
 
@@ -4081,7 +4135,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-19.7.2/1** — While the samples load, a loading state is shown and every guitar note sounds through the melodic synth voice rather than waiting
     - **AC-19.7.2/2** — A failed load shows a non-blocking notice with a Retry control, guitar notes keep sounding through the synth voice, and Retry requests the samples again
-    - **AC-19.7.2/3** — The piano voice is the melodic synth voice the app already has, and loads nothing
+    - **AC-19.7.2/3** — The Piano view's sampled piano falls back the same way: while its recordings load, or when they cannot, each note sounds through the synth
 
 ---
 
@@ -4188,7 +4242,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **When** the Practicing Musician looks at the cycle controls
   - **Then** Cycle fills and Cycle progressions each offer All or My list, and a Choose control that builds the list
   - **Cases**:
-    - **AC-2.12.1/1** — Beside the cycle toggles, fills and progressions each have an All or My list choice and a Choose control, wherever Cycle fills and Cycle progressions are offered — the Melody group and Play melodies over it's practice panel alike
+    - **AC-2.12.1/1** — Beside the cycle toggles, fills and progressions each have an All or My list choice and a Choose control, wherever Cycle fills and Cycle progressions are offered — the Melody group and Practise a rhythm's settings rail alike
     - **AC-2.12.1/2** — All is the default; My list names how many entries the list holds, and cannot be chosen while the list is empty
     - **AC-2.12.1/3** — Both lists and both choices are app preferences — one fills list and one progressions list, the same on every Pattern — remembered across loads; neither is Pattern content, nothing auto-saves, and a shipped Pattern is never prompted for a name
     - **AC-2.12.1/4** — When the catalogue re-spells a song progression, its tick on My list moves to the entry that now holds that song's section, so the list keeps the same songs
@@ -4217,6 +4271,126 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.12.3/5** — What is rendered for the screen off is the whole cycle of the list: a cycle on My list repeats after as many entries as the list holds
   - *(Cross-references, kept out of the Case wording so each Case's criterion stays its own: /3 is the hand choice of AC-2.7.2/7 and AC-2.10.2/7, now able to land off the list; /5 is AC-4.1.15/4's whole cycle, counted over the list; AC-2.12.2/3's credited songs are AC-2.6.11's. AC-2.7.2/8 and AC-2.10.2/8's "where turning the cycle on would" is AC-2.7.1/3 and AC-2.10.1/3 under All and /2 here under My list.)*
 
+
+---
+
+### User Story 60 - Choose the melodic voice
+
+*Traceability: `US-2.13` — Choose the melodic voice*
+
+**As** the Practicing Musician, **I want** to choose whether melodic notes sound as a real piano, the synth, or the guitar, **so that** what I practise and compose against sounds like an instrument I want to hear, without losing the synth on days I prefer it.
+
+*(Added 2026-10-24 at the maintainer's request: "I don't like the current synth sounds as the only option for piano. I would like a setting that lets me toggle the sound - real piano (look at what we did in fret-navigator project), synth and guitar … for the composer mode it will use the instrument displayed. but if i am in piano the setting will play piano or synth based on what the global setting is. if the global setting is guitar it will play piano." Before any work they were told what else this changes: it reverses the 2026-08-17 retirement of sampled piano audio (research.md D-003) and the 3.7.0 limit of one sampled voice, and it revises US-2.4 and US-19.7. They then decided four things. The piano is fret-navigator's Salamander Grand, **bundled** with the app rather than fetched, so it works offline and in the store builds. The choice applies in Practice as well as in the Composer. Piano is the default. The switch sits beside the Sound Mode switch. Constitution 3.9.0 records the second sampled voice.)*
+
+**Independent Test**: Open a Melodic Pattern and assert the voice switch sits beside the Sound Mode switch with Piano pressed. Press Play and assert the piano's recordings are requested from the app's own origin, that the first notes sound through the synth if the recordings are not yet ready, and that later notes sound through the piano. Choose Synth while playing and assert the next note is synthesised, then Guitar and assert it is the guitar. Reload and assert the choice is remembered and that no Pattern changed. In the Composer, assert the Guitar view always plays the guitar, and that the Piano view plays the synth under Synth and the piano otherwise.
+
+**Acceptance Scenarios**:
+
+- **AC-2.13.1** — The voice switch offers Piano, Synth and Guitar beside the Sound Mode switch
+  - **Given** a Melodic Pattern open in Practice
+  - **When** the Practicing Musician looks at the Pattern header
+  - **Then** beside the Sound Mode switch a voice switch offers Piano, Synth and Guitar, with the voice in force pressed; the choice is an app preference, never Pattern content, and takes effect at once
+  - **Cases**:
+    - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a three-way voice switch — Piano, Synth, Guitar — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
+    - **AC-2.13.1/2** — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
+    - **AC-2.13.1/3** — Choosing a voice while playing changes it from the next melodic note, with no restart
+
+- **AC-2.13.2** — Practice plays the voice chosen
+  - **Given** a Melodic Pattern in Practice
+  - **When** a melodic note sounds — played back, or sounded at once
+  - **Then** it sounds through the chosen voice, and nothing else about playback changes with it
+  - **Cases**:
+    - **AC-2.13.2/1** — Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level
+    - **AC-2.13.2/2** — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1
+    - **AC-2.13.2/3** — Under Guitar, a melodic note sounds through the sampled guitar of US-19.7
+    - **AC-2.13.2/4** — Percussive notes and the metronome click sound the same whatever the voice
+
+- **AC-2.13.3** — The Composer plays the instrument on screen
+  - **Given** the Composer
+  - **When** a melodic note sounds — tapped on the instrument, or played back
+  - **Then** the Guitar view sounds the guitar, and the Piano view sounds the piano unless Synth is the chosen voice
+  - **Cases**:
+    - **AC-2.13.3/1** — In the Guitar view every melodic note sounds through the guitar, whatever voice is chosen
+    - **AC-2.13.3/2** — In the Piano view every melodic note sounds through the synth when Synth is the chosen voice, and through the sampled piano when Piano or Guitar is
+
+- **AC-2.13.4** — The piano ships with the app, and loading it never blocks or silences
+  - **Given** the piano is the voice a note would sound with
+  - **When** its recordings have not been requested, are on their way, or have failed
+  - **Then** they are requested from the app's own origin at the first moment the piano could sound and never on page load, every note sounds through the synth until its recording is ready, and a failure shows a notice with Retry
+  - **Cases**:
+    - **AC-2.13.4/1** — The recordings are served from the app's own origin, and none is requested on page load; the first moment the piano could sound — Play, a note sounded at once, or choosing Piano — requests them, each once
+    - **AC-2.13.4/2** — While a note's recording is not ready, the note sounds through the synth instead, and the voice switch shows the piano loading
+    - **AC-2.13.4/3** — A failed load shows a non-blocking notice with Retry beside the voice switch; notes keep sounding through the synth, and Retry requests the recordings again
+    - **AC-2.13.4/4** — The piano's credit — Salamander Grand Piano by Alexander Holm, CC BY 3.0 — is shown in the Composer's attribution line beside the guitar's, and as the Piano option's description
+
+- **AC-2.13.5** — The screen-off render plays the chosen voice
+  - **Given** a Melodic Pattern playing, on a browser that renders the run ahead for a locked screen (AC-4.1.15)
+  - **When** the run is rendered
+  - **Then** its melodic notes sound through the voice the live transport is using, loaded on the render's own context, or through the synth when that voice's samples are not ready
+  - **Cases**:
+    - **AC-2.13.5/1** — With the piano in force and its recordings loaded, the render sounds its melodic notes through the piano; with them not loaded, through the synth
+    - **AC-2.13.5/2** — With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth
+
+---
+
+### User Story 61 - Play a MIDI instrument into the Composer
+
+*Traceability: `US-19.10` — Play a MIDI instrument into the Composer*
+
+**As** the Composer, **I want** a MIDI keyboard or MIDI guitar connected to the computer to play the Composer's instrument view exactly as tapping it does, **so that** I can record a melody on the instrument in my hands instead of clicking each note on the screen — and still tap when that is quicker, with nothing to switch.
+
+*(Added 2026-10-24 at the maintainer's request: "If I have a midi device connected, is it feasible for the keyboard or guitar in Compose mode … to actually take input from the midi device instead of me needing to click the note on the screen?" Decisions taken with the maintainer the same day: input is monophonic for now — every note-on is one note, and several voices in layers may come later; a MIDI note behaves exactly as a tap on that note, so it advances to the next syllable only in record mode; taps and MIDI work interchangeably with no setting; with several devices a picker chooses among them, disabled otherwise; a note the instrument on screen has no place for flashes "out of range"; the browser's MIDI permission is asked for on entering the Composer. Web first: Web MIDI exists in Chrome, Edge and Firefox but not in Safari or any iOS browser, so this story says what those browsers show, and the store builds' native MIDI is a later layer behind the same seam (research.md D-019).)*
+
+**Independent Test**: With a fake MIDI device connected, enter the Composer and assert MIDI access was asked for once; load a four-syllable rhythm, press Record, and send four note-ons, asserting each lands on the next syllable exactly as a tap would, sounds, and lights its key or fret; send a note the keyboard does not have and assert nothing is recorded and the record bar says it is out of range; connect a second device and assert the picker is enabled offering All devices and both names, choose one and assert the other's notes are ignored; switch to Practice and assert MIDI notes do nothing; and with no Web MIDI at all assert the picker is disabled saying why while taps still record.
+
+**Acceptance Scenarios**:
+
+- **AC-19.10.1** — A MIDI note plays the Composer exactly as a tap does
+  - **Given** the Composer, with a MIDI device connected and access allowed
+  - **When** the device sends a note-on
+  - **Then** that note is taken exactly as a tap on the instrument view's key or fret for it would be — heard at rest, while playing and while recording (AC-19.2.4, AC-19.3.4), recorded onto the target and moving on in record mode (AC-19.4.2), re-pitching the selection out of it (AC-19.5.2) — one note per note-on, with taps still working alongside and no setting between them; and in Practice a MIDI note does nothing
+  - **Cases**:
+    - **AC-19.10.1/1** — A note-on sounds that note with the instrument view's voice, at rest, while the composition plays and while recording, as a tap on it does
+    - **AC-19.10.1/2** — In record mode a note-on gives the target that note and moves it to the next syllable without one, leaving record mode after the last; out of record mode it re-pitches the selected Slot and moves nothing
+    - **AC-19.10.1/3** — Input is monophonic: each note-on is one note, notes played together are taken one after another in the order they arrive, a note-off or a note-on at velocity 0 does nothing, and how hard a key is struck does not change the note taken
+    - **AC-19.10.1/4** — Taps and MIDI notes can be mixed freely in one recording, with no setting to change between them
+    - **AC-19.10.1/5** — Outside the Composer a MIDI note does nothing: no sound, and no change to any Pattern
+
+- **AC-19.10.2** — The instrument view shows where a MIDI note landed
+  - **Given** a MIDI note taken by the Composer (AC-19.10.1)
+  - **When** the Composer looks at the instrument view
+  - **Then** the place that note is played lights briefly, so a note played without looking at the screen can be seen
+  - **Cases**:
+    - **AC-19.10.2/1** — In the Piano view the key for the note lights, and goes out again within a second
+    - **AC-19.10.2/2** — In the Guitar view every visible, playable fret that sounds the note lights, and goes out again within a second
+
+- **AC-19.10.3** — A note the instrument view has no place for is out of range
+  - **Given** the Composer
+  - **When** a MIDI note arrives that the instrument view on screen has no key or fret for
+  - **Then** it is neither heard nor recorded — as a fret under the capo is inert (AC-19.2.4/2) — the target and the selection stay where they were, and the record bar flashes the note's name and that it is out of range
+  - **Cases**:
+    - **AC-19.10.3/1** — In the Piano view a note outside the key count's range is neither heard nor recorded, and the record bar shows its name, out of range for that many keys
+    - **AC-19.10.3/2** — In the Guitar view a note with no visible, playable fret — below the capo, beyond the lowest or highest note of the board, or outside the visible frets — is neither heard nor recorded, and the record bar shows its name, not on the visible frets
+    - **AC-19.10.3/3** — An out-of-range note leaves the target, the selection and every recorded note as they were, and the flash clears on its own
+
+- **AC-19.10.4** — A device picker when there is more than one device
+  - **Given** the Composer, with MIDI access allowed
+  - **When** the Composer looks at the Composer's controls
+  - **Then** a MIDI input picker sits among them: disabled with no device or one, saying which; enabled with two or more, offering All devices — the default — and each device by name; the choice remembered, and the list following devices as they are connected and disconnected
+  - **Cases**:
+    - **AC-19.10.4/1** — With no device connected the picker is disabled and says none is connected; with one it is disabled and names that device, whose notes are taken
+    - **AC-19.10.4/2** — With two or more devices the picker is enabled, offering All devices and each device by name, All devices on first use; with one device chosen, notes from the others are ignored
+    - **AC-19.10.4/3** — The choice is remembered in `rm.settings.v1` and is in force after a reload; while the chosen device is not connected, notes from every device are taken
+    - **AC-19.10.4/4** — A device connected or disconnected while the Composer is open is added to or removed from the picker at once, with no reload
+
+- **AC-19.10.5** — MIDI access is asked for on entering the Composer, and never blocks it
+  - **Given** a browser
+  - **When** the Composer is entered
+  - **Then** MIDI access is asked for then, and only once in a page load; where the browser has no Web MIDI, or access is refused, the picker is disabled and says why, and the instrument view, taps and recording work exactly as without a device
+  - **Cases**:
+    - **AC-19.10.5/1** — Entering the Composer asks the browser for MIDI access, without system-exclusive messages; leaving and entering again in the same page load does not ask again
+    - **AC-19.10.5/2** — Where the browser has no Web MIDI — Safari, and every browser on iPhone and iPad — the picker is disabled and says MIDI input needs Chrome, Edge or Firefox, and tapping records as before
+    - **AC-19.10.5/3** — Where access is refused, the picker is disabled and says MIDI access was not allowed, and tapping records as before
 
 ---
 

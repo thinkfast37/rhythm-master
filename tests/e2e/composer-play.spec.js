@@ -6,6 +6,23 @@ test.use(launch);
 const play = (page) => page.locator('.transport').first().click();
 const voiceLog = (page) => page.evaluate(() => window.__rm.voiceLog());
 
+/**
+ * Click an instrument button and return how long the voice log was at the
+ * instant the switch took effect. Read in a capturing listener, so it runs in
+ * the click's own dispatch, before the button's handler and with no scheduler
+ * tick able to interleave: everything logged after it was scheduled after the
+ * switch. A length read in a separate round trip before the click also counts
+ * whatever the scheduler queued in the old voice while the click was on its
+ * way (T412).
+ */
+async function switchInstrument(page, id) {
+  await page.evaluate(() => {
+    document.addEventListener('click', () => { window.__voiceLogAtSwitch = window.__rm.voiceLog().length; }, { capture: true, once: true });
+  });
+  await page.locator(`.instrument-switch [data-instrument="${id}"]`).click();
+  return page.evaluate(() => window.__voiceLogAtSwitch);
+}
+
 // --- AC-19.6.1: Play sounds what is recorded and the rest percussively ----------------
 
 test('AC-19.6.1/1 — Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it', async ({ page }) => {
@@ -47,10 +64,15 @@ test('AC-19.6.1/2 — A pitched Slot sounds with the voice of the instrument sho
   expect(guitarRun.map((v) => v.midi).every((m) => m === 60 || m === 62)).toBe(true);
   await play(page);
   await page.locator('.instrument-switch [data-instrument="piano"]').click();
-  const logMid = (await voiceLog(page)).length;
   await play(page);
+  // The piano view's voice is the sampled piano under the default voice
+  // (AC-2.13.3/2): every pitched Slot through its recordings once they are in.
+  await expect.poll(() => page.evaluate(() => window.__rm.piano.getStatus().status), { timeout: 15000 }).toBe('ready');
+  const logMid = (await voiceLog(page)).length;
   await expect.poll(async () => (await voiceLog(page)).length, { timeout: 8000 }).toBeGreaterThan(logMid + 1);
-  expect((await voiceLog(page)).slice(logMid).every((v) => v.instrument === 'piano' && v.via === 'synth')).toBe(true);
+  const pianoRun = (await voiceLog(page)).slice(logMid);
+  expect(pianoRun.every((v) => v.instrument === 'piano' && v.voice === 'piano' && v.via === 'sampled')).toBe(true);
+  expect(pianoRun.map((v) => v.midi).every((m) => m === 60 || m === 62)).toBe(true);
   await play(page);
 });
 
@@ -64,19 +86,19 @@ test('AC-19.6.1/3 — Switching Guitar to Piano, or back, while playing changes 
   await play(page);
   await expect.poll(async () => (await voiceLog(page)).filter((v) => v.instrument === 'guitar').length, { timeout: 8000 }).toBeGreaterThan(1);
   const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
-  const countBefore = (await voiceLog(page)).length;
-  await page.locator('.instrument-switch [data-instrument="piano"]').click();
+  const countBefore = await switchInstrument(page, 'piano');
   await expect.poll(async () => (await voiceLog(page)).length, { timeout: 8000 }).toBeGreaterThan(countBefore + 1);
   const after = (await voiceLog(page)).slice(countBefore);
+  // From the next event: every note scheduled after the switch is piano.
   expect(after.some((v) => v.instrument === 'piano')).toBe(true);
-  expect(after.at(-1).instrument).toBe('piano');
+  expect(after.every((v) => v.instrument === 'piano')).toBe(true);
   // No restart: still playing, the loop counter not reset below where it was.
   const state = await page.evaluate(() => window.__rm.getState());
   expect(state.isPlaying).toBe(true);
   expect(state.loop).toBeGreaterThanOrEqual(loopBefore);
-  await page.locator('.instrument-switch [data-instrument="guitar"]').click();
-  const countBack = (await voiceLog(page)).length;
-  await expect.poll(async () => (await voiceLog(page)).slice(countBack).filter((v) => v.instrument === 'guitar').length, { timeout: 8000 }).toBeGreaterThan(0);
+  const countBack = await switchInstrument(page, 'guitar');
+  await expect.poll(async () => (await voiceLog(page)).length, { timeout: 8000 }).toBeGreaterThan(countBack + 1);
+  expect((await voiceLog(page)).slice(countBack).every((v) => v.instrument === 'guitar')).toBe(true);
   await play(page);
 });
 
@@ -121,10 +143,17 @@ test('AC-19.6.2/2 — Tempo and swing changes while playing take effect as they 
   await cslot(page, 0, 0, 2).locator('.cslot-syllable').click();
   await cslot(page, 0, 1).locator('.cslot-note').click();
   await fret(page, 0, 0).click();
+  // The edit goes to the transport as a pending update, not a restart. Read
+  // in the click's own dispatch, after the button's handler: the pending edit
+  // is consumed at the next pass boundary, which a read a few round trips
+  // later could already have crossed (T412).
+  await page.evaluate(() => {
+    document.addEventListener('click', () => { window.__pendingAfterDelete = window.__rm.transport._snapshot().pendingEdit; }, { once: true });
+  });
   await page.locator('.composer-delete').click();
   const state = await page.evaluate(() => window.__rm.getState());
   expect(state.isPlaying).toBe(true);
   expect(state.loop).toBeGreaterThanOrEqual(loopBefore);
-  expect(await page.evaluate(() => window.__rm.transport._snapshot().pendingEdit)).toBe(true);
+  expect(await page.evaluate(() => window.__pendingAfterDelete)).toBe(true);
   await play(page);
 });

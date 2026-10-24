@@ -62,8 +62,8 @@ import {
 } from './core/song.js';
 import { downloadSongMidi, songMidiFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
-import { LAB, ANY_LEVEL, surfaceFor, pickAtLevel, libraryTagsFor, isPracticeGoal, LEVELS } from './core/goals.js';
-import { buildEntries, neighbours, toggleTag } from './ui/library.js';
+import { LAB, ANY_LEVEL, pickAtLevel, libraryTagsFor, isPracticeGoal, goalById, LEGACY_GOALS, LEVELS } from './core/goals.js';
+import { buildEntries, neighbours, toggleTag, UNRATED } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
 import {
@@ -111,6 +111,8 @@ import { heardIn } from './core/songbook.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
 import * as guitar from './audio/guitar.js';
+import * as piano from './audio/pianoSamples.js';
+import { resolveVoice, normaliseVoice } from './core/voice.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
@@ -121,6 +123,7 @@ import {
   clearNote,
   cycleSyllable,
   duplicateUnpitched,
+  hasAnyNote,
   canDuplicate,
   isComplete,
   sameSlot,
@@ -133,6 +136,8 @@ import {
 } from './core/composer.js';
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
 import { composerUnsaved } from './ui/composer.js';
+import { placeFor, acceptsFrom, ALL_DEVICES } from './core/midi.js';
+import { createMidiInput } from './midi/input.js';
 import { mountShell } from './ui/shell.js';
 import { deriveEntitlement, isEntitled } from './core/entitlement.js';
 import { hasStoreSync, selectBillingAdapter } from './billing/index.js';
@@ -229,7 +234,18 @@ const state = {
     notice: null,
     guitar: guitar.getStatus(),
     widthPx: 0,
+    /** The MIDI note just played, lit on the instrument view for a moment (AC-19.10.2). */
+    midiLit: null,
+    /** A MIDI note the instrument view has no place for, flashed in the record bar (AC-19.10.3). */
+    midiFlash: null,
   },
+  /**
+   * MIDI input (US-19.10): whether the browser allowed it, and the devices
+   * connected. Never stored; the device chosen is a setting (AC-19.10.4/3).
+   */
+  midi: { status: 'idle', devices: [] },
+  /** The piano's recordings: idle, loading, ready or error (AC-2.13.4). */
+  pianoStatus: piano.getStatus(),
   /**
    * The store build's entitlement (US-17.1). `hasStore` is false on the web, where
    * the app is free and none of this exists. Entitlement is re-derived from the
@@ -240,6 +256,37 @@ const state = {
 };
 
 const listeners = new Set();
+
+/** How long a MIDI note stays lit, and an out-of-range flash stays up (AC-19.10.2, AC-19.10.3/3). */
+const MIDI_LIT_MS = 350;
+const MIDI_FLASH_MS = 2000;
+let midiSeq = 0;
+
+/** Clear a transient MIDI mark, unless a later note has replaced it meanwhile. */
+function clearMidiMarkLater(field, ms) {
+  const seq = state.composer[field]?.seq;
+  setTimeout(() => {
+    if (state.composer[field]?.seq !== seq) return;
+    state.composer = { ...state.composer, [field]: null };
+    render();
+  }, ms);
+}
+
+/** The instrument view on screen, as `core/midi.placeFor` reads it. */
+function currentInstrumentView() {
+  const s = state.settings;
+  return s.composerInstrument === 'piano'
+    ? { instrument: 'piano', count: s.composerKeys ?? 49 }
+    : { instrument: 'guitar', capo: s.composerCapo ?? 0, range: s.composerFretRange ?? [0, 24] };
+}
+
+const midiInput = createMidiInput({
+  onNote: (midi, deviceName) => handlers.onMidiNote(midi, deviceName),
+  onChange: (status, devices) => {
+    state.midi = { status, devices };
+    render();
+  },
+});
 
 /**
  * Undo history. A bounded stack of previous Pattern states.
@@ -372,6 +419,36 @@ function cyclePasses() {
 /** The rendered cycle currently loaded into the keep-alive element, or null. */
 let rendered = null;
 
+/** How long the screen-off render waits for a sampled voice still loading. */
+const VOICE_WAIT_MS = 3000;
+
+/** Whether the live voice is a sampled one whose samples are still loading. */
+function sampledVoiceLoading() {
+  const voice = currentVoice();
+  if (voice === 'piano') return piano.getStatus().status === 'loading';
+  if (voice === 'guitar') return guitar.getStatus().status === 'loading';
+  return false;
+}
+
+/**
+ * The voice the screen-off render sounds melodic notes with: the live one,
+ * loaded on the render's own context once its samples are ready on the live
+ * context, and the synth until then (AC-2.13.5).
+ */
+function renderVoice(voice) {
+  if (voice === 'piano') {
+    return async (ctx) =>
+      (await piano.prepare(ctx)) ? { voice: 'piano', play: (c, d, e, w) => piano.playPiano(c, d, e, w, melodic.playMelodic) } : null;
+  }
+  if (voice === 'guitar') {
+    return async (ctx) => {
+      const instrument = await guitar.prepare(ctx);
+      return instrument ? { voice: 'guitar', play: (c, d, e, w) => guitar.playOn(instrument, e, w) } : null;
+    };
+  }
+  return null;
+}
+
 /**
  * Render the run as it now stands, for the element to carry when the screen
  * goes off (AC-4.1.15/1). Called at Play and whenever what is heard changes.
@@ -388,11 +465,21 @@ async function refreshBackgroundAudio() {
     rendered = null;
     return;
   }
+  // While the voice's samples are on their way, give them a moment: their
+  // arrival renders again at once (the status listeners below), superseding
+  // this one, so a quick load costs one render rather than the synth's and
+  // then the whole cycle again — minutes of audio scheduled on the main
+  // thread. A slow load still gets the synth render it is owed (AC-2.13.5).
+  if (sampledVoiceLoading()) {
+    await new Promise((resolve) => setTimeout(resolve, VOICE_WAIT_MS));
+    if (token !== renderToken || !state.isPlaying) return;
+  }
   const next = await renderCycle({
     patternAt: (pass) => playingAt(pass),
     passes: cyclePasses(),
     settings: state.settings,
     sampleRate: 44100,
+    prepareMelodic: renderVoice(currentVoice()),
   });
   // A later render started while this one ran: that one owns the element.
   if (token !== renderToken || !next) {
@@ -602,21 +689,38 @@ function discardDraft() {
 }
 
 /**
- * The melodic voice the transport and the instrument sound with: the sampled
- * guitar in the Composer's Guitar view, the synth everywhere else (AC-19.6.1/2,
- * AC-19.7.1/2). Read at every note, so an instrument switch changes the voice
- * from the next event with no restart (AC-19.6.1/3).
+ * The voice a melodic note sounds with (US-2.13): the chosen one in Practice;
+ * in the Composer the instrument on screen — the guitar in the Guitar view,
+ * the piano or the synth in the Piano view (AC-2.13.3, AC-19.6.1/2).
  */
-const guitarVoice = (ctx, destination, event, when) => guitar.playGuitar(ctx, destination, event, when, melodic.playMelodic);
-function melodicVoice() {
-  return state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? guitarVoice : melodic.playMelodic;
+function currentVoice() {
+  return resolveVoice({
+    composer: state.composer.mode === 'composer',
+    instrument: state.settings.composerInstrument,
+    voice: state.settings.melodicVoice,
+  });
 }
 
-/** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2). */
+/**
+ * Each voice behind `playMelodic`'s signature. The sampled ones sound through
+ * the synth while their samples are not ready (AC-2.13.4/2, AC-19.7.2/1).
+ * Read at every note, so a switch changes the voice from the next event with
+ * no restart (AC-2.13.1/3, AC-19.6.1/3).
+ */
+const VOICE_PLAYERS = {
+  guitar: (ctx, destination, event, when) => guitar.playGuitar(ctx, destination, event, when, melodic.playMelodic),
+  piano: (ctx, destination, event, when) => piano.playPiano(ctx, destination, event, when, melodic.playMelodic),
+  synth: melodic.playMelodic,
+};
+function melodicVoice() {
+  return VOICE_PLAYERS[currentVoice()];
+}
+
+/** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2, AC-2.13.2). */
 const voiceLog = [];
 function logVoice(event, via) {
   const instrument = state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? 'guitar' : 'piano';
-  voiceLog.push({ instrument, via: via ?? 'synth', midi: event.pitch?.midiNote ?? null });
+  voiceLog.push({ instrument, voice: currentVoice(), via: via ?? 'synth', midi: event.pitch?.midiNote ?? null });
   if (voiceLog.length > 500) voiceLog.shift();
 }
 
@@ -644,6 +748,25 @@ function persistDraft() {
   return true;
 }
 
+/**
+ * Ask for the piano's recordings at a moment it could sound — Play, a note
+ * sounded at once, choosing Piano — and never on page load (AC-2.13.4/1).
+ * Always inside a gesture, since it may create the context. The guitar's
+ * request stays with the Guitar view and its first note (AC-19.7.1/1).
+ */
+function ensurePianoLoaded() {
+  if (currentVoice() !== 'piano') return;
+  if (state.composer.mode !== 'composer' && state.pattern.soundMode !== 'melodic') return;
+  let ctx;
+  try {
+    ctx = getContext();
+  } catch {
+    return;
+  }
+  piano.load(ctx).catch(() => {});
+  state.pianoStatus = piano.getStatus(ctx);
+}
+
 /** Ask for the guitar's samples when, and only when, the Guitar view is shown (AC-19.7.1/1). */
 function ensureGuitarLoaded() {
   if (state.composer.mode !== 'composer' || state.settings.composerInstrument !== 'guitar') return;
@@ -665,6 +788,7 @@ function previewNote(midi) {
   } catch {
     return;
   }
+  ensurePianoLoaded();
   const event = { accent: 2, pitch: { midiNote: midi, frequency: midiToFrequency(midi) } };
   const sound = (c) => {
     const via = melodicVoice()(c, c.destination, event, c.currentTime + 0.01);
@@ -678,8 +802,12 @@ function previewNote(midi) {
  * A library Pattern into the Composer (US-19.8): a percussive rhythm or a
  * progression under a new name, a melody edited or copied, a shipped melody
  * copied. Nothing is written until the first Save (AC-19.8.1/2).
+ *
+ * `editOwned` is the mode switch's path (AC-19.1.2/1): the Pattern was not
+ * chosen, it is simply the one open, so an owned melody skips the Edit-or-copy
+ * ask and opens for editing directly.
  */
-async function openInComposer(pattern, owned) {
+async function openInComposer(pattern, owned, { editOwned = false } = {}) {
   if (composerUnsaved(state.composer)) {
     const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and open', cancelLabel: 'Keep composing' });
     if (!ok) {
@@ -717,14 +845,16 @@ async function openInComposer(pattern, owned) {
       ? `${baked.passes} ${baked.passes === 1 ? 'pass' : 'passes'} of the progression written out as ${n} ${n === 1 ? 'Measure' : 'Measures'}.`
       : `The progression's ${baked.passes} passes would need ${baked.passes * pattern.measures.length} Measures, more than the 8 a Pattern holds — the first pass alone was kept.`;
   } else if (owned) {
-    const choice = await ask({
-      message: `"${pattern.name}" is a melody you own. Edit it here — every change saves — or save your changes as a new composition?`,
-      options: [
-        { label: 'Edit', value: 'edit', primary: true },
-        { label: 'Save as new…', value: 'copy' },
-        { label: 'Cancel', value: 'cancel' },
-      ],
-    });
+    const choice = editOwned
+      ? 'edit'
+      : await ask({
+          message: `"${pattern.name}" is a melody you own. Edit it here — every change saves — or save your changes as a new composition?`,
+          options: [
+            { label: 'Edit', value: 'edit', primary: true },
+            { label: 'Save as new…', value: 'copy' },
+            { label: 'Cancel', value: 'cancel' },
+          ],
+        });
     if (choice === 'cancel') {
       render();
       return false;
@@ -1022,14 +1152,29 @@ const handlers = {
    * AC-14.1.2/5). The tab resets so the panel opens on the first group the
    * goal offers that applies (AC-14.1.2/1). Nothing on any Pattern changes.
    */
-  onGoal(id) {
-    state.settings = settingsStore.save({ goal: id });
+  async onGoal(id) {
+    // A legacy id is stored as the goal it became (AC-14.1.1/2's note).
+    const goal = goalById(id);
+    // Practise a rhythm has no Composer and no switch to leave it by
+    // (AC-15.1.20/2), so the Composer is left first — asking about unsaved
+    // work as the switch does (AC-19.1.4), and staying put if the answer is no.
+    if (goal.practice && state.composer.mode === 'composer') {
+      await handlers.onComposerMode('practice');
+      if (state.composer.mode === 'composer') return;
+    }
+    state.settings = settingsStore.save({ goal: goal.id });
     state.goalsOpen = false;
     state.workbenchTab = null;
     // The main panel is what was asked for, so the drawer that AC-15.1.5
     // opened on load gets out of its way — as loading a Pattern does
     // (AC-15.1.6). Pick from the library is the way back in.
     ui?.hideLibrary();
+    // Play it in is the Composer as a goal (AC-14.1.2/6): until its own screen
+    // lands it opens the Composer, whose first step is choosing a rhythm.
+    if (goal.composer && state.composer.mode !== 'composer') {
+      void handlers.onComposerMode('composer');
+      return;
+    }
     render();
   },
 
@@ -1047,15 +1192,13 @@ const handlers = {
   },
 
   /**
-   * A shipped Pattern at the level, in the goal's Mode, never the one open
+   * A shipped Pattern at the level, in either Mode, never the one open
    * (AC-14.1.4/2). The draw is the one impure input the pure picker takes;
    * opening goes through the library's own path, overlays and all.
    */
   onGiveMeOne() {
-    const { soundMode } = surfaceFor(state.settings.goal);
     const pick = pickAtLevel(seedStore.loadAll(), {
       level: state.settings.level,
-      soundMode,
       excludeId: state.pattern.id,
       random: Math.random(),
     });
@@ -1431,6 +1574,7 @@ const handlers = {
     state.isPlaying = true;
     state.loop = 0;
     render();
+    ensurePianoLoaded();
     state.soundStatus = melodic.getStatus();
     await transport.start(scheduled(), state.settings);
   },
@@ -1695,8 +1839,10 @@ const handlers = {
     state.compose.on = false;
     render();
 
-    // Both Sound Modes are pure Web Audio synthesis, so neither waits on an
-    // asset — nothing to load, nothing to block on (AC-2.4.3).
+    // Nothing waits on an asset (AC-2.4.3): a sampled voice is asked for here,
+    // inside the gesture, and sounds through the synth until it is ready
+    // (AC-2.13.4/1, /2).
+    ensurePianoLoaded();
     state.soundStatus = melodic.getStatus();
     await transport.start(scheduled(), state.settings);
     // Best-effort: lets a browser that supports it keep the audio session
@@ -1722,6 +1868,7 @@ const handlers = {
     if (state.isPlaying) transport.stop();
     const ctx = replaceAudio();
     ensureGuitarLoaded();
+    ensurePianoLoaded();
     const event = { accent: 2, pitch: { midiNote: 64, frequency: midiToFrequency(64) } };
     logVoice(event, melodicVoice()(ctx, ctx.destination, event, ctx.currentTime + 0.01));
     state.audioNotice = null;
@@ -1776,9 +1923,18 @@ const handlers = {
     if (state.isPlaying) transport.stop();
     state.composer = { ...state.composer, mode, recording: false, target: null, selected: null };
     if (mode === 'composer') {
-      // The first thing to do is choose a rhythm (AC-19.1.2/1).
-      if (!state.composer.draft) ui?.showLibrary();
       ensureGuitarLoaded();
+      // Asked for here, once a page load (AC-19.10.5/1).
+      void midiInput.request();
+      // The Pattern open in Practice is the composition, unless it already is
+      // (AC-19.1.2/1, /4). Declining falls back to choosing from the library
+      // (AC-19.1.2/3).
+      const keep = Boolean(state.composer.draft) && state.composer.savedId === state.pattern.id;
+      if (!keep) {
+        render();
+        const opened = await openInComposer(state.pattern, state.isOwned, { editOwned: true });
+        if (!opened && !state.composer.draft) ui?.showLibrary();
+      }
     }
     render();
   },
@@ -1787,6 +1943,32 @@ const handlers = {
   onComposerInstrument(instrument) {
     state.settings = settingsStore.save({ composerInstrument: instrument === 'piano' ? 'piano' : 'guitar' });
     ensureGuitarLoaded();
+    render();
+  },
+
+  /**
+   * Piano | Synth | Guitar (AC-2.13.1): an app preference, never Pattern
+   * content, so no shipped-Pattern guard and nothing saved to the Pattern
+   * (/2). Heard from the next note (/3); the screen-off render is redone so a
+   * locked screen hears the new voice too (AC-2.13.5).
+   */
+  onMelodicVoice(voice) {
+    state.settings = settingsStore.save({ melodicVoice: normaliseVoice(voice) });
+    ensurePianoLoaded();
+    if (state.isPlaying) refreshBackgroundAudio();
+    render();
+  },
+
+  /** Ask for the piano's recordings again after a failure (AC-2.13.4/3). */
+  onPianoRetry() {
+    let ctx;
+    try {
+      ctx = getContext();
+    } catch {
+      return;
+    }
+    piano.retry(ctx);
+    state.pianoStatus = piano.getStatus(ctx);
     render();
   },
 
@@ -1860,6 +2042,35 @@ const handlers = {
     }
   },
 
+  /**
+   * A note-on from a MIDI device (US-19.10): taken exactly as a tap on its key
+   * or fret (AC-19.10.1), lit where it landed (AC-19.10.2), or refused when the
+   * instrument on screen has no place for it (AC-19.10.3). Ignored outside the
+   * Composer (AC-19.10.1/5) and from a device other than the one chosen
+   * (AC-19.10.4/2).
+   */
+  onMidiNote(midi, deviceName) {
+    if (state.composer.mode !== 'composer') return;
+    if (!acceptsFrom(state.midi.devices, state.settings.composerMidiInput, deviceName)) return;
+    const place = placeFor(midi, currentInstrumentView());
+    if (!place.inRange) {
+      state.composer = { ...state.composer, midiFlash: { message: place.message, seq: ++midiSeq } };
+      clearMidiMarkLater('midiFlash', MIDI_FLASH_MS);
+      render();
+      return;
+    }
+    state.composer = { ...state.composer, midiLit: { midi, seq: ++midiSeq } };
+    clearMidiMarkLater('midiLit', MIDI_LIT_MS);
+    handlers.onInstrumentNote(midi);
+    render();
+  },
+
+  /** The MIDI device the Composer takes notes from, or every device (AC-19.10.4/2, /3). */
+  onComposerMidiInput(name) {
+    state.settings = settingsStore.save({ composerMidiInput: name || ALL_DEVICES });
+    render();
+  },
+
   /** Delete: the Slot before the target while recording (AC-19.4.3); the selection otherwise (AC-19.5.2/3). */
   onComposerDelete() {
     const c = state.composer;
@@ -1901,11 +2112,28 @@ const handlers = {
     render();
   },
 
-  /** Double Length, the copy without its notes (AC-19.5.4). */
-  onComposerDuplicate() {
+  /** Double Length asks whether the copy keeps the notes (AC-19.5.4). */
+  async onComposerDuplicate() {
     const c = state.composer;
     if (!c.draft || !canDuplicate(c.draft)) return;
-    applyDraft(duplicateUnpitched);
+    // With nothing recorded there is nothing to carry (AC-19.5.4/5).
+    if (!hasAnyNote(c.draft)) {
+      applyDraft(duplicateUnpitched);
+      return;
+    }
+    const choice = await ask({
+      message: 'Double the length: should the new Measures carry the same notes, or start percussive for you to record from scratch?',
+      options: [
+        { label: 'Keep the notes', value: 'keep', primary: true },
+        { label: 'Start percussive', value: 'percussive' },
+        { label: 'Cancel', value: 'cancel' },
+      ],
+    });
+    if (choice === 'cancel') {
+      render();
+      return;
+    }
+    applyDraft(choice === 'keep' ? duplicate : duplicateUnpitched);
   },
 
   onComposerKey(key) {
@@ -2001,9 +2229,9 @@ const handlers = {
     });
   },
 
-  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6). */
+  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6, AC-6.1.8). */
   onRatingFilter(minRating) {
-    state.view = { ...state.view, minRating: Number(minRating) || 0 };
+    state.view = { ...state.view, minRating: minRating === UNRATED ? UNRATED : Number(minRating) || 0 };
     render();
   },
 
@@ -2471,6 +2699,17 @@ export { transport };
 // The guitar's samples arriving, or failing, is a change the record bar shows (AC-19.7.2).
 guitar.onStatus((status) => {
   state.composer.guitar = status;
+  // Arrived or failed, the render waiting on them runs now (AC-2.13.5/2).
+  if ((status.status === 'ready' || status.status === 'error') && state.isPlaying) refreshBackgroundAudio();
+  render();
+});
+
+// The piano's recordings arriving, or failing, is a change the voice switch
+// shows (AC-2.13.4/2, /3) — and, arriving, one the screen-off render should
+// hear (AC-2.13.5/1).
+piano.onStatus((status) => {
+  state.pianoStatus = status;
+  if ((status.status === 'ready' || status.status === 'error') && state.isPlaying) refreshBackgroundAudio();
   render();
 });
 
@@ -2646,6 +2885,11 @@ export function init(root = document.getElementById('app')) {
   }
 
   state.settings = settingsStore.load();
+  // A goal remembered under one of the 2026-09-20 ids is read as the goal it
+  // became, and stored so (AC-14.1.1/2's note); an id that is no goal is left
+  // as it is, since `goalById` reads it as Lab wherever it matters.
+  if (state.settings.goal && goalById(state.settings.goal).id !== state.settings.goal && state.settings.goal in LEGACY_GOALS)
+    state.settings = settingsStore.save({ goal: goalById(state.settings.goal).id });
   // The goals screen first, unless the remembered goal is Lab (AC-14.1.1/4,
   // AC-14.1.3/2): a Lab user has said they know the tool.
   state.goalsOpen = state.settings.goal !== LAB;
@@ -2723,7 +2967,7 @@ if (typeof window !== 'undefined') {
     /** Test seam: the keep-alive element, once one exists (AC-4.1.12). */
     keepAlive: () => keepAlive.current(),
     /** Test seam: the rendered cycle the element carries, or null (AC-4.1.15). */
-    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole },
+    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole, voice: rendered.voice },
     /** Test seam: whether the carrier has the sound rather than the transport. */
     carrying: () => keepAlive.isCarrying(),
     /** Test seam: the carrier element holding the render, or null (AC-4.1.15). */
@@ -2740,6 +2984,9 @@ if (typeof window !== 'undefined') {
     /** Which voice sounded each melodic event (AC-19.6.1/2, AC-19.7.1/2). */
     voiceLog: () => voiceLog.slice(),
     guitar,
+    piano,
+    /** The voice a melodic note would sound with now (US-2.13). */
+    currentVoice,
     /** The Song entry in force on the pass on screen, or null (US-18.1). */
     songEntryInForce: () => songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
     /** The name the Section would export under (AC-18.1.5/2). */

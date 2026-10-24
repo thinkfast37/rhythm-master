@@ -92,7 +92,7 @@ const fill = (i) => ARPEGGIOS[i].id;
 
 // --- AC-2.12.1 — Each cycle steps through All or My list ---
 
-test("AC-2.12.1/1 — Beside the cycle toggles, fills and progressions each have an All or My list choice and a Choose control, wherever Cycle fills and Cycle progressions are offered — the Melody group and Play melodies over it's practice panel alike", async ({ page }) => {
+test("AC-2.12.1/1 — Beside the cycle toggles, fills and progressions each have an All or My list choice and a Choose control, wherever Cycle fills and Cycle progressions are offered — the Melody group and Practise a rhythm's settings rail alike", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.sound-mode [data-mode="melodic"]').click();
@@ -112,10 +112,12 @@ test("AC-2.12.1/1 — Beside the cycle toggles, fills and progressions each have
   await expect(line(page, 'fills').locator('.cycle-from-label')).toHaveText('Fills from');
   await expect(line(page, 'progressions').locator('.cycle-from-label')).toHaveText('Progressions from');
 
-  // Play melodies over it: the practice panel's cycling row carries the same.
+  // Practise a rhythm: the settings rail's cycling row carries the same, on a
+  // Melodic rhythm with a progression — the one built above, reopened there.
+  const id = await page.evaluate(() => window.__rm.getState().pattern.id);
   await page.locator('[data-action="show-goals"]').click();
-  await page.locator('.goal-card[data-goal="melody"]').click();
-  await page.locator('.goal-bar [data-action="give-me-one"]').click();
+  await page.locator('.goal-card[data-goal="practise"]').click();
+  await page.evaluate((i) => window.__rm.handlers.onOpen(i, true), id);
   const panel = page.locator('.practice-panel');
   await expect(panel.locator('[data-action="toggle-fill-cycle"]')).toBeVisible();
   for (const kind of ['fills', 'progressions']) {

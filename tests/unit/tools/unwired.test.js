@@ -47,6 +47,11 @@ describe('tools/check-unwired — reading exports', () => {
 });
 
 describe('tools/check-unwired — the gate', () => {
+  // The real tree is scanned once and shared: the scan is deterministic, and three
+  // tests repeating it timed out on a busy machine (T415).
+  let realFindings;
+  const findingsInSrc = () => (realFindings ??= findUnwired(jsFiles('src')));
+
   /*
    * A two-module tree with one export nothing reaches. Until T274 these tests
    * used the real tree's `removeMeasure` — the finding the gate was built for —
@@ -74,7 +79,7 @@ describe('tools/check-unwired — the gate', () => {
     // And on the real tree: the finding the gate was built for — AC-1.1.8 and
     // AC-1.1.9's −Measure control, whose mutator nothing called for the life of
     // the project — is wired now (T274), and stays wired.
-    const real = findUnwired(jsFiles('src')).map((f) => f.name);
+    const real = findingsInSrc().map((f) => f.name);
     expect(real).not.toContain('removeMeasure');
     expect(real).not.toContain('addMeasure');
     expect(real).not.toContain('cycleAccent');
@@ -89,7 +94,7 @@ describe('tools/check-unwired — the gate', () => {
 
   it('every current finding is either baselined or a build failure — no third state', () => {
     const baseline = JSON.parse(readFileSync('tools/unwired-baseline.json', 'utf8'));
-    const findings = findUnwired(jsFiles('src'));
+    const findings = findingsInSrc();
     const fresh = findings.filter((f) => !(f.key in baseline.accepted));
     expect(fresh).toEqual([]);
   });
@@ -98,7 +103,7 @@ describe('tools/check-unwired — the gate', () => {
     // The rule that keeps the list honest: it may only shrink. A stale entry could
     // otherwise re-excuse a regression years later.
     const baseline = JSON.parse(readFileSync('tools/unwired-baseline.json', 'utf8'));
-    const keys = new Set(findUnwired(jsFiles('src')).map((f) => f.key));
+    const keys = new Set(findingsInSrc().map((f) => f.key));
     expect(Object.keys(baseline.accepted).filter((k) => !keys.has(k))).toEqual([]);
   });
 

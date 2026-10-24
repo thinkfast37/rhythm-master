@@ -90,6 +90,10 @@ test('AC-19.3.2/2 — Each row keeps its black keys between the white keys they 
   await page.locator('.keys-picker').selectOption('88');
   for (const width of [390, 700, 1280]) {
     await page.setViewportSize({ width, height: 900 });
+    // The keyboard re-lays itself out from a ResizeObserver, a frame after the
+    // resize, and records the width it laid out to in the same callback.
+    // Measured before then, the keys can be mid-rebuild and detached (T412).
+    await expect.poll(() => page.evaluate(() => window.__rm.composer().widthPx === document.querySelector('.composer-panel').clientWidth)).toBe(true);
     const overflow = await page.evaluate(() => {
       const main = document.querySelector('.main-panel');
       const panel = document.querySelector('.composer-panel');
@@ -179,7 +183,9 @@ test('AC-19.3.4 — Tapping a key sounds its note at any time', async ({ page })
   const count = () => page.evaluate(() => window.__rm.voiceLog().filter((v) => v.midi === 67).length);
   await key(page, 67).click();
   expect(await count()).toBe(1);
-  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'piano', via: 'synth', midi: 67 });
+  // The first tap is what asks for the piano's recordings (AC-2.13.4/1), so it
+  // sounds through the synth while they load (AC-2.13.4/2).
+  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'piano', voice: 'piano', via: 'fallback', midi: 67 });
   await page.locator('.transport').first().click();
   await key(page, 67).click();
   expect(await count()).toBe(2);

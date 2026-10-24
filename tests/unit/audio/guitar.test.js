@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as guitar from '../../../src/audio/guitar.js';
+import { fakeContext } from './fakeAudio.js';
 
 const ctxA = { id: 'A' };
 const ctxB = { id: 'B' };
@@ -26,7 +27,7 @@ beforeEach(() => {
 });
 
 describe('audio/guitar', () => {
-  it('AC-19.7.1/1 — No sample is requested on page load, in Practice, or in the Piano view; the first showing of the Guitar view requests them once: one load per context, nothing until asked', async () => {
+  it('AC-19.7.1/1 — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once: one load per context, nothing until asked', async () => {
     const { loader, calls } = deferredLoader();
     guitar.__setLoader(loader);
     expect(guitar.getStatus()).toEqual({ status: 'idle', error: null });
@@ -101,9 +102,32 @@ describe('audio/guitar', () => {
     expect(statuses).toEqual(['loading', 'error', 'loading', 'ready']);
   });
 
-  it('AC-19.7.2/3 — The piano voice is the melodic synth voice the app already has, and loads nothing: the guitar module is the only loader and names its one instrument', () => {
+  it('AC-19.7.1/3 — The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer: the module names its one instrument and carries the credit the Composer shows', () => {
     expect(guitar.INSTRUMENT_NAME).toBe('acoustic_guitar_steel');
     expect(guitar.SOUNDFONT).toBe('FluidR3_GM');
     expect(guitar.ATTRIBUTION.text).toMatch(/CC BY 3.0/);
+  });
+});
+
+describe('audio/guitar — the screen-off render (AC-2.13.5/2)', () => {
+  it("AC-2.13.5/2 — With the guitar in force and its samples loaded, the render sounds its melodic notes through the guitar; with them not loaded, through the synth: prepare plays the live instrument's buffers on the render's context, with no second load", async () => {
+    const { loader, calls } = deferredLoader();
+    guitar.__setLoader(loader);
+    const offline = fakeContext();
+    guitar.load(ctxA);
+    expect(await guitar.prepare(offline)).toBeNull();
+    const e4 = { duration: 1 };
+    calls[0].resolve({ play: vi.fn(), buffers: { 64: e4 } });
+    await guitar.load(ctxA);
+    const instrument = await guitar.prepare(offline);
+    expect(instrument).not.toBeNull();
+    expect(calls).toHaveLength(1);
+    expect(guitar.playOn(instrument, event, 2)).toBe('sampled');
+    const source = offline.sources.at(-1);
+    expect(source.buffer).toBe(e4);
+    expect(source.started).toBe(2);
+    expect(source.connected[0].connected[0].kind).toBe('compressor');
+    // The live status is the live context's, untouched by the render.
+    expect(guitar.getStatus().status).toBe('ready');
   });
 });

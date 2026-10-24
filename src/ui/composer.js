@@ -21,6 +21,7 @@ import { subdivisionGroups } from '../core/recipes.js';
 import { effectiveAccent, defaultAccent } from '../core/accents.js';
 import { LABEL_MODES, LABEL_MODE_LABELS, MAX_CAPO, FRET_COUNT } from '../core/fretboard.js';
 import { KEY_COUNTS, rangeFor, keyName } from '../core/piano.js';
+import { pickerFor } from '../core/midi.js';
 import {
   describeNote,
   recordTarget,
@@ -31,6 +32,7 @@ import {
   sameSlot,
 } from '../core/composer.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
+import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 
 const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
 
@@ -91,6 +93,17 @@ export function renderComposer(root, state, handlers) {
       '.'
     );
     fresh.appendChild(credit);
+    // The piano's credit beside the guitar's (AC-2.13.4/4).
+    const pianoCredit = el('p', 'composer-attribution');
+    pianoCredit.dataset.attribution = 'piano-samples';
+    pianoCredit.append(
+      'Piano samples: ',
+      el('a', null, { href: PIANO_ATTRIBUTION.sourceUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'Salamander Grand Piano' }),
+      ' by Alexander Holm, licensed ',
+      el('a', null, { href: PIANO_ATTRIBUTION.licenseUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'CC BY 3.0' }),
+      '.'
+    );
+    fresh.appendChild(pianoCredit);
   });
 }
 
@@ -208,6 +221,14 @@ function renderBar(composer, draft, instrument, state, handlers) {
     }
   }
 
+  // A MIDI note the instrument view has no place for (AC-19.10.3).
+  if (composer.midiFlash) {
+    const f = el('span', 'midi-out-of-range', { textContent: composer.midiFlash.message });
+    f.dataset.midiFlash = 'true';
+    f.setAttribute('role', 'status');
+    bar.appendChild(f);
+  }
+
   if (composer.notice) {
     const n = el('p', 'composer-notice', { textContent: composer.notice });
     n.dataset.notice = 'true';
@@ -219,10 +240,15 @@ function renderBar(composer, draft, instrument, state, handlers) {
 function renderInstrument(instrument, key, scale, state, handlers) {
   const wrap = el('div', 'composer-instrument');
   wrap.dataset.instrument = instrument;
-  const model = { key, scale, labelMode: state.settings.composerLabelMode ?? 'notes' };
+  // The MIDI note just played lights where it landed (AC-19.10.2).
+  const model = { key, scale, labelMode: state.settings.composerLabelMode ?? 'notes', lit: state.composer.midiLit?.midi ?? null };
   const onNote = (midi) => handlers.onInstrumentNote?.(midi);
   if (instrument === 'guitar') {
-    renderFretboard(wrap, { ...model, capo: state.settings.composerCapo ?? 0, range: state.settings.composerFretRange ?? [0, FRET_COUNT] }, { onNote });
+    renderFretboard(
+      wrap,
+      { ...model, capo: state.settings.composerCapo ?? 0, range: state.settings.composerFretRange ?? [0, FRET_COUNT], widthPx: state.composer.widthPx ?? 0 },
+      { onNote }
+    );
   } else {
     renderPiano(wrap, { ...model, count: state.settings.composerKeys ?? 49, widthPx: state.composer.widthPx ?? 0 }, { onNote });
   }
@@ -231,8 +257,8 @@ function renderInstrument(instrument, key, scale, state, handlers) {
 
 /**
  * The composing grid: the note first, the syllable under it (AC-19.5.1).
- * Measures stack as the grid's do; a Slot's two boxes are two buttons, so each
- * has its own hit area and accessible name.
+ * Measures flow left to right and wrap, centred (tokens.css); a Slot's two
+ * boxes are two buttons, so each has its own hit area and accessible name.
  */
 function renderComposingGrid(draft, composer, state) {
   const grid = el('div', 'composer-grid');
@@ -421,6 +447,8 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     wrap.appendChild(labelled('Keys', keys));
   }
 
+  wrap.appendChild(renderMidiPicker(state, handlers));
+
   const counting = el('select', 'composer-counting');
   counting.dataset.action = 'composer-counting';
   counting.setAttribute('aria-label', 'Counting');
@@ -483,11 +511,31 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     wrap.appendChild(labelledRow(`Swing ${amount}`, swingEntry, swing));
 
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
-    dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself; the copy has no notes yet' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
+    dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself, keeping the notes or starting percussive' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     dup.addEventListener('click', () => handlers.onComposerDuplicate?.());
     wrap.appendChild(labelled('Measures', dup));
   }
   return wrap;
+}
+
+/** The MIDI input picker (AC-19.10.4, AC-19.10.5): usable only with two or more devices. */
+function renderMidiPicker(state, handlers) {
+  const midi = state.midi ?? { status: 'idle', devices: [] };
+  const model = pickerFor(midi.status, midi.devices, state.settings.composerMidiInput);
+  const picker = el('select', 'midi-input-picker', { disabled: model.disabled });
+  picker.dataset.action = 'composer-midi-input';
+  picker.dataset.status = midi.status;
+  picker.setAttribute('aria-label', 'MIDI input');
+  picker.setAttribute('title', model.reason);
+  for (const o of model.options) picker.appendChild(el('option', null, { value: o.value, textContent: o.label }));
+  picker.value = model.value;
+  picker.addEventListener('change', (e) => handlers.onComposerMidiInput?.(e.target.value));
+  const field = labelled('MIDI input', picker);
+  field.classList.add('midi-input');
+  const reason = el('span', 'midi-input-reason', { textContent: model.reason });
+  reason.dataset.reason = 'true';
+  field.appendChild(reason);
+  return field;
 }
 
 /** Move the playback cursor in the composing grid without rebuilding it. */

@@ -26,9 +26,28 @@ export async function openApp(page, { samples = 'abort' } = {}) {
 export const composerState = (page) => page.evaluate(() => window.__rm.composer());
 export const appState = (page) => page.evaluate(() => window.__rm.getState());
 
-export async function enterComposer(page) {
+/**
+ * Switch to Composer. Entering offers the Pattern open in Practice
+ * (AC-19.1.2/1–/3): `load: 'cancel'` (the default) declines the naming prompt,
+ * leaving the empty Composer the suites historically started from;
+ * `load: 'accept'` takes the prompt, filling `name` when given; `load: 'none'`
+ * expects no prompt — a kept composition, or an owned melody opening directly.
+ */
+export async function enterComposer(page, { load = 'cancel', name } = {}) {
   await page.locator('.mode-switch [data-mode="composer"]').click();
   await expect(page.locator('.composer-panel')).toBeVisible();
+  if (load === 'none') {
+    await expect(page.locator('.dialog')).toHaveCount(0);
+    return;
+  }
+  await expect(page.locator('.dialog')).toBeVisible();
+  if (load === 'cancel') {
+    await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  } else {
+    if (name) await page.locator('.dialog-input').fill(name);
+    await page.locator('.dialog-button.primary').click();
+  }
+  await expect(page.locator('.dialog')).toHaveCount(0);
 }
 
 export async function leaveComposer(page) {
@@ -62,8 +81,9 @@ export async function openInComposer(page, id, owned, name = 'My line') {
 /** The whole path: a four-syllable rhythm open in the Composer as an unsaved composition. */
 export async function loadFourBeats(page, name = 'My line') {
   await makeFourBeats(page);
-  await enterComposer(page);
-  await openInComposer(page, 'p_test', true, name);
+  // Entering offers the fixture itself (AC-19.1.2/2): take the prompt.
+  await enterComposer(page, { load: 'accept', name });
+  await expect(page.locator('.composer-grid')).toBeVisible();
 }
 
 export const fret = (page, string, fretNumber) => page.locator(`.fretboard .note[data-string="${string}"][data-fret="${fretNumber}"]`);

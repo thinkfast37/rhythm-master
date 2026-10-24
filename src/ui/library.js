@@ -50,9 +50,15 @@ export function sortEntries(entries) {
   });
 }
 
+/** The Rating filter value for "not yet rated" (AC-6.1.8). */
+export const UNRATED = 'unrated';
+
 /**
  * Filter by text, Tags, and Rating. Every filter NARROWS what the others left
  * (AC-6.1.6).
+ *
+ * `minRating` is a minimum (0 = All), or `'unrated'` for a Rating of exactly 0
+ * — the Patterns not yet reviewed (AC-6.1.8).
  *
  * Multiple Tags are ANDed: each one you add takes the list further down, which
  * is what makes them useful together — "Latin" plus "melodic" means the Latin
@@ -72,7 +78,8 @@ export function filterEntries(entries, { query = '', tag = null, tags = null, mi
     );
 
     if (!wanted.every((w) => allTagsOn.includes(w))) return false;
-    if (minRating > 0 && (e.pattern.rating ?? 0) < minRating) return false;
+    const rating = e.pattern.rating ?? 0;
+    if (minRating === UNRATED ? rating > 0 : minRating > 0 && rating < minRating) return false;
     if (!q) return true;
 
     const haystack = [e.pattern.name, ...allTagsOn].join(' ').toLowerCase();
@@ -179,10 +186,11 @@ export function renderLibrary(root, entries, viewState, handlers) {
   root.appendChild(backupRow);
 
   const ratingFilter = el('div', 'rating-filter');
-  for (const min of [0, 3, 4, 5]) {
+  // Unrated sits beside All; 5★ takes no "+", since nothing rates above it (AC-6.1.8).
+  for (const min of [0, UNRATED, 3, 4, 5]) {
     const b = el('button', `rating-option${(viewState.minRating ?? 0) === min ? ' on' : ''}`, {
       type: 'button',
-      textContent: min === 0 ? 'All' : `${min}★+`,
+      textContent: min === 0 ? 'All' : min === UNRATED ? 'Unrated' : min === 5 ? '5★' : `${min}★+`,
     });
     b.dataset.action = 'filter-rating';
     b.dataset.min = String(min);

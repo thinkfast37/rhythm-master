@@ -266,7 +266,7 @@ test('AC-19.2.4/2 — A fret below the capo is inert: no sound, no note recorded
 
 // --- US-19.7: the sampled guitar ----------------------------------------------------
 
-test('AC-19.7.1/1 — No sample is requested on page load, in Practice, or in the Piano view; the first showing of the Guitar view requests them once', async ({ page }) => {
+test('AC-19.7.1/1 — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once', async ({ page }) => {
   const requests = [];
   await page.route('https://gleitz.github.io/**', (route) => {
     requests.push(route.request().url());
@@ -277,16 +277,19 @@ test('AC-19.7.1/1 — No sample is requested on page load, in Practice, or in th
   await page.evaluate(() => localStorage.setItem('rm.settings.v1', JSON.stringify({ ...JSON.parse(localStorage.getItem('rm.settings.v1')), composerInstrument: 'piano' })));
   await page.reload();
   await expect(page.locator('.mode-switch')).toBeVisible();
-  // Practice: play something melodic, no request.
+  // Practice under Piano, then Synth: play something melodic, no request.
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.grid .slot[data-beat="0"][data-slot="0"]').click();
   await page.locator('.sound-mode [data-mode="melodic"]').click();
-  await page.locator('.transport').first().click();
-  await page.waitForTimeout(400);
-  await page.locator('.transport').first().click();
+  for (const voice of ['piano', 'synth']) {
+    await page.locator(`.voice-switch [data-voice="${voice}"]`).click();
+    await page.locator('.transport').first().click();
+    await page.waitForTimeout(400);
+    await page.locator('.transport').first().click();
+  }
   expect(requests).toHaveLength(0);
   // The Piano view: still nothing.
-  await enterComposer(page);
+  await enterComposer(page, { load: 'none' });
   await expect(page.locator('.piano')).toBeVisible();
   await page.locator('.piano .key[data-midi="60"]').click();
   expect(requests).toHaveLength(0);
@@ -299,6 +302,28 @@ test('AC-19.7.1/1 — No sample is requested on page load, in Practice, or in th
   await page.locator('.instrument-switch [data-instrument="guitar"]').click();
   await fret(page, 0, 0).click();
   expect(requests).toHaveLength(1);
+
+  // Practice under Guitar: the first melodic note requests them, once.
+  const fresh = await page.context().newPage();
+  const freshRequests = [];
+  await fresh.route('https://gleitz.github.io/**', (route) => {
+    freshRequests.push(route.request().url());
+    route.fulfill({ status: 200, contentType: 'application/javascript', body: fakeSoundfont() });
+  });
+  await fresh.goto('/');
+  await expect(fresh.locator('.mode-switch')).toBeVisible();
+  await fresh.evaluate(() => window.__rm.loadBlank('4/4'));
+  await fresh.locator('.grid .slot[data-beat="0"][data-slot="0"]').click();
+  await fresh.locator('.sound-mode [data-mode="melodic"]').click();
+  await fresh.locator('.voice-switch [data-voice="guitar"]').click();
+  expect(freshRequests).toHaveLength(0);
+  await fresh.locator('.transport').first().click();
+  await expect.poll(() => freshRequests.length).toBe(1);
+  expect(freshRequests[0]).toBe(SAMPLE_URL);
+  await fresh.waitForTimeout(600);
+  await fresh.locator('.transport').first().click();
+  expect(freshRequests).toHaveLength(1);
+  await fresh.close();
 });
 
 test('AC-19.7.1/2 — Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note', async ({ page }) => {
@@ -312,7 +337,7 @@ test('AC-19.7.1/2 — Once loaded, a tapped fret and a pitched Slot played back 
   await expect(page.locator('.guitar-status')).toHaveCount(0);
   await fret(page, 0, 0).click(); // E4
   const tapped = (await page.evaluate(() => window.__rm.voiceLog())).at(-1);
-  expect(tapped).toEqual({ instrument: 'guitar', via: 'sampled', midi: 64 });
+  expect(tapped).toEqual({ instrument: 'guitar', voice: 'guitar', via: 'sampled', midi: 64 });
   expect(await page.evaluate(() => window.__rm.guitar.__sampledPlays())).toBe(1);
   await page.locator('.composer-tempo-entry').fill('240');
   await page.locator('.composer-tempo-entry').press('Enter');
@@ -331,7 +356,8 @@ test('AC-19.7.1/3 — The attribution — FluidR3_GM by Frank Wen via gleitz/mid
   await openApp(page);
   await expect(page.locator('.composer-attribution')).toHaveCount(0);
   await enterComposer(page);
-  const credit = page.locator('.composer-attribution');
+  // The guitar's own line; the piano's credit stands beside it (AC-2.13.4/4).
+  const credit = page.locator('.composer-attribution[data-attribution="guitar-samples"]');
   await expect(credit).toBeVisible();
   await expect(credit).toContainText('FluidR3_GM');
   await expect(credit).toContainText('Frank Wen');
@@ -351,7 +377,7 @@ test('AC-19.7.2/1 — While the samples load, a loading state is shown and every
   await expect(page.locator('.guitar-status')).toHaveAttribute('data-status', 'loading');
   await expect(page.locator('.guitar-status')).toContainText('Loading');
   await fret(page, 0, 0).click();
-  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'guitar', via: 'fallback', midi: 64 });
+  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'guitar', voice: 'guitar', via: 'fallback', midi: 64 });
   // Recording went ahead too.
   await page.locator('.record').click();
   await fret(page, 1, 1).click();
@@ -381,7 +407,7 @@ test('AC-19.7.2/2 — A failed load shows a non-blocking notice with a Retry con
   await expect(status.locator('.guitar-retry')).toBeVisible();
   // Non-blocking: the board, Record and the grid all work.
   await fret(page, 0, 0).click();
-  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'guitar', via: 'fallback', midi: 64 });
+  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'guitar', voice: 'guitar', via: 'fallback', midi: 64 });
   await expect(page.locator('.record')).toBeEnabled();
   await expect(page.locator('.dialog')).toHaveCount(0);
   expect(requests).toHaveLength(1);
@@ -392,13 +418,10 @@ test('AC-19.7.2/2 — A failed load shows a non-blocking notice with a Retry con
   await expect(page.locator('.guitar-status')).toHaveCount(0);
 });
 
-test('AC-19.7.2/3 — The piano voice is the melodic synth voice the app already has, and loads nothing', async ({ page }) => {
-  const requests = [];
-  await page.route('**/*', (route) => {
-    const url = route.request().url();
-    if (!url.startsWith('http://localhost')) requests.push(url);
-    route.continue();
-  });
+test("AC-19.7.2/3 — The Piano view's sampled piano falls back the same way: while its recordings load, or when they cannot, each note sounds through the synth", async ({ page }) => {
+  // Held: the recordings are on their way.
+  const held = [];
+  await page.route('**/audio/piano/*.mp3', (route) => held.push(route));
   await page.goto('/');
   await expect(page.locator('.mode-switch')).toBeVisible();
   await page.evaluate(() => localStorage.setItem('rm.settings.v1', JSON.stringify({ ...JSON.parse(localStorage.getItem('rm.settings.v1')), composerInstrument: 'piano' })));
@@ -407,8 +430,19 @@ test('AC-19.7.2/3 — The piano voice is the melodic synth voice the app already
   await loadFourBeats(page);
   await expect(page.locator('.piano')).toBeVisible();
   await page.locator('.piano .key[data-midi="64"]').click();
-  const last = (await page.evaluate(() => window.__rm.voiceLog())).at(-1);
-  expect(last).toEqual({ instrument: 'piano', via: 'synth', midi: 64 });
-  expect(requests.filter((u) => /soundfont|gleitz/.test(u))).toHaveLength(0);
+  await expect.poll(() => page.evaluate(() => window.__rm.piano.getStatus().status)).toBe('loading');
+  await page.locator('.piano .key[data-midi="65"]').click();
+  expect((await page.evaluate(() => window.__rm.voiceLog())).slice(-2)).toEqual([
+    { instrument: 'piano', voice: 'piano', via: 'fallback', midi: 64 },
+    { instrument: 'piano', voice: 'piano', via: 'fallback', midi: 65 },
+  ]);
+
+  // Failed: they cannot come, and the keys still sound through the synth.
+  for (const r of held.splice(0)) await r.abort();
+  await page.unroute('**/audio/piano/*.mp3');
+  await expect.poll(() => page.evaluate(() => window.__rm.piano.getStatus().status)).toBe('error');
+  await page.locator('.piano .key[data-midi="67"]').click();
+  expect((await page.evaluate(() => window.__rm.voiceLog())).at(-1)).toEqual({ instrument: 'piano', voice: 'piano', via: 'fallback', midi: 67 });
+  // And the guitar's samples are never asked for by the Piano view.
   expect(await page.evaluate(() => window.__rm.composer().guitar.status)).toBe('idle');
 });

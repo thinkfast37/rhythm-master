@@ -35,6 +35,8 @@ import {
   MAX_CHORDS,
 } from '../core/harmony.js';
 import { placeHelp } from './help.js';
+import { VOICES, normaliseVoice } from '../core/voice.js';
+import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -407,6 +409,8 @@ function renderHeaderInto(root, pattern, state, handlers) {
     // a Pattern — it decides which half of the workbench the panel shows — so it
     // sits where the eye lands, not in a section at the foot of the panel.
     root.appendChild(renderSoundModeSwitch(pattern, handlers));
+    // The melodic voice beside it, while there is a melody to voice (AC-2.13.1/1).
+    if (pattern.soundMode === 'melodic') root.appendChild(renderVoiceSwitch(state, handlers));
   }
 
   // The Rating lives here as well as on the library row (AC-6.1.7): rating is
@@ -472,6 +476,54 @@ function renderSoundModeSwitch(pattern, handlers) {
     group.appendChild(b);
   }
   return group;
+}
+
+const VOICE_LABELS = { piano: 'Piano', synth: 'Synth', guitar: 'Guitar' };
+const VOICE_TITLES = {
+  piano: `A real grand piano. ${PIANO_ATTRIBUTION.text}`,
+  synth: 'The synthesised voice: three detuned sines through a filter and reverb.',
+  guitar: 'The sampled steel-string guitar the Composer plays.',
+};
+
+/**
+ * Piano | Synth | Guitar (AC-2.13.1): the voice melodic notes sound with. An
+ * app preference, so tapping one never touches the Pattern (/2). The piano's
+ * loading state and its failure, with Retry, sit beside it (AC-2.13.4/2, /3).
+ */
+function renderVoiceSwitch(state, handlers) {
+  const voice = normaliseVoice(state.settings?.melodicVoice);
+  const wrap = el('div', 'melodic-voice');
+  const group = el('div', 'voice-switch', { role: 'group' });
+  group.setAttribute('aria-label', 'Melodic voice');
+  group.dataset.voice = voice;
+  for (const id of VOICES) {
+    const b = el('button', 'mode-option', { type: 'button', textContent: VOICE_LABELS[id], title: VOICE_TITLES[id] });
+    b.dataset.action = 'set-melodic-voice';
+    b.dataset.voice = id;
+    b.setAttribute('aria-pressed', String(voice === id));
+    b.addEventListener('click', () => {
+      if (voice !== id) handlers.onMelodicVoice?.(id);
+    });
+    group.appendChild(b);
+  }
+  wrap.appendChild(group);
+
+  const status = state.pianoStatus?.status ?? 'idle';
+  if (voice === 'piano' && (status === 'loading' || status === 'error')) {
+    const note = el('span', `voice-status ${status}`, {
+      textContent: status === 'loading' ? 'Loading piano… the synth plays meanwhile.' : 'The piano could not load; the synth is playing instead.',
+    });
+    note.dataset.status = status;
+    note.setAttribute('role', 'status');
+    wrap.appendChild(note);
+    if (status === 'error') {
+      const retry = el('button', 'voice-retry', { type: 'button', textContent: 'Retry' });
+      retry.dataset.action = 'piano-retry';
+      retry.addEventListener('click', () => handlers.onPianoRetry?.());
+      wrap.appendChild(retry);
+    }
+  }
+  return wrap;
 }
 
 /**
@@ -607,7 +659,7 @@ export function renderPracticePanel(root, pattern, state, handlers, items) {
         else
           fresh.appendChild(
             el('p', 'panel-note', {
-              textContent: 'Cycling needs a rhythm with a chord progression. Give me one draws melodic rhythms, which have one.',
+              textContent: 'Cycling needs a Melodic rhythm with a chord progression. Filter the library to Melodic to find one.',
             })
           );
       }
@@ -1239,8 +1291,11 @@ function cycleOn(state) {
   return Boolean(state.fillCycle?.on || state.progressionCycle?.on);
 }
 
-/** The metronome click and the count-in (US-4.3), in the Practice group. */
-function renderClickControls(state, handlers) {
+/**
+ * The metronome click and the count-in (US-4.3), in the Practice group — and
+ * in Practise a rhythm's goal strip, as its quick toggles (AC-14.1.5/4).
+ */
+export function renderClickControls(state, handlers) {
   const group = el('div', 'control-group');
 
   const metronome = el('button', `toggle${state.settings.metronomeEnabled ? ' on' : ''}`, {
