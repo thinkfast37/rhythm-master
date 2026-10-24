@@ -13,7 +13,7 @@ const voiceLog = (page) => page.evaluate(() => window.__rm.voiceLog());
  * tick able to interleave: everything logged after it was scheduled after the
  * switch. A length read in a separate round trip before the click also counts
  * whatever the scheduler queued in the old voice while the click was on its
- * way (T410).
+ * way (T412).
  */
 async function switchInstrument(page, id) {
   await page.evaluate(() => {
@@ -141,7 +141,7 @@ test('AC-19.6.2/2 — Tempo and swing changes while playing take effect as they 
   // The edit goes to the transport as a pending update, not a restart. Read
   // in the click's own dispatch, after the button's handler: the pending edit
   // is consumed at the next pass boundary, which a read a few round trips
-  // later could already have crossed (T410).
+  // later could already have crossed (T412).
   await page.evaluate(() => {
     document.addEventListener('click', () => { window.__pendingAfterDelete = window.__rm.transport._snapshot().pendingEdit; }, { once: true });
   });

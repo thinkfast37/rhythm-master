@@ -77,13 +77,13 @@ test('AC-7.6.1/1 — A Back up library control in the library panel, offered und
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto('/');
   await page.locator('[data-action="show-goals"]').click();
-  await page.locator('.goal-card[data-goal="play"]').click();
+  await page.locator('.goal-card[data-goal="practise"]').click();
   await page.locator('.library-toggle').click();
   await expect(page.locator('[data-action="new-pattern"]')).toBeHidden();
   await expect(page.locator('[data-action="backup-library"]')).toBeVisible();
   await expect(page.locator('[data-action="restore-library"]')).toBeVisible();
   const { file } = await backUp(page);
-  expect(file.stores['rm.settings.v1'].goal).toBe('play');
+  expect(file.stores['rm.settings.v1'].goal).toBe('practise');
 });
 
 test('AC-7.6.2/1 — A Restore library control beside Back up library opens a file picker; once a file is picked, a prompt says the current library will be replaced, and Cancel changes nothing', async ({ page }) => {

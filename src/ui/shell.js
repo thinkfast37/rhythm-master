@@ -1,15 +1,14 @@
 /**
- * The app shell (research.md D-018, phase 1): everything about *where things
- * sit* — the sidebar, the pinned bar, the panes, the Composer's panel, the
- * goals screen — and the per-render pass that fills them.
+ * The app shell (research.md D-018, phase 2): one frame shared by every goal
+ * (AC-15.1.20) — the sidebar, the pinned bar with the goal strip under it,
+ * the rhythm band, one work surface, the Composer's panel, the goals screen —
+ * and the per-render pass that fills them.
  *
- * Lifted out of the composition root unchanged, so that the frame can be
- * replaced in one module without touching the handlers or the state. Nothing
- * here owns state: `ctx` hands in the state object, the handlers and the few
- * functions the render pass reads from the container (`subscribe`, `render`,
- * `libraryEntries`, `familyMembers`, `canUndo`, `fillLabel`, `storeSignature`).
- * Rendering stays a pure function of the Pattern and the transport position
- * (FR-013).
+ * Nothing here owns state: `ctx` hands in the state object, the handlers and
+ * the few functions the render pass reads from the container (`subscribe`,
+ * `render`, `libraryEntries`, `familyMembers`, `canUndo`, `fillLabel`,
+ * `storeSignature`). Rendering stays a pure function of the Pattern and the
+ * transport position (FR-013).
  */
 import { automaticTags } from '../core/pattern.js';
 import { surfaceFor } from '../core/goals.js';
@@ -43,7 +42,7 @@ import {
   scrollMeasureIntoView,
 } from './responsive.js';
 import { renderComposeGroup } from './compose.js';
-import { renderGoals, renderGoalBar } from './goals.js';
+import { renderGoals, renderGoalStrip } from './goals.js';
 import { placeHelp } from './help.js';
 import { renderLibrary } from './library.js';
 import { renderScore } from './score.js';
@@ -62,14 +61,27 @@ function sameLibrarySignature(a, b) {
   );
 }
 
+/** A plain button for the pinned bar, built once. */
+function barButton(className, action, text) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = className;
+  b.dataset.action = action;
+  b.textContent = text;
+  return b;
+}
+
 /**
  * Build the app shell.
  *
- * Main-panel section order is fixed top to bottom and does not vary by
- * viewport (AC-15.1.8): the pinned bar (library toggle, transport, quick
- * navigation), then Pattern header, chord strip, grid, the workbench — Melody,
- * Rhythm, Practice, tabbed on a phone (AC-15.1.7) — Pattern actions, family
- * members. DOM order is the priority order.
+ * The frame (AC-15.1.20): the pinned bar — ‹ Goals, Library, Related,
+ * Play/Stop with the tempo entry, Prev/Next — with the goal strip as its
+ * second row; then the rhythm band — Pattern header, chord strip, the grid or
+ * the sheet with the View control at its head and the brush line under it;
+ * then one work surface — the tabbed workbench, Pattern actions and the family
+ * members under Lab and the making goals, the settings rail under Practise a
+ * rhythm. The order is AC-15.1.8's and does not vary by viewport: DOM order is
+ * the priority order.
  */
 export function mountShell(root, ctx) {
   const { state, handlers, subscribe, render, libraryEntries, familyMembers, canUndo, fillLabel, storeSignature } = ctx;
@@ -88,11 +100,7 @@ export function mountShell(root, ctx) {
    * sticky within the main panel rather than merely first in it, so a musician
    * who has scrolled down to the edit controls can still reach it.
    */
-  const libraryToggle = document.createElement('button');
-  libraryToggle.type = 'button';
-  libraryToggle.className = 'library-toggle';
-  libraryToggle.dataset.action = 'toggle-library';
-  libraryToggle.textContent = 'Library';
+  const libraryToggle = barButton('library-toggle', 'toggle-library', 'Library');
   const syncLibraryToggle = () => {
     const open = isLibraryOpen(shell);
     libraryToggle.textContent = open ? 'Close Library' : 'Library';
@@ -111,6 +119,29 @@ export function mountShell(root, ctx) {
     syncLibraryToggle();
   });
 
+  // --- the pinned bar's own controls (AC-15.1.20/1) ---
+
+  // The way back to the goals screen, first in the bar under every goal, Lab
+  // included (AC-14.1.1/3).
+  const goalsButton = barButton('goals-button', 'show-goals', '');
+  // The word is dropped at phone width, as the navigation's are (AC-15.1.17/3).
+  const goalsWord = document.createElement('span');
+  goalsWord.className = 'goals-word';
+  goalsWord.textContent = ' Goals';
+  goalsButton.append('\u2039', goalsWord);
+  goalsButton.setAttribute('aria-label', 'Goals');
+  goalsButton.setAttribute('title', 'Back to the goals screen');
+  goalsButton.addEventListener('click', () => handlers.onShowGoals?.());
+
+  // Related: the family of the rhythm on screen, from the bar. A placeholder
+  // until Share and tidy up lands (D-018 phase 7): present where it will live,
+  // disabled, and saying so, rather than a control that appears later in a
+  // place nothing prepared the eye for.
+  const relatedButton = barButton('related-button', 'show-related', 'Related');
+  relatedButton.disabled = true;
+  relatedButton.setAttribute('aria-disabled', 'true');
+  relatedButton.setAttribute('title', 'Related rhythms — coming with Share and tidy up');
+
   // --- main panel, in priority order ---
   const main = document.createElement('main');
   main.className = 'main-panel';
@@ -124,8 +155,8 @@ export function mountShell(root, ctx) {
   chordStripEl.dataset.primary = 'true';
   /*
    * The grid section holds the grid or the sheet music in its place, chosen by
-   * the toggle at its head (AC-12.2.1). One section, so the fixed order of
-   * AC-15.1.8 is unchanged by which of the two it shows.
+   * the View control at its head (AC-12.2.1). One section, so the fixed order
+   * of AC-15.1.8 is unchanged by which of the two it shows.
    */
   const viewEl = document.createElement('div');
   viewEl.className = 'pattern-view';
@@ -182,7 +213,8 @@ export function mountShell(root, ctx) {
    * The workbench (AC-15.1.7, AC-15.1.8): four groups named for the job —
    * Melody, Rhythm, Practice, Compose — one on screen at a time, chosen by the
    * tab bar, at every width. Melody is absent, not empty, on a Percussive
-   * Pattern (AC-2.2.13).
+   * Pattern (AC-2.2.13). It is what Lab and the making goals put on the work
+   * surface (AC-15.1.20/4).
    */
   const tabsEl = document.createElement('nav');
   tabsEl.className = 'workbench-tabs';
@@ -224,10 +256,10 @@ export function mountShell(root, ctx) {
   familyEl.dataset.section = 'family';
 
   /*
-   * Prev/Next lives in the pinned bar at the top of the main panel, beside the
-   * library toggle, rather than at the panel's foot (AC-5.5.3). Stepping to the
-   * next rhythm is the gesture a practice run repeats most, and at the foot it
-   * cost a scroll past the whole grid and every accordion first.
+   * Prev/Next lives in the pinned bar at the top of the main panel, at its
+   * right, rather than at the panel's foot (AC-5.5.3). Stepping to the next
+   * rhythm is the gesture a practice run repeats most, and at the foot it cost
+   * a scroll past the whole grid and every accordion first.
    *
    * One control, not one at each end: two bars would have to agree about their
    * state, and the toggle is already pinned here for the same reason.
@@ -244,76 +276,62 @@ export function mountShell(root, ctx) {
     const word = document.createElement('span');
     word.className = 'nav-word';
     word.textContent = direction === 'previous' ? 'Prev' : 'Next';
-    if (direction === 'previous') b.append('\u2039 ', word);
-    else b.append(word, ' \u203a');
+    if (direction === 'previous') b.append('‹ ', word);
+    else b.append(word, ' ›');
     b.addEventListener('click', () => handlers.onNavigate(direction));
     navEl.appendChild(b);
   }
 
   /*
-   * Practice | Composer (AC-19.1.1): in the pinned bar, so the mode is reached
-   * from any scroll offset like the transport beside it. Absent under a
-   * practice goal, which has no Composer.
+   * The pinned bar (AC-15.1.17, AC-15.1.20/1): identical under every goal —
+   * ‹ Goals, Library, Related, Play/Stop with the tempo entry, Prev/Next —
+   * with the goal strip as its second row (AC-15.1.20/2): the goal's name and
+   * its own quick controls, reached from any scroll offset like the transport
+   * above them.
    */
-  const modeSwitchEl = document.createElement('div');
-  modeSwitchEl.className = 'mode-switch';
-  modeSwitchEl.setAttribute('role', 'group');
-  modeSwitchEl.setAttribute('aria-label', 'Mode');
-  for (const [mode, label] of [
-    ['practice', 'Practice'],
-    ['composer', 'Composer'],
-  ]) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'mode-option';
-    b.dataset.action = 'set-mode';
-    b.dataset.mode = mode;
-    b.textContent = label;
-    b.addEventListener('click', () => handlers.onComposerMode(mode));
-    modeSwitchEl.appendChild(b);
-  }
-
   const topBarEl = document.createElement('div');
   topBarEl.className = 'main-top-bar';
-  // The goal bar is the pinned bar's second row (AC-15.1.8, AC-15.1.17): the
-  // way back to the goals screen and the goal's own controls, reached from
-  // any scroll offset like the transport beside them.
-  const goalBarEl = document.createElement('div');
-  // Lab's Help for the pinned bar itself, under the goal bar (AC-14.1.3/3).
-  topBarEl.append(libraryToggle, playEl, navEl, modeSwitchEl, goalBarEl);
+  const stripEl = document.createElement('div');
+  topBarEl.append(goalsButton, libraryToggle, relatedButton, playEl, navEl, stripEl);
 
   // The goals screen (AC-14.1.1): stands in for the library and the main
   // panel together while open, so it is a child of the shell beside them.
   const goalsEl = document.createElement('section');
 
   /*
-   * Two panes under the pinned bar (AC-15.1.18): the Pattern — header, chord
-   * strip, grid — and the workbench — tab bar, groups, actions, family. On a
-   * wide panel they sit side by side and each scrolls on its own; on a narrow
-   * one they are plain blocks, one under the other, and the panel scrolls as
-   * one. The order AC-15.1.8 fixes is the same list either way.
+   * The frame's two parts under the pinned bar (AC-15.1.20/3, /4): the rhythm
+   * band — header, chord strip, grid or sheet — across the panel's full width,
+   * and one work surface under it — tab bar, groups, actions, family, or the
+   * goal's own rail. On a wide panel each scrolls on its own (AC-15.1.18); on
+   * a narrow one they are plain blocks and the panel scrolls as one. The order
+   * AC-15.1.8 fixes is the same list either way.
+   *
+   * `pane-pattern` and `pane-workbench` are kept as second names for the
+   * criteria the frame does not revise in this phase — the Composer's
+   * AC-19.1.1, the column of AC-15.2.8 — whose tests reach the two by them.
+   * D-018 phase 9 drops them.
    */
-  const patternPaneEl = document.createElement('div');
-  patternPaneEl.className = 'pane pane-pattern';
-  patternPaneEl.append(headerEl, chordStripEl, viewEl);
-  const workbenchPaneEl = document.createElement('div');
-  workbenchPaneEl.className = 'pane pane-workbench';
-  workbenchPaneEl.append(tabsEl, melodyEl, rhythmEl, practiceEl, composeEl, actionsEl, familyEl);
-  // The Composer's panel stands in for both panes while its mode is in force
-  // (AC-19.1.1/2); empty and hidden otherwise, so none of its controls can be
-  // found in Practice.
+  const bandEl = document.createElement('div');
+  bandEl.className = 'rhythm-band pane pane-pattern';
+  bandEl.append(headerEl, chordStripEl, viewEl);
+  const surfaceEl = document.createElement('div');
+  surfaceEl.className = 'work-surface pane pane-workbench';
+  surfaceEl.append(tabsEl, melodyEl, rhythmEl, practiceEl, composeEl, actionsEl, familyEl);
+  // The Composer's panel stands in for the band and the surface while its mode
+  // is in force (AC-19.1.1/2); empty and hidden otherwise, so none of its
+  // controls can be found in Practice.
   const composerEl = document.createElement('section');
   composerEl.className = 'composer-panel';
   composerEl.dataset.section = 'composer';
   composerEl.hidden = true;
-  main.append(topBarEl, patternPaneEl, workbenchPaneEl, composerEl);
+  main.append(topBarEl, bandEl, surfaceEl, composerEl);
   shell.append(goalsEl, sidebar, scrim, main);
   root.appendChild(shell);
   // In the tree now, so the panel has a width to be laid out by (AC-15.1.18).
   applyPanelLayout(main);
   observePanelWidth(main);
   // The pinned bar's height, for the autoscroll to clear (AC-15.1.11): two
-  // rows with the goal bar, and its wrapping depends on the width.
+  // rows with the goal strip, and its wrapping depends on the width.
   const measurePinned = () => main.style.setProperty('--pinned-height', `${topBarEl.offsetHeight}px`);
   measurePinned();
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(measurePinned).observe(topBarEl);
@@ -321,7 +339,7 @@ export function mountShell(root, ctx) {
   // Delegated rather than bound per Slot, so a re-render cannot leave stale
   // listeners behind.
   gridEl.addEventListener('click', (event) => {
-    // Under a practice goal the grid is looked at and played, never edited
+    // Under Practise a rhythm the grid is looked at and played, never edited
     // (AC-14.1.5/1): no accent, no stamp, no Time Signature prompt.
     if (surfaceFor(state.settings.goal).readOnly) return;
     /*
@@ -411,7 +429,7 @@ export function mountShell(root, ctx) {
       syncLibraryToggle();
       // Whichever of them scrolls in the layout in force (AC-15.1.18).
       appScrolled();
-      for (const el of [main, patternPaneEl, workbenchPaneEl]) el.scrollTop = 0;
+      for (const el of [main, bandEl, surfaceEl]) el.scrollTop = 0;
     }
   });
 
@@ -474,9 +492,10 @@ export function mountShell(root, ctx) {
    * and the app did not move it, the musician did.
    *
    * On `window`, because `scroll` does not bubble and the scrolling element
-   * differs by layout — the panel at narrow widths, one of its panes when wide
-   * (AC-15.1.18), the document if a browser scrolls that instead. Capture sees
-   * them all, and the target check keeps the library's own scrolling out of it.
+   * differs by layout — the panel at narrow widths, the band or the surface
+   * when wide (AC-15.1.18), the document if a browser scrolls that instead.
+   * Capture sees them all, and the target check keeps the library's own
+   * scrolling out of it.
    */
   let appScrollUntil = 0;
   /*
@@ -580,26 +599,25 @@ export function mountShell(root, ctx) {
       : { autoTags: automaticTags(pattern, s.isOwned), lockedTags: [], userTags: pattern.tags ?? [] };
 
     // The goals screen in place of everything else while it is open
-    // (AC-14.1.1/1); the goal bar otherwise.
+    // (AC-14.1.1/1); the goal strip otherwise.
     shell.dataset.goals = s.goalsOpen ? 'open' : 'closed';
     renderGoals(goalsEl, s, handlers);
-    renderGoalBar(goalBarEl, s, handlers);
+    renderGoalStrip(stripEl, s, handlers);
     // The pinned bar's ?s on the parts built once; the rebuilt parts place
     // their own (AC-14.1.3/3).
-    placeHelp(topBarEl, 'bar', s, ['Library']);
+    placeHelp(topBarEl, 'bar', s, ['Goals', 'Library', 'Related']);
     placeHelp(navEl, 'bar', s, ['Prev / Next']);
     // What the goal offers (AC-14.1.2): the groups, Pattern actions and the
     // family members it has a use for. Lab offers everything (AC-14.1.3/1).
-    // A practice goal offers none of it and edits nothing (AC-14.1.5).
+    // Practise a rhythm offers none of it and edits nothing (AC-14.1.5).
     const surface = surfaceFor(s.settings.goal);
     shell.dataset.readonly = String(surface.readOnly);
-    // Practice or Composer (AC-19.1.1): the shell carries the mode so the
-    // panes and the Composer's panel can stand in for each other.
+    // The frame's proportion (AC-15.1.20/5): Playback under Practise, where
+    // the music takes the room; Design elsewhere, where the tools do.
+    main.dataset.frame = surface.layout;
+    // Practice or Composer (AC-19.1.1): the shell carries the mode so the band
+    // and the surface and the Composer's panel can stand in for each other.
     shell.dataset.mode = s.composer.mode;
-    for (const b of modeSwitchEl.querySelectorAll('[data-mode]')) {
-      b.setAttribute('aria-pressed', String(b.dataset.mode === s.composer.mode));
-    }
-    modeSwitchEl.hidden = surface.readOnly;
     if (!state.composer.widthPx && composerEl.clientWidth) state.composer.widthPx = composerEl.clientWidth;
     renderComposer(composerEl, s, handlers);
 
@@ -619,7 +637,7 @@ export function mountShell(root, ctx) {
     gridEl.hidden = sheet;
     scoreEl.hidden = !sheet;
     // The brush line describes grid taps; the score takes none (AC-12.2.9),
-    // and neither does a practice goal's grid (AC-14.1.5/1).
+    // and neither does Practise a rhythm's grid (AC-14.1.5/1).
     brushEl.hidden = sheet || surface.readOnly;
     if (sheet) {
       // Read-only, from the same Pattern and position the grid renders from
@@ -643,10 +661,17 @@ export function mountShell(root, ctx) {
     renderMelodyGroup(melodyEl, pattern, s, handlers);
     renderRhythmGroup(rhythmEl, pattern, s, handlers);
     if (surface.readOnly) {
-      // The practice panel stands in the Practice group's place (AC-14.1.5/3):
-      // the one section of the workbench a practice goal shows, so the
-      // section order AC-15.1.8 fixes is unchanged.
-      renderPracticePanel(practiceEl, pattern, s, handlers, surface.panel);
+      // The settings rail stands in the Practice group's place (AC-14.1.5/3):
+      // the one section of the workbench Practise a rhythm shows, so the
+      // section order AC-15.1.8 fixes is unchanged. Click and Count-in are in
+      // the strip (AC-14.1.5/4); the rail holds the rest.
+      renderPracticePanel(
+        practiceEl,
+        pattern,
+        s,
+        handlers,
+        surface.panel.filter((item) => item !== 'click')
+      );
     } else {
       renderPracticeGroup(practiceEl, pattern, s, handlers);
     }
@@ -661,8 +686,8 @@ export function mountShell(root, ctx) {
       g.hidden = !usable || !surface.tabs.includes(g.dataset.tab);
     }
     applyWorkbench(tabsEl, groups, workbenchTabFor(pattern, s.workbenchTab, surface.tabs));
-    // No workbench at all under a practice goal: the tab bar goes, and the
-    // panel is on screen in the Practice group's place.
+    // No workbench at all under Practise a rhythm: the tab bar goes, and the
+    // rail is on screen in the Practice group's place.
     tabsEl.hidden = surface.readOnly;
     if (surface.readOnly) {
       practiceEl.hidden = false;
@@ -731,7 +756,8 @@ export function mountShell(root, ctx) {
     showLibrary() {
       openLibrary(shell);
       syncLibraryToggle();
-    },    /** Collapses it, the toggle following (AC-14.1.1/1). */
+    },
+    /** Collapses it, the toggle following (AC-14.1.1/1). */
     hideLibrary() {
       collapseLibrary(shell);
       syncLibraryToggle();
@@ -739,7 +765,13 @@ export function mountShell(root, ctx) {
     sidebar,
     libraryEl,
     libraryToggle,
+    goalsButton,
+    relatedButton,
     main,
+    topBarEl,
+    stripEl,
+    bandEl,
+    surfaceEl,
     headerEl,
     gridEl,
     scoreEl,
@@ -755,7 +787,5 @@ export function mountShell(root, ctx) {
     navEl,
     familyEl,
     composerEl,
-    modeSwitchEl,
   };
 }
-

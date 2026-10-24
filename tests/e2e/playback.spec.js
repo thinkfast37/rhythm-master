@@ -192,7 +192,7 @@ test('AC-4.1.2 — Visual highlight stays in sync with audio: playback moves the
   // plus one boundary scheduled just before the window and heard inside it.
   // It is counted in passes because the window is wall-clock: under load the
   // twenty samples stretch it, and a fixed count failed as soon as it spanned
-  // a second boundary (T410). Rebuilding on EVERY sounding event, as before
+  // a second boundary (T412). Rebuilding on EVERY sounding event, as before
   // this fix, is four more per pass on top and still fails it.
   expect(rebuilds).toBeLessThanOrEqual(2 * (passes + 1));
 });
