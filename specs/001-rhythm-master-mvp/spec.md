@@ -1637,7 +1637,7 @@ field survives showing it.)*
 
 **As** the Practicing Musician, **I want** to rate any Pattern 0–5 stars, **so that** I can remember which ones I like and quickly find my best-rated material later.
 
-**Independent Test**: Set, change, and clear a Rating and assert the minimum-rating filter combines with existing filters.
+**Independent Test**: Set, change, and clear a Rating and assert the Rating filter — a minimum, or Unrated — combines with existing filters.
 
 **Acceptance Scenarios**:
 
@@ -1684,6 +1684,20 @@ field survives showing it.)*
     - **AC-6.1.7/3** — Tapping the header star at the current Rating clears it to 0, and tapping a different star changes the Rating rather than clearing it
     - **AC-6.1.7/4** — On a 390px viewport with the drawer closed, a built-in Pattern is rated from the header without opening the drawer, and the Rating survives a reload
   - *(Added 2026-08-22. Requested by the maintainer: the Rating should be settable and visible on the playback/composer panel, not only in the library review. Mirrors AC-5.3.10, which moved Tags onto the header for the same reason: rating is something you do while looking at — and playing — the Pattern.)*
+
+- **AC-6.1.8** — The Unrated filter shows only Patterns not yet rated
+  - **Given** the library contains "Bossa Groove" (Rating 5), "Samba Break" (Rating 0), and "Simple Fill" (Rating 0)
+  - **When** the Practicing Musician selects the "Unrated" Rating filter
+  - **Then** the list shows only "Samba Break" and "Simple Fill" — Unrated matches a Rating of exactly 0, where every other option is a minimum
+  - **And** the Rating filter's options read All, Unrated, 3★+, 4★+, 5★, in that order — 5★ carries no "+", since nothing rates above it
+  - **And** rating a Pattern while Unrated is selected takes it off the list, since it has now been reviewed
+  - **And** Unrated narrows an already-filtered list exactly as the other options do (AC-6.1.6)
+  - **Cases**:
+    - **AC-6.1.8/1** — Selecting Unrated shows only the Patterns whose Rating is 0
+    - **AC-6.1.8/2** — The Rating filter's options read All, Unrated, 3★+, 4★+, 5★ in that order
+    - **AC-6.1.8/3** — Rating a Pattern while Unrated is selected takes it off the list
+    - **AC-6.1.8/4** — Unrated narrows an already search-filtered list rather than replacing it
+  - *(Added 2026-10-23. Requested by the maintainer: "sometimes i want to see what i have not already reviewed. i usually assign a rating after reviewing." The filter offered only minimums, so the unreviewed Patterns could not be picked out. The "5★+" label became "5★" in the same change, at the maintainer's prompting.)*
 
 ---
 

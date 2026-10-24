@@ -63,7 +63,7 @@ import {
 import { downloadSongMidi, songMidiFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
 import { LAB, ANY_LEVEL, pickAtLevel, libraryTagsFor, isPracticeGoal, goalById, LEGACY_GOALS, LEVELS } from './core/goals.js';
-import { buildEntries, neighbours, toggleTag } from './ui/library.js';
+import { buildEntries, neighbours, toggleTag, UNRATED } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
 import {
@@ -2014,9 +2014,9 @@ const handlers = {
     });
   },
 
-  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6). */
+  /** Narrows the already-filtered list rather than replacing the filter (AC-6.1.6, AC-6.1.8). */
   onRatingFilter(minRating) {
-    state.view = { ...state.view, minRating: Number(minRating) || 0 };
+    state.view = { ...state.view, minRating: minRating === UNRATED ? UNRATED : Number(minRating) || 0 };
     render();
   },
 
