@@ -1493,9 +1493,10 @@ test('AC-15.2.8/1 — On a wide desktop viewport no section is wider than the pa
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.library-toggle').click();
 
-  // Two panes at this width (AC-15.1.18); each is the column this criterion
-  // describes. The workbench pane's sections are also held to the content
-  // column, as the whole panel used to be.
+  // The rhythm band and the work surface at this width (AC-15.1.18,
+  // AC-15.1.20); each is the column this criterion describes. The surface's
+  // sections are also held to the content column, as the whole panel used to
+  // be; the band's take the panel's full width (AC-15.1.19).
   await expect(page.locator('.main-panel')).toHaveAttribute('data-layout', 'wide');
   const { column, panes } = await page.evaluate(() => {
     const panel = document.querySelector('.main-panel');
@@ -1516,9 +1517,9 @@ test('AC-15.2.8/1 — On a wide desktop viewport no section is wider than the pa
   expect(column).toBeGreaterThan(800);
   expect(panes).toHaveLength(2);
   for (const pane of panes) {
-    // The Pattern pane holds the header and the grid on a Percussive blank
-    // (the chord strip is absent); the workbench pane holds the tab bar, the
-    // groups, the actions and the family area.
+    // The band holds the header and the grid on a Percussive blank (the
+    // chord strip is absent); the surface holds the tab bar, the groups, the
+    // actions and the family area.
     expect(pane.sections.length, pane.pane).toBeGreaterThanOrEqual(2);
     const left = pane.sections[0].left;
     for (const s of pane.sections) {
@@ -1527,9 +1528,12 @@ test('AC-15.2.8/1 — On a wide desktop viewport no section is wider than the pa
       expect(Math.abs(s.left - left), `${pane.pane} ${s.tag}`).toBeLessThanOrEqual(1);
     }
   }
-  // And the two panes are two columns, not one: the workbench starts where
-  // the Pattern pane ends.
-  expect(panes[1].left).toBeGreaterThanOrEqual(panes[0].left + panes[0].width - 1);
+  // And the two are one above the other on one left edge, not side by side:
+  // the surface starts where the band ends (AC-15.1.20/4).
+  expect(Math.abs(panes[1].left - panes[0].left)).toBeLessThanOrEqual(1);
+  const bandBottom = await page.locator('.rhythm-band').evaluate((el) => el.getBoundingClientRect().bottom);
+  const surfaceTop = await page.locator('.work-surface').evaluate((el) => el.getBoundingClientRect().top);
+  expect(surfaceTop).toBeGreaterThanOrEqual(bandBottom - 1);
 });
 
 test('AC-15.2.8/2 — A Measure box is as wide as its Beats and label: a 3/4 Measure’s box is narrower than a 4/4 Measure’s, and neither reaches the column’s edge', async ({ page }) => {
@@ -1596,7 +1600,7 @@ test('AC-15.2.8/4 — The Subdivision strip sits on the panel’s left edge with
   const chips = await page.locator('.recipe-chips').evaluate((el) => el.getBoundingClientRect().left);
   await page.locator('.workbench-tab[data-tab="practice"]').click();
   const { play, paneLeft, paneMid } = await page.evaluate(() => {
-    const pane = document.querySelector('.pane-workbench').getBoundingClientRect();
+    const pane = document.querySelector('.work-surface').getBoundingClientRect();
     return {
       play: document.querySelector('[data-section="practice"] button').getBoundingClientRect().left,
       paneLeft: pane.left,
@@ -1604,7 +1608,7 @@ test('AC-15.2.8/4 — The Subdivision strip sits on the panel’s left edge with
     };
   });
   // On the same left edge as the Practice group's first control, on the left
-  // edge of the pane that holds them (AC-15.1.18), and nowhere near its middle.
+  // edge of the work surface that holds them (AC-15.1.20/4), and nowhere near its middle.
   expect(Math.abs(chips - play)).toBeLessThanOrEqual(2);
   expect(chips - paneLeft).toBeLessThan(40);
   expect(chips).toBeLessThan(paneMid);

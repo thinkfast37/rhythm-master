@@ -92,11 +92,11 @@ test('AC-15.1.6 — loading a Pattern returns the main panel to its top', async 
   await loadTallPattern(page); // tall enough that the panel has somewhere to scroll
 
   // Scroll the main panel well down, as it would be after working on a Pattern.
-  // With the library open beside a 1400px window the panel is 1100px and has
-  // two panes (AC-15.1.18); what scrolls is then its grid pane, and both are
-  // put back to the top.
+  // With the library open beside a 1400px window the panel is 1100px and wide
+  // (AC-15.1.18); what scrolls is then its rhythm band, and both are put back
+  // to the top.
   const layout = await page.locator('.main-panel').getAttribute('data-layout');
-  const scroller = page.locator(layout === 'wide' ? '.pane-pattern' : '.main-panel');
+  const scroller = page.locator(layout === 'wide' ? '.rhythm-band' : '.main-panel');
   await scroller.evaluate((el) => {
     el.scrollTop = el.scrollHeight;
   });
@@ -264,12 +264,13 @@ test('AC-15.1.8 — Fixed main-panel section order', async ({ page }) => {
     'SECTION[family]',
   ];
 
-  // The sections of both panes in document order (AC-15.1.18): the Pattern
-  // pane's, then the workbench pane's. The pinned bar — the library toggle,
-  // the transport and quick navigation — sits above the panes rather than
-  // among the sections (AC-5.5.3, AC-15.1.17), so it is not walked.
+  // The sections of the rhythm band, then the work surface, in document order
+  // (AC-15.1.18, AC-15.1.20). The pinned bar and the goal strip — ‹ Goals, the
+  // library toggle, Related, the transport, quick navigation, the goal's
+  // controls — sit above them rather than among the sections (AC-5.5.3,
+  // AC-15.1.17), so they are not walked.
   const orderNow = () =>
-    page.locator('.main-panel .pane > *').evaluateAll((els) =>
+    page.locator('.main-panel .rhythm-band > *, .main-panel .work-surface > *').evaluateAll((els) =>
       els
         .map((e) => {
           if (e.tagName === 'DETAILS') return `DETAILS[${e.dataset.section}]`;
@@ -475,10 +476,10 @@ test('AC-15.1.12 — the library and the main panel scroll independently, and th
     const shell = page.locator('.shell');
     const sidebar = page.locator('.sidebar');
     // What scrolls beside the library: the panel itself, or — with the
-    // library open beside a 1400px window, a 1100px panel — its grid pane
+    // library open beside a 1400px window, a 1100px panel — its rhythm band
     // (AC-15.1.18). The panel's own offset stays zero either way.
     const layout = await page.locator('.main-panel').getAttribute('data-layout');
-    const main = page.locator(layout === 'wide' ? '.pane-pattern' : '.main-panel');
+    const main = page.locator(layout === 'wide' ? '.rhythm-band' : '.main-panel');
     await expect(shell).toHaveAttribute('data-library', 'open');
 
     // Both panes must actually overflow, or the test proves nothing.
@@ -915,7 +916,7 @@ test('AC-15.1.16/8 — A number or text entry typed into but not yet committed k
   await page.locator('[data-action="stop"]').click();
 });
 
-// --- AC-15.1.18: two panes on a wide panel, each scrolling on its own ------
+// --- AC-15.1.18: the band and the surface on a wide panel, each scrolling on its own ------
 
 /**
  * `count` plain 4/4 bars on Straight 8ths — the bar the thresholds are set
@@ -944,8 +945,9 @@ const rect = (page, selector) =>
   });
 const scrollOf = (page, selector) =>
   page.locator(selector).evaluate((el) => ({ top: el.scrollTop, overflow: el.scrollHeight - el.clientHeight }));
+const overflowY = (page, selector) => page.locator(selector).evaluate((el) => getComputedStyle(el).overflowY);
 
-test('AC-15.1.18/1 — With the panel 1024px or wider the grid pane and the workbench pane sit side by side under the pinned bar, and the workbench is on screen without scrolling however long the Pattern is', async ({
+test('AC-15.1.18/1 — With the panel 1024px or wider the rhythm band sits under the pinned bar and the work surface under the band, and the work surface is on screen without scrolling however long the Pattern is', async ({
   page,
 }) => {
   // Short, so eight bars genuinely overflow the window.
@@ -956,23 +958,23 @@ test('AC-15.1.18/1 — With the panel 1024px or wider the grid pane and the work
 
   await expect(page.locator('.main-panel')).toHaveAttribute('data-layout', 'wide');
   const bar = await rect(page, '.main-top-bar');
-  const pattern = await rect(page, '.pane-pattern');
-  const workbench = await rect(page, '.pane-workbench');
-  // Side by side, both starting under the bar.
-  expect(workbench.left).toBeGreaterThanOrEqual(pattern.right - 1);
-  expect(Math.abs(pattern.top - workbench.top)).toBeLessThanOrEqual(1);
-  expect(pattern.top).toBeGreaterThanOrEqual(bar.bottom - 1);
-  // The grid is taller than the window — the case the layout exists for.
-  expect((await scrollOf(page, '.pane-pattern')).overflow).toBeGreaterThan(0);
+  const band = await rect(page, '.rhythm-band');
+  const surface = await rect(page, '.work-surface');
+  // One above the other, on one left edge, the band starting under the bar.
+  expect(band.top).toBeGreaterThanOrEqual(bar.bottom - 1);
+  expect(surface.top).toBeGreaterThanOrEqual(band.bottom - 1);
+  expect(Math.abs(surface.left - band.left)).toBeLessThanOrEqual(1);
+  // The grid is taller than the room it has — the case the layout exists for.
+  expect((await scrollOf(page, '.rhythm-band')).overflow).toBeGreaterThan(0);
   // And every tab's controls are on screen with nothing scrolled.
   await expect(page.locator('.workbench-tabs')).toBeInViewport();
   await page.locator('.workbench-tab[data-tab="practice"]').click();
   await expect(page.locator('.tempo-slider')).toBeInViewport();
-  expect((await scrollOf(page, '.pane-workbench')).top).toBe(0);
+  expect((await scrollOf(page, '.work-surface')).top).toBe(0);
   expect((await scrollOf(page, '.main-panel')).top).toBe(0);
 });
 
-test('AC-15.1.18/2 — The grid pane scrolls on its own: scrolled to the foot of an eight-Measure Pattern, the workbench has not moved and the main panel’s own scroll offset is still zero', async ({
+test('AC-15.1.18/2 — The rhythm band scrolls on its own: scrolled to the foot of an eight-Measure Pattern, the work surface has not moved and the main panel’s own scroll offset is still zero', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1400, height: 700 });
@@ -982,22 +984,24 @@ test('AC-15.1.18/2 — The grid pane scrolls on its own: scrolled to the foot of
   await expect(page.locator('.main-panel')).toHaveAttribute('data-layout', 'wide');
 
   const before = await rect(page, '.workbench-tabs');
-  const scrolled = await page.locator('.pane-pattern').evaluate((el) => {
+  const scrolled = await page.locator('.rhythm-band').evaluate((el) => {
     el.scrollTop = el.scrollHeight;
     return el.scrollTop;
   });
   expect(scrolled).toBeGreaterThan(0);
-  // The last Measure is now on screen and the first is not.
+  // The last Measure is now on screen, and the first has gone up under the
+  // band's top edge.
   await expect(page.locator('.measure').last()).toBeInViewport();
-  await expect(page.locator('.measure').first()).not.toBeInViewport();
-  // The workbench did not move, and the panel itself has nothing to scroll.
+  const bandTop = (await rect(page, '.rhythm-band')).top;
+  expect((await rect(page, '.measure')).top).toBeLessThan(bandTop);
+  // The surface did not move, and the panel itself has nothing to scroll.
   const after = await rect(page, '.workbench-tabs');
   expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(1);
   expect(await scrollOf(page, '.main-panel')).toEqual({ top: 0, overflow: 0 });
-  expect((await scrollOf(page, '.pane-workbench')).top).toBe(0);
+  expect((await scrollOf(page, '.work-surface')).top).toBe(0);
 });
 
-test('AC-15.1.18/3 — Below 1024px of panel width the workbench sits under the grid, tabbed, and the main panel scrolls as one', async ({
+test('AC-15.1.18/3 — Below 1024px of panel width the band and the surface are plain blocks and the main panel scrolls as one', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1000, height: 700 });
@@ -1006,10 +1010,13 @@ test('AC-15.1.18/3 — Below 1024px of panel width the workbench sits under the 
   await loadBars(page, 8);
 
   await expect(page.locator('.main-panel')).toHaveAttribute('data-layout', 'narrow');
-  const pattern = await rect(page, '.pane-pattern');
-  const workbench = await rect(page, '.pane-workbench');
-  expect(workbench.top).toBeGreaterThanOrEqual(pattern.bottom - 1);
-  expect(Math.abs(workbench.left - pattern.left)).toBeLessThanOrEqual(1);
+  const band = await rect(page, '.rhythm-band');
+  const surface = await rect(page, '.work-surface');
+  expect(surface.top).toBeGreaterThanOrEqual(band.bottom - 1);
+  expect(Math.abs(surface.left - band.left)).toBeLessThanOrEqual(1);
+  // Plain blocks: neither scrolls on its own.
+  expect(await overflowY(page, '.rhythm-band')).toBe('visible');
+  expect(await overflowY(page, '.work-surface')).toBe('visible');
   // Still tabbed: one group on screen.
   await expect(page.locator('.workbench-tabs')).toBeVisible();
   expect(await visibleGroups(page)).toEqual(['rhythm']);
@@ -1021,42 +1028,43 @@ test('AC-15.1.18/3 — Below 1024px of panel width the workbench sits under the 
   });
   expect(scrolled).toBe(120);
   expect((await rect(page, '.workbench-tabs')).top).toBeCloseTo(tabsBefore - 120, 0);
-  expect((await scrollOf(page, '.pane-pattern')).overflow).toBe(0);
+  expect((await scrollOf(page, '.rhythm-band')).overflow).toBe(0);
 });
 
-test('AC-15.1.18/4 — The split follows the panel’s width, not the viewport’s: opening the library beside a 1200px window drops the workbench under the grid, and collapsing it restores the panes', async ({
+test('AC-15.1.18/4 — The split follows the panel’s width, not the viewport’s: opening the library beside a 1200px window makes the panel scroll as one, and collapsing it restores the two scrolls', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
   await page.goto('/');
-  await loadBars(page, 4);
+  await loadBars(page, 8);
   const main = page.locator('.main-panel');
 
-  // Library open: a 900px panel, one column.
+  // Library open: a 900px panel, one scroll — the band and the surface plain blocks.
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'open');
   await expect(main).toHaveAttribute('data-layout', 'narrow');
-  let pattern = await rect(page, '.pane-pattern');
-  let workbench = await rect(page, '.pane-workbench');
-  expect(workbench.top).toBeGreaterThanOrEqual(pattern.bottom - 1);
+  expect(await overflowY(page, '.rhythm-band')).toBe('visible');
+  expect(await overflowY(page, '.work-surface')).toBe('visible');
+  expect(await overflowY(page, '.main-panel')).toBe('auto');
 
-  // Collapsed: the whole 1200px, two panes — and no resize event was fired.
+  // Collapsed: the whole 1200px, two scrolls — and no resize event was fired.
   await page.locator('.library-toggle').click();
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
   await expect(main).toHaveAttribute('data-layout', 'wide');
-  pattern = await rect(page, '.pane-pattern');
-  workbench = await rect(page, '.pane-workbench');
-  expect(workbench.left).toBeGreaterThanOrEqual(pattern.right - 1);
-  expect(Math.abs(pattern.top - workbench.top)).toBeLessThanOrEqual(1);
+  expect(await overflowY(page, '.rhythm-band')).toBe('auto');
+  expect(await overflowY(page, '.work-surface')).toBe('auto');
+  expect(await overflowY(page, '.main-panel')).toBe('hidden');
+  const band = await rect(page, '.rhythm-band');
+  const surface = await rect(page, '.work-surface');
+  expect(surface.top).toBeGreaterThanOrEqual(band.bottom - 1);
 
   // And back.
   await page.locator('.library-toggle').click();
   await expect(main).toHaveAttribute('data-layout', 'narrow');
-  pattern = await rect(page, '.pane-pattern');
-  workbench = await rect(page, '.pane-workbench');
-  expect(workbench.top).toBeGreaterThanOrEqual(pattern.bottom - 1);
+  expect(await overflowY(page, '.rhythm-band')).toBe('visible');
+  expect(await overflowY(page, '.main-panel')).toBe('auto');
 });
 
-test('AC-15.1.18/5 — During playback in the two-pane layout the sounding Measure is scrolled into view within the grid pane and the workbench pane does not move', async ({
+test('AC-15.1.18/5 — During playback on a wide panel the sounding Measure is scrolled into view within the rhythm band and the work surface does not move', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1400, height: 600 });
@@ -1065,31 +1073,31 @@ test('AC-15.1.18/5 — During playback in the two-pane layout the sounding Measu
   await loadBars(page, 8, 240);
   await expect(page.locator('.main-panel')).toHaveAttribute('data-layout', 'wide');
 
-  // A Measure that genuinely starts below the pane's foot.
+  // A Measure that genuinely starts below the band's foot.
   const offscreen = await page.evaluate(() => {
-    const pane = document.querySelector('.pane-pattern').getBoundingClientRect();
-    const found = [...document.querySelectorAll('.measure')].find((m) => m.getBoundingClientRect().top >= pane.bottom);
+    const band = document.querySelector('.rhythm-band').getBoundingClientRect();
+    const found = [...document.querySelectorAll('.measure')].find((m) => m.getBoundingClientRect().top >= band.bottom);
     return found ? Number(found.dataset.measure) : null;
   });
-  expect(offscreen, 'expected at least one Measure below the pane').not.toBeNull();
+  expect(offscreen, 'expected at least one Measure below the band').not.toBeNull();
   const tabsBefore = (await rect(page, '.workbench-tabs')).top;
 
   await page.locator('[data-action="play"]').click();
   await page.waitForFunction(
     (index) => {
-      const pane = document.querySelector('.pane-pattern').getBoundingClientRect();
+      const band = document.querySelector('.rhythm-band').getBoundingClientRect();
       const r = document.querySelector(`.measure[data-measure="${index}"]`).getBoundingClientRect();
-      return r.top >= pane.top && r.bottom <= pane.bottom;
+      return r.top >= band.top && r.bottom <= band.bottom;
     },
     offscreen,
     { timeout: 20000 }
   );
   await page.locator('[data-action="stop"]').click();
 
-  // The grid pane scrolled; nothing else did.
-  expect((await scrollOf(page, '.pane-pattern')).top).toBeGreaterThan(0);
+  // The band scrolled; nothing else did.
+  expect((await scrollOf(page, '.rhythm-band')).top).toBeGreaterThan(0);
   expect((await scrollOf(page, '.main-panel')).top).toBe(0);
-  expect((await scrollOf(page, '.pane-workbench')).top).toBe(0);
+  expect((await scrollOf(page, '.work-surface')).top).toBe(0);
   expect((await rect(page, '.workbench-tabs')).top).toBeCloseTo(tabsBefore, 0);
 });
 
@@ -1110,20 +1118,32 @@ test('AC-15.1.19/1 — Where the grid is wide enough for several Measures at the
 
   const tops = await measureTops(page);
   const lefts = await measureLefts(page);
-  // Two plain bars fit the grid pane at this width: rows of two, four rows.
-  expect(new Set(tops).size).toBe(4);
-  for (let i = 0; i < 8; i += 2) {
-    expect(tops[i + 1], `Measures ${i + 1} and ${i + 2} share a row`).toBe(tops[i]);
-    expect(lefts[i + 1], `Measure ${i + 2} is to the right of ${i + 1}`).toBeGreaterThan(lefts[i]);
+  // Several plain bars fit the band at this width — how many is the width's
+  // business (the band takes the panel's full width, AC-15.1.20/3), so the
+  // rows are read off the layout: every full row holds the same number of
+  // Measures, more than one, left to right.
+  const rows = [];
+  for (let i = 0; i < 8; i++) {
+    if (rows.length && rows[rows.length - 1].top === tops[i]) rows[rows.length - 1].lefts.push(lefts[i]);
+    else rows.push({ top: tops[i], lefts: [lefts[i]] });
   }
-  // Rows read down the page in Pattern order.
-  for (let i = 2; i < 8; i += 2) expect(tops[i]).toBeGreaterThan(tops[i - 2]);
+  const perRow = rows[0].lefts.length;
+  expect(perRow).toBeGreaterThan(1);
+  expect(rows.length).toBe(Math.ceil(8 / perRow));
+  for (const [r, row] of rows.entries()) {
+    if (r < rows.length - 1) expect(row.lefts.length, `row ${r + 1} is full`).toBe(perRow);
+    for (let j = 1; j < row.lefts.length; j++) expect(row.lefts[j], `row ${r + 1} reads left to right`).toBeGreaterThan(row.lefts[j - 1]);
+    // Rows read down the page in Pattern order.
+    if (r > 0) expect(row.top).toBeGreaterThan(rows[r - 1].top);
+  }
 });
 
 test('AC-15.1.19/2 — A Measure that does not fit the room left on a row starts the next row whole: no Measure is split across rows', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1920, height: 1080 });
+  // 1200 with the library collapsed: the band holds two 516px plain bars on a
+  // row and not three (a 1920px band holds all three, and would prove nothing).
+  await page.setViewportSize({ width: 1200, height: 1080 });
   await page.goto('/');
   await page.locator('.library-toggle').click();
   await loadBars(page, 3);
@@ -1181,23 +1201,23 @@ test('AC-15.1.19/3 — A Measure wider than the grid takes the whole row and wra
 test('AC-15.1.19/4 — The rows re-flow when the grid’s width changes: collapsing the library beside the grid can put on one row two Measures that were on separate rows before', async ({
   page,
 }) => {
-  // 1700: with the library's 300px column beside it the grid pane holds one
-  // 516px bar per row, and without it two (a 1920px window holds two either
-  // way, so it would prove nothing here).
+  // 1700: the library's 300px column beside the band costs it a bar per row
+  // — 516px plain bars, two per row beside it and three without.
   await page.setViewportSize({ width: 1700, height: 900 });
   await page.goto('/');
   await loadBars(page, 8);
 
-  // With the library's column taken out of the grid pane, one bar per row.
+  // With the library's column taken out of the band, fewer bars per row.
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'open');
-  expect(new Set(await measureTops(page)).size).toBe(8);
+  const rowsOpen = new Set(await measureTops(page)).size;
+  expect(rowsOpen).toBeGreaterThan(1);
 
-  // Collapsed, the pane has room for two — and re-flows without a reload.
+  // Collapsed, the band has room for one more per row — and re-flows without a reload.
   await page.locator('.library-toggle').click();
   await expect(page.locator('.shell')).toHaveAttribute('data-library', 'collapsed');
-  await expect.poll(async () => new Set(await measureTops(page)).size).toBe(4);
+  await expect.poll(async () => new Set(await measureTops(page)).size).toBeLessThan(rowsOpen);
 
-  // And back to one per row when the library returns.
+  // And back to the fuller rows when the library returns.
   await page.locator('.library-toggle').click();
-  await expect.poll(async () => new Set(await measureTops(page)).size).toBe(8);
+  await expect.poll(async () => new Set(await measureTops(page)).size).toBe(rowsOpen);
 });
