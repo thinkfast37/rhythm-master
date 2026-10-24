@@ -62,7 +62,7 @@ import {
 } from './core/song.js';
 import { downloadSongMidi, songMidiFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
-import { LAB, ANY_LEVEL, surfaceFor, pickAtLevel, libraryTagsFor, isPracticeGoal, LEVELS } from './core/goals.js';
+import { LAB, ANY_LEVEL, pickAtLevel, libraryTagsFor, isPracticeGoal, goalById, LEGACY_GOALS, LEVELS } from './core/goals.js';
 import { buildEntries, neighbours, toggleTag, UNRATED } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
 import { buildScore } from './core/notation.js';
@@ -1022,14 +1022,29 @@ const handlers = {
    * AC-14.1.2/5). The tab resets so the panel opens on the first group the
    * goal offers that applies (AC-14.1.2/1). Nothing on any Pattern changes.
    */
-  onGoal(id) {
-    state.settings = settingsStore.save({ goal: id });
+  async onGoal(id) {
+    // A legacy id is stored as the goal it became (AC-14.1.1/2's note).
+    const goal = goalById(id);
+    // Practise a rhythm has no Composer and no switch to leave it by
+    // (AC-15.1.20/2), so the Composer is left first — asking about unsaved
+    // work as the switch does (AC-19.1.4), and staying put if the answer is no.
+    if (goal.practice && state.composer.mode === 'composer') {
+      await handlers.onComposerMode('practice');
+      if (state.composer.mode === 'composer') return;
+    }
+    state.settings = settingsStore.save({ goal: goal.id });
     state.goalsOpen = false;
     state.workbenchTab = null;
     // The main panel is what was asked for, so the drawer that AC-15.1.5
     // opened on load gets out of its way — as loading a Pattern does
     // (AC-15.1.6). Pick from the library is the way back in.
     ui?.hideLibrary();
+    // Play it in is the Composer as a goal (AC-14.1.2/6): until its own screen
+    // lands it opens the Composer, whose first step is choosing a rhythm.
+    if (goal.composer && state.composer.mode !== 'composer') {
+      void handlers.onComposerMode('composer');
+      return;
+    }
     render();
   },
 
@@ -1047,15 +1062,13 @@ const handlers = {
   },
 
   /**
-   * A shipped Pattern at the level, in the goal's Mode, never the one open
+   * A shipped Pattern at the level, in either Mode, never the one open
    * (AC-14.1.4/2). The draw is the one impure input the pure picker takes;
    * opening goes through the library's own path, overlays and all.
    */
   onGiveMeOne() {
-    const { soundMode } = surfaceFor(state.settings.goal);
     const pick = pickAtLevel(seedStore.loadAll(), {
       level: state.settings.level,
-      soundMode,
       excludeId: state.pattern.id,
       random: Math.random(),
     });
@@ -2646,6 +2659,11 @@ export function init(root = document.getElementById('app')) {
   }
 
   state.settings = settingsStore.load();
+  // A goal remembered under one of the 2026-09-20 ids is read as the goal it
+  // became, and stored so (AC-14.1.1/2's note); an id that is no goal is left
+  // as it is, since `goalById` reads it as Lab wherever it matters.
+  if (state.settings.goal && goalById(state.settings.goal).id !== state.settings.goal && state.settings.goal in LEGACY_GOALS)
+    state.settings = settingsStore.save({ goal: goalById(state.settings.goal).id });
   // The goals screen first, unless the remembered goal is Lab (AC-14.1.1/4,
   // AC-14.1.3/2): a Lab user has said they know the tool.
   state.goalsOpen = state.settings.goal !== LAB;

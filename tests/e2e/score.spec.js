@@ -390,6 +390,18 @@ test("AC-12.2.10/3 — A line carries its own clef and key signature, and a line
 
 /* --- AC-12.2.11 — printing ------------------------------------------------------------ */
 
+/**
+ * Switch the emulated media and let the score settle. The switch changes the
+ * score's width, and its ResizeObserver re-renders it in the next frame — after
+ * that frame's animation callbacks — so two frames on, the re-render has run.
+ * Read before then, a one-shot read can land on the nodes it replaced, which
+ * keep their names but compute no style once detached (T412).
+ */
+const emulateSettled = async (page, media) => {
+  await page.emulateMedia({ media });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+};
+
 /** Stub the print dialog and count the calls. */
 const stubPrint = (page) =>
   page.evaluate(() => {
@@ -699,7 +711,7 @@ test("AC-12.3.4/1 — With Note aids on, the printed page carries every note's n
   await aidsButton(page).click();
   await stubPrint(page);
   await page.locator('[data-action="print-score"]').click();
-  await page.emulateMedia({ media: 'print' });
+  await emulateSettled(page, 'print');
   const facts = (root) =>
     page.locator(`${root} .note-item`).evaluateAll((els) =>
       els.map((e) => ({
@@ -714,7 +726,7 @@ test("AC-12.3.4/1 — With Note aids on, the printed page carries every note's n
   expect(printed).toHaveLength(8);
   expect(printed.map((f) => f.name)).toEqual(['C', 'D♭', 'E', 'F♯', 'G', 'A♭', 'B', 'C']);
   expect(printed.map((f) => f.fill)).toEqual(['#c62828', '#ffab40', '#2e7d32', '#84ffff', '#0b69b7', '#9fa8da', '#c2185b', '#c62828'].map(rgb));
-  await page.emulateMedia({ media: 'screen' });
+  await emulateSettled(page, 'screen');
   expect(printed).toEqual(await facts('.score'));
 });
 

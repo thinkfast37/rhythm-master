@@ -607,7 +607,7 @@ export function renderPracticePanel(root, pattern, state, handlers, items) {
         else
           fresh.appendChild(
             el('p', 'panel-note', {
-              textContent: 'Cycling needs a rhythm with a chord progression. Give me one draws melodic rhythms, which have one.',
+              textContent: 'Cycling needs a Melodic rhythm with a chord progression. Filter the library to Melodic to find one.',
             })
           );
       }
@@ -1239,8 +1239,11 @@ function cycleOn(state) {
   return Boolean(state.fillCycle?.on || state.progressionCycle?.on);
 }
 
-/** The metronome click and the count-in (US-4.3), in the Practice group. */
-function renderClickControls(state, handlers) {
+/**
+ * The metronome click and the count-in (US-4.3), in the Practice group — and
+ * in Practise a rhythm's goal strip, as its quick toggles (AC-14.1.5/4).
+ */
+export function renderClickControls(state, handlers) {
   const group = el('div', 'control-group');
 
   const metronome = el('button', `toggle${state.settings.metronomeEnabled ? ' on' : ''}`, {
