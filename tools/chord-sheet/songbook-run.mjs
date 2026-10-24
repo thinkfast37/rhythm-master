@@ -1,0 +1,175 @@
+/**
+ * Re-reading the songbook from real chord sheets: which songs to look up, which
+ * Ultimate Guitar version to read for each, where its review is kept, and the
+ * report that sets every shipped credit beside what the sheet says. Pure — the
+ * fetching and pacing live in tools/chord-sheet.mjs — so every rule is tested.
+ *
+ * The reviews are kept in the repository (chord-reviews/), one file per song, so
+ * each shipped song carries a record of where its chords came from. They hold
+ * chords, numerals and the source only; no word of a sheet survives reading.
+ */
+import { readStore } from './parse.mjs';
+import { compareReview, numeral, songbookTitle } from './catalogue.mjs';
+
+export const REVIEW_DIR = 'chord-reviews';
+
+export const slug = (s) =>
+  String(s)
+    .toLowerCase()
+    .replace(/[’']/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+/** Where a song's review is kept. */
+export const reviewPath = (artist, title) => `${REVIEW_DIR}/${slug(artist)}--${slug(songbookTitle(title))}.json`;
+
+/** The songs the songbook credits, once each, in songbook order, optionally narrowed. */
+export function songbookSongs(SONGBOOK, { artist = null, song = null } = {}) {
+  const seen = new Set();
+  const out = [];
+  for (const c of SONGBOOK) {
+    if (artist && c.artist.toLowerCase() !== artist.toLowerCase()) continue;
+    if (song && norm(c.title) !== norm(song)) continue;
+    const k = `${c.artist}\n${c.title}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push({ artist: c.artist, title: c.title });
+  }
+  return out;
+}
+
+/** A title or name reduced for matching: no brackets, punctuation, case or leading "The". */
+function norm(s) {
+  return String(s)
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[’']/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/^the /, '')
+    .trim();
+}
+
+/** The Ultimate Guitar search for a song. */
+export function searchUrl(artist, title) {
+  const q = `${artist} ${songbookTitle(title).replace(/\([^)]*\)/g, '')}`.replace(/\s+/g, ' ').trim();
+  return `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(q)}`;
+}
+
+/**
+ * The version to read from a search page: a Chords version by this artist of
+ * this song, the one with the most ratings (a tab, a bass tab, or a live or
+ * acoustic arrangement is never taken).
+ * Null when the page lists none.
+ */
+const ALTERNATE = /\b(live|acoustic|demo|remix|piano|ukulele|instrumental|unplugged|cover)\b/i;
+
+export function pickChords(html, { artist, title }) {
+  const results = readStore(html)?.store?.page?.data?.results ?? [];
+  const candidates = results.filter(
+    (r) =>
+      r.type === 'Chords' &&
+      r.tab_url &&
+      norm(r.artist_name) === norm(artist) &&
+      norm(r.song_name) === norm(title) &&
+      // A live or acoustic arrangement is not the record, unless the song is.
+      (!ALTERNATE.test(r.song_name) || ALTERNATE.test(title))
+  );
+  if (!candidates.length) return null;
+  const best = candidates.reduce((a, b) => ((b.votes ?? 0) > (a.votes ?? 0) ? b : a));
+  return { url: best.tab_url, votes: best.votes ?? 0, rating: best.rating ?? null, version: best.version ?? null };
+}
+
+/* --- the report ------------------------------------------------------------ */
+
+const label = (numerals, QUALITIES) => numerals.map((n) => numeral(n, QUALITIES)).join('–');
+const token = (numerals) => numerals.map((n) => `${n.degree}:${n.quality}`);
+/** Whether two loops are the same chords started at a different point. */
+export function isRotation(a, b) {
+  const x = token(a);
+  const y = token(b);
+  if (!x.length || x.length !== y.length) return false;
+  return x.some((_, i) => [...x.slice(i), ...x.slice(0, i)].join(' ') === y.join(' '));
+}
+
+/** One song's standing: confirmed, differs, not found, or not yet read. */
+export function songStatus(review, catalogue) {
+  if (!review) return { status: 'not read' };
+  if (review.notFound) return { status: 'not found' };
+  const c = compareReview(review, catalogue);
+  return { status: c.unmatchedShipped.length ? 'differs' : 'confirmed', compare: c };
+}
+
+/**
+ * The whole songbook against the reviews read so far, as Markdown: a summary,
+ * then each song with its shipped credits marked as on the sheet or not, and the
+ * sheet's own loops as chords and numerals, with the source to check by ear.
+ */
+export function buildReport(songs, reviews, catalogue) {
+  const { SONGBOOK, PROGRESSIONS, spellProgression, QUALITIES } = catalogue;
+  const byPath = new Map(reviews.map((r) => [reviewPath(r.artist, r.title), r]));
+  const rows = songs.map((s) => {
+    const review = byPath.get(reviewPath(s.artist, s.title)) ?? null;
+    return { ...s, review, ...songStatus(review, catalogue) };
+  });
+  const count = (st) => rows.filter((r) => r.status === st).length;
+
+  const lines = [
+    '# Songbook against the chord sheets',
+    '',
+    'Generated by `npm run chords -- songbook` (or `-- report`). Do not edit by hand.',
+    'Each shipped credit is checked against the most-rated Ultimate Guitar Chords version of the song.',
+    'A sheet is one guitarist’s reading, not the record: **differs** is a question to settle by ear, not a verdict.',
+    '',
+    `| Status | Songs |`,
+    `|---|---|`,
+    `| ✅ confirmed — every shipped credit is on the sheet | ${count('confirmed')} |`,
+    `| ❌ differs — a shipped credit is not on the sheet | ${count('differs')} |`,
+    `| ❔ not found — no Chords version on Ultimate Guitar | ${count('not found')} |`,
+    `| ⏳ not read yet | ${count('not read')} |`,
+    '',
+  ];
+  const mark = { confirmed: '✅', differs: '❌', 'not found': '❔', 'not read': '⏳' };
+
+  for (const r of rows) {
+    if (r.status === 'not read') continue;
+    lines.push(`## ${mark[r.status]} ${r.artist} — ${r.title}`, '');
+    if (r.status === 'not found') {
+      lines.push(`No Chords version found. Searched: ${r.review.searched}`, '');
+      continue;
+    }
+    const v = r.review;
+    const found = v.found ?? {};
+    const about = [
+      v.sources?.[0] ? `[source](${v.sources[0]})` : null,
+      found.version ? `version ${found.version}` : null,
+      typeof found.votes === 'number' ? `${found.votes} ratings` : null,
+      found.rating ? `★${Number(found.rating).toFixed(2)}` : null,
+      `key ${v.key}`,
+      `confidence ${v.confidence}`,
+    ].filter(Boolean);
+    lines.push(about.join(' · '), '');
+    if (v.note) lines.push(`> ${v.note}`, '');
+
+    const read = v.sections.map((s) => ({ ...s, sig: token(s.numerals).join(' ') }));
+    const shipped = SONGBOOK.filter((c) => c.artist === r.artist && c.title === r.title);
+    lines.push('| | Section | Numerals | Chords on the sheet |', '|---|---|---|---|');
+    for (const c of shipped) {
+      const steps = spellProgression(c.progression);
+      const hit = read.find((s) => s.sig === token(steps).join(' '));
+      const rot = !hit && read.find((s) => isRotation(s.numerals, steps));
+      const plain = PROGRESSIONS.find((p) => p.id === c.progression)?.label.replace(/\s*\([^)]*\)$/, '') ?? c.progression;
+      const verdict = hit ? `✅ shipped, on the sheet (${hit.section})` : rot ? `🔁 shipped, the sheet starts it elsewhere (${rot.section})` : '❌ shipped, not on the sheet';
+      lines.push(`| ${verdict} | ${c.section} | ${plain} | ${hit ? hit.chords.join(' ') : rot ? rot.chords.join(' ') : ''} |`);
+    }
+    for (const s of read) {
+      const shippedHit = shipped.some((c) => token(spellProgression(c.progression)).join(' ') === s.sig);
+      if (shippedHit) continue;
+      lines.push(`| ➕ on the sheet only | ${s.section} | ${label(s.numerals, QUALITIES)} | ${s.chords.join(' ')}${s.note ? ` — ${s.note}` : ''} |`);
+    }
+    lines.push('');
+  }
+  const unread = rows.filter((r) => r.status === 'not read');
+  if (unread.length) lines.push(`## ${mark['not read']} Not read yet`, '', ...unread.map((r) => `- ${r.artist} — ${r.title}`), '');
+  return lines.join('\n') + '\n';
+}
