@@ -154,6 +154,19 @@ export function clearNote(pattern, at) {
 }
 
 /**
+ * Take every Slot's note away at once; the rhythm itself — which Slots sound,
+ * and how hard — is untouched, so it sounds percussively until recorded again
+ * and Record starts on the first syllable (AC-19.5.6/2).
+ */
+export function clearAllNotes(pattern) {
+  const next = clone(pattern);
+  for (const measure of next.measures) {
+    for (const beat of measure.beats) for (const slot of beat.slots) delete slot.pitch;
+  }
+  return next;
+}
+
+/**
  * The syllable box's tap: the grid's own accent cycle (AC-19.5.3/1). A Slot
  * that comes on has no note until recorded, so nothing is stamped here, unlike
  * `onSlotTap` in Practice; a Slot cycled off loses its Pitch with its accent,

@@ -29,6 +29,7 @@ import {
   missingCount,
   isComplete,
   canDuplicate,
+  hasAnyNote,
   sameSlot,
 } from '../core/composer.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
@@ -168,6 +169,23 @@ function renderBar(composer, draft, instrument, state, handlers) {
   );
   del.addEventListener('click', () => handlers.onComposerDelete?.());
   bar.appendChild(del);
+
+  // Clear notes: every note at once, the rhythm kept (AC-19.5.6). Out of
+  // record mode only, and only when there is a note to clear (/4).
+  const clearable = Boolean(draft) && !recording && hasAnyNote(draft);
+  const clear = button('composer-clear', 'Clear notes', 'composer-clear', { disabled: !clearable });
+  clear.setAttribute(
+    'title',
+    !draft
+      ? 'Choose a rhythm from the library first'
+      : recording
+        ? 'Stop recording first'
+        : clearable
+          ? 'Clear every note, keeping the rhythm to record again'
+          : 'No note to clear'
+  );
+  clear.addEventListener('click', () => handlers.onComposerClearNotes?.());
+  bar.appendChild(clear);
 
   const missing = draft ? missingCount(draft) : 0;
   const complete = Boolean(draft) && missing === 0;
