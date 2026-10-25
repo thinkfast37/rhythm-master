@@ -188,7 +188,7 @@ test('AC-2.12.1/3 — Both lists and both choices are app preferences — one fi
   expect((await settings(page)).fillCycleList).toEqual([fill(5), fill(6)]);
 });
 
-test("AC-2.12.1/4 — When the catalogue re-spells a song progression, its tick on My list moves to the entry that now holds that song's section, so the list keeps the same songs", async ({ page }) => {
+test("AC-2.12.1/4 — When the catalogue re-spells a song progression or retires an entry for its four-chord form, its tick on My list moves to the entry that now holds that song's section or that form, so the list keeps the same music", async ({ page }) => {
   const { SONGBOOK } = await import('../../src/core/songbook.js');
   const verse = SONGBOOK.find((c) => c.title === 'Reckoner' && c.section === 'verse').progression;
   // A list saved before AC-2.6.1/19, holding Reckoner's verse under its old spelling.
@@ -197,15 +197,18 @@ test("AC-2.12.1/4 — When the catalogue re-spells a song progression, its tick 
     const stored = JSON.parse(localStorage.getItem('rm.settings.v1'));
     localStorage.setItem(
       'rm.settings.v1',
-      JSON.stringify({ ...stored, progressionCycleFrom: 'list', progressionCycleList: ['I-IV-V', 'i-bVII-bVI-i-bVI'] })
+      JSON.stringify({ ...stored, progressionCycleFrom: 'list', progressionCycleList: ['I-IV-V', 'i-bVII-bVI-i-bVI', 'Vsus4-V-I'] })
     );
   });
   await harmonicBlank(page);
-  await expect(option(page, 'progressions', 'list')).toHaveText('My list · 2');
+  await expect(option(page, 'progressions', 'list')).toHaveText('My list · 3');
   await choose(page, 'progressions');
   await expect(tick(page, verse)).toBeChecked();
   await expect(tick(page, 'I-IV-V')).toBeChecked();
   await expect(checklist(page).locator('.cycle-list-item[data-id="i-bVII-bVI-i-bVI"]')).toHaveCount(0);
+  // A three-chord entry retired for its four-chord form (AC-2.6.1/20) is ticked as that form.
+  await expect(tick(page, 'Vsus4-V-I-I')).toBeChecked();
+  await expect(checklist(page).locator('.cycle-list-item[data-id="Vsus4-V-I"]')).toHaveCount(0);
 });
 
 // --- AC-2.12.2 — Choose builds the list from a checklist of the catalogue ---

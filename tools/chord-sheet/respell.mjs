@@ -23,13 +23,17 @@ const asChord = (step) => ({ root: CHROMATIC.indexOf(step.degree), quality: step
 export function songSections(SONGBOOK, spellProgression, overrides = []) {
   const songs = [];
   const index = new Map();
+  // A corrected song's credits are replaced wholesale, so they are never spelled:
+  // a correction may take over a credit to an entry the catalogue has retired.
+  const corrected = new Set(overrides.map((o) => `${o.artist}\n${songbookTitle(o.title)}`));
   for (const c of SONGBOOK) {
     const k = `${c.artist}\n${c.title}`;
     if (!index.has(k)) {
       index.set(k, songs.length);
       songs.push({ artist: c.artist, title: c.title, sections: [] });
     }
-    songs[index.get(k)].sections.push({ section: c.section, chords: spellProgression(c.progression).map(asChord), was: c.progression });
+    const chords = corrected.has(k) ? null : spellProgression(c.progression).map(asChord);
+    songs[index.get(k)].sections.push({ section: c.section, chords, was: c.progression });
   }
   for (const o of overrides) {
     const song = songs.find((s) => s.artist === o.artist && s.title === songbookTitle(o.title));
