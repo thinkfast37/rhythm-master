@@ -822,3 +822,79 @@ built first; the native adapter is a later change and gets its own entry when it
 - *A Web MIDI polyfill over a browser extension or helper app (Jazz-Plugin and the like)* — rejected:
   it asks the musician to install software for a feature Chrome and Firefox already have.
 - *Taking MIDI in Practice too, to stamp degrees* — not asked for; Practice ignores MIDI (AC-19.10.1/5).
+
+## D-020 — Variations: the Pattern grows, each device one pure rule
+
+**Decision (2026-10-25)**: a variation is appended to the Pattern as Measures — a copy of a base
+phrase with one named device applied — through the same `append` that Double Length uses (US-10.1).
+Each device is a deterministic pure function in `core/variations.js`, `(phrase, context) → phrase`,
+with an `availability(phrase, context)` beside it that returns the reason it cannot apply or null.
+The base phrase is the Pattern's first or last N Measures; N is the musician's choice in the picker
+and is remembered per Pattern in `rm.localMeta.v1` as `phraseLength`. Nothing about a variation is
+Pattern content (US-10.3).
+
+**Why.** The maintainer wants a loop to change on every repeat, three or four variations strung
+together, and to hear each one in the loop as it is added. Measures already do all of that: the loop
+plays them, the grid and the Composer edit them, Remove Measure discards from the end, MIDI exports
+them, and duplicate detection compares them. A separate non-destructive object — a variation set
+beside the Pattern, auditioned and then committed — was the alternative weighed with the maintainer
+and declined: it is a second place content lives, needs its own save, export and comparison rules,
+and the audition it buys is already there in the loop, since an unwanted copy is one Remove Measure
+per Measure away. Growing the Pattern is also what Double Length already does, so the shipped-Pattern
+naming prompt, auto-save and the cap all come for free.
+
+Each device is **one exact rule, not a style**. `core/` may not use `Math.random` (Constitution), and
+a random tweak is in any case not a musical one; what composition teaching names — an end-of-phrase
+fill, anticipation, subtraction, terraced dynamics, antecedent–consequent endings, sequence, octave
+displacement, passing and neighbour tones, inversion, retrograde — are each a rule a musician can
+predict, which is what makes the same device applied twice give the same Measures and lets a test name
+the criterion. Where a rule would change nothing or lacks what it needs, the device reports why rather
+than silently appending an exact copy, which Double Length already provides.
+
+**Consequences.**
+- The phrase length has to live somewhere, since a Pattern stores no phrase: it is Local Metadata,
+  bookkeeping *about* the Pattern that never leaves the app (FR-006), beside `submittedAt` and
+  `duplicateResolved`. It is a convenience, not a truth: the picker always shows it and lets it be
+  changed, and a remembered length longer than the Pattern falls back to the whole Pattern.
+- Melodic rhythm devices that turn a Slot on must give it a Pitch (AC-2.2.8): the nearest earlier
+  note in the phrase, the phrase's first note, or the tonic — in that order — which is how a player
+  fills a gap, by repeating what they just played.
+- Pitch devices read a chord-tone Pitch as the degree it sounds in the first pass, as removing a
+  progression does (AC-2.6.1/6), except Octave and Chord-tone swap, which keep roles. Under a
+  progression that changes every Measure, a phrase as long as the chord list keeps every copy over
+  the same chords; under one that changes every pass, the pass simply lengthens. The picker says
+  which (AC-10.3.2/4); the progression itself is never edited by a device.
+- A fill deals every sounding note (`arpeggioDeal`), so under one the pitch devices other than Octave
+  would change stored Pitches nobody hears; they are unavailable and say why (AC-10.3.3/23). The one
+  device that varies a fill — **Change the fill** — writes notes, because a fill is one setting for the
+  whole Pattern: the current fill's first-pass deal into the Measures already there, the next fill's
+  into the copy, through `stepAsDegree` as removing a progression bakes (AC-2.6.1/6), and the fill set
+  to None. That is what "vary the fill from one loop to the next" means once the loop is Measures; the
+  live way — the Fills cycle at Repeats 1, or a Section — is untouched and stays the way to audition.
+- **Roll the dice** takes its random number from the UI, as `pickAtLevel` does for Give me one
+  (US-14.1): `core/variations.js` exposes `rollable(devices, noDice)` and a `pick(list, random)`, and
+  `Math.random` is called in `src/ui/`. The per-group **No dice** toggles are session state in the
+  picker, not a setting: the maintainer framed them as "no dice" rather than "lock", and a toggle
+  that persisted would be one more remembered state to find (the 2026-09-13 review's lesson).
+- On a making goal whose tab bar has no Rhythm group — Make it melodic, Combine patterns — the Melody
+  group ends with Double Length and Add variation (AC-15.1.8 revised), per D-018's ruling that Double
+  Length is visible on every making goal. Lab keeps them in the Rhythm group alone.
+- A harmonic turnaround is **not** a device: `harmony.chords` is one list dealt across passes or
+  Measures (D-011), and a chord in force for one copy only would need chords addressed by Measure
+  range, which is a change to the harmony model before it is a variation.
+- Ghost notes are **not** a device yet: the accent scale stops at Weak (US-3.1). A
+  Ghost level is its own spec change — accent table, audio gain, MIDI velocity, duplicate identity —
+  and the device joins the Dynamics group when it lands.
+
+**Alternatives considered**:
+- *A variation set beside the Pattern, committed on request* — declined, above.
+- *Variations as Section entries (US-18.1)* — rejected: a Section chains fills over one Pattern; its
+  entries are arpeggio choices, not Measures, and Songs exist only on a Melodic Pattern with a
+  progression. A percussive loop needs this just as much.
+- *A single "Vary" button choosing a device at random* — rejected: `core/` is pure, and the musician
+  asked for a set of named tools, not a dice roll.
+- *A dice roll with a No dice toggle on every Melody-group control — key, scale, progression, fill,
+  voicing, register* — deferred to a story of its own: each control needs a toggle and a rule for what
+  it may roll to, across several existing stories' criteria. Asked for on 2026-10-25; not forgotten.
+- *Storing the phrase length on the Pattern* — rejected: it would be exported, compared and
+  submitted as content, and two identical Patterns would differ by a number that changes no sound.

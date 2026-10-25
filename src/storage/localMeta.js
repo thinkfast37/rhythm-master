@@ -2,7 +2,8 @@
  * Local Metadata, in `rm.localMeta.v1`. FR-006 — MANDATORY separation.
  *
  * App-local bookkeeping ABOUT a Pattern: when it was submitted, whether a
- * duplicate prompt has been answered. Deliberately a different key with a
+ * duplicate prompt has been answered, the phrase length Add variation copies
+ * (US-10.3). Deliberately a different key with a
  * different module, so a Pattern's serialization physically cannot reach it.
  *
  * NOTHING here may ever appear in an export, a MIDI file, or a submission
@@ -16,7 +17,7 @@ export const KEY = 'rm.localMeta.v1';
 const EMPTY = { byPatternId: {} };
 
 /** Every key this store may hold — asserted against exports by the FR-006 test. */
-export const LOCAL_META_FIELDS = ['submittedAt', 'submittedDigest', 'duplicateResolved'];
+export const LOCAL_META_FIELDS = ['submittedAt', 'submittedDigest', 'duplicateResolved', 'phraseLength'];
 
 export function loadAll() {
   return readStore(KEY, EMPTY).byPatternId ?? {};

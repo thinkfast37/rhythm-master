@@ -107,6 +107,8 @@ import {
   copyToClipboard,
   chooseCycleList,
 } from './ui/dialogs.js';
+import { showVariationPicker } from './ui/variations.js';
+import { devicesFor, addVariation, canAddVariation, defaultPhraseLength, hasBaseChoice } from './core/variations.js';
 import { heardIn } from './core/songbook.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
@@ -116,6 +118,7 @@ import { resolveVoice, normaliseVoice } from './core/voice.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
+  soundingSlots,
   recordTarget,
   nextTarget,
   previousSounding,
@@ -351,6 +354,39 @@ function fillIndexAt(loop) {
 /** The catalogue indices Cycle fills steps through: all, or the list alone (AC-2.12.3/1). */
 function fillOrder() {
   return cycleOrder(ARPEGGIOS, { from: state.settings.fillCycleFrom, list: state.settings.fillCycleList });
+}
+
+/** How the chords line up with a phrase of this length — the progression is never altered (AC-10.3.2/4). */
+function variationHint(pattern, phraseLength) {
+  if (!hasHarmony(pattern)) return null;
+  if (pattern.harmony.change === 'measure') {
+    const n = pattern.harmony.chords.length;
+    return phraseLength === n
+      ? `The progression changes every Measure and has ${n} chords, so each copy plays over the same chords.`
+      : `The progression changes every Measure: a phrase of ${n} Measures keeps each copy over the same chords.`;
+  }
+  return 'The progression changes every pass, so the pass is now as long as the whole Pattern.';
+}
+
+/** Open the Add variation picker on a Pattern, remembering nothing until a device is chosen (US-10.3). */
+function pickVariation(pattern, phraseLength) {
+  const context = { fillOrder: fillOrder() };
+  return showVariationPicker({
+    phraseLength,
+    maxPhrase: pattern.measures.length,
+    describe: (length, base) => ({
+      devices: devicesFor(pattern, length, base, context),
+      baseChoice: hasBaseChoice(pattern, length),
+      hint: variationHint(pattern, length),
+    }),
+  });
+}
+
+/** Editing focus to the first Slot of Measure `measureIndex` in the grid (AC-10.3.1/3). */
+function focusGridSlot(measureIndex) {
+  const slot = document.querySelector(`.grid .slot[data-measure="${measureIndex}"][data-beat="0"][data-slot="0"]`);
+  const target = slot?.querySelector('.slot-accent') ?? slot;
+  if (target && typeof target.focus === 'function') target.focus();
 }
 
 /** As `fillOrder`, for Cycle progressions. */
@@ -2160,6 +2196,30 @@ const handlers = {
     applyDraft(choice === 'keep' ? duplicate : duplicateUnpitched);
   },
 
+  /** Add a variation to the composition: the notes always kept (AC-10.3.1/6), the first Slot of the copy selected. */
+  async onComposerAddVariation() {
+    const c = state.composer;
+    if (!c.draft || !canAddVariation(c.draft, 1)) return;
+    const id = c.savedId ?? c.draft.id ?? null;
+    const remembered = id ? localMetaStore.forPattern(id).phraseLength : undefined;
+    const choice = await pickVariation(c.draft, defaultPhraseLength(c.draft, remembered));
+    if (!choice) {
+      render();
+      return;
+    }
+    const start = c.draft.measures.length;
+    try {
+      const next = applyDraft(addVariation, choice.deviceId, choice.phraseLength, choice.base, { fillOrder: fillOrder() });
+      if (id) localMetaStore.update(id, { phraseLength: choice.phraseLength });
+      const first = { measureIndex: start, beatIndex: 0, slotIndex: 0 };
+      const selected = slotAt(next, first)?.on ? first : (soundingSlots(next).find((a) => a.measureIndex >= start) ?? null);
+      state.composer = { ...state.composer, selected, recording: false, target: null };
+      render();
+    } catch (err) {
+      await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
+    }
+  },
+
   onComposerKey(key) {
     applyDraft((p) => ({ ...p, key }));
   },
@@ -2501,6 +2561,31 @@ const handlers = {
     if (!(await guardShipped())) return;
     try {
       apply(duplicate);
+    } catch (err) {
+      await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
+    }
+  },
+
+  /**
+   * Add a variation: a copy of the base phrase with one device applied,
+   * appended as Double Length appends (US-10.3). A shipped Pattern is named
+   * first, before the picker, so cancelling the name changes nothing
+   * (AC-10.3.1/4); the phrase length is remembered as Local Metadata.
+   */
+  async onAddVariation() {
+    if (!canAddVariation(state.pattern, 1)) return;
+    if (!(await guardShipped())) return;
+    const remembered = localMetaStore.forPattern(state.pattern.id).phraseLength;
+    const choice = await pickVariation(state.pattern, defaultPhraseLength(state.pattern, remembered));
+    if (!choice) {
+      render();
+      return;
+    }
+    const start = state.pattern.measures.length;
+    try {
+      apply(addVariation, choice.deviceId, choice.phraseLength, choice.base, { fillOrder: fillOrder() });
+      if (state.pattern.id) localMetaStore.update(state.pattern.id, { phraseLength: choice.phraseLength });
+      focusGridSlot(start);
     } catch (err) {
       await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
     }

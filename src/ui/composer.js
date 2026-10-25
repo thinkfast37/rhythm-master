@@ -8,7 +8,8 @@
  * Composer's controls. Everything here is a pure function of `state.composer`,
  * the settings and the transport position; it holds no state of its own.
  */
-import { el, rebuild, labelled, labelledRow, valueEntry, SWING_FEEL_LABELS } from './controls.js';
+import { el, rebuild, labelled, labelledRow, labelledGroup, valueEntry, SWING_FEEL_LABELS } from './controls.js';
+import { canAddVariation } from '../core/variations.js';
 import { renderFretboard } from './fretboard.js';
 import { renderPiano } from './piano.js';
 import { KEYS, resolve } from '../core/pitch.js';
@@ -531,7 +532,12 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
     dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself, keeping the notes or starting percussive' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     dup.addEventListener('click', () => handlers.onComposerDuplicate?.());
-    wrap.appendChild(labelled('Measures', dup));
+    const vary = button('action composer-add-variation', 'Add variation…', 'composer-add-variation', { disabled: !canAddVariation(draft, 1) });
+    vary.setAttribute('title', canAddVariation(draft, 1) ? 'Append a copy of the phrase with one device applied' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
+    vary.addEventListener('click', () => handlers.onComposerAddVariation?.());
+    const row = el('div', 'control-group structure-row');
+    row.append(vary, dup);
+    wrap.appendChild(labelledGroup('Measures', row));
   }
   return wrap;
 }
