@@ -1,5 +1,5 @@
 {
-  "about": "Song sections corrected from their chord sheets, approved by the maintainer 2026-10-24 (T428), and from their raw chord lines 2026-10-25 (T432). Chords are as each sheet writes them (capo shapes where the sheet uses a capo; the numerals are the same). `npm run chords -- respell` spells every song from these where given, and from the shipped credits otherwise, by AC-2.6.1/19. A song listed here has all its credits taken from here. The songs added 2026-10-25 are written from their shipped numerals in C, with the held chord the sheet shows, since only the held chord was in question.",
+  "about": "Song sections corrected from their chord sheets, approved by the maintainer 2026-10-24 (T428), and from their raw chord lines 2026-10-25 (T434). Chords are as each sheet writes them (capo shapes where the sheet uses a capo; the numerals are the same). `npm run chords -- respell` spells every song from these where given, and from the shipped credits otherwise, by AC-2.6.1/19. A song listed here has all its credits taken from here. The songs added 2026-10-25 are written from their shipped numerals in C, with the held chord the sheet shows, since only the held chord was in question.",
   "songs": [
     {
       "artist": "Radiohead",
@@ -13,7 +13,7 @@
     {
       "artist": "The National",
       "title": "I Need My Girl",
-      "why": "Verse: the sheet writes Am F C C/B, the I held under a walking bass; the chorus F Am G. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Verse: the sheet writes Am F C C/B, the I held under a walking bass; the chorus F Am G. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["Am", "F", "C", "C"] },
         { "section": "chorus", "chords": ["F", "Am", "G"] }
@@ -46,7 +46,7 @@
     {
       "artist": "The National",
       "title": "Conversation 16",
-      "why": "Chorus: the sheet writes Bm D / G, the IV on a line of its own. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Chorus: the sheet writes Bm D / G, the IV on a line of its own. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["Bm", "D", "Em", "A"] },
         { "section": "chorus", "chords": ["Bm", "D", "G", "G"] }
@@ -79,7 +79,7 @@
     {
       "artist": "Coldplay",
       "title": "My Universe",
-      "why": "The intro and chorus write G D A D, coming back to I. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "The intro and chorus write G D A D, coming back to I. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [{ "section": "verse and chorus", "chords": ["G", "D", "A", "D"] }]
     },
     {
@@ -103,7 +103,7 @@
     {
       "artist": "Coldplay",
       "title": "Yellow",
-      "why": "Verse: the intro and interlude write G D C G, so the loop comes back to I before it repeats. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Verse: the intro and interlude write G D C G, so the loop comes back to I before it repeats. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["C", "G6", "Fmaj7", "C"] },
         { "section": "chorus", "chords": ["F", "Am", "G"] }
@@ -112,7 +112,7 @@
     {
       "artist": "Coldplay",
       "title": "Hymn for the Weekend",
-      "why": "Verse: the intro writes Dm G Am Am, the vi held. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Verse: the intro writes Dm G Am Am, the vi held. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["Dm", "G", "Am", "Am"] },
         { "section": "pre-chorus", "chords": ["Am", "F", "Dm", "G"] },
@@ -122,13 +122,13 @@
     {
       "artist": "Coldplay",
       "title": "Adventure of a Lifetime",
-      "why": "The intro, interlude and outro write Dm G Am Am, the vi held. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "The intro, interlude and outro write Dm G Am Am, the vi held. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [{ "section": "verse and chorus", "chords": ["Dm", "G", "Am", "Am"] }]
     },
     {
       "artist": "Bon Iver",
       "title": "Blood Bank",
-      "why": "Verse: the sheet writes Em D / C, the IV held; its intro is G Em D C, not this loop, so the section is the verse alone. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Verse: the sheet writes Em D / C, the IV held; its intro is G Em D C, not this loop, so the section is the verse alone. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["Am7", "G", "F", "F"] },
         { "section": "second part", "chords": ["C", "G", "Am7", "F"] }
@@ -137,7 +137,7 @@
     {
       "artist": "Wilco",
       "title": "Say You Miss Me",
-      "why": "Chorus: the sheet writes C E Am F, starting on I. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Chorus: the sheet writes C E Am F, starting on I. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "intro and verse", "chords": ["C", "C", "Am", "G", "F"] },
         { "section": "chorus", "chords": ["C", "E", "Am", "F"] }
@@ -146,13 +146,13 @@
     {
       "artist": "Radiohead",
       "title": "Weird Fishes/Arpeggi",
-      "why": "Every verse line writes Em7 F#m7 A Gmaj7: the IVmaj7 is the loop's fourth chord. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Every verse line writes Em7 F#m7 A Gmaj7: the IVmaj7 is the loop's fourth chord. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [{ "section": "main loop", "chords": ["Em7", "F#m7", "A", "Gmaj7"] }]
     },
     {
       "artist": "The National",
       "title": "Fake Empire",
-      "why": "The intro writes C F G G and the interlude F Am G G, the V held. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "The intro writes C F G G and the interlude F Am G G, the V held. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["C", "F", "G", "G"] },
         { "section": "chorus", "chords": ["Am", "F", "G", "G"] }
@@ -161,7 +161,7 @@
     {
       "artist": "Bob Dylan",
       "title": "One More Cup of Coffee",
-      "why": "Chorus: the sheet writes F E / F E / Am G F E. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Chorus: the sheet writes F E / F E / Am G F E. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["Am", "G", "F", "E"] },
         { "section": "chorus", "chords": ["F", "E", "F", "E", "Am", "G", "F", "E"] }
@@ -170,7 +170,7 @@
     {
       "artist": "Bob Dylan",
       "title": "Lay, Lady, Lay",
-      "why": "Refrain: the sheet writes E F#m A Asus4 A, the I held under a sus4. Read from the raw chord lines 2026-10-25 (T432): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
+      "why": "Refrain: the sheet writes E F#m A Asus4 A, the I held under a sus4. Read from the raw chord lines 2026-10-25 (T434): the reader had merged a chord written twice, or repeated where the loop comes round, into one.",
       "sections": [
         { "section": "verse", "chords": ["C", "Em", "Bb", "Dm"] },
         { "section": "refrain", "chords": ["G", "Am", "C", "C"] },

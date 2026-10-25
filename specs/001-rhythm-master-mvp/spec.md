@@ -4072,6 +4072,16 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.5.5/1** — The tempo entry sets the composition's tempo, and playback follows it
     - **AC-19.5.5/2** — The swing amount and feel controls set the composition's swing, and playback follows them
 
+- **AC-19.5.6** — Clear every note at once
+  - **Given** a composition with at least one note recorded, out of record mode
+  - **When** the Composer presses Clear notes in the record bar and confirms
+  - **Then** every Slot loses its note and the rhythm stays exactly as it was — every syllable still sounding, percussively, until recorded again — the selection is dropped, and Record then starts on the first syllable; cancelling changes nothing; with no note recorded, or while recording, the control is disabled. Delete is untouched: it still clears one selected Slot *(Added 2026-10-25: the maintainer, finding that outside record mode every note had to be selected and deleted one at a time: "I can't delete until I select a note or go into record mode." Clear notes alone was chosen, over a Delete that advances, so that tweaking a single note stays exactly as it was.)*
+  - **Cases**:
+    - **AC-19.5.6/1** — Clear notes asks first, and cancelling leaves the composition unchanged
+    - **AC-19.5.6/2** — Confirming clears every Slot's note and keeps every syllable sounding, so the count of notes missing is the count of syllables and Record targets the first
+    - **AC-19.5.6/3** — Confirming drops the selection, and the cleared composition counts as an unsaved change
+    - **AC-19.5.6/4** — Clear notes is disabled with no note recorded and while recording, and Delete still clears only the selected Slot
+
 ---
 
 ### User Story 55 - Play the composition while composing

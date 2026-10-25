@@ -5,7 +5,7 @@
  * the entry that now holds that song's section. Written by
  * `npm run chords -- respell`, which keeps every rename already here whose
  * successor still exists; the three-chord entries of the headings' own retired
- * for their four-chord forms (AC-2.6.1/20, T432) were added by hand, since no
+ * for their four-chord forms (AC-2.6.1/20, T434) were added by hand, since no
  * song carries them over.
  */
 export const PROGRESSION_RENAMES = {

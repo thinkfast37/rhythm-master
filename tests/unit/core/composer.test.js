@@ -13,6 +13,7 @@ import {
   clearNote,
   cycleSyllable,
   duplicateUnpitched,
+  clearAllNotes,
   hasAnyNote,
   canDuplicate,
   loadKind,
@@ -189,6 +190,24 @@ describe('core/composer — editing a draft', () => {
     expect(d.measures[1].beats.map((b) => b.slots[0].pitch)).toEqual([undefined, undefined, undefined, undefined]);
     expect(missingCount(d)).toBe(4);
     expect(recordTarget(d)).toEqual(at(1, 0));
+  });
+
+  it("AC-19.5.6/2 — Confirming clears every Slot's note and keeps every syllable sounding, so the count of notes missing is the count of syllables and Record targets the first", () => {
+    let p = blankDraft();
+    for (let b = 0; b < 4; b++) p = recordNote(p, at(0, b), 60 + b);
+    expect(missingCount(p)).toBe(0);
+    const c = clearAllNotes(p);
+    expect(c).not.toBe(p);
+    expect(c.measures[0].beats.map((b) => b.slots[0].pitch)).toEqual([undefined, undefined, undefined, undefined]);
+    expect(c.measures[0].beats.map((b) => b.slots[0].on)).toEqual([true, true, true, true]);
+    // Silent Slots stay silent: clearing notes never changes the rhythm.
+    expect(c.measures[0].beats.map((b) => b.slots[1].on)).toEqual([false, false, false, false]);
+    expect(c.measures[0].beats.map((b) => b.slots[0].accent)).toEqual(p.measures[0].beats.map((b) => b.slots[0].accent));
+    expect(missingCount(c)).toBe(4);
+    expect(hasAnyNote(c)).toBe(false);
+    expect(recordTarget(c)).toEqual(at(0, 0));
+    // The original is untouched.
+    expect(missingCount(p)).toBe(0);
   });
 
   it('AC-19.5.4/4 — Keeping the notes appends a copy of every Measure carrying the same notes as the originals: duplicate from core/pattern.js', () => {
