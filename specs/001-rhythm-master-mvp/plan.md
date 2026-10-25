@@ -246,7 +246,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186, T290 | T161, T169, T185, T187, T291 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
-| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.11 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428 | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429 |
+| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.11 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T432 | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T433 |
 | **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260, T400 | T261, T262, T401 |
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346, T348, T388, T390, T394 | T264, T273, T283, T324, T333, T335, T347, T349, T389, T391, T395 |
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.6 | T266, T402 | T267, T403 |
@@ -268,7 +268,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
 | **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
 | **P-062** | Governance for the Composer: Constitution 3.7.0, research D-003/D-016, data-model §6 | — | T387 | — |
-| **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394, T428 | T395, T429 |
+| **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394, T428, T432 | T395, T429, T433 |
 | **P-064** | US-2.13 — Choose the melodic voice | AC-2.13.1–AC-2.13.5 | T422, T423 | T424 |
 | **P-065** | US-19.10 — Play a MIDI instrument into the Composer | AC-19.10.1–AC-19.10.5 | T426 | T427 |
 

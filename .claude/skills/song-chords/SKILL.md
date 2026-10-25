@@ -56,7 +56,10 @@ command and the files come back with the branch.
      apart), the tie-break decides; say so in the PR. The page's own key is in the note.
    - **The loops.** A sheet shows where chords change, not how long each lasts, so a
      chord held for two bars is written once. Where the maintainer would hear I–I–IV–V,
-     edit the numerals by hand.
+     edit the numerals by hand. The reader also merges a chord written twice running,
+     and a chord repeated where the loop comes round, into one — so before filing a
+     three-chord loop, look at the sheet's chord-only lines (intro, interlude, outro):
+     `G D C G` or `Dm G Am Am` is the four-chord loop the song plays (T432).
    - **Simplifications.** Anything in `note` (dropped bass, m11 read as m7) is fine to
      keep, but say so in the PR.
    - `confidence: low` means the chords fit no key well. **Ask the maintainer**; don't

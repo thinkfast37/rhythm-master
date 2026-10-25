@@ -57,7 +57,7 @@ describe('core/songbook', () => {
     // A minor-key song reads from its relative major: Reckoner's Em loop starts on vi.
     expect(spell(credit('Reckoner', 'verse'))).toBe('6:min 5:maj 4:maj 6:min 4:maj');
     // The two loops the criterion names.
-    expect(spell(credit('I Need My Girl', 'verse'))).toBe('6:min 4:maj 1:maj');
+    expect(spell(credit('I Need My Girl', 'verse'))).toBe('6:min 4:maj 1:maj 1:maj');
     expect(spell(credit('England', 'main loop'))).toBe('5:maj 6:m7 1:maj 2:m7 1:maj 6:m7');
   });
 });
