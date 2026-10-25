@@ -78,6 +78,22 @@ const pitches = (p) =>
 describe('core/harmony', () => {
   // --- AC-2.6.1 — A progression is chosen from a catalogue of named progressions ---
 
+  it("AC-2.6.1/20 — No heading's own entry has three chords except the five that sit beside their own repeat shapes: I–IV–V, i–iv–v, i–iv–V, ii–V–I and I–♭VII–IV", () => {
+    const kept = ['I-IV-V', 'i-iv-v', 'i-iv-V', 'ii-V-I', 'I-bVII-IV'];
+    const own = PROGRESSIONS.filter((p) => !p.fromSongs);
+    expect(own.filter((p) => p.steps.length === 3).map((p) => p.id)).toEqual(kept);
+    // Each of the five sits beside its own repeat shapes, the first, middle or last chord doubled.
+    const key = (chords) => chords.map((c) => `${c.degree}:${c.quality}`).join(' ');
+    const spelled = new Set(own.map((p) => key(spellProgression(p.id))));
+    for (const id of kept) {
+      const chords = spellProgression(id);
+      const shapes = [0, 1, 2].map((i) => key([...chords.slice(0, i + 1), ...chords.slice(i)]));
+      expect(shapes.filter((s) => spelled.has(s)).length, id).toBeGreaterThan(0);
+    }
+    // A retired three-chord entry is its four-chord form now: the Mario cadence lands and stays.
+    expect(spellProgression('bVI-bVII-I-I').map((c) => c.degree)).toEqual(['b6', 'b7', '1', '1']);
+  });
+
   it('AC-2.6.1/15 — No two catalogue entries spell the same chords under the default scale, so a chosen entry is always matched back to its own name', () => {
     const seen = new Map();
     for (const entry of PROGRESSIONS) {
@@ -805,7 +821,7 @@ describe('core/harmony', () => {
     const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 5);
     expect(under('travis', sevenths)).toEqual([62, 77, 69, 74, 62]);
     // A sus2 chord's suspended note takes the 3rd's place: under Csus2 the treble 3rd is D5.
-    const sus = sounding(setProgression(melodic(), 'Isus2-IVsus2-Vsus4'), 4);
+    const sus = sounding(setProgression(melodic(), 'Isus2-IVsus2-IVsus2-Vsus4'), 4);
     expect(under('travis', sus)).toEqual([60, 74, 67, 72]);
     // An every-Measure change starts each shape again on the new chord: C, F, G.
     const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 4);

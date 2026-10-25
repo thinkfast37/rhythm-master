@@ -119,7 +119,7 @@ async function chooseAndRead(page, id) {
   return chordNames(page);
 }
 
-test('AC-2.6.1/8 — The Three chords and repeats group holds I–IV–V, I–I–IV–V, I–IV–IV–V, I–IV–V–V, I–IV–V–IV, I–IV–V–I, I–IV–I–V, I–V–IV, I–V–IV–I, I–IV and I–V', async ({ page }) => {
+test('AC-2.6.1/8 — The Three chords and repeats group holds I–IV–V, I–I–IV–V, I–IV–IV–V, I–IV–V–V, I–IV–V–IV, I–IV–V–I, I–IV–I–V, I–I–V–IV, I–V–IV–I, I–IV and I–V', async ({ page }) => {
   await melodicBlank(page);
   expect(await groupEntries(page, 'Three chords and repeats')).toEqual([
     ['I-IV-V', 'I–IV–V'],
@@ -129,7 +129,7 @@ test('AC-2.6.1/8 — The Three chords and repeats group holds I–IV–V, I–I�
     ['I-IV-V-IV', 'I–IV–V–IV (Wild Thing)'],
     ['I-IV-V-I', 'I–IV–V–I'],
     ['I-IV-I-V', 'I–IV–I–V'],
-    ['I-V-IV', 'I–V–IV'],
+    ['I-I-V-IV', 'I–I–V–IV'],
     ['I-V-IV-I', 'I–V–IV–I'],
     ['I-IV', 'I–IV'],
     ['I-V', 'I–V'],
@@ -138,6 +138,7 @@ test('AC-2.6.1/8 — The Three chords and repeats group holds I–IV–V, I–I�
   expect(await chooseAndRead(page, 'I-I-IV-V')).toEqual(['C', 'C', 'F', 'G']);
   expect(await chooseAndRead(page, 'I-IV-IV-V')).toEqual(['C', 'F', 'F', 'G']);
   expect(await chooseAndRead(page, 'I-IV-V-V')).toEqual(['C', 'F', 'G', 'G']);
+  expect(await chooseAndRead(page, 'I-I-V-IV')).toEqual(['C', 'C', 'G', 'F']);
 });
 
 test("AC-2.6.1/9 — The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–I–V–vi, V–vi–IV–I, IV–V–vi–I, I–vi–IV–V, I–IV–vi–V, I–V–vi–iii, I–iii–vi–IV, I–ii–IV–V, I–IV–ii–V, I–ii–iii–IV, vi–V–IV–III, the Royal Road IV–V–iii–vi, Creep's I–III–IV–iv, I–IV–iv–I, Something's I–Imaj7–I7–IV and Wonderwall's vi–I–V–II, then the song progressions filed under it", async ({ page }) => {
@@ -167,7 +168,7 @@ test("AC-2.6.1/9 — The Pop group holds I–V–vi–IV, vi–IV–I–V, IV–
   expect(await chooseAndRead(page, 'vi-I-V-II')).toEqual(['Am7', 'C', 'G', 'D7sus4']);
 });
 
-test("AC-2.6.1/10 — The Minor group holds i–iv–v, i–i–iv–v, i–iv–iv–v, i–iv–v–v, i–iv–V, i–i–iv–V, i–iv–iv–V, i–iv–V–V, i–iv–i–V, i–♭VI–♭III–♭VII, the Andalusian i–♭VII–♭VI–V, the Aeolian vamp i–♭VII–♭VI–♭VII, i–♭VI–♭VII, i–♭VII–♭VI, i–♭III–♭VII–♭VI, i–iv–♭VII–♭III, ♭VI–♭VII–i and Hotel California's i–V–♭VII–IV–♭VI–♭III–iv–V, then the song progressions filed under it", async ({ page }) => {
+test("AC-2.6.1/10 — The Minor group holds i–iv–v, i–i–iv–v, i–iv–iv–v, i–iv–v–v, i–iv–V, i–i–iv–V, i–iv–iv–V, i–iv–V–V, i–iv–i–V, i–♭VI–♭III–♭VII, the Andalusian i–♭VII–♭VI–V, the Aeolian vamp i–♭VII–♭VI–♭VII, i–i–♭VI–♭VII, i–i–♭VII–♭VI, i–♭III–♭VII–♭VI, i–iv–♭VII–♭III, ♭VI–♭VII–i–i and Hotel California's i–V–♭VII–IV–♭VI–♭III–iv–V, then the song progressions filed under it", async ({ page }) => {
   await melodicBlank(page);
   await ownThenSongs(page, 'Minor', [
     ['i-iv-v', 'i–iv–v'],
@@ -182,20 +183,21 @@ test("AC-2.6.1/10 — The Minor group holds i–iv–v, i–i–iv–v, i–iv�
     ['i-bVI-bIII-bVII', 'i–♭VI–♭III–♭VII'],
     ['andalusian', 'i–♭VII–♭VI–V (Andalusian)'],
     ['i-bVII-bVI-bVII', 'i–♭VII–♭VI–♭VII (Aeolian vamp)'],
-    ['i-bVI-bVII', 'i–♭VI–♭VII'],
-    ['i-bVII-bVI', 'i–♭VII–♭VI'],
+    ['i-i-bVI-bVII', 'i–i–♭VI–♭VII'],
+    ['i-i-bVII-bVI', 'i–i–♭VII–♭VI'],
     ['i-bIII-bVII-bVI', 'i–♭III–♭VII–♭VI'],
     ['i-iv-bVII-bIII', 'i–iv–♭VII–♭III'],
-    ['bVI-bVII-i', '♭VI–♭VII–i'],
+    ['bVI-bVII-i-i', '♭VI–♭VII–i–i'],
     ['hotel-california', 'i–V–♭VII–IV–♭VI–♭III–iv–V (Hotel California)'],
   ]);
   // Minor entries are minor under the default scale too: they carry their qualities.
   expect(await chooseAndRead(page, 'i-iv-v-v')).toEqual(['Cm', 'Fm', 'Gm', 'Gm']);
   expect(await chooseAndRead(page, 'i-iv-V')).toEqual(['Cm', 'Fm', 'G']);
+  expect(await chooseAndRead(page, 'bVI-bVII-i-i')).toEqual(['Ab', 'Bb', 'Cm', 'Cm']);
   expect(await chooseAndRead(page, 'hotel-california')).toEqual(['Cm', 'G', 'Bb', 'F', 'Ab', 'Eb', 'Fm', 'G']);
 });
 
-test("AC-2.6.1/11 — The Jazz group holds ii–V–I, ii–V, ii–V–I–I, the ii–V–I–VI7 turnaround, I–vi–ii–V, iii–vi–ii–V, I–VI7–ii–V, the minor ii°–V–i, the ragtime III7–VI7–II7–V7–I, the backdoor iv–♭VII–I, the tritone substitution ii–♭II–I, Autumn Leaves' iv–♭VII–♭III–♭VI–ii°–V–i, the Coltrane changes and the circle of fifths in sevenths", async ({ page }) => {
+test("AC-2.6.1/11 — The Jazz group holds ii–V–I, ii–V, ii–V–I–I, the ii–V–I–VI7 turnaround, I–vi–ii–V, iii–vi–ii–V, I–VI7–ii–V, the minor ii°–V–V–i, the ragtime III7–VI7–II7–V7–I, the backdoor iv–♭VII–♭VII–I, the tritone substitution ii–♭II–♭II–I, Autumn Leaves' iv–♭VII–♭III–♭VI–ii°–V–i, the Coltrane changes and the circle of fifths in sevenths", async ({ page }) => {
   await melodicBlank(page);
   expect(await groupEntries(page, 'Jazz')).toEqual([
     ['ii-V-I', 'ii–V–I (jazz)'],
@@ -205,20 +207,21 @@ test("AC-2.6.1/11 — The Jazz group holds ii–V–I, ii–V, ii–V–I–I, t
     ['I-vi-ii-V', 'I–vi–ii–V (turnaround)'],
     ['iii-vi-ii-V', 'iii–vi–ii–V'],
     ['I-VI7-ii-V', 'I–VI7–ii–V'],
-    ['iio-V-i', 'ii°–V–i (minor)'],
+    ['iio-V-V-i', 'ii°–V–V–i (minor)'],
     ['ragtime', 'III7–VI7–II7–V7–I (ragtime)'],
-    ['backdoor', 'iv–♭VII–I (backdoor)'],
-    ['tritone', 'ii–♭II–I (tritone substitution)'],
+    ['backdoor', 'iv–♭VII–♭VII–I (backdoor)'],
+    ['tritone', 'ii–♭II–♭II–I (tritone substitution)'],
     ['autumn-leaves', 'iv–♭VII–♭III–♭VI–ii°–V–i (Autumn Leaves)'],
     ['coltrane', 'I–♭III7–♭VI–VII7–III–V7–I (Coltrane changes)'],
     ['circle-sevenths', 'I–IV–vii°–iii–vi–ii–V–I (circle of fifths, sevenths)'],
   ]);
-  expect(await chooseAndRead(page, 'iio-V-i')).toEqual(['Dm7♭5', 'G7', 'Cm7']);
+  expect(await chooseAndRead(page, 'iio-V-V-i')).toEqual(['Dm7♭5', 'G7', 'G7', 'Cm7']);
+  expect(await chooseAndRead(page, 'backdoor')).toEqual(['Fm7', 'Bb7', 'Bb7', 'Cmaj7']);
   expect(await chooseAndRead(page, 'ragtime')).toEqual(['E7', 'A7', 'D7', 'G7', 'Cmaj7']);
   expect(await chooseAndRead(page, 'coltrane')).toEqual(['Cmaj7', 'Eb7', 'Abmaj7', 'B7', 'Emaj7', 'G7', 'Cmaj7']);
 });
 
-test('AC-2.6.1/12 — The Blues group holds the twelve-bar blues, its quick-change, V–V and no-turnaround forms, the twelve-bar minor blues, the twelve-bar jazz blues, the eight-bar blues and I7–IV7–V7', async ({ page }) => {
+test('AC-2.6.1/12 — The Blues group holds the twelve-bar blues, its quick-change, V–V and no-turnaround forms, the twelve-bar minor blues, the twelve-bar jazz blues, the eight-bar blues and I7–IV7–IV7–V7', async ({ page }) => {
   await melodicBlank(page);
   expect(await groupEntries(page, 'Blues')).toEqual([
     ['twelve-bar-blues', 'Twelve-bar blues'],
@@ -228,7 +231,7 @@ test('AC-2.6.1/12 — The Blues group holds the twelve-bar blues, its quick-chan
     ['minor-blues', 'Twelve-bar minor blues'],
     ['jazz-blues', 'Twelve-bar jazz blues'],
     ['eight-bar-blues', 'Eight-bar blues'],
-    ['I7-IV7-V7', 'I7–IV7–V7'],
+    ['I7-IV7-IV7-V7', 'I7–IV7–IV7–V7'],
   ]);
   expect(await chooseAndRead(page, 'quick-change-blues')).toEqual([
     'C7', 'F7', 'C7', 'C7', 'F7', 'F7', 'C7', 'C7', 'G7', 'F7', 'C7', 'G7',
@@ -236,10 +239,11 @@ test('AC-2.6.1/12 — The Blues group holds the twelve-bar blues, its quick-chan
   expect(await chooseAndRead(page, 'minor-blues')).toEqual([
     'Cm7', 'Cm7', 'Cm7', 'Cm7', 'Fm7', 'Fm7', 'Cm7', 'Cm7', 'Ab7', 'G7', 'Cm7', 'G7',
   ]);
+  expect(await chooseAndRead(page, 'I7-IV7-IV7-V7')).toEqual(['C7', 'F7', 'F7', 'G7']);
   expect(await chooseAndRead(page, 'eight-bar-blues')).toEqual(['C7', 'G7', 'F7', 'F7', 'C7', 'G7', 'C7', 'G7']);
 });
 
-test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII–IV–I, I–I–♭VII–IV, I–♭VII–IV–IV, I–♭VII, the Mario cadence ♭VI–♭VII–I, I–♭III–IV, the Dorian i–IV, i–♭VII, the Lydian I–II and the Phrygian i–♭II, then the song progressions filed under it', async ({ page }) => {
+test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII–IV–I, I–I–♭VII–IV, I–♭VII–IV–IV, I–♭VII, the Mario cadence ♭VI–♭VII–I–I, I–♭III–IV–IV, the Dorian i–IV, i–♭VII, the Lydian I–II and the Phrygian i–♭II, then the song progressions filed under it', async ({ page }) => {
   await melodicBlank(page);
   await ownThenSongs(page, 'Modal and rock', [
     ['I-bVII-IV', 'I–♭VII–IV (Mixolydian)'],
@@ -247,15 +251,15 @@ test('AC-2.6.1/13 — The Modal and rock group holds I–♭VII–IV, I–♭VII
     ['I-I-bVII-IV', 'I–I–♭VII–IV'],
     ['I-bVII-IV-IV', 'I–♭VII–IV–IV'],
     ['I-bVII', 'I–♭VII (Mixolydian vamp)'],
-    ['bVI-bVII-I', '♭VI–♭VII–I (Mario cadence)'],
-    ['I-bIII-IV', 'I–♭III–IV'],
+    ['bVI-bVII-I-I', '♭VI–♭VII–I–I (Mario cadence)'],
+    ['I-bIII-IV-IV', 'I–♭III–IV–IV'],
     ['i-IV', 'i–IV (Dorian)'],
     ['i-bVII', 'i–♭VII'],
     ['I-II', 'I–II (Lydian)'],
     ['i-bII', 'i–♭II (Phrygian)'],
   ]);
   expect(await chooseAndRead(page, 'I-I-bVII-IV')).toEqual(['C', 'C', 'Bb', 'F']);
-  expect(await chooseAndRead(page, 'bVI-bVII-I')).toEqual(['Ab', 'Bb', 'C']);
+  expect(await chooseAndRead(page, 'bVI-bVII-I-I')).toEqual(['Ab', 'Bb', 'C', 'C']);
   expect(await chooseAndRead(page, 'i-IV')).toEqual(['Cm', 'F']);
   expect(await chooseAndRead(page, 'i-bII')).toEqual(['Cm', 'Db']);
 });
@@ -274,54 +278,54 @@ test("AC-2.6.1/14 — The Classical and folk group holds Pachelbel's I–V–vi�
   expect(await chooseAndRead(page, 'circle-triads')).toEqual(['C', 'F', 'Bdim', 'Em', 'Am', 'Dm', 'G', 'C']);
 });
 
-test('AC-2.6.1/16 — The Indie and alt group holds vi–V–I, vi–IV–V, vi–V–IV–V, IV–vi–I–V, I–V–vi–V, vi–iii–IV–I, I–iii–vi–V, the double plagal ♭VII–IV–I, I–V–♭VII–IV, the Dorian vamp i–♭VII–IV, the Dorian i–♭III–♭VII–IV, i–♭III–iv and Imaj7–V–iii–II (Fast Car), then the song progressions filed under it', async ({ page }) => {
+test('AC-2.6.1/16 — The Indie and alt group holds vi–vi–V–I, vi–IV–V–V, vi–V–IV–V, IV–vi–I–V, I–V–vi–V, vi–iii–IV–I, I–iii–vi–V, the double plagal ♭VII–IV–IV–I, I–V–♭VII–IV, the Dorian vamp i–♭VII–♭VII–IV, the Dorian i–♭III–♭VII–IV, i–i–♭III–iv and Imaj7–V–iii–II (Fast Car), then the song progressions filed under it', async ({ page }) => {
   await melodicBlank(page);
   await ownThenSongs(page, 'Indie and alt', [
-    ['vi-V-I', 'vi–V–I'],
-    ['vi-IV-V', 'vi–IV–V'],
+    ['vi-vi-V-I', 'vi–vi–V–I'],
+    ['vi-IV-V-V', 'vi–IV–V–V'],
     ['vi-V-IV-V', 'vi–V–IV–V'],
     ['IV-vi-I-V', 'IV–vi–I–V'],
     ['I-V-vi-V', 'I–V–vi–V'],
     ['vi-iii-IV-I', 'vi–iii–IV–I'],
     ['I-iii-vi-V', 'I–iii–vi–V'],
-    ['bVII-IV-I', '♭VII–IV–I (double plagal)'],
+    ['bVII-IV-IV-I', '♭VII–IV–IV–I (double plagal)'],
     ['I-V-bVII-IV', 'I–V–♭VII–IV'],
-    ['i-bVII-IV', 'i–♭VII–IV (Dorian vamp)'],
+    ['i-bVII-bVII-IV', 'i–♭VII–♭VII–IV (Dorian vamp)'],
     ['i-bIII-bVII-IV', 'i–♭III–♭VII–IV (Dorian)'],
-    ['i-bIII-iv', 'i–♭III–iv'],
+    ['i-i-bIII-iv', 'i–i–♭III–iv'],
     ['Imaj7-V-iii-II', 'Imaj7–V–iii–II (Fast Car)'],
   ]);
   // The chords each one names, in C.
-  expect(await chooseAndRead(page, 'vi-V-I')).toEqual(['Am', 'G', 'C']);
-  expect(await chooseAndRead(page, 'bVII-IV-I')).toEqual(['Bb', 'F', 'C']);
+  expect(await chooseAndRead(page, 'vi-vi-V-I')).toEqual(['Am', 'Am', 'G', 'C']);
+  expect(await chooseAndRead(page, 'bVII-IV-IV-I')).toEqual(['Bb', 'F', 'F', 'C']);
   expect(await chooseAndRead(page, 'i-bIII-bVII-IV')).toEqual(['Cm', 'Eb', 'Bb', 'F']);
   expect(await chooseAndRead(page, 'Imaj7-V-iii-II')).toEqual(['Cmaj7', 'G', 'Em', 'D']);
 });
 
-test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2, Isus2–Isus4–I, I–Isus4–IV–V, the delayed dominant Vsus4–V–I, V7sus4–V7–I, the suspended cadence ii7–V7sus4–Imaj7, I–IVsus2–I–V (Free Fallin’), the open sus loop Isus2–IVsus2–Vsus4, the suspended pop loop I–V–vi–IVsus2, vi–IV–Isus2–Vsus4, the Mixolydian sus I–♭VIIsus2–IVsus2, the minor sus vamp i–♭VIIsus2–♭VIsus2, IVadd9–I–V, Iadd9–IVadd9–V and I–IVadd9–vi7–V, then the song progressions filed under it', async ({ page }) => {
+test('AC-2.6.1/17 — The Sus and open chords group holds I–Isus4–I–Isus2, Isus2–Isus2–Isus4–I, I–Isus4–IV–V, the delayed dominant Vsus4–V–I–I, V7sus4–V7–I–I, the suspended cadence ii7–ii7–V7sus4–Imaj7, I–IVsus2–I–V (Free Fallin’), the open sus loop Isus2–IVsus2–IVsus2–Vsus4, the suspended pop loop I–V–vi–IVsus2, vi–IV–Isus2–Vsus4, the Mixolydian sus I–♭VIIsus2–♭VIIsus2–IVsus2, the minor sus vamp i–♭VIIsus2–♭VIIsus2–♭VIsus2, IVadd9–I–I–V, Iadd9–IVadd9–IVadd9–V and I–IVadd9–vi7–V, then the song progressions filed under it', async ({ page }) => {
   await melodicBlank(page);
   await ownThenSongs(page, 'Sus and open chords', [
     ['I-Isus4-I-Isus2', 'I–Isus4–I–Isus2 (open-string embellishment)'],
-    ['Isus2-Isus4-I', 'Isus2–Isus4–I'],
+    ['Isus2-Isus2-Isus4-I', 'Isus2–Isus2–Isus4–I'],
     ['I-Isus4-IV-V', 'I–Isus4–IV–V'],
-    ['Vsus4-V-I', 'Vsus4–V–I (delayed dominant)'],
-    ['V7sus4-V7-I', 'V7sus4–V7–I'],
-    ['ii7-V7sus4-Imaj7', 'ii7–V7sus4–Imaj7 (suspended cadence)'],
+    ['Vsus4-V-I-I', 'Vsus4–V–I–I (delayed dominant)'],
+    ['V7sus4-V7-I-I', 'V7sus4–V7–I–I'],
+    ['ii7-ii7-V7sus4-Imaj7', 'ii7–ii7–V7sus4–Imaj7 (suspended cadence)'],
     ['I-IVsus2-I-V', 'I–IVsus2–I–V (Free Fallin’)'],
-    ['Isus2-IVsus2-Vsus4', 'Isus2–IVsus2–Vsus4 (open sus loop)'],
+    ['Isus2-IVsus2-IVsus2-Vsus4', 'Isus2–IVsus2–IVsus2–Vsus4 (open sus loop)'],
     ['I-V-vi-IVsus2', 'I–V–vi–IVsus2 (the pop loop, suspended)'],
     ['vi-IV-Isus2-Vsus4', 'vi–IV–Isus2–Vsus4'],
-    ['I-bVIIsus2-IVsus2', 'I–♭VIIsus2–IVsus2 (Mixolydian sus)'],
-    ['i-bVIIsus2-bVIsus2', 'i–♭VIIsus2–♭VIsus2 (minor sus vamp)'],
-    ['IVadd9-I-V', 'IVadd9–I–V (open folk trio)'],
-    ['Iadd9-IVadd9-V', 'Iadd9–IVadd9–V'],
+    ['I-bVIIsus2-bVIIsus2-IVsus2', 'I–♭VIIsus2–♭VIIsus2–IVsus2 (Mixolydian sus)'],
+    ['i-bVIIsus2-bVIIsus2-bVIsus2', 'i–♭VIIsus2–♭VIIsus2–♭VIsus2 (minor sus vamp)'],
+    ['IVadd9-I-I-V', 'IVadd9–I–I–V (open folk trio)'],
+    ['Iadd9-IVadd9-IVadd9-V', 'Iadd9–IVadd9–IVadd9–V'],
     ['I-IVadd9-vi7-V', 'I–IVadd9–vi7–V'],
   ]);
   // The suspensions are what they say, in C, whatever the scale would have stacked.
   expect(await chooseAndRead(page, 'I-Isus4-I-Isus2')).toEqual(['C', 'Csus4', 'C', 'Csus2']);
-  expect(await chooseAndRead(page, 'V7sus4-V7-I')).toEqual(['G7sus4', 'G7', 'C']);
+  expect(await chooseAndRead(page, 'V7sus4-V7-I-I')).toEqual(['G7sus4', 'G7', 'C', 'C']);
   expect(await chooseAndRead(page, 'I-V-vi-IVsus2')).toEqual(['C', 'G', 'Am', 'Fsus2']);
-  expect(await chooseAndRead(page, 'i-bVIIsus2-bVIsus2')).toEqual(['Cm', 'Bbsus2', 'Absus2']);
+  expect(await chooseAndRead(page, 'i-bVIIsus2-bVIIsus2-bVIsus2')).toEqual(['Cm', 'Bbsus2', 'Bbsus2', 'Absus2']);
   expect(await chooseAndRead(page, 'I-IVadd9-vi7-V')).toEqual(['C', 'Fadd9', 'Am7', 'G']);
 });
 

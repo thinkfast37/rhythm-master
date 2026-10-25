@@ -51,6 +51,17 @@ describe('tools/chord-sheet — re-spelling the songbook (AC-2.6.1/19)', () => {
     expect(() => songSections(SONGBOOK, spellProgression, [{ artist: 'Radiohead', title: 'Reckoner', sections: [{ section: 'verse', chords: ['Hello'] }] }])).toThrow(/cannot read Hello/);
   });
 
+  it('lets a correction take over a credit to an entry the catalogue has retired', () => {
+    const retired = [...SONGBOOK, { artist: 'Radiohead', title: 'Reckoner', section: 'coda', progression: 'no-longer-an-entry' }];
+    expect(() => songSections(retired, spellProgression)).toThrow(/Unknown progression/);
+    const songs = songSections(retired, spellProgression, [
+      { artist: 'Radiohead', title: 'Reckoner', sections: [{ section: 'coda', chords: ['C', 'Em', 'B', 'B'] }] },
+    ]);
+    const reckoner = songs.find((s) => s.title === 'Reckoner');
+    expect(reckoner.sections).toHaveLength(1);
+    expect(reckoner.sections[0].was).toBe('no-longer-an-entry');
+  });
+
   it('spells a minor-key song from its relative major, and a loop with Dm7 in C', () => {
     const [girl, england] = ionianReviews([
       { artist: 'A', title: 'Girl', sections: [{ section: 'verse', chords: c('Am F C G') }] },
