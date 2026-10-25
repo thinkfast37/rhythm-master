@@ -33625,7 +33625,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Rest Lands on One · vi–V–I · Root only",
+      "name": "Quarter Notes — Rest Lands on One · vi–vi–V–I · Root only",
       "soundMode": "melodic",
       "key": "E",
       "scale": "ionian",
@@ -33639,6 +33639,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "6",
+            "quality": "min"
+          },
           {
             "degree": "6",
             "quality": "min"
@@ -33895,7 +33899,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Downbeat Rests · vi–IV–V · Root and fifth",
+      "name": "Quarter Notes — Downbeat Rests · vi–IV–V–V · Root and fifth",
       "soundMode": "melodic",
       "key": "B",
       "scale": "ionian",
@@ -33917,6 +33921,10 @@
             "degree": "4",
             "quality": "maj",
             "inversion": 1
+          },
+          {
+            "degree": "5",
+            "quality": "maj"
           },
           {
             "degree": "5",
@@ -34416,7 +34424,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Late Entry · ii7–V7sus4–Imaj7 · Up and down, repeating the turn",
+      "name": "Quarter Notes — Late Entry · ii7–ii7–V7sus4–Imaj7 · Up and down, repeating the turn",
       "soundMode": "melodic",
       "key": "Db",
       "scale": "ionian",
@@ -34430,6 +34438,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "2",
+            "quality": "m7"
+          },
           {
             "degree": "2",
             "quality": "m7"
@@ -34675,7 +34687,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — One Note Per Bar · i–♭VII–IV · Down from the octave",
+      "name": "Quarter Notes — One Note Per Bar · i–♭VII–♭VII–IV · Down from the octave",
       "soundMode": "melodic",
       "key": "Ab",
       "scale": "dorian",
@@ -34692,6 +34704,11 @@
           {
             "degree": "1",
             "quality": "min"
+          },
+          {
+            "degree": "b7",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -34921,7 +34938,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Five-Bar Fade · I–♭VIIsus2–IVsus2 · Up over and down",
+      "name": "Quarter Notes — Five-Bar Fade · I–♭VIIsus2–♭VIIsus2–IVsus2 · Up over and down",
       "soundMode": "melodic",
       "key": "Eb",
       "scale": "mixolydian",
@@ -34938,6 +34955,11 @@
           {
             "degree": "1",
             "quality": "maj"
+          },
+          {
+            "degree": "b7",
+            "quality": "sus2",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -35233,7 +35255,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Full Bar Then Sparse · i–♭III–iv · Ascending",
+      "name": "Quarter Notes — Full Bar Then Sparse · i–i–♭III–iv · Ascending",
       "soundMode": "melodic",
       "key": "Bb",
       "scale": "aeolian",
@@ -35247,6 +35269,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "1",
+            "quality": "min"
+          },
           {
             "degree": "1",
             "quality": "min"
@@ -35551,7 +35577,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Rest on One, Five Bars · i–♭VI–♭VII · Descending",
+      "name": "Quarter Notes — Rest on One, Five Bars · i–i–♭VI–♭VII · Descending",
       "soundMode": "melodic",
       "key": "F",
       "scale": "aeolian",
@@ -35565,6 +35591,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "1",
+            "quality": "min"
+          },
           {
             "degree": "1",
             "quality": "min"
@@ -35871,7 +35901,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Long Rests into a Full Bar · IVadd9–I–V · Up and down",
+      "name": "Quarter Notes — Long Rests into a Full Bar · IVadd9–I–I–V · Up and down",
       "soundMode": "melodic",
       "key": "C",
       "scale": "ionian",
@@ -35888,6 +35918,11 @@
           {
             "degree": "4",
             "quality": "add9"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "1",
@@ -36190,7 +36225,7 @@
       ]
     },
     {
-      "name": "In Two — Rest Swaps Sides · i–♭VII–♭VI · Alberti",
+      "name": "In Two — Rest Swaps Sides · i–i–♭VII–♭VI · Alberti",
       "soundMode": "melodic",
       "key": "G",
       "scale": "aeolian",
@@ -36205,6 +36240,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "1",
+            "quality": "min"
+          },
           {
             "degree": "1",
             "quality": "min"
@@ -36451,7 +36490,7 @@
       ]
     },
     {
-      "name": "In Two — Silent Bar in the Middle · Iadd9–IVadd9–V · Root only",
+      "name": "In Two — Silent Bar in the Middle · Iadd9–IVadd9–IVadd9–V · Root only",
       "soundMode": "melodic",
       "key": "D",
       "scale": "ionian",
@@ -36468,6 +36507,10 @@
         "chords": [
           {
             "degree": "1",
+            "quality": "add9"
+          },
+          {
+            "degree": "4",
             "quality": "add9"
           },
           {
@@ -36707,7 +36750,7 @@
       ]
     },
     {
-      "name": "In Two — Rest on One to Start · ♭VI–♭VII–i · Root and fifth",
+      "name": "In Two — Rest on One to Start · ♭VI–♭VII–i–i · Root and fifth",
       "soundMode": "melodic",
       "key": "A",
       "scale": "aeolian",
@@ -36729,6 +36772,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "min",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -37219,7 +37267,7 @@
       ]
     },
     {
-      "name": "In Two — Two Silent Bars · vi–V–I · Up and down, repeating the turn",
+      "name": "In Two — Two Silent Bars · vi–vi–V–I · Up and down, repeating the turn",
       "soundMode": "melodic",
       "key": "B",
       "scale": "ionian",
@@ -37234,6 +37282,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "6",
+            "quality": "min"
+          },
           {
             "degree": "6",
             "quality": "min"
@@ -38837,7 +38889,7 @@
       ]
     },
     {
-      "name": "Eighth Pairs in Two — Silent Downbeats · Vsus4–V–I · Up to the octave",
+      "name": "Eighth Pairs in Two — Silent Downbeats · Vsus4–V–I–I · Up to the octave",
       "soundMode": "melodic",
       "key": "G",
       "scale": "ionian",
@@ -38859,6 +38911,11 @@
           {
             "degree": "5",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -42130,7 +42187,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Rest on Two · ♭VI–♭VII–I · Down from the octave",
+      "name": "Quarter Notes — Rest on Two · ♭VI–♭VII–I–I · Down from the octave",
       "soundMode": "melodic",
       "key": "G",
       "scale": "mixolydian",
@@ -42152,6 +42209,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -42405,7 +42467,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Backbeat Bars · ii7–V7sus4–Imaj7 · Up over and down",
+      "name": "Quarter Notes — Backbeat Bars · ii7–ii7–V7sus4–Imaj7 · Up over and down",
       "soundMode": "melodic",
       "key": "D",
       "scale": "ionian",
@@ -42419,6 +42481,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "2",
+            "quality": "m7"
+          },
           {
             "degree": "2",
             "quality": "m7"
@@ -42676,7 +42742,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Eighths First, Then Space · I–♭III–IV · Descending",
+      "name": "Quarter Notes — Eighths First, Then Space · I–♭III–IV–IV · Descending",
       "soundMode": "melodic",
       "key": "A",
       "scale": "mixolydian",
@@ -42697,6 +42763,10 @@
           },
           {
             "degree": "b3",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
             "quality": "maj"
           },
           {
@@ -42954,7 +43024,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Long Rest into Eighths · ♭VII–IV–I · Up and down",
+      "name": "Quarter Notes — Long Rest into Eighths · ♭VII–IV–IV–I · Up and down",
       "soundMode": "melodic",
       "key": "E",
       "scale": "mixolydian",
@@ -42972,6 +43042,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "4",
@@ -43234,7 +43309,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — One and Four, Then Eighths · Isus2–IVsus2–Vsus4 · Root only",
+      "name": "Quarter Notes — One and Four, Then Eighths · Isus2–IVsus2–IVsus2–Vsus4 · Root only",
       "soundMode": "melodic",
       "key": "B",
       "scale": "ionian",
@@ -43252,6 +43327,11 @@
           {
             "degree": "1",
             "quality": "sus2"
+          },
+          {
+            "degree": "4",
+            "quality": "sus2",
+            "inversion": 2
           },
           {
             "degree": "4",
@@ -43518,7 +43598,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Rest on Three · i–♭VII–IV · Root and fifth",
+      "name": "Quarter Notes — Rest on Three · i–♭VII–♭VII–IV · Root and fifth",
       "soundMode": "melodic",
       "key": "Gb",
       "scale": "dorian",
@@ -43536,6 +43616,11 @@
           {
             "degree": "1",
             "quality": "min"
+          },
+          {
+            "degree": "b7",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -43801,7 +43886,7 @@
       ]
     },
     {
-      "name": "Quarter Notes — Eighths First, Then One and Three · I–♭VIIsus2–IVsus2 · Up and down, repeating the turn",
+      "name": "Quarter Notes — Eighths First, Then One and Three · I–♭VIIsus2–♭VIIsus2–IVsus2 · Up and down, repeating the turn",
       "soundMode": "melodic",
       "key": "Db",
       "scale": "mixolydian",
@@ -43819,6 +43904,11 @@
           {
             "degree": "1",
             "quality": "maj"
+          },
+          {
+            "degree": "b7",
+            "quality": "sus2",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -46763,7 +46853,7 @@
       ]
     },
     {
-      "name": "Four to Two — Rest on Four Hinge · Isus2–Isus4–I · Scale up and down, major pentatonic",
+      "name": "Four to Two — Rest on Four Hinge · Isus2–Isus2–Isus4–I · Scale up and down, major pentatonic",
       "soundMode": "melodic",
       "key": "B",
       "scale": "ionian",
@@ -46778,6 +46868,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "1",
+            "quality": "sus2"
+          },
           {
             "degree": "1",
             "quality": "sus2"
@@ -49566,7 +49660,7 @@
       ]
     },
     {
-      "name": "Eighth Pairs in Two — Seven Bars, Trading Beats · Vsus4–V–I · Scale up and down, major",
+      "name": "Eighth Pairs in Two — Seven Bars, Trading Beats · Vsus4–V–I–I · Scale up and down, major",
       "soundMode": "melodic",
       "key": "E",
       "scale": "ionian",
@@ -49588,6 +49682,11 @@
           {
             "degree": "5",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -50199,7 +50298,7 @@
       ]
     },
     {
-      "name": "Offbeat Eighths in Two — Seven Bars · ♭VI–♭VII–I · Scale up and down, major pentatonic",
+      "name": "Offbeat Eighths in Two — Seven Bars · ♭VI–♭VII–I–I · Scale up and down, major pentatonic",
       "soundMode": "melodic",
       "key": "Gb",
       "scale": "mixolydian",
@@ -50222,6 +50321,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -68268,7 +68372,7 @@
       ]
     },
     {
-      "name": "Sixteenth Notes — Rest Lands on One (Condensed) · vi–V–I · Root only",
+      "name": "Sixteenth Notes — Rest Lands on One (Condensed) · vi–vi–V–I · Root only",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -68283,6 +68387,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "6",
+            "quality": "min"
+          },
           {
             "degree": "6",
             "quality": "min"
@@ -68418,7 +68526,7 @@
       ]
     },
     {
-      "name": "Sixteenth Notes — Downbeat Rests (Condensed) · vi–IV–V · Root and fifth",
+      "name": "Sixteenth Notes — Downbeat Rests (Condensed) · vi–IV–V–V · Root and fifth",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -68441,6 +68549,10 @@
             "degree": "4",
             "quality": "maj",
             "inversion": 1
+          },
+          {
+            "degree": "5",
+            "quality": "maj"
           },
           {
             "degree": "5",
@@ -68697,7 +68809,7 @@
       ]
     },
     {
-      "name": "Sixteenth Notes — Late Entry (Condensed) · ii7–V7sus4–Imaj7 · Up and down, repeating the turn",
+      "name": "Sixteenth Notes — Late Entry (Condensed) · ii7–ii7–V7sus4–Imaj7 · Up and down, repeating the turn",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -68712,6 +68824,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "2",
+            "quality": "m7"
+          },
           {
             "degree": "2",
             "quality": "m7"
@@ -68837,7 +68953,7 @@
       ]
     },
     {
-      "name": "Sixteenth Notes — One Note Per Beat (Condensed) · i–♭VII–IV · Down from the octave",
+      "name": "Sixteenth Notes — One Note Per Beat (Condensed) · i–♭VII–♭VII–IV · Down from the octave",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -68855,6 +68971,11 @@
           {
             "degree": "1",
             "quality": "min"
+          },
+          {
+            "degree": "b7",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -69738,7 +69859,7 @@
       ]
     },
     {
-      "name": "Sixteenth Pairs in Two — Silent Downbeats (Condensed) · Vsus4–V–I · Up to the octave",
+      "name": "Sixteenth Pairs in Two — Silent Downbeats (Condensed) · Vsus4–V–I–I · Up to the octave",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -69761,6 +69882,11 @@
           {
             "degree": "5",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -72002,7 +72128,7 @@
       ]
     },
     {
-      "name": "Eighth Notes — Rest on Two (Condensed) · ♭VI–♭VII–I · Down from the octave",
+      "name": "Eighth Notes — Rest on Two (Condensed) · ♭VI–♭VII–I–I · Down from the octave",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -72025,6 +72151,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -72236,7 +72367,7 @@
       ]
     },
     {
-      "name": "Sixteenth Notes — Backbeat Shape (Condensed) · ii7–V7sus4–Imaj7 · Up over and down",
+      "name": "Sixteenth Notes — Backbeat Shape (Condensed) · ii7–ii7–V7sus4–Imaj7 · Up over and down",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -72251,6 +72382,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "2",
+            "quality": "m7"
+          },
           {
             "degree": "2",
             "quality": "m7"
@@ -72386,7 +72521,7 @@
       ]
     },
     {
-      "name": "Eighth Notes — Sixteenths First, Then Space (Condensed) · I–♭III–IV · Descending",
+      "name": "Eighth Notes — Sixteenths First, Then Space (Condensed) · I–♭III–IV–IV · Descending",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -72408,6 +72543,10 @@
           },
           {
             "degree": "b3",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
             "quality": "maj"
           },
           {
@@ -72623,7 +72762,7 @@
       ]
     },
     {
-      "name": "Eighth Notes — Long Rest into Sixteenths (Condensed) · ♭VII–IV–I · Up and down",
+      "name": "Eighth Notes — Long Rest into Sixteenths (Condensed) · ♭VII–IV–IV–I · Up and down",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -72642,6 +72781,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "4",
@@ -72862,7 +73006,7 @@
       ]
     },
     {
-      "name": "Eighth Notes — One and Four, Then Sixteenths (Condensed) · Isus2–IVsus2–Vsus4 · Root only",
+      "name": "Eighth Notes — One and Four, Then Sixteenths (Condensed) · Isus2–IVsus2–IVsus2–Vsus4 · Root only",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -72881,6 +73025,11 @@
           {
             "degree": "1",
             "quality": "sus2"
+          },
+          {
+            "degree": "4",
+            "quality": "sus2",
+            "inversion": 2
           },
           {
             "degree": "4",
@@ -73106,7 +73255,7 @@
       ]
     },
     {
-      "name": "Eighth Notes — Rest on Three (Condensed) · i–♭VII–IV · Root and fifth",
+      "name": "Eighth Notes — Rest on Three (Condensed) · i–♭VII–♭VII–IV · Root and fifth",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -73125,6 +73274,11 @@
           {
             "degree": "1",
             "quality": "min"
+          },
+          {
+            "degree": "b7",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -73349,7 +73503,7 @@
       ]
     },
     {
-      "name": "Eighth Notes — Sixteenths First, Then One and Three (Condensed) · I–♭VIIsus2–IVsus2 · Up and down, repeating the turn",
+      "name": "Eighth Notes — Sixteenths First, Then One and Three (Condensed) · I–♭VIIsus2–♭VIIsus2–IVsus2 · Up and down, repeating the turn",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -73368,6 +73522,11 @@
           {
             "degree": "1",
             "quality": "maj"
+          },
+          {
+            "degree": "b7",
+            "quality": "sus2",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -75844,7 +76003,7 @@
       ]
     },
     {
-      "name": "Sixteenth Pairs in Two — Three Bars, Thinning (Condensed) · i–♭VIIsus2–♭VIsus2 · Chord root drone",
+      "name": "Sixteenth Pairs in Two — Three Bars, Thinning (Condensed) · i–♭VIIsus2–♭VIIsus2–♭VIsus2 · Chord root drone",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -75863,6 +76022,11 @@
           {
             "degree": "1",
             "quality": "min"
+          },
+          {
+            "degree": "b7",
+            "quality": "sus2",
+            "inversion": 1
           },
           {
             "degree": "b7",
@@ -76074,7 +76238,7 @@
       ]
     },
     {
-      "name": "Two to Four and Back — Sixteenths (Condensed) · V7sus4–V7–I · Scale up, major pentatonic",
+      "name": "Two to Four and Back — Sixteenths (Condensed) · V7sus4–V7–I–I · Scale up, major pentatonic",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -76097,6 +76261,11 @@
           {
             "degree": "5",
             "quality": "7"
+          },
+          {
+            "degree": "1",
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -76365,7 +76534,7 @@
       ]
     },
     {
-      "name": "Sixteenth Pairs in Two — Three Bars, No Rests (Condensed) · i–♭VI–♭VII · Alberti",
+      "name": "Sixteenth Pairs in Two — Three Bars, No Rests (Condensed) · i–i–♭VI–♭VII · Alberti",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -76381,6 +76550,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "1",
+            "quality": "min"
+          },
           {
             "degree": "1",
             "quality": "min"
@@ -76588,7 +76761,7 @@
       ]
     },
     {
-      "name": "Upbeat of Two — Steady (Condensed) · i–♭VII–♭VI · Scale up and down, the Pattern's scale",
+      "name": "Upbeat of Two — Steady (Condensed) · i–i–♭VII–♭VI · Scale up and down, the Pattern's scale",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -76605,6 +76778,10 @@
       "harmony": {
         "change": "pass",
         "chords": [
+          {
+            "degree": "1",
+            "quality": "min"
+          },
           {
             "degree": "1",
             "quality": "min"
@@ -76799,7 +76976,7 @@
       ]
     },
     {
-      "name": "Upbeat of Two — Sixteenth Pairs in the Middle (Condensed) · Iadd9–IVadd9–V · Drone below (tonic)",
+      "name": "Upbeat of Two — Sixteenth Pairs in the Middle (Condensed) · Iadd9–IVadd9–IVadd9–V · Drone below (tonic)",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -76818,6 +76995,10 @@
         "chords": [
           {
             "degree": "1",
+            "quality": "add9"
+          },
+          {
+            "degree": "4",
             "quality": "add9"
           },
           {
@@ -77018,7 +77199,7 @@
       ]
     },
     {
-      "name": "Upbeat of Two — Mixed with Eighths (Condensed) · ♭VI–♭VII–i · Chord root drone",
+      "name": "Upbeat of Two — Mixed with Eighths (Condensed) · ♭VI–♭VII–i–i · Chord root drone",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -77042,6 +77223,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "1",
+            "quality": "min",
+            "inversion": 2
           },
           {
             "degree": "1",
@@ -77229,7 +77415,7 @@
       ]
     },
     {
-      "name": "Upbeat of Two — Sixteenths into Upbeat (Condensed) · I–♭III–IV · Scale up, major",
+      "name": "Upbeat of Two — Sixteenths into Upbeat (Condensed) · I–♭III–IV–IV · Scale up, major",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -77252,6 +77438,10 @@
           },
           {
             "degree": "b3",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
             "quality": "maj"
           },
           {
@@ -77443,7 +77633,7 @@
       ]
     },
     {
-      "name": "Upbeat of Two — Upbeat Alone (Condensed) · ♭VII–IV–I · Scale up and down, major",
+      "name": "Upbeat of Two — Upbeat Alone (Condensed) · ♭VII–IV–IV–I · Scale up and down, major",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -77463,6 +77653,11 @@
           {
             "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "4",
@@ -77644,7 +77839,7 @@
       ]
     },
     {
-      "name": "Upbeat of Two — Rest on One Start (Condensed) · Isus2–IVsus2–Vsus4 · Scale up, major pentatonic",
+      "name": "Upbeat of Two — Rest on One Start (Condensed) · Isus2–IVsus2–IVsus2–Vsus4 · Scale up, major pentatonic",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -77664,6 +77859,11 @@
           {
             "degree": "1",
             "quality": "sus2"
+          },
+          {
+            "degree": "4",
+            "quality": "sus2",
+            "inversion": 2
           },
           {
             "degree": "4",
@@ -80176,7 +80376,7 @@
       ]
     },
     {
-      "name": "Offbeat Sixteenths in Two — Upbeats First (Condensed) · i–♭VIIsus2–♭VIsus2 · Scale up, natural minor",
+      "name": "Offbeat Sixteenths in Two — Upbeats First (Condensed) · i–♭VIIsus2–♭VIIsus2–♭VIsus2 · Scale up, natural minor",
       "soundMode": "melodic",
       "tempo": 80,
       "tags": [
@@ -80196,6 +80396,11 @@
           {
             "degree": "1",
             "quality": "min"
+          },
+          {
+            "degree": "b7",
+            "quality": "sus2",
+            "inversion": 1
           },
           {
             "degree": "b7",
