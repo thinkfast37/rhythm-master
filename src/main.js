@@ -126,6 +126,7 @@ import {
   clearNote,
   cycleSyllable,
   duplicateUnpitched,
+  clearAllNotes,
   hasAnyNote,
   canDuplicate,
   isComplete,
@@ -2121,6 +2122,29 @@ const handlers = {
     } else if (c.selected) {
       applyDraft(clearNote, c.selected);
     }
+  },
+
+  /**
+   * Clear notes: every note at once, after asking, the rhythm kept (AC-19.5.6).
+   * The selection goes with the notes (/3); record mode is never entered here,
+   * so Record afterwards starts on the first syllable (/2).
+   */
+  async onComposerClearNotes() {
+    const c = state.composer;
+    if (!c.draft || c.recording || !hasAnyNote(c.draft)) return;
+    const choice = await ask({
+      message: 'Clear every note? The rhythm stays, and sounds percussively until you record again.',
+      options: [
+        { label: 'Clear notes', value: 'clear', primary: true },
+        { label: 'Cancel', value: 'cancel' },
+      ],
+    });
+    if (choice !== 'clear') {
+      render();
+      return;
+    }
+    state.composer = { ...state.composer, selected: null };
+    applyDraft(clearAllNotes);
   },
 
   /** A tap on a note box selects that Slot, or clears the selection (AC-19.5.2/1, /4). */

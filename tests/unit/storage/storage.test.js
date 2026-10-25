@@ -231,7 +231,7 @@ describe('storage/overlays — remembered playback settings (AC-4.2.4, AC-4.4.6)
 });
 
 describe('storage/settings — My list across a re-spelled catalogue', () => {
-  it('AC-2.12.1/4 — When the catalogue re-spells a song progression, its tick on My list moves to the entry that now holds that song’s section, so the list keeps the same songs', async () => {
+  it('AC-2.12.1/4 — When the catalogue re-spells a song progression or retires an entry for its four-chord form, its tick on My list moves to the entry that now holds that song’s section or that form, so the list keeps the same music', async () => {
     const { PROGRESSION_RENAMES, renameProgressions } = await import('../../../src/storage/progressionRenames.js');
     const { PROGRESSIONS } = await import('../../../src/core/harmony.js');
     const { SONGBOOK } = await import('../../../src/core/songbook.js');
@@ -242,6 +242,9 @@ describe('storage/settings — My list across a re-spelled catalogue', () => {
     expect(PROGRESSION_RENAMES['i-bVII-bVI-i-bVI']).toEqual([verse]);
     settings.save({ progressionCycleFrom: 'list', progressionCycleList: ['I-IV-V', 'i-bVII-bVI-i-bVI'] });
     expect(settings.load().progressionCycleList).toEqual(['I-IV-V', verse]);
+    // A three-chord entry of a heading's own retired for its four-chord form (AC-2.6.1/20) is ticked as that form.
+    settings.save({ progressionCycleFrom: 'list', progressionCycleList: ['vi-V-I', 'Vsus4-V-I'] });
+    expect(settings.load().progressionCycleList).toEqual(['vi-vi-V-I', 'Vsus4-V-I-I']);
     // An id that was never renamed, or is already current, is left as it is, once.
     expect(renameProgressions([verse, 'i-bVII-bVI-i-bVI', 'ii-V-I'])).toEqual([verse, 'ii-V-I']);
     // Every rename is from an id the catalogue no longer has to ids it does.

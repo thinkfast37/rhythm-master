@@ -2430,6 +2430,7 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 }
 .composer-bar .record,
 .composer-bar .composer-delete,
+.composer-bar .composer-clear,
 .composer-bar .composer-save,
 .composer-bar .guitar-retry {
   padding: 9px 14px;

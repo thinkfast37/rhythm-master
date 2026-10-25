@@ -180,6 +180,78 @@ test('AC-19.5.3/3 — A Slot cycled to off loses its note, and the count of syll
   await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '1');
 });
 
+// --- AC-19.5.6: Clear notes --------------------------------------------------------------
+
+test('AC-19.5.6/1 — Clear notes asks first, and cancelling leaves the composition unchanged', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  const before = await page.evaluate(() => JSON.stringify(window.__rm.composer().draft));
+  await page.locator('.composer-clear').click();
+  await expect(page.locator('.dialog')).toBeVisible();
+  await expect(page.locator('.dialog-button[data-value="clear"]')).toBeVisible();
+  await page.locator('.dialog-button[data-value="cancel"]').click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  for (let b = 0; b < 4; b++) expect(await noteAt(page, b)).not.toBeNull();
+  expect(await page.evaluate(() => JSON.stringify(window.__rm.composer().draft))).toBe(before);
+});
+
+test("AC-19.5.6/2 — Confirming clears every Slot's note and keeps every syllable sounding, so the count of notes missing is the count of syllables and Record targets the first", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  await page.locator('.composer-clear').click();
+  await page.locator('.dialog-button[data-value="clear"]').click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  for (let b = 0; b < 4; b++) {
+    expect(await noteAt(page, b)).toBeNull();
+    await expect(cslot(page, 0, b)).toHaveClass(/unpitched/);
+    await expect(cslot(page, 0, b).locator('.cslot-syllable .slot-label')).not.toHaveAttribute('data-rest', 'true');
+  }
+  await expect(page.locator('.composer-grid .slot.cslot')).toHaveCount(16);
+  await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '4');
+  await page.locator('.record').click();
+  expect((await composerState(page)).target).toEqual({ measureIndex: 0, beatIndex: 0, slotIndex: 0 });
+  await expect(cslot(page, 0, 0)).toHaveClass(/target/);
+});
+
+test('AC-19.5.6/3 — Confirming drops the selection, and the cleared composition counts as an unsaved change', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  await page.locator('.composer-save').click();
+  await expect(page.locator('.composer-unsaved')).toHaveCount(0);
+  await cslot(page, 0, 2).locator('.cslot-note').click();
+  await expect(cslot(page, 0, 2)).toHaveClass(/selected/);
+  await page.locator('.composer-clear').click();
+  await page.locator('.dialog-button[data-value="clear"]').click();
+  await expect(page.locator('.composer-grid .slot.selected')).toHaveCount(0);
+  expect((await composerState(page)).selected).toBeNull();
+  await expect(page.locator('.composer-unsaved')).toHaveAttribute('data-unsaved', 'changes');
+});
+
+test('AC-19.5.6/4 — Clear notes is disabled with no note recorded and while recording, and Delete still clears only the selected Slot', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await expect(page.locator('.composer-clear')).toBeDisabled();
+  await recordAll(page);
+  await expect(page.locator('.composer-clear')).toBeEnabled();
+  // Delete, out of record mode, is still one selected Slot.
+  await cslot(page, 0, 1).locator('.cslot-note').click();
+  await page.locator('.composer-delete').click();
+  expect(await noteAt(page, 1)).toBeNull();
+  expect(await noteAt(page, 0)).not.toBeNull();
+  expect(await noteAt(page, 2)).not.toBeNull();
+  expect(await noteAt(page, 3)).not.toBeNull();
+  // Recording disables Clear notes; leaving record mode gives it back.
+  await page.locator('.record').click();
+  await expect(page.locator('.record')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.composer-clear')).toBeDisabled();
+  await page.locator('.record').click();
+  await expect(page.locator('.record')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.composer-clear')).toBeEnabled();
+});
+
 // --- AC-19.5.4: Double Length ---------------------------------------------------------
 
 test('AC-19.5.4/1 — With a note recorded, Double Length asks whether the new Measures keep the notes or start percussive, and cancelling leaves the composition unchanged', async ({ page }) => {
