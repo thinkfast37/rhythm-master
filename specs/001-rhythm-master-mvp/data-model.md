@@ -284,7 +284,8 @@ App-local bookkeeping *about* Patterns, keyed by Pattern id:
   "byPatternId": {
     "p_7f3a9c": {
       "submittedAt": "2026-08-14T10:22:00Z",   // US-13.1
-      "duplicateResolved": true                 // US-11.3 — one-time prompt already answered
+      "duplicateResolved": true,                // US-11.3 — one-time prompt already answered
+      "phraseLength": 4                         // US-10.3 — the base phrase Add variation copies, in Measures
     }
   }
 }
