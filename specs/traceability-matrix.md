@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 926 across 61 User Stories
+**Criteria**: 971 across 62 User Stories
 
-**Coverage**: 742 of 926 criteria proven (80.1%)
+**Coverage**: 787 of 971 criteria proven (81.1%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 742 | 80.1% |
-| 🔴 Gap — HIGH | 65 | 7.0% |
-| 🟠 Gap — MEDIUM | 41 | 4.4% |
-| 🟡 Gap — LOW | 78 | 8.4% |
+| 🟢 Proven | 787 | 81.1% |
+| 🔴 Gap — HIGH | 65 | 6.7% |
+| 🟠 Gap — MEDIUM | 41 | 4.2% |
+| 🟡 Gap — LOW | 78 | 8.0% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -119,6 +119,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.12 | 14 | **14** | · | · | · | · | · |
 | 🟢 US-2.13 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-19.10 | 17 | **17** | · | · | · | · | · |
+| 🟢 US-10.3 | 45 | **45** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1050,3 +1051,48 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.10 | `AC-19.10.5/1` 🖵 | Entering the Composer asks the browser for MIDI access, without system-exclusive messages; leaving and entering again in the same page load does not ask again | P-065 | T426 (1/1 done) | T427 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
 | US-19.10 | `AC-19.10.5/2` 🖵 | Where the browser has no Web MIDI — Safari, and every browser on iPhone and iPad — the picker is disabled and says MIDI input needs Chrome, Edge or Firefox, and tapping records as before | P-065 | T426 (1/1 done) | T427 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
 | US-19.10 | `AC-19.10.5/3` 🖵 | Where access is refused, the picker is disabled and says MIDI access was not allowed, and tapping records as before | P-065 | T426 (1/1 done) | T427 (1/1 done) | `composer-midi.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.1/1` 🖵 | The appended Measures are as many as the base phrase, and every Time Signature, Recipe, Accent Level and Pitch in them is the base phrase's except where the device's rule says otherwise | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.1/2` 🖵 | The Measures the Pattern already held are unchanged, whichever base was varied | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.1/3` 🖵 | Editing focus moves to the first Slot of the appended copy, as it does after Double Length | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.1/4` 🖵 | Into an owned Pattern the result auto-saves at once (US-7.2); on a shipped Pattern the choice is the first edit and the naming prompt of US-7.3 comes before anything is applied, cancelling it leaving the Pattern as it was | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.1/5` 🖵 | Add variation is enabled only while the Pattern's length plus the phrase length is within the 32-Measure cap, and says so when it is not | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.1/6` 🖵 | In the Composer the variation keeps the draft's notes — there is no keep-or-start-percussive question, which belongs to Double Length — and a draft Slot that sounds without a Pitch is copied as it is | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.2/1` 🖵 | The phrase length can be set to any number of Measures from 1 to the Pattern's length; its default is the length remembered for this Pattern, and the whole Pattern when none is remembered or the remembered length is longer than the Pattern | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.2/2` 🖵 | The original phrase is the Pattern's first Measures up to the phrase length; the latest copy is its last Measures of that length; while the Pattern is no longer than the phrase there is one base and no choice is shown | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.2/3` 🖵 | The phrase length is remembered per Pattern in `rm.localMeta.v1` when a variation is added, is in force after a reload, and like all Local Metadata is in no Pattern export or submission (FR-006) | P-066 | T430 (0/1 done) | T431 (0/1 done) | `storage.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.2/4` 🖵 | The picker says, under a progression that changes every Measure, that a phrase as long as the progression keeps each copy over the same chords, and under one that changes every pass, that the pass is now as long as the whole Pattern — the progression itself is never altered | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/1` | Fill the ending: the last Beat of the phrase — the last two Beats when the phrase has two or more Measures — takes the Straight 16ths Recipe, every Slot sounding; unavailable when each of those Beats already has four or more Slots all sounding | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/2` | Anticipate: the phrase's last sounding Slot moves one Slot earlier, taking its accent override and Pitch with it and falling silent where it was; unavailable when the Slot before it sounds or it is the phrase's first Slot | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/3` | Delay: in the phrase's last Measure, the first sounding Slot after the downbeat Slot moves one Slot later the same way; unavailable when there is none, when the Slot after it sounds, or when it is the phrase's last Slot | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/4` | Add a note: the first silent Slot whose computed default accent is Medium turns on; unavailable when there is none | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/5` | Drop a note: the last sounding Slot at Accent Level Weak that is not the first Slot of a Measure turns off; unavailable when there is none | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/6` | Breathe: every Slot of the phrase's last Beat turns off; unavailable when that Beat is already silent | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/7` | Double the last Beat: the phrase's last Beat takes the Recipe with twice its Slot count — Straight 8ths to Straight 16ths on a quarter-note Beat, Undivided to Straight 16ths on an eighth-note Beat — each sounding Slot landing on the Slot at twice its position with its override and Pitch, the Slots between them off; unavailable on any other Recipe | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/8` | Halve the last Beat: the reverse — Straight 16ths to Straight 8ths on a quarter-note Beat, to Undivided on an eighth-note Beat — the Slots at even positions kept and the others dropped; unavailable on any other Recipe | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/9` | Lift: every sounding Slot one Accent Level louder, Strong staying Strong; unavailable when every sounding Slot is Strong | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/10` | Soften: every sounding Slot one Accent Level quieter, Weak staying Weak and nothing turned off; unavailable when every sounding Slot is Weak | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/11` | Shift the accent: in each Measure of the phrase, the first Slot of Beat 1 takes Weak and the first Slot of Beat 2 takes Strong, each where it sounds; unavailable when no Measure has a sounding first Slot on Beat 1 or Beat 2, or every Measure has one Beat | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/12` | Resolve the ending (Melodic): the phrase's last sounding note becomes the tonic — degree 1 — nearest to it, the lower of two equally near; unavailable without a note or when it already is the tonic | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/13` | Open the ending (Melodic): the same with the fifth — degree 5; unavailable without a note or when it already is the fifth | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/14` | Sequence up (Melodic): every note one scale step up; unavailable without a note | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/15` | Sequence down (Melodic): every note one scale step down; unavailable without a note | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/16` | Octave up (Melodic): every note's octave raised by one, chord-tone Pitches keeping their roles; unavailable without a note or when any note is already in octave 7 | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/17` | Octave down (Melodic): every note's octave lowered by one, likewise; unavailable without a note or when any note is already in octave 1 | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/18` | Fill the gaps (Melodic): for each pair of consecutive notes two scale steps apart with a silent Slot between them, the silent Slot nearest the second note sounds the scale degree between them; unavailable when there is no such pair | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/19` | Neighbour (Melodic): the note followed by the longest run of silent Slots before the next note — the earlier of two equal runs — gets its upper scale neighbour on the last silent Slot of that run; unavailable when no note is followed by a silent Slot | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/20` | Chord-tone swap (Melodic, with a progression): each note that is the 3rd of the chord in force for its Measure in the first pass becomes that chord's 5th and each 5th its 3rd, a chord-tone Pitch of role 3 becoming role 5 and the reverse; unavailable without a progression or when no note is a 3rd or a 5th | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/21` | Invert (Melodic): each note's distance in scale steps from the phrase's first note is reversed, so a line that rose falls by the same steps; unavailable when every note is the first note's degree and octave | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/22` | Retrograde (Melodic): the notes are reversed over the same sounding Slots, the first sounding Slot taking the last note's Pitch and so on; unavailable when fewer than two distinct Pitches sound | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/23` | Under a fill, every Pitch device other than Octave up and Octave down is unavailable, saying the fill deals the notes; the Rhythm, Dynamics and Fill devices apply and are heard under it | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.3/24` | Change the fill (Melodic, with a progression and a fill set): the Measures already there take the notes the current fill deals them in the first pass, written as fixed Pitches at each Slot's own octave; the copy takes the notes the next fill deals it in the first pass of the lengthened Pattern, written the same way; and the Pattern's fill becomes None, the progression unchanged. The next fill is the next on My list after the current one when the Fills cycle is set to My list, and the next in the catalogue otherwise, wrapping round and never None. Unavailable without a progression, without a fill, or when the next fill is the current one | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/1` 🖵 | Add variation sits beside Double Length in the grid editor's Measures row, in the Composer's Measures control, and — on a making goal whose tab bar has no Rhythm group — in a Measures row at the foot of the Melody group carrying Double Length and Add variation; disabled with the reason when the cap refuses it | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/2` 🖵 | The picker lists the devices under the headings Rhythm, Dynamics, Pitch and Fill, in the order of AC-10.3.3, each with its name and one line saying what it does to the phrase | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/3` 🖵 | A device unavailable on this base phrase is shown disabled with its reason; the Pitch group says it needs a melody on a percussive Pattern, and the Fill group that it needs a progression and a fill | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/4` 🖵 | Choosing a device applies it and closes the picker; the picker can be dismissed with no change, by its Close control or Escape | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/5` 🖵 | The picker is a named dialog that takes focus on opening, returns it to Add variation on closing, and whose devices and their reasons are read by assistive technology as buttons with their descriptions | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/6` 🖵 | On a phone the picker fills the width within the mobile breakpoint with the groups stacked, each device a full-width row; on desktop and tablet it is a dialog over the editor | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/7` 🖵 | Roll the dice, at the head of the picker, applies one device chosen at random from those available and not in a group marked No dice, exactly as tapping it would, and is disabled saying so when no such device remains | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.4/8` 🖵 | Each group heading carries a No dice toggle that keeps the whole group out of the roll and changes nothing else; the toggles hold for the session and are not Pattern content | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.5/1` 🖵 | The Pattern's JSON, MIDI export and submission payload carry no device name, base choice or phrase length, and are byte-for-byte what the same Measures entered by hand would give | P-066 | T430 (0/1 done) | T431 (0/1 done) | `storage.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.5/2` 🖵 | Removing Measures from the end discards the latest variation Measure by Measure, and Double Length, Condense and Append work on the lengthened Pattern as on any other | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |
+| US-10.3 | `AC-10.3.5/3` 🖵 | Duplicate detection and Families (US-11.1, US-11.2) compare the Measures alone; two Patterns built by the same devices from the same phrase are true duplicates | P-066 | T430 (0/1 done) | T431 (0/1 done) | `variations.spec.js` | 🟢 OK |

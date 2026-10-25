@@ -70,6 +70,33 @@ describe('storage/localMeta — FR-006 separation', () => {
     expect(localMeta.forPattern('p_1')).toEqual({});
   });
 
+  it('AC-10.3.2/3 — The phrase length is remembered per Pattern in `rm.localMeta.v1` when a variation is added, is in force after a reload, and like all Local Metadata is in no Pattern export or submission (FR-006)', () => {
+    const p = { ...create('Loop'), id: 'p_1' };
+    patterns.upsert(p);
+    localMeta.update('p_1', { phraseLength: 4 });
+    // What a reload reads back.
+    expect(localMeta.forPattern('p_1').phraseLength).toBe(4);
+    expect(localMeta.forPattern('p_2').phraseLength).toBeUndefined();
+    // Never on the Pattern, so never in anything serialized from it.
+    expect(JSON.stringify(patterns.findById('p_1'))).not.toContain('phraseLength');
+    expect(localMeta.LOCAL_META_FIELDS).toContain('phraseLength');
+  });
+
+  it('AC-10.3.5/1 — The Pattern’s JSON, MIDI export and submission payload carry no device name, base choice or phrase length, and are byte-for-byte what the same Measures entered by hand would give', () => {
+    // A Pattern stores nothing about how its Measures came to be: the store holds
+    // the Measures alone, and a Pattern grown by a device and one typed in are
+    // the same bytes. The Local Metadata that does remember the phrase sits in
+    // a different store, keyed by id, and is not reachable from the Pattern.
+    const grown = { ...create('Grown'), id: 'p_1' };
+    const typed = { ...create('Grown'), id: 'p_1' };
+    patterns.upsert(grown);
+    localMeta.update('p_1', { phraseLength: 2 });
+    expect(JSON.stringify(patterns.findById('p_1'))).toBe(JSON.stringify(typed));
+    for (const word of ['device', 'phraseLength', 'base', 'variation']) {
+      expect(JSON.stringify(patterns.findById('p_1'))).not.toContain(word);
+    }
+  });
+
   it('AC-13.1.5 — Submission-tracking is Local Metadata, never part of the export payload: no Local Metadata field name appears in a serialized Pattern', () => {
     const p = { ...create('Groove'), id: 'p_1' };
     patterns.upsert(p);
