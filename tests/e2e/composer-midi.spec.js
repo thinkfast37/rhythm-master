@@ -7,7 +7,7 @@
  * has it; 'denied' refuses access.
  */
 import { test, expect } from '@playwright/test';
-import { launch, openApp, enterComposer, leaveComposer, composerState, loadFourBeats, fret, key, cslot } from './composer-helpers.js';
+import { launch, openApp, enterComposer, leaveComposer, composerState, loadFourBeats, fret, cslot } from './composer-helpers.js';
 
 test.use(launch);
 
@@ -55,6 +55,14 @@ const play = (page, notes, device = 'kbd') =>
   page.evaluate(([d, ns]) => window.__fakeMidi.send(d, ...ns.map((n) => [0x90, n, 96])), [device, notes]);
 const sendRaw = (page, messages, device = 'kbd') => page.evaluate(([d, ms]) => window.__fakeMidi.send(d, ...ms), [device, messages]);
 const heard = (page, midi) => page.evaluate((m) => window.__rm.voiceLog().filter((v) => v.midi === m).length, midi);
+/*
+ * What is lit, read in one snapshot. A note stays lit for 350 ms (AC-19.10.2),
+ * so separate checks one after another can straddle it going out; one
+ * snapshot asserts the whole lit set at a single instant.
+ */
+const litKeys = (page) => page.locator('.piano .key.lit').evaluateAll((ks) => ks.map((k) => Number(k.dataset.midi)));
+const litFrets = (page) =>
+  page.locator('.fretboard .note.lit').evaluateAll((ns) => ns.map((n) => `${n.dataset.string}:${n.dataset.fret}`).sort());
 const pitches = (page) => page.evaluate(() => window.__rm.composer().draft.measures[0].beats.map((b) => b.slots[0].pitch ?? null));
 const target = async (page) => (await composerState(page)).target;
 const toPiano = (page) => page.locator('.instrument-switch [data-instrument="piano"]').click();
@@ -173,9 +181,9 @@ test('AC-19.10.2/1 — In the Piano view the key for the note lights, and goes o
   await loadFourBeats(page);
   await toPiano(page);
   await play(page, [67]);
-  await expect(key(page, 67)).toHaveClass(/\blit\b/);
-  await expect(page.locator('.piano .key.lit')).toHaveCount(1);
-  await expect(key(page, 67)).not.toHaveClass(/\blit\b/, { timeout: 1000 });
+  // The key for the note, and no other.
+  await expect.poll(() => litKeys(page)).toEqual([67]);
+  await expect.poll(() => litKeys(page), { timeout: 1000 }).toEqual([]);
 });
 
 test('AC-19.10.2/2 — In the Guitar view every visible, playable fret that sounds the note lights, and goes out again within a second', async ({ page }) => {
@@ -184,18 +192,15 @@ test('AC-19.10.2/2 — In the Guitar view every visible, playable fret that soun
   await loadFourBeats(page);
   // E4 is open on the top string and at 5, 9, 14, 19 and 24 below it.
   await play(page, [64]);
-  await expect(page.locator('.fretboard .note.lit')).toHaveCount(6);
-  for (const [s, f] of [[0, 0], [1, 5], [2, 9], [3, 14], [4, 19], [5, 24]]) await expect(fret(page, s, f)).toHaveClass(/\blit\b/);
-  await expect(page.locator('.fretboard .note.lit')).toHaveCount(0, { timeout: 1000 });
+  await expect.poll(() => litFrets(page)).toEqual(['0:0', '1:5', '2:9', '3:14', '4:19', '5:24']);
+  await expect.poll(() => litFrets(page), { timeout: 1000 }).toEqual([]);
   // With frets 5–12 visible, only the two places on screen light.
   await page.locator('.fret-lower').fill('5');
   await page.locator('.fret-lower').press('Enter');
   await page.locator('.fret-upper').fill('12');
   await page.locator('.fret-upper').press('Enter');
   await play(page, [64]);
-  await expect(page.locator('.fretboard .note.lit')).toHaveCount(2);
-  await expect(fret(page, 1, 5)).toHaveClass(/\blit\b/);
-  await expect(fret(page, 2, 9)).toHaveClass(/\blit\b/);
+  await expect.poll(() => litFrets(page)).toEqual(['1:5', '2:9']);
 });
 
 // --- AC-19.10.3: out of range -----------------------------------------------------
