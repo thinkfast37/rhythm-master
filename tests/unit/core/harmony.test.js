@@ -34,6 +34,7 @@ import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pat
 import { fillIndexFor, fillIndexOf, withArpeggio, progressionIndexFor, progressionIndexOf, withProgression } from '../../../src/core/harmony.js';
 import { cycleOrder, cycleStart } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
+import { entryAt, playingAt } from '../../../src/core/song.js';
 import {
   chordStack,
   setChordBass,
@@ -428,7 +429,7 @@ describe('core/harmony', () => {
     expect(dealKey(0, 1, 0)).toBe('0:1:0');
   });
 
-  it("AC-2.6.6/9 — A step is a chord tone at an octave, a drone, a scale step rooted on the chord, a scale neighbour of a chord tone, or an interval above the chord's root: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root", () => {
+  it("AC-2.6.6/9 — A step is a chord tone at an octave, a drone, a scale step rooted on the chord, a scale neighbour of a chord tone, an interval above the chord's root, a chromatic neighbour of a chord tone, or a chromatic approach to the next chord: Up to the octave sounds Root 3rd 5th then the Root an octave up, Down from the octave the reverse, Up over and down rises through the octave Root and falls without repeating it, and Up and down repeating the turn sounds Root 3rd 5th 5th 3rd Root", () => {
     const p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats
     const under = (id) => notesOf(setArpeggio(p, id));
     expect(under('up-octave')).toEqual([60, 64, 67, 72, 60, 64, 67, 72, 60, 64, 67, 72]);
@@ -449,6 +450,9 @@ describe('core/harmony', () => {
     // The two newer kinds: a scale neighbour of a chord tone, and an interval above the chord's root.
     expect(arpeggioSequence('upper-neighbour-fifth', p)).toEqual([{ tone: 5 }, { tone: 5 }, { neighbour: 1, of: 5 }, { tone: 5 }]);
     expect(arpeggioSequence('boogie', p).slice(3, 5)).toEqual([{ interval: '6' }, { interval: 'b7' }]);
+    // The chromatic kinds: a semitone beside a chord tone, and a semitone beside the next chord's bass.
+    expect(arpeggioSequence('chromatic-approach-below', p).slice(0, 2)).toEqual([{ chromatic: -1, of: 1 }, { tone: 1 }]);
+    expect([...arpeggioDeal(setArpeggio(sounding(setProgression(melodic(), 'I-IV-V'), 4), 'walk-next-below'), 0).values()][3]).toEqual({ approach: -1, target: 5 });
     expect(ARPEGGIOS.map((a) => a.id)).toEqual([
       'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave', 'up-over-down',
       'travis', 'travis-down', 'bass-treble-pair', 'backward-roll', 'inside-out', 'outside-in', 'sweep', 'sweep-back',
@@ -463,6 +467,8 @@ describe('core/harmony', () => {
       'octave-pump', 'octave-pairs', 'three-and-move', 'seven-and-move', 'root-fifth-doubled',
       'pedal-root-riff', 'root-pedal-below', 'fifth-on-top', 'reciting-fifth', 'reciting-third',
       'upper-neighbour-fifth', 'lower-neighbour-root', 'upper-neighbour-third', 'neighbours-root', 'boogie',
+      'chromatic-approach-below', 'chromatic-approach-above', 'enclosure', 'chromatic-enclosure',
+      'chromatic-run-up', 'chromatic-run-down', 'line-cliche', 'walk-next-below', 'walk-next-above',
     ]);
   });
 
@@ -667,6 +673,118 @@ describe('core/harmony', () => {
     expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
   });
 
+  it("AC-2.6.6/20 — A chromatic-approach fill reaches each rising chord tone from the semitone beside it, whatever the Key: Chromatic approach from below sounds B C E♭ E F♯ G over C, Chromatic approach from above D♭ C F E A♭ G; Enclosure sounds the Pattern's scale note above, the semitone below, then the chord tone — D B C F E♭ E A F♯ G over C in C major — and Chromatic enclosure takes the semitone above as well — D♭ B C F E♭ E A♭ F♯ G; the note band marks a chromatic neighbour by its chord tone, +½ above and −½ below", () => {
+    const under = (id, q) => notesOf(setArpeggio(q, id));
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 9);
+    expect(under('chromatic-approach-below', p).slice(0, 6)).toEqual([59, 60, 63, 64, 66, 67]); // B C E♭ E F♯ G
+    expect(under('chromatic-approach-above', p).slice(0, 6)).toEqual([61, 60, 65, 64, 68, 67]); // D♭ C F E A♭ G
+    expect(under('enclosure', p)).toEqual([62, 59, 60, 65, 63, 64, 69, 66, 67]); // D B C F E♭ E A F♯ G
+    expect(under('chromatic-enclosure', p)).toEqual([61, 59, 60, 65, 63, 64, 68, 66, 67]); // D♭ B C F E♭ E A♭ F♯ G
+    // Whatever the Key: over Em in C the approaches are D♯, F♯ and A♯, while the enclosure's upper note is the Key's.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 4 }), 'I-V-vi-iii'), 'measure'), 9);
+    expect(under('chromatic-approach-below', changing).slice(27, 33)).toEqual([63, 64, 66, 67, 70, 71]); // D♯ E F♯ G A♯ B
+    expect(under('enclosure', changing).slice(27, 36)).toEqual([65, 63, 64, 69, 66, 67, 72, 70, 71]); // F E♭ E A F♯ G C B♭ B
+    // The band marks a chromatic neighbour by its chord tone, ½ a step either side.
+    expect(arpeggioSequence('chromatic-approach-below', p).map(stepLabel)).toEqual(['R−½', 'R', '3−½', '3', '5−½', '5']);
+    expect(arpeggioSequence('chromatic-approach-above', p).map(stepLabel)).toEqual(['R+½', 'R', '3+½', '3', '5+½', '5']);
+    expect(arpeggioSequence('enclosure', p).map(stepLabel)).toEqual(['R+', 'R−½', 'R', '3+', '3−½', '3', '5+', '5−½', '5']);
+    expect(arpeggioSequence('chromatic-enclosure', p).map(stepLabel)).toEqual(['R+½', 'R−½', 'R', '3+½', '3−½', '3', '5+½', '5−½', '5']);
+    // And every one bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['chromatic-approach-below', 'chromatic-approach-above', 'enclosure', 'chromatic-enclosure']) {
+      const filled = setArpeggio(changing, id);
+      expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+    }
+  });
+
+  it("AC-2.6.6/21 — A chromatic run moves by semitones above the chord's root, whatever the Key and the chord's quality: Chromatic run up to the 5th sounds C C♯ D E♭ E F F♯ G over C and D E♭ E F F♯ G A♭ A over Dm; Chromatic run down from the octave sounds C′ B B♭ A A♭ G", () => {
+    const under = (id, q, pass = 0) => notesOf(setArpeggio(q, id), pass);
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 8);
+    expect(under('chromatic-run-up', p)).toEqual([60, 61, 62, 63, 64, 65, 66, 67]); // C C♯ D E♭ E F F♯ G
+    expect(under('chromatic-run-down', p).slice(0, 6)).toEqual([72, 71, 70, 69, 68, 67]); // C′ B B♭ A A♭ G
+    const dm = sounding(setProgression(melodic(), 'ii-V-I'), 8);
+    expect(under('chromatic-run-up', dm)).toEqual([62, 63, 64, 65, 66, 67, 68, 69]); // D E♭ E F F♯ G A♭ A
+    // Whatever the quality: over Cm the run is the same semitones.
+    const minor = sounding(setProgression(melodic({ scale: 'aeolian' }), 'i-iv-v'), 8);
+    expect(under('chromatic-run-up', minor)).toEqual([60, 61, 62, 63, 64, 65, 66, 67]);
+    expect(arpeggioSequence('chromatic-run-up', p).map(stepLabel)).toEqual(['1', '♭2', '2', '♭3', '3', '4', '♯4', '5']);
+    expect(arpeggioSequence('chromatic-run-down', p).map(stepLabel)).toEqual(['1↑', '7', '♭7', '6', '♭6', '5']);
+    const filled = setArpeggio(dm, 'chromatic-run-up');
+    expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+  });
+
+  it("AC-2.6.6/22 — Line cliché sounds the chord's root, then falls by semitones through the major 7th, minor 7th and major 6th an octave down — C B B♭ A over C, and the same four over Cm, where it is the minor line cliché — each chord taking its own under an every-Measure change", () => {
+    const under = (id, q) => notesOf(setArpeggio(q, id));
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 4);
+    expect(under('line-cliche', p)).toEqual([60, 59, 58, 57]); // C B B♭ A
+    const minor = sounding(setProgression(melodic({ scale: 'aeolian' }), 'i-iv-v'), 4);
+    expect(under('line-cliche', minor)).toEqual([60, 59, 58, 57]);
+    // Each chord its own: C then F, one a Measure.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 2 }), 'I-IV'), 'measure'), 4);
+    expect(under('line-cliche', changing)).toEqual([60, 59, 58, 57, 65, 64, 63, 62]); // C B B♭ A, F E E♭ D
+    expect(arpeggioSequence('line-cliche', p).map(stepLabel)).toEqual(['1', '7↓', '♭7↓', '6↓']);
+    const filled = setArpeggio(changing, 'line-cliche');
+    expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+  });
+
+  it("AC-2.6.6/23 — Walking into the next chord deals the chord tones rising and makes the last sounding Slot before the chord changes a semitone below — or, from above, a semitone above — the next chord's bass: under an every-Measure change through C then F, four Slots a Measure from below sound C E G E then F A C B, the last aimed at C at the top of the next pass; from above, C E G F♯ then F A C D♭", () => {
+    const p = sounding(setChange(setProgression(melodic({ measures: 2 }), 'I-IV'), 'measure'), 4);
+    // From below: C E G E (into F), F A C B (into C at the top of the next pass).
+    expect(notesOf(setArpeggio(p, 'walk-next-below'))).toEqual([60, 64, 67, 64, 65, 69, 72, 59]);
+    // From above: C E G F♯, F A C D♭.
+    expect(notesOf(setArpeggio(p, 'walk-next-above'))).toEqual([60, 64, 67, 66, 65, 69, 72, 61]);
+    // Only the last sounding Slot before the change: with more Slots the rest still rise.
+    const more = sounding(setChange(setProgression(melodic({ measures: 2 }), 'I-IV'), 'measure'), 6);
+    expect(notesOf(setArpeggio(more, 'walk-next-below'))).toEqual([60, 64, 67, 60, 64, 64, 65, 69, 72, 65, 69, 59]);
+    // It bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    const filled = setArpeggio(p, 'walk-next-below');
+    expect(notesOf(clearHarmony(filled))).toEqual(notesOf(filled));
+  });
+
+  it("AC-2.6.6/24 — Under a once-a-pass change, walking into the next chord falls on the last sounding Slot of the pass, aimed at the chord the next pass opens on, and the last pass of the harmonic cycle aims back at its first chord", () => {
+    const p = setArpeggio(sounding(setProgression(melodic(), 'I-IV-V'), 4), 'walk-next-below');
+    expect(cyclePasses(p)).toBe(3);
+    expect(notesOf(p, 0)).toEqual([60, 64, 67, 64]); // into F
+    expect(notesOf(p, 1)).toEqual([65, 69, 72, 66]); // into G
+    expect(notesOf(p, 2)).toEqual([67, 71, 74, 59]); // back into C, the cycle's first chord
+    expect(notesOf(p, 3)).toEqual(notesOf(p, 0));
+    // Over two Measures the approach waits for the pass's last sounding Slot.
+    const two = setArpeggio(sounding(setProgression(melodic({ measures: 2 }), 'I-IV-V'), 2), 'walk-next-above');
+    expect(notesOf(two, 0)).toEqual([60, 64, 67, 66]); // C E | G F♯, into F from above
+  });
+
+  it("AC-2.6.6/25 — Over a next chord with a bass chosen, the approach aims at that bass: walking into C/E from below sounds E♭", () => {
+    let p = sounding(setProgression(melodic(), 'I-IV'), 4);
+    p = setChordBass(p, 0, 1); // C/E
+    p = setArpeggio(p, 'walk-next-below');
+    expect(notesOf(p, 1)).toEqual([65, 69, 72, 63]); // F A C, then E♭ into C/E
+    expect(notesOf(setArpeggio(p, 'walk-next-above'), 1)).toEqual([65, 69, 72, 65]); // F into C/E from above
+  });
+
+  it("AC-2.6.6/26 — The approach to the next chord is reckoned within the Pattern: a Pattern playing as a Section of a Song aims its last approach at the chord the Pattern itself would play next, not at the next Section's", () => {
+    const a = { ...sounding(setProgression(melodic(), 'I-IV'), 4), id: 'a' };
+    const b = { ...sounding(setProgression(melodic(), 'ii-V-I'), 4), id: 'b' };
+    const byId = (id) => ({ a, b })[id];
+    const song = {
+      id: null,
+      name: 'Two Sections',
+      sections: [
+        { patternId: 'a', entries: [{ fill: 'walk-next-below', repeats: 1 }] },
+        { patternId: 'b', entries: [{ fill: 'up', repeats: 1 }] },
+      ],
+    };
+    // The first Section's last pass, under F: the approach aims at its own C (B), not the next Section's Dm (C♯).
+    const at = entryAt(song, byId, 1);
+    expect(at.sectionIndex).toBe(0);
+    expect(notesOf(playingAt(song, byId, 1), at.passInEntry)).toEqual([65, 69, 72, 59]);
+  });
+
+  it("AC-2.6.6/27 — The note band marks an approach to the next chord →−½ from below and →+½ from above", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 4);
+    const labels = (id) => [...arpeggioDeal(setArpeggio(p, id), 0).values()].map(stepLabel);
+    expect(labels('walk-next-below')).toEqual(['R', '3', '5', '→−½']);
+    expect(labels('walk-next-above')).toEqual(['R', '3', '5', '→+½']);
+  });
+
   it("AC-2.6.6/11 — A scale walk steps up the chosen scale from the chord's root, one octave and round again: Scale up in major under F sounds F G A B♭ C D E then F; Scale up and down turns without repeating the turn; the Pattern's scale walks the scale the Pattern carries", () => {
     const p = sounding(setProgression(melodic(), 'I-IV-V'), 12);
     // Under the IV (pass 1): F major from F.
@@ -753,17 +871,17 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — Under All the order is the catalogue's, through all six groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — Under All the order is the catalogue's, through all seven groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
-    expect(n).toBe(70);
+    expect(n).toBe(79);
     const one = { start: 0, baseLoop: 0, repeats: 1 };
     const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
     expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
     expect(sequence[n]).toBe(ARPEGGIOS[0].id);
     expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
     expect(sequence).not.toContain('none');
-    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes']);
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes', 'Chromatic']);
 
     // A Pattern's own fill is where the cycle starts; none means the first.
     expect(fillIndexOf(p)).toBe(0);
