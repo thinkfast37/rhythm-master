@@ -542,6 +542,9 @@ export const PROGRESSIONS = [
  *   { scale: kind, step, octave? }      the n-th step of a scale rooted on the chord
  *   { neighbour: 1|-1, of, octave? }    the Pattern's scale note next above or below the chord tone `of`
  *   { interval, octave? }               a fixed interval above the chord's root, whatever the Key
+ *   { chromatic: 1|-1, of, octave? }    the semitone above or below the chord tone `of`, whatever the Key
+ *   { approach: 1|-1, target }          the semitone above or below the next chord's bass, `target`
+ *                                       semitones above the tonic — written by the deal, never by an entry
  * Every catalogue entry builds its sequence from the progression's roles and,
  * for a walk, the scale it names. Nothing here is stored: the deal is derived.
  */
@@ -603,6 +606,12 @@ const walkOverPedal = (pedal, down = false) => (ctx) => {
 const N = (of, neighbour) => ({ neighbour, of });
 /** A fixed interval above the chord's root (AC-2.6.6/19). */
 const above = (interval) => ({ interval });
+/** The semitone above (+1) or below (−1) a chord tone, whatever the Key (AC-2.6.6/20). */
+const C = (of, chromatic) => ({ chromatic, of });
+/** Each rising chord tone reached from the steps `before` it builds (AC-2.6.6/20). */
+const approached = (roles, before) => roles.flatMap((r) => [...before(r), T(r)]);
+/** Fixed intervals above the chord's root, each at an octave (AC-2.6.6/21, /22). */
+const intervals = (pairs) => pairs.map(([interval, octave]) => (octave ? { interval, octave } : { interval }));
 /** Each role of `roles` dealt `times` times before the next (AC-2.6.6/16). */
 const repeatEach = (roles, times) => roles.flatMap((r) => Array(times).fill(T(r)));
 const walkUpDown = (kind) => (ctx) => {
@@ -612,8 +621,10 @@ const walkUpDown = (kind) => (ctx) => {
 };
 
 /**
- * The arpeggios a Pattern can follow (AC-2.6.6/1), in six groups. Absent on
- * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`.
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in seven groups. Absent on
+ * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`. An entry
+ * carrying `approach` has the deal turn the last sounding Slot before each
+ * chord change into the semitone beside the next chord's bass (AC-2.6.6/23).
  */
 export const ARPEGGIOS = [
   { id: 'up', label: 'Ascending', group: 'Chord tones', steps: ({ roles }) => tones(roles) },
@@ -698,6 +709,25 @@ export const ARPEGGIOS = [
     group: 'Repeated notes',
     steps: ({ roles }) => [...tones(at(roles, [0, 1, 2])), above('6'), above('b7'), above('6'), ...tones(at(roles, [2, 1]))],
   },
+  { id: 'chromatic-approach-below', label: 'Chromatic approach from below', group: 'Chromatic', steps: ({ roles }) => approached(roles, (r) => [C(r, -1)]) },
+  { id: 'chromatic-approach-above', label: 'Chromatic approach from above', group: 'Chromatic', steps: ({ roles }) => approached(roles, (r) => [C(r, 1)]) },
+  { id: 'enclosure', label: 'Enclosure', group: 'Chromatic', steps: ({ roles }) => approached(roles, (r) => [N(r, 1), C(r, -1)]) },
+  { id: 'chromatic-enclosure', label: 'Chromatic enclosure', group: 'Chromatic', steps: ({ roles }) => approached(roles, (r) => [C(r, 1), C(r, -1)]) },
+  {
+    id: 'chromatic-run-up',
+    label: 'Chromatic run up to the 5th',
+    group: 'Chromatic',
+    steps: () => intervals([['1'], ['b2'], ['2'], ['b3'], ['3'], ['4'], ['#4'], ['5']]),
+  },
+  {
+    id: 'chromatic-run-down',
+    label: 'Chromatic run down from the octave',
+    group: 'Chromatic',
+    steps: () => intervals([['1', 1], ['7'], ['b7'], ['6'], ['b6'], ['5']]),
+  },
+  { id: 'line-cliche', label: 'Line cliché', group: 'Chromatic', steps: () => intervals([['1'], ['7', -1], ['b7', -1], ['6', -1]]) },
+  { id: 'walk-next-below', label: 'Walking into the next chord from below', group: 'Chromatic', approach: -1, steps: ({ roles }) => tones(roles) },
+  { id: 'walk-next-above', label: 'Walking into the next chord from above', group: 'Chromatic', approach: 1, steps: ({ roles }) => tones(roles) },
 ];
 
 export const CHANGES = ['pass', 'measure'];
@@ -1290,10 +1320,13 @@ export function dealKey(measureIndex, beatIndex, slotIndex) {
 export function arpeggioDeal(pattern, pass = 0) {
   const order = pattern?.harmony?.arpeggio;
   if (!order || !hasHarmony(pattern)) return null;
+  const approach = ARPEGGIOS.find((a) => a.id === order)?.approach;
   const deal = new Map();
   let sequence = null;
   let k = 0;
   let previous = null;
+  let lastKey = null;
+  const last = pattern.measures.length - 1;
   pattern.measures.forEach((measure, m) => {
     const chord = chordAt(pattern, pass, m);
     if (m === 0 || chord !== previous) {
@@ -1305,10 +1338,20 @@ export function arpeggioDeal(pattern, pass = 0) {
     measure.beats.forEach((beat, b) => {
       beat.slots.forEach((slot, s) => {
         if (!slot.on) return;
-        deal.set(dealKey(m, b, s), sequence[k % sequence.length]);
+        lastKey = dealKey(m, b, s);
+        deal.set(lastKey, sequence[k % sequence.length]);
         k += 1;
       });
     });
+    // Walking into the next chord: the span's last sounding Slot takes the
+    // semitone beside the bass of the chord after it — the next Measure's, or
+    // the next pass's at the end, wrapping with the cycle and reckoned within
+    // the Pattern alone (AC-2.6.6/23–/26).
+    const next = m === last ? chordAt(pattern, pass + 1, 0) : chordAt(pattern, pass, m + 1);
+    if (approach && lastKey !== null && (m === last || next !== chord)) {
+      deal.set(lastKey, { approach, target: chordStack(pattern.harmony.chords[next])[0].offset });
+      lastKey = null;
+    }
   });
   return deal;
 }
@@ -1367,6 +1410,8 @@ function stepSemitones(step, chord, pattern) {
   if (step.drone !== undefined) return droneSemitones(step.drone, chord, pattern) + shift;
   if (step.neighbour !== undefined) return neighbourSemitones(step, chord, pattern) + shift;
   if (step.interval !== undefined) return memberFor(chord, 1).offset + degreeSemitones(step.interval) + shift;
+  if (step.chromatic !== undefined) return memberFor(chord, step.of).offset + step.chromatic + shift;
+  if (step.approach !== undefined) return step.target + step.approach;
   if (step.scale !== undefined) {
     const degrees = walkDegrees(step.scale, pattern);
     const i = step.step - 1;
@@ -1395,12 +1440,14 @@ export function stepAsDegree(step, chord, pattern, octaveOffset = 0) {
 
 const OCTAVE_MARK = (octave) => (octave > 0 ? '↑'.repeat(octave) : octave < 0 ? '↓'.repeat(-octave) : '');
 
-/** How the band writes a step: `R↑`, `T↑` for the tonic drone, `5̂↑` for the scale's 5th, `s3` for a scale step, `5+` / `R−` for a neighbour, `♭7` for an interval above the root (AC-2.6.6/12, /14, /18, /19). */
+/** How the band writes a step: `R↑`, `T↑` for the tonic drone, `5̂↑` for the scale's 5th, `s3` for a scale step, `5+` / `R−` for a neighbour, `♭7` for an interval above the root, `3−½` / `R+½` for a chromatic neighbour, `→−½` / `→+½` for an approach to the next chord (AC-2.6.6/12, /14, /18–/20, /27). */
 export function stepLabel(step) {
   if (step.tone !== undefined) return `${toneLabel(step.tone)}${OCTAVE_MARK(step.octave ?? 0)}`;
   if (step.drone !== undefined) return `${DRONE_MARK[step.drone]}${OCTAVE_MARK(step.octave ?? 0)}`;
   if (step.neighbour !== undefined) return `${toneLabel(step.of)}${step.neighbour > 0 ? '+' : '−'}${OCTAVE_MARK(step.octave ?? 0)}`;
   if (step.interval !== undefined) return `${degreeLabel(step.interval)}${OCTAVE_MARK(step.octave ?? 0)}`;
+  if (step.chromatic !== undefined) return `${toneLabel(step.of)}${step.chromatic > 0 ? '+' : '−'}½${OCTAVE_MARK(step.octave ?? 0)}`;
+  if (step.approach !== undefined) return `→${step.approach > 0 ? '+' : '−'}½`;
   return `s${step.step}`;
 }
 
