@@ -10,6 +10,7 @@ import { recipesFor, isOffered } from '../core/recipes.js';
 import { canCondense } from '../core/condense.js';
 import { canAddVariation } from '../core/variations.js';
 import { surfaceFor } from '../core/goals.js';
+import { DICE_CONTROLS, canRoll } from '../core/dice.js';
 import {
   KEYS,
   degreeLabel,
@@ -603,6 +604,9 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
   root.hidden = pattern.soundMode !== 'melodic';
   return rebuild(root, (fresh) => {
     if (root.hidden) return;
+    // Roll the dice first (AC-2.14.1/1): one tap re-picks every control below
+    // not marked No dice, so it stands ahead of the controls it rolls.
+    fresh.appendChild(renderDiceRow(pattern, state, handlers));
     const strip = el('div', 'pitch-strip');
     renderPitchStripInto(strip, pattern, state, handlers);
     fresh.appendChild(strip);
@@ -860,6 +864,49 @@ function renderSwing(pattern, handlers) {
 }
 
 /**
+ * Roll the dice (US-2.14): one tap re-picks every Melody control not marked
+ * No dice — Key, Scale, Register, Progression, Chord changes, Fill, Voicing —
+ * as one edit. The marks are session state (`state.noDice`), never Pattern
+ * content; with every control marked, there is nothing to roll and the button
+ * says so (AC-2.14.1/5).
+ */
+function renderDiceRow(pattern, state, handlers) {
+  const row = el('div', 'control-group dice-row');
+  const noDice = [...(state.noDice ?? [])];
+  const can = canRoll(pattern, noDice);
+  const roll = el('button', 'roll-dice', {
+    type: 'button',
+    textContent: can ? '🎲 Roll the dice' : '🎲 Roll the dice — nothing left to roll',
+    title: can
+      ? 'Re-pick every Melody control not marked No dice, at random'
+      : 'Every control the dice could roll is marked No dice',
+  });
+  roll.dataset.action = 'roll-dice';
+  roll.disabled = !can;
+  roll.addEventListener('click', () => handlers.onRollDice());
+  row.appendChild(roll);
+  row.appendChild(el('span', 'dice-hint', { textContent: 'No dice keeps a control as it is' }));
+  return row;
+}
+
+/** The No dice toggle beside one control the roll can change (AC-2.14.3). */
+function noDiceToggle(id, state, handlers) {
+  const label = DICE_CONTROLS.find((c) => c.id === id)?.label ?? id;
+  const on = Boolean(state.noDice?.has(id));
+  const toggle = el('button', `nodice${on ? ' on' : ''}`, {
+    type: 'button',
+    textContent: 'No dice',
+    title: on ? `${label} is kept out of the roll` : `Keep ${label} out of the roll`,
+  });
+  toggle.dataset.action = 'no-dice';
+  toggle.dataset.control = id;
+  toggle.setAttribute('aria-pressed', String(on));
+  toggle.setAttribute('aria-label', `No dice for ${label}`);
+  toggle.addEventListener('click', () => handlers.onNoDice(id));
+  return toggle;
+}
+
+/**
  * The pitch strip: the palette a Melodic grid is stamped from (US-2.2).
  *
  * It holds one armed pitch — a chromatic degree and an octave — and does
@@ -905,6 +952,7 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   keyPicker.value = key;
   keyPicker.addEventListener('change', (e) => handlers.onKey(e.target.value));
   root.appendChild(keyPicker);
+  root.appendChild(noDiceToggle('key', state, handlers));
 
   // The scale drives the strip's in-scale marking and spelling, nothing else —
   // resolution to a sounding note never sees it (AC-2.5.5).
@@ -922,6 +970,7 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   scale.value = scaleId;
   scale.addEventListener('change', (e) => handlers.onScale(e.target.value));
   root.appendChild(scale);
+  root.appendChild(noDiceToggle('scale', state, handlers));
 
   // The Register places the whole Pattern in an octave (AC-2.9.1): it sits with
   // the Key and the scale because, like them, it governs every note at once,
@@ -944,6 +993,7 @@ function renderPitchStripInto(root, pattern, state, handlers) {
   register.value = String(registerOf(pattern));
   register.addEventListener('change', (e) => handlers.onRegister(Number(e.target.value)));
   root.appendChild(register);
+  root.appendChild(noDiceToggle('register', state, handlers));
 
   // Under an arpeggio the notes are dealt, not stamped: the chips stand down
   // and the strip says so, so nothing here looks tappable and does nothing
@@ -1035,6 +1085,7 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   picker.value = harmonic ? (matched ?? 'custom') : 'none';
   picker.addEventListener('change', (e) => handlers.onProgression(e.target.value));
   head.appendChild(picker);
+  head.appendChild(noDiceToggle('progression', state, handlers));
   root.appendChild(head);
 
   // The songs that use the chosen progression (AC-2.6.11), by artist, so the
@@ -1082,6 +1133,7 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   arpeggio.value = pattern.harmony.arpeggio ?? 'none';
   arpeggio.addEventListener('change', (e) => handlers.onArpeggio(e.target.value));
   arpeggioRow.appendChild(arpeggio);
+  arpeggioRow.appendChild(noDiceToggle('fill', state, handlers));
   root.appendChild(arpeggioRow);
 
   // Stamped notes are fixed by design (AC-2.6.4/4), so with no arpeggio the
@@ -1111,6 +1163,7 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     b.addEventListener('click', () => handlers.onChordChange(value));
     change.appendChild(b);
   }
+  change.appendChild(noDiceToggle('change', state, handlers));
   root.appendChild(change);
 
   // The voicing shape (AC-2.11.3): every chord's bass at once. Custom is the
@@ -1127,6 +1180,7 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   voicing.value = matchedVoicing ?? 'custom';
   voicing.addEventListener('change', (e) => handlers.onVoicing(e.target.value));
   voicingRow.appendChild(voicing);
+  voicingRow.appendChild(noDiceToggle('voicing', state, handlers));
   root.appendChild(voicingRow);
 
   // One editor per chord (AC-2.6.2): root, quality, bass, and the name they make.

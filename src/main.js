@@ -109,6 +109,7 @@ import {
 } from './ui/dialogs.js';
 import { showVariationPicker } from './ui/variations.js';
 import { devicesFor, addVariation, canAddVariation, defaultPhraseLength, hasBaseChoice } from './core/variations.js';
+import { rollMelody, canRoll } from './core/dice.js';
 import { heardIn } from './core/songbook.js';
 import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
@@ -178,6 +179,12 @@ const state = {
    * practice setting, never Pattern data (AC-2.10.1/4).
    */
   progressionCycle: { on: false, start: 0, baseLoop: 0 },
+  /**
+   * The Melody controls marked No dice (US-2.14): kept out of Roll the dice.
+   * Session state — one set for every Pattern, cleared by a reload, never
+   * stored and never Pattern content (AC-2.14.3/2, /3).
+   */
+  noDice: new Set(),
   /**
    * The Compose group (US-18.1): the Section being built over the open
    * Pattern, the saved Song it came from (for the unsaved mark), and whether
@@ -2589,6 +2596,41 @@ const handlers = {
     }
   },
 
+  /** Mark a Melody control No dice, or unmark it (AC-2.14.3). Changes nothing else. */
+  onNoDice(id) {
+    if (state.noDice.has(id)) state.noDice.delete(id);
+    else state.noDice.add(id);
+    render();
+  },
+
+  /**
+   * Roll the dice (US-2.14): every Melody control not marked No dice re-picked
+   * at random, as one edit — one history entry, one auto-save, and on a shipped
+   * Pattern the naming prompt first (AC-2.14.1/4). The dice are rolled here;
+   * `core/dice.js` takes the numbers (research.md D-021). The Fill and
+   * Progression rolls draw from what their cycles step through (AC-2.14.2/4,
+   * /6), and a rolled fill or progression restarts its cycle as a chosen one
+   * does (AC-2.14.1/6).
+   */
+  async onRollDice() {
+    const noDice = [...state.noDice];
+    if (!canRoll(state.pattern, noDice)) return;
+    if (!(await guardShipped())) return;
+    const { pattern, rolled } = rollMelody(state.pattern, {
+      noDice,
+      random: Math.random,
+      fills: fillOrder().map((i) => ARPEGGIOS[i].id),
+      progressions: progressionOrder().map((i) => PROGRESSIONS[i].id),
+    });
+    if (rolled.progression !== undefined && state.progressionCycle.on) {
+      state.progressionCycle = { on: true, start: PROGRESSIONS.findIndex((p) => p.id === rolled.progression), baseLoop: state.isPlaying ? state.loop : 0 };
+    }
+    if (rolled.fill !== undefined && state.fillCycle.on) {
+      state.fillCycle = { on: true, start: ARPEGGIOS.findIndex((a) => a.id === rolled.fill), baseLoop: state.isPlaying ? state.loop : 0 };
+    }
+    apply(() => pattern);
+  },
+
   /**
    * Add a variation: a copy of the base phrase with one device applied,
    * appended as Double Length appends (US-10.3). A shipped Pattern is named
@@ -3108,6 +3150,8 @@ if (typeof window !== 'undefined') {
     fillInForce: () => playing().harmony?.arpeggio ?? null,
     /** The progression cycling has in force, as its catalogue id, or null (US-2.10). */
     progressionInForce: () => matchProgression(playing()),
+    /** Test seam: the fill and progression catalogues in order, by id (US-2.14). */
+    catalogues: () => ({ fills: ARPEGGIOS.map((a) => a.id), progressions: PROGRESSIONS.map((p) => p.id) }),
     songStore,
     /** The Composer's state (US-19.x): mode, draft, target, selection, saved id. */
     composer: () => state.composer,
