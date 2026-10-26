@@ -442,7 +442,7 @@ function bakedDegrees(p) {
 /* --- the dice -------------------------------------------------------------------- */
 
 describe('core/variations — the roll (AC-10.3.4/7, /8)', () => {
-  it('AC-10.3.4/7 — Roll the dice, at the head of the picker, applies one device chosen at random from those available and not in a group marked No dice, exactly as tapping it would, and is disabled saying so when no such device remains: the pure part', () => {
+  it('AC-10.3.4/7 — Roll the dice, at the head of the picker, auditions one device chosen at random from those available and not in a group marked No dice, exactly as tapping it would, and is disabled saying so when no such device remains: the pure part', () => {
     const list = devicesFor(mel(['1', '3', null, '5']), 1);
     const open = rollable(list);
     expect(open.every((d) => !d.reason)).toBe(true);

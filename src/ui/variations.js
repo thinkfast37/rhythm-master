@@ -36,14 +36,17 @@ const GROUP_HINTS = {
  * @param {(phraseLength: number, base: string) => {devices: Array, baseChoice: boolean, hint: string|null}} spec.describe
  *   the catalogue with each device's availability on that base, whether a base
  *   choice exists, and the progression note (AC-10.3.2/4)
+ * @param {(choice: {deviceId: string, phraseLength: number, base: string, rolled: boolean}|null) => void} spec.onAudition
+ *   called with the candidate to hear and show, and with null when it is discarded (AC-10.3.1/7–/9)
  * @param {() => number} [spec.random]    the dice; `Math.random` by default
- * @returns {Promise<{deviceId: string, phraseLength: number, base: string, rolled: boolean}|null>}
+ * @returns {Promise<{deviceId: string, phraseLength: number, base: string, rolled: boolean}|null>} the accepted candidate, or null
  */
-export function showVariationPicker({ phraseLength, maxPhrase, describe, random = Math.random }) {
+export function showVariationPicker({ phraseLength, maxPhrase, describe, onAudition, random = Math.random }) {
   const root = ensureHost();
   const opener = document.activeElement;
   let length = phraseLength;
   let base = 'original';
+  let candidate = null;
 
   return new Promise((resolve) => {
     root.innerHTML = '';
@@ -57,6 +60,7 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
 
     const close = (result) => {
       document.removeEventListener('keydown', onKey);
+      if (!result && candidate) onAudition(null);
       root.innerHTML = '';
       if (opener && typeof opener.focus === 'function' && opener.isConnected) opener.focus();
       resolve(result);
@@ -70,7 +74,7 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
     box.appendChild(
       Object.assign(document.createElement('p'), {
         className: 'dialog-note',
-        textContent: 'Appends a copy of the phrase with one device applied. One tap, one variation; add three or four and the loop changes on every repeat.',
+        textContent: 'Tap a device to hear the phrase with that variation after it; Accept keeps it, or tap another. Add three or four and the loop changes on every repeat.',
       })
     );
 
@@ -89,6 +93,7 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
     lengthSelect.value = String(length);
     lengthSelect.addEventListener('change', () => {
       length = Number(lengthSelect.value);
+      discard();
       paint();
     });
     lengthLabel.appendChild(lengthSelect);
@@ -109,6 +114,7 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
       b.textContent = label;
       b.addEventListener('click', () => {
         base = value;
+        discard();
         paint();
       });
       baseWrap.appendChild(b);
@@ -130,6 +136,24 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
     list.className = 'variation-groups';
     box.appendChild(list);
 
+    // What is being heard, and Accept (AC-10.3.1/7, /9).
+    const hearing = document.createElement('div');
+    hearing.className = 'variation-hearing';
+    hearing.setAttribute('role', 'status');
+    hearing.setAttribute('aria-live', 'polite');
+    const hearingText = document.createElement('span');
+    hearingText.className = 'variation-hearing-text';
+    const accept = document.createElement('button');
+    accept.type = 'button';
+    accept.className = 'dialog-button primary';
+    accept.dataset.action = 'accept-variation';
+    accept.textContent = 'Accept';
+    accept.addEventListener('click', () => {
+      if (candidate) close(candidate);
+    });
+    hearing.append(hearingText, accept);
+    box.appendChild(hearing);
+
     const actions = document.createElement('div');
     actions.className = 'dialog-actions variation-actions';
     const cancel = document.createElement('button');
@@ -142,6 +166,18 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
     box.appendChild(actions);
 
     let devices = [];
+    /** Stop hearing the candidate, if any, without closing (AC-10.3.1/8). */
+    const discard = () => {
+      if (!candidate) return;
+      candidate = null;
+      onAudition(null);
+    };
+    /** Hear this one in the candidate's place (AC-10.3.1/7, /8). */
+    const audition = (d, rolled) => {
+      candidate = { deviceId: d.id, phraseLength: length, base, rolled };
+      onAudition(candidate);
+      paint();
+    };
     const paint = () => {
       const described = describe(length, base);
       devices = described.devices;
@@ -154,9 +190,14 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
       hint.textContent = described.hint ?? '';
       hint.hidden = !described.hint;
 
+      const heard = candidate && devices.find((d) => d.id === candidate.deviceId);
+      hearing.hidden = !heard;
+      hearingText.textContent = heard ? `Hearing: ${heard.label}${candidate.rolled ? ' (rolled)' : ''}` : '';
+      accept.setAttribute('aria-label', heard ? `Accept ${heard.label}` : 'Accept');
+
       const canRoll = rollable(devices, [...noDice]).length > 0;
       roll.disabled = !canRoll;
-      roll.textContent = canRoll ? '🎲 Roll the dice' : '🎲 Roll the dice — nothing left to roll';
+      roll.textContent = canRoll ? (candidate ? '🎲 Roll again' : '🎲 Roll the dice') : '🎲 Roll the dice — nothing left to roll';
       roll.title = canRoll ? 'Apply one available device at random, from the groups without No dice' : 'Every available device is in a group marked No dice';
 
       list.innerHTML = '';
@@ -203,7 +244,10 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
           if (d.reason) desc.classList.add('reason');
           b.append(name, desc);
           b.setAttribute('aria-label', d.reason ? `${d.label}: ${d.reason}` : `${d.label}: ${d.description}`);
-          b.addEventListener('click', () => close({ deviceId: d.id, phraseLength: length, base, rolled: false }));
+          const heardHere = Boolean(candidate && candidate.deviceId === d.id);
+          b.setAttribute('aria-pressed', String(heardHere));
+          b.classList.toggle('hearing', heardHere);
+          b.addEventListener('click', () => audition(d, false));
           li.appendChild(b);
           ul.appendChild(li);
         }
@@ -214,7 +258,7 @@ export function showVariationPicker({ phraseLength, maxPhrase, describe, random 
 
     roll.addEventListener('click', () => {
       const chosen = pick(rollable(devices, [...noDice]), random());
-      if (chosen) close({ deviceId: chosen.id, phraseLength: length, base, rolled: true });
+      if (chosen) audition(chosen, true);
     });
 
     paint();

@@ -156,6 +156,8 @@ const state = {
   /** Provenance: true when the Pattern came from the user's own store (data-model §5). */
   isOwned: false,
   isPlaying: false,
+  /** The Pattern with a variation candidate appended while the picker auditions it; never stored (AC-10.3.1/7). */
+  variationCandidate: null,
   /** Reset audio's verdict when the replacement's clock is not moving (AC-4.1.16/3), else null. */
   audioNotice: null,
   loop: 0,
@@ -368,10 +370,15 @@ function variationHint(pattern, phraseLength) {
   return 'The progression changes every pass, so the pass is now as long as the whole Pattern.';
 }
 
-/** Open the Add variation picker on a Pattern, remembering nothing until a device is chosen (US-10.3). */
-function pickVariation(pattern, phraseLength) {
+/**
+ * Open the Add variation picker on a Pattern. A tap auditions: the candidate
+ * becomes what plays and what the grid shows, through the overlay `playingAt`
+ * already serves, and nothing is stored until Accept (AC-10.3.1/7–/9). The
+ * loop is started if it was stopped — inside the tap, so audio may begin.
+ */
+async function pickVariation(pattern, phraseLength) {
   const context = { fillOrder: fillOrder() };
-  return showVariationPicker({
+  const choice = await showVariationPicker({
     phraseLength,
     maxPhrase: pattern.measures.length,
     describe: (length, base) => ({
@@ -379,7 +386,20 @@ function pickVariation(pattern, phraseLength) {
       baseChoice: hasBaseChoice(pattern, length),
       hint: variationHint(pattern, length),
     }),
+    onAudition: (candidate) => {
+      state.variationCandidate = candidate
+        ? addVariation(pattern, candidate.deviceId, candidate.phraseLength, candidate.base, context)
+        : null;
+      if (candidate && !state.isPlaying) {
+        handlers.onPlay();
+        return;
+      }
+      syncTransport();
+      render();
+    },
   });
+  state.variationCandidate = null;
+  return choice;
 }
 
 /** Editing focus to the first Slot of Measure `measureIndex` in the grid (AC-10.3.1/3). */
@@ -585,6 +605,9 @@ function fillIdAt(loop) {
  * overlays, so either, neither, or both apply without disturbing the other.
  */
 function playingAt(loop) {
+  // A variation being auditioned: the Pattern — or the draft — with the
+  // candidate copy appended, heard and shown but never stored (AC-10.3.1/7).
+  if (state.variationCandidate) return state.variationCandidate;
   // In the Composer the transport plays the draft as it stands — pitched Slots
   // melodic, unpitched ones percussive — with no overlay (AC-19.6.1).
   if (composerActive()) return state.composer.draft;
