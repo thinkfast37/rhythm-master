@@ -271,7 +271,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-063** | US-2.12 — Choose what a cycle steps through | AC-2.12.1–AC-2.12.3 | T394, T428, T434 | T395, T429, T435 |
 | **P-064** | US-2.13 — Choose the melodic voice | AC-2.13.1–AC-2.13.5 | T422, T423 | T424 |
 | **P-065** | US-19.10 — Play a MIDI instrument into the Composer | AC-19.10.1–AC-19.10.5 | T426 | T427 |
-| **P-066** | US-10.3 — Add a variation to a loop | AC-10.3.1–AC-10.3.5 | T436 | T437 |
+| **P-066** | US-10.3 — Add a variation to a loop | AC-10.3.1–AC-10.3.5 | T436, T444 | T437, T445 |
 | **P-067** | US-2.14 — Roll the dice across the Melody group | AC-2.14.1–AC-2.14.3 | T442 | T443 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change

@@ -888,6 +888,16 @@ than silently appending an exact copy, which Double Length already provides.
   Ghost level is its own spec change — accent table, audio gain, MIDI velocity, duplicate identity —
   and the device joins the Dynamics group when it lands.
 
+**Amended 2026-10-25, the same day.** The maintainer tried it and asked to "hear the candidate
+variation and either accept it or go to try another one". The paragraph above argued the loop was the
+audition; it is not — an unwanted copy costs one Remove Measure per Measure, and trying four devices
+costs sixteen. So a tap now **auditions**: `state.variationCandidate` is the Pattern with the candidate
+appended, `playingAt` returns it in place of the Pattern (the overlay cycle mode already uses, which
+writes nothing — AC-2.7.1/4), the grid and the Composer's grid draw it, and Accept is what calls
+`addVariation` through `apply`. The Pattern still grows, as decided; only the moment it grows moved
+from the tap to Accept. A separate variation set is still declined: the candidate lives in UI state for
+the life of the picker and nowhere else.
+
 **Alternatives considered**:
 - *A variation set beside the Pattern, committed on request* — declined, above.
 - *Variations as Section entries (US-18.1)* — rejected: a Section chains fills over one Pattern; its

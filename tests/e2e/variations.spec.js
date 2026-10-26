@@ -55,16 +55,27 @@ const measureCount = (page) => page.evaluate(() => window.__rm.getState().patter
 const pitchesOf = (page, measure) =>
   page.evaluate((m) => window.__rm.getState().pattern.measures[m].beats.map((b) => b.slots[0].pitch ?? null), measure);
 
+const accept = (page) => page.locator('[data-action="accept-variation"]');
+const hearing = (page) => page.locator('.variation-hearing-text');
+const isPlaying = (page) => page.evaluate(() => window.__rm.getState().isPlaying);
+
+/** Tap a device, hear it, Accept it (AC-10.3.1/7, /9). */
+async function take(page, id) {
+  await device(page, id).click();
+  await expect(hearing(page)).toBeVisible();
+  await accept(page).click();
+  await expect(picker(page)).toHaveCount(0);
+}
+
 async function choose(page, id) {
   await addVariation(page).click();
   await expect(picker(page)).toBeVisible();
-  await device(page, id).click();
-  await expect(picker(page)).toHaveCount(0);
+  await take(page, id);
 }
 
 // --- AC-10.3.1 ------------------------------------------------------------------------
 
-test('AC-10.3.1/3 — Editing focus moves to the first Slot of the appended copy, as it does after Double Length', async ({ page }) => {
+test('AC-10.3.1/3 — Editing focus moves to the first Slot of the appended copy on Accept, as it does after Double Length', async ({ page }) => {
   await melody(page);
   await choose(page, 'resolve-ending');
   expect(await measureCount(page)).toBe(2);
@@ -117,7 +128,7 @@ test('AC-10.3.1/5 — Add variation is enabled only while the Pattern’s length
   // Two more would make 33: every device says so.
   for (const reason of await page.locator('.variation-device-desc').allTextContents()) expect(reason).toMatch(/32 Measures/);
   await page.locator('.variation-length-select').selectOption('1');
-  await device(page, 'breathe').click();
+  await take(page, 'breathe');
   expect(await measureCount(page)).toBe(32);
   await expect(addVariation(page)).toBeDisabled();
   await expect(addVariation(page)).toHaveAttribute('title', /32 Measures/);
@@ -130,6 +141,10 @@ test('AC-10.3.1/6 — In the Composer the variation keeps the draft’s notes �
   await page.locator('.composer-add-variation').click();
   await expect(picker(page)).toBeVisible();
   await device(page, 'breathe').click();
+  // Heard and shown in the Composer's grid, the draft still one Measure, until Accept.
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
+  expect(await page.evaluate(() => window.__rm.composer().draft.measures.length)).toBe(1);
+  await accept(page).click();
   await expect(picker(page)).toHaveCount(0);
   await expect(page.locator('.dialog')).toHaveCount(0);
   await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
@@ -143,7 +158,7 @@ test('AC-10.3.1/6 — In the Composer the variation keeps the draft’s notes �
   await loadFourBeats(page);
   await recordAll(page);
   await page.locator('.composer-add-variation').click();
-  await device(page, 'lift').click();
+  await take(page, 'lift');
   await expect(page.locator('.dialog')).toHaveCount(0);
   const notes = await page.evaluate(() => window.__rm.composer().draft.measures.map((m) => m.beats.map((b) => b.slots[0].pitch ?? null)));
   expect(notes[1]).toEqual(notes[0]);
@@ -162,7 +177,7 @@ test('AC-10.3.2/1 — The phrase length can be set to any number of Measures fro
   await expect(select.locator('option')).toHaveText(['1 Measure', '2 Measures', '3 Measures', '4 Measures']);
   await expect(select).toHaveValue('4');
   await select.selectOption('2');
-  await device(page, 'breathe').click();
+  await take(page, 'breathe');
   expect(await measureCount(page)).toBe(6);
   // Remembered for this Pattern.
   await addVariation(page).click();
@@ -180,16 +195,16 @@ test('AC-10.3.2/2 — The original phrase is the Pattern’s first Measures up t
   await melody(page);
   await addVariation(page).click();
   await expect(page.locator('.variation-base')).toBeHidden();
-  await device(page, 'octave-up').click();
+  await take(page, 'octave-up');
   // Now there is a choice: the original is the first Measure, the latest the octave-up copy.
   await addVariation(page).click();
   await expect(page.locator('.variation-base')).toBeVisible();
   await expect(page.locator('.variation-base-option[data-base="original"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('.variation-base-option[data-base="latest"]').click();
-  await device(page, 'octave-up').click();
+  await take(page, 'octave-up');
   expect((await pitchesOf(page, 2)).map((p) => p.octaveOffset)).toEqual([2, 2, 2, 2]);
   await addVariation(page).click();
-  await device(page, 'octave-up').click(); // original again, by default
+  await take(page, 'octave-up'); // original again, by default
   expect((await pitchesOf(page, 3)).map((p) => p.octaveOffset)).toEqual([1, 1, 1, 1]);
   // Phrase as long as the Pattern: one base.
   await addVariation(page).click();
@@ -202,7 +217,7 @@ test('AC-10.3.2/3 — The phrase length is remembered per Pattern in `rm.localMe
   await page.locator('[data-action="duplicate-pattern"]').click();
   await addVariation(page).click();
   await page.locator('.variation-length-select').selectOption('1');
-  await device(page, 'breathe').click();
+  await take(page, 'breathe');
   await page.reload();
   const stored = await page.evaluate(() => {
     const id = window.__rm.getState().pattern.id;
@@ -235,7 +250,7 @@ test('AC-10.3.2/4 — The picker says, under a progression that changes every Me
   const chordsBefore = (await pattern(page)).harmony.chords;
   await addVariation(page).click();
   await expect(page.locator('.variation-hint')).toContainText('a phrase of 3 Measures keeps each copy over the same chords');
-  await device(page, 'breathe').click();
+  await take(page, 'breathe');
   expect((await pattern(page)).harmony.chords).toEqual(chordsBefore);
 });
 
@@ -310,14 +325,20 @@ test('AC-10.3.4/3 — A device unavailable on this base phrase is shown disabled
   await expect(device(page, 'change-fill')).toBeEnabled();
 });
 
-test('AC-10.3.4/4 — Choosing a device applies it and closes the picker; the picker can be dismissed with no change, by its Close control or Escape', async ({ page }) => {
+test('AC-10.3.4/4 — Choosing a device auditions it and Accept applies it and closes the picker; the picker can be dismissed with no change, by its Close control or Escape, any candidate discarded with it', async ({ page }) => {
   await rhythm(page);
   const before = JSON.stringify(await pattern(page));
   await addVariation(page).click();
+  await device(page, 'breathe').click();
+  await expect(picker(page)).toBeVisible();
+  await expect(hearing(page)).toHaveText('Hearing: Breathe');
+  expect(JSON.stringify(await pattern(page))).toBe(before);
   await page.locator('[data-action="close-variation"]').click();
   await expect(picker(page)).toHaveCount(0);
   expect(JSON.stringify(await pattern(page))).toBe(before);
+  await expect(page.locator('.measure')).toHaveCount(1);
   await addVariation(page).click();
+  await device(page, 'breathe').click();
   await page.keyboard.press('Escape');
   await expect(picker(page)).toHaveCount(0);
   expect(JSON.stringify(await pattern(page))).toBe(before);
@@ -367,7 +388,7 @@ test('AC-10.3.4/6 — On a phone the picker fills the width within the mobile br
   await expect(page.locator('.dialog-backdrop')).toBeVisible();
 });
 
-test('AC-10.3.4/7 — Roll the dice, at the head of the picker, applies one device chosen at random from those available and not in a group marked No dice, exactly as tapping it would, and is disabled saying so when no such device remains', async ({ page }) => {
+test('AC-10.3.4/7 — Roll the dice, at the head of the picker, auditions one device chosen at random from those available and not in a group marked No dice, exactly as tapping it would, and is disabled saying so when no such device remains', async ({ page }) => {
   await rhythm(page, [0]);
   await page.evaluate(() => {
     Math.random = () => 0;
@@ -375,8 +396,12 @@ test('AC-10.3.4/7 — Roll the dice, at the head of the picker, applies one devi
   await addVariation(page).click();
   const roll = page.locator('[data-action="roll-variation"]');
   await expect(roll).toBeEnabled();
-  // The first available device, Fill the ending, is what a zero rolls — and what tapping it gives.
+  // The first available device, Fill the ending, is what a zero rolls — heard first, then accepted, as a tap would be.
   await roll.click();
+  await expect(hearing(page)).toHaveText('Hearing: Fill the ending (rolled)');
+  expect(await measureCount(page)).toBe(1);
+  await expect(roll).toHaveText(/Roll again/);
+  await accept(page).click();
   await expect(picker(page)).toHaveCount(0);
   expect(await measureCount(page)).toBe(2);
   const last = await page.evaluate(() => window.__rm.getState().pattern.measures[1].beats[3]);
@@ -404,6 +429,7 @@ test('AC-10.3.4/8 — Each group heading carries a No dice toggle that keeps the
   await expect(device(page, 'octave-up')).toBeEnabled();
   const before = JSON.stringify(await pattern(page));
   await page.locator('[data-action="roll-variation"]').click();
+  await accept(page).click();
   // The highest roll lands on the last rollable device outside Pitch — Shift the accent — so the notes are untouched.
   expect(await pitchesOf(page, 1)).toEqual(await pitchesOf(page, 0));
   const copy = await page.evaluate(() => window.__rm.getState().pattern.measures[1]);
@@ -460,7 +486,7 @@ test('AC-10.3.1/1 — The appended Measures are as many as the base phrase, and 
   await page.locator('[data-action="duplicate-pattern"]').click();
   await addVariation(page).click();
   await page.locator('.variation-length-select').selectOption('2');
-  await device(page, 'breathe').click();
+  await take(page, 'breathe');
   await expect(page.locator('.measure')).toHaveCount(4);
   const p = await pattern(page);
   expect(p.measures[2]).toEqual(p.measures[0]);
@@ -478,11 +504,11 @@ test('AC-10.3.1/2 — The Measures the Pattern already held are unchanged, which
   const before = (await pattern(page)).measures;
   await addVariation(page).click();
   await page.locator('.variation-base-option[data-base="latest"]').click();
-  await device(page, 'octave-up').click();
+  await take(page, 'octave-up');
   expect((await pattern(page)).measures.slice(0, 2)).toEqual(before);
   await addVariation(page).click();
   await page.locator('.variation-base-option[data-base="original"]').click();
-  await device(page, 'octave-down').click();
+  await take(page, 'octave-down');
   expect((await pattern(page)).measures.slice(0, 2)).toEqual(before);
   await expect(page.locator('.measure')).toHaveCount(4);
 });
@@ -501,4 +527,82 @@ test('AC-10.3.5/1 — The Pattern’s JSON, MIDI export and submission payload c
   for (const word of ['device', 'phraseLength', 'base', 'variation', 'resolve-ending']) expect(stored.json).not.toContain(word);
   // The phrase length lives apart, in Local Metadata, and nowhere in the Pattern.
   expect(stored.meta.phraseLength).toBe(1);
+});
+
+// --- AC-10.3.1/7–/9: hear it first ------------------------------------------------
+
+test('AC-10.3.1/7 — Choosing a device auditions a candidate: the loop plays the Pattern with the candidate copy appended and the grid shows it, the picker stays open naming the device being heard with an Accept control, and nothing is stored or auto-saved while it is heard; if the loop was stopped, auditioning starts it, and it keeps running afterwards', async ({ page }) => {
+  await melody(page);
+  expect(await isPlaying(page)).toBe(false);
+  await addVariation(page).click();
+  await device(page, 'resolve-ending').click();
+  await expect(picker(page)).toBeVisible();
+  await expect(hearing(page)).toHaveText('Hearing: Resolve the ending');
+  await expect(accept(page)).toBeVisible();
+  // The grid and the loop carry two Measures; the Pattern and its store still hold one.
+  await expect(page.locator('.measure')).toHaveCount(2);
+  await expect(page.locator('.measure[data-measure="1"] .slot[data-beat="3"][data-slot="0"] .slot-pitch')).toHaveAttribute('data-degree', '1');
+  expect(await measureCount(page)).toBe(1);
+  expect(await page.evaluate(() => window.__rm.patternStore.findById(window.__rm.getState().pattern.id)?.measures.length ?? 1)).toBe(1);
+  expect(await isPlaying(page)).toBe(true);
+  await accept(page).click();
+  expect(await measureCount(page)).toBe(2);
+  expect(await isPlaying(page)).toBe(true);
+});
+
+test('AC-10.3.1/8 — Choosing another device, or rolling again, replaces the candidate with that one — one candidate at a time, never a second copy; changing the phrase length or the base discards the candidate being heard', async ({ page }) => {
+  await melody(page);
+  await page.locator('[data-action="duplicate-pattern"]').click();
+  await page.evaluate(() => {
+    Math.random = () => 0;
+  });
+  await addVariation(page).click();
+  await device(page, 'resolve-ending').click();
+  await expect(page.locator('.measure')).toHaveCount(4);
+  await device(page, 'octave-up').click();
+  await expect(hearing(page)).toHaveText('Hearing: Octave up');
+  await expect(page.locator('.measure')).toHaveCount(4);
+  await expect(page.locator('.measure[data-measure="2"] .slot[data-beat="0"][data-slot="0"] .slot-pitch')).toHaveAttribute('data-octave', '1');
+  await page.locator('[data-action="roll-variation"]').click();
+  await expect(hearing(page)).toHaveText('Hearing: Fill the ending (rolled)');
+  await expect(page.locator('.measure')).toHaveCount(4);
+  // A new phrase length: nothing is heard until a device is tapped again.
+  await page.locator('.variation-length-select').selectOption('1');
+  await expect(hearing(page)).toBeHidden();
+  await expect(page.locator('.measure')).toHaveCount(2);
+  await device(page, 'breathe').click();
+  await expect(page.locator('.measure')).toHaveCount(3);
+  await page.locator('.variation-base-option[data-base="latest"]').click();
+  await expect(hearing(page)).toBeHidden();
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(await measureCount(page)).toBe(2);
+});
+
+test('AC-10.3.1/9 — Accept appends the candidate and closes the picker; Close or Escape discards it and the Pattern, its length and what plays are exactly as before the picker opened', async ({ page }) => {
+  await melody(page);
+  await addVariation(page).click();
+  await device(page, 'sequence-up').click();
+  await accept(page).click();
+  await expect(picker(page)).toHaveCount(0);
+  expect(await measureCount(page)).toBe(2);
+  expect(await pitchesOf(page, 1)).toEqual([
+    { degree: '2', octaveOffset: 0 },
+    { degree: '4', octaveOffset: 0 },
+    { degree: '6', octaveOffset: 0 },
+    { degree: '3', octaveOffset: 0 },
+  ]);
+  const before = JSON.stringify(await pattern(page));
+  const playingBefore = await isPlaying(page);
+  await addVariation(page).click();
+  await device(page, 'octave-up').click();
+  await expect(page.locator('.measure')).toHaveCount(3);
+  await page.locator('[data-action="close-variation"]').click();
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(JSON.stringify(await pattern(page))).toBe(before);
+  expect(await isPlaying(page)).toBe(playingBefore);
+  await addVariation(page).click();
+  await device(page, 'octave-up').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(JSON.stringify(await pattern(page))).toBe(before);
 });
