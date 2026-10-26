@@ -37,7 +37,7 @@ in the evening — but separating them keeps each story honest about whose probl
 
 | Persona | Who they are | Stories written from this view |
 |---|---|---|
-| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.10 |
+| **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-2.14, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.10 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
 | **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-2.13, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
@@ -2292,9 +2292,10 @@ field survives showing it.)*
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom, below the pinned bar (‹ Goals, the library toggle, Related, Play/Stop with the exact tempo entry and its ♩/♪ unit, and quick navigation — AC-5.5.3, AC-15.1.17, AC-15.1.20/1) and the goal strip under it (AC-15.1.20/2): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the View control, Grid | Sheet, at its head (AC-12.2.1) and the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8), then — on a making goal whose tab bar has no Rhythm group — the Measure controls Double Length and Add variation (US-10.1, US-10.3) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
+  - **Then** the order is fixed top to bottom, below the pinned bar (‹ Goals, the library toggle, Related, Play/Stop with the exact tempo entry and its ♩/♪ unit, and quick navigation — AC-5.5.3, AC-15.1.17, AC-15.1.20/1) and the goal strip under it (AC-15.1.20/2): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the View control, Grid | Sheet, at its head (AC-12.2.1) and the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: Roll the dice (US-2.14), then pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8), then — on a making goal whose tab bar has no Rhythm group — the Measure controls Double Length and Add variation (US-10.1, US-10.3) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Section, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - **And** the same list is the frame's two parts, one above the other (AC-15.1.20): the Pattern header, chord strip and grid with its View control are the rhythm band; the tab bar, the groups, Pattern actions and family members are the work surface — each keeping the order above, so no section ever swaps places with another, and on a wide panel each scrolling on its own (AC-15.1.18)
+  - *(Revised 2026-10-25 with US-2.14 (T442): the Melody group gains a first entry, Roll the dice, ahead of the pitch strip, and a No dice toggle beside each of the seven controls the roll can change — Key, Scale and Register on the pitch strip, Progression, Chord changes, Fill and Voicing among the harmony controls. The maintainer chose the head of the group over its foot. The section order is untouched: the entry is inside the Melody group.)*
   - *(Revised 2026-10-25 with US-10.3 (T436): the Melody group gains a last entry, Double Length and Add variation, shown only on a making goal whose tab bar has no Rhythm group — Make it melodic and Combine patterns. D-018's ruling is that Double Length is visible on every making goal, and the maintainer asked for Add variation on the chord-progression-and-fill goals; in Lab and Build a rhythm both stay in the Rhythm group alone, so nothing is shown twice. The section order is untouched: the entry is inside the Melody group.)*
   - *(Revised 2026-10-24 with T410, D-018 phase 2: the two side-by-side panes of 2026-09-13 become the rhythm band above the work surface, the frame of the maintainer's storyboard (board 0); the pinned bar gains ‹ Goals at its left and Related beside the library toggle, and the goal bar of 2026-09-20 becomes the goal strip under it. The ordered list itself is untouched.)*
   - *(Clarified 2026-10-18 with US-19.1: the pinned bar also carries a Practice | Composer switch (AC-19.1.1), and in Composer mode the Composer's own panel stands in for both panes. This criterion describes Practice, which is unchanged; the Composer's layout is its own (US-19.1–US-19.5).)*
@@ -4507,6 +4508,57 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-10.3.5/2** — Removing Measures from the end discards the latest variation Measure by Measure, and Double Length, Condense and Append work on the lengthened Pattern as on any other
     - **AC-10.3.5/3** — Duplicate detection and Families (US-11.1, US-11.2) compare the Measures alone; two Patterns built by the same devices from the same phrase are true duplicates
   - *(Cross-reference, kept out of the Case wording: /2's removal from the end is AC-1.1.9's.)*
+
+---
+
+### User Story 63 - Roll the dice across the Melody group
+
+*Traceability: `US-2.14` — Roll the dice across the Melody group*
+
+**As** the Composer, **I want** one Roll the dice button in the Melody group that re-picks every melodic setting at random — Key, Scale, Register, Progression, Chord changes, Fill and Voicing — except the ones I have marked No dice, **so that** I can hear a loop in a setting I would never have chosen, keeping the parts I have already decided on, without working seven pickers one at a time.
+
+*(Added 2026-10-25 at the maintainer's request, made while reviewing US-10.3's picker: "it would be good to have a roll the dice button. Essentially for each control that could be randomized could have a roll the dice or locked toggle, so the dice roll only picks a random option for the controls that don't have a lock on them." They asked for the framing "No dice" rather than "lock". Deferred from US-10.3 under research.md D-020 and taken up the same day as its own story. Decisions taken with the maintainer the same day: all seven controls take part — Key, Scale, Register, Progression, Chord changes, Fill and Voicing — and a Pattern with no progression is given one, so its Fill, Voicing and Chord changes roll too; the chord editors, the octave stepper, the Fills and Progressions cycles and their Repeats never roll, and tempo and swing are Practice settings, not Melody; the button stands at the head of the Melody group, with a No dice toggle beside each control where it already sits; No dice holds for the session only, as the variation picker's group toggles do; Auto landing. Each setting rolls to a value other than the one in force, so a roll is always audible on every control it touches. Randomness comes from outside `core/`, as Give me one's does (US-14.1) and the variation picker's (AC-10.3.4/7): `core/dice.js` takes its random numbers from the caller (research.md D-021).)*
+
+**Independent Test**: Under Lab, load an owned Melodic Pattern in C Ionian at Normal with no progression; with the page's random number fixed, press Roll the dice and assert the Key, Scale and Register each changed to a different value, the Pattern gained a progression from the catalogue with the default fill, every stored Pitch is as it was, the Pattern auto-saved, and one Undo takes all of it back; mark Key and Fill No dice, roll again and assert the Key and the fill are as they were while Scale, Register, Progression, Chord changes and Voicing changed; set the Fills cycle to a two-entry My list, mark everything else No dice, roll and assert the fill is the other entry on the list; reload and assert every No dice mark is cleared and nothing of them is in the Pattern's JSON; on a shipped Pattern assert the naming prompt comes first and cancelling it changes nothing; mark every control No dice and assert the button is disabled saying nothing is left to roll; switch to Percussive and assert the button is absent with the group; and under Make it melodic and Combine patterns assert the button stands at the head of the Melody group.
+
+**Acceptance Scenarios**:
+
+- **AC-2.14.1** — Roll the dice re-picks every Melody control not marked No dice
+  - **Given** a Melodic Pattern with the Melody group on screen
+  - **When** the Composer presses Roll the dice
+  - **Then** every control taking part that is not marked No dice takes a value chosen at random from what it offers, as one edit that lands exactly as choosing those values by hand would; a control marked No dice keeps its value
+  - **Cases**:
+    - **AC-2.14.1/1** — Roll the dice stands at the head of the Melody group wherever the group is shown — Lab, Make it melodic and Combine patterns alike — and is absent with the group in Percussive mode
+    - **AC-2.14.1/2** — One press gives every control not marked No dice a value different from the one in force, chosen at random from what that control offers, as one edit that one Undo takes back whole
+    - **AC-2.14.1/3** — A control marked No dice keeps its value, whatever the roll gives the others
+    - **AC-2.14.1/4** — Into an owned Pattern the result auto-saves at once (US-7.2); on a shipped Pattern the roll is the first edit and the naming prompt of US-7.3 comes before anything is rolled, cancelling it leaving the Pattern as it was
+    - **AC-2.14.1/5** — With every control taking part marked No dice the button is disabled saying nothing is left to roll
+    - **AC-2.14.1/6** — A rolled fill or progression is where its cycle begins again while that cycle is on, as choosing it in its picker is
+  - *(Cross-references, kept out of the Case wording so each Case's criterion stays its own: /6's cycle restarts are AC-2.7.2/7's and AC-2.10.2/7's.)*
+
+- **AC-2.14.2** — What each roll may land on
+  - **Given** a roll of the dice
+  - **When** a setting taking part is rolled
+  - **Then** it lands on one of the values below, never the one already in force while another is offered; and a setting that exists only under a progression is rolled only where a progression is in force once the Progression's own roll is done
+  - **Cases**:
+    - **AC-2.14.2/1** — Key: one of the twelve Keys
+    - **AC-2.14.2/2** — Scale: one of the catalogue's scales, every category together
+    - **AC-2.14.2/3** — Register: one of Bass, Low, Normal, High and Lead
+    - **AC-2.14.2/4** — Progression: one from the catalogue — My list when Cycle progressions is set to it, the whole catalogue otherwise — never None; a Pattern without a progression is given one, voiced Closest and with the default fill, exactly as choosing it would be
+    - **AC-2.14.2/5** — Chord changes: the other of Every Measure and Every pass
+    - **AC-2.14.2/6** — Fill: one from the catalogue — My list when the Fills cycle is set to it, the whole catalogue otherwise — never None
+    - **AC-2.14.2/7** — Voicing: one of the named voicings, never Custom
+    - **AC-2.14.2/8** — Nothing else is rolled: every stored Pitch is as it was, each chord's root, quality and bass are what the rolled Progression and Voicing give, and the armed octave, the Fills and Progressions cycles, their Repeats, the tempo and the swing are untouched
+  - *(Cross-references, kept out of the Case wording: /4's voicing and default fill are AC-2.11.3/7's and AC-2.6.1/7's; /6's and /4's My list are AC-2.12.1's.)*
+
+- **AC-2.14.3** — No dice, per control
+  - **Given** the Melody group
+  - **When** the Composer looks at a control the roll can change
+  - **Then** a No dice toggle stands beside it, pressed to keep that control out of the roll, and toggling it changes nothing else
+  - **Cases**:
+    - **AC-2.14.3/1** — Each of Key, Scale, Register, Progression, Chord changes, Fill and Voicing carries a No dice toggle beside it, shown with the control and pressed while the control is kept out of the roll; toggling it changes no Pattern content
+    - **AC-2.14.3/2** — The marks hold for the session and a reload clears them; they are neither Pattern content nor a setting: nothing auto-saves, a shipped Pattern is never prompted for a name, and no export carries them
+    - **AC-2.14.3/3** — The marks are the same on every Pattern in the session: a mark set on one Pattern holds when another is loaded
 
 ---
 

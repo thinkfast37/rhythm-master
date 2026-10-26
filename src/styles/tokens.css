@@ -2805,6 +2805,25 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .variation-base-option.on { color: #0b0c15; background: var(--brand); border-color: var(--brand); font-weight: 700; }
 .variation-hint { margin: 0 0 10px; }
 .variation-roll { align-self: flex-start; margin: 0 0 10px; }
+
+/* Roll the dice across the Melody group (US-2.14): the row at the group's head,
+   and the No dice toggle beside each control it can roll. */
+.dice-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.roll-dice {
+  font: 600 13px/1 var(--font-ui); color: var(--ink);
+  background: #1c1f2b; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; cursor: pointer;
+}
+.roll-dice:hover:not(:disabled) { background: #262b3a; }
+.roll-dice:disabled { color: var(--ink-dim); cursor: default; }
+.dice-hint { font: 400 12px/1.3 var(--font-ui); color: var(--ink-dim); }
+.nodice {
+  font: 500 11px/1 var(--font-ui); color: var(--ink-dim);
+  background: #1c1f2b; border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 9px; cursor: pointer;
+}
+.nodice.on { color: #0b0c15; background: var(--ink-dim); border-color: var(--ink-dim); font-weight: 700; }
+/* On the pitch strip the strip's own button rules would size the toggle as a chip; keep it the same small mark as in the harmony rows. */
+.pitch-strip button.nodice { font: 500 11px/1 var(--font-ui); color: var(--ink-dim); background: #1c1f2b; border: 1px solid var(--line); padding: 5px 9px; margin-right: 4px; }
+.pitch-strip button.nodice.on { color: #0b0c15; background: var(--ink-dim); border-color: var(--ink-dim); font-weight: 700; }
 .variation-groups { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-bottom: 12px; border-top: 1px solid var(--line); }
 .variation-group { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .variation-group-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }

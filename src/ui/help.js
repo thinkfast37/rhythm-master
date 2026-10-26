@@ -34,6 +34,7 @@ export const HELP = Object.freeze({
     ['Practice / Composer', 'Practice is the grid and the workbench; Composer puts a guitar or piano over the rhythm to play a melody in. Play it in will be its own goal.', '.mode-switch'],
   ],
   melody: [
+    ['Roll the dice', 'Re-picks every Melody control at random — Key, Scale, Register, Progression, Chord changes, Fill, Voicing — except the ones marked No dice.', '[data-action="roll-dice"]'],
     ['Pitch strip', 'Arm a scale degree, then tap a note’s upper band in the grid to give it that pitch.', '.pitch-strip > .pitch-strip-label:first-child'],
     ['Octave', 'Moves what the strip stamps up or down an octave.', '.octave-stepper'],
     ['Key', 'The key everything sounds in; the degrees on the strip follow it.', '.key-picker'],

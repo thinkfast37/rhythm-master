@@ -14,16 +14,16 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 984 across 62 User Stories
+**Criteria**: 1001 across 63 User Stories
 
-**Coverage**: 800 of 984 criteria proven (81.3%)
+**Coverage**: 817 of 1001 criteria proven (81.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 800 | 81.3% |
-| 🔴 Gap — HIGH | 65 | 6.6% |
-| 🟠 Gap — MEDIUM | 41 | 4.2% |
-| 🟡 Gap — LOW | 78 | 7.9% |
+| 🟢 Proven | 817 | 81.6% |
+| 🔴 Gap — HIGH | 65 | 6.5% |
+| 🟠 Gap — MEDIUM | 41 | 4.1% |
+| 🟡 Gap — LOW | 78 | 7.8% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -120,6 +120,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.13 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-19.10 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-10.3 | 45 | **45** | · | · | · | · | · |
+| 🟢 US-2.14 | 17 | **17** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1109,3 +1110,20 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-10.3 | `AC-10.3.5/1` 🖵 | The Pattern's JSON, MIDI export and submission payload carry no device name, base choice or phrase length, and are byte-for-byte what the same Measures entered by hand would give | P-066 | T436 (1/1 done) | T437 (1/1 done) | `storage.test.js`, `variations.spec.js` | 🟢 OK |
 | US-10.3 | `AC-10.3.5/2` 🖵 | Removing Measures from the end discards the latest variation Measure by Measure, and Double Length, Condense and Append work on the lengthened Pattern as on any other | P-066 | T436 (1/1 done) | T437 (1/1 done) | `variations.spec.js` | 🟢 OK |
 | US-10.3 | `AC-10.3.5/3` 🖵 | Duplicate detection and Families (US-11.1, US-11.2) compare the Measures alone; two Patterns built by the same devices from the same phrase are true duplicates | P-066 | T436 (1/1 done) | T437 (1/1 done) | `variations.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.1/1` 🖵 | Roll the dice stands at the head of the Melody group wherever the group is shown — Lab, Make it melodic and Combine patterns alike — and is absent with the group in Percussive mode | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.1/2` 🖵 | One press gives every control not marked No dice a value different from the one in force, chosen at random from what that control offers, as one edit that one Undo takes back whole | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.1/3` 🖵 | A control marked No dice keeps its value, whatever the roll gives the others | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.1/4` 🖵 | Into an owned Pattern the result auto-saves at once (US-7.2); on a shipped Pattern the roll is the first edit and the naming prompt of US-7.3 comes before anything is rolled, cancelling it leaving the Pattern as it was | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.1/5` 🖵 | With every control taking part marked No dice the button is disabled saying nothing is left to roll | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.1/6` 🖵 | A rolled fill or progression is where its cycle begins again while that cycle is on, as choosing it in its picker is | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/1` | Key: one of the twelve Keys | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/2` | Scale: one of the catalogue's scales, every category together | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/3` | Register: one of Bass, Low, Normal, High and Lead | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/4` | Progression: one from the catalogue — My list when Cycle progressions is set to it, the whole catalogue otherwise — never None; a Pattern without a progression is given one, voiced Closest and with the default fill, exactly as choosing it would be | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/5` | Chord changes: the other of Every Measure and Every pass | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/6` | Fill: one from the catalogue — My list when the Fills cycle is set to it, the whole catalogue otherwise — never None | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/7` | Voicing: one of the named voicings, never Custom | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.2/8` | Nothing else is rolled: every stored Pitch is as it was, each chord's root, quality and bass are what the rolled Progression and Voicing give, and the armed octave, the Fills and Progressions cycles, their Repeats, the tempo and the swing are untouched | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.test.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.3/1` 🖵 | Each of Key, Scale, Register, Progression, Chord changes, Fill and Voicing carries a No dice toggle beside it, shown with the control and pressed while the control is kept out of the roll; toggling it changes no Pattern content | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.3/2` 🖵 | The marks hold for the session and a reload clears them; they are neither Pattern content nor a setting: nothing auto-saves, a shipped Pattern is never prompted for a name, and no export carries them | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.14 | `AC-2.14.3/3` 🖵 | The marks are the same on every Pattern in the session: a mark set on one Pattern holds when another is loaded | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |

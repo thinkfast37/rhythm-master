@@ -500,8 +500,12 @@ test('AC-14.1.3/3 — A Help toggle in the goal strip, present in Lab alone, put
   await strip(page).locator('[data-action="toggle-help"]').click();
   const tips = page.locator('[data-section="melody"] .help-tip[data-help="melody"]');
   expect(await tips.count()).toBeGreaterThan(5);
-  // Nothing is laid out ahead of the strip or the grid: the ?s sit in the rows.
-  expect(await page.locator('[data-section="melody"] > :first-child').evaluate((e) => e.className)).toBe('pitch-strip');
+  // Nothing is laid out ahead of the group's first row or the grid: the ?s sit in
+  // the rows. The first row is Roll the dice (AC-15.1.8), its own ? inside it.
+  const first = page.locator('[data-section="melody"] > :first-child');
+  expect(await first.evaluate((e) => e.className)).toContain('dice-row');
+  expect(await first.evaluate((e) => e.classList.contains('help-tip'))).toBe(false);
+  expect(await first.locator('.help-tip[data-help-for="Roll the dice"]').count()).toBe(1);
   expect(Math.abs((await top(page.locator('.grid'))) - gridOff)).toBeLessThan(2);
   const stripOn = await top(pitchStrip);
   expect(Math.abs(stripOn - stripOff)).toBeLessThan(2);
