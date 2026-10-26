@@ -898,5 +898,65 @@ than silently appending an exact copy, which Double Length already provides.
 - *A dice roll with a No dice toggle on every Melody-group control — key, scale, progression, fill,
   voicing, register* — deferred to a story of its own: each control needs a toggle and a rule for what
   it may roll to, across several existing stories' criteria. Asked for on 2026-10-25; not forgotten.
+  *(Taken up the same day as US-2.14, D-021.)*
+
+## D-021 — Roll the dice across the Melody group: one pure roll, the dice outside `core/`
+
+**Decision (2026-10-25)**: `core/dice.js` holds one function, `rollMelody(pattern, { noDice, random,
+fills, progressions })`, that returns the Pattern with every Melody setting not marked No dice
+re-picked — Key, Scale, Register, Progression, Chord changes, Fill and Voicing, in that order — and a
+record of what each landed on. It takes its random numbers from the caller as a `random()` function,
+as `pickAtLevel` takes one for Give me one (US-14.1) and `pick` for the variation picker (D-020);
+`Math.random` is called once, in `src/main.js`. Each setting lands on a value other than the one in
+force whenever another is offered. The No dice marks are session state in `main.js`, one set for
+every Pattern, never stored (US-2.14).
+
+**Why.** The maintainer asked, while reviewing US-10.3's Roll the dice, for the same across the
+melodic interface: "for each control that could be randomized could have a roll the dice or locked
+toggle, so the dice roll only picks a random option for the controls that don't have a lock on them."
+Seven pickers worked one at a time is the cost of hearing a loop in a setting one would not have
+chosen; one tap with the decided parts held is the whole feature.
+
+One function rather than seven handlers rolling in turn, because the settings are not independent:
+a Pattern without a progression has no Fill, Voicing or Chord changes to roll until the Progression's
+own roll gives it one, and the progression is spelled under the scale, so the scale must land first.
+Ordering them inside one pure function makes the result one edit — one `apply`, one history entry,
+one auto-save, one naming prompt on a shipped Pattern — which is what makes one Undo take it back
+whole. The roll applies each setting through the same core setters the pickers use
+(`setProgression`, `setArpeggio`, `setVoicing`, `setChange`), so a rolled value is indistinguishable
+from a chosen one: a fresh progression arrives voiced Closest with the default fill (AC-2.6.1/7,
+AC-2.11.3/7), and a rolled fill or progression restarts its cycle as a chosen one does (AC-2.7.2/7,
+AC-2.10.2/7).
+
+"Never the value in force" because a roll that lands where it was is indistinguishable from a roll
+that skipped that control, and the musician cannot tell which happened; every unmarked control
+audibly moving is what makes No dice legible.
+
+The catalogues the Fill and Progression rolls draw from are the ones the cycles step through
+(AC-2.12.1): My list when a cycle is set to it, the whole catalogue otherwise. A musician who has
+shortlisted fills has said which fills they want to hear, and a roll that ignored the list would be a
+second opinion nobody asked for.
+
+**Consequences.**
+- No dice is session state, as the variation picker's group toggles are: the maintainer chose
+  session-only over a remembered setting, on the 2026-09-13 review's reasoning that a persisted
+  toggle is one more remembered state to find. The marks live in `main.js`'s `state`, so they hold
+  from one Pattern to the next in a session and are cleared by a reload.
+- The Melody group's first entry is the Roll the dice row (AC-15.1.8 revised), so it is shown
+  wherever the group is — Lab, Make it melodic, Combine patterns — and absent with it in Percussive.
+  Each toggle sits beside the control it marks, on the pitch strip or among the harmony controls.
+- The chord editors, the octave stepper, the cycles and their Repeats, tempo and swing never roll:
+  the editors are what the rolled Progression and Voicing write, the stepper arms the next stamp
+  rather than describing the Pattern, and the rest are Practice settings.
+
+**Alternatives considered**:
+- *Rolling through the seven handlers one after another* — rejected: seven history entries, seven
+  auto-saves, and a shipped Pattern asked for a name on the first and then rolled six more times; and
+  no place for the ordering the progression needs.
+- *A roll that may leave a setting where it was* — rejected, above.
+- *Remembering No dice in `rm.settings.v1`* — offered, declined by the maintainer the same day.
+- *Rolling the Scale within its category* — not asked for; a scale change is the point of a roll, and
+  the category heading is a picker convenience, not a musical boundary.
+
 - *Storing the phrase length on the Pattern* — rejected: it would be exported, compared and
   submitted as content, and two identical Patterns would differ by a number that changes no sound.
