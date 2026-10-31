@@ -16,6 +16,7 @@ import {
   matchVoicing,
   setProgression,
   setArpeggio,
+  clearChordFills,
   setVoicing,
   setChange,
   PROGRESSIONS,
@@ -110,8 +111,10 @@ export function rollMelody(pattern, { noDice = [], random, fills = ARPEGGIOS.map
     next = setChange(next, rolled.change);
   }
   if (controls.includes('fill')) {
+    // The rolled fill is heard on every chord: each chord's own fill goes with
+    // the roll (AC-2.15.3/3).
     rolled.fill = other(fills, next.harmony.arpeggio ?? null, random);
-    next = setArpeggio(next, rolled.fill);
+    next = clearChordFills(setArpeggio(next, rolled.fill));
   }
   if (controls.includes('voicing')) {
     rolled.voicing = other(VOICINGS.map((v) => v.id), matchVoicing(next.harmony.chords), random);

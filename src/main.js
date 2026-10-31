@@ -36,6 +36,7 @@ import {
   setChordQuality,
   setChordDegree,
   setChordBass,
+  setChordFill,
   setVoicing,
   addChord,
   removeChord,
@@ -1443,6 +1444,12 @@ const handlers = {
   async onChordBass(index, inversion) {
     if (!(await guardShipped())) return;
     apply(setChordBass, index, inversion);
+  },
+
+  /** The chord's own fill in place of the arpeggio, or As above to follow it (AC-2.15.1). */
+  async onChordFill(index, id) {
+    if (!(await guardShipped())) return;
+    apply(setChordFill, index, id === 'as-above' ? null : id);
   },
 
   /** Every chord's bass at once, by shape (AC-2.11.3). "Custom" names what is already there. */

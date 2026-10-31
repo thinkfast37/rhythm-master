@@ -13,7 +13,7 @@ import {
 } from '../../../src/export/submit.js';
 import { create, cycleAccent, setTimeSignature, addMeasure, setPitch } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
-import { setProgression as chooseProgression, setVoicing, setChange, addChord, setChordDegree, cyclePasses, setArpeggio, withArpeggio } from '../../../src/core/harmony.js';
+import { setProgression as chooseProgression, setVoicing, setChange, addChord, setChordDegree, cyclePasses, setArpeggio, setChordFill, withArpeggio } from '../../../src/core/harmony.js';
 
 /*
  * A progression chosen is voiced Closest (AC-2.11.3/7). The criteria proved
@@ -512,6 +512,19 @@ describe('US-2.1 — a Percussive Pattern goes out as it plays', () => {
     const plain = { ...create('Plain'), tempo: 120, measures: structuredClone(p.measures) };
     for (const m of plain.measures) for (const b of m.beats) for (const s of b.slots) delete s.pitch;
     expect(Array.from(buildMidi(p))).toEqual(Array.from(buildMidi({ ...plain, name: p.name })));
+  });
+
+  it("AC-2.15.1/5 — A chord's fill is Pattern content: it is saved with the Pattern and survives a reload, auto-saves into an owned Pattern, is one Undo step, is carried by the Pattern's JSON export and its submission, and on a shipped Pattern goes through the naming prompt, cancelling it leaving the Pattern as it was: the submission and the MIDI file", () => {
+    let p = { ...create('Varied'), soundMode: 'melodic', key: 'C', scale: 'ionian', tempo: 120 };
+    for (let b = 0; b < 4; b++) p = cycleAccent(p, 0, b, 0);
+    p = setArpeggio(setVoicing(chooseProgression(p, 'I-V-vi-IV'), 'root'), 'up');
+    p = setChordFill(p, 3, 'down');
+    // The submission is the Pattern as it plays, the chord's fill included.
+    expect(toSubmissionShape(p).harmony.chords[3].fill).toBe('down');
+    // The MIDI file is the four passes playback sounds: the fourth from the IV's 5th down.
+    const fourth = buildTimeline(p, 3).map((e) => e.pitch.midiNote);
+    expect(fourth).toEqual([72, 69, 65, 72]);
+    expect(Array.from(buildMidi(p))).not.toEqual(Array.from(buildMidi(setChordFill(p, 3, null))));
   });
 });
 

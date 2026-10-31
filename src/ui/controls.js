@@ -1233,6 +1233,28 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     bassPicker.addEventListener('change', (e) => handlers.onChordBass(index, Number(e.target.value)));
     row.appendChild(bassPicker);
 
+    // The chord's own fill (AC-2.15.1): As above — the Pattern's arpeggio, named
+    // — then the catalogue. Only under an arpeggio; with None nothing is dealt.
+    if (pattern.harmony.arpeggio) {
+      const above = ARPEGGIOS.find((a) => a.id === pattern.harmony.arpeggio);
+      const fillPicker = el('select', 'chord-fill');
+      fillPicker.dataset.action = 'set-chord-fill';
+      fillPicker.dataset.chord = String(index);
+      fillPicker.setAttribute('aria-label', `Chord ${index + 1} fill`);
+      fillPicker.appendChild(el('option', null, { value: 'as-above', textContent: `As above (${above?.label ?? 'arpeggio'})` }));
+      let fillGroup = null;
+      for (const a of ARPEGGIOS) {
+        if (fillGroup?.label !== a.group) {
+          fillGroup = el('optgroup', null, { label: a.group });
+          fillPicker.appendChild(fillGroup);
+        }
+        fillGroup.appendChild(el('option', null, { value: a.id, textContent: a.label }));
+      }
+      fillPicker.value = chord.fill ?? 'as-above';
+      fillPicker.addEventListener('change', (e) => handlers.onChordFill(index, e.target.value));
+      row.appendChild(fillPicker);
+    }
+
     let name = chordNumeral(chord);
     try {
       name = chordName(chord, key);

@@ -975,3 +975,52 @@ second opinion nobody asked for.
 
 - *Storing the phrase length on the Pattern* — rejected: it would be exported, compared and
   submitted as content, and two identical Patterns would differ by a number that changes no sound.
+
+## D-022 — A fill per chord: the chord carries it, the deal's restart reads it
+
+**Decision (2026-10-31)**: a chord in `harmony.chords` may carry a `fill` — an `ARPEGGIOS` id — and
+`arpeggioDeal`, which already restarts the deal at every chord change (AC-2.6.6/2), takes the chord's
+own fill at that restart in place of `harmony.arpeggio`. Nothing else learns about it: the timeline,
+the grid's note bands, the score and MIDI export all read the deal, so a per-chord fill reaches every
+view and the file through the one place the arpeggio already does (US-2.15, research.md D-011).
+
+**Why.** The maintainer's framing of the variations redesign is that a loop needs to change as it
+goes round, and the first, plainest change is the fill: one shape over three chords and another over
+the last. The chord is the unit a fill is already dealt over — the deal restarts there, a walking
+approach aims at the next one — so the chord is where the choice belongs, beside the quality and the
+bass the chord already carries (AC-2.6.2, US-2.11). It is Pattern content for the same reason the bass
+is: it changes what the chord sounds, so it is saved, exported, undone, compared (AC-2.6.9/1) and
+prompted for on a shipped Pattern, and no second store, overlay or migration is needed — a Pattern
+saved before has no `fill` on any chord and sounds as it did.
+
+**Consequences.**
+- `harmony.arpeggio` is now the fill of every chord without one; the picker names it and each
+  chord's picker reads **As above** until a fill is chosen. A chord's fill exists only under an
+  arpeggio: setting the arpeggio to None drops every chord's fill, so the stamped Pitches return
+  whole (AC-2.6.6/7) and no chord is dealt over a stamped melody. The maintainer declined, for this
+  story, both a chord's fill under None and an "as stamped" entry in the chord's picker: each is the
+  mixed state the pitch strip and degree chips would have to show, and the broader variations work
+  is where that is decided.
+- **A fill in force wins everywhere.** Cycle fills and a Song's Section put a fill in force through
+  `withArpeggio` (AC-2.7.1/4, D-013); the overlay it returns deals every chord, each chord's own fill
+  suspended, so the fill being auditioned is always heard — the maintainer's ruling. The overlay still
+  writes nothing: the Pattern's chords keep their fills and they return when the cycle or Song ends.
+- **The Fill roll clears them.** Roll the dice (US-2.14) sets `harmony.arpeggio` and removes every
+  chord's fill in the same edit, so the roll is audible on every chord; Fill marked No dice leaves
+  them, as it leaves the arpeggio. The maintainer chose this over leaving them (a roll inaudible on
+  overridden chords) and over rolling each chord too (a roll that changes more than one control).
+- A new progression's chords carry no fill, as `setProgression` writes fresh chords; `addChord` adds
+  one without; editing a chord's root, quality or bass keeps it; removing the chord removes it.
+- Baking on Progression None (AC-2.6.1/6) already bakes what the first pass sounded, read from the
+  deal, so a chord's own fill in that pass is baked without a further rule.
+- Duplicate identity (`core/similarity.js`) carries each chord's fill beside its bass; two Patterns
+  alike but for one chord's fill are not duplicates. Family detection is unchanged.
+
+**Alternatives considered**:
+- *A fill per Measure* — rejected: under every-pass changes a chord spans a whole pass, and a fill
+  that followed the Measure would cut across the chord the deal restarts on; the chord is the unit.
+- *A fill per pass, or a per-pass schedule beside the Pattern* — rejected for now: it is the
+  non-destructive variation set D-020 weighed and declined, a second place content lives. The broader
+  redesign may still want one; this story gives it a unit — a fill on a chord — to build from.
+- *Per-chord fills kept under a fill in force* — declined by the maintainer: the cycled fill would be
+  inaudible on every overridden chord, which defeats auditioning it.
