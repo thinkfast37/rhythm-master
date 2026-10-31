@@ -40,7 +40,7 @@ function findChunk(bytes, id) {
 }
 
 describe('export/midi', () => {
-  it('AC-12.1.1 — the file is a valid format-0 SMF with the documented division', () => {
+  it('the exported file is a valid format-0 SMF with the documented division', () => {
     const bytes = buildMidi(withNote(create('Groove')));
     expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('MThd');
     const header = findChunk(bytes, 'MThd');
@@ -49,7 +49,7 @@ describe('export/midi', () => {
     expect(findChunk(bytes, 'MTrk')).not.toBeNull();
   });
 
-  it('AC-12.1.2 — Accent Level maps to note-on velocity', () => {
+  it('AC-12.1.3 — Accent Level maps to a fixed MIDI velocity table: each Accent Level reaches the file as its VELOCITY entry', () => {
     let p = create('Dynamics');
     p = withNote(p, 0, 0); // Beat 1 Slot 1 -> Strong
     p = withNote(p, 1, 0); // Beat 2 Slot 1 -> Weak
@@ -57,15 +57,18 @@ describe('export/midi', () => {
 
     const track = findChunk(buildMidi(p), 'MTrk');
     const velocities = [];
+    // A Percussive Pattern's notes are on the drum channel, 10 — status 0x99, not
+    // 0x90 (AC-12.1.2). This scan read 0x90 while the exporter wrongly put
+    // Percussive notes on channel 1; only the status byte it looks for changed.
     for (let i = 0; i < track.length - 2; i++) {
-      if (track[i] === 0x90) velocities.push(track[i + 2]);
+      if (track[i] === 0x99) velocities.push(track[i + 2]);
     }
     expect(velocities).toContain(VELOCITY[3]);
     expect(velocities).toContain(VELOCITY[2]);
     expect(velocities).toContain(VELOCITY[1]);
   });
 
-  it('AC-12.1.3 — every Measure emits its own Time Signature meta event', () => {
+  it('AC-12.1.4 — Mixed-meter Pattern exports each Measure by its own Time Signature: every Measure emits its own Time Signature meta event', () => {
     let p = create('Mixed');
     p = addMeasure(p);
     p = setTimeSignature(p, 1, '6/8');
@@ -84,7 +87,7 @@ describe('export/midi', () => {
     ]);
   });
 
-  it('AC-12.1.4 — melodic notes export at the pitch playback resolves, not a re-derivation', () => {
+  it('AC-12.1.2 — Percussive exports to a drum channel; Melodic exports pitched notes: melodic notes export at the pitch playback resolves, not a re-derivation', () => {
     let p = { ...create('Tune'), soundMode: 'melodic', key: 'Eb' };
     p = withNote(p, 0, 0);
     p = setPitch(p, 0, 0, 0, { degree: '5', octaveOffset: -1 });
@@ -111,13 +114,13 @@ describe('export/midi', () => {
     );
   });
 
-  it('AC-12.1.1 — the filename is derived from the Pattern name, safely', () => {
+  it('the MIDI filename is derived from the Pattern name, safely', () => {
     expect(midiFilename({ name: 'Bossa Groove' })).toBe('bossa-groove.mid');
     expect(midiFilename({ name: '  Odd/Name?  ' })).toBe('oddname.mid');
     expect(midiFilename({ name: '///' })).toBe('pattern.mid');
   });
 
-  it('AC-12.1.2 — a Pattern with no notes still produces a valid file', () => {
+  it('a Pattern with no notes still produces a valid MIDI file', () => {
     const bytes = buildMidi(create('Silent'));
     expect(findChunk(bytes, 'MTrk')).not.toBeNull();
   });

@@ -43,7 +43,7 @@ describe('core/pattern — construction', () => {
     }
   });
 
-  it('AC-1.1.4 — a Measure holds exactly its numerator in Beats, for every meter', () => {
+  it('a Measure holds exactly its numerator in Beats, for every meter', () => {
     const expected = {
       '1/4': 1, '2/4': 2, '3/4': 3, '4/4': 4, '5/4': 5, '6/4': 6, '7/4': 7,
       '6/8': 6, '7/8': 7, '9/8': 9, '12/8': 12,
@@ -55,7 +55,7 @@ describe('core/pattern — construction', () => {
 });
 
 describe('core/pattern — Measures', () => {
-  it('AC-1.1.2 — an added Measure inherits the previous Measure’s meter', () => {
+  it("AC-1.1.2 — Appending inherits the preceding Measure's Time Signature: core addMeasure carries a 7/8 forward", () => {
     let p = create();
     p = setTimeSignature(p, 0, '7/8');
     p = addMeasure(p);
@@ -208,7 +208,7 @@ describe('core/pattern — accents', () => {
 });
 
 describe('core/pattern — whole-Pattern operations', () => {
-  it('AC-8.1.1 — append concatenates Measures, each keeping its own meter', () => {
+  it('AC-8.1.1 — Combine has no meter-matching restriction: append concatenates Measures, each keeping its own meter', () => {
     const a = setTimeSignature(create(), 0, '3/4');
     const b = setTimeSignature(create(), 0, '6/8');
     const joined = append(a, b);
@@ -226,7 +226,7 @@ describe('core/pattern — whole-Pattern operations', () => {
     expect(append(a, b).measures).toHaveLength(32);
   });
 
-  it('AC-10.1.1 — duplicate doubles a Pattern’s length with its own Measures', () => {
+  it('AC-10.1.1 — Duplicate copies the full Measure sequence exactly: core duplicate appends each Measure deep-equal to its original', () => {
     let p = addMeasure(create());
     p = cycleAccent(p, 0, 0, 0);
     const d = duplicate(p);
