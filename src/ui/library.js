@@ -101,7 +101,10 @@ export function toggleTag(viewState, name) {
     : [...current, name];
 }
 
-/** Every Tag in use, automatic ones first, then user Tags alphabetically. */
+/**
+ * Every Tag in use: automatic ones first, alphabetically, then user Tags
+ * alphabetically (AC-5.3.8).
+ */
 export function allTags(entries) {
   const auto = new Set();
   const user = new Set();
@@ -111,7 +114,9 @@ export function allTags(entries) {
     for (const t of e.userTags) user.add(String(t));
   }
   return [
-    ...AUTOMATIC_TAGS.filter((t) => auto.has(t)).map((name) => ({ name, automatic: true })),
+    ...AUTOMATIC_TAGS.filter((t) => auto.has(t))
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ name, automatic: true })),
     ...[...user].sort((a, b) => a.localeCompare(b)).map((name) => ({ name, automatic: false })),
   ];
 }

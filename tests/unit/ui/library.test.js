@@ -49,14 +49,14 @@ describe('ui/library', () => {
     expect(entries.find((e) => e.pattern.name === 'Mine').owned).toBe(true);
   });
 
-  it('AC-5.3.1 — automatic Tags mark provenance: built-in versus custom', () => {
+  it('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: provenance is an automatic Tag, built-in versus custom', () => {
     const entries = buildEntries([p('Shipped')], [p('Mine')]);
     expect(entries[0].autoTags).toEqual(['built-in', 'percussive']);
     expect(entries[1].autoTags).toEqual(['custom', 'percussive']);
     expect(entries[1].pattern.tags).toEqual([]);
   });
 
-  it('AC-5.3.2 — a built-in Pattern’s own Tags are locked; Tags you add to it are not', () => {
+  it('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: a built-in Pattern’s own Tags are locked; Tags you add to it are not', () => {
     const shipped = { ...p('Bossa'), tags: ['Latin'] };
     const entries = buildEntries([shipped], [], (id) => (id === 'bossa' ? ['warmup'] : []));
 
@@ -64,7 +64,7 @@ describe('ui/library', () => {
     expect(entries[0].userTags).toEqual(['warmup']);
   });
 
-  it('AC-5.3.2 — every Tag on a Pattern you own is yours to remove', () => {
+  it('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: every Tag on a Pattern you own is yours to remove', () => {
     const mine = { ...p('Mine'), tags: ['groove'] };
     const entries = buildEntries([], [mine]);
     expect(entries[0].lockedTags).toEqual([]);
@@ -92,25 +92,25 @@ describe('ui/library', () => {
     expect(filterEntries(entries, { query: '   ' })).toHaveLength(2);
   });
 
-  it('AC-5.3.3 — filtering by an automatic Tag works like any other', () => {
+  it('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: provenance filters like any other Tag', () => {
     const entries = buildEntries([p('Shipped')], [p('Mine')]);
     expect(filterEntries(entries, { tag: 'custom' }).map((e) => e.pattern.name)).toEqual(['Mine']);
     expect(filterEntries(entries, { tag: 'percussive' })).toHaveLength(2);
   });
 
-  it('AC-5.3.4 — Tag filtering is case-insensitive', () => {
+  it('Tag filtering is case-insensitive', () => {
     const entries = buildEntries([{ ...p('A'), tags: ['Warmup'] }], []);
     expect(filterEntries(entries, { tag: 'warmup' })).toHaveLength(1);
   });
 
-  it('AC-5.3.6 — automatic Tags are listed before the rest', () => {
+  it('AC-5.3.8 — Tag-filter pill ordering: automatic Tags are listed before the rest', () => {
     const entries = buildEntries([{ ...p('A'), tags: ['zebra', 'apple'] }], []);
     const tags = allTags(entries);
     expect(tags.filter((t) => t.automatic).map((t) => t.name)).toEqual(['built-in', 'percussive']);
     expect(tags.filter((t) => !t.automatic).map((t) => t.name)).toEqual(['apple', 'zebra']);
   });
 
-  it('AC-5.3.6 — a built-in Pattern’s own Tags are filterable like any other', () => {
+  it('a built-in Pattern’s own Tags are filterable like any other', () => {
     const entries = buildEntries([{ ...p('A'), tags: ['Latin'] }], []);
     expect(filterEntries(entries, { tag: 'latin' })).toHaveLength(1);
     expect(filterEntries(entries, { tag: 'built-in' })).toHaveLength(1);
@@ -125,7 +125,7 @@ describe('ui/library', () => {
     expect(tags).not.toContain('custom');
   });
 
-  it('AC-5.3.8 — a melodic Pattern surfaces the melodic Tag', () => {
+  it('a melodic Pattern surfaces the melodic Tag', () => {
     const melodic = { ...p('Tune'), soundMode: 'melodic', key: 'C' };
     const entries = buildEntries([melodic], []);
     expect(entries[0].autoTags).toContain('melodic');

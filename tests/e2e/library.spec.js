@@ -56,7 +56,7 @@ test('AC-5.2.3 — clearing the search restores the full list', async ({ page })
   await expect(page.locator('.pattern-item')).toHaveCount(SEED_PATTERN_COUNT);
 });
 
-test('AC-5.3.5 — automatic Tags are outlined with no removal control; user Tags are filled with one', async ({
+test('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: automatic Tags are outlined with no removal control; user Tags are filled with one', async ({
   page,
 }) => {
   await page.goto('/');
@@ -78,7 +78,7 @@ test('AC-5.3.5 — automatic Tags are outlined with no removal control; user Tag
   await expect(user.locator('.tag-remove')).toHaveCount(1);
 });
 
-test('AC-5.3.3 — clicking a Tag chip filters by it', async ({ page }) => {
+test('clicking a Tag chip filters by it', async ({ page }) => {
   await page.goto('/');
   await page.locator('.tag-filter', { hasText: 'melodic' }).first().click();
   const count = await page.locator('.pattern-item').count();
@@ -97,7 +97,7 @@ test('AC-5.3.3 — clicking a Tag chip filters by it', async ({ page }) => {
   expect(allMelodic).toBe(true);
 });
 
-test('AC-5.3.6 — a Tag you added is removable; a built-in Pattern’s own Tags are not', async ({
+test('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: a Tag you added is removable; a built-in Pattern’s own Tags are not', async ({
   page,
 }) => {
   await page.goto('/');
@@ -126,7 +126,7 @@ test('AC-5.3.6 — a Tag you added is removable; a built-in Pattern’s own Tags
   await expect(header.locator('.tag-chip.locked', { hasText: builtInTag })).toBeVisible();
 });
 
-test('AC-5.3.6 — a built-in Tag survives an attempt to remove it programmatically', async ({
+test('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: a built-in Tag survives an attempt to remove it programmatically', async ({
   page,
 }) => {
   await page.goto('/');
@@ -143,7 +143,7 @@ test('AC-5.3.6 — a built-in Tag survives an attempt to remove it programmatica
   expect(result.notMovedToOverlay).toBe(0);
 });
 
-test('AC-5.3.2 — a Tag can be added from the Pattern itself, without opening the library', async ({
+test("AC-5.3.10 — A Pattern's Tags live on the Pattern, not repeated down the library list: a Tag can be added from the Pattern itself, without opening the library", async ({
   page,
 }) => {
   await page.goto('/');
@@ -159,7 +159,7 @@ test('AC-5.3.2 — a Tag can be added from the Pattern itself, without opening t
   await expect(page.locator('.tag-filter', { hasText: 'warmup' })).toBeVisible();
 });
 
-test('AC-5.3.1 — provenance reads as a Tag, not as prose about the software', async ({ page }) => {
+test('AC-5.3.5 — Auto-tags are not user-removable and render distinctly: provenance reads as a Tag, not as prose about the software', async ({ page }) => {
   await page.goto('/');
   await expect(
     page.locator('.header-tags .tag-chip.automatic', { hasText: 'built-in' })
@@ -170,7 +170,7 @@ test('AC-5.3.1 — provenance reads as a Tag, not as prose about the software', 
   expect(body.toLowerCase()).not.toContain('ships with the app');
 });
 
-test('AC-5.3.7 — user Tags de-duplicate case-insensitively', async ({ page }) => {
+test('AC-5.3.6 — User Tag de-duplication is case-insensitive: re-adding a Tag in another case keeps the first', async ({ page }) => {
   await page.goto('/');
   const tags = await page.evaluate(() => {
     const id = window.__rm.seedStore.loadAll()[0].id;
@@ -181,7 +181,7 @@ test('AC-5.3.7 — user Tags de-duplicate case-insensitively', async ({ page }) 
   expect(tags.filter((t) => t.toLowerCase() === 'warmup')).toEqual(['Warmup']);
 });
 
-test('AC-6.1.1 — a shipped Pattern can be rated without mutating it', async ({ page }) => {
+test('a shipped Pattern can be rated without mutating it', async ({ page }) => {
   await page.goto('/');
   const first = page.locator('.pattern-item').first();
   await first.locator('.star').nth(3).click(); // 4 stars
@@ -202,7 +202,7 @@ test('AC-6.1.1 — a shipped Pattern can be rated without mutating it', async ({
   expect(state.inOverlay).toBe(4);
 });
 
-test('AC-6.1.2 — a rating survives a reload', async ({ page }) => {
+test('a rating survives a reload', async ({ page }) => {
   await page.goto('/');
   await page.locator('.pattern-item').first().locator('.star').nth(2).click();
   await page.reload();
@@ -221,7 +221,7 @@ test('AC-6.1.3 — clicking the current rating clears it back to zero', async ({
   await expect(first.locator('.rating')).toHaveAttribute('data-rating', '0');
 });
 
-test('AC-6.1.4 — rating reorders Patterns that share a name', async ({ page }) => {
+test('rating reorders Patterns that share a name', async ({ page }) => {
   await page.goto('/');
   // Ratings sort within a name, so the overall alphabetical order is unchanged.
   const before = await page.locator('.pattern-name').allTextContents();
