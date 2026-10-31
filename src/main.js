@@ -22,6 +22,7 @@ import {
   setPitch,
   append,
   duplicate,
+  tagRefusal,
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
@@ -745,6 +746,25 @@ function applyDraft(mutator, ...args) {
   syncTransport();
   render();
   return next;
+}
+
+/**
+ * A full render on the next animation frame, coalesced: several requests before it
+ * runs are one render, reading state as it is then. Without animation frames it
+ * renders at once, as before.
+ */
+let fullRenderPending = false;
+function deferFullRender() {
+  if (fullRenderPending) return;
+  if (typeof requestAnimationFrame !== 'function') {
+    render('full');
+    return;
+  }
+  fullRenderPending = true;
+  requestAnimationFrame(() => {
+    fullRenderPending = false;
+    render('full');
+  });
 }
 
 /** The auto-save with its one precondition: a saved composition, complete (AC-19.9.2). */
@@ -2321,6 +2341,8 @@ const handlers = {
       (t) => String(t).toLowerCase() === name.toLowerCase()
     );
     if (taken) return;
+    // The limits on the musician's own Tags (AC-5.3.11); the prompt says why first.
+    if (tagRefusal(existing, name)) return;
 
     const next = [...existing, name];
     if (owned) patternStore.upsert({ ...owned, tags: next });
@@ -2331,12 +2353,29 @@ const handlers = {
   },
 
   async onAddTagPrompt(id) {
+    const own = () => {
+      const owned = patternStore.findById(id);
+      return owned ? (owned.tags ?? []) : overlayStore.addedTagsFor(id);
+    };
+    const refuse = (message) => ask({ message, options: [{ label: 'OK', value: true, primary: true }] });
+    // Full already: say so rather than asking for a Tag that would be refused (AC-5.3.11/1).
+    const full = tagRefusal(own(), '');
+    if (full) {
+      await refuse(full);
+      return;
+    }
     const name = await askForText({
       message: 'Add a tag',
       placeholder: 'e.g. warmup',
       confirmLabel: 'Add',
     });
-    if (name) handlers.onAddTag(id, name);
+    if (!name) return;
+    const why = tagRefusal(own(), name);
+    if (why) {
+      await refuse(why);
+      return;
+    }
+    handlers.onAddTag(id, name);
   },
 
   /**
@@ -2686,7 +2725,11 @@ const transport = createTransport({
     const crossed = position.loop !== state.transportPosition?.loop;
     state.transportPosition = position;
     // The cursor moving within a pass — see `render`.
-    render(crossed ? 'full' : 'cursor');
+    render('cursor');
+    // At a pass boundary the full render follows a frame later: the highlight is
+    // painted the moment its note sounds, and the rest of the views catch up on
+    // the next frame rather than holding the highlight back (AC-4.1.2).
+    if (crossed) deferFullRender();
   },
   onLoop(loop) {
     const previousFill = fillIdAt(state.loop);

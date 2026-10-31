@@ -71,7 +71,7 @@ describe('ui/library', () => {
     expect(entries[0].userTags).toEqual(['groove']);
   });
 
-  it('AC-5.2.1 — search matches Pattern names, case-insensitively', () => {
+  it('AC-5.2.1 — Search matches name and Tags: names, case-insensitively', () => {
     const entries = buildEntries([p('Bossa Groove'), p('Samba Break')], []);
     expect(filterEntries(entries, { query: 'bossa' }).map((e) => e.pattern.name)).toEqual([
       'Bossa Groove',
@@ -117,7 +117,7 @@ describe('ui/library', () => {
     expect(filterEntries(entries, { query: 'latin' })).toHaveLength(1);
   });
 
-  it('AC-5.3.7 — only Tags actually in use are listed', () => {
+  it('only Tags actually in use are listed', () => {
     const tags = allTags(buildEntries([p('A')], [])).map((t) => t.name);
     expect(tags).toContain('percussive');
     expect(tags).toContain('built-in');
@@ -139,7 +139,7 @@ describe('ui/library', () => {
     expect(next.pattern.name).toBe('Charlie');
   });
 
-  it('AC-5.5.2 — navigation wraps at both ends and stays inside the active filter', () => {
+  it('AC-5.5.2 — Prev/Next wraps at list boundaries: at both ends, and inside the active filter', () => {
     const entries = buildEntries([p('Alpha'), p('Bravo'), p('Charlie')], []);
     expect(neighbours(entries, { currentId: 'alpha' }).previous.pattern.name).toBe('Charlie');
     expect(neighbours(entries, { currentId: 'charlie' }).next.pattern.name).toBe('Alpha');
@@ -266,7 +266,7 @@ describe('ui/library — filtering by several Tags', () => {
     expect(filterEntries(entries, { tag: 'Latin' }).map((e) => e.pattern.name)).toEqual(['A']);
   });
 
-  it('AC-5.5.2 — Prev/Next traverse the multi-Tag filtered list', () => {
+  it('AC-5.5.1 — Prev/Next steps through the filtered list, not the full library: under several Tags at once', () => {
     const entries = buildEntries(
       [
         withTags('Alpha', ['Latin', 'Song']),
@@ -281,3 +281,19 @@ describe('ui/library — filtering by several Tags', () => {
     expect(neighbours(entries, view).previous.pattern.name).toBe('Charlie');
   });
 });
+
+describe('US-5.3 — the limits on a Pattern’s own Tags', () => {
+  it('AC-5.3.11 — User Tag length/count limits: the rule itself', async () => {
+    const { tagRefusal, MAX_USER_TAGS, MAX_TAG_LENGTH } = await import('../../../src/core/pattern.js');
+    expect(MAX_USER_TAGS).toBe(20);
+    expect(MAX_TAG_LENGTH).toBe(30);
+    const twenty = Array.from({ length: 20 }, (_, i) => `t${i}`);
+    expect(tagRefusal(twenty.slice(0, 19), 'one more')).toBeNull();
+    expect(tagRefusal(twenty, 'one more')).toMatch(/at most 20 Tags of your own/);
+    expect(tagRefusal([], 'x'.repeat(30))).toBeNull();
+    expect(tagRefusal([], 'x'.repeat(31))).toMatch(/at most 30 characters/);
+    // Surrounding spaces are not counted, as they are trimmed before adding.
+    expect(tagRefusal([], `  ${'x'.repeat(30)}  `)).toBeNull();
+  });
+});
+

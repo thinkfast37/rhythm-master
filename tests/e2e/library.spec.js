@@ -16,7 +16,7 @@ test('AC-5.1.4 — Default sort order: alphabetical by name, then Rating descend
   expect(names).toEqual(sorted);
 });
 
-test('AC-5.2.1 — typing filters the list', async ({ page }) => {
+test('AC-5.2.1 — Search matches name and Tags: typing filters the list by name', async ({ page }) => {
   await page.goto('/');
   await page.locator('.library-search').fill('clave');
   const count = await page.locator('.pattern-item').count();
@@ -253,7 +253,7 @@ test('AC-5.5.1 — Prev and Next step through the list', async ({ page }) => {
   expect(await page.evaluate(() => window.__rm.getState().pattern.name)).toBe(start);
 });
 
-test('AC-5.5.2 — navigation stays inside the active search filter', async ({ page }) => {
+test('AC-5.5.1 — Prev/Next steps through the filtered list, not the full library: under a search', async ({ page }) => {
   await page.goto('/');
   await page.locator('.library-search').fill('clave');
   const names = await page.locator('.pattern-name').allTextContents();

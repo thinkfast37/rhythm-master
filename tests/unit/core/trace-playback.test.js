@@ -159,6 +159,46 @@ describe('trace: playback timing (US-4.1)', () => {
   });
 });
 
+describe('trace: the highlight drawn when its note sounds (US-4.1)', () => {
+  let transport = null;
+  beforeEach(() => {
+    vi.useFakeTimers();
+    resetContext();
+    resetNodes();
+    starts = [];
+    globalThis.AudioContext = ClockContext;
+  });
+  afterEach(() => {
+    transport?.stop();
+    transport = null;
+    vi.useRealTimers();
+    delete globalThis.AudioContext;
+    delete globalThis.requestAnimationFrame;
+    delete globalThis.cancelAnimationFrame;
+  });
+
+  it('AC-4.1.2 — Visual highlight stays in sync with audio: each highlight, the first after Play included, is drawn within 5ms of its note rather than at the next frame', async () => {
+    // Frames 16ms apart: the frame loop alone would leave a highlight up to a frame late.
+    globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 16);
+    globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
+    const shown = [];
+    transport = createTransport({ onPosition: (position) => shown.push({ position, at: getContext().currentTime }) });
+    await transport.start(quarterNotes(), OFF);
+    const ctx = getContext();
+    for (let ms = 0; ms < 4500; ms++) {
+      ctx.currentTime += 0.001;
+      vi.advanceTimersByTime(1);
+    }
+    const sounded = starts.filter((s) => s.when <= ctx.currentTime);
+    expect(shown.length).toBe(sounded.length);
+    shown.forEach(({ at }, k) => {
+      const lag = at - sounded[k].when;
+      expect(lag, `highlight ${k}`).toBeGreaterThanOrEqual(-1e-9);
+      expect(lag, `highlight ${k}`).toBeLessThan(0.005);
+    });
+  });
+});
+
 describe('trace: swing (US-4.4)', () => {
   it('AC-4.4.1 — Swing default and range: a straight group swings by 0 until set, and only integers 0–100 are accepted', () => {
     let p = { ...create(), tempo: 120 };

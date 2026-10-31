@@ -35,6 +35,21 @@ export const DEFAULT_TIME_SIGNATURE = '4/4';
  */
 export const AUTOMATIC_TAGS = ['built-in', 'custom', 'swing', 'percussive', 'melodic'];
 
+/** The most Tags of the musician's own one Pattern carries, and the longest one may be (AC-5.3.11). */
+export const MAX_USER_TAGS = 20;
+export const MAX_TAG_LENGTH = 30;
+
+/**
+ * Why a Tag cannot be added to a Pattern already carrying `userTags` of the
+ * musician's own, or null when it can (AC-5.3.11). The limits govern adding:
+ * a stored Pattern already over one keeps its Tags.
+ */
+export function tagRefusal(userTags, name) {
+  if (String(name).trim().length > MAX_TAG_LENGTH) return `A Tag can be at most ${MAX_TAG_LENGTH} characters.`;
+  if ((userTags ?? []).length >= MAX_USER_TAGS) return `A Pattern can carry at most ${MAX_USER_TAGS} Tags of your own.`;
+  return null;
+}
+
 const clone = (v) => structuredClone(v);
 
 // --- construction -----------------------------------------------------------
