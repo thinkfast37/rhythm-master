@@ -16,7 +16,7 @@ test('AC-2.1.1 — Sound Mode is Percussive by default and switchable', async ({
   await expect(page.locator('.sound-mode [data-mode="melodic"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('AC-2.1.2 — Key appears only in Melodic mode, not disabled in Percussive', async ({ page }) => {
+test('AC-2.3.3 — Percussive Patterns have no Key: Key appears only in Melodic mode, not disabled in Percussive', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.key-picker')).toHaveCount(0);

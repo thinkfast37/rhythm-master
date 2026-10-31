@@ -47,7 +47,7 @@ describe('core/pitch', () => {
     expect(resolve({ degree: '1', octaveOffset: 0 }, 'C').midiNote).toBe(60);
   });
 
-  it('AC-2.2.5 — octaveOffset shifts by exactly twelve semitones per step', () => {
+  it('octaveOffset shifts by exactly twelve semitones per step', () => {
     const base = resolve({ degree: '1', octaveOffset: 0 }, 'C').midiNote;
     expect(resolve({ degree: '1', octaveOffset: -1 }, 'C').midiNote).toBe(base - 12);
     expect(resolve({ degree: '1', octaveOffset: 1 }, 'C').midiNote).toBe(base + 12);

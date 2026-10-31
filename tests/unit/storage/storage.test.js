@@ -23,7 +23,7 @@ describe('storage/patterns', () => {
     expect(patterns.findById('p_1').tempo).toBe(140);
   });
 
-  it('AC-7.5.1 — a deleted Pattern is gone from the store', () => {
+  it('AC-7.5.2 — Delete is permanent: a deleted Pattern is gone from the store', () => {
     patterns.upsert({ ...create('A'), id: 'p_1' });
     patterns.upsert({ ...create('B'), id: 'p_2' });
     patterns.remove('p_1');

@@ -492,7 +492,7 @@ test('AC-7.3.1 — editing a shipped Pattern asks for a name before the edit app
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
 });
 
-test('AC-7.3.2 — naming the copy applies the edit to the copy, not the original', async ({ page }) => {
+test('AC-7.3.2 — Confirming the naming prompt creates a new owned Pattern: naming the copy applies the edit to the copy, not the original', async ({ page }) => {
   await page.goto('/');
   const originalName = await page.evaluate(() => window.__rm.getState().pattern.name);
 
@@ -594,7 +594,7 @@ test('AC-15.1.10 — Grid remains usable for the largest supported Pattern on mo
   expect(Math.min(...widths)).toBeGreaterThanOrEqual(24);
 });
 
-test('AC-15.1.1 — the layout adapts across desktop, tablet, and phone', async ({ page }) => {
+test('the layout adapts across desktop, tablet, and phone', async ({ page }) => {
   for (const size of [
     { width: 1280, height: 800 },
     { width: 900, height: 1000 },
