@@ -12,6 +12,7 @@ import * as songStore from '../../../src/storage/songs.js';
 import * as settingsStore from '../../../src/storage/settings.js';
 import * as localMetaStore from '../../../src/storage/localMeta.js';
 import * as seedStore from '../../../src/storage/seed.js';
+import { create, cycleAccent } from '../../../src/core/pattern.js';
 
 const KEYS = [patternStore.KEY, overlayStore.KEY, songStore.KEY, settingsStore.KEY, localMetaStore.KEY];
 const CREATED = '2026-10-03T14:05:09.000Z';
@@ -167,3 +168,21 @@ describe('US-7.6 — files that cannot be restored (AC-7.6.3)', () => {
     expect(parsedSnapshot()).toEqual(before);
   });
 });
+
+describe('US-2.1 — the backup keeps a dormant melody', () => {
+  it('AC-2.1.8/2 — The whole-library backup keeps a Percussive Pattern’s dormant melody, and a restore brings it back', () => {
+    let p = { ...create('Was Melodic'), id: 'p_dormant' };
+    p = cycleAccent(p, 0, 0, 0);
+    p.measures[0].beats[0].slots[0].pitch = { degree: 'b3', octaveOffset: -1 };
+    const kept = { ...p, soundMode: 'percussive', key: 'Eb', scale: 'aeolian', register: -1, harmony: { change: 'pass', chords: [{ degree: '1', quality: 'min' }] } };
+    patternStore.upsert(kept);
+    const text = backupText('2026-10-31T12:00:00Z');
+
+    patternStore.remove('p_dormant');
+    expect(patternStore.findById('p_dormant')).toBeFalsy();
+    expect(checkBackup(text).ok).toBe(true);
+    restoreBackup(text);
+    expect(patternStore.findById('p_dormant')).toEqual(kept);
+  });
+});
+

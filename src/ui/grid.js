@@ -213,7 +213,10 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   // With the chord changing every Measure, each Measure names the chord it
   // sounds in the pass being played (AC-2.6.7/3) — the strip above says which
   // chord is in force, this says where it lands.
-  const chordIndex = pattern.harmony?.change === 'measure' ? chordAt(pattern, pass, measureIndex) : null;
+  // Only a Melodic Pattern's progression is in force; a Percussive one keeps its
+  // progression unused for when it turns Melodic again (AC-2.1.4).
+  const chordIndex =
+    pattern.soundMode === 'melodic' && pattern.harmony?.change === 'measure' ? chordAt(pattern, pass, measureIndex) : null;
   if (chordIndex !== null) {
     const chord = pattern.harmony.chords[chordIndex];
     const label = document.createElement('span');

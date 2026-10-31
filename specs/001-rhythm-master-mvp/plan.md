@@ -219,7 +219,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-011** | US-4.2 — Adjust tempo | AC-4.2.1–AC-4.2.7 | T057–T058, T204, T234, T244, T272, T279, T400 | T059, T205, T235, T245, T273, T280, T401 |
 | **P-012** | US-4.3 — Metronome click and count-in | AC-4.3.1–AC-4.3.6 | T060–T061 | T062 |
 | **P-013** | US-4.4 — Swing | AC-4.4.1–AC-4.4.17 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 |
-| **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.6 | T065, T272 | T066, T273 |
+| **P-014** | US-2.1 — Choose Sound Mode | AC-2.1.1–AC-2.1.8 | T065, T272, T450 | T066, T273, T451 |
 | **P-015** | US-2.3 — Transpose to a Key | AC-2.3.1–AC-2.3.3 | T067 | T068 |
 | **P-016** | US-2.2 — Assign Pitch to a Slot | AC-2.2.1–AC-2.2.19 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 |
 | **P-017** | US-2.4 — Melodic playback | AC-2.4.1–AC-2.4.5 | T071–T072, T423 | T073, T424 |

@@ -428,14 +428,35 @@ from this view.)*
   - **Then** a Key is required to be active, and defaults to C if none was set
 
 - **AC-2.1.4** — Pitch data survives a Sound Mode round-trip
-  - **Given** a Melodic Pattern with per-Slot Pitch data
+  - **Given** a Melodic Pattern with per-Slot Pitch data, a Key, a scale, a Register and a progression
   - **When** the Composer switches its Sound Mode to Percussive and then back to Melodic
-  - **Then** all previously stored Pitch data reappears exactly as it was — it was never deleted, only unused during Percussive playback *(Assumption: preserves in-progress melodic authoring across an exploratory mode toggle.)*
+  - **Then** the melody reappears exactly as it was — none of it was deleted, only unused while the Pattern was Percussive
+  - **Cases**:
+    - **AC-2.1.4/1** — Every Slot's Pitch reappears exactly as it was
+    - **AC-2.1.4/2** — The Key, scale, Register and progression reappear exactly as they were
+    - **AC-2.1.4/3** — A Slot turned on while the Pattern was Percussive takes the tonic when it turns Melodic again, and a Slot turned off while Percussive keeps no Pitch
+  - *(Revised 2026-10-31 at the maintainer's decision (T450). The criterion was right and the code was wrong: switching to Percussive deleted every Pitch, the Key, scale, Register and progression, and skipped the undo history, so an accidental toggle lost a melody for good — "I just hit the toggle by accident and then I lost a melody." The Given now names everything the melody depends on, since returning the degrees without their Key would bring the melody back transposed; Cases /1–/3 decompose it. The assumption note is dropped: the maintainer confirmed it. AC-2.5.4/3, AC-2.6.8/3 and data-model §7 rules 6, 7, 13, 14 and 19, which said the switch removes this data, are revised with it.)*
 
 - **AC-2.1.5** — Sound Mode changes never alter Accent Levels
   - **Given** a Pattern with existing Accent Level data on its Slots
   - **When** the Composer switches Sound Mode in either direction
   - **Then** no Accent Level anywhere on the Pattern changes
+
+- **AC-2.1.7** — Switching Sound Mode is one undoable edit
+  - **Given** a Melodic Pattern
+  - **When** the Composer switches it to Percussive and then presses Undo
+  - **Then** the Pattern is Melodic again exactly as it was before the switch, as Undo restores any other edit (US-7.2)
+  - *(Added 2026-10-31 with AC-2.1.4's revision (T450): the switch was the one edit that skipped the undo history.)*
+
+- **AC-2.1.8** — A Percussive Pattern's exports carry none of its dormant melody
+  - **Given** a Percussive Pattern still holding the Pitches, Key, scale, Register and progression of its Melodic past (AC-2.1.4)
+  - **When** it is submitted (US-13.1) or exported as MIDI (US-12.1), or the whole library is backed up (US-7.6)
+  - **Then** the submission and the MIDI file carry the Pattern as it plays, with none of that dormant data
+  - **And** the backup carries it all, so a restored library loses nothing
+  - **Cases**:
+    - **AC-2.1.8/1** — A Percussive Pattern's submission and MIDI file carry no Pitch, Key, scale, Register or progression
+    - **AC-2.1.8/2** — The whole-library backup keeps a Percussive Pattern's dormant melody, and a restore brings it back
+  - *(Added 2026-10-31 with AC-2.1.4's revision (T450), at the maintainer's decision: what leaves the app is the Pattern as it sounds; the backup, being every store as it is, keeps everything.)*
 
 - **AC-2.1.6** — The Sound Mode switch is in the Pattern header
   - **Given** any Pattern open, at any viewport width
@@ -2913,9 +2934,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-2.5.4/1** — A changed scale survives a close and reopen of the Pattern
     - **AC-2.5.4/2** — A Melodic Pattern that carries no stored scale reads as Ionian (Major), so Patterns saved before the field existed need no migration
-    - **AC-2.5.4/3** — `scale` is present only on Melodic Patterns: switching to Percussive removes it, switching to Melodic restores one (the stored value if present, else Ionian)
+    - **AC-2.5.4/3** — `scale` is used only on Melodic Patterns: switching to Percussive keeps a stored scale unused, switching to Melodic uses it (the stored value if present, else Ionian)
     - **AC-2.5.4/4** — Every shipped Melodic Pattern carries its `scale` explicitly, a catalogue id, never left to the default
     - **AC-2.5.4/5** — On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern
+  - *(/3 revised 2026-10-31 with AC-2.1.4 (T450): it said switching to Percussive removes the scale. It now stays, unused, so the melody comes back in its own scale.)*
   - *(AC-2.5.4/4 revised 2026-09-13. It read "carries `scale: "ionian"` explicitly" while every shipped Melodic Pattern happened to be in a major key. The melodic exercises (T270) carry progressions in minor, modal and blues keys, and a Pattern whose chords are minor should print a minor key signature and walk a minor scale — so the criterion is that the scale is stated, not that it is Major.)*
 
 - **AC-2.5.5** — The scale never changes what is stamped or heard
@@ -3084,9 +3106,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-2.6.8/1** — A progression, its chord edits, the change setting and the arpeggio survive closing and reopening the Pattern
     - **AC-2.6.8/2** — A Pattern with no progression behaves exactly as before, and stored Patterns need no migration
-    - **AC-2.6.8/3** — Switching to Percussive removes the progression along with the Key, scale and Pitch data
+    - **AC-2.6.8/3** — Switching to Percussive keeps the progression with the Key, scale and Pitch data, unused, and switching back to Melodic restores them
     - **AC-2.6.8/4** — Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it
     - **AC-2.6.8/5** — A submission carries the progression, so the maintainer receives the melody as authored
+  - *(/3 revised 2026-10-31 with AC-2.1.4 (T450): it said switching to Percussive removes the progression with the Key, scale and Pitch data. They now stay, unused, and come back with the melody.)*
 
 - **AC-2.6.9** — Duplicate detection sees the progression
   - **Given** two Melodic Patterns identical in rhythm and in every Slot's Pitch

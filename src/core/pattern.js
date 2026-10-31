@@ -285,21 +285,22 @@ export function validate(pattern) {
   if (!['percussive', 'melodic'].includes(pattern?.soundMode)) fail(`soundMode "${pattern?.soundMode}" invalid`);
 
   const melodic = pattern?.soundMode === 'melodic';
-  if (melodic !== ('key' in (pattern ?? {}))) fail('key must be present iff soundMode is melodic');
-  if (melodic && !isSupportedKey(pattern.key)) fail(`Key "${pattern.key}" unsupported`);
+  // A Percussive Pattern may keep its melody unused — Key, scale, Register,
+  // progression and Pitches — so switching back restores it (AC-2.1.4). It is still
+  // checked as well-formed; only its presence stops being tied to the Sound Mode.
+  if (melodic && !('key' in (pattern ?? {}))) fail('key must be present when soundMode is melodic');
+  if ('key' in (pattern ?? {}) && !isSupportedKey(pattern.key)) fail(`Key "${pattern.key}" unsupported`);
   // Optional even on a melodic Pattern — absent reads as ionian, so Patterns
   // saved before the field existed need no migration (data-model §7 rule 13).
   if ('scale' in (pattern ?? {})) {
-    if (!melodic) fail('scale is only valid when soundMode is melodic');
-    else if (!isValidScale(pattern.scale)) fail(`scale "${pattern.scale}" unsupported`);
+    if (!isValidScale(pattern.scale)) fail(`scale "${pattern.scale}" unsupported`);
   }
 
   // The Register, like the scale, is optional even on a Melodic Pattern — absent
   // reads as Normal, so Patterns saved before it existed sound unchanged
   // (data-model §7 rule 19).
   if ('register' in (pattern ?? {})) {
-    if (!melodic) fail('register is only valid when soundMode is melodic');
-    else if (!Number.isInteger(pattern.register) || pattern.register < MIN_REGISTER || pattern.register > MAX_REGISTER) {
+    if (!Number.isInteger(pattern.register) || pattern.register < MIN_REGISTER || pattern.register > MAX_REGISTER) {
       fail(`register ${pattern.register} outside ${MIN_REGISTER}–${MAX_REGISTER}`);
     }
   }
@@ -307,7 +308,6 @@ export function validate(pattern) {
   // A progression only on a Melodic Pattern, in shape (data-model §7 rule 14).
   if ('harmony' in (pattern ?? {})) {
     const h = pattern.harmony;
-    if (!melodic) fail('harmony is only valid when soundMode is melodic');
     if (!CHANGES.includes(h?.change)) fail(`harmony.change "${h?.change}" is not one of ${CHANGES.join(', ')}`);
     if ('arpeggio' in (h ?? {}) && !isValidArpeggio(h.arpeggio)) fail(`harmony.arpeggio "${h.arpeggio}" unsupported`);
     if (!Array.isArray(h?.chords) || h.chords.length < 1 || h.chords.length > MAX_CHORDS) {
@@ -388,7 +388,6 @@ export function validate(pattern) {
         }
         if ('pitch' in s) {
           if (!s.on) fail(`${slot}: pitch on an off Slot`);
-          if (!melodic) fail(`${slot}: pitch on a percussive Pattern`);
           // A Pitch is a degree or a role, never both, never neither (rules 15–16).
           const hasDegree = s.pitch?.degree !== undefined;
           const hasTone = s.pitch?.tone !== undefined;

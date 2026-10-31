@@ -1769,21 +1769,14 @@ const handlers = {
           }
         }
       }
-    } else {
-      delete next.key;
-      delete next.scale;
-      // A Register is meaningless without pitch (AC-2.9.1/4).
-      delete next.register;
-      // A progression goes with the Key and scale it is spelled from (AC-2.6.8/3).
-      delete next.harmony;
-      // Pitch is meaningless in Percussive mode and would fail validation.
-      for (const measure of next.measures) {
-        for (const beat of measure.beats) {
-          for (const slot of beat.slots) delete slot.pitch;
-        }
-      }
     }
+    // Switching to Percussive deletes nothing: the Key, scale, Register, progression
+    // and every Pitch stay on the Pattern, unused, so switching back restores the
+    // melody exactly (AC-2.1.4, AC-2.6.8/3). Every reader that sounds or shows pitch
+    // already asks the Sound Mode first.
 
+    // One undoable edit, like any other (AC-2.1.7).
+    pushHistory(state.pattern);
     state.pattern = next;
     if (state.isOwned) patternStore.upsert(next);
     syncTransport();

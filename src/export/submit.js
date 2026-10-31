@@ -32,6 +32,11 @@ export function toSubmissionShape(pattern) {
     rating: 0,
     measures: structuredClone(pattern.measures),
   };
+  // A Percussive Pattern goes out as it plays: none of a melody it may still hold,
+  // unused, from before it was switched (AC-2.1.8/1).
+  if (pattern.soundMode !== 'melodic') {
+    for (const m of out.measures) for (const b of m.beats) for (const s of b.slots) delete s.pitch;
+  }
   if (pattern.soundMode === 'melodic') out.key = pattern.key;
   // The progression is the melody's harmony, so a submission without it would
   // arrive as a different piece (AC-2.6.8/5).

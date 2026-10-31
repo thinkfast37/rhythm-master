@@ -14,16 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 953 across 62 User Stories
+**Criteria**: 958 across 62 User Stories
 
-**Coverage**: 823 of 953 criteria proven (86.4%)
+**Coverage**: 829 of 958 criteria proven (86.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 823 | 86.4% |
-| 🔴 Gap — HIGH | 1 | 0.1% |
-| 🟠 Gap — MEDIUM | 51 | 5.4% |
-| 🟡 Gap — LOW | 78 | 8.2% |
+| 🟢 Proven | 829 | 86.5% |
+| 🟠 Gap — MEDIUM | 51 | 5.3% |
+| 🟡 Gap — LOW | 78 | 8.1% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -51,7 +50,7 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (130 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (129 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
@@ -62,7 +61,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟠 US-1.2 | 4 | 0 | · | · | · | 4 | · |
 | 🟠 US-1.3 | 19 | 9 | · | · | · | 4 | 6 |
 | 🟠 US-1.4 | 8 | 0 | · | · | · | 6 | 2 |
-| 🔴 US-2.1 | 8 | 4 | · | · | 1 | · | 3 |
+| 🟡 US-2.1 | 13 | 10 | · | · | · | · | 3 |
 | 🟠 US-2.2 | 36 | 24 | · | · | · | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
 | 🟡 US-2.4 | 5 | 2 | · | · | · | · | 3 |
@@ -167,14 +166,19 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-1.4 | `AC-1.4.6` 🖵 | Changing a dimmed label recalculates neighboring prominence | P-008 | T045, T400 (2/2 done) | T046, T401 (2/2 done) | `grid.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.7` 🖵 | Changing a prominent label recalculates neighboring prominence | P-008 | T045, T400 (2/2 done) | T046, T401 (2/2 done) | `grid.test.js`, `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.8` 🖵 | Read-only contexts show labels without a picker | P-008 | T045, T400 (2/2 done) | T046, T401 (2/2 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.1 | `AC-2.1.1` | Sound Mode changes take effect immediately | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.1 | `AC-2.1.2` | New Pattern defaults to Percussive | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
-| US-2.1 | `AC-2.1.3` | Switching to Melodic requires a Key, defaulting to C | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.1 | `AC-2.1.4` 🖵 | Pitch data survives a Sound Mode round-trip | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-2.1 | `AC-2.1.5` | Sound Mode changes never alter Accent Levels | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.1 | `AC-2.1.6/1` 🖵 | The header carries a Percussive \| Melodic switch that marks the current Mode | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.1 | `AC-2.1.6/2` 🖵 | One tap on the other Mode switches the Pattern, and the switch shows the new Mode | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.1 | `AC-2.1.6/3` 🖵 | On a 390px viewport the switch is reachable without opening any tab or accordion | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.1` | Sound Mode changes take effect immediately | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.1 | `AC-2.1.2` | New Pattern defaults to Percussive | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.3` | Switching to Melodic requires a Key, defaulting to C | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.1 | `AC-2.1.4/1` 🖵 | Every Slot's Pitch reappears exactly as it was | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.4/2` 🖵 | The Key, scale, Register and progression reappear exactly as they were | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.4/3` 🖵 | A Slot turned on while the Pattern was Percussive takes the tonic when it turns Melodic again, and a Slot turned off while Percussive keeps no Pitch | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.5` | Sound Mode changes never alter Accent Levels | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.1 | `AC-2.1.7` | Switching Sound Mode is one undoable edit | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.8/1` | A Percussive Pattern's submission and MIDI file carry no Pitch, Key, scale, Register or progression | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `export.test.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.8/2` | The whole-library backup keeps a Percussive Pattern's dormant melody, and a restore brings it back | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `backup.test.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.6/1` 🖵 | The header carries a Percussive \| Melodic switch that marks the current Mode | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.6/2` 🖵 | One tap on the other Mode switches the Pattern, and the switch shows the new Mode | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.1 | `AC-2.1.6/3` 🖵 | On a 390px viewport the switch is reachable without opening any tab or accordion | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.1` | One Pitch per Slot, no chords | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.2 | `AC-2.2.2` 🖵 | Armed pitch defaults to degree 1, octave 4, and stays armed | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
@@ -555,7 +559,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-16.2 | `AC-16.2.1` | Patterns are data, not source | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-16.2 | `AC-16.2.2` | Adding a Pattern requires no code change | P-004 | T034 (1/1 done) | T035 (1/1 done) | `seed.test.js`, `trace-library-data.test.js` | 🟢 OK |
 | US-16.2 | `AC-16.2.3` | Malformed entries fail loudly, not silently | P-004 | T034 (1/1 done) | T035 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
-| US-16.2 | `AC-16.2.4` | The data file is versioned | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-16.2 | `AC-16.2.4` | The data file is versioned | P-004 | T034 (1/1 done) | T035 (1/1 done) | `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160, T169, T184, T186, T290 (5/5 done) | T161, T169, T185, T187, T291 (5/5 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160, T169, T184, T186, T290 (5/5 done) | T161, T169, T185, T187, T291 (5/5 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.1/3` 🖵 | A Slot's border, against the Measure panel behind it | P-038 | T160, T169, T184, T186, T290 (5/5 done) | T161, T169, T185, T187, T291 (5/5 done) | `grid-boundaries.spec.js` | 🟢 OK |
@@ -609,7 +613,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.5 | `AC-2.5.3` 🖵 | Chip labels follow the scale's own spelling | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.4/1` | A changed scale survives a close and reopen of the Pattern | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.4/2` 🖵 | A Melodic Pattern that carries no stored scale reads as Ionian (Major), so Patterns saved before the field existed need no migration | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.5 | `AC-2.5.4/3` | `scale` is present only on Melodic Patterns: switching to Percussive removes it, switching to Melodic restores one (the stored value if present, else Ionian) | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.5 | `AC-2.5.4/3` | `scale` is used only on Melodic Patterns: switching to Percussive keeps a stored scale unused, switching to Melodic uses it (the stored value if present, else Ionian) | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.4/4` | Every shipped Melodic Pattern carries its `scale` explicitly, a catalogue id, never left to the default | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.4/5` | On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.5` 🖵 | The scale never changes what is stamped or heard | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
@@ -687,7 +691,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.6 | `AC-2.6.7/7` 🖵 | With an arpeggio set, each sounding Slot's note band shows the role dealt to it and the note it sounds under the chord in force | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.8/1` | A progression, its chord edits, the change setting and the arpeggio survive closing and reopening the Pattern | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.8/2` | A Pattern with no progression behaves exactly as before, and stored Patterns need no migration | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `pattern.test.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.8/3` | Switching to Percussive removes the progression along with the Key, scale and Pitch data | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.8/3` | Switching to Percussive keeps the progression with the Key, scale and Pitch data, unused, and switching back to Melodic restores them | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.8/4` | Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `pattern.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.8/5` | A submission carries the progression, so the maintainer receives the melody as authored | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `export.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.9/1` | Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, in the change setting, or in the arpeggio are not duplicates | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `similarity.test.js` | 🟢 OK |

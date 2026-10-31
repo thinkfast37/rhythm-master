@@ -842,10 +842,12 @@ export function nextChordAt(pattern, pass, measureIndex) {
 
 /**
  * Passes until the progression is back at its first chord on Measure 1 — what
- * a MIDI export spans (AC-2.6.10/1). One without a progression.
+ * a MIDI export spans (AC-2.6.10/1). One without a progression in force — and a
+ * Percussive Pattern's progression, kept unused for when it turns Melodic again,
+ * is not in force (AC-2.1.4, AC-2.1.8/1).
  */
 export function cyclePasses(pattern) {
-  if (!hasHarmony(pattern)) return 1;
+  if (pattern?.soundMode !== 'melodic' || !hasHarmony(pattern)) return 1;
   const n = pattern.harmony.chords.length;
   if (pattern.harmony.change !== 'measure') return n;
   const m = pattern.measures.length;
