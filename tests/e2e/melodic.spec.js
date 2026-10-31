@@ -16,7 +16,7 @@ test('AC-2.1.1 — Sound Mode is Percussive by default and switchable', async ({
   await expect(page.locator('.sound-mode [data-mode="melodic"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('AC-2.1.2 — Key appears only in Melodic mode, not disabled in Percussive', async ({ page }) => {
+test('AC-2.3.3 — Percussive Patterns have no Key: Key appears only in Melodic mode, not disabled in Percussive', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.key-picker')).toHaveCount(0);
@@ -830,7 +830,7 @@ test('AC-2.3.2 — changing Key transposes playback but leaves stored degrees al
   expect(degree).toBe('1');
 });
 
-test('AC-2.4.3 — Percussive playback starts immediately, with nothing to load', async ({ page }) => {
+test('AC-2.4.3 — Neither Sound Mode waits on anything to load: Percussive playback starts immediately, with nothing to load', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
@@ -840,7 +840,7 @@ test('AC-2.4.3 — Percussive playback starts immediately, with nothing to load'
   expect(await page.evaluate(() => window.__rm.getState().soundStatus.status)).toBe('ready');
 });
 
-test('AC-2.4.3 — Melodic playback starts immediately too, with no loading state', async ({ page }) => {
+test('AC-2.4.3 — Neither Sound Mode waits on anything to load: Melodic playback starts immediately too, with no loading state', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.sound-mode [data-mode="melodic"]').click();
@@ -962,7 +962,7 @@ test('AC-2.4.4 — concurrent Melodic notes share one reverb and one compressor'
   expect(counts.compressors).toBe(1);
 });
 
-test('AC-2.4.5 — a Percussive note is one sine bending down, dry', async ({ page }) => {
+test('AC-2.4.5 — Percussive playback stays dry and single-oscillator: a Percussive note is one sine bending down, dry', async ({ page }) => {
   await page.goto('/');
   const shape = await page.evaluate(() => {
     const { playPercussive } = window.__rmAudio;
@@ -1363,7 +1363,7 @@ test('AC-2.2.19/2 — The Rhythm group holds no Key picker', async ({ page }) =>
   await expect(page.locator('[data-section="rhythm"] .key-picker')).toHaveCount(0);
 });
 
-test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)", async ({ page }) => {
+test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.3.3's treatment of Key)", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
@@ -1429,7 +1429,7 @@ test('AC-2.9.1/3 — Changing the Register on a shipped Pattern asks for a name 
   expect(after.isOwned).toBe(false);
 });
 
-test('AC-2.9.1/4 — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2’s treatment of Key)', async ({ page }) => {
+test('AC-2.9.1/4 — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.3.3’s treatment of Key)', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.register-picker')).toHaveCount(0);

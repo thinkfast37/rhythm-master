@@ -274,7 +274,7 @@ test('FR-012 — accent carries a size channel as well as a colour', async ({ pa
   expect(clearance).toBeGreaterThan(0);
 });
 
-test('AC-5.6.4 — the grid labels Slots in the selected counting system', async ({ page }) => {
+test('AC-5.6.4 — A Pattern without mixed-feel Recipes supports all three systems: the grid labels Slots in the selected counting system', async ({ page }) => {
   await page.goto('/');
   // Read the generated syllable, which every Slot carries whether or not it
   // sounds. A silent Slot displays a dot in its place (AC-3.1.17/1), and what
@@ -492,7 +492,7 @@ test('AC-7.3.1 — editing a shipped Pattern asks for a name before the edit app
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
 });
 
-test('AC-7.3.2 — naming the copy applies the edit to the copy, not the original', async ({ page }) => {
+test('AC-7.3.2 — Confirming the naming prompt creates a new owned Pattern: naming the copy applies the edit to the copy, not the original', async ({ page }) => {
   await page.goto('/');
   const originalName = await page.evaluate(() => window.__rm.getState().pattern.name);
 
@@ -594,7 +594,7 @@ test('AC-15.1.10 — Grid remains usable for the largest supported Pattern on mo
   expect(Math.min(...widths)).toBeGreaterThanOrEqual(24);
 });
 
-test('AC-15.1.1 — the layout adapts across desktop, tablet, and phone', async ({ page }) => {
+test('the layout adapts across desktop, tablet, and phone', async ({ page }) => {
   for (const size of [
     { width: 1280, height: 800 },
     { width: 900, height: 1000 },

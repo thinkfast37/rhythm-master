@@ -388,7 +388,7 @@ test('AC-15.1.11 — playback scrolls the sounding Measure into view and back on
   );
 });
 
-test('AC-15.1.1 — the library is reachable at every width', async ({ page }) => {
+test('the library is reachable at every width', async ({ page }) => {
   for (const size of [DESKTOP, TABLET, MOBILE]) {
     await page.setViewportSize(size);
     await page.goto('/');

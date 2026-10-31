@@ -43,7 +43,7 @@ describe('core/pattern — construction', () => {
     }
   });
 
-  it('AC-1.1.4 — a Measure holds exactly its numerator in Beats, for every meter', () => {
+  it('a Measure holds exactly its numerator in Beats, for every meter', () => {
     const expected = {
       '1/4': 1, '2/4': 2, '3/4': 3, '4/4': 4, '5/4': 5, '6/4': 6, '7/4': 7,
       '6/8': 6, '7/8': 7, '9/8': 9, '12/8': 12,
@@ -55,7 +55,7 @@ describe('core/pattern — construction', () => {
 });
 
 describe('core/pattern — Measures', () => {
-  it('AC-1.1.2 — an added Measure inherits the previous Measure’s meter', () => {
+  it("AC-1.1.2 — Appending inherits the preceding Measure's Time Signature: core addMeasure carries a 7/8 forward", () => {
     let p = create();
     p = setTimeSignature(p, 0, '7/8');
     p = addMeasure(p);
@@ -184,7 +184,7 @@ describe('core/pattern — accents', () => {
     expect(effectiveAccent(p.measures[0], 2, 0)).toBe(MEDIUM);
   });
 
-  it('AC-3.1.12 — tapping on from a Medium default walks Medium → Strong → Weak → off', () => {
+  it('AC-3.1.12 — Override cycle, Medium default: tapping on from a Medium default walks Medium → Strong → Weak → off', () => {
     let p = cycleAccent(create(), 0, 2, 0);
     const read = () => effectiveAccent(p.measures[0], 2, 0);
     expect(read()).toBe(MEDIUM);
@@ -208,7 +208,7 @@ describe('core/pattern — accents', () => {
 });
 
 describe('core/pattern — whole-Pattern operations', () => {
-  it('AC-8.1.1 — append concatenates Measures, each keeping its own meter', () => {
+  it('AC-8.1.1 — Combine has no meter-matching restriction: append concatenates Measures, each keeping its own meter', () => {
     const a = setTimeSignature(create(), 0, '3/4');
     const b = setTimeSignature(create(), 0, '6/8');
     const joined = append(a, b);
@@ -226,7 +226,7 @@ describe('core/pattern — whole-Pattern operations', () => {
     expect(append(a, b).measures).toHaveLength(32);
   });
 
-  it('AC-10.1.1 — duplicate doubles a Pattern’s length with its own Measures', () => {
+  it('AC-10.1.1 — Duplicate copies the full Measure sequence exactly: core duplicate appends each Measure deep-equal to its original', () => {
     let p = addMeasure(create());
     p = cycleAccent(p, 0, 0, 0);
     const d = duplicate(p);
@@ -244,7 +244,7 @@ describe('core/pattern — whole-Pattern operations', () => {
 });
 
 describe('core/pattern — derived Tags', () => {
-  it('AC-5.3.1 — Sound Mode and provenance produce automatic Tags', () => {
+  it('Sound Mode and provenance produce automatic Tags', () => {
     const p = create();
     // Provenance reads as a Tag rather than as prose about the software.
     expect(automaticTags(p, false)).toEqual(['built-in', 'percussive']);
@@ -252,7 +252,7 @@ describe('core/pattern — derived Tags', () => {
     expect(automaticTags({ ...p, soundMode: 'melodic' }, false)).toEqual(['built-in', 'melodic']);
   });
 
-  it('AC-5.3.2 — the swing Tag is derived from actual swing, not stored', () => {
+  it('AC-5.3.4 — `swing` tracks live swing state: derived from actual swing, not stored', () => {
     const p = create();
     expect(automaticTags(p, true)).not.toContain('swing');
     p.measures[0].beats[0].swing = { 0: 40 };
@@ -287,7 +287,7 @@ describe('core/pattern — validation', () => {
     expect(validate(create())).toEqual({ valid: true, errors: [] });
   });
 
-  it('AC-16.2.2 — a Beat count that disagrees with the meter is rejected', () => {
+  it('a Beat count that disagrees with the meter is rejected', () => {
     const p = create();
     p.measures[0].beats.pop();
     const { valid, errors } = validate(p);
@@ -295,7 +295,7 @@ describe('core/pattern — validation', () => {
     expect(errors.join(' ')).toMatch(/3 Beats in 4\/4, expected 4/);
   });
 
-  it('AC-16.2.3 — out-of-range tempo, rating, and stored automatic Tags are rejected', () => {
+  it('out-of-range tempo, rating, and stored automatic Tags are rejected', () => {
     // 301: one past the AC-4.2.1 ceiling (18–300 since its 2026-08-22 revision).
     expect(validate({ ...create(), tempo: 301 }).errors.join(' ')).toMatch(/tempo 301/);
     expect(validate({ ...create(), rating: 9 }).errors.join(' ')).toMatch(/rating 9/);

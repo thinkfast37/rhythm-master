@@ -15,11 +15,19 @@ import { totalPasses, entryAt, playingAt } from '../core/song.js';
 
 export const TICKS_PER_QUARTER = 480;
 
-/** Note-on velocity per Accent Level. */
+/** Note-on velocity per Accent Level — Weak 48, Medium 80, Strong 112 (AC-12.1.3). */
 export const VELOCITY = { 1: 48, 2: 80, 3: 112 };
 
 /** Percussive Patterns export at one fixed pitch — the rhythm is the content. */
 const PERCUSSIVE_NOTE = 37; // side stick
+
+/**
+ * Percussive Patterns go on the General MIDI drum channel (channel 10, index 9),
+ * Melodic ones on channel 1, so a DAW reads each as what it is (AC-12.1.2).
+ */
+const DRUM_CHANNEL = 9;
+const MELODIC_CHANNEL = 0;
+const channelFor = (pattern) => (pattern.soundMode === 'melodic' ? MELODIC_CHANNEL : DRUM_CHANNEL);
 
 const NOTE_LENGTH_TICKS = 60;
 
@@ -92,8 +100,9 @@ export function buildMidi(pattern) {
     const note = event.pitch ? event.pitch.midiNote : PERCUSSIVE_NOTE;
     const velocity = VELOCITY[event.accent] ?? VELOCITY[1];
     const onTick = toTicks(event.timeSeconds);
-    timed.push({ tick: onTick, bytes: [0x90, note & 0x7f, velocity] });
-    timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80, note & 0x7f, 0] });
+    const channel = channelFor(pattern);
+    timed.push({ tick: onTick, bytes: [0x90 | channel, note & 0x7f, velocity] });
+    timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80 | channel, note & 0x7f, 0] });
   }
 
   // End of track, one cycle after the start so the file's duration is the
@@ -165,8 +174,9 @@ export function buildSongMidi(song, patternById) {
       const note = event.pitch ? event.pitch.midiNote : PERCUSSIVE_NOTE;
       const velocity = VELOCITY[event.accent] ?? VELOCITY[1];
       const onTick = toTicks(event.timeSeconds);
-      timed.push({ tick: onTick, bytes: [0x90, note & 0x7f, velocity] });
-      timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80, note & 0x7f, 0] });
+      const channel = channelFor(pattern);
+      timed.push({ tick: onTick, bytes: [0x90 | channel, note & 0x7f, velocity] });
+      timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80 | channel, note & 0x7f, 0] });
     }
     startTick = toTicks(loopDurationSeconds(pattern));
   }

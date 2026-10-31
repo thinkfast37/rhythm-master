@@ -90,7 +90,7 @@ import {
   submissionDigest,
   readSubmittedPatterns,
 } from './export/submit.js';
-import { findDuplicates, findFamily, isDuplicate, duplicateGroups } from './core/similarity.js';
+import { findDuplicates, findFamily, isDuplicate, duplicateGroups, shippedIdentity, newlyShipped } from './core/similarity.js';
 import * as localMetaStore from './storage/localMeta.js';
 import * as backupStore from './storage/backup.js';
 import { backupFilename } from './core/backup.js';
@@ -2814,8 +2814,7 @@ function nowIso() {
  * than on the Pattern — so the fact that you were asked never travels with an
  * export (FR-006, US-11.3).
  */
-export function unresolvedLibraryDuplicates() {
-  const shipped = seedStore.loadAll();
+export function unresolvedLibraryDuplicates(shipped = seedStore.loadAll()) {
   return patternStore
     .loadAll()
     .filter((owned) => !localMetaStore.forPattern(owned.id).duplicateResolved)
@@ -2851,14 +2850,21 @@ export function currentDuplicates() {
  * (US-11.3).
  */
 async function promptLibraryDuplicates() {
-  for (const { owned, shipped } of unresolvedLibraryDuplicates()) {
+  // Only a library update can make a copy newly redundant (AC-11.3.1): the check runs
+  // against the shipped Patterns this install has not seen before, and records the
+  // library it saw once every question is answered.
+  const shipped = seedStore.loadAll();
+  const fresh = newlyShipped(shipped, state.settings.shippedSeen);
+  const pairs = fresh.length > 0 ? unresolvedLibraryDuplicates(fresh) : [];
+  for (const { owned } of pairs) {
+    // AC-11.3.2's wording, data-loss callout included: Rating and Tags live on the copy.
     const choice = await ask({
       message:
-        `"${owned.name}" is now identical to the built-in pattern "${shipped.name}". ` +
-        'Remove your copy, or keep it?',
+        `Your custom pattern '${owned.name}' is now in the library — remove your copy? ` +
+        "(Your Rating and Tags on it won't carry over.)",
       options: [
-        { label: 'Remove mine', value: 'remove' },
-        { label: 'Keep both', value: 'keep', primary: true },
+        { label: 'Remove', value: 'remove' },
+        { label: 'Keep', value: 'keep', primary: true },
       ],
     });
     if (choice === 'remove') {
@@ -2868,6 +2874,7 @@ async function promptLibraryDuplicates() {
       localMetaStore.update(owned.id, { duplicateResolved: true });
     }
   }
+  state.settings = settingsStore.save({ shippedSeen: shipped.map(shippedIdentity) });
   render();
 }
 
@@ -3029,6 +3036,8 @@ if (typeof window !== 'undefined') {
     currentDuplicates,
     currentFamily,
     unresolvedLibraryDuplicates,
+    /** Test seam: a shipped Pattern's identity, to model a library update (AC-11.3.1). */
+    shippedIdentity,
     melodic,
     /** Test seam: the keep-alive element, once one exists (AC-4.1.12). */
     keepAlive: () => keepAlive.current(),

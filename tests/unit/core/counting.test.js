@@ -45,11 +45,11 @@ function groups(text) {
 }
 
 describe('core/counting', () => {
-  it('AC-5.6.1 — three counting systems are offered', () => {
+  it('three counting systems are offered', () => {
     expect(COUNTING_SYSTEMS).toEqual(['takadimi', 'one-e-and-a', 'numbered']);
   });
 
-  it('AC-5.6.4 — Takadimi labels per Recipe', () => {
+  it('Takadimi labels per Recipe', () => {
     expect(labelsFor('straight-16ths', 'quarter', 'takadimi')).toEqual(['ta', 'ka', 'di', 'mi']);
     expect(labelsFor('straight-8ths', 'quarter', 'takadimi')).toEqual(['ta', 'di']);
     expect(labelsFor('triplet-8ths', 'quarter', 'takadimi')).toEqual(['ta', 'ki', 'da']);
@@ -57,13 +57,13 @@ describe('core/counting', () => {
     expect(labelsFor('straight-16ths', 'eighth', 'takadimi')).toEqual(['ta', 'di']);
   });
 
-  it('AC-5.6.5 — 1-e-&-a labels per Recipe', () => {
+  it('1-e-&-a labels per Recipe', () => {
     expect(labelsFor('straight-16ths', 'quarter', 'one-e-and-a')).toEqual(['1', 'e', '&', 'a']);
     expect(labelsFor('straight-8ths', 'quarter', 'one-e-and-a')).toEqual(['1', '&']);
     expect(labelsFor('triplet-8ths', 'quarter', 'one-e-and-a')).toEqual(['1', 'trip', 'let']);
   });
 
-  it('AC-5.6.6 — Numbered labels every Slot by ordinal', () => {
+  it('Numbered labels every Slot by ordinal', () => {
     expect(labelsFor('straight-16ths', 'quarter', 'numbered')).toEqual(['1', '2', '3', '4']);
     expect(labelsFor('triplet-8ths', 'quarter', 'numbered')).toEqual(['1', '2', '3']);
     expect(labelsFor('undivided', 'eighth', 'numbered')).toEqual(['1']);
@@ -91,7 +91,7 @@ describe('core/counting', () => {
     expect(isForcedNumbered(p)).toBe(true);
   });
 
-  it('AC-5.6.3 — the override is per Pattern and does not change the stored preference', () => {
+  it('AC-5.6.3 — Pattern-level restriction does not overwrite the global setting: the override is per Pattern and does not change the stored preference', () => {
     const mixed = setRecipe(create(), 0, 0, 'straight-triplet-split');
     const plain = create();
     const preference = 'takadimi';

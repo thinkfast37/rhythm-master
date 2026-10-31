@@ -156,3 +156,33 @@ export function familyGroups(patterns) {
   }
   return [...byRhythm.values()].filter((group) => group.length > 1);
 }
+
+/**
+ * A shipped Pattern's identity across loads: a 32-bit FNV-1a digest of everything but
+ * its id, which is derived from its position in the data file and so moves when
+ * Patterns are inserted ahead of it. Equal content, equal identity (AC-11.3.1).
+ */
+export function shippedIdentity(pattern) {
+  const content = { ...pattern };
+  delete content.id;
+  const text = JSON.stringify(content);
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
+
+/**
+ * The shipped Patterns this install has not seen before (AC-11.3.1). `seen` is the
+ * list of identities recorded at the last load, or null when nothing was ever
+ * recorded — every shipped Pattern then counts as new, once, so an install from
+ * before the record existed is checked one last time in full.
+ */
+export function newlyShipped(shipped, seen) {
+  if (!Array.isArray(seen)) return shipped;
+  const known = new Set(seen);
+  return shipped.filter((p) => !known.has(shippedIdentity(p)));
+}
+

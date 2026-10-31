@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 956 across 62 User Stories
+**Criteria**: 953 across 62 User Stories
 
-**Coverage**: 772 of 956 criteria proven (80.8%)
+**Coverage**: 823 of 953 criteria proven (86.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 772 | 80.8% |
-| 🔴 Gap — HIGH | 65 | 6.8% |
-| 🟠 Gap — MEDIUM | 41 | 4.3% |
+| 🟢 Proven | 823 | 86.4% |
+| 🔴 Gap — HIGH | 1 | 0.1% |
+| 🟠 Gap — MEDIUM | 51 | 5.4% |
 | 🟡 Gap — LOW | 78 | 8.2% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
@@ -51,47 +51,47 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (184 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (130 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
 
 | User Story | Criteria | 🟢 Proven | 🔵 Waived | 🔴 CRITICAL | 🔴 HIGH | 🟠 MEDIUM | 🟡 LOW |
 |---|---|---|---|---|---|---|---|
-| 🔴 US-1.1 | 11 | 6 | · | · | 2 | · | 3 |
+| 🟠 US-1.1 | 11 | 7 | · | · | · | 1 | 3 |
 | 🟠 US-1.2 | 4 | 0 | · | · | · | 4 | · |
 | 🟠 US-1.3 | 19 | 9 | · | · | · | 4 | 6 |
 | 🟠 US-1.4 | 8 | 0 | · | · | · | 6 | 2 |
-| 🔴 US-2.1 | 8 | 3 | · | · | 2 | · | 3 |
-| 🔴 US-2.2 | 36 | 24 | · | · | 1 | 6 | 5 |
+| 🔴 US-2.1 | 8 | 4 | · | · | 1 | · | 3 |
+| 🟠 US-2.2 | 36 | 24 | · | · | · | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
-| 🔴 US-2.4 | 5 | 0 | · | · | 2 | · | 3 |
-| 🔴 US-3.1 | 24 | 8 | · | · | 3 | 1 | 12 |
-| 🔴 US-4.1 | 43 | 39 | · | · | 2 | · | 2 |
+| 🟡 US-2.4 | 5 | 2 | · | · | · | · | 3 |
+| 🟠 US-3.1 | 24 | 10 | · | · | · | 2 | 12 |
+| 🟡 US-4.1 | 43 | 41 | · | · | · | · | 2 |
 | 🟠 US-4.2 | 20 | 19 | · | · | · | 1 | · |
 | 🟠 US-4.3 | 6 | 0 | · | · | · | 1 | 5 |
-| 🔴 US-4.4 | 47 | 42 | · | · | 5 | · | · |
-| 🔴 US-5.1 | 10 | 4 | · | · | 5 | · | 1 |
-| 🔴 US-5.2 | 4 | 1 | · | · | 1 | · | 2 |
-| 🔴 US-5.3 | 10 | 0 | · | · | 7 | 3 | · |
+| 🟠 US-4.4 | 46 | 45 | · | · | · | 1 | · |
+| 🟡 US-5.1 | 8 | 7 | · | · | · | · | 1 |
+| 🟡 US-5.2 | 4 | 2 | · | · | · | · | 2 |
+| 🟠 US-5.3 | 10 | 4 | · | · | · | 6 | · |
 | 🟠 US-5.5 | 5 | 3 | · | · | · | 1 | 1 |
-| 🔴 US-5.6 | 24 | 18 | · | · | 5 | 1 | · |
-| 🔴 US-6.1 | 14 | 8 | · | · | 3 | · | 3 |
+| 🟠 US-5.6 | 24 | 22 | · | · | · | 2 | · |
+| 🟡 US-6.1 | 14 | 11 | · | · | · | · | 3 |
 | 🟠 US-7.1 | 2 | 0 | · | · | · | 1 | 1 |
-| 🔴 US-7.2 | 3 | 0 | · | · | 2 | · | 1 |
-| 🔴 US-7.3 | 5 | 0 | · | · | 1 | · | 4 |
-| 🔴 US-7.4 | 6 | 0 | · | · | 1 | · | 5 |
-| 🔴 US-7.5 | 4 | 0 | · | · | 1 | · | 3 |
-| 🔴 US-8.1 | 6 | 0 | · | · | 1 | 1 | 4 |
-| 🔴 US-10.1 | 6 | 2 | · | · | 1 | · | 3 |
+| 🟡 US-7.2 | 3 | 2 | · | · | · | · | 1 |
+| 🟡 US-7.3 | 5 | 1 | · | · | · | · | 4 |
+| 🟡 US-7.4 | 6 | 1 | · | · | · | · | 5 |
+| 🟡 US-7.5 | 4 | 1 | · | · | · | · | 3 |
+| 🟠 US-8.1 | 6 | 1 | · | · | · | 1 | 4 |
+| 🟡 US-10.1 | 6 | 3 | · | · | · | · | 3 |
 | 🟠 US-11.1 | 9 | 8 | · | · | · | 1 | · |
 | 🟢 US-11.2 | 6 | **6** | · | · | · | · | · |
-| 🔴 US-11.3 | 5 | 0 | · | · | 4 | · | 1 |
-| 🔴 US-12.1 | 4 | 0 | · | · | 4 | · | · |
+| 🟡 US-11.3 | 5 | 4 | · | · | · | · | 1 |
+| 🟢 US-12.1 | 4 | **4** | · | · | · | · | · |
 | 🟢 US-13.1 | 11 | **11** | · | · | · | · | · |
-| 🔴 US-15.1 | 51 | 39 | · | · | 1 | 8 | 3 |
-| 🔴 US-16.1 | 11 | 0 | · | · | 9 | 2 | · |
-| 🔴 US-16.2 | 4 | 0 | · | · | 2 | · | 2 |
+| 🟠 US-15.1 | 51 | 40 | · | · | · | 8 | 3 |
+| 🟠 US-16.1 | 11 | 7 | · | · | · | 4 | · |
+| 🟡 US-16.2 | 4 | 2 | · | · | · | · | 2 |
 | 🟢 US-15.2 | 19 | **19** | · | · | · | · | · |
 | 🟢 US-17.1 | 24 | **24** | · | · | · | · | · |
 | 🟢 US-2.5 | 14 | **14** | · | · | · | · | · |
@@ -126,9 +126,9 @@ fail the build, and it is outstanding work — never a settled decision.
 | Story | Criterion | What it requires | Plan | Implementation tasks | Test tasks | Proving test | Status |
 |---|---|---|---|---|---|---|---|
 | US-1.1 | `AC-1.1.1` | New Pattern defaults | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `trace-pattern-ops.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.1 | `AC-1.1.3` 🖵 | 32-Measure cap disables +Measure | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.5/1` 🖵 | The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.5/2` 🖵 | A Measure other than the first changes alone, with no prompt | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
 | US-1.1 | `AC-1.1.6` | Time Signature change resets that Measure's content | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -168,7 +168,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-1.4 | `AC-1.4.7` 🖵 | Changing a prominent label recalculates neighboring prominence | P-008 | T045, T400 (2/2 done) | T046, T401 (2/2 done) | `grid.test.js`, `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.4 | `AC-1.4.8` 🖵 | Read-only contexts show labels without a picker | P-008 | T045, T400 (2/2 done) | T046, T401 (2/2 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.1 | `AC-2.1.1` | Sound Mode changes take effect immediately | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.1 | `AC-2.1.2` | New Pattern defaults to Percussive | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.1 | `AC-2.1.2` | New Pattern defaults to Percussive | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-2.1 | `AC-2.1.3` | Switching to Melodic requires a Key, defaulting to C | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.1 | `AC-2.1.4` 🖵 | Pitch data survives a Sound Mode round-trip | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
 | US-2.1 | `AC-2.1.5` | Sound Mode changes never alter Accent Levels | P-014 | T065, T272 (2/2 done) | T066, T273 (2/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -181,7 +181,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.2 | `AC-2.2.4/1` 🖵 | All twelve chromatic degrees are shown at once, each armed by a single tap | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.4/2` 🖵 | There is no flat/natural/sharp mode: a chip is the degree it names, so arming `b3` never relabels or re-pitches any other chip | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.4/3` 🖵 | Degrees above the octave are reached with the octave stepper — a ninth is stamped as degree `2` an octave up — while a stored Pattern whose tokens use `8`–`15` still displays and plays unchanged | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.5` 🖵 | A Slot that is not sounding cannot be stamped | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.2 | `AC-2.2.5` 🖵 | A Slot that is not sounding cannot be stamped | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.2 | `AC-2.2.6` 🖵 | Stamping a sounding Slot changes only its Pitch | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.2 | `AC-2.2.7` 🖵 | Cycling Accent to off clears Pitch too | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.2 | `AC-2.2.8` | Accent/Pitch null-state invariant | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -209,16 +209,16 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.2 | `AC-2.2.18` 🖵 | The armed control stays marked while the pointer is on it | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.19/1` 🖵 | The Key picker renders on the pitch strip beside the scale picker | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.19/2` 🖵 | The Rhythm group holds no Key picker | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.2 | `AC-2.2.19/3` 🖵 | In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key) | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.2 | `AC-2.2.19/3` 🖵 | In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.3.3's treatment of Key) | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.19/4` 🖵 | The Key picker carries a visible label of its own reading Key, and the strip's Note label names the degree chips it sits with — neither picker is left to be identified by the label of the other | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.3 | `AC-2.3.1` | Default Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.2` | Changing Key re-transposes without altering stored data | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.3 | `AC-2.3.3` 🖵 | Percussive Patterns have no Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.3 | `AC-2.3.3` 🖵 | Percussive Patterns have no Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.4 | `AC-2.4.1` | The Synth voice uses the ported synthesis chain | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `voice.test.js`, `melodic.spec.js`, `voice.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.4 | `AC-2.4.2` | Percussive and Synth fetch no audio asset | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `trace-playback.spec.js` | 🟢 OK |
 | US-2.4 | `AC-2.4.4` | Synth notes share one reverb and one compressor | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-2.4 | `AC-2.4.5` | Percussive playback stays dry and single-oscillator | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `trace-playback.test.js`, `melodic.spec.js`, `remaining.spec.js` | 🟢 OK |
 | US-3.1 | `AC-3.1.1` 🖵 | Turning on a Slot lands on its computed default, not a fixed value | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.2` | Beat Accent table | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-3.1 | `AC-3.1.3` | Within-Beat rule, 4-Slot Recipe on a Strong Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `timeline.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -232,19 +232,19 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-3.1 | `AC-3.1.18/2` 🖵 | A Slot that sounds is tinted by its actual Accent Level instead, more strongly than any resting tint, so what sounds wins the eye over what merely could | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
 | US-3.1 | `AC-3.1.18/3` 🖵 | Its counting syllable takes the same Accent Level's colour, so the cell reads as one thing rather than as text sitting on an unrelated ground | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
 | US-3.1 | `AC-3.1.18/4` 🖵 | The syllable's colour clears 4.5:1 against the tint behind it at every Accent Level, since the fills are chosen for separability as blocks and are not all usable as text | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `grid.spec.js` | 🟢 OK |
-| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-3.1 | `AC-3.1.16` | The within-Beat shape is identical in every Beat | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-3.1 | `AC-3.1.6` | Within-Beat rule, 2-Slot Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.7` | Within-Beat rule, 3-Slot Triplet Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.8` | Within-Beat rule, 5-Slot mixed Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.9` | Within-Beat rule, 1-Slot undivided Recipe | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.10` | Computed default recomputes fresh after a Recipe reset | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.11` 🖵 | Override cycle, Strong default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-3.1 | `AC-3.1.12` 🖵 | Override cycle, Medium default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `pattern.test.js`, `trace-playback.spec.js` | 🟢 OK |
+| US-3.1 | `AC-3.1.13` 🖵 | Override cycle, Weak default | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `accents.test.js`, `trace-playback.spec.js` | 🟢 OK |
 | US-3.1 | `AC-3.1.14` | Percussive accent-to-sound mapping is deterministic | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-3.1 | `AC-3.1.15` | Melodic accent-to-sound mapping is independent of Pitch | P-009 | T047, T048, T050, T166, T169 (4/5 done) | T049, T166, T169 (2/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `scheduler.test.js`, `timeline.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `scheduler.test.js`, `playback.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.1 | `AC-4.1.1` | Playback stays sample-accurate over long loops | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `scheduler.test.js`, `trace-playback.test.js`, `playback.spec.js` | 🟢 OK |
+| US-4.1 | `AC-4.1.2` 🖵 | Visual highlight stays in sync with audio | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `scheduler.test.js`, `trace-playback.test.js`, `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.7/1` 🖵 | It is the accent zone that is marked — the cell carrying the counting syllable — never the note band beneath it | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.7/2` 🖵 | That cell fills completely with its own Accent colour, rather than being outlined | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `playback.spec.js` | 🟢 OK |
 | US-4.1 | `AC-4.1.7/3` 🖵 | The counting syllable stays legible against the fill, at every Accent Level | P-010 | T051, T052, T053, T054, T055, T165, T220, T228, T230, T308, T318, T321, T338, T342, T392, T396 (16/16 done) | T056, T165, T221, T229, T231, T309, T319, T322, T339, T343, T393, T397 (12/12 done) | `playback.spec.js` | 🟢 OK |
@@ -312,11 +312,10 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.3 | `AC-4.3.4` 🖵 | Metronome setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.5` 🖵 | Count-in setting persists across reloads | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-4.3 | `AC-4.3.6` | Metronome/count-in have no per-Pattern override, unlike tempo | P-012 | T060, T061 (2/2 done) | T062 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.2` 🖵 | Swing is set per Subdivision Group independently | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.3` 🖵 | Triplet-feel groups have no swing control | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `swing.test.js`, `timeline.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `timeline.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `swing.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-4.4 | `AC-4.4.1` | Swing default and range | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `swing.test.js`, `trace-playback.test.js`, `trace-playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.2` 🖵 | Per-group swing amounts carried in a Pattern's data play as authored | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `trace-playback.test.js`, `trace-playback.spec.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.4` | Swing only affects the straight portion of a mixed Beat | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `timeline.test.js`, `trace-playback.test.js` | 🟢 OK |
+| US-4.4 | `AC-4.4.5` | Swing timing formula | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `swing.test.js`, `trace-playback.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-4.4 | `AC-4.4.6/1` 🖵 | Changing swing on a shipped Pattern shows no naming prompt and creates no new Pattern | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `playback.spec.js` | 🟢 OK |
 | US-4.4 | `AC-4.4.6/2` 🖵 | The swing set on a shipped Pattern is applied again when it is next loaded, surviving a reload | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `playback.spec.js` | 🟢 OK |
 | US-4.4 | `AC-4.4.6/3` 🖵 | The remembered swing lives in the overlay store and the shipped Pattern's own data is unchanged | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `playback.spec.js` | 🟢 OK |
@@ -359,41 +358,39 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-4.4 | `AC-4.4.17/2` 🖵 | The swing feel does not carry either: a Pattern with no feel of its own loads on the 8ths feel | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `playback-defaults.test.js`, `playback.spec.js` | 🟢 OK |
 | US-4.4 | `AC-4.4.17/3` 🖵 | A Pattern's own swing — remembered, Pattern-wide, or per-group — loads as it is | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `playback-defaults.test.js`, `playback.spec.js` | 🟢 OK |
 | US-4.4 | `AC-4.4.17/4` 🖵 | No swing is stored to carry, so a reload starts an untouched Pattern straight | P-013 | T063, T204, T206, T210, T222, T236, T244, T272, T279, T336 (10/10 done) | T064, T205, T207, T211, T223, T237, T245, T273, T280, T337 (10/10 done) | `playback-defaults.test.js`, `playback.spec.js` | 🟢 OK |
-| US-5.1 | `AC-5.1.1` | Shipped and custom Patterns appear in one unified list | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.1 | `AC-5.1.2` 🖵 | Library entry shows name, meter, and Measure/Beat count | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.3` 🖵 | Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.4` | Default sort order: Rating descending, then alphabetical within each Rating | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.5` 🖵 | Sort order applies on top of Tag filtering | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.1 | `AC-5.1.6` | "List order" elsewhere in the doc means this sort order | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.1 | `AC-5.1.1` 🖵 | Shipped and custom Patterns appear in one unified list | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-5.1 | `AC-5.1.4` | Default sort order: alphabetical by name, then Rating descending between equal names | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.test.js`, `library.spec.js`, `trace-library.spec.js` | 🟢 OK |
+| US-5.1 | `AC-5.1.5` 🖵 | Sort order applies on top of Tag filtering | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `trace-library.spec.js` | 🟢 OK |
+| US-5.1 | `AC-5.1.6` | "List order" elsewhere in the doc means this sort order | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `trace-library.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.7/1` 🖵 | A row for a shipped Pattern carries a marker reading "Built-in" | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.7/2` 🖵 | A row for a Pattern the musician owns carries a marker reading "Custom" | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.7/3` 🖵 | The marker says which it is in words, never by colour alone | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.7/4` 🖵 | Two Patterns sharing one name, one shipped and one owned, are told apart by their markers, and both still sit in the one unified list | P-024 | T087, T316 (2/2 done) | T088, T317 (2/2 done) | `library.spec.js` | 🟢 OK |
 | US-5.2 | `AC-5.2.1` 🖵 | Search matches name/description | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-5.2 | `AC-5.2.2` 🖵 | Search matching is case-insensitive | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-5.2 | `AC-5.2.3` 🖵 | Search results keep the library's default sort order | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.2 | `AC-5.2.3` 🖵 | Search results keep the library's default sort order | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `trace-library.spec.js` | 🟢 OK |
 | US-5.2 | `AC-5.2.4` 🖵 | Typing in the search field keeps the field focused | P-025 | T089, T312 (2/2 done) | T090, T313 (2/2 done) | `library.spec.js` | 🟢 OK |
-| US-5.3 | `AC-5.3.1` | Auto-tags recompute immediately on configuration change | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.3 | `AC-5.3.2` | `custom` is permanent, set once at creation | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.3 | `AC-5.3.3` | `percussive`/`melodic` always reflects current Sound Mode | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.3 | `AC-5.3.4` | `swing` tracks live swing state | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.3 | `AC-5.3.5` 🖵 | Auto-tags are not user-removable and render distinctly | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.3 | `AC-5.3.1` | Auto-tags recompute immediately on configuration change | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `trace-library.spec.js` | 🟢 OK |
+| US-5.3 | `AC-5.3.2` | `custom` is permanent, set once at creation | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `trace-library.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-5.3 | `AC-5.3.3` | `percussive`/`melodic` always reflects current Sound Mode | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `trace-library.spec.js` | 🟢 OK |
+| US-5.3 | `AC-5.3.4` | `swing` tracks live swing state | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `pattern.test.js`, `trace-library.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-5.3 | `AC-5.3.5` 🖵 | Auto-tags are not user-removable and render distinctly | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `library.spec.js`, `trace-library.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-5.3 | `AC-5.3.9` 🖵 | Several Tags can be selected, and each one narrows further | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-5.3 | `AC-5.3.10` 🖵 | A Pattern's Tags live on the Pattern, not repeated down the library list | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-5.3 | `AC-5.3.7` | The Tag vocabulary means what it says | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `library.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-5.3 | `AC-5.3.6` | User Tag de-duplication is case-insensitive | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.3 | `AC-5.3.8` 🖵 | Tag-filter pill ordering | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.3 | `AC-5.3.6` | User Tag de-duplication is case-insensitive | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.spec.js`, `trace-library.spec.js` | 🟢 OK |
+| US-5.3 | `AC-5.3.8` 🖵 | Tag-filter pill ordering | P-026 | T091, T092 (2/2 done) | T093 (1/1 done) | `library.test.js`, `trace-library.test.js`, `trace-library.spec.js` | 🟢 OK |
 | US-5.5 | `AC-5.5.1` 🖵 | Prev/Next steps through the filtered list, not the full library | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.test.js`, `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-5.5 | `AC-5.5.2` 🖵 | Prev/Next doesn't wrap at list boundaries | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.test.js`, `library.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-5.5 | `AC-5.5.3/1` 🖵 | Prev/Next are on screen with the main panel scrolled to its foot | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.spec.js` | 🟢 OK |
 | US-5.5 | `AC-5.5.3/2` 🖵 | The panel holds exactly one Prev/Next control | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.spec.js` | 🟢 OK |
 | US-5.5 | `AC-5.5.3/3` 🖵 | Prev/Next stay reachable without scrolling at mobile width | P-027 | T094, T246, T272 (3/3 done) | T095, T247, T273 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-5.6 | `AC-5.6.1` 🖵 | Counting-system toggle updates labels live | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `storage.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
+| US-5.6 | `AC-5.6.1` 🖵 | Counting-system toggle updates labels live | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `trace-playback.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.2` 🖵 | A Pattern containing a mixed-feel Recipe supports Numbered only | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-5.6 | `AC-5.6.3` 🖵 | Pattern-level restriction does not overwrite the global setting | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.4` 🖵 | A Pattern without mixed-feel Recipes supports all three systems | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.5` | Adding a mixed-feel Recipe to a Pattern switches it to Numbered immediately | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-5.6 | `AC-5.6.6` | Default counting system on first load | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-5.6 | `AC-5.6.3` 🖵 | Pattern-level restriction does not overwrite the global setting | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `trace-playback.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.4` 🖵 | A Pattern without mixed-feel Recipes supports all three systems | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `grid.spec.js`, `trace-playback.spec.js` | 🟢 OK |
+| US-5.6 | `AC-5.6.5` | Adding a mixed-feel Recipe to a Pattern switches it to Numbered immediately | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `trace-playback.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-5.6 | `AC-5.6.6` | Default counting system on first load | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `storage.test.js`, `trace-playback.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.7/1` 🖵 | A 4/4 Measure of Straight 16ths with default accents reads 1-2-3-4, 2-2-3-4, 3-2-3-4, 4-2-3-4 | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.7/2` 🖵 | A 4/4 Measure of Straight 8ths reads 1-2-3-4, 2-2-3-4: two-Slot Beats are not counted alone | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.7/3` 🖵 | A 2/4 Measure of Straight 8ths reads 1-2-3-4, one group across both Beats | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
@@ -412,10 +409,10 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.6 | `AC-5.6.11` 🖵 | Pulse tracking counts a mixed-feel Recipe by its halves | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.12` | 1-e-&-a scheme, the leading digit is the Beat's own number | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js`, `grid.spec.js` | 🟢 OK |
 | US-5.6 | `AC-5.6.13` | 1-e-&-a scheme, restart per Beat even at eighth-note-Beat granularity | P-018 | T074, T075, T162, T363 (4/4 done) | T076, T163, T364 (3/3 done) | `counting.test.js` | 🟢 OK |
-| US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.1` | New Pattern defaults to Rating 0 | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `trace-library.spec.js` | 🟢 OK |
+| US-6.1 | `AC-6.1.2` 🖵 | Rating filter defaults to All | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `trace-library.spec.js` | 🟢 OK |
 | US-6.1 | `AC-6.1.3` 🖵 | Tapping a star sets Rating from zero | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `library.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-6.1 | `AC-6.1.4` 🖵 | Tapping the current star clears Rating | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `library.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-6.1 | `AC-6.1.4` 🖵 | Tapping the current star clears Rating | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `trace-library.spec.js` | 🟢 OK |
 | US-6.1 | `AC-6.1.5` 🖵 | Tapping a different star changes Rating rather than clearing it | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-6.1 | `AC-6.1.6` 🖵 | Rating filter narrows an already-filtered list | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-6.1 | `AC-6.1.7/1` 🖵 | The header shows the open Pattern's current Rating, and rating that Pattern from its library row updates the header's stars | P-028 | T096, T200, T413 (3/3 done) | T097, T201, T414 (3/3 done) | `library.spec.js` | 🟢 OK |
@@ -429,30 +426,30 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.1 | `AC-7.1.1` 🖵 | New Pattern name default and validation | P-019 | T077 (1/1 done) | T078 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-7.1 | `AC-7.1.2` | A newly created Pattern is immediately in the library | P-019 | T077 (1/1 done) | T078 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.2 | `AC-7.2.1` 🖵 | Edits to an owned Pattern save immediately, no Save action | P-020 | T079 (1/1 done) | T080 (1/1 done) | `storage.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-7.2 | `AC-7.2.2` | Each edit in a sequence saves individually | P-020 | T079 (1/1 done) | T080 (1/1 done) | `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-7.2 | `AC-7.2.3` | Auto-saved edits survive an app close mid-edit | P-020 | T079 (1/1 done) | T080 (1/1 done) | `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-7.2 | `AC-7.2.2` | Each edit in a sequence saves individually | P-020 | T079 (1/1 done) | T080 (1/1 done) | `trace-library-data.spec.js` | 🟢 OK |
+| US-7.2 | `AC-7.2.3` | Auto-saved edits survive an app close mid-edit | P-020 | T079 (1/1 done) | T080 (1/1 done) | `trace-library-data.spec.js` | 🟢 OK |
 | US-7.3 | `AC-7.3.1` 🖵 | Editing a shipped Pattern triggers a naming prompt before the edit applies | P-021 | T081 (1/1 done) | T082 (1/1 done) | `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-7.3 | `AC-7.3.2` 🖵 | Confirming the naming prompt creates a new owned Pattern | P-021 | T081 (1/1 done) | T082 (1/1 done) | `grid.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-7.3 | `AC-7.3.2` 🖵 | Confirming the naming prompt creates a new owned Pattern | P-021 | T081 (1/1 done) | T082 (1/1 done) | `grid.spec.js`, `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-7.3 | `AC-7.3.3` 🖵 | Canceling the naming prompt discards the edit | P-021 | T081 (1/1 done) | T082 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.3 | `AC-7.3.4` 🖵 | The naming prompt fires only once per shipped Pattern | P-021 | T081 (1/1 done) | T082 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.3 | `AC-7.3.5` 🖵 | Naming prompt enforces unique Pattern names | P-021 | T081 (1/1 done) | T082 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.1` | Make Copy prompts for a name with no default | P-022 | T083 (1/1 done) | T084 (1/1 done) | `storage.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-7.4 | `AC-7.4.2` 🖵 | Confirming Make Copy creates an independent Pattern | P-022 | T083 (1/1 done) | T084 (1/1 done) | `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-7.4 | `AC-7.4.2` 🖵 | Confirming Make Copy creates an independent Pattern | P-022 | T083 (1/1 done) | T084 (1/1 done) | `operations.spec.js`, `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-7.4 | `AC-7.4.3` 🖵 | Canceling Make Copy creates nothing | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.4` | Make Copy enforces unique Pattern names | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.5` | A Make Copy result immediately qualifies as a Pattern Family member | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.6` 🖵 | Make Copy is unavailable on shipped Patterns | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-7.5 | `AC-7.5.1` | Delete requires a naming confirmation | P-023 | T085 (1/1 done) | T086 (1/1 done) | `storage.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-7.5 | `AC-7.5.1` | Delete requires a naming confirmation | P-023 | T085 (1/1 done) | T086 (1/1 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-7.5 | `AC-7.5.2` | Delete is permanent | P-023 | T085 (1/1 done) | T086 (1/1 done) | `storage.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.5 | `AC-7.5.3` 🖵 | Only owned Patterns can be deleted | P-023 | T085 (1/1 done) | T086 (1/1 done) | `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.5 | `AC-7.5.4` 🖵 | Deleting one Family member doesn't affect the other | P-023 | T085 (1/1 done) | T086 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-8.1 | `AC-8.1.1` | Combine has no meter-matching restriction | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-8.1 | `AC-8.1.1` | Combine has no meter-matching restriction | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-8.1 | `AC-8.1.2` 🖵 | Combine picker excludes Patterns that would exceed the 32-Measure cap | P-029 | T098 (1/1 done) | T099 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.3` 🖵 | Combining to exactly 32 Measures succeeds | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-8.1 | `AC-8.1.4` | Combine into an owned Pattern auto-saves | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.5` 🖵 | Combine into a shipped Pattern triggers the naming prompt | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-8.1 | `AC-8.1.6` 🖵 | Combine picker re-filters correctly on repeated use | P-029 | T098 (1/1 done) | T099 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-10.1 | `AC-10.1.1` | Duplicate copies the full Measure sequence exactly | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-10.1 | `AC-10.1.1` | Duplicate copies the full Measure sequence exactly | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js`, `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-10.1 | `AC-10.1.2` | Duplicate focuses the newly-added second half | P-030 | T100 (1/1 done) | T101 (1/1 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-10.1 | `AC-10.1.3` 🖵 | Duplicate is enabled within the 32-Measure cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `remaining.spec.js` | 🟢 OK |
 | US-10.1 | `AC-10.1.4` 🖵 | Duplicate is disabled when doubling would exceed the cap | P-030 | T100 (1/1 done) | T101 (1/1 done) | `operations.spec.js`, `remaining.spec.js` | 🟢 OK |
@@ -473,15 +470,15 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-11.2 | `AC-11.2.4` 🖵 | Family members are discoverable via normal Tag/name listing | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | 🟢 OK |
 | US-11.2 | `AC-11.2.5/1` 🖵 | Below 768px no family information is shown | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | 🟢 OK |
 | US-11.2 | `AC-11.2.5/2` 🖵 | At 768px and wider the editor lists family members as links | P-032 | T105, T148 (2/2 done) | T106, T155 (2/2 done) | `duplicates.spec.js` | 🟢 OK |
-| US-11.3 | `AC-11.3.1` | Trigger: app load after a library update | P-033 | T107 (1/1 done) | T108 (1/1 done) | `storage.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-11.3 | `AC-11.3.2` 🖵 | One-time Remove/Keep prompt, with data-loss callout | P-033 | T107 (1/1 done) | T108 (1/1 done) | `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-11.3 | `AC-11.3.1` | Trigger: app load after a library update | P-033 | T107 (1/1 done) | T108 (1/1 done) | `trace-library-data.test.js`, `remaining.spec.js`, `trace-library-data.spec.js` | 🟢 OK |
+| US-11.3 | `AC-11.3.2` 🖵 | One-time Remove/Keep prompt, with data-loss callout | P-033 | T107 (1/1 done) | T108 (1/1 done) | `trace-library-data.spec.js` | 🟢 OK |
 | US-11.3 | `AC-11.3.3` 🖵 | Remove deletes the custom copy | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-11.3 | `AC-11.3.4` 🖵 | Keep retains both, no repeat prompt for that pair | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-11.3 | `AC-11.3.5` | Resolved-pair tracking is Local Metadata | P-033 | T107 (1/1 done) | T108 (1/1 done) | `remaining.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.1` | MIDI generation is entirely client-side | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js`, `operations.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.2` | Percussive exports to a drum channel; Melodic exports pitched notes | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.3` | Accent Level maps to a fixed MIDI velocity table | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-12.1 | `AC-12.1.4` | Mixed-meter Pattern exports each Measure by its own Time Signature | P-034 | T109 (1/1 done) | T110 (1/1 done) | `export.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-11.3 | `AC-11.3.4` 🖵 | Keep retains both, no repeat prompt for that pair | P-033 | T107 (1/1 done) | T108 (1/1 done) | `trace-library-data.spec.js` | 🟢 OK |
+| US-11.3 | `AC-11.3.5` | Resolved-pair tracking is Local Metadata | P-033 | T107 (1/1 done) | T108 (1/1 done) | `storage.test.js`, `operations.spec.js`, `trace-library-data.spec.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.1` | MIDI generation is entirely client-side | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.2` | Percussive exports to a drum channel; Melodic exports pitched notes | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.test.js`, `export.test.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.3` | Accent Level maps to a fixed MIDI velocity table | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.test.js`, `export.test.js` | 🟢 OK |
+| US-12.1 | `AC-12.1.4` | Mixed-meter Pattern exports each Measure by its own Time Signature | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.test.js`, `export.test.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/1` 🖵 | The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/2` 🖵 | Submit presents the URL as a clickable link that opens GitHub's own issue page in a new tab | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/3` 🖵 | No GitHub credential is held and GitHub's API is never called | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
@@ -493,7 +490,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-13.1 | `AC-13.1.4/2` | A Pattern edited since it was submitted is included again | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.4/3` | A Pattern never submitted is included | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.5` 🖵 | Submission-tracking is Local Metadata, never part of the export payload | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `storage.test.js`, `operations.spec.js` | 🟢 OK |
-| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `grid.spec.js`, `responsive.spec.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-15.1 | `AC-15.1.1` 🖵 | Breakpoint definitions | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-15.1 | `AC-15.1.2` 🖵 | Desktop sidebar is a 300px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `responsive.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-15.1 | `AC-15.1.3` 🖵 | Tablet sidebar is a 240px column, open on load and collapsible | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-15.1 | `AC-15.1.4` 🖵 | Mobile sidebar is an off-canvas drawer | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `responsive.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -544,20 +541,20 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-15.1 | `AC-15.1.20/3` 🖵 | The rhythm band holds the Pattern header, the chord strip, and the grid or sheet with the View control at its head — Grid \| Sheet, with Note aids and Print / PDF while Sheet shows — and the brush line under it, across the panel's full width under every goal | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `frame.spec.js` | 🟢 OK |
 | US-15.1 | `AC-15.1.20/4` 🖵 | One work surface under the band holds what the goal is for — the tabbed workbench with Pattern actions and the family members under Lab and the making goals, the settings rail under Practise a rhythm, and the Composer's panel in Composer mode — and nothing sits beside the band | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `frame.spec.js` | 🟢 OK |
 | US-15.1 | `AC-15.1.20/5` 🖵 | The panel is marked with the layout in force: Playback under Practise a rhythm, where on a wide panel the band takes at least the height the rail does and the rail is capped; Design under every other goal, where on a wide panel the band is capped and the work surface takes the rest | P-036 | T114, T115, T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410 (20/20 done) | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411 (18/18 done) | `goals.test.js`, `frame.spec.js` | 🟢 OK |
-| US-16.1 | `AC-16.1.1` | Shipped library present on first run | P-003 | T032 (1/1 done) | T033 (1/1 done) | `timeline.test.js`, `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.1 | `AC-16.1.2` 🖵 | Shipped Patterns are not marked as user-authored | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · NOT PROVABLE ᵃ |
-| US-16.1 | `AC-16.1.3` | Legacy category becomes a Tag | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.1 | `AC-16.1.4` | Straight and triplet beats map to Recipes | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.1 | `AC-16.1.5` | One Pattern-wide meter becomes a per-Measure Time Signature | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-16.1 | `AC-16.1.1` | Shipped library present on first run | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js`, `trace-library-data.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-16.1 | `AC-16.1.2` 🖵 | Shipped Patterns are not marked as user-authored | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.spec.js` | 🟢 OK |
+| US-16.1 | `AC-16.1.3` | Legacy category becomes a Tag | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
+| US-16.1 | `AC-16.1.4` | Straight and triplet beats map to Recipes | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
+| US-16.1 | `AC-16.1.5` | One Pattern-wide meter becomes a per-Measure Time Signature | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
 | US-16.1 | `AC-16.1.6` | Sub-measure drill cells become their own short Measure | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-16.1 | `AC-16.1.7` | Deliberate accents are preserved; everything else uses computed defaults | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-16.1 | `AC-16.1.8` | Melodic Patterns have their pitches resolved at conversion time | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.1 | `AC-16.1.9` | Trailing silent Measures are dropped | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.1 | `AC-16.1.10` | Seeded data satisfies every structural rule in this specification | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.1 | `AC-16.1.11` | Conversion is reproducible, not hand-edited | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-16.1 | `AC-16.1.8` | Melodic Patterns have their pitches resolved at conversion time | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-16.1 | `AC-16.1.9` | Trailing silent Measures are dropped | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
+| US-16.1 | `AC-16.1.10` | Seeded data satisfies every structural rule in this specification | P-003 | T032 (1/1 done) | T033 (1/1 done) | `seed.test.js`, `trace-library-data.test.js` | 🟢 OK |
+| US-16.1 | `AC-16.1.11` | The legacy conversion was a one-time step, and its rules are tested | P-003 | T032 (1/1 done) | T033 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
 | US-16.2 | `AC-16.2.1` | Patterns are data, not source | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-16.2 | `AC-16.2.2` | Adding a Pattern requires no code change | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
-| US-16.2 | `AC-16.2.3` | Malformed entries fail loudly, not silently | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🔴 **HIGH** · WRONG TEST ᵃ |
+| US-16.2 | `AC-16.2.2` | Adding a Pattern requires no code change | P-004 | T034 (1/1 done) | T035 (1/1 done) | `seed.test.js`, `trace-library-data.test.js` | 🟢 OK |
+| US-16.2 | `AC-16.2.3` | Malformed entries fail loudly, not silently | P-004 | T034 (1/1 done) | T035 (1/1 done) | `trace-library-data.test.js` | 🟢 OK |
 | US-16.2 | `AC-16.2.4` | The data file is versioned | P-004 | T034 (1/1 done) | T035 (1/1 done) | `pattern.test.js`, `seed.test.js`, `storage.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-15.2 | `AC-15.2.1/1` 🖵 | A Measure block's border, against the page background behind it | P-038 | T160, T169, T184, T186, T290 (5/5 done) | T161, T169, T185, T187, T291 (5/5 done) | `grid-boundaries.spec.js` | 🟢 OK |
 | US-15.2 | `AC-15.2.1/2` 🖵 | A Beat's border, against the Measure panel behind it | P-038 | T160, T169, T184, T186, T290 (5/5 done) | T161, T169, T185, T187, T291 (5/5 done) | `grid-boundaries.spec.js` | 🟢 OK |
@@ -818,7 +815,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.9 | `AC-2.9.1/1` 🖵 | The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.1/2` 🖵 | The Register is Pattern content: it is saved with the Pattern and survives a reload | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.1/3` 🖵 | Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.9 | `AC-2.9.1/4` 🖵 | In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key) | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
+| US-2.9 | `AC-2.9.1/4` 🖵 | In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.3.3's treatment of Key) | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.2/1` | At Low every sounding note is twelve semitones below the same Pattern at Normal, and at High twelve above; Bass and Lead are twenty-four either way | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.2/2` | A dealt arpeggio step and a chord-tone Pitch move with the Register exactly as a stamped degree does | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |
 | US-2.9 | `AC-2.9.2/3` | Setting a Register rewrites no stored Pitch: every Slot keeps the degree and `octaveOffset` it held, so returning to Normal sounds exactly as it did before | P-047 | T295, T305 (2/2 done) | T296, T306 (2/2 done) | `timeline.test.js` | 🟢 OK |

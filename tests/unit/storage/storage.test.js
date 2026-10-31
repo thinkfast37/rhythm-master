@@ -15,7 +15,7 @@ describe('storage/patterns', () => {
     expect(patterns.findById('p_1')).toEqual(p);
   });
 
-  it('AC-7.2.2 — upsert replaces by id rather than appending a duplicate', () => {
+  it('upsert replaces by id rather than appending a duplicate', () => {
     const p = { ...create('Groove'), id: 'p_1' };
     patterns.upsert(p);
     patterns.upsert({ ...p, tempo: 140 });
@@ -23,14 +23,14 @@ describe('storage/patterns', () => {
     expect(patterns.findById('p_1').tempo).toBe(140);
   });
 
-  it('AC-7.5.1 — a deleted Pattern is gone from the store', () => {
+  it('AC-7.5.2 — Delete is permanent: a deleted Pattern is gone from the store', () => {
     patterns.upsert({ ...create('A'), id: 'p_1' });
     patterns.upsert({ ...create('B'), id: 'p_2' });
     patterns.remove('p_1');
     expect(patterns.loadAll().map((p) => p.id)).toEqual(['p_2']);
   });
 
-  it('AC-7.2.3 — an empty store reads as an empty library, not an error', () => {
+  it('an empty store reads as an empty library, not an error', () => {
     expect(patterns.loadAll()).toEqual([]);
   });
 
@@ -43,7 +43,7 @@ describe('storage/patterns', () => {
 });
 
 describe('storage/localMeta — FR-006 separation', () => {
-  it('AC-11.3.1 — Local Metadata lives under its own key, keyed by Pattern id', () => {
+  it('AC-11.3.5 — Resolved-pair tracking is Local Metadata: Local Metadata lives under its own key, keyed by Pattern id', () => {
     expect(localMeta.KEY).not.toBe(patterns.KEY);
     localMeta.update('p_1', { duplicateResolved: true });
     expect(localMeta.forPattern('p_1')).toEqual({ duplicateResolved: true });
@@ -60,7 +60,7 @@ describe('storage/localMeta — FR-006 separation', () => {
     expect('submittedAt' in stored).toBe(false);
   });
 
-  it('AC-11.3.2 — an undeclared Local Metadata field is refused rather than smuggled in', () => {
+  it('an undeclared Local Metadata field is refused rather than smuggled in', () => {
     expect(() => localMeta.update('p_1', { sneaky: true })).toThrow(/not a Local Metadata field/);
   });
 
@@ -83,7 +83,7 @@ describe('storage/localMeta — FR-006 separation', () => {
 });
 
 describe('storage/settings', () => {
-  it('AC-5.6.1 — settings fall back to documented defaults', () => {
+  it('AC-5.6.6 — Default counting system on first load: settings fall back to documented defaults', () => {
     expect(settings.load()).toMatchObject({
       countingSystem: 'takadimi',
       metronomeEnabled: false,
@@ -106,12 +106,12 @@ describe('storage/migrate — FR-005', () => {
     expect(CURRENT_VERSION).toBe(1);
   });
 
-  it('AC-16.2.2 — data at the current version passes through untouched', () => {
+  it('data at the current version passes through untouched', () => {
     const data = { schemaVersion: 1, patterns: [] };
     expect(migrate(data)).toEqual(data);
   });
 
-  it('AC-16.2.3 — data from a newer build is refused, never downgraded', () => {
+  it('data from a newer build is refused, never downgraded', () => {
     expect(() => migrate({ schemaVersion: 99, patterns: [] })).toThrow(FutureSchemaError);
     expect(() => migrate({ schemaVersion: 99, patterns: [] })).toThrow(/Refusing to downgrade/);
   });

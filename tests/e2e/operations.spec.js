@@ -33,7 +33,7 @@ test('AC-7.4.1 — Make Copy creates a second, independent Pattern', async ({ pa
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(2);
 });
 
-test('AC-7.4.2 — editing a copy leaves the original untouched', async ({ page }) => {
+test('AC-7.4.2 — Confirming Make Copy creates an independent Pattern: editing the copy leaves the original untouched', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Original');
   await page.locator('[data-action="make-copy"]').click();
@@ -67,7 +67,7 @@ test('AC-11.1.3 — Duplicate warning fires only at Pattern-creation moments: Ma
   expect(await page.evaluate(() => window.__rm.patternStore.loadAll().length)).toBe(2);
 });
 
-test('AC-7.5.1 — Delete removes an owned Pattern permanently', async ({ page }) => {
+test('AC-7.5.2 — Delete is permanent: an owned Pattern is gone from the store and, after a reload, from the library', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Doomed');
 
@@ -113,7 +113,7 @@ test('AC-7.5.3 — deleting a Pattern drops its Local Metadata with it', async (
   expect(after).toEqual({});
 });
 
-test('AC-10.1.1 — Double Length duplicates the Pattern’s own Measures', async ({ page }) => {
+test('Double Length duplicates the Pattern’s own Measures', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Doubler');
   const before = await page.evaluate(() => window.__rm.getState().pattern.measures.length);
@@ -135,7 +135,7 @@ test('AC-10.1.4 — Duplicate is disabled when doubling would exceed the cap: th
   await expect(page.locator('[data-action="duplicate-pattern"]')).toBeDisabled();
 });
 
-test('AC-8.1.1 — Append adds another Pattern’s Measures after this one', async ({ page }) => {
+test('Append adds another Pattern’s Measures after this one', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Base');
   const before = await page.evaluate(() => window.__rm.getState().pattern.measures.length);
@@ -157,7 +157,7 @@ test('AC-8.1.2 — Append is unavailable once the Pattern is at the Measure cap'
   await expect(page.locator('[data-action="add-measure"]')).toBeDisabled();
 });
 
-test('AC-12.1.1 — Export MIDI produces a downloadable .mid named after the Pattern', async ({ page }) => {
+test('Export MIDI produces a downloadable .mid named after the Pattern', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Export Me');
 
@@ -215,7 +215,7 @@ test('AC-11.2.1 — Family match criteria: a melodic variant surfaces as a Famil
   expect(result.duplicates).not.toContain('Rhythm');
 });
 
-test('AC-11.3.1 — a Pattern the library has since duplicated prompts once, then never again', async ({ page }) => {
+test('AC-11.3.5 — Resolved-pair tracking is Local Metadata: a resolved pair is no longer reported, and the resolution never joins the Pattern', async ({ page }) => {
   await page.goto('/');
   // Make an owned Pattern note-for-note identical to a shipped one.
   await page.evaluate(() => {

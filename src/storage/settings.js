@@ -41,6 +41,12 @@ export const DEFAULTS = {
   progressionCycleFrom: 'all',
   progressionCycleList: [],
   /**
+   * The identities of the shipped Patterns seen at the last load (AC-11.3.1), so the
+   * "your copy is now in the library" check runs against newly shipped Patterns
+   * only. null until the first load records it. App bookkeeping, never Pattern data.
+   */
+  shippedSeen: null,
+  /**
    * The chosen goal's id, or 'lab' (US-14.1). null until one is chosen, and
    * anything but 'lab' opens the goals screen on launch (AC-14.1.1/4). A
    * preference about the interface, never about a Pattern (AC-14.1.2/5).
