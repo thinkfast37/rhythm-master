@@ -696,10 +696,30 @@ test("AC-12.3.3/5 — While playing, the current note's mark (AC-12.2.9) shows o
   await page.locator('[data-action="play"]').click();
   const playing = page.locator('.score .item.playing');
   await expect(playing).toHaveCount(1, { timeout: 4000 });
-  expect(await fillOf(playing.locator('.notehead'))).toBe(rgb('#d4880c'));
-  // The others keep their colours.
-  const others = page.locator('.score .note-item:not(.playing) .notehead');
-  for (const head of await others.all()) expect(await fillOf(head)).not.toBe(rgb('#d4880c'));
+  // The score is redrawn on every cursor move, so finding the playing notehead and
+  // reading its colour happen in one synchronous step in the page: read in two, a
+  // redraw between them leaves a detached element whose computed fill is empty.
+  // Polled until a note (not a rest) is the one playing.
+  const read = () =>
+    page.evaluate(() => {
+      const head = document.querySelector('.score .note-item.playing .notehead');
+      if (!head) return null;
+      const others = [...document.querySelectorAll('.score .note-item:not(.playing) .notehead')];
+      return { playing: getComputedStyle(head).fill, others: others.map((h) => getComputedStyle(h).fill) };
+    });
+  let seen = null;
+  await expect
+    .poll(
+      async () => {
+        seen = await read();
+        return seen?.playing ?? null;
+      },
+      { timeout: 4000 }
+    )
+    .toBe(rgb('#d4880c'));
+  // The others keep their colours — read in the same moment as the playing note.
+  expect(seen.others.length).toBeGreaterThan(0);
+  for (const fill of seen.others) expect(fill).not.toBe(rgb('#d4880c'));
   await page.locator('[data-action="stop"]').click();
   await expect(playing).toHaveCount(0);
 });
