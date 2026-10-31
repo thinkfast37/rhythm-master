@@ -302,11 +302,13 @@ describe('core/pattern — validation', () => {
     expect(validate({ ...create(), tags: ['custom'] }).errors.join(' ')).toMatch(/automatic/);
   });
 
-  it('AC-16.2.4 — key must be present exactly when the Pattern is melodic', () => {
-    expect(validate({ ...create(), key: 'C' }).errors.join(' ')).toMatch(/key must be present iff/);
+  it('key must be present on a melodic Pattern, and may remain unused on a percussive one (rule 7)', () => {
     expect(validate({ ...create(), soundMode: 'melodic' }).errors.join(' ')).toMatch(
-      /key must be present iff/
+      /key must be present when soundMode is melodic/
     );
+    // Kept from the Pattern's Melodic past, unused, and still checked as well-formed (AC-2.1.4).
+    expect(validate({ ...create(), key: 'C' }).valid).toBe(true);
+    expect(validate({ ...create(), key: 'H' }).errors.join(' ')).toMatch(/Key "H" unsupported/);
   });
 
   it('scale, where present, must be a catalogue id on a melodic Pattern — and may be absent (rule 13)', () => {
@@ -315,9 +317,9 @@ describe('core/pattern — validation', () => {
     expect(validate({ ...melodic, scale: 'ionian' }).valid).toBe(true);
     expect(validate({ ...melodic, scale: 'blues-major-pentatonic' }).valid).toBe(true);
     expect(validate({ ...melodic, scale: 'major' }).errors.join(' ')).toMatch(/scale "major" unsupported/);
-    expect(validate({ ...create(), scale: 'ionian' }).errors.join(' ')).toMatch(
-      /scale is only valid when soundMode is melodic/
-    );
+    // On a percussive Pattern a scale may remain, unused, and is still checked (AC-2.1.4).
+    expect(validate({ ...create(), scale: 'ionian' }).valid).toBe(true);
+    expect(validate({ ...create(), scale: 'major' }).errors.join(' ')).toMatch(/scale "major" unsupported/);
   });
 
 

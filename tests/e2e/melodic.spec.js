@@ -42,19 +42,111 @@ test('AC-2.1.3 — switching to Melodic gives every sounding Slot a pitch', asyn
   await expect(page.locator('.slot-pitch').first()).toBeVisible();
 });
 
-test('AC-2.1.4 — switching back to Percussive strips pitch, keeping the Pattern valid', async ({ page }) => {
+/**
+ * An owned Melodic Pattern holding everything a melody depends on — Pitches on
+ * three Slots, Key G, Dorian, Register +1 and a progression changing every Measure —
+ * so a round trip through Percussive can be checked for all of it (AC-2.1.4).
+ */
+async function fullMelody(page) {
   await page.goto('/');
-  await page.evaluate(() => window.__rm.loadBlank('4/4'));
-  await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
-  await page.locator('.sound-mode [data-mode="melodic"]').click();
-  await page.locator('.sound-mode [data-mode="percussive"]').click();
-
-  const state = await page.evaluate(() => {
-    const p = window.__rm.getState().pattern;
-    return { key: 'key' in p, pitch: 'pitch' in p.measures[0].beats[0].slots[0] };
+  await page.evaluate(() => {
+    const p = window.__rm.loadBlank('4/4', 'Round Trip');
+    const measures = structuredClone(p.measures);
+    const notes = [['1', 0], ['b3', 0], ['5', 1]];
+    notes.forEach(([degree, octaveOffset], b) => {
+      measures[0].beats[b].slots[0] = { on: true, pitch: { degree, octaveOffset } };
+    });
+    window.__rm.loadPattern(
+      {
+        ...p,
+        soundMode: 'melodic',
+        key: 'G',
+        scale: 'dorian',
+        register: 1,
+        harmony: { change: 'measure', chords: [{ degree: '1', quality: 'min' }, { degree: '4', quality: 'maj' }] },
+        measures,
+      },
+      { owned: true }
+    );
   });
-  expect(state.key).toBe(false);
-  expect(state.pitch).toBe(false);
+}
+const melodicPart = (page) =>
+  page.evaluate(() => {
+    const p = window.__rm.getState().pattern;
+    return {
+      key: p.key,
+      scale: p.scale,
+      register: p.register,
+      harmony: p.harmony,
+      pitches: p.measures.map((m) => m.beats.map((b) => b.slots.map((s) => s.pitch ?? null))),
+    };
+  });
+const toMode = (page, mode) => page.locator(`.sound-mode [data-mode="${mode}"]`).click();
+
+test('AC-2.1.4/1 — Every Slot’s Pitch reappears exactly as it was', async ({ page }) => {
+  await fullMelody(page);
+  const before = (await melodicPart(page)).pitches;
+  await toMode(page, 'percussive');
+  await expect(page.locator('.slot-note')).toHaveCount(0); // unused while Percussive: no note band at all
+  await toMode(page, 'melodic');
+  expect((await melodicPart(page)).pitches).toEqual(before);
+  // And the grid shows them again.
+  await expect(page.locator('.slot[data-beat="1"][data-slot="0"] .slot-pitch')).toHaveAttribute('data-degree', 'b3');
+});
+
+test('AC-2.1.4/2 — The Key, scale, Register and progression reappear exactly as they were', async ({ page }) => {
+  await fullMelody(page);
+  const before = await melodicPart(page);
+  await toMode(page, 'percussive');
+  // Unused while Percussive: no chord strip, no Key picker, and it plays unpitched.
+  await expect(page.locator('.chord-chip')).toHaveCount(0);
+  await expect(page.locator('.key-picker')).toHaveCount(0);
+  await toMode(page, 'melodic');
+  const after = await melodicPart(page);
+  expect({ key: after.key, scale: after.scale, register: after.register, harmony: after.harmony }).toEqual({
+    key: before.key,
+    scale: before.scale,
+    register: before.register,
+    harmony: before.harmony,
+  });
+  await expect(page.locator('.chord-chip')).toHaveCount(2);
+  await expect(page.locator('.key-picker')).toHaveCount(1); // the absence above was real
+  // It survives a reload too, being what the store holds.
+  await toMode(page, 'percussive');
+  await page.reload();
+  const stored = await page.evaluate(() => window.__rm.patternStore.findById(window.__rm.getState().pattern.id));
+  expect(stored.soundMode).toBe('percussive');
+  expect(stored.key).toBe('G');
+  expect(stored.harmony).toEqual(before.harmony);
+});
+
+test('AC-2.1.4/3 — A Slot turned on while the Pattern was Percussive takes the tonic when it turns Melodic again, and a Slot turned off while Percussive keeps no Pitch', async ({ page }) => {
+  await fullMelody(page);
+  await toMode(page, 'percussive');
+  // Beat 4 turned on, Beat 2 turned off — both while Percussive.
+  await page.locator('.slot[data-beat="3"][data-slot="0"]').click();
+  for (let i = 0; i < 4 && (await page.evaluate(() => window.__rm.getState().pattern.measures[0].beats[1].slots[0].on)); i++) {
+    await page.locator('.slot[data-beat="1"][data-slot="0"]').click();
+  }
+  await toMode(page, 'melodic');
+  const pitches = (await melodicPart(page)).pitches[0].map((beat) => beat[0]);
+  expect(pitches[3]).toEqual({ degree: '1', octaveOffset: 0 }); // the tonic
+  expect(pitches[1]).toBeNull(); // off, and no Pitch kept
+  expect(pitches[0]).toEqual({ degree: '1', octaveOffset: 0 }); // untouched Slots as they were
+  expect(pitches[2]).toEqual({ degree: '5', octaveOffset: 1 });
+});
+
+test('AC-2.1.7 — Switching Sound Mode is one undoable edit', async ({ page }) => {
+  await fullMelody(page);
+  const before = await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern));
+  await toMode(page, 'percussive');
+  expect(await page.evaluate(() => window.__rm.getState().pattern.soundMode)).toBe('percussive');
+  await page.locator('[data-action="undo"]').click();
+  expect(await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern))).toBe(before);
+  await expect(page.locator('.sound-mode [data-mode="melodic"]')).toHaveAttribute('aria-pressed', 'true');
+  // The undone state is what is saved.
+  const stored = await page.evaluate(() => window.__rm.patternStore.findById(window.__rm.getState().pattern.id).soundMode);
+  expect(stored).toBe('melodic');
 });
 
 // --- AC-2.1.6: the Sound Mode switch is in the Pattern header ----------------
@@ -1227,13 +1319,22 @@ test('AC-2.5.4/2 — A Melodic Pattern that carries no stored scale reads as Ion
   expect(await page.evaluate(() => 'scale' in window.__rm.getState().pattern)).toBe(false);
 });
 
-test('AC-2.5.4/3 — `scale` is present only on Melodic Patterns: switching to Percussive removes it, switching to Melodic restores one (the stored value if present, else Ionian)', async ({ page }) => {
+test('AC-2.5.4/3 — `scale` is used only on Melodic Patterns: switching to Percussive keeps a stored scale unused, switching to Melodic uses it (the stored value if present, else Ionian)', async ({ page }) => {
   await melodicBlank(page);
   expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
 
+  await page.locator('.scale-picker').selectOption('dorian');
   await page.locator('.sound-mode [data-mode="percussive"]').click();
-  expect(await page.evaluate(() => 'scale' in window.__rm.getState().pattern)).toBe(false);
+  // Kept, unused: the scale stays on the Pattern, and nothing offers it.
+  expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('dorian');
+  await expect(page.locator('.scale-picker')).toHaveCount(0);
 
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('dorian');
+  await expect(page.locator('.scale-picker')).toHaveValue('dorian');
+
+  // With none stored, switching to Melodic uses Ionian.
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.sound-mode [data-mode="melodic"]').click();
   expect(await page.evaluate(() => window.__rm.getState().pattern.scale)).toBe('ionian');
 });
@@ -1438,8 +1539,9 @@ test('AC-2.9.1/4 — In Percussive mode there is no Register picker anywhere, th
   await page.locator('.register-picker').selectOption('1');
   await page.locator('.sound-mode [data-mode="percussive"]').click();
   await expect(page.locator('.register-picker')).toHaveCount(0);
-  // And the field goes with the control, as the Key does.
-  expect(await page.evaluate(() => 'register' in window.__rm.getState().pattern)).toBe(false);
+  // The Register itself stays on the Pattern, unused, for when it turns Melodic
+  // again (AC-2.1.4/2) — only the control is gone.
+  expect(await page.evaluate(() => window.__rm.getState().pattern.register)).toBe(1);
 });
 
 test('AC-2.9.3/1 — A note band names the note the Slot sounds at the current Register', async ({ page }) => {

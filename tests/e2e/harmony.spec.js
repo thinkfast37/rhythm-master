@@ -838,20 +838,25 @@ test('AC-2.6.8/1 — A progression, its chord edits, the change setting and the 
   await expect(page.locator('.progression-picker')).toHaveValue('custom');
 });
 
-test('AC-2.6.8/3 — Switching to Percussive removes the progression along with the Key, scale and Pitch data', async ({ page }) => {
+test('AC-2.6.8/3 — Switching to Percussive keeps the progression with the Key, scale and Pitch data, unused, and switching back to Melodic restores them', async ({ page }) => {
   await harmonicBlank(page);
   await accentZone(page, 0, 0).click();
   await page.locator('.degree[data-degree="3"]').click();
   await noteBand(page, 0, 0).click();
+  const before = await pattern(page);
   await page.locator('.sound-mode [data-mode="percussive"]').click();
   const p = await pattern(page);
-  expect('harmony' in p).toBe(false);
-  expect('key' in p).toBe(false);
-  expect('pitch' in p.measures[0].beats[0].slots[0]).toBe(false);
-  // Back to Melodic: no progression, and the sounding Slot takes a degree it can sound.
+  // Kept on the Pattern …
+  expect(p.harmony).toEqual(before.harmony);
+  expect(p.key).toBe(before.key);
+  expect(p.scale).toBe(before.scale);
+  expect(p.measures[0].beats[0].slots[0].pitch).toEqual(before.measures[0].beats[0].slots[0].pitch);
+  // … but unused: no chord strip, and the progression's passes do not lengthen a percussive loop.
+  await expect(page.locator('.chord-chip')).toHaveCount(0);
+  // Back to Melodic: the progression and the Slot's degree are as they were.
   await page.locator('.sound-mode [data-mode="melodic"]').click();
-  await expect(page.locator('.progression-picker')).toHaveValue('none');
-  expect((await slotState(page, 0, 0)).pitch).toEqual({ degree: '1', octaveOffset: 0 });
+  await expect(page.locator('.progression-picker')).toHaveValue('I-IV-V');
+  expect((await slotState(page, 0, 0)).pitch).toEqual(before.measures[0].beats[0].slots[0].pitch);
 });
 
 // --- US-2.7 — Cycle through the fill patterns while practising ---

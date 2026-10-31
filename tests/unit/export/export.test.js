@@ -479,3 +479,39 @@ describe('export/midi under cycle mode (US-2.7)', () => {
     expect(noteOns(own).slice(0, 2).map((e) => e.data[0])).toEqual([60, 64]); // Ascending: Root, 3rd
   });
 });
+
+describe('US-2.1 — a Percussive Pattern goes out as it plays', () => {
+  /** A Percussive Pattern still holding a whole melody from before it was switched. */
+  function dormant() {
+    let p = { ...create('Was Melodic'), tempo: 120 };
+    for (let b = 0; b < 4; b++) p = cycleAccent(p, 0, b, 0);
+    for (const m of p.measures) for (const b of m.beats) for (const s of b.slots) if (s.on) s.pitch = { degree: '5', octaveOffset: 0 };
+    return {
+      ...p,
+      soundMode: 'percussive',
+      key: 'G',
+      scale: 'dorian',
+      register: 1,
+      harmony: { change: 'pass', chords: [{ degree: '1', quality: 'maj' }, { degree: '4', quality: 'maj' }, { degree: '5', quality: 'maj' }] },
+    };
+  }
+
+  it('AC-2.1.8/1 — A Percussive Pattern’s submission and MIDI file carry no Pitch, Key, scale, Register or progression', () => {
+    const p = dormant();
+    const sent = toSubmissionShape(p);
+    expect(sent).not.toHaveProperty('key');
+    expect(sent).not.toHaveProperty('scale');
+    expect(sent).not.toHaveProperty('register');
+    expect(sent).not.toHaveProperty('harmony');
+    expect(JSON.stringify(sent.measures)).not.toContain('pitch');
+    // The Pattern it came from is untouched.
+    expect(p.measures[0].beats[0].slots[0].pitch).toEqual({ degree: '5', octaveOffset: 0 });
+
+    // The MIDI file is the Pattern as it plays: one pass, not the progression's three,
+    // every note on the drum channel at the one fixed drum note, none pitched.
+    const plain = { ...create('Plain'), tempo: 120, measures: structuredClone(p.measures) };
+    for (const m of plain.measures) for (const b of m.beats) for (const s of b.slots) delete s.pitch;
+    expect(Array.from(buildMidi(p))).toEqual(Array.from(buildMidi({ ...plain, name: p.name })));
+  });
+});
+

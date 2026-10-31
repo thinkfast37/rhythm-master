@@ -15,13 +15,13 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
   "id": "p_7f3a9c",              // stable, opaque. Assigned on creation; never reused.
   "name": "Bossa Groove",        // required, non-empty, trimmed
   "soundMode": "percussive",     // "percussive" | "melodic"
-  "key": "C",                    // present only when soundMode === "melodic"
-  "scale": "ionian",             // optional; only when soundMode === "melodic". Absent reads as "ionian"
+  "key": "C",                    // required when melodic; may remain, unused, when percussive
+  "scale": "ionian",             // optional; used when melodic, may remain unused when percussive. Absent reads as "ionian"
   "tempo": 80,                   // integer BPM, 18–300
   "tempoUnit": "quarter",        // "quarter" | "eighth"; optional — what the tempo counts (AC-4.2.7)
   "swingFeel": "eighth",         // "quarter" | "eighth" | "sixteenth"; optional, absent means "eighth"
   "swingAmount": 30,             // integer 0–100; optional, absent means 0. The Pattern-wide default (AC-4.4.13)
-  "harmony": {                   // optional; only when soundMode === "melodic" (US-2.6)
+  "harmony": {                   // optional; used when melodic, may remain unused when percussive (US-2.6)
     "change": "pass",            //   "pass" | "measure" — when the chord in force moves on
     "chords": [                  //   1–16 concrete chords, in order
       { "degree": "1", "quality": "maj7" },
@@ -42,14 +42,14 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
 |---|---|---|
 | `id` | Assigned at creation. Shipped Patterns get a deterministic id derived from their seed-file position, so Local Metadata keyed to one survives a library update. | FR-006 |
 | `name` | Required. Duplicate names are permitted — identity is `id`, not name. | US-7.1 |
-| `key` | Present iff `soundMode === "melodic"`. One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
-| `scale` | Optional, and only when `soundMode === "melodic"`. One of the ids in `core/scales.js`'s catalogue (church modes, the five pentatonic modes, both blues scales, harmonic and melodic minor). Absent reads as `ionian`, so Patterns saved before the field existed need no migration; every shipped Melodic Pattern carries it explicitly. Drives the strip's in-scale marking and spelling only — never resolution to a sounding note, which stays `(degree, octaveOffset, key)`. | US-2.5 |
-| `register` | Optional, and only when `soundMode === "melodic"`. An integer −2 to +2: the whole octaves every note the Pattern sounds is moved by, Bass (−2) to Lead (+2). Absent reads as 0, so Patterns saved before the field existed sound unchanged. It shifts what sounds, never what is stored — no Slot's `octaveOffset` is touched — and a Slot's own octave plus the register is held inside the stepper's octave range of 1 to 7 (AC-2.9.2/4). | US-2.9 |
+| `key` | Present when `soundMode === "melodic"`; may remain, unused, on a Percussive Pattern (AC-2.1.4). One of C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B. | US-2.3 |
+| `scale` | Optional; used only when `soundMode === "melodic"`, and may remain, unused, on a Percussive Pattern (AC-2.1.4). One of the ids in `core/scales.js`'s catalogue (church modes, the five pentatonic modes, both blues scales, harmonic and melodic minor). Absent reads as `ionian`, so Patterns saved before the field existed need no migration; every shipped Melodic Pattern carries it explicitly. Drives the strip's in-scale marking and spelling only — never resolution to a sounding note, which stays `(degree, octaveOffset, key)`. | US-2.5 |
+| `register` | Optional; used only when `soundMode === "melodic"`, and may remain, unused, on a Percussive Pattern (AC-2.1.4). An integer −2 to +2: the whole octaves every note the Pattern sounds is moved by, Bass (−2) to Lead (+2). Absent reads as 0, so Patterns saved before the field existed sound unchanged. It shifts what sounds, never what is stored — no Slot's `octaveOffset` is touched — and a Slot's own octave plus the register is held inside the stepper's octave range of 1 to 7 (AC-2.9.2/4). | US-2.9 |
 | `tempo` | Clamped 18–300 on read as well as write, so hand-edited seed data cannot introduce an out-of-range value. | AC-4.2.1 |
 | `tempoUnit` | The note value the tempo counts per minute: `quarter` (♩) or `eighth` (♪). Every Beat lasts its own written length against it — an eighth-note Beat is half a quarter-note Beat. Optional; absent reads as the note value of the first Measure's Beat, which is what tempo counted before the field existed, so a Pattern whose Measures share a note value plays unchanged with no migration. The editor states it on open, so a later change to Measure 1's meter does not retime the Pattern. | AC-4.2.7 |
 | `swingFeel` | The pulse level swing pairs at: `quarter`, `eighth`, or `sixteenth`. Optional; absent reads as `eighth`, so Patterns saved before the field existed keep their timing. One value for the whole Pattern. | AC-4.4.7 |
 | `swingAmount` | The Pattern-wide swing amount, 0–100; optional, absent reads as 0. Every straight Subdivision Group without a per-group amount inherits it — which is why a Measure added later swings without any copying. Per-group amounts on a Beat (`beat.swing`, keyed by group index) act as overrides and play as authored. | AC-4.4.12, AC-4.4.13 |
-| `harmony` | Optional, and only when `soundMode === "melodic"`. A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure, and an optional `arpeggio` (an id from `core/harmony.js`'s `ARPEGGIOS`; absent means None) under which every sounding Slot's note is dealt from the arpeggio's step sequence at play time rather than read from its stored Pitch (AC-2.6.6). A step is a chord tone at an octave, a drone on the Key's tonic or the chord's root, a step of a scale rooted on the chord, the Pattern's scale note next above or below a chord tone, a fixed interval above the chord's root, the semitone above or below a chord tone, or the semitone above or below the next chord's bass — never stored, always derived. Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. Each chord may carry an `inversion` — which of its members is in the bass, 0 the root — written by the Bass picker or a Voicing shape and voiced Closest when a progression is chosen (US-2.11); absent means root position, so a Pattern saved before voicings existed sounds as it did and is never rewritten. | US-2.6, US-2.11 |
+| `harmony` | Optional; used only when `soundMode === "melodic"`, and may remain, unused, on a Percussive Pattern (AC-2.1.4). A progression as concrete chords — each a chromatic degree token of the Key (`1`, `b7`, …) and a quality id from `core/harmony.js`'s catalogue — plus `change`, which says whether the chord in force moves on every pass or every Measure, and an optional `arpeggio` (an id from `core/harmony.js`'s `ARPEGGIOS`; absent means None) under which every sounding Slot's note is dealt from the arpeggio's step sequence at play time rather than read from its stored Pitch (AC-2.6.6). A step is a chord tone at an octave, a drone on the Key's tonic or the chord's root, a step of a scale rooted on the chord, the Pattern's scale note next above or below a chord tone, a fixed interval above the chord's root, the semitone above or below a chord tone, or the semitone above or below the next chord's bass — never stored, always derived. Written when a progression is chosen, spelled from the Key and scale at that moment; thereafter the Composer's data, so a later scale change alters no chord (AC-2.6.2/5). Absent means no progression, and a Pattern without one is untouched by US-2.6. Each chord may carry an `inversion` — which of its members is in the bass, 0 the root — written by the Bass picker or a Voicing shape and voiced Closest when a progression is chosen (US-2.11); absent means root position, so a Pattern saved before voicings existed sounds as it did and is never rewritten. | US-2.6, US-2.11 |
 | `tags` | Stores **only** user-typed Tags. `custom`, `swing`, `percussive`, and `melodic` are computed from the Pattern on read and never persisted — persisting them would let them drift out of sync with the Pattern they describe. | US-5.3 |
 | `measures` | 1–32 entries (8 until 2026-10-23). The cap is enforced on every operation that can grow a Pattern (add Measure, Append, Duplicate). | AC-1.1.3 |
 
@@ -145,7 +145,7 @@ Slot content is carried across, in either direction.
 |---|---|---|
 | `on` | boolean | Required. `false` means silent. |
 | `accent` | 1 \| 2 \| 3 | **Optional, and present only when the user overrode the computed default.** Absent means "use the metric default." Never written speculatively. |
-| `pitch` | object | Present only when `soundMode === "melodic"` and `on === true`. |
+| `pitch` | object | Only when `on === true`. Required on a Melodic Pattern's on Slots; may remain, unused, on a Percussive Pattern's (AC-2.1.4). |
 
 `accent` is deliberately absent rather than 0 for an off Slot. Accent Level 0 is not a stored value
 — it is what `on: false` means.
@@ -512,22 +512,24 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 3. Each Beat's `recipe` is in the catalogue for its Beat note value.
 4. Each Beat's `slots.length` equals its resolved Slot count.
 5. `accent`, where present, is 1, 2, or 3 — and only on a Slot with `on: true`.
-6. `pitch`, where present, only on a Slot with `on: true`, and only when `soundMode` is `melodic`.
-7. `key` present iff `soundMode` is `melodic`.
+6. `pitch`, where present, only on a Slot with `on: true`. On a Melodic Pattern every on Slot carries one; on a Percussive Pattern it may remain, unused (AC-2.1.4).
+7. `key` present when `soundMode` is `melodic`; on a Percussive Pattern it may remain, unused (AC-2.1.4).
 8. `tempo` an integer within 18–300.
 9. `rating` an integer within 0–5.
 10. `tags` contains no automatic Tag name.
 11. `swingFeel`, where present, is `quarter`, `eighth`, or `sixteenth`.
 12. `swingAmount`, where present, is an integer within 0–100.
-13. `scale`, where present, is a catalogue id from `core/scales.js` — and only when `soundMode` is `melodic`.
-14. `harmony`, where present, only when `soundMode` is `melodic`; its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`, and an `inversion`, where present, that is an integer from 0 to one less than the quality's member count (US-2.11; absent means 0).
+13. `scale`, where present, is a catalogue id from `core/scales.js`. Used only when `soundMode` is `melodic`; on a Percussive Pattern it may remain, unused (AC-2.1.4).
+14. `harmony`, where present, is used only when `soundMode` is `melodic` — on a Percussive Pattern it may remain, unused (AC-2.1.4); its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`, and an `inversion`, where present, that is an integer from 0 to one less than the quality's member count (US-2.11; absent means 0).
 15. A Pitch carries exactly one of `degree` (a degree token) or `tone` (1, 3, 5, 7 or 9), with an integer `octaveOffset`.
 16. A Pitch with `tone` only on a Pattern that has `harmony`.
 17. An overlay's `keptFills`, where present, is an array of ids from `core/harmony.js`'s `ARPEGGIOS`;
     an id the catalogue no longer carries is skipped on read.
 18. A Song has a non-empty `name`, at least one Section, and each Section a `patternId` string and an
     `entries` array whose every entry has a `fill` from `ARPEGGIOS` and an integer `repeats` 1–16.
-19. `register`, where present, is an integer within −2 to +2 — and only when `soundMode` is `melodic`.
+19. `register`, where present, is an integer within −2 to +2. Used only when `soundMode` is `melodic`; on a Percussive Pattern it may remain, unused (AC-2.1.4).
+
+*(Rules 6, 7, 13, 14 and 19 revised 2026-10-31 with AC-2.1.4 (T450). They said each of these fields exists only on a Melodic Pattern, and the Sound Mode switch deleted them to obey — losing a melody to an accidental toggle. A Percussive Pattern may now hold its melody unused; it is still validated as well-formed, every reader that sounds or shows pitch already asks the Sound Mode first, and what leaves the app is the Pattern as it plays (AC-2.1.8). Nothing stored is rewritten: a Pattern saved before simply holds nothing dormant.)*
 20. `tempoUnit`, where present, is `quarter` or `eighth`.
 
 A shipped Pattern failing validation is a build-breaking error — the seed file is checked in CI.
