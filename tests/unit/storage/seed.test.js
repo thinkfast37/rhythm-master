@@ -17,25 +17,25 @@ const library = seed.loadAll();
 const CONVERTED_LIBRARY_SIZE = 110;
 
 describe('the shipped Pattern library', () => {
-  it('AC-16.1.1 — the app arrives stocked with every shipped Pattern', () => {
+  it('AC-16.1.1 — Shipped library present on first run: the loader yields every Pattern in the data file', () => {
     expect(library).toHaveLength(SEED_PATTERN_COUNT);
     expect(library.length).toBeGreaterThanOrEqual(CONVERTED_LIBRARY_SIZE);
   });
 
-  it('AC-16.1.2 — every shipped Pattern is valid against the data model', () => {
+  it('AC-16.1.10 — Seeded data satisfies every structural rule in this specification: every shipped Pattern is valid against the data model', () => {
     const { valid, errors } = seed.validateAll();
     expect(errors).toEqual([]);
     expect(valid).toBe(true);
   });
 
-  it('AC-16.1.3 — the conversion preserved every note from the predecessor', () => {
+  it('the conversion preserved every note from the predecessor', () => {
     // 1,053 at conversion, less the 26 notes in the two placeholder Patterns
     // ("New Rhythm", "My Rhythm") removed during the 2026-08-17 tag audit.
     // Counted over the converted slice, so later additions cannot disturb it.
     expect(seed.noteOnCount(library.slice(0, CONVERTED_LIBRARY_SIZE))).toBe(1027);
   });
 
-  it('AC-16.1.4 — ids are deterministic, unique, and derived from seed position', () => {
+  it('ids are deterministic, unique, and derived from seed position', () => {
     const ids = library.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids[0]).toBe(seed.seedId(0));
@@ -43,7 +43,7 @@ describe('the shipped Pattern library', () => {
     expect(seed.loadAll().map((p) => p.id)).toEqual(ids);
   });
 
-  it('AC-16.1.5 — every Measure holds exactly its numerator in Beats', () => {
+  it('AC-16.1.10 — Seeded data satisfies every structural rule in this specification: every Measure holds exactly its numerator in Beats', () => {
     for (const p of library) {
       for (const [i, m] of p.measures.entries()) {
         expect(isSupported(m.timeSignature), `${p.name} measure ${i + 1}`).toBe(true);
@@ -99,13 +99,13 @@ describe('the shipped Pattern library', () => {
     }
   });
 
-  it('AC-16.1.8 — every shipped Pattern builds a playable timeline', () => {
+  it('AC-16.1.1 — Shipped library present on first run: every shipped Pattern builds a playable timeline', () => {
     for (const p of library) {
       expect(() => buildTimeline(p), p.name).not.toThrow();
     }
   });
 
-  it('AC-16.1.9 — every melodic Pattern carries a Key and a pitch on every sounding Slot', () => {
+  it('AC-16.1.10 — Seeded data satisfies every structural rule in this specification: every melodic Pattern carries a Key and a pitch on every sounding Slot', () => {
     for (const p of library.filter((x) => x.soundMode === 'melodic')) {
       expect(p.key, p.name).toBeTruthy();
       for (const m of p.measures) {
@@ -118,7 +118,7 @@ describe('the shipped Pattern library', () => {
     }
   });
 
-  it('AC-16.1.10 — shipped Patterns store no id-bearing or automatic-Tag cruft', () => {
+  it('shipped Patterns store no id-bearing or automatic-Tag cruft', () => {
     for (const p of library) {
       expect(validate(p).valid, p.name).toBe(true);
       for (const t of p.tags) {
@@ -142,12 +142,12 @@ describe('the shipped Pattern library', () => {
     expect(seed.findById('nope')).toBeNull();
   });
 
-  it('AC-16.2.2 — the seed file carries a schema version and no ids of its own', () => {
+  it('the seed file carries a schema version and no ids of its own', () => {
     // Ids are assigned on load; the file itself stays a plain list of music.
     expect(library.every((p) => p.id)).toBe(true);
   });
 
-  it('AC-16.2.3 — adding a Pattern is a data edit: the loader needs only the documented fields', () => {
+  it('AC-16.2.2 — Adding a Pattern requires no code change: the loader needs only the documented fields', () => {
     const handWritten = {
       name: 'Hand Added',
       soundMode: 'percussive',

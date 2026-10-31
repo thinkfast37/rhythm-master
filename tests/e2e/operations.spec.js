@@ -215,7 +215,7 @@ test('AC-11.2.1 — Family match criteria: a melodic variant surfaces as a Famil
   expect(result.duplicates).not.toContain('Rhythm');
 });
 
-test('AC-11.3.1 — a Pattern the library has since duplicated prompts once, then never again', async ({ page }) => {
+test('AC-11.3.5 — Resolved-pair tracking is Local Metadata: a resolved pair is no longer reported, and the resolution never joins the Pattern', async ({ page }) => {
   await page.goto('/');
   // Make an owned Pattern note-for-note identical to a shipped one.
   await page.evaluate(() => {

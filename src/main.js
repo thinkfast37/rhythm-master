@@ -2851,14 +2851,15 @@ export function currentDuplicates() {
  * (US-11.3).
  */
 async function promptLibraryDuplicates() {
-  for (const { owned, shipped } of unresolvedLibraryDuplicates()) {
+  for (const { owned } of unresolvedLibraryDuplicates()) {
+    // AC-11.3.2's wording, data-loss callout included: Rating and Tags live on the copy.
     const choice = await ask({
       message:
-        `"${owned.name}" is now identical to the built-in pattern "${shipped.name}". ` +
-        'Remove your copy, or keep it?',
+        `Your custom pattern '${owned.name}' is now in the library — remove your copy? ` +
+        "(Your Rating and Tags on it won't carry over.)",
       options: [
-        { label: 'Remove mine', value: 'remove' },
-        { label: 'Keep both', value: 'keep', primary: true },
+        { label: 'Remove', value: 'remove' },
+        { label: 'Keep', value: 'keep', primary: true },
       ],
     });
     if (choice === 'remove') {
