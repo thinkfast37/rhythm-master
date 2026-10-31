@@ -830,7 +830,7 @@ test('AC-2.3.2 — changing Key transposes playback but leaves stored degrees al
   expect(degree).toBe('1');
 });
 
-test('AC-2.4.3 — Percussive playback starts immediately, with nothing to load', async ({ page }) => {
+test('AC-2.4.3 — Neither Sound Mode waits on anything to load: Percussive playback starts immediately, with nothing to load', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.slot[data-beat="0"][data-slot="0"]').click();
@@ -840,7 +840,7 @@ test('AC-2.4.3 — Percussive playback starts immediately, with nothing to load'
   expect(await page.evaluate(() => window.__rm.getState().soundStatus.status)).toBe('ready');
 });
 
-test('AC-2.4.3 — Melodic playback starts immediately too, with no loading state', async ({ page }) => {
+test('AC-2.4.3 — Neither Sound Mode waits on anything to load: Melodic playback starts immediately too, with no loading state', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.sound-mode [data-mode="melodic"]').click();
@@ -962,7 +962,7 @@ test('AC-2.4.4 — concurrent Melodic notes share one reverb and one compressor'
   expect(counts.compressors).toBe(1);
 });
 
-test('AC-2.4.5 — a Percussive note is one sine bending down, dry', async ({ page }) => {
+test('AC-2.4.5 — Percussive playback stays dry and single-oscillator: a Percussive note is one sine bending down, dry', async ({ page }) => {
   await page.goto('/');
   const shape = await page.evaluate(() => {
     const { playPercussive } = window.__rmAudio;

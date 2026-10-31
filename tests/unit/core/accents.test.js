@@ -71,7 +71,7 @@ describe('core/accents', () => {
     ]);
   });
 
-  it('AC-3.1.16 — only Slot 1 varies between Beats; the rest never do', () => {
+  it('AC-3.1.16 — The within-Beat shape is identical in every Beat: only Slot 1 varies between Beats; the rest never do', () => {
     for (const ts of ['2/4', '3/4', '4/4', '5/4', '6/4', '7/4']) {
       const m = measureWith(ts, 'straight-16ths');
       const tails = m.beats.map((_, b) => levels(m, b).slice(1));
@@ -139,14 +139,14 @@ describe('core/accents', () => {
     expect(seq).toEqual([WEAK, MEDIUM, OFF, STRONG]);
   });
 
-  it('AC-3.1.12 — override cycle from a Medium default', () => {
+  it('AC-3.1.12 — Override cycle, Medium default: the cycle from a Medium default, at the source', () => {
     const seq = [];
     let level = MEDIUM;
     for (let i = 0; i < 4; i++) seq.push((level = nextAccentInCycle(level, MEDIUM)));
     expect(seq).toEqual([STRONG, WEAK, OFF, MEDIUM]);
   });
 
-  it('AC-3.1.13 — override cycle from a Weak default', () => {
+  it('AC-3.1.13 — Override cycle, Weak default: the cycle from a Weak default, at the source', () => {
     const seq = [];
     let level = WEAK;
     for (let i = 0; i < 4; i++) seq.push((level = nextAccentInCycle(level, WEAK)));
