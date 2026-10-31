@@ -83,7 +83,7 @@ describe('storage/localMeta — FR-006 separation', () => {
 });
 
 describe('storage/settings', () => {
-  it('AC-5.6.1 — settings fall back to documented defaults', () => {
+  it('AC-5.6.6 — Default counting system on first load: settings fall back to documented defaults', () => {
     expect(settings.load()).toMatchObject({
       countingSystem: 'takadimi',
       metronomeEnabled: false,

@@ -184,7 +184,7 @@ describe('core/pattern — accents', () => {
     expect(effectiveAccent(p.measures[0], 2, 0)).toBe(MEDIUM);
   });
 
-  it('AC-3.1.12 — tapping on from a Medium default walks Medium → Strong → Weak → off', () => {
+  it('AC-3.1.12 — Override cycle, Medium default: tapping on from a Medium default walks Medium → Strong → Weak → off', () => {
     let p = cycleAccent(create(), 0, 2, 0);
     const read = () => effectiveAccent(p.measures[0], 2, 0);
     expect(read()).toBe(MEDIUM);

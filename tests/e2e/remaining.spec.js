@@ -154,7 +154,7 @@ test('AC-2.4.4 — a second Melodic play needs no reload, because nothing loads'
   expect(await page.evaluate(() => window.__rm.melodic.getStatus().status)).toBe('ready');
 });
 
-test('AC-2.4.5 — Percussive playback never builds the melodic reverb it does not use', async ({
+test('AC-2.4.5 — Percussive playback stays dry and single-oscillator: Percussive playback never builds the melodic reverb it does not use', async ({
   page,
 }) => {
   await page.goto('/');

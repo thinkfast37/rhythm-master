@@ -46,7 +46,7 @@ describe('core/timeline', () => {
     expect(loopDurationSeconds(p)).toBeCloseTo(3.5, 10);
   });
 
-  it('AC-4.1.1 — Slot onsets are evenly spaced within a Beat', () => {
+  it('Slot onsets are evenly spaced within a Beat', () => {
     let p = { ...create(), tempo: 120 }; // quarter = 0.5s, 16th = 0.125s
     p = fillBeat(p, 0, 0);
     const times = buildTimeline(p).map((e) => e.timeSeconds);
@@ -91,14 +91,14 @@ describe('core/timeline', () => {
     expect(buildTimeline(p).map((e) => e.accent)).toEqual([STRONG, WEAK, MEDIUM, WEAK]);
   });
 
-  it('AC-4.1.1 — an off Slot produces no event at all', () => {
+  it('an off Slot produces no event at all', () => {
     let p = create();
     expect(buildTimeline(p)).toHaveLength(0);
     p = cycleAccent(p, 0, 0, 0);
     expect(buildTimeline(p)).toHaveLength(1);
   });
 
-  it('AC-4.4.4 — swing shifts the straight group and leaves the triplet group alone', () => {
+  it('AC-4.4.4 — Swing only affects the straight portion of a mixed Beat: swing shifts the straight group and leaves the triplet group alone', () => {
     let p = { ...create(), tempo: 120 };
     p = setRecipe(p, 0, 0, 'straight-triplet-split');
     p = fillBeat(p, 0, 0);
@@ -306,7 +306,7 @@ describe('core/timeline', () => {
     expect(buildTimeline(p)[0].pitch.midiNote).toBe(62);
   });
 
-  it('AC-4.1.1 — events come back in time order even when swing reorders them', () => {
+  it('events come back in time order even when swing reorders them', () => {
     let p = { ...create(), tempo: 120 };
     p = fillBeat(p, 0, 0);
     p = setGroupSwing(p, 0, 0, 0, 100);
@@ -314,7 +314,7 @@ describe('core/timeline', () => {
     expect([...times].sort((a, b) => a - b)).toEqual(times);
   });
 
-  it('AC-4.1.1 — tempo scales every onset proportionally', () => {
+  it('tempo scales every onset proportionally', () => {
     let slow = { ...create(), tempo: 60 };
     slow = fillBeat(slow, 0, 0);
     const fast = { ...slow, tempo: 120 };

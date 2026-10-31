@@ -1702,15 +1702,21 @@ function renderCounting(pattern, state, handlers) {
 
   const select = el('select', 'counting-picker');
   select.dataset.action = 'set-counting';
+  // A mixed-feel Pattern supports Numbered only, so the other two are shown as
+  // unavailable for it (AC-5.6.2, AC-5.6.5) — disabled, not hidden, and the
+  // stored preference is left exactly as it was (AC-5.6.3).
+  const forced = isForcedNumbered(pattern);
   for (const s of COUNTING_SYSTEMS) {
-    select.appendChild(el('option', null, { value: s, textContent: COUNTING_LABELS[s] }));
+    const option = el('option', null, { value: s, textContent: COUNTING_LABELS[s] });
+    if (forced && s !== 'numbered') option.disabled = true;
+    select.appendChild(option);
   }
   select.value = state.settings.countingSystem;
   select.addEventListener('change', (e) => handlers.onCountingSystem(e.target.value));
   group.appendChild(labelled('Counting', select));
 
   // Explain the override rather than silently ignoring the setting (AC-5.6.2).
-  if (isForcedNumbered(pattern)) {
+  if (forced) {
     const note = el('p', 'counting-note', {
       textContent: 'This Pattern mixes straight and triplet feel within a Beat, so it counts by pulse.',
     });

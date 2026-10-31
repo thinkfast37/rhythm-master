@@ -73,14 +73,14 @@ async function loadSimple(page, tempo = 240) {
   }, tempo);
 }
 
-test('AC-4.1.1 — no audio exists before a transport gesture', async ({ page }) => {
+test('no audio exists before a transport gesture', async ({ page }) => {
   await page.goto('/');
   // FR-010: nothing may create or start an AudioContext on load.
   const created = await page.evaluate(() => Boolean(window.__rm.transport.isRunning));
   expect(created).toBe(false);
 });
 
-test('AC-4.1.2 — pressing Play starts the transport and moves the cursor', async ({ page }) => {
+test('pressing Play starts the transport and moves the cursor', async ({ page }) => {
   await page.goto('/');
   await loadSimple(page);
 
@@ -89,7 +89,7 @@ test('AC-4.1.2 — pressing Play starts the transport and moves the cursor', asy
   expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
 });
 
-test('AC-4.1.2 — the cursor advances through the Beats in order', async ({ page }) => {
+test('the cursor advances through the Beats in order', async ({ page }) => {
   await page.goto('/');
   await loadSimple(page, 300);
 
@@ -1165,7 +1165,7 @@ test('toggling the metronome during playback does not desync the Play/Stop butto
   await expect(page.locator('[data-action="stop"]')).toBeVisible();
 });
 
-test('AC-4.1.2 — Stop clears the cursor and halts the transport', async ({ page }) => {
+test('Stop clears the cursor and halts the transport', async ({ page }) => {
   await page.goto('/');
   await loadSimple(page);
 
@@ -1177,7 +1177,7 @@ test('AC-4.1.2 — Stop clears the cursor and halts the transport', async ({ pag
   expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(false);
 });
 
-test('AC-4.1.1 — event times are computed from an absolute origin, never accumulated', async ({
+test('AC-4.1.1 — Playback stays sample-accurate over long loops: event times are computed from an absolute origin, never accumulated', async ({
   page,
 }) => {
   await page.goto('/');

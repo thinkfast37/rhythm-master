@@ -274,7 +274,7 @@ test('FR-012 — accent carries a size channel as well as a colour', async ({ pa
   expect(clearance).toBeGreaterThan(0);
 });
 
-test('AC-5.6.4 — the grid labels Slots in the selected counting system', async ({ page }) => {
+test('AC-5.6.4 — A Pattern without mixed-feel Recipes supports all three systems: the grid labels Slots in the selected counting system', async ({ page }) => {
   await page.goto('/');
   // Read the generated syllable, which every Slot carries whether or not it
   // sounds. A silent Slot displays a dot in its place (AC-3.1.17/1), and what
