@@ -825,7 +825,10 @@ built first; the native adapter is a later change and gets its own entry when it
   it asks the musician to install software for a feature Chrome and Firefox already have.
 - *Taking MIDI in Practice too, to stamp degrees* — not asked for; Practice ignores MIDI (AC-19.10.1/5).
 
-## D-020 — Variations: the Pattern grows, each device one pure rule
+## D-020 — Variations: the Pattern grows, each device one pure rule *(withdrawn 2026-10-31)*
+
+**Withdrawn 2026-10-31 (T446).** US-10.3 was taken out whole at the maintainer's request after they played with it, to be redesigned. The decision below is kept as the record of what was tried and what was learnt, and constrains nothing: the redesign gets its own entry. Two lessons worth carrying into it, both the maintainer's own findings in use: a variation must be **heard before it is written** (the same-day amendment below), and a device that hides a choice among many options — which fill, which degree, how many steps — needs that choice **offered, not guessed**. `core/variations.js`, `ui/variations.js` and `phraseLength` in `rm.localMeta.v1` are gone; a stored `phraseLength` is left unread rather than migrated away, since it is not Pattern content and no export carries it.
+
 
 **Decision (2026-10-25)**: a variation is appended to the Pattern as Measures — a copy of a base
 phrase with one named device applied — through the same `append` that Double Length uses (US-10.1).
@@ -916,10 +919,12 @@ the life of the picker and nowhere else.
 fills, progressions })`, that returns the Pattern with every Melody setting not marked No dice
 re-picked — Key, Scale, Register, Progression, Chord changes, Fill and Voicing, in that order — and a
 record of what each landed on. It takes its random numbers from the caller as a `random()` function,
-as `pickAtLevel` takes one for Give me one (US-14.1) and `pick` for the variation picker (D-020);
+as `pickAtLevel` takes one for Give me one (US-14.1) and `pick` for the variation picker (D-020) took one;
 `Math.random` is called once, in `src/main.js`. Each setting lands on a value other than the one in
 force whenever another is offered. The No dice marks are session state in `main.js`, one set for
 every Pattern, never stored (US-2.14).
+
+*(Note 2026-10-31: D-020 is withdrawn (T446). The `pick` helper this roll borrowed from `core/variations.js` moved into `core/dice.js` unchanged; the roll's behaviour is untouched.)*
 
 **Why.** The maintainer asked, while reviewing US-10.3's Roll the dice, for the same across the
 melodic interface: "for each control that could be randomized could have a roll the dice or locked

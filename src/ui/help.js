@@ -51,7 +51,6 @@ export const HELP = Object.freeze({
     ['Subdivision', 'Arm a Recipe, then tap a Beat in the grid to split it that way.', '.recipe-strip .control-label'],
     ['− Measure / + Measure', 'Removes the last Measure, or adds one at the end; a Pattern always keeps one.', '[data-action="add-measure"]'],
     ['Time signature', 'Tap a Measure’s signature in the grid to change it; every Measure can differ.', '.control:has(> .structure-row) > .control-label'],
-    ['Add variation…', 'Appends a copy of the phrase with one compositional device applied — a fill at the end, a note anticipated, the ending resolved, an octave up. Roll the dice picks one; No dice keeps a group out of the roll.', '[data-action="add-variation"]'],
     ['Double Length', 'Repeats the whole Pattern after itself, to vary the second half.', '[data-action="duplicate-pattern"]'],
     ['Condense', 'Rewrites the Pattern at the simplest subdivision that still sounds the same. Mixed meters are regrouped into the time signature you pick, keeping their accents.', '[data-action="condense-pattern"]'],
     ['Append…', 'Adds another Pattern from the library after this one.', '[data-action="append-pattern"]'],

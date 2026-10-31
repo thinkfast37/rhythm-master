@@ -3,8 +3,7 @@
  * melodic setting not marked No dice re-picked at random, as one edit.
  *
  * Pure. The random numbers come from the caller as `random()`, as `pickAtLevel`
- * takes one for Give me one (US-14.1) and `pick` for the variation picker
- * (AC-10.3.4/7) — `core/` rolls no dice of its own. Each setting lands on a
+ * takes one for Give me one (US-14.1) — `core/` rolls no dice of its own. Each setting lands on a
  * value other than the one in force whenever another is offered, through the
  * same core setters its picker uses, so a rolled value is indistinguishable
  * from a chosen one.
@@ -25,7 +24,13 @@ import {
   CHANGES,
   DEFAULT_ARPEGGIO,
 } from './harmony.js';
-import { pick } from './variations.js';
+
+/** One of `list` for a random number in [0, 1) the caller supplies, or null for an empty list. */
+function pick(list, random) {
+  if (!list.length) return null;
+  const i = Math.min(list.length - 1, Math.max(0, Math.floor(random * list.length)));
+  return list[i];
+}
 
 /** The controls a roll can change, in the order they are rolled (AC-2.14.2). */
 export const DICE_CONTROLS = [

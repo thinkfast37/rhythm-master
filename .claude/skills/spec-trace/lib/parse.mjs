@@ -125,7 +125,14 @@ export function readPlan(path) {
   return items;
 }
 
-/** @returns {Map<string, {done:boolean, text:string, files:string[]}>} */
+/**
+ * `retires` lists the tasks this one withdraws: "Retires T436, T437 and T444". A
+ * feature taken out leaves the finished tasks that built it naming files that are
+ * gone, and those tasks are the record of what was built and why, so they are kept as
+ * written rather than edited to stop naming the files (T3).
+ *
+ * @returns {Map<string, {done:boolean, text:string, files:string[], retires:string[]}>}
+ */
 export function readTasks(path) {
   if (!existsSync(path)) throw new Error(`tasks not found at ${path}`);
   const tasks = new Map();
@@ -136,7 +143,9 @@ export function readTasks(path) {
       .map((f) => f[1])
       // A path with an ellipsis is prose shorthand, not a path.
       .filter((f) => f.includes('/') && !f.includes('...'));
-    tasks.set(m[2], { done: m[1] !== ' ', text: m[3], files });
+    const phrase = m[3].match(/\bRetires\s+(T\d+(?:\s*(?:,|and|,\s*and)\s*T\d+)*)/);
+    const retires = phrase ? [...phrase[1].matchAll(/T\d+/g)].map((r) => r[0]) : [];
+    tasks.set(m[2], { done: m[1] !== ' ', text: m[3], files, retires });
   }
   return tasks;
 }

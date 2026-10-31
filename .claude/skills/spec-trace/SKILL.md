@@ -38,7 +38,7 @@ npm run trace:prune              # strike off baseline entries that are no longe
 |---|---|---|
 | **T1** | Every AC traces to a numbered plan item | An AC no plan item claims was never scheduled |
 | **T2** | Every plan item carrying ACs has an implementation **and** a test task | A plan item with no test task is work whose proof was never scheduled |
-| **T3** | Every file a **completed** task names exists | A finished task naming a file nobody wrote is a false record |
+| **T3** | Every file a **completed** task names exists, unless a later completed task says `Retires T…` | A finished task naming a file nobody wrote is a false record; a feature taken out on purpose is recorded by the task that retires it, which may name the files those tasks named |
 | **T4** | An AC asserting more than one thing declares numbered **Cases** | One test standing in for twelve table rows proves one and claims twelve |
 | **T5** | Every criterion has a test whose **name is its title, verbatim** | A paraphrase can only be judged by similarity, and every threshold has a band where a wrong test gets through |
 | **T6** | A UI-level criterion has a test that can reach the DOM | A pure unit test cannot prove a criterion about a control, whatever it is named |

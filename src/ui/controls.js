@@ -8,8 +8,6 @@
 import { TIME_SIGNATURES, beatNoteValue, tempoUnitOf } from '../core/meter.js';
 import { recipesFor, isOffered } from '../core/recipes.js';
 import { canCondense } from '../core/condense.js';
-import { canAddVariation } from '../core/variations.js';
-import { surfaceFor } from '../core/goals.js';
 import { DICE_CONTROLS, canRoll } from '../core/dice.js';
 import {
   KEYS,
@@ -616,9 +614,6 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
     // Cycling and Keep sit with the picker whose catalogue they step through:
     // auditioning fills is melody work, not practice (AC-2.7.1, AC-2.8.1).
     if (hasHarmony(pattern)) fresh.appendChild(renderFillCycle(pattern, state, handlers));
-    // On a making goal with no Rhythm group — Make it melodic, Combine patterns —
-    // the Measure controls that grow a loop stand here (AC-15.1.8, AC-10.3.4/1).
-    if (!surfaceFor(state.settings.goal).tabs.includes('rhythm')) fresh.appendChild(renderMelodyMeasures(pattern, handlers));
     // Lab's Help, part of the group it describes (AC-14.1.3/3).
     placeHelp(fresh, 'melody', state);
   });
@@ -1466,29 +1461,10 @@ function renderStructure(pattern, handlers) {
 
   button('remove-measure', '− Measure', () => handlers.onRemoveMeasure(), measures <= 1);
   button('add-measure', '+ Measure', () => handlers.onAddMeasure(), measures >= MAX_MEASURES);
-  const vary = button('add-variation', 'Add variation…', () => handlers.onAddVariation(), !canAddVariation(pattern, 1));
-  vary.title = canAddVariation(pattern, 1) ? 'Append a copy of the phrase with one device applied' : `A Pattern may hold at most ${MAX_MEASURES} Measures`;
   button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), measures * 2 > MAX_MEASURES);
   button('condense-pattern', 'Condense', () => handlers.onCondense(), !canCondense(pattern));
   button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), measures >= MAX_MEASURES);
 
-  return labelledGroup('Measures', row);
-}
-
-/** Double Length and Add variation at the foot of the Melody group, where there is no Rhythm group to hold them (US-10.3). */
-function renderMelodyMeasures(pattern, handlers) {
-  const row = el('div', 'control-group structure-row melody-measures');
-  const measures = pattern.measures.length;
-  const button = (action, label, onClick, disabled) => {
-    const b = el('button', 'action', { type: 'button', textContent: label, disabled });
-    b.dataset.action = action;
-    b.addEventListener('click', onClick);
-    row.appendChild(b);
-    return b;
-  };
-  const vary = button('add-variation', 'Add variation…', () => handlers.onAddVariation(), !canAddVariation(pattern, 1));
-  vary.title = canAddVariation(pattern, 1) ? 'Append a copy of the phrase with one device applied' : `A Pattern may hold at most ${MAX_MEASURES} Measures`;
-  button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), measures * 2 > MAX_MEASURES);
   return labelledGroup('Measures', row);
 }
 

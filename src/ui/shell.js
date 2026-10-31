@@ -619,13 +619,7 @@ export function mountShell(root, ctx) {
     // and the surface and the Composer's panel can stand in for each other.
     shell.dataset.mode = s.composer.mode;
     if (!state.composer.widthPx && composerEl.clientWidth) state.composer.widthPx = composerEl.clientWidth;
-    // While a variation is auditioned the Composer's grid shows the candidate
-    // in the draft's place; the picker is modal, so nothing can edit it (AC-10.3.1/7).
-    renderComposer(
-      composerEl,
-      s.variationCandidate && s.composer.mode === 'composer' ? { ...s, composer: { ...s.composer, draft: s.variationCandidate, selected: null, target: null } } : s,
-      handlers
-    );
+    renderComposer(composerEl, s, handlers);
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags, readOnly: surface.readOnly }, handlers);
     renderChordStrip(chordStripEl, pattern, position);
