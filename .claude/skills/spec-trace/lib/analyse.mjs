@@ -238,9 +238,31 @@ export function analyse({ acs, plan, tasks, suite, config }) {
 
   // T3 — a COMPLETED task's named files exist. An open task naming a missing file is
   // ordinary: the file is the work, or the task is about the file's absence.
+  //
+  // A completed task that a later COMPLETED task retires ("Retires T436") is exempt:
+  // the feature it built was taken out on purpose, and the retiring task is the record
+  // of that. An open retiring task retires nothing yet, and naming a task the log does
+  // not hold is itself a finding, so the exemption cannot be claimed by a typo.
+  const retired = new Set();
   for (const [tid, task] of tasks) {
-    if (!task.done) continue;
+    for (const r of task.retires ?? []) {
+      if (!tasks.has(r)) {
+        findings.T3.push({ id: tid, why: `retires ${r}, which the task log does not hold` });
+      } else if (task.done) {
+        retired.add(r);
+      }
+    }
+  }
+  // The retiring task names what it took out, so a missing file it names is exempt when
+  // a task it retires named that same file — and only then, so it cannot excuse
+  // anything else.
+  const takenOut = (task) =>
+    new Set(task.done ? (task.retires ?? []).flatMap((r) => tasks.get(r)?.files ?? []) : []);
+  for (const [tid, task] of tasks) {
+    if (!task.done || retired.has(tid)) continue;
+    const gone = takenOut(task);
     for (const f of task.files) {
+      if (gone.has(f)) continue;
       if (!existsSync(join(config.root, f))) {
         findings.T3.push({ id: tid, why: `names \`${f}\`, which does not exist` });
       }

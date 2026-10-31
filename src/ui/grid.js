@@ -46,18 +46,6 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
   const system = effectiveSystem(pattern, options.countingSystem ?? 'takadimi');
   const readOnly = options.readOnly === true;
 
-  // A rebuild must not take the keyboard away: a Slot focused while the loop
-  // plays, or just given focus after an edit (AC-10.1.2, AC-10.3.1/3), keeps it
-  // across the full render a pass boundary does.
-  const active = typeof document !== 'undefined' ? document.activeElement : null;
-  const focusedSlot = active && root.contains(active) ? active.closest('.slot') : null;
-  const keep = focusedSlot
-    ? {
-        selector: `.slot[data-measure="${focusedSlot.dataset.measure}"][data-beat="${focusedSlot.dataset.beat}"][data-slot="${focusedSlot.dataset.slot}"]`,
-        part: active.classList.contains('slot-accent') ? '.slot-accent' : active.classList.contains('slot-note') ? '.slot-note' : null,
-      }
-    : null;
-
   root.innerHTML = '';
   // `recipe-armed` says a tap in the grid will apply the armed Recipe to a Beat
   // rather than cycle a Slot's accent (AC-1.3.11) — the only mode the app has, so
@@ -78,12 +66,6 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
       renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly, pattern.key, pass, deal)
     );
   });
-
-  if (keep) {
-    const slot = root.querySelector(keep.selector);
-    const target = keep.part ? slot?.querySelector(keep.part) : slot;
-    if (target && typeof target.focus === 'function') target.focus({ preventScroll: true });
-  }
 
   return root;
 }

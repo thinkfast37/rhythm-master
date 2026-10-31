@@ -102,7 +102,7 @@ Seven checks, each failing on its own:
 |---|---|
 | **T1** | Every AC traces to a numbered plan item in `plan.md`. |
 | **T2** | Every plan item carrying ACs has an implementation task **and** a test task. |
-| **T3** | Every file path a *completed* task names exists. (Open tasks may name files that are the work.) |
+| **T3** | Every file path a *completed* task names exists. (Open tasks may name files that are the work. A finished task a later finished task `Retires` is exempt, and the retiring task may name the files it took out.) |
 | **T4** | An AC asserting more than one thing declares numbered **Cases**. |
 | **T5** | Every criterion has a test whose **name is its title, verbatim**. |
 | **T6** | A UI-level criterion has a test that can reach the DOM (`tests/e2e/` or `tests/unit/ui/`). |

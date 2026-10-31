@@ -139,6 +139,46 @@ describe('T3 — a completed task names files that exist', () => {
     const { findings } = checkAll();
     expect(findings.T3).toEqual([]);
   });
+
+  it('does NOT fire for a completed task that a later completed task retires', () => {
+    rmSync(join(root, 'src/widget.js'));
+    edit('specs/tasks.md', (s) => `${s}- [X] T004 Take widgets out. Retires T002\n`);
+    const { findings } = checkAll();
+    expect(findings.T3).toEqual([]);
+  });
+
+  it('reads every task a retirement lists, separated by commas and "and"', () => {
+    rmSync(join(root, 'src/widget.js'));
+    rmSync(join(root, 'src/setup.js'));
+    edit('specs/tasks.md', (s) => `${s}- [X] T004 Take them out. Retires T001, T002 and T003\n`);
+    const { findings } = checkAll();
+    expect(findings.T3).toEqual([]);
+  });
+
+  it('still fires when the retiring task is OPEN, since nothing is retired until it is done', () => {
+    rmSync(join(root, 'src/widget.js'));
+    edit('specs/tasks.md', (s) => `${s}- [ ] T004 Take widgets out. Retires T002\n`);
+    const { findings } = checkAll();
+    expect(findings.T3.map((f) => f.id)).toEqual(['T002']);
+  });
+
+  it('lets the retiring task name the files it took out, and nothing else that is missing', () => {
+    rmSync(join(root, 'src/widget.js'));
+    rmSync(join(root, 'src/setup.js'));
+    edit('specs/tasks.md', (s) => `${s}- [X] T004 Deleted \`src/widget.js\` and \`src/setup.js\`. Retires T002\n`);
+    const { findings } = checkAll();
+    // widget.js was T002's, so T004 may name it; setup.js was T001's, which T004 does not retire.
+    expect(findings.T3).toEqual([
+      { id: 'T001', why: 'names `src/setup.js`, which does not exist' },
+      { id: 'T004', why: 'names `src/setup.js`, which does not exist' },
+    ]);
+  });
+
+  it('fires on the retiring task when it names a task the log does not hold', () => {
+    edit('specs/tasks.md', (s) => `${s}- [X] T004 Take something out. Retires T099\n`);
+    const { findings } = checkAll();
+    expect(findings.T3).toEqual([{ id: 'T004', why: 'retires T099, which the task log does not hold' }]);
+  });
 });
 
 describe('T4 — a compound AC declares its Cases', () => {
