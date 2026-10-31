@@ -291,7 +291,7 @@ test('AC-11.3.3 — resolving a library duplicate by removing deletes only the c
   expect(await page.evaluate(() => window.__rm.seedStore.loadAll().length)).toBe(SEED_PATTERN_COUNT);
 });
 
-test('AC-11.3.4 — an unresolved library duplicate is reported until answered', async ({ page }) => {
+test('an unresolved library duplicate is reported until answered', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
     const shipped = window.__rm.seedStore.loadAll()[0];
@@ -305,7 +305,7 @@ test('AC-11.3.4 — an unresolved library duplicate is reported until answered',
   expect(await page.evaluate(() => window.__rm.unresolvedLibraryDuplicates().length)).toBe(0);
 });
 
-test('AC-11.3.5 — a Pattern that merely resembles a shipped one is never reported', async ({ page }) => {
+test('AC-11.3.1 — Trigger: app load after a library update: a Pattern that merely resembles a shipped one is never reported', async ({ page }) => {
   await page.goto('/');
   await makeOwned(page, 'Not A Duplicate');
   // An edited Pattern is not note-for-note identical to anything shipped.

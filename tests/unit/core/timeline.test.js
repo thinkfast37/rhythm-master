@@ -323,7 +323,7 @@ describe('core/timeline', () => {
     slowTimes.forEach((t, i) => expect(fastTimes[i]).toBeCloseTo(t / 2, 10));
   });
 
-  it('AC-16.1.1 — a Beat whose Slots and Recipe have drifted apart is caught, not played', () => {
+  it('a Beat whose Slots and Recipe have drifted apart is caught, not played', () => {
     let p = create();
     p = fillBeat(p, 0, 0);
     p.measures[0].beats[0].slots.pop();

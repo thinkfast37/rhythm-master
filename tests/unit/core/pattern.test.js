@@ -287,7 +287,7 @@ describe('core/pattern — validation', () => {
     expect(validate(create())).toEqual({ valid: true, errors: [] });
   });
 
-  it('AC-16.2.2 — a Beat count that disagrees with the meter is rejected', () => {
+  it('a Beat count that disagrees with the meter is rejected', () => {
     const p = create();
     p.measures[0].beats.pop();
     const { valid, errors } = validate(p);
@@ -295,7 +295,7 @@ describe('core/pattern — validation', () => {
     expect(errors.join(' ')).toMatch(/3 Beats in 4\/4, expected 4/);
   });
 
-  it('AC-16.2.3 — out-of-range tempo, rating, and stored automatic Tags are rejected', () => {
+  it('out-of-range tempo, rating, and stored automatic Tags are rejected', () => {
     // 301: one past the AC-4.2.1 ceiling (18–300 since its 2026-08-22 revision).
     expect(validate({ ...create(), tempo: 301 }).errors.join(' ')).toMatch(/tempo 301/);
     expect(validate({ ...create(), rating: 9 }).errors.join(' ')).toMatch(/rating 9/);

@@ -22,13 +22,16 @@
  * specs/001-rhythm-master-mvp/contracts/file-formats.md. Shipped Patterns carry no
  * `id` and no provenance field by design — both are assigned on load.
  */
-const fs = require('fs'), vm = require('vm');
+import fs from 'node:fs';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = process.env.LEGACY_APP_PATH || '../takadimi_app';
-const ctx = { console };
-vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(ROOT + '/js/patterns.js', 'utf8') + ';globalThis.__P=PATTERNS;', ctx);
-const LEGACY = ctx.__P;
+/*
+ * The package is an ES module (package.json "type": "module"), so this was rewritten
+ * from CommonJS: under `require` it could not run at all. `convert` is exported so
+ * the conversion rules (AC-16.1.3–AC-16.1.9) are tested directly; reading the legacy
+ * source and writing the seed file happen only when the script is run.
+ */
 
 // Melodic scheme table, lifted from the legacy audio engine.
 const MELODIC_SCHEMES = {
@@ -45,16 +48,16 @@ const SLOTS  = { S: 4, T: 3 };
 const numOf = t => parseInt(t.split('/')[0], 10);
 const SUPPORTED_TS = ['1/4','2/4','3/4','4/4','5/4','6/4','7/4','6/8','7/8','9/8','12/8'];
 
-const warnings = [];
-const shortMeters = [];
-const trimmed = [];
+let warnings = [];
+let shortMeters = [];
+let trimmed = [];
 
 /* Legacy degree token -> { degree, octaveOffset }.
    Trailing commas meant "drop an octave"; a leading b meant flat. */
 function parseDegree(tok) {
   const s = String(tok);
   const commas = (s.match(/,+$/) || [''])[0].length;
-  return { degree: s.replace(/,+$/, ''), octaveOffset: -commas };
+  return { degree: s.replace(/,+$/, ''), octaveOffset: commas ? -commas : 0 };
 }
 
 /* Legacy custom schemes exist in two historical shapes: a flat array of tokens,
@@ -72,7 +75,7 @@ function normalizeCustom(data, patternName) {
   });
 }
 
-function convert(p) {
+export function convert(p) {
   const isMelodic = !!(p.soundScheme && p.soundScheme !== 'percussive');
 
   // Resolve the pitch sequence the legacy engine would have produced.
@@ -150,6 +153,18 @@ function convert(p) {
   return out;
 }
 
+/** Load the predecessor's PATTERNS array from its source tree. */
+function loadLegacy(root) {
+  const ctx = { console };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(root + '/js/patterns.js', 'utf8') + ';globalThis.__P=PATTERNS;', ctx);
+  return ctx.__P;
+}
+
+function main() {
+const ROOT = process.env.LEGACY_APP_PATH || '../takadimi_app';
+const LEGACY = loadLegacy(ROOT);
+warnings = []; shortMeters = []; trimmed = [];
 const converted = LEGACY.map(convert);
 
 // --- validation -------------------------------------------------------------
@@ -168,7 +183,7 @@ converted.forEach(p => {
   });
 });
 
-fs.writeFileSync(__dirname + '/../data/seed-patterns.json',
+fs.writeFileSync(new URL('../data/seed-patterns.json', import.meta.url),
   JSON.stringify({ schemaVersion: 1, patterns: converted }, null, 2));
 
 const noteOns = converted.reduce((a,p) => a + p.measures.reduce((b,m) =>
@@ -187,3 +202,6 @@ console.log(`\nwarnings (${warnings.length}):`);
 warnings.forEach(w => console.log('  -', w));
 console.log(`\nblocking errors (${errors.length}):`);
 errors.forEach(e => console.log('  !', e));
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
