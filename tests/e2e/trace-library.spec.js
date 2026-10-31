@@ -420,3 +420,78 @@ test("AC-5.2.3 — Search results keep the library's default sort order", async 
   expect(shown).toEqual(sorted);
 });
 
+// --- US-5.5 / US-5.2 / US-5.3 — wrapping, Tag search, Tag limits -------------------
+
+/** The filtered list as the library renders it: the "warmup" Patterns. */
+async function warmupList(page) {
+  await page.locator('.tag-filter', { hasText: /^warmup$/ }).click();
+  return page.locator('.pattern-item').evaluateAll((rows) => rows.map((r) => r.dataset.patternId));
+}
+const loadedId = (page) => page.evaluate(() => window.__rm.getState().pattern.id);
+
+test('AC-5.5.2/1 — Next on the last Pattern of the list loads the first', async ({ page }) => {
+  await seedOwned(page, LIBRARY);
+  const rows = await warmupList(page);
+  await page.locator(`.pattern-item[data-pattern-id="${rows[rows.length - 1]}"] [data-action="open-pattern"]`).click();
+  await expect(page.locator('[data-action="next-pattern"]')).toBeEnabled();
+  await page.locator('[data-action="next-pattern"]').click();
+  expect(await loadedId(page)).toBe(rows[0]);
+});
+
+test('AC-5.5.2/2 — Prev on the first Pattern of the list loads the last', async ({ page }) => {
+  await seedOwned(page, LIBRARY);
+  const rows = await warmupList(page);
+  await page.locator(`.pattern-item[data-pattern-id="${rows[0]}"] [data-action="open-pattern"]`).click();
+  await expect(page.locator('[data-action="prev-pattern"]')).toBeEnabled();
+  await page.locator('[data-action="prev-pattern"]').click();
+  expect(await loadedId(page)).toBe(rows[rows.length - 1]);
+});
+
+test('AC-5.2.1 — Search matches name and Tags', async ({ page }) => {
+  await seedOwned(page, [
+    ['Bossa Nova Groove', 0, []],
+    ['Samba Break', 0, ['bossa-feel']],
+    ['Plain Groove', 0, []],
+  ]);
+  await page.locator('.library-search').fill('BOSSA');
+  // Both of these match — one by name, one by its Tag — and the third does not.
+  expect(await ownedOrder(page)).toEqual(['Bossa Nova Groove 0', 'Samba Break 0']);
+  // Every row shown, shipped ones included, matches by name or Tag.
+  const unmatched = await page.locator('.pattern-item').evaluateAll((rows) =>
+    rows
+      .map((r) => {
+        const id = r.dataset.patternId;
+        const p = window.__rm.patternStore.findById(id) ?? window.__rm.seedStore.findById(id);
+        const added = window.__rm.overlayStore.addedTagsFor?.(id) ?? [];
+        const text = [p.name, ...(p.tags ?? []), ...added].join(' ').toLowerCase();
+        return text.includes('bossa') ? null : p.name;
+      })
+      .filter(Boolean)
+  );
+  expect(unmatched).toEqual([]);
+});
+
+test('AC-5.3.11/1 — A 21st Tag of the user’s own is refused, saying why, and the Pattern keeps its 20', async ({ page }) => {
+  const twenty = Array.from({ length: 20 }, (_, i) => `tag ${i + 1}`);
+  await seedOwned(page, [['Full Up', 0, twenty]]);
+  await page.locator('.pattern-item[data-pattern-id="p_order_0"] [data-action="open-pattern"]').click();
+  await header(page).locator('[data-action="add-tag"]').click();
+  // No prompt for a Tag that would be refused: the reason, at once.
+  await expect(page.locator('.dialog-message')).toHaveText('A Pattern can carry at most 20 Tags of your own.');
+  await expect(page.locator('.dialog-input')).toHaveCount(0);
+  await page.locator('.dialog-button', { hasText: 'OK' }).click();
+  expect(await page.evaluate(() => window.__rm.patternStore.findById('p_order_0').tags.length)).toBe(20);
+});
+
+test('AC-5.3.11/2 — A Tag over 30 characters is refused, saying why, while one of exactly 30 is added', async ({ page }) => {
+  await seedOwned(page, [['Long Tags', 0, []]]);
+  await page.locator('.pattern-item[data-pattern-id="p_order_0"] [data-action="open-pattern"]').click();
+  await addTagFromHeader(page, 'x'.repeat(31));
+  await expect(page.locator('.dialog-message')).toHaveText('A Tag can be at most 30 characters.');
+  await page.locator('.dialog-button', { hasText: 'OK' }).click();
+  expect(await page.evaluate(() => window.__rm.patternStore.findById('p_order_0').tags)).toEqual([]);
+
+  await addTagFromHeader(page, 'y'.repeat(30));
+  expect(await page.evaluate(() => window.__rm.patternStore.findById('p_order_0').tags)).toEqual(['y'.repeat(30)]);
+});
+

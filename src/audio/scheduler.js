@@ -222,6 +222,35 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       const { position } = pendingVisuals.shift();
       onPosition?.(position);
     }
+    armVisualTimer();
+  }
+
+  /*
+   * A timer set for the next highlight's own audio time, so it is drawn when its
+   * note sounds rather than at the next animation frame, up to a frame later
+   * (AC-4.1.2). A FLUSH ONLY, like the frame loop: it reads the same queue against
+   * `ctx.currentTime`, so a timer firing early flushes nothing and re-arms, and a
+   * throttled one changes nothing about what is heard.
+   */
+  let visualTimer = null;
+  function armVisualTimer() {
+    if (visualTimer !== null) {
+      clearTimeout(visualTimer);
+      visualTimer = null;
+    }
+    if (!running || pendingVisuals.length === 0) return;
+    // Whole milliseconds, rounded up: a timer that fires a fraction early finds
+    // nothing due and has to re-arm, and browsers stretch a chain of re-armed
+    // timers to 4ms each, so it is aimed at or just after the note instead.
+    const delay = Math.max(1, Math.ceil((pendingVisuals[0].when - ctx.currentTime) * 1000));
+    visualTimer = setTimeout(() => {
+      visualTimer = null;
+      flushVisuals();
+    }, delay);
+  }
+  function stopVisualTimer() {
+    if (visualTimer !== null) clearTimeout(visualTimer);
+    visualTimer = null;
   }
 
   /*
@@ -259,6 +288,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       globalThis.cancelAnimationFrame(frame);
     }
     frame = null;
+    stopVisualTimer();
   }
 
   /** A count-in Measure of clicks before the Pattern starts (US-4.3). */

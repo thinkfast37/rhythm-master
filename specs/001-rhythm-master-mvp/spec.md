@@ -1390,10 +1390,11 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 
 **Acceptance Scenarios**:
 
-- **AC-5.2.1** — Search matches name/description
-  - **Given** the library contains "Bossa Nova Groove" and "Samba Break," and no other Pattern's name or description contains "bossa"
+- **AC-5.2.1** — Search matches name and Tags
+  - **Given** the library contains "Bossa Nova Groove", and "Samba Break" carrying the Tag "bossa-feel", and no other Pattern's name or Tags contain "bossa"
   - **When** the Practicing Musician types "bossa" into the search field
-  - **Then** the list filters to show only "Bossa Nova Groove"
+  - **Then** the list filters to show exactly "Bossa Nova Groove" and "Samba Break" — a Pattern matches when its name or any of its Tags contains the text, without regard to case
+  - *(Revised 2026-10-31 at the maintainer's decision (T452). It said search matches name and description; no Pattern has ever had a description, and the search has always matched name and Tags. The example now shows a match by Tag.)*
 
 - **AC-5.2.2** — Search matching is case-insensitive
   - **Given** the search from AC-5.2.1 showing only "Bossa Nova Groove"
@@ -1495,12 +1496,15 @@ field survives showing it.)*
   - **When** the user types "warmup" (lowercase) and adds it as a Tag
   - **Then** no second Tag is added — the existing "Warmup" Tag is unchanged, since matching is case-insensitive
 
-- **AC-5.3.7** — User Tag length/count limits
+- **AC-5.3.11** — User Tag length/count limits
   - **Given** a Pattern already carrying 20 user-typed Tags
   - **When** the user attempts to add a 21st
-  - **Then** the addition is rejected
-  - **And**, given the user attempts to add a Tag 31 characters long
-  - **Then** the addition is rejected *(Assumption: 20 Tags / 30 characters are starting limits, not derived from a prior decision.)*
+  - **Then** the addition is rejected, with a message saying a Pattern can carry at most 20 Tags of the user's own
+  - **And**, given the user attempts to add a Tag 31 characters long, the addition is rejected, with a message saying a Tag can be at most 30 characters *(Assumption: 20 Tags / 30 characters are starting limits, not derived from a prior decision.)*
+  - **Cases**:
+    - **AC-5.3.11/1** — A 21st Tag of the user's own is refused, saying why, and the Pattern keeps its 20
+    - **AC-5.3.11/2** — A Tag over 30 characters is refused, saying why, while one of exactly 30 is added
+  - *(Renumbered and built 2026-10-31 at the maintainer's decision (T452). It was declared as a second AC-5.3.7, sharing the ID of "The Tag vocabulary means what it says", so the vocabulary's tests counted for it and it read as covered while nothing enforced either limit. It takes the next free ID; the messages are added so a refusal is never silent; Tags already over a limit on a stored Pattern are kept, since the limits govern adding.)*
 
 - **AC-5.3.8** — Tag-filter pill ordering
   - **Given** a library where the Tags currently in use are `custom`, `percussive`, `melodic`, `swing`, "hard," and "warmup"
@@ -1525,11 +1529,15 @@ field survives showing it.)*
   - **Then** "Samba Break" loads — the second item in the filtered list, not the second item in the full unfiltered library
   - *(Clarified 2026-09-20 with US-14.1 (T328): under a practice goal the list is the filtered list narrowed further by the level and Mode the goal bar shows (AC-14.1.4/6) — still a filtered list, never the full library. Under Any level, and under every other goal, it is exactly the list this criterion describes. 2026-10-24 with T410: the one Practise goal has no Mode, so the narrowing is the level alone.)*
 
-- **AC-5.5.2** — Prev/Next doesn't wrap at list boundaries
+- **AC-5.5.2** — Prev/Next wraps at list boundaries
   - **Given** the same filtered list as AC-5.5.1, with "Simple Fill" (the last item) currently loaded
-  - **When** the Practicing Musician looks at the Next control
-  - **Then** it is disabled
-  - **And**, given instead "Bossa Groove" (the first item) is loaded, the Prev control is disabled — neither control wraps to the other end of the list
+  - **When** the Practicing Musician taps Next
+  - **Then** "Bossa Groove", the first item, loads
+  - **And**, given instead "Bossa Groove" (the first item) is loaded, tapping Prev loads "Simple Fill", the last — neither control is ever disabled while the list holds more than one Pattern
+  - **Cases**:
+    - **AC-5.5.2/1** — Next on the last Pattern of the list loads the first
+    - **AC-5.5.2/2** — Prev on the first Pattern of the list loads the last
+  - *(Revised 2026-10-31 at the maintainer's decision (T452). It said Prev/Next stop at the ends and are disabled there; Prev/Next have wrapped around the filtered list since the library was built (T087, the same day as the criterion), which is what the maintainer uses and chose to keep.)*
 
 - **AC-5.5.3** — Prev/Next is reachable without scrolling
   - **Given** a Pattern is loaded and the main panel is scrolled away from its top — down the grid, or to the foot of the panel
