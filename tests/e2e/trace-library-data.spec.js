@@ -27,10 +27,23 @@ const shape = (p) =>
  * had been written before a library update shipped that same Pattern, and reload so
  * the app goes through its load-time check.
  */
-async function ownedTwinOfShipped(page, { name, id = 'p_dupe', change = null, rating = 0, tags = [] }) {
+/**
+ * An owned copy of the first shipped Pattern. By default the library is also made to
+ * look updated — that shipped Pattern removed from the record of what this install
+ * has seen — because AC-11.3.1 checks only after a library update, against newly
+ * shipped Patterns; `newlyShipped: false` leaves the record as the last load wrote it.
+ */
+async function ownedTwinOfShipped(page, { name, id = 'p_dupe', change = null, rating = 0, tags = [], newlyShipped = true }) {
   await page.evaluate(
-    ({ name: n, id: pid, change: c, rating: r, tags: t }) => {
+    ({ name: n, id: pid, change: c, rating: r, tags: t, fresh }) => {
       const shipped = window.__rm.seedStore.loadAll()[0];
+      if (fresh) {
+        const settings = JSON.parse(localStorage.getItem('rm.settings.v1') || '{}');
+        const target = window.__rm.shippedIdentity(shipped);
+        const all = window.__rm.seedStore.loadAll().map((p) => window.__rm.shippedIdentity(p));
+        settings.shippedSeen = all.filter((x) => x !== target);
+        localStorage.setItem('rm.settings.v1', JSON.stringify(settings));
+      }
       const mine = { ...structuredClone(shipped), id: pid, name: n, rating: r, tags: t };
       if (c === 'swing') mine.swingAmount = 20;
       if (c === 'melodic') {
@@ -44,7 +57,7 @@ async function ownedTwinOfShipped(page, { name, id = 'p_dupe', change = null, ra
       }
       window.__rm.patternStore.upsert(mine);
     },
-    { name, id, change, rating, tags }
+    { name, id, change, rating, tags, fresh: newlyShipped }
   );
   await page.reload();
 }
@@ -170,6 +183,29 @@ test('AC-11.3.1 — Trigger: app load after a library update', async ({ page }) 
   await ownedTwinOfShipped(page, { name: 'Twin' });
   await expect(libraryPrompt(page)).toContainText("'Twin'");
   await page.locator('.dialog-button', { hasText: 'Keep' }).click();
+});
+
+test('AC-11.3.1 — Trigger: app load after a library update: an unchanged library asks nothing, a newly shipped twin is asked about once', async ({
+  page,
+}) => {
+  await page.goto('/');
+  // The library is the one this install saw last time: a copy of a shipped Pattern
+  // that was already there — a Make Copy kept, say — is not asked about.
+  await ownedTwinOfShipped(page, { name: 'Old Twin', newlyShipped: false });
+  await expect(page.locator('.pattern-item', { hasText: 'Old Twin' })).toHaveCount(1);
+  await expect(libraryPrompt(page)).toHaveCount(0);
+
+  // A library update that ships that Pattern anew: now it is asked about …
+  await ownedTwinOfShipped(page, { name: 'Old Twin' });
+  await expect(libraryPrompt(page)).toContainText("'Old Twin'");
+  await page.locator('.dialog-button', { hasText: 'Keep' }).click();
+
+  // … and the library seen is recorded, so the next load asks nothing at all.
+  const seen = await page.evaluate(() => window.__rm.getState().settings.shippedSeen.length);
+  expect(seen).toBe(await page.evaluate(() => window.__rm.seedStore.loadAll().length));
+  await page.reload();
+  await expect(page.locator('.pattern-item').first()).toBeVisible();
+  await expect(libraryPrompt(page)).toHaveCount(0);
 });
 
 test('AC-11.3.1 — Trigger: app load after a library update: only a true duplicate is found', async ({

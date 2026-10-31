@@ -9,7 +9,7 @@
  * `core/counting.measureLabels`, the one function the grid itself renders from.
  */
 import { test, expect } from '@playwright/test';
-import { create, cycleAccent, setRecipe, addMeasure, setTimeSignature } from '../../src/core/pattern.js';
+import { create, cycleAccent, setRecipe, addMeasure, setTimeSignature, setGroupSwing, setSwingAmount } from '../../src/core/pattern.js';
 import { measureLabels } from '../../src/core/counting.js';
 
 test.use({
@@ -66,6 +66,54 @@ test('AC-4.4.1 — Swing default and range: the swing control opens at 0 and run
   await expect(slider).toHaveAttribute('min', '0');
   await expect(slider).toHaveAttribute('max', '100');
   await expect(slider).toHaveAttribute('step', '1');
+});
+
+test("AC-4.4.2 — Per-group swing amounts carried in a Pattern's data play as authored", async ({ page }) => {
+  // Every oscillator the page schedules, by its start time on the audio clock.
+  await page.addInitScript(() => {
+    window.__starts = [];
+    const real = AudioScheduledSourceNode.prototype.start;
+    AudioScheduledSourceNode.prototype.start = function (when, ...rest) {
+      window.__starts.push(when ?? 0);
+      return real.call(this, when, ...rest);
+    };
+  });
+  await page.goto('/');
+
+  // 4/4 at 120 BPM: a quarter is 0.5s. Beat 1 on Straight → Triplet split whose
+  // straight half carries 40; Beat 2 on Straight 16ths carrying 60; Beat 3 on
+  // Straight 16ths carrying nothing, so it takes the Pattern-wide 20.
+  let p = { ...create('Grouped Swing'), tempo: 120 };
+  p = setRecipe(p, 0, 0, 'straight-triplet-split');
+  for (const b of [0, 1, 2]) {
+    const n = p.measures[0].beats[b].slots.length;
+    for (let s = 0; s < n; s++) p = cycleAccent(p, 0, b, s);
+  }
+  p = setSwingAmount(p, 20);
+  p = setGroupSwing(p, 0, 0, 0, 40);
+  p = setGroupSwing(p, 0, 1, 0, 60);
+  await load(page, p, 'p_grouped');
+
+  await page.locator('[data-action="play"]').click();
+  await expect.poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 10000 }).toBeGreaterThanOrEqual(1);
+  await page.locator('[data-action="stop"]').click();
+
+  const expected = [
+    // Beat 1: the straight half swung at 40, the triplet half not at all.
+    0, 0.125 + 0.4 * 0.125, 0.25, 0.25 + 0.25 / 3, 0.25 + (2 * 0.25) / 3,
+    // Beat 2: its own 60.
+    0.5, 0.625, 0.75 + 0.6 * 0.125, 0.875,
+    // Beat 3: the Pattern-wide 20.
+    1.0, 1.125, 1.25 + 0.2 * 0.125, 1.375,
+  ];
+  const starts = await page.evaluate(() => [...new Set(window.__starts.map((t) => Math.round(t * 1e4) / 1e4))].sort((a, b) => a - b));
+  // Somewhere in what was scheduled is one pass of the Pattern, onset for onset. The
+  // page also renders the loop offline for screen-off playback (AC-4.1.15), whose
+  // oscillators start on their own clock, so the onsets are found from a base
+  // rather than as a consecutive run.
+  const near = (t) => starts.some((x) => Math.abs(x - t) < 0.002);
+  const found = starts.some((base) => expected.every((t) => near(base + t)));
+  expect(found, `scheduled onsets: ${JSON.stringify(starts.slice(0, 30))}`).toBe(true);
 });
 
 // --- US-5.6 ---------------------------------------------------------------------

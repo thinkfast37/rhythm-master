@@ -25,6 +25,8 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { MAX_MEASURES } from '../src/core/pattern.js';
+import { TIME_SIGNATURES } from '../src/core/meter.js';
 
 /*
  * The package is an ES module (package.json "type": "module"), so this was rewritten
@@ -46,7 +48,30 @@ const RECIPE = { S: 'straight-16ths', T: 'triplet-8ths' };
 const SLOTS  = { S: 4, T: 3 };
 
 const numOf = t => parseInt(t.split('/')[0], 10);
-const SUPPORTED_TS = ['1/4','2/4','3/4','4/4','5/4','6/4','7/4','6/8','7/8','9/8','12/8'];
+// What the app supports, not a copy that can drift from it (AC-16.1.11).
+const SUPPORTED_TS = TIME_SIGNATURES;
+
+/**
+ * Every Pattern the conversion could not produce cleanly, by name and rule — over the
+ * Measure cap, an unsupported Time Signature, or Beats that disagree with the meter —
+ * so nothing is dropped or corrupted silently (AC-16.1.11).
+ */
+export function problems(converted) {
+  const errors = [];
+  converted.forEach((p) => {
+    if (p.measures.length > MAX_MEASURES) {
+      errors.push(`${p.name}: ${p.measures.length} Measures exceeds the ${MAX_MEASURES}-Measure cap (AC-1.1.3)`);
+    }
+    p.measures.forEach((m, i) => {
+      if (!SUPPORTED_TS.includes(m.timeSignature)) {
+        errors.push(`${p.name}: unsupported time signature ${m.timeSignature}`);
+      } else if (m.beats.length !== numOf(m.timeSignature)) {
+        errors.push(`${p.name} measure ${i + 1}: ${m.beats.length} Beats in ${m.timeSignature} — must be ${numOf(m.timeSignature)} (AC-1.2.2)`);
+      }
+    });
+  });
+  return errors;
+}
 
 let warnings = [];
 let shortMeters = [];
@@ -168,20 +193,7 @@ warnings = []; shortMeters = []; trimmed = [];
 const converted = LEGACY.map(convert);
 
 // --- validation -------------------------------------------------------------
-const errors = [];
-converted.forEach(p => {
-  if (p.measures.length > 6) {
-    errors.push(`${p.name}: ${p.measures.length} Measures exceeds the 6-Measure cap (AC-1.1.3)`);
-  }
-  p.measures.forEach((m, i) => {
-    if (!SUPPORTED_TS.includes(m.timeSignature)) {
-      errors.push(`${p.name}: unsupported time signature ${m.timeSignature}`);
-    }
-    if (m.beats.length !== numOf(m.timeSignature)) {
-      errors.push(`${p.name} measure ${i + 1}: ${m.beats.length} Beats in ${m.timeSignature} — must be ${numOf(m.timeSignature)} (AC-1.2.2)`);
-    }
-  });
-});
+const errors = problems(converted);
 
 fs.writeFileSync(new URL('../data/seed-patterns.json', import.meta.url),
   JSON.stringify({ schemaVersion: 1, patterns: converted }, null, 2));

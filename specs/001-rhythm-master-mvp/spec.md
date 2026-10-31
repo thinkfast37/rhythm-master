@@ -621,8 +621,9 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **Cases**:
     - **AC-2.2.19/1** — The Key picker renders on the pitch strip beside the scale picker
     - **AC-2.2.19/2** — The Rhythm group holds no Key picker
-    - **AC-2.2.19/3** — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)
+    - **AC-2.2.19/3** — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.3.3's treatment of Key)
     - **AC-2.2.19/4** — The Key picker carries a visible label of its own reading Key, and the strip's Note label names the degree chips it sits with — neither picker is left to be identified by the label of the other
+  - *(Case /3's cross-reference corrected 2026-10-31 (T448): it cited AC-2.1.2, which is the Percussive default; Key's treatment in Percussive mode is AC-2.3.3's.)*
   - *(Added 2026-09-07 at the maintainer's request: "the key, when I'm in Melodic — I really think that should be in the notes section, because I'm up and hunting around trying to find it." The Key sat in the Edit accordion beside Sound and + Measure; everything else about a note — the scale, the degrees, the octave — already lives on the pitch strip.)*
   - *(/2 retitled 2026-09-13 with T272: the Edit accordion became the Rhythm group, which is where the structural controls now live.)*
   - *(/4 added 2026-09-13. Reported by the maintainer while working on US-2.9: "where it says it says note, and it says C — but I really, it should be key". The Key picker had no label of its own and sat immediately after the strip's Note label, so the label of the degree chips read as the label of the Key.)*
@@ -1141,17 +1142,15 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** it is created
   - **Then** its swing amount defaults to 0, adjustable from 0–100 in integer steps
 
-- **AC-4.4.2** — Swing is set per Subdivision Group independently
-  - **Given** a Beat on the Straight → Triplet split Recipe (2 straight Slots + 3 triplet Slots, per AC-1.3.4), with the straight group's swing set to 40
-  - **When** the Composer looks at the triplet group's swing setting
-  - **Then** it is unaffected and remains at its own independent value — each straight-feel Subdivision Group in a Beat has its own swing amount, not one value shared across the Beat or the Pattern
+- **AC-4.4.2** — Per-group swing amounts carried in a Pattern's data play as authored
+  - **Given** a Pattern whose data gives one straight-feel Subdivision Group a swing amount of 40 and another a swing amount of 60 — one of them the straight half of a Beat on the Straight → Triplet split Recipe (per AC-1.3.4) — with a Pattern-wide amount of 20
+  - **When** it plays
+  - **Then** each of those two groups swings at its own amount, 40 and 60, the triplet half is not swung, and the Pattern-wide 20 applies only to straight groups that carry no amount of their own (AC-4.4.13)
+  - *(Revised 2026-10-31 at the maintainer's decision (T448). Its title said swing is "set" per Subdivision Group, and its When had the Composer look at a triplet group's swing setting — which AC-4.4.3 said does not exist, and which no screen has offered since the swing control became Pattern-wide (AC-4.4.12). What survives, per the second 2026-08-22 note below, is the data: per-group amounts play as authored. It is restated as that.)*
   - *(Clarified 2026-08-22: the swing **amount** stays per Subdivision Group. The swing **feel** — the pulse level the amount pairs at, AC-4.4.7 — is one value for the whole Pattern; a Pattern swings at one metric level however many groups carry amounts.)*
   - *(Clarified again 2026-08-22, later the same day: per-group independence is a property of the **data** — a shipped or imported Pattern may carry differing per-group amounts, which play as authored — while the swing **control** is Pattern-wide (AC-4.4.12). The maintainer found the control only ever reached Measure 1 Beat 1, so every other Measure played straight; a slider that silently governs one Beat is a defect, not independence. Per-group values act as overrides over the Pattern-wide amount (AC-4.4.13), and moving the control clears them so what is heard is what it shows.)*
 
-- **AC-4.4.3** — Triplet-feel groups have no swing control
-  - **Given** the 3-Slot triplet group within a Beat on the Straight → Triplet split Recipe
-  - **When** the Composer looks for a swing control on it
-  - **Then** none is shown — swing is inapplicable to triplet feel, not merely present-but-disabled
+- *(AC-4.4.3 "Triplet-feel groups have no swing control" was withdrawn 2026-10-31 at the maintainer's decision (T448). It presumed a swing control on each group; since AC-4.4.12 there is one Pattern-wide control and no group has one, so it was true of every group and proved nothing. What a musician sees on a Pattern with no straight-feel group is AC-4.4.14's.)*
 
 - **AC-4.4.4** — Swing only affects the straight portion of a mixed Beat
   - **Given** a Beat on the Straight → Triplet split Recipe, with the straight group's (Slots 1–2) swing set to 60
@@ -1327,30 +1326,25 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
   - **When** they open the library
   - **Then** both appear together in the same list, with no separate "custom" or "shipped" section dividing them
 
-- **AC-5.1.2** — Library entry shows name, meter, and Measure/Beat count
-  - **Given** a Pattern named "Samba Break" whose Measures are all 4/4, 2 Measures totaling 8 Beats
-  - **When** it is displayed in the library list
-  - **Then** its entry shows "Samba Break", meter summary "4/4", and "2 Measures, 8 Beats"
+- *(AC-5.1.2 "Library entry shows name, meter, and Measure/Beat count" and AC-5.1.3 "Mixed-meter Pattern shows 'Mixed Meter' instead of one Time Signature" were withdrawn 2026-10-31 at the maintainer's decision (T448). Neither was ever built — no row has shown a meter or a Measure/Beat count — and AC-5.3.10 later settled that a row carries its name and Rating only, with AC-5.1.7's provenance marker beside them. The traceability burn-down found them standing unproven against that; a row that shows less is the design, not a gap.)*
 
-- **AC-5.1.3** — Mixed-meter Pattern shows "Mixed Meter" instead of one Time Signature
-  - **Given** a Pattern named "Shifting Meter" whose Measure 1 is 4/4 and Measure 2 is 2/4
-  - **When** it is displayed in the library list
-  - **Then** its entry shows meter summary "Mixed Meter" rather than a single Time Signature
-
-- **AC-5.1.4** — Default sort order: Rating descending, then alphabetical within each Rating
-  - **Given** the library contains "Zebra Beat" (5★), "Apple Groove" (5★), "Mango Fill" (3★), "Banana Riff" (3★), and "Date Loop" (0★, unrated)
+- **AC-5.1.4** — Default sort order: alphabetical by name, then Rating descending between equal names
+  - **Given** the library contains "Zebra Beat" (5★), "Apple Groove" (5★), "Mango Fill" (3★), "banana Riff" (3★), "Date Loop" (0★, unrated), and two Patterns named "Samba Break" rated 2★ and 4★
   - **When** the Practicing Musician views the library list with no other sort selected
-  - **Then** the order is: "Apple Groove" (5★), "Zebra Beat" (5★), "Banana Riff" (3★), "Mango Fill" (3★), "Date Loop" (0★) — Patterns are grouped by Rating from 5★ down to 0★ (unrated last), and only *within* each Rating tier are they alphabetical by name; the list is never simply alphabetical top to bottom
+  - **Then** the order is: "Apple Groove", "banana Riff", "Date Loop", "Mango Fill", "Samba Break" (4★), "Samba Break" (2★), "Zebra Beat" — names compare alphabetically without regard to case, and Rating, highest first, orders only Patterns whose names are equal
+  - *(Revised 2026-10-31 at the maintainer's decision (T448). It said Rating descending first, then alphabetical within each Rating, and that "the list is never simply alphabetical top to bottom"; the library has sorted alphabetically, then by Rating between equal names, since it was built (T087, the same day as the criterion), which is the order the maintainer uses and chose to keep. AC-5.1.5, AC-5.1.6 and AC-5.2.3, which named the old order, follow it.)*
 
 - **AC-5.1.5** — Sort order applies on top of Tag filtering
   - **Given** the same library as AC-5.1.4, with the Tag filter "warmup" active
   - **When** the filtered list renders
-  - **Then** it applies the same Rating-descending-then-alphabetical order (AC-5.1.4) to whichever Patterns match the Tag filter — sort order and filtering combine, they don't replace each other
+  - **Then** it applies the same alphabetical-then-Rating order (AC-5.1.4) to whichever Patterns match the Tag filter — sort order and filtering combine, they don't replace each other
+  - *(Revised 2026-10-31 with AC-5.1.4 (T448): the order named was Rating descending, then alphabetical.)*
 
 - **AC-5.1.6** — "List order" elsewhere in the doc means this sort order
   - **Given** the sort order from AC-5.1.4
   - **When** Prev/Next navigation (US-5.5) or Pattern Family display (US-11.2) references "the list" or "list order"
-  - **Then** it means this Rating-descending-then-alphabetical order, applied to whatever the current filter set is — not a separately defined ordering
+  - **Then** it means this alphabetical-then-Rating order, applied to whatever the current filter set is — not a separately defined ordering
+  - *(Revised 2026-10-31 with AC-5.1.4 (T448): the order named was Rating descending, then alphabetical.)*
 
 - **AC-5.1.7** — A library row says whether the Pattern ships with the app or is the musician's own
   - **Given** the library contains "Bossa Groove" (shipped with the app) and a Pattern of the same name the Practicing Musician edited into a copy of their own
@@ -1388,7 +1382,8 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-5.2.3** — Search results keep the library's default sort order
   - **Given** a search for "groove" matches "Zebra Groove" (5★) and "Apple Groove" (5★)
   - **When** the filtered list renders
-  - **Then** it applies the same Rating-descending-then-alphabetical order as AC-5.1.4 — "Apple Groove" before "Zebra Groove" — search filtering does not override the library's default sort order
+  - **Then** it applies the same alphabetical-then-Rating order as AC-5.1.4 — "Apple Groove" before "Zebra Groove" — search filtering does not override the library's default sort order
+  - *(Revised 2026-10-31 with AC-5.1.4 (T448): the order named was Rating descending, then alphabetical; the example holds under either.)*
 
 - **AC-5.2.4** — Typing in the search field keeps the field focused
   - **Given** the Practicing Musician has clicked into the search field and typed "b"
@@ -1541,7 +1536,8 @@ field survives showing it.)*
 - **AC-5.6.1** — Counting-system toggle updates labels live
   - **Given** "Samba Break" is loaded and playing, currently showing Takadimi syllables
   - **When** the Practicing Musician toggles to 1-e-&-a
-  - **Then** every grid cell label and the legend switch to 1-e-&-a immediately, without reselecting "Samba Break" or restarting playback
+  - **Then** every grid cell label switches to 1-e-&-a immediately, without reselecting "Samba Break" or restarting playback
+  - *(Revised 2026-10-31 at the maintainer's decision (T448): "and the legend" is struck. No counting legend has ever existed in the app; the grid's own labels are what switch.)*
 
 - **AC-5.6.2** — A Pattern containing a mixed-feel Recipe supports Numbered only
   - **Given** "Mixed Feel Groove," where at least one Beat anywhere in the Pattern uses a mixed-feel Recipe (Straight → Triplet split or Triplet → Straight split, per AC-1.3.4)
@@ -2134,7 +2130,8 @@ field survives showing it.)*
 - **AC-12.1.3** — Accent Level maps to a fixed MIDI velocity table
   - **Given** a Slot at Accent Level 1 (Weak), a Slot at Accent Level 2 (Medium), a Slot at Accent Level 3 (Strong), and an off Slot (Accent Level 0)
   - **When** the Pattern is exported
-  - **Then** they receive MIDI velocities 50, 80, and 110 respectively, and the off Slot produces no note event at all *(Assumption: these three velocity values are carried over from the original app's design and haven't been explicitly re-confirmed for this rebuild.)*
+  - **Then** they receive MIDI velocities 48, 80, and 112 respectively, and the off Slot produces no note event at all
+  - *(Revised 2026-10-31 at the maintainer's decision (T448). It said 50, 80 and 110 under an assumption note that the values were carried over from the original app and never re-confirmed. The exporter and `contracts/file-formats.md` have always used 48, 80 and 112, every exported file carries them, and the maintainer chose those; the assumption note is dropped because the values are now confirmed.)*
 
 - **AC-12.1.4** — Mixed-meter Pattern exports each Measure by its own Time Signature
   - **Given** "Shifting Meter" whose Measure 1 is 4/4 and Measure 2 is 6/8
@@ -2554,15 +2551,18 @@ present, correctly structured, and immediately playable without any authoring st
   - **Given** the complete seeded library
   - **When** it is validated against this specification
   - **Then** every Measure holds exactly its Time Signature's numerator in Beats (AC-1.2.2), every
-    Pattern is within the 32-Measure cap (AC-1.1.3), every Time Signature is one of the eleven supported
+    Pattern is within the 32-Measure cap (AC-1.1.3), every Time Signature is one of the fourteen supported
     values (AC-1.2.1), and every Melodic Slot that is on carries a Pitch while every off Slot
     carries none (AC-2.2.8)
+  - *(Revised 2026-10-31 (T448): "eleven" supported values became fourteen with AC-1.2.1's 2026-10-18 revision; the count is corrected.)*
 
-- **AC-16.1.11** — Conversion is reproducible, not hand-edited
-  - **Given** the legacy Pattern source and the conversion tool
-  - **When** the conversion is re-run
-  - **Then** it reproduces the shipped seed data exactly, and reports any Pattern it could not
-    convert cleanly rather than silently dropping or corrupting it
+- **AC-16.1.11** — The legacy conversion was a one-time step, and its rules are tested
+  - **Given** the conversion tool and legacy-shaped input
+  - **When** it converts
+  - **Then** each rule of AC-16.1.3–AC-16.1.9 holds, and a Pattern it cannot convert cleanly — over the
+    32-Measure cap, an unsupported Time Signature, or a Measure whose Beats disagree with its Time Signature —
+    is reported by name rather than silently dropped or corrupted
+  - *(Revised 2026-10-31 at the maintainer's decision (T448). It said re-running the conversion "reproduces the shipped seed data exactly". It cannot and should not: the shipped library has been curated by hand since the conversion (CLAUDE.md §7, T130), and holds 317 Patterns added after it, so a re-run would erase them. The conversion's rules are what remain worth proving. The tool's own check still enforced the old 6-Measure cap; it now uses the 32-Measure one.)*
 
 ---
 
@@ -2595,9 +2595,10 @@ it appears in the library and plays correctly, with no source file modified.
   - **Given** a Pattern entry in the data file that violates a structural rule — a Measure whose Beat
     count does not match its Time Signature, an unsupported Time Signature, or a Melodic Slot that is
     on but carries no Pitch
-  - **When** the app loads it
-  - **Then** the problem is surfaced clearly, identifying the offending Pattern by name and the rule
-    it breaks, rather than the Pattern silently failing to appear or rendering incorrectly
+  - **When** the build checks the data file (`npm run validate:seed`, which every deploy runs)
+  - **Then** the build fails with the problem stated clearly, identifying the offending Pattern by name and the rule
+    it breaks, so a malformed entry never reaches a deployed build
+  - *(Revised 2026-10-31 at the maintainer's decision (T448). The When said "the app loads it". The shipped library has been validated at build time by design since `npm run validate:seed` became a gate — `tools/unwired-baseline.json` records `validateAll` as deliberately not called on load — so a bad entry is stopped before it can ship rather than reported to whoever opens the app.)*
 
 - **AC-16.2.4** — The data file is versioned
   - **Given** the shipped Pattern data file
@@ -3493,7 +3494,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.9.1/1** — The Register picker renders on the pitch strip beside the Key and scale pickers, offering exactly Bass, Low, Normal, High and Lead, and a Pattern with no stored Register shows Normal
     - **AC-2.9.1/2** — The Register is Pattern content: it is saved with the Pattern and survives a reload
     - **AC-2.9.1/3** — Changing the Register on a shipped Pattern asks for a name first, through the same guarded copy flow a scale change goes through
-    - **AC-2.9.1/4** — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)
+    - **AC-2.9.1/4** — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.3.3's treatment of Key)
+  - *(Case /4's cross-reference corrected 2026-10-31 (T448): it cited AC-2.1.2, which is the Percussive default; Key's treatment in Percussive mode is AC-2.3.3's.)*
 
 - **AC-2.9.2** — A Register moves every sounding note by whole octaves
   - **Given** a Melodic Pattern, with or without a progression and an arpeggio

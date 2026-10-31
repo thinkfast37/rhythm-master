@@ -20,12 +20,12 @@ describe('ui/library', () => {
     expect(entries.map((e) => e.owned)).toEqual([false, true]);
   });
 
-  it('AC-5.1.2 — the list sorts alphabetically by name', () => {
+  it('AC-5.1.4 — Default sort order: alphabetical by name, then Rating descending between equal names: names sort A to Z', () => {
     const entries = buildEntries([p('Zulu'), p('Alpha')], [p('Mike')]);
     expect(sortEntries(entries).map((e) => e.pattern.name)).toEqual(['Alpha', 'Mike', 'Zulu']);
   });
 
-  it('AC-5.1.3 — Patterns sharing a name sort by rating, highest first', () => {
+  it('AC-5.1.4 — Default sort order: alphabetical by name, then Rating descending between equal names: Patterns sharing a name sort by Rating, highest first', () => {
     const entries = buildEntries(
       [{ ...p('Groove'), id: 'low', rating: 1 }, { ...p('Groove'), id: 'high', rating: 5 }],
       []
@@ -33,17 +33,17 @@ describe('ui/library', () => {
     expect(sortEntries(entries).map((e) => e.pattern.id)).toEqual(['high', 'low']);
   });
 
-  it('AC-5.1.4 — sorting is case-insensitive', () => {
+  it('AC-5.1.4 — Default sort order: alphabetical by name, then Rating descending between equal names: names compare without regard to case', () => {
     const entries = buildEntries([p('banjo'), p('Apple')], []);
     expect(sortEntries(entries).map((e) => e.pattern.name)).toEqual(['Apple', 'banjo']);
   });
 
-  it('AC-5.1.5 — every shipped and owned Pattern is listed, none dropped', () => {
+  it('every shipped and owned Pattern is listed, none dropped', () => {
     const entries = buildEntries([p('A'), p('B'), p('C')], [p('D')]);
     expect(sortEntries(entries)).toHaveLength(4);
   });
 
-  it('AC-5.1.6 — a Pattern carries its provenance for display', () => {
+  it('a Pattern carries its provenance for display', () => {
     const entries = buildEntries([p('Shipped')], [p('Mine')]);
     expect(entries.find((e) => e.pattern.name === 'Shipped').owned).toBe(false);
     expect(entries.find((e) => e.pattern.name === 'Mine').owned).toBe(true);
@@ -87,7 +87,7 @@ describe('ui/library', () => {
     expect(filterEntries(entries, { query: 'melodic' })).toHaveLength(0);
   });
 
-  it('AC-5.2.3 — an empty query matches everything', () => {
+  it('an empty query matches everything', () => {
     const entries = buildEntries([p('A'), p('B')], []);
     expect(filterEntries(entries, { query: '   ' })).toHaveLength(2);
   });

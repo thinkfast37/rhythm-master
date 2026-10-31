@@ -127,7 +127,7 @@ describe('the shipped Pattern library', () => {
     }
   });
 
-  it('AC-16.1.11 — a shipped Pattern cannot be mutated in place', () => {
+  it('a shipped Pattern cannot be mutated in place', () => {
     const p = library[0];
     expect(Object.isFrozen(p)).toBe(true);
     expect(() => {

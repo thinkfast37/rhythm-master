@@ -325,3 +325,98 @@ test('AC-6.1.4 — Tapping the current star clears Rating', async ({ page }) => 
   });
   expect(stored).toBe(0);
 });
+
+// --- US-5.1 / US-5.2 — the list order ------------------------------------------
+
+/**
+ * Owned Patterns with the names, Ratings and Tags given, stored through the app's own
+ * store and the page reloaded so the library is built from them as it would be on any
+ * visit. Each gets a known id so its row can be found among the shipped ones.
+ */
+async function seedOwned(page, specs) {
+  await page.goto('/');
+  await page.evaluate((list) => {
+    const blank = window.__rm.loadBlank('4/4', 'Seed');
+    list.forEach(([name, rating, tags], i) => {
+      window.__rm.patternStore.upsert({ ...structuredClone(blank), id: `p_order_${i}`, name, rating, tags });
+    });
+  }, specs);
+  await page.reload();
+  await openLibrary(page);
+}
+
+/** The owned rows, in the order the library renders them, as "name rating". */
+async function ownedOrder(page) {
+  return page.locator('.pattern-item[data-owned="true"]').evaluateAll((rows) =>
+    rows
+      .filter((r) => r.dataset.patternId.startsWith('p_order_'))
+      .map((r) => {
+        const p = window.__rm.patternStore.findById(r.dataset.patternId);
+        return `${p.name} ${p.rating}`;
+      })
+  );
+}
+
+const LIBRARY = [
+  ['Zebra Beat', 5, ['warmup']],
+  ['Apple Groove', 5, ['warmup']],
+  ['Mango Fill', 3, []],
+  ['banana Riff', 3, ['warmup']],
+  ['Date Loop', 0, ['warmup']],
+  ['Samba Break', 2, ['warmup']],
+  ['Samba Break', 4, []],
+];
+
+test('AC-5.1.4 — Default sort order: alphabetical by name, then Rating descending between equal names', async ({ page }) => {
+  await seedOwned(page, LIBRARY);
+  expect(await ownedOrder(page)).toEqual([
+    'Apple Groove 5',
+    'banana Riff 3',
+    'Date Loop 0',
+    'Mango Fill 3',
+    'Samba Break 4',
+    'Samba Break 2',
+    'Zebra Beat 5',
+  ]);
+});
+
+test('AC-5.1.5 — Sort order applies on top of Tag filtering', async ({ page }) => {
+  await seedOwned(page, LIBRARY);
+  await page.locator('.tag-filter', { hasText: /^warmup$/ }).click();
+  // Only the "warmup" Patterns remain, and in the same alphabetical-then-Rating order.
+  const names = await page.locator('.pattern-item').evaluateAll((rows) =>
+    rows.map((r) => {
+      const p = window.__rm.patternStore.findById(r.dataset.patternId);
+      return p ? `${p.name} ${p.rating}` : `shipped:${r.dataset.patternId}`;
+    })
+  );
+  expect(names).toEqual(['Apple Groove 5', 'banana Riff 3', 'Date Loop 0', 'Samba Break 2', 'Zebra Beat 5']);
+});
+
+test('AC-5.1.6 — "List order" elsewhere in the doc means this sort order', async ({ page }) => {
+  await seedOwned(page, LIBRARY);
+  await page.locator('.tag-filter', { hasText: /^warmup$/ }).click();
+  const rendered = await page.locator('.pattern-item').evaluateAll((rows) => rows.map((r) => r.dataset.patternId));
+  // Open the first row, then Next walks the rows exactly as they are rendered.
+  await page.locator(`.pattern-item[data-pattern-id="${rendered[0]}"] [data-action="open-pattern"]`).click();
+  const walked = [await page.evaluate(() => window.__rm.getState().pattern.id)];
+  for (let i = 1; i < rendered.length; i++) {
+    await page.locator('[data-action="next-pattern"]').click();
+    walked.push(await page.evaluate(() => window.__rm.getState().pattern.id));
+  }
+  expect(walked).toEqual(rendered);
+});
+
+test("AC-5.2.3 — Search results keep the library's default sort order", async ({ page }) => {
+  await seedOwned(page, [
+    ['Zebra Groove', 5, []],
+    ['Apple Groove', 5, []],
+  ]);
+  await page.locator('.library-search').fill('groove');
+  expect(await ownedOrder(page)).toEqual(['Apple Groove 5', 'Zebra Groove 5']);
+  // And the whole result list is in the library's order, shipped matches included.
+  const shown = await page.locator('.pattern-name').allTextContents();
+  const sorted = [...shown].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  expect(shown).toEqual(sorted);
+});
+

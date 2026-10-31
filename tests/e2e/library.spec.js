@@ -9,7 +9,7 @@ test('AC-5.1.1 — the library lists every shipped Pattern on first load', async
   await expect(page.locator('.library-count')).toHaveText(`${SEED_PATTERN_COUNT} patterns`);
 });
 
-test('AC-5.1.2 — the list is alphabetical', async ({ page }) => {
+test('AC-5.1.4 — Default sort order: alphabetical by name, then Rating descending between equal names: the rendered list, whole', async ({ page }) => {
   await page.goto('/');
   const names = await page.locator('.pattern-name').allTextContents();
   const sorted = [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -49,7 +49,7 @@ test('AC-5.2.4 — Typing in the search field keeps the field focused', async ({
   expect(count).toBeLessThan(SEED_PATTERN_COUNT);
 });
 
-test('AC-5.2.3 — clearing the search restores the full list', async ({ page }) => {
+test('clearing the search restores the full list', async ({ page }) => {
   await page.goto('/');
   await page.locator('.library-search').fill('clave');
   await page.locator('.library-search').fill('');
@@ -230,7 +230,7 @@ test('rating reorders Patterns that share a name', async ({ page }) => {
   expect(after).toEqual(before);
 });
 
-test('AC-5.1.5 — opening a Pattern from the library loads it into the grid', async ({ page }) => {
+test('opening a Pattern from the library loads it into the grid', async ({ page }) => {
   await page.goto('/');
   const target = page.locator('.pattern-item').nth(5);
   const name = await target.locator('.pattern-name').textContent();
@@ -264,7 +264,7 @@ test('AC-5.5.2 — navigation stays inside the active search filter', async ({ p
   expect(names).toContain(current);
 });
 
-test('AC-5.1.6 — an owned Pattern joins the library alongside built-in ones', async ({ page }) => {
+test('an owned Pattern joins the library alongside built-in ones', async ({ page }) => {
   await page.goto('/');
   await page.locator('.slot').first().click();
   await page.locator('.dialog-input').fill('Aaa My Pattern');

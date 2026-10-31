@@ -15,8 +15,8 @@ import { totalPasses, entryAt, playingAt } from '../core/song.js';
 
 export const TICKS_PER_QUARTER = 480;
 
-/** Note-on velocity per Accent Level — Weak 50, Medium 80, Strong 110 (AC-12.1.3). */
-export const VELOCITY = { 1: 50, 2: 80, 3: 110 };
+/** Note-on velocity per Accent Level — Weak 48, Medium 80, Strong 112 (AC-12.1.3). */
+export const VELOCITY = { 1: 48, 2: 80, 3: 112 };
 
 /** Percussive Patterns export at one fixed pitch — the rhythm is the content. */
 const PERCUSSIVE_NOTE = 37; // side stick

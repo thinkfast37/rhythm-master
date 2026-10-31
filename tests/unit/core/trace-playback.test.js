@@ -213,6 +213,27 @@ describe('trace: swing (US-4.4)', () => {
     extreme.slice(2).forEach((t, k) => expect(t).toBeCloseTo(triplet[k], 10));
   });
 
+  it("AC-4.4.2 — Per-group swing amounts carried in a Pattern's data play as authored", () => {
+    // 4/4 at 120 BPM: a quarter is 0.5s. Beat 1 on Straight → Triplet split, Beats 2
+    // and 3 on Straight 16ths, every Slot sounding.
+    let p = { ...create(), tempo: 120 };
+    p = setRecipe(p, 0, 0, 'straight-triplet-split');
+    for (const b of [0, 1, 2]) p = fillBeat(p, 0, b);
+    p = setSwingAmount(p, 20); // the Pattern-wide default
+    p = setGroupSwing(p, 0, 0, 0, 40); // Beat 1's straight half carries 40
+    p = setGroupSwing(p, 0, 1, 0, 60); // Beat 2's group carries 60
+    const at = (b, s) => buildTimeline(p).find((e) => e.beatIndex === b && e.slotIndex === s).timeSeconds;
+
+    // Beat 1's straight half swings at its own 40: Slot 2 at 0.125 + 0.4 × 0.125.
+    expect(at(0, 1)).toBeCloseTo(0.125 + 0.4 * 0.125, 10);
+    // Its triplet half is not swung at all.
+    [0.25, 0.25 + 0.25 / 3, 0.25 + (2 * 0.25) / 3].forEach((t, k) => expect(at(0, 2 + k)).toBeCloseTo(t, 10));
+    // Beat 2 swings at its own 60: the "&" at 0.5 + 0.25 + 0.6 × 0.125.
+    expect(at(1, 2)).toBeCloseTo(0.5 + 0.25 + 0.6 * 0.125, 10);
+    // Beat 3 carries no amount of its own, so it takes the Pattern-wide 20.
+    expect(at(2, 2)).toBeCloseTo(1.0 + 0.25 + 0.2 * 0.125, 10);
+  });
+
   it('AC-4.4.5 — Swing timing formula: the worked example, 4/4 at 120 BPM on Straight 16ths with swing 67, as the timeline plays it', () => {
     let p = { ...create(), tempo: 120 };
     p = fillBeat(p, 0, 0);

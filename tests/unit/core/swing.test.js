@@ -53,14 +53,14 @@ describe('core/swing', () => {
     expect(offsets[2]).toBeLessThan(d);
   });
 
-  it('AC-4.4.3 — an odd-length group has no midpoint and cannot swing', () => {
+  it('an odd-length group has no midpoint and cannot swing', () => {
     // Triplet groups are never passed here, but a 1-Slot Undivided group is
     // straight-feel and must still come back unshifted.
     expect(swungOffsets(3, 100, 0.1)).toEqual([0, 0, 0]);
     expect(swungOffsets(1, 100, 0.25)).toEqual([0]);
   });
 
-  it('AC-4.4.2 — offsets depend only on this group’s own arguments', () => {
+  it('offsets depend only on this group’s own arguments', () => {
     expect(swungOffsets(2, 40, 0.25)).toEqual(swungOffsets(2, 40, 0.25));
     expect(swungOffsets(2, 40, 0.25)).not.toEqual(swungOffsets(2, 60, 0.25));
   });

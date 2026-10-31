@@ -412,6 +412,15 @@ overlay or a Song (AC-14.1.2/5). The app opens on the goals screen whenever `goa
 never about a Pattern: it is read only while Sheet is showing a Melodic Pattern, and is kept while it
 is not (AC-12.3.1/4).
 
+`shippedSeen` was added 2026-10-31 with T448 for AC-11.3.1: the identities of the shipped Patterns
+seen at the last load, each a 32-bit FNV-1a digest of the Pattern's content without its
+position-derived id (`core/similarity.shippedIdentity`). The "your copy is now in the library" check
+runs only against shipped Patterns whose identity is not in it, then records the library it saw.
+`null` — the default, and what an install from before this field reads — means nothing was ever
+recorded, so every shipped Pattern counts as new once and the check runs in full one last time. It is
+app bookkeeping, not a preference and not Pattern data; no Pattern export carries it, and the
+whole-library backup copies it with the rest of this store.
+
 ### `rm.songs.v1` — Songs (US-18.1)
 
 A Song is the Composer's own sequence of fills over a Pattern's progression. It is neither Pattern

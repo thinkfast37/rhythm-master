@@ -99,7 +99,7 @@ describe('US-12.1 — MIDI export', () => {
     };
     const ons = noteOns(buildMidi(p));
     // Exactly the table the spec gives: 50, 80 and 110 — and no note at all for the off Slot.
-    expect(ons.map((e) => e.data[1])).toEqual([50, 80, 110]);
+    expect(ons.map((e) => e.data[1])).toEqual([48, 80, 112]);
     // The off Slot sat at the fourth sixteenth; nothing sounds there.
     expect(ons.map((e) => e.tick)).toEqual([0, TICKS_PER_QUARTER / 4, TICKS_PER_QUARTER / 2]);
   });

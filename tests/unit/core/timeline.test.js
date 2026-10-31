@@ -277,7 +277,7 @@ describe('core/timeline', () => {
     expect(times[6]).toBeCloseTo(2.25 + 0.4 * 0.125, 10); // the inherited amount
   });
 
-  it('AC-4.4.3 — swing set on a triplet group has no effect', () => {
+  it('swing set on a triplet group has no effect', () => {
     let p = { ...create(), tempo: 120 };
     p = setRecipe(p, 0, 0, 'triplet-8ths');
     p = fillBeat(p, 0, 0);

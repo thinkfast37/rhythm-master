@@ -9,7 +9,8 @@
  * shows what the converter emits.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { convert } from '../../../tools/convert-legacy-patterns.js';
+import { convert, problems } from '../../../tools/convert-legacy-patterns.js';
+import { shippedIdentity, newlyShipped } from '../../../src/core/similarity.js';
 import * as seed from '../../../src/storage/seed.js';
 import { MAX_MEASURES, validate, automaticTags } from '../../../src/core/pattern.js';
 import { TIME_SIGNATURES, beatCount } from '../../../src/core/meter.js';
@@ -144,6 +145,52 @@ describe('US-16.1 — the conversion from the predecessor', () => {
         }
       }
     }
+  });
+});
+
+describe('US-16.1 — the conversion as a tested, one-time step', () => {
+  /** A converted-shape Pattern of `n` Measures, each `beats` Beats in `ts`. */
+  const shaped = (name, n, ts = '4/4', beats = 4) => ({
+    name,
+    measures: Array.from({ length: n }, () => ({ timeSignature: ts, beats: Array.from({ length: beats }, () => ({})) })),
+  });
+
+  it('AC-16.1.11 — The legacy conversion was a one-time step, and its rules are tested', () => {
+    // The rules of AC-16.1.3–AC-16.1.9 each have a test of their own in the block above,
+    // against `convert` itself. What this proves is the second half: a Pattern the
+    // conversion cannot produce cleanly is reported by name and rule, never dropped.
+    expect(problems([shaped('Clean', 4)])).toEqual([]);
+    expect(problems([shaped('At the cap', MAX_MEASURES)])).toEqual([]);
+
+    const found = problems([
+      shaped('Too Long', MAX_MEASURES + 1),
+      shaped('Odd Meter', 1, '11/8', 11),
+      shaped('Short Measure', 1, '3/4', 2),
+      shaped('Fine', 2),
+    ]);
+    expect(found).toHaveLength(3);
+    expect(found[0]).toMatch(/^Too Long: 33 Measures exceeds the 32-Measure cap/);
+    expect(found[1]).toMatch(/^Odd Meter: unsupported time signature 11\/8/);
+    expect(found[2]).toMatch(/^Short Measure measure 1: 2 Beats in 3\/4 — must be 3/);
+    expect(found.join('\n')).not.toContain('Fine');
+
+    // Every meter the app supports is accepted, so the check cannot drift from it.
+    for (const ts of TIME_SIGNATURES) expect(problems([shaped(ts, 1, ts, beatCount(ts))])).toEqual([]);
+  });
+});
+
+describe('US-11.3 — what counts as newly shipped', () => {
+  it('AC-11.3.1 — Trigger: app load after a library update: only shipped Patterns not seen at the last load are new', () => {
+    const [a, b, c] = realSeed.patterns.slice(0, 3).map((p, i) => ({ ...p, id: `p_seed_${i}` }));
+    // Nothing recorded yet: everything counts as new, once.
+    expect(newlyShipped([a, b, c], null)).toEqual([a, b, c]);
+    // The last load saw a and b: only c is new.
+    expect(newlyShipped([a, b, c], [shippedIdentity(a), shippedIdentity(b)])).toEqual([c]);
+    // Nothing changed: nothing is new.
+    expect(newlyShipped([a, b, c], [a, b, c].map(shippedIdentity))).toEqual([]);
+    // Identity ignores the position-derived id, and follows the content.
+    expect(shippedIdentity({ ...a, id: 'p_moved' })).toBe(shippedIdentity(a));
+    expect(shippedIdentity({ ...a, tempo: (a.tempo ?? 80) + 1 })).not.toBe(shippedIdentity(a));
   });
 });
 

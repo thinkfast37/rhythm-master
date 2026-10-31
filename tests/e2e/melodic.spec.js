@@ -1363,7 +1363,7 @@ test('AC-2.2.19/2 — The Rhythm group holds no Key picker', async ({ page }) =>
   await expect(page.locator('[data-section="rhythm"] .key-picker')).toHaveCount(0);
 });
 
-test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.1.2's treatment of Key)", async ({ page }) => {
+test("AC-2.2.19/3 — In Percussive mode there is no Key picker anywhere, the pitch strip included (consistent with AC-2.3.3's treatment of Key)", async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.sound-mode [data-mode="percussive"]')).toHaveAttribute('aria-pressed', 'true');
@@ -1429,7 +1429,7 @@ test('AC-2.9.1/3 — Changing the Register on a shipped Pattern asks for a name 
   expect(after.isOwned).toBe(false);
 });
 
-test('AC-2.9.1/4 — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.1.2’s treatment of Key)', async ({ page }) => {
+test('AC-2.9.1/4 — In Percussive mode there is no Register picker anywhere, the pitch strip included (consistent with AC-2.3.3’s treatment of Key)', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await expect(page.locator('.register-picker')).toHaveCount(0);
