@@ -1740,7 +1740,7 @@ body {
   align-items: center;
   gap: 8px;
 }
-.progression-picker, .arpeggio-picker, .voicing-picker, .chord-root, .chord-quality, .chord-bass {
+.progression-picker, .arpeggio-picker, .voicing-picker, .chord-root, .chord-quality, .chord-bass, .chord-fill {
   max-width: 100%;
   font: 500 13px/1 var(--font-ui);
   color: var(--ink);

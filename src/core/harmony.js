@@ -1046,11 +1046,13 @@ export function setVoicing(pattern, id) {
   });
 }
 
-/** A chord is added as a copy of the last, ready to be edited (AC-2.6.2/4). */
+/** A chord is added as a copy of the last, ready to be edited (AC-2.6.2/4), with no fill of its own (AC-2.15.1/6). */
 export function addChord(pattern) {
   return withHarmony(pattern, (h) => {
     if (h.chords.length >= MAX_CHORDS) throw new Error(`A progression holds at most ${MAX_CHORDS} chords`);
-    h.chords.push({ ...h.chords[h.chords.length - 1] });
+    const added = { ...h.chords[h.chords.length - 1] };
+    delete added.fill;
+    h.chords.push(added);
   });
 }
 
@@ -1061,12 +1063,49 @@ export function removeChord(pattern, index) {
   });
 }
 
-/** Set which arpeggio the notes follow; None removes it and the stored Pitches sound again. */
+/**
+ * Set which arpeggio the notes follow; None removes it and the stored Pitches
+ * sound again. A chord's own fill exists only under an arpeggio, so None drops
+ * every chord's too (AC-2.15.1/2); a fill chosen keeps them (AC-2.15.1/4).
+ */
 export function setArpeggio(pattern, id) {
   if (id !== null && id !== 'none' && !isValidArpeggio(id)) throw new Error(`Unknown arpeggio: ${id}`);
   return withHarmony(pattern, (h) => {
-    if (id === null || id === 'none') delete h.arpeggio;
-    else h.arpeggio = id;
+    if (id === null || id === 'none') {
+      delete h.arpeggio;
+      for (const chord of h.chords) delete chord.fill;
+    } else h.arpeggio = id;
+  });
+}
+
+/* --- a fill per chord (US-2.15, research.md D-022) -------------------------- */
+
+/** The fill a chord deals: its own where it carries one, the Pattern's arpeggio otherwise. */
+export function fillOf(pattern, chordIndex) {
+  return pattern.harmony?.chords?.[chordIndex]?.fill ?? pattern.harmony?.arpeggio ?? null;
+}
+
+/**
+ * Give one chord a fill of its own in place of the arpeggio, or null — As
+ * above — to take it away (AC-2.15.1/3). Only under an arpeggio: with none the
+ * notes are as stamped and no chord is dealt (AC-2.15.1/2).
+ */
+export function setChordFill(pattern, index, id) {
+  if (id !== null && !isValidArpeggio(id)) throw new Error(`Unknown arpeggio: ${id}`);
+  return withHarmony(pattern, (h) => {
+    const chord = h.chords[index];
+    if (!chord) throw new Error(`No chord ${index}`);
+    if (id !== null && !h.arpeggio) throw new Error("A chord's fill needs an arpeggio to stand in for");
+    if (id === null) delete chord.fill;
+    else chord.fill = id;
+  });
+}
+
+/** Every chord back to As above — what the Fill roll does with its new arpeggio (AC-2.15.3/3). */
+export function clearChordFills(pattern) {
+  if (!hasHarmony(pattern) || !pattern.harmony.chords.some((c) => c.fill)) return pattern;
+  return withHarmony(pattern, (h) => {
+    for (const chord of h.chords) delete chord.fill;
   });
 }
 
@@ -1231,12 +1270,21 @@ export function fillIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, or
 
 /**
  * The Pattern as played with the fill `id` in force — a playback overlay handed
- * to whoever renders or sounds it, never stored (AC-2.7.1/4). The Pattern
- * itself is returned when it has no progression or already carries that fill.
+ * to whoever renders or sounds it, never stored (AC-2.7.1/4). The fill in force
+ * deals every chord, each chord's own fill suspended while it lasts
+ * (AC-2.15.3/1). The Pattern itself is returned when it has no progression or
+ * already plays exactly that.
  */
 export function withArpeggio(pattern, id) {
-  if (!hasHarmony(pattern) || (pattern.harmony.arpeggio ?? null) === id) return pattern;
-  return { ...pattern, harmony: { ...pattern.harmony, arpeggio: id } };
+  if (!hasHarmony(pattern)) return pattern;
+  const chords = pattern.harmony.chords;
+  if ((pattern.harmony.arpeggio ?? null) === id && !chords.some((c) => c.fill)) return pattern;
+  const bare = chords.map((c) => {
+    const rest = { ...c };
+    delete rest.fill;
+    return rest;
+  });
+  return { ...pattern, harmony: { ...pattern.harmony, arpeggio: id, chords: bare } };
 }
 
 /* --- cycle mode: the progression in force (US-2.10) ------------------------ */
@@ -1320,11 +1368,10 @@ export function dealKey(measureIndex, beatIndex, slotIndex) {
  * @returns {Map<string, object>|null} dealKey → step
  */
 export function arpeggioDeal(pattern, pass = 0) {
-  const order = pattern?.harmony?.arpeggio;
-  if (!order || !hasHarmony(pattern)) return null;
-  const approach = ARPEGGIOS.find((a) => a.id === order)?.approach;
+  if (!pattern?.harmony?.arpeggio || !hasHarmony(pattern)) return null;
   const deal = new Map();
   let sequence = null;
+  let approach = null;
   let k = 0;
   let previous = null;
   let lastKey = null;
@@ -1332,9 +1379,13 @@ export function arpeggioDeal(pattern, pass = 0) {
   pattern.measures.forEach((measure, m) => {
     const chord = chordAt(pattern, pass, m);
     if (m === 0 || chord !== previous) {
-      // Each chord opens on its own first step, dealt from its own stack (AC-2.11.2/3).
+      // Each chord opens on its own first step, dealt from its own stack
+      // (AC-2.11.2/3) — and from its own fill where it carries one, the
+      // Pattern's arpeggio otherwise (AC-2.15.2).
       k = 0;
+      const order = fillOf(pattern, chord);
       sequence = arpeggioSequence(order, pattern, pattern.harmony.chords[chord]);
+      approach = ARPEGGIOS.find((a) => a.id === order)?.approach ?? null;
     }
     previous = chord;
     measure.beats.forEach((beat, b) => {

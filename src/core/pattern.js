@@ -338,6 +338,11 @@ export function validate(pattern) {
         if ('inversion' in (c ?? {}) && isValidQuality(c.quality) && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= memberCount(c))) {
           fail(`chord ${i + 1}: inversion ${c.inversion} is not a member of a ${c.quality} chord (rule 14)`);
         }
+        // A chord's own fill: a catalogue id, and only under an arpeggio (rule 14, US-2.15).
+        if ('fill' in (c ?? {})) {
+          if (!isValidArpeggio(c.fill)) fail(`chord ${i + 1}: fill "${c.fill}" unsupported (rule 14)`);
+          else if (!('arpeggio' in h)) fail(`chord ${i + 1}: fill "${c.fill}" without an arpeggio (rule 14)`);
+        }
       });
     }
   }

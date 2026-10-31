@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 961 across 62 User Stories
+**Criteria**: 974 across 63 User Stories
 
-**Coverage**: 834 of 961 criteria proven (86.8%)
+**Coverage**: 847 of 974 criteria proven (87.0%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 834 | 86.8% |
-| 🟠 Gap — MEDIUM | 50 | 5.2% |
-| 🟡 Gap — LOW | 77 | 8.0% |
+| 🟢 Proven | 847 | 87.0% |
+| 🟠 Gap — MEDIUM | 50 | 5.1% |
+| 🟡 Gap — LOW | 77 | 7.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -119,6 +119,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.13 | 15 | **15** | · | · | · | · | · |
 | 🟢 US-19.10 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.14 | 17 | **17** | · | · | · | · | · |
+| 🟢 US-2.15 | 13 | **13** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -697,7 +698,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.6 | `AC-2.6.8/3` | Switching to Percussive keeps the progression with the Key, scale and Pitch data, unused, and switching back to Melodic restores them | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.8/4` | Make Copy and Duplicate carry the progression; Append keeps the first Pattern's progression and the second's chord tones resolve against it | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `pattern.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.8/5` | A submission carries the progression, so the maintainer receives the melody as authored | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `export.test.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.9/1` | Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, in the change setting, or in the arpeggio are not duplicates | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `similarity.test.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.9/1` | Two Patterns identical in rhythm and roles but differing in progression, in one chord's quality, in the change setting, in the arpeggio, or in one chord's own fill are not duplicates | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `similarity.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.9/2` | Two Patterns identical in all of those are duplicates, and Family detection is unchanged: the same rhythm under different harmony is the same Family | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `similarity.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.10/1` | The file holds as many passes as the progression needs to return to its first chord at Measure 1: four passes for I–IV–V–I changing every pass, and three for the twelve-bar blues over eight Measures changing every Measure | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `export.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.10/2` | Each pass's notes are the notes playback sounds in that pass, from the one timeline | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `export.test.js` | 🟢 OK |
@@ -1085,3 +1086,16 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.14 | `AC-2.14.3/1` 🖵 | Each of Key, Scale, Register, Progression, Chord changes, Fill and Voicing carries a No dice toggle beside it, shown with the control and pressed while the control is kept out of the roll; toggling it changes no Pattern content | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
 | US-2.14 | `AC-2.14.3/2` 🖵 | The marks hold for the session and a reload clears them; they are neither Pattern content nor a setting: nothing auto-saves, a shipped Pattern is never prompted for a name, and no export carries them | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
 | US-2.14 | `AC-2.14.3/3` 🖵 | The marks are the same on every Pattern in the session: a mark set on one Pattern holds when another is loaded | P-067 | T442 (1/1 done) | T443 (1/1 done) | `dice.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.1/1` 🖵 | Each chord-editor row carries a Fill picker after the bass, offering As above first and then the whole fill catalogue under its group headings; As above names the Pattern's Arpeggio, and a row reads As above until a fill is chosen for its chord | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.1/2` 🖵 | The picker is absent from every row while the Arpeggio is None, and setting the Arpeggio to None drops every chord's own fill, so setting it again afterwards finds every row at As above | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js`, `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.1/3` 🖵 | Choosing a fill for one chord changes that chord alone: the Arpeggio picker still shows the Pattern's Arpeggio and every other row keeps As above or its own fill | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.1/4` 🖵 | Changing the Arpeggio changes what As above deals and leaves each chord's own fill as it is | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.1/5` 🖵 | A chord's fill is Pattern content: it is saved with the Pattern and survives a reload, auto-saves into an owned Pattern, is one Undo step, is carried by the Pattern's JSON export and its submission, and on a shipped Pattern goes through the naming prompt, cancelling it leaving the Pattern as it was | P-068 | T454 (1/1 done) | T455 (1/1 done) | `export.test.js`, `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.1/6` 🖵 | Choosing a progression from the picker gives fresh chords with no fill of their own, a chord added with + Chord has none, editing a chord's root, quality or bass keeps its fill, and removing a chord takes its fill with it | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js`, `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.2/1` | Under I–IV–V–I changing every pass with the Arpeggio at Ascending and the fourth chord at Descending, four sounding Slots a Measure deal Root 3rd 5th Root in the first three passes and 5th 3rd Root 5th in the fourth; under every-Measure changes the same holds Measure by Measure, each chord's span dealt from its own fill's first step | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.2/2` 🖵 | Playback, the grid's note bands, the score and MIDI export all sound and show the chord's own fill, from the one timeline, and the pitch strip still says the notes follow the arpeggio | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.2/3` | A chord whose own fill walks into the next chord aims its approach at the next chord's bass exactly as that fill does as the Arpeggio, whatever fill the next chord carries | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.2/4` | Choosing Progression None bakes the first pass as it sounded, a chord's own fill included, so the first pass sounds exactly as before | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.3/1` 🖵 | While Cycle fills has a fill in force it deals every chord, each chord's own fill suspended; turning cycle mode off, or stopping where stopping returns the Pattern's own fill, returns the Arpeggio and each chord's own fill together, and the Pattern's JSON is unchanged throughout | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js`, `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.3/2` 🖵 | While a Song plays, the Section's fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.spec.js` | 🟢 OK |
+| US-2.15 | `AC-2.15.3/3` 🖵 | Rolling the Fill control sets the Arpeggio to the rolled fill and clears every chord's own fill, as one edit that one Undo takes back whole; with Fill marked No dice each chord's own fill is as it was | P-068 | T454 (1/1 done) | T455 (1/1 done) | `chord-fill.test.js`, `chord-fill.spec.js` | 🟢 OK |

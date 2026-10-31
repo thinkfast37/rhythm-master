@@ -273,6 +273,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-065** | US-19.10 — Play a MIDI instrument into the Composer | AC-19.10.1–AC-19.10.5 | T426 | T427 |
 | **P-066** | US-10.3 — Add a variation to a loop *(withdrawn 2026-10-31)* | — | T436, T444, T446 | T437, T445, T447 |
 | **P-067** | US-2.14 — Roll the dice across the Melody group | AC-2.14.1–AC-2.14.3 | T442 | T443 |
+| **P-068** | US-2.15 — A fill for each chord of the progression | AC-2.15.1–AC-2.15.3 | T454 | T455 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of
