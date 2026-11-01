@@ -52,6 +52,7 @@ export const HELP = Object.freeze({
     ['− Measure / + Measure', 'Removes the last Measure, or adds one at the end; a Pattern always keeps one.', '[data-action="add-measure"]'],
     ['Time signature', 'Tap a Measure’s signature in the grid to change it; every Measure can differ.', '.control:has(> .structure-row) > .control-label'],
     ['Double Length', 'Repeats the whole Pattern after itself, to vary the second half.', '[data-action="duplicate-pattern"]'],
+    ['Add variation', 'Appends a variation of the original — the first Measures — built from several techniques at once: a chord’s inversion, quality or fill changed in that copy alone, syllables added, moved or removed, a triplet or a 16th fill, the accent shifted. Each choice is offered, the loop plays the candidate before it is written, and the dice roll one to three techniques for you.', '[data-action="add-variation"]'],
     ['Condense', 'Rewrites the Pattern at the simplest subdivision that still sounds the same. Mixed meters are regrouped into the time signature you pick, keeping their accents.', '[data-action="condense-pattern"]'],
     ['Append…', 'Adds another Pattern from the library after this one.', '[data-action="append-pattern"]'],
   ],

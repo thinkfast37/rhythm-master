@@ -31,6 +31,7 @@
  */
 import { TIME_SIGNATURES, beatCount, beatNoteValue } from './meter.js';
 import { defaultAccent, effectiveAccent } from './accents.js';
+import { mapOverrides, withOverrides } from './harmony.js';
 
 const PACKED_RECIPE = 'straight-16ths';
 
@@ -118,7 +119,10 @@ function halveOwned(pattern) {
     measures.push({ timeSignature, beats });
   }
   pattern.measures = measures;
-  return pattern;
+  // A Measure made of two takes the overrides of both, the first's where they
+  // clash (AC-10.4.7/2).
+  const overrides = mapOverrides(pattern.harmony?.overrides, (m, c) => [Math.floor(m / 2), c]);
+  return withOverrides(pattern, overrides);
 }
 
 /**
@@ -200,6 +204,9 @@ function condensedInto(pattern, target) {
       measures.push({ timeSignature: target, beats: beats.slice(i, i + perMeasure) });
     }
     next.measures = measures;
+    // Regrouped into another meter, no Measure is the one an override was on,
+    // so they are dropped (AC-10.4.7/2).
+    next = withOverrides(next, null);
     const halved = halveAll(next);
     // Condensing never lengthens: 2/4 is no target for 4/4, 4/4, 2/4, 2/4, 2/4.
     if (halved.measures.length < pattern.measures.length) result = halved;

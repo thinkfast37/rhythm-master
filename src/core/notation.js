@@ -24,6 +24,7 @@ import { noteName, inRegister, registerOf, soundingOctaveOffset, keySemitones, d
 import { SCALES, DEFAULT_SCALE } from './scales.js';
 import {
   chordAt,
+  chordInMeasure,
   chordName,
   chordToneName,
   cyclePasses,
@@ -319,11 +320,17 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null }
       const countLabels = measureLabels(measure, system);
       const beatTicks = noteValue === 'quarter' ? QUARTER : QUARTER / 2;
       const chordIndex = chordAt(pattern, pass, m);
-      const chord = chordIndex === null ? null : pattern.harmony.chords[chordIndex];
+      const chord = chordIndex === null ? null : chordInMeasure(pattern, m, chordIndex);
       // Named where the chord in force changes — by what it is, so a step that
-      // repeats the chord before it is not named twice (AC-12.2.8/2).
-      const previous = chord && m > 0 ? pattern.harmony.chords[chordAt(pattern, pass, m - 1)] : null;
-      const changed = !previous || previous.degree !== chord.degree || previous.quality !== chord.quality;
+      // repeats the chord before it is not named twice (AC-12.2.8/2). A
+      // Measure's override is a change of chord (US-10.4).
+      const previous = chord && m > 0 ? chordInMeasure(pattern, m - 1, chordAt(pattern, pass, m - 1)) : null;
+      const changed =
+        !previous ||
+        previous.degree !== chord.degree ||
+        previous.quality !== chord.quality ||
+        (previous.inversion ?? 0) !== (chord.inversion ?? 0) ||
+        (previous.omit ?? []).join() !== (chord.omit ?? []).join();
       const chordLabel = chord && (m === 0 || changed) ? prettyName(chordName(chord, pattern.key)) : null;
 
       // Accidentals in force, by letter and octave, reset at every bar line

@@ -20,6 +20,7 @@ import { noteName, inRegister, registerOf, soundingOctaveOffset } from '../core/
 import {
   hasHarmony,
   chordAt,
+  chordInMeasure,
   chordIn,
   nextChordAt,
   chordName,
@@ -46,6 +47,12 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
   const system = effectiveSystem(pattern, options.countingSystem ?? 'takadimi');
   const readOnly = options.readOnly === true;
 
+  // A Slot that holds focus keeps it across the rebuild — a run re-renders the
+  // grid every pass, and editing focus placed on a Slot (AC-10.4.1/4) must not
+  // fall off it at the next pass boundary.
+  const active = document.activeElement;
+  const focused = active && root.contains(active) && active.classList.contains('slot-accent') ? { ...active.dataset } : null;
+
   root.innerHTML = '';
   // `recipe-armed` says a tap in the grid will apply the armed Recipe to a Beat
   // rather than cycle a Slot's accent (AC-1.3.11) — the only mode the app has, so
@@ -62,10 +69,24 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
   const deal = pattern.soundMode === 'melodic' ? arpeggioDeal(pattern, pass) : null;
 
   pattern.measures.forEach((measure, measureIndex) => {
-    root.appendChild(
-      renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly, pattern.key, pass, deal)
-    );
+    const row = renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly, pattern.key, pass, deal);
+    // A candidate variation's Measures, after the Pattern's own, are marked as
+    // the candidate (AC-10.4.4/2): heard and seen, written nowhere.
+    if (options.candidateFrom !== undefined && options.candidateFrom !== null && measureIndex >= options.candidateFrom) {
+      row.classList.add('candidate');
+      const mark = document.createElement('span');
+      mark.className = 'measure-candidate';
+      mark.textContent = 'Candidate';
+      row.prepend(mark);
+    }
+    root.appendChild(row);
   });
+
+  if (focused) {
+    root
+      .querySelector(`.slot[data-measure="${focused.measure}"][data-beat="${focused.beat}"][data-slot="${focused.slot}"] .slot-accent`)
+      ?.focus();
+  }
 
   return root;
 }
@@ -142,7 +163,10 @@ export function renderChordStrip(root, pattern, transportPosition = null) {
     numeral.textContent = chordNumeral(chord);
     const name = document.createElement('span');
     name.className = 'chord-name';
-    name.textContent = tryChordName(chord, pattern.key);
+    // The chip in force names the chord as the Measure being played plays it
+    // — with its override, where one is written (AC-10.4.5/16).
+    const asPlayed = index === now ? chordInMeasure(pattern, measureIndex, index) : chord;
+    name.textContent = tryChordName(asPlayed, pattern.key);
     chip.dataset.chordName = name.textContent;
     chip.append(numeral, name);
 
@@ -218,7 +242,7 @@ function renderMeasure(measure, measureIndex, pattern, position, system, readOnl
   const chordIndex =
     pattern.soundMode === 'melodic' && pattern.harmony?.change === 'measure' ? chordAt(pattern, pass, measureIndex) : null;
   if (chordIndex !== null) {
-    const chord = pattern.harmony.chords[chordIndex];
+    const chord = chordInMeasure(pattern, measureIndex, chordIndex);
     const label = document.createElement('span');
     label.className = 'measure-chord';
     label.dataset.chord = String(chordIndex);

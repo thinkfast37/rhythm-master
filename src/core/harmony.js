@@ -914,10 +914,10 @@ export function chordAt(pattern, pass, measureIndex) {
   return pass % n;
 }
 
-/** The chord itself, or null. */
+/** The chord itself, as this Measure plays it (US-10.4), or null. */
 export function chordIn(pattern, pass, measureIndex) {
   const i = chordAt(pattern, pass, measureIndex);
-  return i === null ? null : pattern.harmony.chords[i];
+  return i === null ? null : chordInMeasure(pattern, measureIndex, i);
 }
 
 /** The chord in force at the position that follows this one — what to play next. */
@@ -1220,6 +1220,13 @@ export function removeChord(pattern, index) {
   return withHarmony(pattern, (h) => {
     if (h.chords.length <= 1) throw new Error('A progression keeps at least one chord');
     h.chords.splice(index, 1);
+    // A removed chord's overrides go with it, and the chords after it keep
+    // theirs under their new index (AC-10.4.7/4).
+    if (h.overrides) {
+      const next = mapOverrides(h.overrides, (m, c) => (c === index ? null : c > index ? [m, c - 1] : [m, c]));
+      if (next) h.overrides = next;
+      else delete h.overrides;
+    }
   });
 }
 
@@ -1234,15 +1241,135 @@ export function setArpeggio(pattern, id) {
     if (id === null || id === 'none') {
       delete h.arpeggio;
       for (const chord of h.chords) delete chord.fill;
+      // A fill override exists only under an arpeggio too (AC-10.4.7/4).
+      if (h.overrides) {
+        const next = mapOverrides(h.overrides, (m, c, o) => {
+          const rest = { ...o };
+          delete rest.fill;
+          return Object.keys(rest).length ? [m, c, rest] : null;
+        });
+        if (next) h.overrides = next;
+        else delete h.overrides;
+      }
     } else h.arpeggio = id;
   });
 }
 
 /* --- a fill per chord (US-2.15, research.md D-022) -------------------------- */
 
-/** The fill a chord deals: its own where it carries one, the Pattern's arpeggio otherwise. */
-export function fillOf(pattern, chordIndex) {
-  return pattern.harmony?.chords?.[chordIndex]?.fill ?? pattern.harmony?.arpeggio ?? null;
+/**
+ * The fill a chord deals: its own where it carries one, the Pattern's arpeggio
+ * otherwise — and, given the Measure, the fill that Measure's override gives
+ * it (US-10.4).
+ */
+export function fillOf(pattern, chordIndex, measureIndex = null) {
+  const chord =
+    measureIndex === null ? pattern.harmony?.chords?.[chordIndex] : chordInMeasure(pattern, measureIndex, chordIndex);
+  return chord?.fill ?? pattern.harmony?.arpeggio ?? null;
+}
+
+/* --- a chord's changes in one Measure (US-10.4, research.md D-025) --------- */
+
+/** The fields an override may carry — the chord's own, less its root. */
+export const OVERRIDE_FIELDS = ['quality', 'inversion', 'fill', 'omit'];
+
+/** The override Measure `m` holds for chord `c`, or null. */
+export function overrideFor(pattern, measureIndex, chordIndex) {
+  return pattern?.harmony?.overrides?.[measureIndex]?.[chordIndex] ?? null;
+}
+
+/**
+ * The chord as one Measure plays it: the progression's chord with that
+ * Measure's override laid over it (AC-10.4.5/16). A quality override redefines
+ * the members, so it carries its own bass and omissions and the chord's are
+ * not inherited; any other override lays its fields over the chord's. Every
+ * field is read through the bounds the chord's own pass — `inversionOf` clamps
+ * the bass, and an omitted member the quality lacks is dropped — so an
+ * override can never name a member the chord does not have (AC-10.4.7/4).
+ */
+export function chordInMeasure(pattern, measureIndex, chordIndex) {
+  const chord = pattern.harmony.chords[chordIndex];
+  const o = overrideFor(pattern, measureIndex, chordIndex);
+  if (!o) return chord;
+  const next = o.quality !== undefined && isValidQuality(o.quality) ? { degree: chord.degree, quality: o.quality } : { ...chord };
+  const inversion = o.inversion ?? (o.quality !== undefined ? 0 : chord.inversion);
+  const omit = o.omit ?? (o.quality !== undefined ? [] : omitOf(chord));
+  delete next.inversion;
+  delete next.omit;
+  const roles = quality(next.quality).intervals.map(roleOf);
+  const kept = omit.filter((t) => t !== 1 && roles.includes(t));
+  if (kept.length && roles.length - kept.length >= MIN_MEMBERS) next.omit = kept;
+  if (inversion) next.inversion = inversion;
+  const fill = o.fill ?? chord.fill;
+  delete next.fill;
+  if (fill && pattern.harmony.arpeggio && isValidArpeggio(fill)) next.fill = fill;
+  return next;
+}
+
+/**
+ * Give chord `c` the fields in `fields` while Measure `m` plays it; a field
+ * set to null is taken back, and an override left with nothing is removed.
+ */
+export function setChordOverride(pattern, measureIndex, chordIndex, fields) {
+  return withHarmony(pattern, (h) => {
+    if (!h.chords[chordIndex]) throw new Error(`No chord ${chordIndex}`);
+    if (!Number.isInteger(measureIndex) || measureIndex < 0 || measureIndex >= pattern.measures.length) {
+      throw new Error(`No Measure ${measureIndex}`);
+    }
+    const current = { ...(h.overrides?.[measureIndex]?.[chordIndex] ?? {}) };
+    for (const [k, v] of Object.entries(fields)) {
+      if (!OVERRIDE_FIELDS.includes(k)) throw new Error(`"${k}" is not a field a chord override may carry`);
+      if (v === null || v === undefined) delete current[k];
+      else current[k] = v;
+    }
+    if (current.quality !== undefined && !isValidQuality(current.quality)) throw new Error(`Unknown chord quality: ${current.quality}`);
+    // Under a quality override root position and no omission are what absence
+    // already means, so neither is written.
+    if (current.quality !== undefined) {
+      if (!current.inversion) delete current.inversion;
+      if (Array.isArray(current.omit) && !current.omit.length) delete current.omit;
+    }
+    if (current.fill !== undefined && (!isValidArpeggio(current.fill) || !h.arpeggio)) throw new Error('A fill override needs an arpeggio to stand in for');
+    const overrides = { ...(h.overrides ?? {}) };
+    const forMeasure = { ...(overrides[measureIndex] ?? {}) };
+    if (Object.keys(current).length) forMeasure[chordIndex] = current;
+    else delete forMeasure[chordIndex];
+    if (Object.keys(forMeasure).length) overrides[measureIndex] = forMeasure;
+    else delete overrides[measureIndex];
+    if (Object.keys(overrides).length) h.overrides = overrides;
+    else delete h.overrides;
+  });
+}
+
+/**
+ * The overrides re-keyed: `place(m, c, override)` returns the new
+ * `[measure, chord]` (or `[measure, chord, override]`) for each, or null to
+ * drop it. Null when nothing is left. Pure; used by every Measure edit that
+ * moves Measures about (AC-10.4.7/2).
+ */
+export function mapOverrides(overrides, place) {
+  if (!overrides) return null;
+  const out = {};
+  for (const [m, byChord] of Object.entries(overrides)) {
+    for (const [c, o] of Object.entries(byChord)) {
+      const placed = place(Number(m), Number(c), o);
+      if (!placed) continue;
+      const [nm, nc, no = o] = placed;
+      // Two overrides landing on one place: the first placed wins.
+      out[nm] ??= {};
+      out[nm][nc] ??= no;
+    }
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/** `pattern` with its overrides re-keyed by `place`, or with none. */
+export function withOverrides(pattern, overrides) {
+  if (!pattern.harmony) return pattern;
+  const harmony = { ...pattern.harmony };
+  if (overrides && Object.keys(overrides).length) harmony.overrides = overrides;
+  else delete harmony.overrides;
+  return { ...pattern, harmony };
 }
 
 /**
@@ -1498,7 +1625,10 @@ export function withProgression(pattern, id) {
  */
 export function arpeggioRoles(pattern, chord = null) {
   const chords = pattern.harmony?.chords ?? [];
-  const roles = TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
+  // The chord in force may be the progression's chord under a Measure's
+  // override (US-10.4), with a member no chord of the list has — Em7 among
+  // triads — so its own members count too.
+  const roles = TONES.filter((tone) => chords.some((c) => hasTone(c, tone)) || (chord && hasTone(chord, tone)));
   if (!chord) return roles;
   // The chord in force is dealt the members it has (AC-2.6.6/5): a member
   // struck from it gets no step (AC-2.16.2/1), and neither does a role of the
@@ -1543,16 +1673,19 @@ export function arpeggioDeal(pattern, pass = 0) {
   const last = pattern.measures.length - 1;
   pattern.measures.forEach((measure, m) => {
     const chord = chordAt(pattern, pass, m);
-    if (m === 0 || chord !== previous) {
+    // A Measure that plays the chord with an override of its own is a change
+    // of chord to the deal (AC-10.4.5/16): it opens on the overridden stack.
+    const inForce = `${chord}:${JSON.stringify(overrideFor(pattern, m, chord) ?? null)}`;
+    if (m === 0 || inForce !== previous) {
       // Each chord opens on its own first step, dealt from its own stack
       // (AC-2.11.2/3) — and from its own fill where it carries one, the
       // Pattern's arpeggio otherwise (AC-2.15.2).
       k = 0;
-      const order = fillOf(pattern, chord);
-      sequence = arpeggioSequence(order, pattern, pattern.harmony.chords[chord]);
+      const order = fillOf(pattern, chord, m);
+      sequence = arpeggioSequence(order, pattern, chordInMeasure(pattern, m, chord));
       approach = ARPEGGIOS.find((a) => a.id === order)?.approach ?? null;
     }
-    previous = chord;
+    previous = inForce;
     measure.beats.forEach((beat, b) => {
       beat.slots.forEach((slot, s) => {
         if (!slot.on) return;
@@ -1565,9 +1698,10 @@ export function arpeggioDeal(pattern, pass = 0) {
     // semitone beside the bass of the chord after it — the next Measure's, or
     // the next pass's at the end, wrapping with the cycle and reckoned within
     // the Pattern alone (AC-2.6.6/23–/26).
+    const nextMeasure = m === last ? 0 : m + 1;
     const next = m === last ? chordAt(pattern, pass + 1, 0) : chordAt(pattern, pass, m + 1);
     if (approach && lastKey !== null && (m === last || next !== chord)) {
-      deal.set(lastKey, { approach, target: chordStack(pattern.harmony.chords[next])[0].offset });
+      deal.set(lastKey, { approach, target: chordStack(chordInMeasure(pattern, nextMeasure, next))[0].offset });
       lastKey = null;
     }
   });

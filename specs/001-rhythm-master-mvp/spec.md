@@ -2322,6 +2322,7 @@ field survives showing it.)*
   - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - **And** the same list is the frame's two parts, one above the other (AC-15.1.20): the Pattern header, chord strip and grid with its View control are the rhythm band; the tab bar, the groups, Pattern actions and family members are the work surface — each keeping the order above, so no section ever swaps places with another, and on a wide panel each scrolling on its own (AC-15.1.18)
   - *(Revised 2026-10-25 with US-2.14 (T442): the Melody group gains a first entry, Roll the dice, ahead of the pitch strip, and a No dice toggle beside each of the seven controls the roll can change — Key, Scale and Register on the pitch strip, Progression, Chord changes, Fill and Voicing among the harmony controls. The maintainer chose the head of the group over its foot. The section order is untouched: the entry is inside the Melody group.)*
+  - *(Revised 2026-11-01 with US-10.4 (T466): the Melody group's last entry returns — Double Length and Add variation, on a making goal with no Rhythm group, Make it melodic and Combine patterns — exactly as the 2026-10-25 revision below placed it, closing the gap the withdrawal named. The section order is untouched: the entry is inside the Melody group.)*
   - *(Revised 2026-10-31 with US-10.3's withdrawal (T446): the Melody group's last entry below — Double Length and Add variation on a making goal with no Rhythm group — is removed, and the list is as it was before 2026-10-25 apart from US-2.14's Roll the dice. One consequence is named rather than left to be found: Make it melodic and Combine patterns again show no Double Length, which D-018's ruling says every making goal should; restoring it on its own is a change for the redesign or a story of its own, not part of a withdrawal.)*
   - *(Revised 2026-10-25 with US-10.3 (T436): the Melody group gains a last entry, Double Length and Add variation, shown only on a making goal whose tab bar has no Rhythm group — Make it melodic and Combine patterns. D-018's ruling is that Double Length is visible on every making goal, and the maintainer asked for Add variation on the chord-progression-and-fill goals; in Lab and Build a rhythm both stay in the Rhythm group alone, so nothing is shown twice. The section order is untouched: the entry is inside the Melody group.)*
   - *(Revised 2026-10-24 with T410, D-018 phase 2: the two side-by-side panes of 2026-09-13 become the rhythm band above the work surface, the frame of the maintainer's storyboard (board 0); the pinned bar gains ‹ Goals at its left and Related beside the library toggle, and the goal bar of 2026-09-20 becomes the goal strip under it. The ordered list itself is untouched.)*
@@ -4472,6 +4473,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *Traceability: `US-10.3` — withdrawn. No criteria are in force.*
 
+*(Note 2026-11-01: the redesign is User Story 67, US-10.4 — Vary a loop.)*
+
 *(Withdrawn 2026-10-31 at the maintainer's request (T446): "After playing with the feature, I don't like how it's implemented and I am going to need to redesign it." The story added an Add variation picker that appended a copy of a loop's phrase with one of 23 named devices applied, then a step to audition the copy before accepting it. It shipped in PR #145 and PR #149 and was taken out whole: the picker, its device catalogue, its Composer and Melody-group controls, the phrase length it remembered, and its 48 criteria. The redesign will be specified as a new story with new IDs rather than by reviving these, so nothing here constrains it. What was learnt is kept in research.md D-020. Two passages elsewhere changed with the withdrawal: AC-15.1.8 drops the Melody group's Measures row the story added, and US-2.14's rationale and D-021 note where the roll's `pick` now lives. A remembered phrase length already in a browser's Local Metadata is left there unread; it is not Pattern content and no export carries it.)*
 
 ---
@@ -4665,6 +4668,134 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.17.2/3** — Chords begun from scratch are the Pattern's as a catalogue entry's are: saved with it and surviving a reload, dealt by the Arpeggio on the grid, and carried into the MIDI file
 
 ---
+
+### User Story 67 - Vary a loop
+
+*Traceability: `US-10.4` — Vary a loop*
+
+**As** the Practicing Musician, **I want** to add variations of my Pattern that play one after another as the loop goes round — each built from several techniques at once, heard before it is written, or rolled for me — and to keep adding them from the same original, **so that** a loop I practise for ten minutes keeps changing instead of repeating one Measure until it is tiresome.
+
+*(Added 2026-11-01 at the maintainer's request, the redesign that User Story 62's withdrawal promised: "looping the exact same pattern over and over becomes tiresome. So when I create a new rhythm pattern I can add variations that will play in each successive loop. When the last variation plays it will return playing from the first pattern … It's important that the variation can use multiple techniques. it would also be good to have a roll the dice feature … it's also important that the original pattern be remembered since the variations will be of the original pattern and if I have a 1 measure pattern then I create a variation it will be a 2 measure pattern. But if I add another variation it should now be a 3 measure pattern (different than duplicating)." Asked what was wrong with the October build, the maintainer said: "The options for generating variations were mostly not musically interesting. The limit of only one technique was very limiting." Decisions taken with the maintainer the same day: a variation's chord changes — a different bass, quality, fill or omitted member for one chord — live as per-Measure chord overrides, Pattern content that travels with the Measure, rather than as a variation list kept apart from the Measures, which the maintainer had declined in October (research.md D-020) and declined again; the first version carries the maintainer's eight techniques, the dynamics of October's build, Breathe, Omit a member, Octave up and down, Halve the Beat and Rotate; Auto landing. The original is the Pattern's first Measures, remembered per Pattern as Local Metadata as October's was, and every variation is built from it, never from the latest copy. The terms: the **original** is the first Measures of the Pattern up to the remembered length; a **technique** is one named, deterministic change; a **candidate** is a copy of the original with a stack of techniques applied, heard in the loop but not yet written; a **variation** is a candidate that has been accepted and appended. See research.md D-025.)*
+
+**Independent Test**: Under Lab, load an owned one-Measure Melodic Pattern in 4/4 with Beats on Straight 8ths, five sounding Slots, a progression Em–C–G–D changing every pass and the Arpeggio at Ascending; open Add variation and assert the dialog names Measure 1 as the original and the loop keeps playing; add Change a chord's quality on Em with Em7 and assert the loop now plays two Measures, the second sounding Em7's seventh in its deal while Measure 1 still sounds Em, and the Pattern is unchanged in storage; add Sixteenth fill on Beat 4 and assert both changes are heard together in Measure 2; press Accept and assert the Pattern has two Measures, Measure 2 carries the quality override and the 16ths, Measure 1 is untouched, it auto-saved, and one Undo removes both; open Add variation again and assert the original is still Measure 1; press Roll the dice and assert a candidate of one to three techniques is listed, each with its choice, and heard as a third Measure; press Accept and assert three Measures, each of 2 and 3 a variation of Measure 1; remove the last Measure and assert its overrides went with it; export MIDI and assert the Em7 seventh sounds in Measure 2 and the file carries no technique name; and assert the Pattern's JSON carries the override and no phrase length.
+
+**Acceptance Scenarios**:
+
+- **AC-10.4.1** — Accept appends a variation of the original
+  - **Given** a Pattern whose original is known (AC-10.4.2)
+  - **When** the musician accepts a candidate in the Add variation dialog
+  - **Then** a copy of the original with the candidate's techniques applied is appended after the Pattern's last Measure, the Measures already there are untouched, and the result is treated exactly as Double Length treats its own: an owned Pattern auto-saves, a shipped Pattern is asked for a name first
+  - **Cases**:
+    - **AC-10.4.1/1** — The appended Measures are as many as the original, and every Time Signature, Recipe, Accent Level, Pitch and chord in them is the original's except where a technique's rule says otherwise
+    - **AC-10.4.1/2** — The Measures the Pattern already held are unchanged, however many variations it already has
+    - **AC-10.4.1/3** — Every variation is built from the original, never from the latest copy: three accepted candidates on a one-Measure Pattern give four Measures, each of Measures 2, 3 and 4 differing from Measure 1 only by its own techniques
+    - **AC-10.4.1/4** — Editing focus moves to the first Slot of the appended copy on Accept, as it does after Double Length
+    - **AC-10.4.1/5** — Into an owned Pattern the result auto-saves at once as one Undo step; on a shipped Pattern Accept is the first edit and the naming prompt comes before anything is applied, cancelling it leaving the Pattern as it was
+    - **AC-10.4.1/6** — Add variation is enabled only while the Pattern's length plus the original's length is within the 32-Measure cap, and says so when it is not
+    - **AC-10.4.1/7** — In the Composer the variation keeps the draft's notes — there is no keep-or-start-percussive question, which belongs to Double Length — and a draft Slot that sounds without a Pitch is copied as it stands
+  - *(Cross-references, kept out of the Case wording: /4 follows AC-10.1.2, /5 follows AC-10.1.5 and AC-10.1.6 with US-7.2 and US-7.3, /6's cap is AC-1.1.3's, /7's draft is US-19.1's.)*
+
+- **AC-10.4.2** — The original is the Pattern's first Measures, and is remembered
+  - **Given** a Pattern
+  - **When** the Add variation dialog opens
+  - **Then** it names the original — Measures 1 to N — and every candidate is built from those Measures; N is remembered for this Pattern as Local Metadata
+  - **Cases**:
+    - **AC-10.4.2/1** — The original's length is the length remembered for this Pattern, and the whole Pattern when none is remembered or the remembered length exceeds the Pattern's; it can be set to any number of Measures from 1 to the Pattern's length before a candidate is built, and changing it discards the candidate
+    - **AC-10.4.2/2** — The length is remembered per Pattern in `rm.localMeta.v1` when a candidate is accepted, is in force after a reload, and like all Local Metadata is in no Pattern export or submission
+    - **AC-10.4.2/3** — Under a progression that changes every Measure, the copy's Measures fall over the chords that follow the original's in the cycle, and the dialog says so; under one that changes every pass, every Measure of a pass shares its chord and the pass simply lengthens
+    - **AC-10.4.2/4** — Removing Measures from the end past the original's length shortens the original to the Pattern's length, so the next candidate is built from what is left
+  - *(Cross-references, kept out of the Case wording: /2's exclusion from exports is FR-006's; /3's chord in force is AC-2.6.3's; /4's removal is AC-1.1.9's.)*
+
+- **AC-10.4.3** — A candidate stacks techniques, each with its choice offered
+  - **Given** the Add variation dialog
+  - **When** the musician adds techniques to the candidate
+  - **Then** the candidate is the original with every technique in the stack applied in the order they were added, each technique carrying the choice it was made with — which Beat, Slot, chord, bass, quality, fill or member — offered from the options that technique allows and never guessed in silence
+  - **Cases**:
+    - **AC-10.4.3/1** — Adding a technique applies it to the candidate as the earlier techniques left it, so a syllable added on Beat 4 after Sixteenth fill on Beat 4 chooses among that Beat's 16th Slots
+    - **AC-10.4.3/2** — Every technique carries a choice with a default, listed with the technique in the stack; changing the choice rebuilds the candidate from the original with the whole stack and is heard at once
+    - **AC-10.4.3/3** — A technique can be removed from the stack, and the candidate is rebuilt from the remaining ones; a later technique whose rule no longer applies after the change is dropped from the stack, saying so
+    - **AC-10.4.3/4** — The same technique can be in the stack more than once with different choices — two syllables added, two chords inverted
+    - **AC-10.4.3/5** — Applying the same stack with the same choices to the same original gives the same Measures every time: nothing about a technique is random
+    - **AC-10.4.3/6** — A technique whose rule would change nothing on the candidate as it stands, or that needs what the candidate lacks, is unavailable with its reason, and the Chord group says it needs a progression, the Pitch group that it needs a melody
+
+- **AC-10.4.4** — A candidate is heard before it is written
+  - **Given** a candidate in the Add variation dialog
+  - **When** it is built, changed or rolled
+  - **Then** the loop plays the Pattern with the candidate appended and the grid shows it, nothing is stored, and the Pattern, its length and what plays are exactly as before the dialog opened until Accept
+  - **Cases**:
+    - **AC-10.4.4/1** — While a candidate exists the loop plays the original Measures followed by the candidate's, through the playback overlay that cycle mode uses, which writes nothing; the Pattern's JSON is unchanged throughout
+    - **AC-10.4.4/2** — The grid shows the candidate's Measures after the Pattern's own, marked as the candidate, and the playback cursor runs through them
+    - **AC-10.4.4/3** — Changing, adding, removing or rolling replaces the candidate — one candidate at a time, never a second copy — and the change is heard from the next pass, the loop counter keeps counting and nothing stops or restarts
+    - **AC-10.4.4/4** — When the transport was stopped, building the first candidate starts playback, and closing the dialog without accepting returns it to stopped; when it was playing it plays on
+    - **AC-10.4.4/5** — Accept appends the candidate and closes the dialog; Accept and vary again appends it and opens a fresh, empty candidate from the same original over the lengthened Pattern; Close or Escape discards the candidate
+    - **AC-10.4.4/6** — A candidate's chord overrides are heard in the audition exactly as they will sound once accepted: the deal, the note bands, the score and the chord names follow them for the candidate's Measures
+  - *(Cross-references, kept out of the Case wording: /1's overlay is AC-2.7.1/4's; /3's loop counter is AC-4.1.3's and its pass boundary AC-4.1.9's.)*
+
+- **AC-10.4.5** — The technique catalogue
+  - **Given** a candidate
+  - **When** a technique is applied to it with a choice
+  - **Then** the candidate differs from what it was exactly as the technique's rule says. Positions are counted in phrase order — Measure, then Beat, then Slot. A technique's choice is offered from the options its rule allows, and its default is named with the rule; where a default names the last Beat or Slot, the ending is varied before anything else, which is how a phrase answers itself. Where a technique turns a Slot on in a Melodic Pattern, the Slot takes the Pitch of the nearest earlier sounding Slot in the candidate, or of the candidate's first note when nothing earlier sounds, or the tonic in the base octave when the candidate has no note; it never sounds without a Pitch. Where a technique turns a Slot on, the Slot sounds at its computed default accent with no override. Where a technique moves a Slot's sound, the accent override and Pitch move with it. A chord technique writes an override for the chosen chord that is in force for the candidate's Measures alone; the progression's chord list is never edited. The Rhythm, Dynamics and Chord techniques apply and are heard under a fill; while a fill is set the Pitch techniques are unavailable, naming the fill, since the fill deals the notes
+  - **Cases**:
+    - **AC-10.4.5/1** — Add a syllable (Rhythm): the chosen silent Slot turns on; offered are the candidate's silent Slots, the default the last silent Slot of the last Beat that has one; unavailable when every Slot sounds
+    - **AC-10.4.5/2** — Remove a syllable (Rhythm): the chosen sounding Slot turns off, its override and Pitch discarded; offered are the candidate's sounding Slots, the default the last sounding Slot that is not the first Slot of a Measure, or the last sounding Slot when every one is; unavailable when nothing sounds
+    - **AC-10.4.5/3** — Move a syllable (Rhythm): the chosen sounding Slot falls silent and the chosen silent Slot sounds in its place with its override and Pitch; offered are every sounding Slot and, for it, every silent Slot; the default moves the last sounding Slot one Slot earlier when that Slot is silent, else one Slot later; unavailable when nothing sounds or nothing is silent
+    - **AC-10.4.5/4** — Two 8ths to a triplet (Rhythm): the chosen quarter-note Beat on Straight 8ths takes the Triplet 8ths Recipe, its first Slot's state, override and Pitch landing on the triplet's first Slot and its second on the triplet's third, the middle Slot silent; offered are the quarter-note Beats on Straight 8ths, the default the last; unavailable when there is none
+    - **AC-10.4.5/5** — Sixteenth fill (Rhythm): the chosen Beat takes the Straight 16ths Recipe with every Slot sounding at its default accent, Pitches by the rule above; offered are the Beats not already on Straight 16ths with every Slot sounding, the default the last; unavailable when there is none
+    - **AC-10.4.5/6** — Breathe (Rhythm): every Slot of the chosen Beat turns off; offered are the Beats with a sounding Slot, the default the last; unavailable when no Beat sounds
+    - **AC-10.4.5/7** — Halve the Beat (Rhythm): the chosen Beat on Straight 16ths takes Straight 8ths on a quarter-note Beat, or Undivided on an eighth-note Beat, the Slots at even positions kept with their state, override and Pitch and the others dropped; offered are the Beats on Straight 16ths, the default the last; unavailable when there is none
+    - **AC-10.4.5/8** — Rotate (Rhythm): in each Measure of the candidate, every Slot's state, override and Pitch move k Slots later in Measure order, the last Slots wrapping to the first; k is chosen from 1 to one less than the Measure's Slot count, the default 1; unavailable when no Measure has both a sounding and a silent Slot
+    - **AC-10.4.5/9** — Lift (Dynamics): every sounding Slot one Accent Level louder, Strong staying Strong; unavailable when every sounding Slot is Strong
+    - **AC-10.4.5/10** — Soften (Dynamics): every sounding Slot one Accent Level quieter, Weak staying Weak and nothing turned off; unavailable when every sounding Slot is Weak
+    - **AC-10.4.5/11** — Shift the accent (Dynamics): in each Measure, the first Slot of the chosen Beat takes Strong and the first Slot of Beat 1 takes Weak, each where it sounds; offered are the Beats after Beat 1, the default Beat 2; unavailable when every Measure has one Beat or no Measure has a sounding first Slot on Beat 1 or the chosen Beat
+    - **AC-10.4.5/12** — Invert a chord (Chord): the chosen chord takes the chosen member as its bass in the candidate's Measures; offered are the progression's chords and, for the chosen one, its members other than its current bass, the default the next member above the current bass; unavailable without a progression
+    - **AC-10.4.5/13** — Change a chord's quality (Chord): the chosen chord takes the chosen quality in the candidate's Measures, its bass member and still-valid omitted members kept; offered first are the qualities whose members include every member of the current quality — the extensions — then the rest of the catalogue; the default is the first extension, the seventh of the chord's family on a triad; unavailable without a progression
+    - **AC-10.4.5/14** — Change a chord's fill (Chord): the chosen chord deals the chosen fill in the candidate's Measures; offered are the catalogue's fills other than the one the chord deals now, the default the next in the catalogue after it; unavailable without a progression or while the Arpeggio is None
+    - **AC-10.4.5/15** — Leave out a member (Chord): the chosen chord sounds without the chosen member in the candidate's Measures; offered are the chord's members that can be struck, the default the 5th where it can be; unavailable when no chord has a member that can be struck
+    - **AC-10.4.5/16** — A chord override is in force for the candidate's Measures alone: when one of them plays the chosen chord, that chord's stack, deal, name and members follow the override, and when any other Measure plays it, the chord is as the progression holds it
+    - **AC-10.4.5/17** — Octave up (Pitch): every note's octave raised by one, chord-tone Pitches keeping their roles; unavailable without a note or when any note is already in octave 7
+    - **AC-10.4.5/18** — Octave down (Pitch): every note's octave lowered by one, likewise; unavailable without a note or when any note is already in octave 1
+    - **AC-10.4.5/19** — Under a fill, Octave up and Octave down are unavailable, saying the fill deals the notes; every Rhythm, Dynamics and Chord technique applies and is heard under it
+  - *(Cross-references, kept out of the Case wording: the Pitch rule for a turned-on Slot is AC-2.2.8's; the octave bounds are AC-2.2.3's; /12's bass options are AC-2.11.1's, /13's catalogue AC-2.16.1's, /14's fills AC-2.6.6's and AC-2.15.1's, /15's members AC-2.16.2's; the chord in force is AC-2.6.3's and the deal's restart at a chord change AC-2.6.6/2's.)*
+
+- **AC-10.4.6** — Roll the dice builds a candidate
+  - **Given** the Add variation dialog
+  - **When** the musician rolls the dice
+  - **Then** a candidate of one to three techniques is drawn at random from the groups not marked No dice, each with its choice drawn from the options its rule offers, applied in the order drawn, heard at once and listed as a stack the musician can change like any other
+  - **Cases**:
+    - **AC-10.4.6/1** — The roll draws how many techniques — one, two or three — then each technique from those available on the candidate as the earlier draws left it, in a group not marked No dice, and each technique's choice from the options its rule offers; a drawn technique that is unavailable at its turn is passed over
+    - **AC-10.4.6/2** — The rolled candidate always differs from the original: every technique in it changed something, by its rule
+    - **AC-10.4.6/3** — The rolled stack is listed with each technique's drawn choice, and can be added to, changed or trimmed exactly as a stack built by hand
+    - **AC-10.4.6/4** — Rolling again replaces the whole candidate; the dice are disabled, saying so, when no technique is available outside the groups marked No dice
+    - **AC-10.4.6/5** — Each technique group carries a No dice toggle that keeps the group out of the roll and changes nothing else; the toggles hold for the session and are not Pattern content
+    - **AC-10.4.6/6** — The roll draws no random number of its own inside the musical rules: given the same draws it builds the same candidate
+  - *(Cross-references, kept out of the Case wording: /5's No dice follows AC-2.14.3's framing; /6 follows research.md D-021, the dice outside the pure core.)*
+
+- **AC-10.4.7** — A chord override is Pattern content that travels with its Measure
+  - **Given** a Pattern in which a variation's Measures carry a chord override
+  - **When** the Pattern is saved, edited, exported, compared or played
+  - **Then** the override is saved and carried as the chord's own fields are, follows its Measure through every Measure edit, counts as a difference between Patterns, and is heard from the one timeline wherever the Pattern sounds
+  - **Cases**:
+    - **AC-10.4.7/1** — An override is saved with the Pattern and survives a reload, is carried by the Pattern's JSON export and its submission, and a Pattern saved before overrides existed loads unchanged, with none
+    - **AC-10.4.7/2** — Removing the last Measure drops that Measure's overrides with it; Double Length copies each Measure's overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on
+    - **AC-10.4.7/3** — Two Patterns whose Measures are the same but whose overrides differ are not duplicates; they are the same Family, as two Patterns with one rhythm and different notes are
+    - **AC-10.4.7/4** — Setting the Arpeggio to None drops every fill override as it drops every chord's own fill; removing a chord drops its overrides and the overrides of the chords after it move with their chords; editing a chord's root, quality, bass, omitted members or fill in the chord editor leaves its overrides in place, each read through the same bounds as the chord's own fields so none can name a member the chord lacks
+    - **AC-10.4.7/5** — Playback, the grid's note bands and chord names, the score and MIDI export all follow the override for its Measures, from the one timeline; the MIDI file and the JSON carry no technique name, stack or original length
+    - **AC-10.4.7/6** — Choosing Progression None bakes the first pass as it sounded, overrides included, and drops them with the progression
+  - *(Cross-references, kept out of the Case wording: /2's edits are AC-1.1.9's, AC-10.1.1's, US-10.2's and AC-1.1.3's; /3 is US-11.1's and US-11.2's comparison; /4's Arpeggio rule is AC-2.15.1/2's; /5's one timeline is FR-013's; /6 follows AC-2.15.2/4.)*
+
+- **AC-10.4.8** — The Add variation dialog
+  - **Given** the grid editor or the Composer
+  - **When** the musician looks at the Measures controls
+  - **Then** Add variation sits beside Double Length, and opens a dialog that names the original, lists the candidate's stack with each technique's choice, and offers the techniques by group, each available one a button with one line saying what it does and each unavailable one disabled with its reason
+  - **Cases**:
+    - **AC-10.4.8/1** — Add variation sits beside Double Length in the grid editor's Measures row, in the Composer's Measures control, and — on a making goal with no Rhythm group, Make it melodic and Combine patterns — in a Measures row at the foot of the Melody group carrying Double Length and Add variation; disabled with the reason when the cap refuses it
+    - **AC-10.4.8/2** — The dialog names the original as Measures 1 to N with a control to change N, then the candidate's stack — each technique with its choice as a control, and a remove control — then Roll the dice with its No dice toggles, then the techniques under the headings Rhythm, Dynamics, Chord and Pitch in the order of AC-10.4.5, each with its name and one line saying what it does
+    - **AC-10.4.8/3** — Tapping a technique adds it to the stack with its default choice; an unavailable technique is shown disabled with its reason
+    - **AC-10.4.8/4** — The dialog carries Accept, Accept and vary again, and Close; Accept and Accept and vary again are disabled while the stack is empty
+    - **AC-10.4.8/5** — The dialog is a named dialog that takes focus on opening, returns it to Add variation on closing, and whose techniques, choices and reasons are read by assistive technology as buttons and selects with their descriptions
+    - **AC-10.4.8/6** — On a phone the dialog fills the width within the mobile breakpoint with the groups stacked, each technique a full-width row; on desktop and tablet it is a dialog over the editor
+    - **AC-10.4.8/7** — Help gains an entry for Add variation naming the original, the stack, the dice and the chord override
+  - *(Cross-references, kept out of the Case wording: /1 restores the Melody-group row AC-15.1.8 lost on 2026-10-31; /6's breakpoint is AC-15.1.1's; /7's Help is US-14.1's.)*
 
 ## Requirements *(mandatory)*
 

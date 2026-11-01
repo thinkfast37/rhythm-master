@@ -80,6 +80,17 @@ describe('storage/localMeta — FR-006 separation', () => {
       expect(serialized, field).not.toContain(field);
     }
   });
+
+  it('AC-10.4.2/2 — The length is remembered per Pattern in `rm.localMeta.v1` when a candidate is accepted, is in force after a reload, and like all Local Metadata is in no Pattern export or submission', () => {
+    const p = { ...create('Loop'), id: 'p_1' };
+    patterns.upsert(p);
+    localMeta.update('p_1', { phraseLength: 2 });
+    expect(localMeta.KEY).toBe('rm.localMeta.v1');
+    expect(localMeta.forPattern('p_1').phraseLength).toBe(2);
+    expect(localMeta.forPattern('p_2').phraseLength).toBeUndefined();
+    expect(JSON.stringify(patterns.findById('p_1'))).not.toContain('phraseLength');
+    expect(localMeta.LOCAL_META_FIELDS).toContain('phraseLength');
+  });
 });
 
 describe('storage/settings', () => {

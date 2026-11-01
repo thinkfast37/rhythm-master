@@ -1131,3 +1131,88 @@ right.
 - *+ Chord visible with no progression* — rejected: the picker is where a progression begins
   (AC-2.6.1), and the chord editor is conditional on a progression by design (AC-15.1.8).
 - *Always a major triad* — offered and declined by the maintainer: the tonic of the scale.
+
+## D-025 — Vary a loop: the Pattern grows from a remembered original, a variation stacks techniques, and a chord's changes live on the Measure
+
+**Decision (2026-11-01)**: US-10.4 replaces the withdrawn US-10.3 (D-020). Three things are kept from
+October and three are changed.
+
+Kept: a variation is **Measures appended to the Pattern** through the same `append` Double Length
+uses, so the loop, the grid, the Composer, Remove Measure, Condense, MIDI, the score and duplicate
+detection all see Measures and nothing else learns a new object; each technique is **one exact,
+deterministic rule** in `core/variations.js`, `(candidate, choice, context) → candidate`, with its
+offered options, its default and the reason it cannot apply beside it; and the **original is the
+Pattern's first N Measures**, N remembered per Pattern in `rm.localMeta.v1` as `phraseLength` —
+Local Metadata, because it changes no sound and must not be exported or compared (D-020's reasoning
+stands).
+
+Changed, each at the maintainer's finding in use:
+
+1. **A variation stacks techniques.** October's one device per variation was "very limiting". A
+   candidate is the original with an ordered stack applied, each technique carrying the choice it was
+   made with, rebuilt from the original whenever the stack changes. Order of application is the order
+   added — the simplest rule a musician can predict, and the one that lets a later technique act on
+   what an earlier one made (a syllable added among the 16ths a fill just wrote). A later technique
+   that an earlier change invalidates is dropped and says so, rather than silently skipped.
+2. **Every choice is offered, never guessed.** October's devices picked the Slot, the degree, the
+   fill by rule, and "the options … were mostly not musically interesting". Each technique now names
+   what it chooses — a Beat, a Slot, a chord, a bass, a quality, a fill, a member — offers the full
+   set its rule allows, and defaults to the ending (the last Beat or Slot, the last chord's turn),
+   which is how a phrase answers itself; the musician changes it in place and hears the result.
+3. **A chord's changes live on the Measure.** The techniques the maintainer named first — a
+   different inversion, fill or quality for *one chord in the variation* — could not be written in
+   October's model, where `harmony.chords` is one list dealt across passes or Measures (D-011) and
+   D-020 ruled a turnaround out for exactly that reason. `harmony.overrides` is a sparse map from
+   Measure index to chord index to the fields that differ (`inversion`, `quality`, `fill`, `omit`).
+   `chordAt(pattern, pass, m)` resolves the chord in force as before and then applies the Measure's
+   override for it, so the stack (D-014), the deal and its restart (D-011, D-022), `fillOf`, the
+   struck members (D-023), the chord's name on the Now/Next strip, the score and MIDI export all
+   follow from the one place they already read. An override is Pattern content — saved, exported,
+   undone, compared — and travels with its Measure through `append`, `duplicate`, `removeMeasure`
+   and Condense. Under `change: 'pass'` the override reads "when this Measure plays chord k, play it
+   as …", which is what a variation Measure means under a progression that moves every pass; under
+   `change: 'measure'` the copy's Measures fall over the next chords of the cycle, and the dialog says
+   so (AC-10.4.2/3).
+
+**Why Measures still, and not a variation list beside them.** The alternative — `pattern.variations`
+kept apart from the original and flattened at play time — was put to the maintainer again on
+2026-11-01 with its one real advantage named (an edit to the original could re-derive its
+variations) and declined again: it is a second place content lives, and every consumer that walks
+`measures` would need a rule for it. "The original is remembered" is met by the first N Measures and
+the remembered length; "different from duplicating" is met by building every variation from those
+Measures rather than from the whole Pattern.
+
+**Consequences.**
+- `pitchFingerprint` (US-11.1, US-11.2) must include overrides, or two Patterns differing only by a
+  variation's inversion would be duplicates (AC-10.4.7/3).
+- `setArpeggio(None)` drops fill overrides as it drops chord fills; `removeChord` re-keys the
+  overrides after it; a chord edited in the chord editor keeps its overrides, each read through the
+  bounds the chord's own fields already pass (`inversionOf`, the omit filter), so an override can
+  never name a member the chord lacks (AC-10.4.7/4). Choosing Progression None bakes overrides into
+  the first pass with the rest (AC-10.4.7/6).
+- The audition uses the playback overlay cycle mode already has (AC-2.7.1/4): `playingAt(loop)`
+  plays the Pattern with the candidate appended, nothing is written, and the grid draws the
+  candidate's Measures marked as such. Accept is `append`.
+- **Roll the dice** draws its numbers from the UI, as D-021 requires: `core/variations.js` exposes
+  `rollStack(context, random)` and never calls `Math.random`. The per-group **No dice** toggles are
+  session state in the dialog, as October's were and as US-2.14's are.
+- Melodic rhythm techniques that turn a Slot on give it a Pitch by October's rule — the nearest
+  earlier note, the first note, the tonic (AC-2.2.8). Under a fill the Pitch techniques are
+  unavailable, since the fill deals the notes; the Chord techniques are the way to vary a fill now.
+- On a making goal with no Rhythm group the Melody group's Measures row returns (AC-15.1.8 revised),
+  closing the gap the withdrawal named; D-018's ruling that Double Length is on every making goal
+  holds again.
+- Editing an override by hand in the chord editor is **out of this story**: an override is reached
+  by varying, and removed by removing its Measure. A per-Measure chord editor is its own change.
+
+**Alternatives considered**:
+- *A variation list beside the Measures (Option B)* — declined, above, twice.
+- *Storing the original's length on the Pattern* — rejected again (D-020): exported and compared,
+  changes no sound.
+- *Order of application fixed by group (recipes, then Slots, then dynamics, then chords)* — rejected:
+  it hides which technique acts on which state, and a musician who adds a 16th fill and then a
+  syllable expects the syllable among the 16ths.
+- *Chord changes inside a Measure (the anticipated chord change, a passing chord)* — out of reach:
+  they need a chord boundary at a Slot, a change to the harmony model before it is a technique.
+- *Muted strums, boom-chick bass* — out of reach: a Slot has no stroke type.
+- *Humanise* — rejected: it fights the syllable grid the app exists to teach.

@@ -28,6 +28,8 @@ import {
   hasHarmony,
   memberCount,
   roleOfInterval,
+  mapOverrides,
+  withOverrides,
 } from './harmony.js';
 import { splitDegree } from './pitch.js';
 
@@ -112,7 +114,10 @@ export function removeMeasure(pattern, index) {
   if (pattern.measures.length <= 1) throw new Error('A Pattern must keep at least one Measure');
   const measures = clone(pattern.measures);
   measures.splice(index, 1);
-  return { ...clone(pattern), measures };
+  // The removed Measure's chord overrides go with it; the Measures after it
+  // keep theirs under their new index (AC-10.4.7/2).
+  const overrides = mapOverrides(pattern.harmony?.overrides, (m, c) => (m === index ? null : m > index ? [m - 1, c] : [m, c]));
+  return withOverrides({ ...clone(pattern), measures }, overrides);
 }
 
 /**
@@ -275,12 +280,22 @@ export function append(a, b) {
       `Appending would produce ${measures.length} Measures, over the ${MAX_MEASURES} cap (AC-1.1.3)`
     );
   }
-  return { ...clone(a), measures };
+  // `a` keeps its chord overrides on its own Measures; `b`'s key into `b`'s
+  // chord list, which is not the one the result plays, so they do not come
+  // (AC-10.4.7/2). A variation, whose chords are `a`'s, appends through
+  // `core/variations.appendVariation`, which carries them.
+  return withOverrides({ ...clone(a), measures }, clone(a.harmony?.overrides ?? null));
 }
 
 /** Double a Pattern's length with a copy of its own Measures. US-10.1 */
 export function duplicate(pattern) {
-  return append(pattern, pattern);
+  const n = pattern.measures.length;
+  const doubled = append(pattern, pattern);
+  // Each Measure's overrides are copied onto its mirrored Measure (AC-10.4.7/2).
+  const own = pattern.harmony?.overrides;
+  if (!own) return doubled;
+  const mirrored = mapOverrides(own, (m, c) => [m + n, c]);
+  return withOverrides(doubled, { ...clone(own), ...mirrored });
 }
 
 // --- derived ----------------------------------------------------------------

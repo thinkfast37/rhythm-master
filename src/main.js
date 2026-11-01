@@ -66,6 +66,23 @@ import {
 } from './core/song.js';
 import { downloadSongMidi, songMidiFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
+import {
+  phraseLengthOf,
+  canAddVariation,
+  freshCandidate,
+  buildCandidate,
+  appendVariation,
+  availability as variationAvailability,
+  groupReason as variationGroupReason,
+  rollStack,
+  canRoll as canRollVariation,
+  fieldsFor,
+  defaultChoice,
+  settleChoice,
+  techniqueById,
+  GROUPS as VARIATION_GROUPS,
+} from './core/variations.js';
+import { openVariationDialog, updateVariationDialog, closeVariationDialog } from './ui/variations.js';
 import { LAB, ANY_LEVEL, pickAtLevel, libraryTagsFor, isPracticeGoal, goalById, LEGACY_GOALS, LEVELS } from './core/goals.js';
 import { buildEntries, neighbours, toggleTag, UNRATED } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
@@ -184,6 +201,16 @@ const state = {
    * stored and never Pattern content (AC-2.14.3/2, /3).
    */
   noDice: new Set(),
+  /**
+   * The Add variation dialog (US-10.4): the original's length, the stack of
+   * techniques with their choices, the candidate they build, and whether the
+   * dialog started playback for the audition. Session state; the candidate
+   * plays through the overlay seam and is never Pattern content until Accept
+   * (AC-10.4.4). `phraseLength` beside it is the open Pattern's remembered
+   * original length, read from Local Metadata for the Measures rows.
+   */
+  variation: null,
+  phraseLength: null,
   /**
    * The Compose group (US-18.1): the Section being built over the open
    * Pattern, the saved Song it came from (for the unsaved mark), and whether
@@ -328,6 +355,7 @@ export function undo() {
   if (!previous) return false;
   state.pattern = previous;
   if (state.isOwned) patternStore.upsert(state.pattern);
+  rebuildVariation();
   syncTransport();
   render();
   return true;
@@ -561,14 +589,29 @@ function fillIdAt(loop) {
  */
 function playingAt(loop) {
   // In the Composer the transport plays the draft as it stands — pitched Slots
-  // melodic, unpitched ones percussive — with no overlay (AC-19.6.1).
-  if (composerActive()) return state.composer.draft;
+  // melodic, unpitched ones percussive — with no overlay (AC-19.6.1), except a
+  // candidate variation being auditioned (AC-10.4.4/1).
+  if (composerActive()) return withCandidate(state.composer.draft);
   let sounding = state.pattern;
   const progressionId = progressionIdAt(loop);
   if (progressionId !== null) sounding = withProgression(sounding, progressionId);
   const fillId = fillIdAt(loop);
   if (fillId !== null) sounding = withArpeggio(sounding, fillId);
-  return sounding;
+  // A candidate variation plays after the Pattern's own Measures, written
+  // nowhere (AC-10.4.4/1): the same seam cycle mode uses (AC-2.7.1/4).
+  return withCandidate(sounding);
+}
+
+/** The Pattern with the candidate being auditioned appended, or as it is. */
+function withCandidate(pattern) {
+  const candidate = state.variation?.candidate;
+  if (!candidate) return pattern;
+  try {
+    return appendVariation(pattern, candidate);
+  } catch {
+    // Over the cap under an overlay that lengthened the Pattern: the candidate is simply not heard.
+    return pattern;
+  }
 }
 
 /**
@@ -746,6 +789,7 @@ function applyDraft(mutator, ...args) {
   const next = mutator(draft, ...args);
   state.composer.draft = next;
   persistDraft();
+  rebuildVariation();
   syncTransport();
   render();
   return next;
@@ -950,7 +994,212 @@ export function subscribe(fn) {
  * arpeggio deal, the Song entry, the loop counter — is NOT on this path. The
  * boundary fires `onLoop`, which renders in full.
  */
+/* --- Vary a loop (US-10.4, research.md D-025) ------------------------------ */
+
+/** What a variation is built from: the Composer's draft while it is open, else the Pattern. */
+function variationSource() {
+  return composerActive() ? state.composer.draft : state.pattern;
+}
+
+/** The counting system the dialog labels Slots in. */
+function variationContext() {
+  return { system: state.settings.countingSystem ?? 'takadimi' };
+}
+
+/**
+ * Rebuild the candidate from the original with the whole stack (AC-10.4.3/2):
+ * after any change to the stack, and after any edit to the Pattern under it.
+ * An entry the change invalidates is dropped and reported (AC-10.4.3/3).
+ */
+function rebuildVariation() {
+  const v = state.variation;
+  if (!v) return;
+  const src = variationSource();
+  v.phraseLength = phraseLengthOf(src, v.phraseLength);
+  if (!v.stack.length) {
+    v.candidate = null;
+    v.stages = [];
+    return;
+  }
+  const built = buildCandidate(src, v.phraseLength, v.stack, variationContext());
+  v.stack = built.stack;
+  v.candidate = built.candidate;
+  v.stages = built.stages;
+  v.dropped = built.dropped.map((d) => ({ ...d, label: techniqueById(d.id).label }));
+}
+
+/** The dialog's model, from the state (see ui/variations.js). */
+function variationModel() {
+  const v = state.variation;
+  const src = variationSource();
+  const ctx = variationContext();
+  const base = v.candidate ?? freshCandidate(src, v.phraseLength);
+  const fits = canAddVariation(src, v.phraseLength);
+  const h = src.soundMode === 'melodic' && hasHarmony(src) ? src.harmony : null;
+  return {
+    phraseLength: v.phraseLength,
+    patternLength: src.measures.length,
+    cap: fits ? null : `A Pattern holds at most ${MAX_MEASURES} Measures; ${src.measures.length} plus ${v.phraseLength} more will not fit`,
+    changeNote: h?.change === 'measure' ? 'Chords change every Measure, so the copy falls over the chords that follow the original’s in the cycle.' : null,
+    stack: v.stack.map((e, i) => ({
+      id: e.id,
+      label: techniqueById(e.id).label,
+      fields: fieldsFor(e.id, v.stages[i], e.choice, ctx).map((f) => ({ ...f, value: e.choice[f.key] })),
+    })),
+    dropped: v.dropped,
+    availability: variationAvailability(base, ctx),
+    groupReasons: Object.fromEntries(VARIATION_GROUPS.map((g) => [g, variationGroupReason(g, base)])),
+    noDice: v.noDice,
+    canRoll: canRollVariation(src, v.phraseLength, v.noDice, ctx),
+    nextFits: src.measures.length + 2 * v.phraseLength <= MAX_MEASURES,
+  };
+}
+
+/**
+ * After the stack changed: the candidate is heard at once (AC-10.4.4/1, /3) —
+ * a stopped transport starts for the first candidate (AC-10.4.4/4), a running
+ * one takes it up from the next pass — and the dialog and the grid redraw.
+ */
+function auditionChanged() {
+  const v = state.variation;
+  rebuildVariation();
+  if (v.candidate && !state.isPlaying) {
+    v.startedPlay = true;
+    void handlers.onPlay();
+  } else {
+    syncTransport();
+    render();
+  }
+  updateVariationDialog(variationModel(), variationHandlers);
+}
+
+/** Close the dialog; a transport the audition started stops again unless the candidate was accepted (AC-10.4.4/4). */
+function closeVariation({ accepted }) {
+  const v = state.variation;
+  state.variation = null;
+  const opener = closeVariationDialog();
+  if (!accepted && v?.startedPlay && state.isPlaying) transport.stop();
+  else syncTransport();
+  render();
+  // The render rebuilt the controls: focus returns to the Add variation that opened it (AC-10.4.8/5).
+  if (opener?.dataset?.action === 'add-variation' || opener?.classList?.contains('composer-add-variation')) {
+    const selector = opener.classList.contains('composer-add-variation') ? '.composer-add-variation' : '[data-action="add-variation"]';
+    const again = [...document.querySelectorAll(selector)].find((b) => b.offsetParent !== null) ?? document.querySelector(selector);
+    again?.focus();
+  }
+}
+
+/** Editing focus to the first Slot of the appended copy (AC-10.4.1/4). */
+function focusMeasure(index) {
+  const slot = document.querySelector(`.measure[data-measure="${index}"] .slot[data-beat="0"][data-slot="0"] .slot-accent`);
+  slot?.focus();
+}
+
+const variationHandlers = {
+  onPhrase(n) {
+    const v = state.variation;
+    if (!v) return;
+    // Changing the original discards the candidate (AC-10.4.2/1).
+    v.phraseLength = n;
+    v.stack = [];
+    v.dropped = [];
+    auditionChanged();
+  },
+  onTechnique(id) {
+    const v = state.variation;
+    if (!v) return;
+    const base = v.candidate ?? freshCandidate(variationSource(), v.phraseLength);
+    const t = techniqueById(id);
+    if (t.reason(base, variationContext())) return;
+    v.stack.push({ id, choice: defaultChoice(t, base, variationContext()) });
+    v.dropped = [];
+    auditionChanged();
+  },
+  onChoice(index, key, value) {
+    const v = state.variation;
+    const entry = v?.stack[index];
+    if (!entry) return;
+    const settled = settleChoice(entry.id, v.stages[index], { ...entry.choice, [key]: value }, variationContext());
+    if (!settled) return;
+    entry.choice = settled;
+    v.dropped = [];
+    auditionChanged();
+  },
+  onRemove(index) {
+    const v = state.variation;
+    if (!v) return;
+    v.stack.splice(index, 1);
+    v.dropped = [];
+    auditionChanged();
+  },
+  onRoll() {
+    const v = state.variation;
+    if (!v) return;
+    // The dice are rolled here; core takes the numbers (AC-10.4.6/6, D-021).
+    v.stack = rollStack(variationSource(), v.phraseLength, { noDice: v.noDice, random: Math.random, ctx: variationContext() });
+    v.dropped = [];
+    auditionChanged();
+  },
+  onNoDice(group) {
+    const v = state.variation;
+    if (!v) return;
+    if (v.noDice.has(group)) v.noDice.delete(group);
+    else v.noDice.add(group);
+    updateVariationDialog(variationModel(), variationHandlers);
+  },
+  /**
+   * Accept appends the candidate as Measures (AC-10.4.1), exactly as Double
+   * Length lands its own: an owned Pattern auto-saves as one Undo step, a
+   * shipped one is named first and a cancelled prompt leaves everything as it
+   * was, candidate included (AC-10.4.1/5). Accept and vary again starts the
+   * next candidate from the same original (AC-10.4.4/5).
+   */
+  async onAccept(again) {
+    const v = state.variation;
+    if (!v?.candidate || !v.stack.length) return;
+    const from = variationSource().measures.length;
+    if (composerActive()) {
+      const candidate = v.candidate;
+      v.candidate = null;
+      applyDraft(appendVariation, candidate);
+    } else {
+      if (!(await guardShipped())) return;
+      if (state.variation !== v) return;
+      const candidate = v.candidate;
+      v.candidate = null;
+      try {
+        apply(appendVariation, candidate);
+      } catch (err) {
+        v.candidate = candidate;
+        await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
+        return;
+      }
+      localMetaStore.update(state.pattern.id, { phraseLength: v.phraseLength });
+    }
+    // A run the audition started is the musician's once something is accepted.
+    v.startedPlay = false;
+    if (again) {
+      v.stack = [];
+      v.dropped = [];
+      rebuildVariation();
+      syncTransport();
+      render();
+      updateVariationDialog(variationModel(), variationHandlers);
+    } else {
+      closeVariation({ accepted: true });
+    }
+    // After the render that drew the new Measures (AC-10.4.1/4).
+    requestAnimationFrame(() => focusMeasure(from));
+  },
+  onClose() {
+    if (!state.variation) return;
+    closeVariation({ accepted: false });
+  },
+};
+
 function render(kind = 'full') {
+  // The original's remembered length, for the Measures rows' cap (AC-10.4.1/6).
+  state.phraseLength = localMetaStore.forPattern(state.pattern.id)?.phraseLength ?? null;
   // The views see the Pattern as it plays — under cycle mode, with the fill in
   // force in place of its own (AC-2.7.2/4). State still carries the real one.
   // In the Composer the Practice views keep the open Pattern; the Composer's
@@ -971,6 +1220,7 @@ export function apply(mutator, ...args) {
   pushHistory(state.pattern);
   state.pattern = mutator(state.pattern, ...args);
   if (state.isOwned) patternStore.upsert(state.pattern);
+  rebuildVariation();
   syncTransport();
   render();
   return state.pattern;
@@ -1102,6 +1352,11 @@ export function loadPattern(pattern, { owned }) {
   // History belongs to the Pattern being edited; carrying it across a load
   // would let undo resurrect a different Pattern's content.
   history.length = 0;
+  // A candidate was of the Pattern that is leaving (AC-10.4.4/5).
+  if (state.variation) {
+    state.variation = null;
+    closeVariationDialog();
+  }
   // The tempo unit is stated on open, so a later change to Measure 1's meter
   // cannot retime the Pattern through the default (AC-4.2.7/5).
   state.pattern = withTempoUnit(withCarriedPlayback(pattern));
@@ -2559,6 +2814,33 @@ const handlers = {
       await confirm(err.message, { confirmLabel: 'OK', cancelLabel: 'Dismiss' });
     }
   },
+  /* --- Vary a loop (US-10.4) ---------------------------------------------- */
+
+  /**
+   * Open the Add variation dialog over the open Pattern, or over the Composer's
+   * draft (AC-10.4.8/1). The original is the first Measures up to the length
+   * remembered for this Pattern, or the whole Pattern (AC-10.4.2/1).
+   */
+  onAddVariation(returnTo = null) {
+    if (state.variation) return;
+    const src = variationSource();
+    state.variation = {
+      phraseLength: phraseLengthOf(src, composerActive() ? null : (localMetaStore.forPattern(state.pattern.id)?.phraseLength ?? null)),
+      stack: [],
+      candidate: null,
+      dropped: [],
+      stages: [],
+      noDice: new Set(),
+      startedPlay: false,
+    };
+    openVariationDialog(variationModel(), variationHandlers, returnTo ?? document.activeElement);
+    render();
+  },
+
+  onComposerAddVariation(returnTo = null) {
+    handlers.onAddVariation(returnTo);
+  },
+
 
   async onDuplicate() {
     if (!(await guardShipped())) return;
@@ -3082,6 +3364,7 @@ export function init(root = document.getElementById('app')) {
 if (typeof window !== 'undefined') {
   window.__rm = {
     getState,
+    variation: () => state.variation,
     loadPattern,
     handlers,
     readSubmittedPatterns,
