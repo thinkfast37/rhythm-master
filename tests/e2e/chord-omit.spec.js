@@ -236,10 +236,10 @@ test('AC-2.16.2/3 — A stored chord-tone Pitch naming a struck member sounds th
   // The MIDI file's first note is that E4; the timeline is the one playback and the score read.
   const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export-midi"]').click()]);
   expect(midiNoteOns(readFileSync(await download.path()))[0]).toBe(64);
-  // Dealt, the same: Ascending over C(no5) deals Root 3rd 5th Root as C4 E4 E4 C4.
+  // Dealt, the same: Ascending over C(no5) deals Root 3rd Root 3rd as C4 E4 C4 E4 — no step for the struck 5th.
   await page.locator('.arpeggio-picker').selectOption('up');
-  expect(await rolesIn(page)).toEqual(['R', '3', '5', 'R']);
-  expect(await namesIn(page)).toEqual(['C4', 'E4', 'E4', 'C4']);
+  expect(await rolesIn(page)).toEqual(['R', '3', 'R', '3']);
+  expect(await namesIn(page)).toEqual(['C4', 'E4', 'C4', 'E4']);
   // Restored, the 5th is G4 again.
   await toggle(page, 0, 5).click();
   expect(await namesIn(page)).toEqual(['C4', 'E4', 'G4', 'C4']);
