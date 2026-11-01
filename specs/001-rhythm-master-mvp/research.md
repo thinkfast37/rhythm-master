@@ -1053,10 +1053,14 @@ in one role would break the stack, which finds a role's member by its role.
   so striking a member re-seats the bass by role, as `rechord` does for a quality change
   (AC-2.16.1/5).
 - The roles a fill deals are still the union over the progression (AC-2.6.6/5), counted after
-  omission. A chord that alone lacks a role the others have deals that role on its next-lower member,
-  so Cm7(no3) among triads deals C C G B♭ — the root doubled, as a guitarist's shape doubles it. The
-  alternative, dealing each chord its own member list, would change the dealt line of every shipped
-  Pattern that mixes triads and sevenths, and was not taken.
+  omission — less, for each chord, the members struck from it. *(Revised 2026-11-01: as first landed
+  a struck member's step fell to the next-lower member like a member the chord never had, so Cm7(no3)
+  among triads dealt C C G B♭ and Descending over Em7(no3) D B E E; the maintainer heard the doubled
+  root and expected D B E D. `arpeggioRoles(pattern, chord)` now drops the chord's own `omit` from
+  the roles it is dealt, so a struck member gets no step. A member a chord never had still falls to
+  its next-lower member, so no Pattern saved before US-2.16 changes; dealing every chord only its own
+  members would have changed every shipped Pattern that mixes triads and sevenths, and is still not
+  taken.)*
 - Fills written as positions of a three-member stack (Alberti, Root and fifth, the fingerpicking
   shapes) meet a two-member stack for the first time: the 3rd's position falls to the bass and the
   5th's is the other member (AC-2.16.4/1), the same next-lower rule in positional clothing.

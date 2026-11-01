@@ -534,8 +534,8 @@ describe('US-2.1 — a Percussive Pattern goes out as it plays', () => {
     p = setChordOmit(p, 0, 5, true);
     // The submission is the Pattern as it plays, the struck member included.
     expect(toSubmissionShape(p).harmony.chords[0].omit).toEqual([5]);
-    // The MIDI file's first pass is C(no5) dealt Root 3rd 5th Root, the 5th fallen to the 3rd.
-    expect(buildTimeline(p, 0).map((e) => e.pitch.midiNote)).toEqual([60, 64, 64, 60]);
+    // The MIDI file's first pass is C(no5) dealt Root 3rd Root 3rd, no step for the struck 5th.
+    expect(buildTimeline(p, 0).map((e) => e.pitch.midiNote)).toEqual([60, 64, 60, 64]);
     expect(Array.from(buildMidi(p))).not.toEqual(Array.from(buildMidi(setChordOmit(p, 0, 5, false))));
   });
 });
