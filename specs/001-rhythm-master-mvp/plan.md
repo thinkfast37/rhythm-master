@@ -248,7 +248,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186, T290 | T161, T169, T185, T187, T291 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
 | **P-040** | US-2.5 — Choose a scale | AC-2.5.1–AC-2.5.5 | T216 | T217 |
-| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.11 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439, T462 | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440, T463 |
+| **P-041** | US-2.6 — Build a melody from a chord progression | AC-2.6.1–AC-2.6.11 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439, T462, T464 | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440, T463, T465 |
 | **P-042** | US-12.2 — View and print a Pattern as sheet music | AC-12.2.1–AC-12.2.11 | T259, T260, T400 | T261, T262, T401 |
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346, T348, T388, T390, T394, T439, T462 | T264, T273, T283, T324, T333, T335, T347, T349, T389, T391, T395, T440, T463 |
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.6 | T266, T402 | T267, T403 |
@@ -258,7 +258,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334, T348, T394 | T311, T324, T335, T349, T395 |
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352, T410 | T327, T329, T331, T353, T411 |
 | **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
-| **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365 | T366 |
+| **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365, T464 | T366, T465 |
 | **P-052** | US-12.3 — Read the score with note names and colours | AC-12.3.1–AC-12.3.4 | T367 | T368 |
 | **P-053** | US-19.1 — Compose on an instrument | AC-19.1.1–AC-19.1.4 | T369, T416 | T370, T417 |
 | **P-054** | US-19.2 — The guitar view | AC-19.2.1–AC-19.2.4 | T371 | T372 |
@@ -276,7 +276,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-066** | US-10.3 — Add a variation to a loop *(withdrawn 2026-10-31)* | — | T436, T444, T446 | T437, T445, T447 |
 | **P-067** | US-2.14 — Roll the dice across the Melody group | AC-2.14.1–AC-2.14.3 | T442 | T443 |
 | **P-068** | US-2.15 — A fill for each chord of the progression | AC-2.15.1–AC-2.15.3 | T454 | T455 |
-| **P-069** | US-2.16 — Chords with a member left out, and a wider chord catalogue | AC-2.16.1–AC-2.16.4 | T456, T460 | T457, T461 |
+| **P-069** | US-2.16 — Chords with a member left out, and a wider chord catalogue | AC-2.16.1–AC-2.16.4 | T456, T460, T464 | T457, T461, T465 |
 | **P-070** | US-2.17 — Start a chord progression from scratch | AC-2.17.1–AC-2.17.2 | T458 | T459 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change

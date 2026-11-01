@@ -307,7 +307,7 @@ test('AC-2.16.3/4 — Nothing already written changes: every catalogue progressi
   expect(await chordNames(page)).toEqual(['Dm11', 'G7', 'C5']);
 });
 
-test('AC-2.16.3/3 — The 11th and 13th are roles beside the 9th: the Bass picker of C13 lists C, E, G, B♭, D and A, a dealt or stored 11th or 13th reads 11 or 13 in its note band, and on a chord lacking the role it falls to the next-lower member as the 9th does', async ({ page }) => {
+test('AC-2.16.3/3 — The 11th and 13th are roles beside the 9th: the Bass picker of C13 lists C, E, G, B♭, D and A, a dealt or stored 11th or 13th reads 11 or 13 in its note band, a stored one on a chord lacking the role falls to the next-lower member as the 9th does, and a fill deals a chord no step for a role it lacks', async ({ page }) => {
   await struck(page);
   // Two Measures of eight notes, the chord changing every Measure: C13 then F.
   await page.evaluate(() => window.__rm.handlers.onAddMeasure());
@@ -321,9 +321,9 @@ test('AC-2.16.3/3 — The 11th and 13th are roles beside the 9th: the Bass picke
   // Ascending over six roles: the sixth note is the 13th, A5.
   expect(await rolesIn(page, 0)).toEqual(['R', '3', '5', '7', '9', '13', 'R', '3']);
   expect(await namesIn(page, 0)).toEqual(['C4', 'E4', 'G4', 'Bb4', 'D5', 'A5', 'C4', 'E4']);
-  // Over the F, which has no 13th, the step falls to the 5th, C5 — as its 9th falls to it too.
-  expect(await rolesIn(page, 1)).toEqual(['R', '3', '5', '7', '9', '13', 'R', '3']);
-  expect(await namesIn(page, 1)).toEqual(['F4', 'A4', 'C5', 'C5', 'C5', 'C5', 'F4', 'A4']);
+  // Over the F, which has no 7th, 9th or 13th, the fill deals its three members and round again (AC-2.16.2/1).
+  expect(await rolesIn(page, 1)).toEqual(['R', '3', '5', 'R', '3', '5', 'R', '3']);
+  expect(await namesIn(page, 1)).toEqual(['F4', 'A4', 'C5', 'F4', 'A4', 'C5', 'F4', 'A4']);
   // An 11th chord reads 11.
   await quality(page, 0).selectOption('11');
   expect(await rolesIn(page, 0)).toEqual(['R', '3', '5', '7', '9', '11', 'R', '3']);

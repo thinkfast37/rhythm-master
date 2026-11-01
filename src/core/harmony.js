@@ -786,12 +786,12 @@ export const ARPEGGIOS = [
   { id: 'root-fifth-doubled', label: 'Root and 5th, doubled', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 2, 2])) },
   { id: 'pedal-root-riff', label: 'Pedal root riff', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [0, 0, 1, 0, 0, 2])) },
   { id: 'root-pedal-below', label: 'Chord root pedal below', group: 'Repeated notes', steps: ({ roles }) => roles.flatMap((r) => [T(roles[0], -1), T(r)]) },
-  { id: 'fifth-on-top', label: 'Repeated 5th on top', group: 'Repeated notes', steps: ({ roles }) => interleave(roles, T(roles[2], 1)) },
+  { id: 'fifth-on-top', label: 'Repeated 5th on top', group: 'Repeated notes', steps: ({ roles }) => interleave(roles, T(position(roles, 2), 1)) },
   { id: 'reciting-fifth', label: 'Reciting on the 5th', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [2, 2, 2, 1])) },
   { id: 'reciting-third', label: 'Reciting on the 3rd', group: 'Repeated notes', steps: ({ roles }) => tones(at(roles, [1, 1, 1, 0])) },
-  { id: 'upper-neighbour-fifth', label: 'Upper neighbour on the 5th', group: 'Repeated notes', steps: ({ roles }) => [T(roles[2]), T(roles[2]), N(roles[2], 1), T(roles[2])] },
+  { id: 'upper-neighbour-fifth', label: 'Upper neighbour on the 5th', group: 'Repeated notes', steps: ({ roles }) => [T(position(roles, 2)), T(position(roles, 2)), N(position(roles, 2), 1), T(position(roles, 2))] },
   { id: 'lower-neighbour-root', label: 'Lower neighbour on the root', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), T(roles[0]), N(roles[0], -1), T(roles[0])] },
-  { id: 'upper-neighbour-third', label: 'Upper neighbour on the 3rd', group: 'Repeated notes', steps: ({ roles }) => [T(roles[1]), T(roles[1]), N(roles[1], 1), T(roles[1])] },
+  { id: 'upper-neighbour-third', label: 'Upper neighbour on the 3rd', group: 'Repeated notes', steps: ({ roles }) => [T(position(roles, 1)), T(position(roles, 1)), N(position(roles, 1), 1), T(position(roles, 1))] },
   { id: 'neighbours-root', label: 'Neighbours around the root', group: 'Repeated notes', steps: ({ roles }) => [T(roles[0]), N(roles[0], 1), T(roles[0]), N(roles[0], -1)] },
   {
     id: 'boogie',
@@ -1492,21 +1492,22 @@ export function withProgression(pattern, id) {
 
 /**
  * The roles an arpeggio deals: the members of the progression's fullest chord
- * (AC-2.6.6/5), in the order they sit in the stack of the chord in force — from
- * the bass up — so a fill's shape is positional (AC-2.11.2/3). Over a root the
+ * that the chord in force has (AC-2.6.6/5), in the order they sit in its stack —
+ * from the bass up — so a fill's shape is positional (AC-2.11.2/3). Over a root the
  * order is Root, 3rd, 5th, 7th, 9th as it always was.
  */
 export function arpeggioRoles(pattern, chord = null) {
   const chords = pattern.harmony?.chords ?? [];
   const roles = TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
   if (!chord) return roles;
-  // A member struck from this chord gets no step (AC-2.16.2/1); a member it
-  // never had still falls to the next-lower one (AC-2.6.4/2).
-  const omit = omitOf(chord);
+  // The chord in force is dealt the members it has (AC-2.6.6/5): a member
+  // struck from it gets no step (AC-2.16.2/1), and neither does a role of the
+  // fullest chord it never had — over Bm/F♯ among seventh chords the stack is
+  // 5th, Root, 3rd, and the 7th is not dealt (AC-2.11.2/3).
   return roles
-    .filter((tone) => !omit.includes(tone))
-    .map((tone, i) => ({ tone, i, offset: memberFor(chord, tone).offset }))
-    .sort((a, b) => a.offset - b.offset || a.i - b.i)
+    .filter((tone) => hasTone(chord, tone))
+    .map((tone) => ({ tone, offset: memberFor(chord, tone).offset }))
+    .sort((a, b) => a.offset - b.offset)
     .map((m) => m.tone);
 }
 
