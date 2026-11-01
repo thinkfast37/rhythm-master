@@ -1183,7 +1183,7 @@ function renderHarmonyInto(root, pattern, state, handlers) {
   voicing.dataset.action = 'set-voicing';
   voicing.setAttribute('aria-label', 'Voicing');
   for (const v of VOICINGS) voicing.appendChild(el('option', null, { value: v.id, textContent: v.label }));
-  const matchedVoicing = matchVoicing(pattern.harmony.chords);
+  const matchedVoicing = matchVoicing(pattern.harmony.chords, pattern.key);
   if (!matchedVoicing) voicing.appendChild(el('option', null, { value: 'custom', textContent: 'Custom' }));
   voicing.value = matchedVoicing ?? 'custom';
   voicing.addEventListener('change', (e) => handlers.onVoicing(e.target.value));
