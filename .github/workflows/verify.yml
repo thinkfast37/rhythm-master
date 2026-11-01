@@ -1,0 +1,63 @@
+# The gates (CLAUDE.md §4), as one reusable job set. Called by pull-request.yml
+# on every PR and by deploy.yml on every push to main, so a branch and the
+# live site are judged by exactly the same checks (research.md D-008).
+#
+# Playwright is nine-tenths of the run (about 10 of 11 minutes on one runner),
+# so it is sharded across SHARDS runners. Every shard runs the same build and
+# the same config; only which tests each runner draws differs. coverage:ac and
+# check:trace read test names from the source files, not from Playwright's
+# report, so splitting the run cannot blind them.
+name: Verify
+
+on:
+  workflow_call:
+
+env:
+  SHARDS: 4
+
+jobs:
+  checks:
+    name: Lint, unit tests and the spec gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint (includes the core/ purity boundary)
+        run: npm run lint
+      - name: Validate the shipped Pattern library
+        run: npm run validate:seed
+      - name: Accent palette colour-vision check
+        run: npm run check:cvd
+      - name: Unit tests
+        run: npm test
+      - name: Per-AC coverage
+        run: npm run coverage:ac
+      - name: Traceability — AC to plan to task to test, and the matrix (CLAUDE.md §2b)
+        run: npm run check:trace
+      - name: Reachability — every export something in src/ can reach
+        run: npm run check:unwired
+      - name: Native shell still assembles (D-009; store builds themselves are made and uploaded by hand)
+        run: npm run cap:sync
+
+  e2e:
+    name: End-to-end tests (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/${{ env.SHARDS }}

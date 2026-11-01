@@ -179,7 +179,9 @@ tools/
 └── convert-legacy-patterns.js
 
 .github/workflows/
-└── deploy.yml              # Test → build → publish to GitHub Pages
+├── verify.yml              # The gates, reusable: lint/unit/spec gates + 4 Playwright shards (T460)
+├── pull-request.yml        # Runs verify on every PR; its `gates` job is required on main
+└── deploy.yml              # verify → build → publish to GitHub Pages
 ```
 
 **Structure Decision**: Single project, no frontend/backend split, because there is no backend and

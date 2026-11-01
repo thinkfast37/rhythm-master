@@ -1,6 +1,7 @@
 # Test -> build -> publish (research.md D-008).
 # A failing check blocks the deploy: FR-014's per-AC suite only has teeth if a
-# red test cannot reach the live site.
+# red test cannot reach the live site. The checks themselves live in verify.yml,
+# shared with pull-request.yml, so a PR and main are judged alike.
 name: Deploy
 
 on:
@@ -19,34 +20,7 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Lint (includes the core/ purity boundary)
-        run: npm run lint
-      - name: Validate the shipped Pattern library
-        run: npm run validate:seed
-      - name: Accent palette colour-vision check
-        run: npm run check:cvd
-      - name: Unit tests
-        run: npm test
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-      - name: End-to-end tests
-        run: npm run test:e2e
-      - name: Per-AC coverage
-        run: npm run coverage:ac
-      - name: Traceability — AC to plan to task to test, and the matrix (CLAUDE.md §2b)
-        run: npm run check:trace
-      - name: Reachability — every export something in src/ can reach
-        run: npm run check:unwired
-      - name: Native shell still assembles (D-009; store builds themselves are made and uploaded by hand)
-        run: npm run cap:sync
+    uses: ./.github/workflows/verify.yml
 
   build:
     needs: verify
