@@ -26,7 +26,8 @@ The single unit that lives in the library, gets played, rated, tagged, exported,
     "chords": [                  //   1–16 concrete chords, in order
       { "degree": "1", "quality": "maj7" },
       { "degree": "4", "quality": "maj7", "inversion": 2 },   // the 5th in the bass (US-2.11); absent means 0, root position
-      { "degree": "5", "quality": "7", "fill": "down" }       // this chord's own fill in place of `arpeggio` (US-2.15); absent means As above
+      { "degree": "5", "quality": "7", "fill": "down" },      // this chord's own fill in place of `arpeggio` (US-2.15); absent means As above
+      { "degree": "6", "quality": "m7", "omit": [3] }         // the members struck from the chord, by role (US-2.16); absent means none
     ],
     "arpeggio": "drone-above"     //   optional; absent means None — the notes are as stamped
   },
@@ -520,7 +521,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 11. `swingFeel`, where present, is `quarter`, `eighth`, or `sixteenth`.
 12. `swingAmount`, where present, is an integer within 0–100.
 13. `scale`, where present, is a catalogue id from `core/scales.js`. Used only when `soundMode` is `melodic`; on a Percussive Pattern it may remain, unused (AC-2.1.4).
-14. `harmony`, where present, is used only when `soundMode` is `melodic` — on a Percussive Pattern it may remain, unused (AC-2.1.4); its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`, and an `inversion`, where present, that is an integer from 0 to one less than the quality's member count (US-2.11; absent means 0), and a `fill`, where present, that is an id from `ARPEGGIOS`, present only while `arpeggio` is (US-2.15; absent means the chord follows `arpeggio`).
+14. `harmony`, where present, is used only when `soundMode` is `melodic` — on a Percussive Pattern it may remain, unused (AC-2.1.4); its `change` is `pass` or `measure`, its `arpeggio`, where present, is an id from `core/harmony.js`'s `ARPEGGIOS`, and `chords` holds 1–16 entries, each with a valid degree token and a quality id from `core/harmony.js`, and an `omit`, where present, that is a non-empty ascending list of distinct roles other than the root (3, 5, 7, 9, 11, 13), each one the quality has a member in, leaving the chord at least two members (US-2.16; absent means none), and an `inversion`, where present, that is an integer from 0 to one less than the chord's member count — its quality's members less those in `omit` (US-2.11; absent means 0), and a `fill`, where present, that is an id from `ARPEGGIOS`, present only while `arpeggio` is (US-2.15; absent means the chord follows `arpeggio`).
 15. A Pitch carries exactly one of `degree` (a degree token) or `tone` (1, 3, 5, 7 or 9), with an integer `octaveOffset`.
 16. A Pitch with `tone` only on a Pattern that has `harmony`.
 17. An overlay's `keptFills`, where present, is an array of ids from `core/harmony.js`'s `ARPEGGIOS`;

@@ -1024,3 +1024,58 @@ saved before has no `fill` on any chord and sounds as it did.
   redesign may still want one; this story gives it a unit — a fill on a chord — to build from.
 - *Per-chord fills kept under a fill in force* — declined by the maintainer: the cycled fill would be
   inaudible on every overridden chord, which defeats auditioning it.
+
+## D-023 — A member struck from a chord: the chord carries `omit`, and its members are read through it
+
+**Decision (2026-10-31)**: a chord in `harmony.chords` may carry `omit` — the roles struck from it,
+never the root — and every reading of a chord's members (`memberCount`, `chordStack`, and so
+`memberFor`, `bassOf`, `hasTone`, `bassOptions`, the voicings and the deal) goes through one
+function that takes the quality's intervals less those roles. Nothing downstream learns about
+omission: a struck member is a role the chord lacks, which AC-2.6.4/2 already resolves to the
+next-lower member. Addition is the catalogue: `QUALITIES` grows from nineteen to forty-one entries
+in eight groups, and the chord-tone model gains the roles 11 and 13 beside 9 (US-2.16).
+
+**Why.** The maintainer plays Em7 as root, 5th and 7th, or as root, 3rd and 7th, and G6 without its
+5th or its 3rd: "there are a lot of options here for various chords and we need those options that add
+or subtract degrees". Subtraction as qualities would mean an entry per combination — six for every
+seventh chord, twelve for every ninth — and a picker nobody could scan; as a setting on the chord it
+is one control that covers every quality, the new ones included. The chord keeps at least two members
+and its root, because the root anchors the Bass picker and every fill's first step, and a one-note
+chord is a drone the catalogue already offers. Addition stays in the catalogue because an added
+degree needs an interval the name supplies — 6/9, 7♭9, 13 — and a chart's names are what a musician
+reaches for. The 11th and 13th become roles rather than being folded into the 9th because two members
+in one role would break the stack, which finds a role's member by its role.
+
+**Consequences.**
+- `omit` is a list of roles, not intervals, so it survives a quality change wherever the new quality
+  has a member in that role (G6(no5) made a 7 is G7(no5)); when the survivors would leave fewer than
+  two members they are all dropped (AC-2.16.1/4). A stored `inversion` indexes the remaining members,
+  so striking a member re-seats the bass by role, as `rechord` does for a quality change
+  (AC-2.16.1/5).
+- The roles a fill deals are still the union over the progression (AC-2.6.6/5), counted after
+  omission. A chord that alone lacks a role the others have deals that role on its next-lower member,
+  so Cm7(no3) among triads deals C C G B♭ — the root doubled, as a guitarist's shape doubles it. The
+  alternative, dealing each chord its own member list, would change the dealt line of every shipped
+  Pattern that mixes triads and sevenths, and was not taken.
+- Fills written as positions of a three-member stack (Alberti, Root and fifth, the fingerpicking
+  shapes) meet a two-member stack for the first time: the 3rd's position falls to the bass and the
+  5th's is the other member (AC-2.16.4/1), the same next-lower rule in positional clothing.
+- The name and numeral carry what is struck — Em7(no3), vi7(no3) — before the slash bass, as the
+  bass is carried; the member is named as a chart names it (2 or 4 on a sus chord, 6 on a sixth
+  chord), from its interval rather than its role.
+- `diatonicChord` matches stacked thirds against the catalogue in order, so the nineteen original
+  entries stay first and every catalogue progression spells as it did (AC-2.16.3/4). The one new
+  match is a major-third, augmented-fifth, major-seventh stack — maj7♯5 — which used to fall back to 7.
+- `tools/validate-seed.js` mirrors the catalogue by hand and is updated with it. No migration: a chord
+  without `omit` has every member, and a quality already stored is unchanged.
+- Duplicate identity (`core/similarity.js`) carries `omit` beside the bass and the fill.
+
+**Alternatives considered**:
+- *A quality per omission* (m7(no3), m7(no5), 6(no3), 6(no5), 7(no5)…) — rejected: combinatorial, and
+  only the combinations guessed at; the maintainer chose the toggle.
+- *Striking the root too (rootless voicings)* — rejected for now: the root is the bass's anchor and
+  every fill's first step, and a progression that never sounds its roots is a different instrument.
+- *Stopping the catalogue at 9ths* — offered and declined by the maintainer: "comprehensive" reaches
+  the 13ths.
+- *Altered chords with two members in one role* (7alt, 7♭9♯9) — not added: the stack finds a role's
+  member by its role, and two would make one of them unreachable.

@@ -16,7 +16,19 @@ import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey, MIN_REGISTER, MAX_REGISTER } from './pitch.js';
 import { isValidScale } from './scales.js';
 import { isValidSwing, isValidSwingFeel, SWING_FEELS } from './swing.js';
-import { CHANGES, MAX_CHORDS, isValidQuality, isValidTone, isValidArpeggio, hasHarmony, memberCount } from './harmony.js';
+import {
+  CHANGES,
+  MAX_CHORDS,
+  MIN_MEMBERS,
+  QUALITIES,
+  TONES,
+  isValidQuality,
+  isValidTone,
+  isValidArpeggio,
+  hasHarmony,
+  memberCount,
+  roleOfInterval,
+} from './harmony.js';
 import { splitDegree } from './pitch.js';
 
 export const MAX_MEASURES = 32;
@@ -335,7 +347,24 @@ export function validate(pattern) {
           fail(`chord ${i + 1}: degree "${c?.degree}" invalid`);
         }
         if (!isValidQuality(c?.quality)) fail(`chord ${i + 1}: quality "${c?.quality}" unsupported`);
-        if ('inversion' in (c ?? {}) && isValidQuality(c.quality) && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= memberCount(c))) {
+        // The members struck from the chord: roles but the root, each one the
+        // quality has, at least two members left (rule 14, US-2.16).
+        let omitOk = true;
+        if ('omit' in (c ?? {})) {
+          const roles = isValidQuality(c.quality) ? QUALITIES.find((q) => q.id === c.quality).intervals.map(roleOfInterval) : [];
+          const list = Array.isArray(c.omit) ? c.omit : null;
+          const wellFormed =
+            list?.length > 0 &&
+            list.every((t, k) => isValidTone(t) && t !== 1 && roles.includes(t) && (k === 0 || t > list[k - 1]));
+          if (!wellFormed) {
+            omitOk = false;
+            fail(`chord ${i + 1}: omit ${JSON.stringify(c.omit)} must list distinct roles the ${c?.quality} chord has, other than the root, ascending (rule 14)`);
+          } else if (roles.length - list.length < MIN_MEMBERS) {
+            omitOk = false;
+            fail(`chord ${i + 1}: omit ${JSON.stringify(c.omit)} leaves a ${c.quality} chord fewer than ${MIN_MEMBERS} members (rule 14)`);
+          }
+        }
+        if ('inversion' in (c ?? {}) && isValidQuality(c.quality) && omitOk && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= memberCount(c))) {
           fail(`chord ${i + 1}: inversion ${c.inversion} is not a member of a ${c.quality} chord (rule 14)`);
         }
         // A chord's own fill: a catalogue id, and only under an arpeggio (rule 14, US-2.15).
@@ -412,7 +441,7 @@ export function validate(pattern) {
           const hasDegree = s.pitch?.degree !== undefined;
           const hasTone = s.pitch?.tone !== undefined;
           if (hasDegree === hasTone) fail(`${slot}: pitch must carry exactly one of degree or tone`);
-          if (hasTone && !isValidTone(s.pitch.tone)) fail(`${slot}: tone ${s.pitch.tone} is not one of 1, 3, 5, 7, 9`);
+          if (hasTone && !isValidTone(s.pitch.tone)) fail(`${slot}: tone ${s.pitch.tone} is not one of ${TONES.join(', ')}`);
           if (hasTone && !hasHarmony(pattern)) fail(`${slot}: chord tone on a Pattern with no progression`);
           if ('octaveOffset' in (s.pitch ?? {}) && !Number.isInteger(s.pitch.octaveOffset)) {
             fail(`${slot}: octaveOffset must be an integer`);

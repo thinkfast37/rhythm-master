@@ -13,7 +13,7 @@ import {
 } from '../../../src/export/submit.js';
 import { create, cycleAccent, setTimeSignature, addMeasure, setPitch } from '../../../src/core/pattern.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
-import { setProgression as chooseProgression, setVoicing, setChange, addChord, setChordDegree, cyclePasses, setArpeggio, setChordFill, withArpeggio } from '../../../src/core/harmony.js';
+import { setProgression as chooseProgression, setVoicing, setChange, addChord, setChordDegree, cyclePasses, setArpeggio, setChordFill, setChordOmit, withArpeggio } from '../../../src/core/harmony.js';
 
 /*
  * A progression chosen is voiced Closest (AC-2.11.3/7). The criteria proved
@@ -525,6 +525,18 @@ describe('US-2.1 — a Percussive Pattern goes out as it plays', () => {
     const fourth = buildTimeline(p, 3).map((e) => e.pitch.midiNote);
     expect(fourth).toEqual([72, 69, 65, 72]);
     expect(Array.from(buildMidi(p))).not.toEqual(Array.from(buildMidi(setChordFill(p, 3, null))));
+  });
+
+  it("AC-2.16.1/6 — An omission is Pattern content: it is saved with the Pattern and survives a reload, auto-saves into an owned Pattern, is one Undo step, is carried by the Pattern's JSON export and its submission, tells two otherwise identical Patterns apart, and on a shipped Pattern goes through the naming prompt, cancelling it leaving the Pattern as it was; a Pattern whose chords leave nothing out is exactly as it was before: the submission and the MIDI file", () => {
+    let p = { ...create('Struck'), soundMode: 'melodic', key: 'C', scale: 'ionian', tempo: 120 };
+    for (let b = 0; b < 4; b++) p = cycleAccent(p, 0, b, 0);
+    p = setArpeggio(setVoicing(chooseProgression(p, 'I-IV-V'), 'root'), 'up');
+    p = setChordOmit(p, 0, 5, true);
+    // The submission is the Pattern as it plays, the struck member included.
+    expect(toSubmissionShape(p).harmony.chords[0].omit).toEqual([5]);
+    // The MIDI file's first pass is C(no5) dealt Root 3rd 5th Root, the 5th fallen to the 3rd.
+    expect(buildTimeline(p, 0).map((e) => e.pitch.midiNote)).toEqual([60, 64, 64, 60]);
+    expect(Array.from(buildMidi(p))).not.toEqual(Array.from(buildMidi(setChordOmit(p, 0, 5, false))));
   });
 });
 

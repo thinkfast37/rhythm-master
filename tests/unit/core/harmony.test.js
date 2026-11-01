@@ -271,8 +271,13 @@ describe('core/harmony', () => {
 
   // --- AC-2.6.4 — A chord-tone Pitch sounds the member of the chord in force ---
 
-  it("AC-2.6.4/1 — Root, 3rd, 5th, 7th and 9th resolve to the chord's members above its root, which sits at the armed octave: in C at octave 4 the 3rd of G is B4 and its 5th is D5", () => {
+  it("AC-2.6.4/1 — Root, 3rd, 5th, 7th, 9th, 11th and 13th resolve to the chord's members above its root, which sits at the armed octave: in C at octave 4 the 3rd of G is B4, its 5th is D5, and the 13th of G13 is E6", () => {
     const G = { degree: '5', quality: 'maj' };
+    // The 11th and 13th are roles beside the 9th (US-2.16): G13 in C at octave 4 reaches E6.
+    const G13 = { degree: '5', quality: '13' };
+    expect(chordToneName({ tone: 13, octaveOffset: 0 }, G13, 'C').text).toBe('E6');
+    expect(resolveChordTone({ tone: 13, octaveOffset: 0 }, G13, 'C').midiNote).toBe(88);
+    expect(chordToneName({ tone: 11, octaveOffset: 0 }, { degree: '5', quality: '11' }, 'C').text).toBe('C6');
     expect(resolveChordTone({ tone: 1, octaveOffset: 0 }, G, 'C').midiNote).toBe(67);
     expect(resolveChordTone({ tone: 3, octaveOffset: 0 }, G, 'C').midiNote).toBe(71);
     expect(resolveChordTone({ tone: 5, octaveOffset: 0 }, G, 'C').midiNote).toBe(74);

@@ -46,16 +46,20 @@ const SCALES = [
 ];
 const DEGREE = /^[b#]?[1-9]\d*$/;
 // Mirrors core/harmony.js (US-2.6), duplicated for standalone-ness like KEYS.
-const QUALITIES = [
-  'maj', 'min', 'dim', 'aug', 'sus2', 'sus4', '6', 'm6', 'maj7', 'm7', '7', 'm7b5', 'dim7',
-  'mMaj7', '7sus4', 'add9', '9', 'maj9', 'm9',
-];
-/** Members per quality, so an `inversion` can be checked against the chord it is on (US-2.11). */
-const QUALITY_SIZES = {
-  maj: 3, min: 3, dim: 3, aug: 3, sus2: 3, sus4: 3, 6: 4, m6: 4, maj7: 4, m7: 4, 7: 4, m7b5: 4, dim7: 4,
-  mMaj7: 4, '7sus4': 4, add9: 4, 9: 5, maj9: 5, m9: 5,
+/** Each quality's members by role (US-2.16), so an `omit` and an `inversion` can be checked against the chord they are on. */
+const QUALITY_ROLES = {
+  maj: [1, 3, 5], min: [1, 3, 5], dim: [1, 3, 5], aug: [1, 3, 5], 5: [1, 5],
+  sus2: [1, 3, 5], sus4: [1, 3, 5], '7sus4': [1, 3, 5, 7], '7sus2': [1, 3, 5, 7], '9sus4': [1, 3, 5, 7, 9],
+  6: [1, 3, 5, 7], m6: [1, 3, 5, 7], 69: [1, 3, 5, 7, 9], m69: [1, 3, 5, 7, 9],
+  maj7: [1, 3, 5, 7], m7: [1, 3, 5, 7], 7: [1, 3, 5, 7], m7b5: [1, 3, 5, 7], dim7: [1, 3, 5, 7], mMaj7: [1, 3, 5, 7],
+  '7b5': [1, 3, 5, 7], '7#5': [1, 3, 5, 7], 'maj7#5': [1, 3, 5, 7],
+  add9: [1, 3, 5, 9], madd9: [1, 3, 5, 9], add11: [1, 3, 5, 11], madd11: [1, 3, 5, 11],
+  9: [1, 3, 5, 7, 9], maj9: [1, 3, 5, 7, 9], m9: [1, 3, 5, 7, 9], '7b9': [1, 3, 5, 7, 9], '7#9': [1, 3, 5, 7, 9],
+  11: [1, 3, 5, 7, 9, 11], m11: [1, 3, 5, 7, 9, 11], 'maj7#11': [1, 3, 5, 7, 11], '7#11': [1, 3, 5, 7, 11], 'maj9#11': [1, 3, 5, 7, 9, 11],
+  13: [1, 3, 5, 7, 9, 13], maj13: [1, 3, 5, 7, 9, 13], m13: [1, 3, 5, 7, 9, 13], '7b13': [1, 3, 5, 7, 13],
 };
-const TONES = [1, 3, 5, 7, 9];
+const QUALITIES = Object.keys(QUALITY_ROLES);
+const TONES = [1, 3, 5, 7, 9, 11, 13];
 const CHANGES = ['pass', 'measure'];
 const ARPEGGIOS = [
   'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave',
@@ -114,8 +118,15 @@ for (const p of raw.patterns) {
       for (const [ci, c] of h.chords.entries()) {
         if (!DEGREE.test(String(c?.degree))) fail(name, `chord ${ci + 1}: degree "${c?.degree}" invalid`);
         if (!QUALITIES.includes(c?.quality)) fail(name, `chord ${ci + 1}: quality "${c?.quality}" unsupported`);
-        else if ('inversion' in c && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= QUALITY_SIZES[c.quality])) {
-          fail(name, `chord ${ci + 1}: inversion ${c.inversion} is not a member of a ${c.quality} chord`);
+        else {
+          const roles = QUALITY_ROLES[c.quality];
+          const omit = Array.isArray(c.omit) ? c.omit : [];
+          const omitOk = !('omit' in c) || (omit.length > 0 && omit.every((t, k) => t !== 1 && roles.includes(t) && (k === 0 || t > omit[k - 1])) && roles.length - omit.length >= 2);
+          if (!omitOk) fail(name, `chord ${ci + 1}: omit ${JSON.stringify(c.omit)} is not members of a ${c.quality} chord, other than the root, leaving two`);
+          const members = roles.length - (omitOk ? omit.length : 0);
+          if ('inversion' in c && (!Number.isInteger(c.inversion) || c.inversion < 0 || c.inversion >= members)) {
+            fail(name, `chord ${ci + 1}: inversion ${c.inversion} is not a member of a ${c.quality} chord`);
+          }
         }
       }
     }
@@ -183,7 +194,7 @@ for (const p of raw.patterns) {
           const hasTone = s.pitch?.tone !== undefined;
           if (hasDegree === hasTone) fail(name, `${slot}: pitch must carry exactly one of degree or tone`);
           if (hasDegree && !DEGREE.test(String(s.pitch?.degree))) fail(name, `${slot}: degree "${s.pitch?.degree}" invalid`);
-          if (hasTone && !TONES.includes(s.pitch.tone)) fail(name, `${slot}: tone ${s.pitch.tone} is not one of 1, 3, 5, 7, 9`);
+          if (hasTone && !TONES.includes(s.pitch.tone)) fail(name, `${slot}: tone ${s.pitch.tone} is not one of ${TONES.join(", ")}`);
           if (hasTone && !harmonic) fail(name, `${slot}: chord tone on a Pattern with no progression (rule 16)`);
           if (!Number.isInteger(s.pitch?.octaveOffset)) fail(name, `${slot}: octaveOffset must be an integer`);
         } else if (melodic && s.on) {

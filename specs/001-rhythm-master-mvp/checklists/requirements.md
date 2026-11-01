@@ -74,3 +74,40 @@
 ## Notes
 
 - Plan row P-068 and tasks T454/T455 were added in the same change, as CLAUDE.md §2b requires.
+
+---
+
+# Specification Quality Checklist: Chords with a member left out, and a wider chord catalogue (US-2.16)
+
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-10-31
+**Feature**: [spec.md](../spec.md) — User Story 65
+
+## Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+## Requirement Completeness
+
+- [x] No [NEEDS CLARIFICATION] markers remain — the three open questions (omission as a toggle or as qualities, how far the catalogue reaches, landing) were put to the maintainer on 2026-10-31 and their rulings are in the story's rationale
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable — the Independent Test names the chords, toggles, names, members and views it asserts
+- [x] Success criteria are technology-agnostic (no implementation details)
+- [x] All acceptance scenarios are defined — AC-2.16.1–AC-2.16.4, 17 Cases
+- [x] Edge cases are identified — the two-member floor, a quality change over omissions, the bass on a struck member, a chord lacking a role among chords that have it, two-member stacks under positional fills, baking on Progression None, a shipped Pattern
+- [x] Scope is clearly bounded — striking the root and altered chords with two members in one role are named as declined
+- [x] Dependencies and assumptions identified — AC-2.6.4/2's fallback, AC-2.6.6/5's union of roles, AC-2.11.1's bass, AC-2.6.2/1 and AC-2.6.4/1 revised
+
+## Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into specification
+
+## Notes
+
+- Plan row P-069 and tasks T456/T457 were added in the same change, as CLAUDE.md §2b requires.

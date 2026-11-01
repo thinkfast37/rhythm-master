@@ -30,31 +30,60 @@ const clone = (v) => structuredClone(v);
 
 /* --- catalogues ----------------------------------------------------------- */
 
+/** The headings the quality picker files the catalogue under (AC-2.16.3/1), in order. */
+export const QUALITY_GROUPS = ['Triads', 'Suspended', 'Sixths', 'Sevenths', 'Added', 'Ninths', 'Elevenths', 'Thirteenths'];
+
 /**
- * Chord qualities, in picker order (AC-2.6.2/1). `intervals` are semitones above
- * the root; `suffix` is what follows the root's name; `numeral` what follows the
- * roman numeral. A minor third makes the numeral lowercase.
+ * Chord qualities, in picker order within their groups (AC-2.6.2/1,
+ * AC-2.16.3/1). `intervals` are semitones above the root; `suffix` is what
+ * follows the root's name; `numeral` what follows the roman numeral. A minor
+ * third makes the numeral lowercase. No quality lists two members in one role
+ * (research.md D-023): the stack finds a role's member by its role. The
+ * thirteenths leave the 11th out, as a chart does.
  */
+const Q = (group, id, label, suffix, numeral, intervals) => ({ id, label, group, suffix, numeral, intervals });
 export const QUALITIES = [
-  { id: 'maj', label: 'major', suffix: '', numeral: '', intervals: [0, 4, 7] },
-  { id: 'min', label: 'minor', suffix: 'm', numeral: '', intervals: [0, 3, 7] },
-  { id: 'dim', label: 'diminished', suffix: 'dim', numeral: '°', intervals: [0, 3, 6] },
-  { id: 'aug', label: 'augmented', suffix: 'aug', numeral: '+', intervals: [0, 4, 8] },
-  { id: 'sus2', label: 'sus2', suffix: 'sus2', numeral: 'sus2', intervals: [0, 2, 7] },
-  { id: 'sus4', label: 'sus4', suffix: 'sus4', numeral: 'sus4', intervals: [0, 5, 7] },
-  { id: '6', label: '6', suffix: '6', numeral: '6', intervals: [0, 4, 7, 9] },
-  { id: 'm6', label: 'm6', suffix: 'm6', numeral: '6', intervals: [0, 3, 7, 9] },
-  { id: 'maj7', label: 'maj7', suffix: 'maj7', numeral: 'maj7', intervals: [0, 4, 7, 11] },
-  { id: 'm7', label: 'm7', suffix: 'm7', numeral: '7', intervals: [0, 3, 7, 10] },
-  { id: '7', label: '7', suffix: '7', numeral: '7', intervals: [0, 4, 7, 10] },
-  { id: 'm7b5', label: 'm7♭5', suffix: 'm7♭5', numeral: 'ø7', intervals: [0, 3, 6, 10] },
-  { id: 'dim7', label: 'dim7', suffix: 'dim7', numeral: '°7', intervals: [0, 3, 6, 9] },
-  { id: 'mMaj7', label: 'mMaj7', suffix: 'mMaj7', numeral: 'mMaj7', intervals: [0, 3, 7, 11] },
-  { id: '7sus4', label: '7sus4', suffix: '7sus4', numeral: '7sus4', intervals: [0, 5, 7, 10] },
-  { id: 'add9', label: 'add9', suffix: 'add9', numeral: 'add9', intervals: [0, 4, 7, 14] },
-  { id: '9', label: '9', suffix: '9', numeral: '9', intervals: [0, 4, 7, 10, 14] },
-  { id: 'maj9', label: 'maj9', suffix: 'maj9', numeral: 'maj9', intervals: [0, 4, 7, 11, 14] },
-  { id: 'm9', label: 'm9', suffix: 'm9', numeral: '9', intervals: [0, 3, 7, 10, 14] },
+  Q('Triads', 'maj', 'major', '', '', [0, 4, 7]),
+  Q('Triads', 'min', 'minor', 'm', '', [0, 3, 7]),
+  Q('Triads', 'dim', 'diminished', 'dim', '°', [0, 3, 6]),
+  Q('Triads', 'aug', 'augmented', 'aug', '+', [0, 4, 8]),
+  Q('Triads', '5', '5', '5', '5', [0, 7]),
+  Q('Suspended', 'sus2', 'sus2', 'sus2', 'sus2', [0, 2, 7]),
+  Q('Suspended', 'sus4', 'sus4', 'sus4', 'sus4', [0, 5, 7]),
+  Q('Suspended', '7sus4', '7sus4', '7sus4', '7sus4', [0, 5, 7, 10]),
+  Q('Suspended', '7sus2', '7sus2', '7sus2', '7sus2', [0, 2, 7, 10]),
+  Q('Suspended', '9sus4', '9sus4', '9sus4', '9sus4', [0, 5, 7, 10, 14]),
+  Q('Sixths', '6', '6', '6', '6', [0, 4, 7, 9]),
+  Q('Sixths', 'm6', 'm6', 'm6', '6', [0, 3, 7, 9]),
+  Q('Sixths', '69', '6/9', '6/9', '6/9', [0, 4, 7, 9, 14]),
+  Q('Sixths', 'm69', 'm6/9', 'm6/9', '6/9', [0, 3, 7, 9, 14]),
+  Q('Sevenths', 'maj7', 'maj7', 'maj7', 'maj7', [0, 4, 7, 11]),
+  Q('Sevenths', 'm7', 'm7', 'm7', '7', [0, 3, 7, 10]),
+  Q('Sevenths', '7', '7', '7', '7', [0, 4, 7, 10]),
+  Q('Sevenths', 'm7b5', 'm7♭5', 'm7♭5', 'ø7', [0, 3, 6, 10]),
+  Q('Sevenths', 'dim7', 'dim7', 'dim7', '°7', [0, 3, 6, 9]),
+  Q('Sevenths', 'mMaj7', 'mMaj7', 'mMaj7', 'mMaj7', [0, 3, 7, 11]),
+  Q('Sevenths', '7b5', '7♭5', '7♭5', '7♭5', [0, 4, 6, 10]),
+  Q('Sevenths', '7#5', '7♯5', '7♯5', '7♯5', [0, 4, 8, 10]),
+  Q('Sevenths', 'maj7#5', 'maj7♯5', 'maj7♯5', 'maj7♯5', [0, 4, 8, 11]),
+  Q('Added', 'add9', 'add9', 'add9', 'add9', [0, 4, 7, 14]),
+  Q('Added', 'madd9', 'madd9', 'madd9', 'add9', [0, 3, 7, 14]),
+  Q('Added', 'add11', 'add11', 'add11', 'add11', [0, 4, 7, 17]),
+  Q('Added', 'madd11', 'madd11', 'madd11', 'add11', [0, 3, 7, 17]),
+  Q('Ninths', '9', '9', '9', '9', [0, 4, 7, 10, 14]),
+  Q('Ninths', 'maj9', 'maj9', 'maj9', 'maj9', [0, 4, 7, 11, 14]),
+  Q('Ninths', 'm9', 'm9', 'm9', '9', [0, 3, 7, 10, 14]),
+  Q('Ninths', '7b9', '7♭9', '7♭9', '7♭9', [0, 4, 7, 10, 13]),
+  Q('Ninths', '7#9', '7♯9', '7♯9', '7♯9', [0, 4, 7, 10, 15]),
+  Q('Elevenths', '11', '11', '11', '11', [0, 4, 7, 10, 14, 17]),
+  Q('Elevenths', 'm11', 'm11', 'm11', '11', [0, 3, 7, 10, 14, 17]),
+  Q('Elevenths', 'maj7#11', 'maj7♯11', 'maj7♯11', 'maj7♯11', [0, 4, 7, 11, 18]),
+  Q('Elevenths', '7#11', '7♯11', '7♯11', '7♯11', [0, 4, 7, 10, 18]),
+  Q('Elevenths', 'maj9#11', 'maj9♯11', 'maj9♯11', 'maj9♯11', [0, 4, 7, 11, 14, 18]),
+  Q('Thirteenths', '13', '13', '13', '13', [0, 4, 7, 10, 14, 21]),
+  Q('Thirteenths', 'maj13', 'maj13', 'maj13', 'maj13', [0, 4, 7, 11, 14, 21]),
+  Q('Thirteenths', 'm13', 'm13', 'm13', '13', [0, 3, 7, 10, 14, 21]),
+  Q('Thirteenths', '7b13', '7♭13', '7♭13', '7♭13', [0, 4, 7, 10, 20]),
 ];
 
 export function isValidQuality(id) {
@@ -68,8 +97,8 @@ function quality(id) {
 }
 
 /** The roles a chord-tone Pitch can hold, in strip order. Stored as numbers. */
-export const TONES = [1, 3, 5, 7, 9];
-const TONE_LABEL = { 1: 'R', 3: '3', 5: '5', 7: '7', 9: '9' };
+export const TONES = [1, 3, 5, 7, 9, 11, 13];
+const TONE_LABEL = { 1: 'R', 3: '3', 5: '5', 7: '7', 9: '9', 11: '11', 13: '13' };
 
 /** A role as the strip and the grid write it: `R` for the root, else its number. */
 export function toneLabel(tone) {
@@ -85,22 +114,57 @@ export function isValidTone(tone) {
  * stands where the 3rd would; a 6th stands where a 7th would. Anything in the
  * range is the member for that role.
  */
-const TONE_RANGE = { 1: [0, 0], 3: [2, 5], 5: [6, 8], 7: [9, 11], 9: [13, 14] };
+const TONE_RANGE = { 1: [0, 0], 3: [2, 5], 5: [6, 8], 7: [9, 11], 9: [13, 15], 11: [17, 18], 13: [20, 21] };
 
 /* Letters up from the root for each interval, so a chord tone is spelled as the
    interval it is — the 3rd of D♭ is F, not E (AC-2.2.15/5's rule, per chord). */
-const LETTER_STEPS = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 9: 5, 10: 6, 11: 6, 13: 8, 14: 8 };
+const LETTER_STEPS = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 9: 5, 10: 6, 11: 6, 13: 8, 14: 8, 15: 8, 17: 10, 18: 10, 20: 12, 21: 12 };
 
-/** The role a listed interval of a quality holds: 0 → Root, 2–5 → 3rd, 6–8 → 5th, 9–11 → 7th, 13–14 → 9th. */
+/* What a chart calls the member at each interval — the label an Omit toggle
+   wears and the name says (AC-2.16.1/1, /2): a sus chord's 2 or 4, a sixth
+   chord's 6; otherwise the role. */
+const MEMBER_LABEL = { 2: '2', 5: '4', 9: '6' };
+
+/** The role a listed interval of a quality holds: 0 → Root, 2–5 → 3rd, 6–8 → 5th, 9–11 → 7th, 13–15 → 9th, 17–18 → 11th, 20–21 → 13th. */
 function roleOf(interval) {
   return TONES.find((role) => interval >= TONE_RANGE[role][0] && interval <= TONE_RANGE[role][1]) ?? 1;
 }
 
+/** The role a quality's interval holds, for a reader outside this module (rule 14). */
+export function roleOfInterval(interval) {
+  return roleOf(interval);
+}
+
+/** The member at an interval, named as a chart names it. */
+export function memberLabel(interval) {
+  return MEMBER_LABEL[interval] ?? toneLabel(roleOf(interval));
+}
+
 const mod12 = (n) => ((n % 12) + 12) % 12;
+
+/** The fewest members a chord keeps: its root and one other (AC-2.16.1/3). */
+export const MIN_MEMBERS = 2;
+
+/** The roles struck from a chord (US-2.16); none unless the chord says so. */
+export function omitOf(chord) {
+  return Array.isArray(chord?.omit) ? chord.omit : [];
+}
+
+/**
+ * The intervals a chord actually has: its quality's, less the members struck
+ * from it (AC-2.16.2). Every reading of a chord's members goes through here,
+ * so a struck member is gone from the stack, the bass, the deal and the name
+ * alike (research.md D-023).
+ */
+function intervalsOf(chord) {
+  const omit = omitOf(chord);
+  const { intervals } = quality(chord.quality);
+  return omit.length ? intervals.filter((i) => !omit.includes(roleOf(i))) : intervals;
+}
 
 /** How many members a chord has — the basses it offers (AC-2.11.1/1). */
 export function memberCount(chord) {
-  return quality(chord.quality).intervals.length;
+  return intervalsOf(chord).length;
 }
 
 /** Which member is in the bass: the stored inversion, clamped to the members the chord has; 0 is the root. */
@@ -122,7 +186,7 @@ export function inversionOf(chord) {
  * @returns {Array<{tone: number, interval: number, offset: number}>}
  */
 export function chordStack(chord) {
-  const { intervals } = quality(chord.quality);
+  const intervals = intervalsOf(chord);
   const root = degreeSemitones(chord.degree);
   const k = inversionOf(chord);
   const stack = [];
@@ -553,8 +617,15 @@ const DRONE_UP = { drone: 'tonic', octave: 1 };
 const DRONE_DOWN = { drone: 'tonic', octave: -1 };
 const ROOT_UP = { drone: 'root', octave: 1 };
 const tones = (roles) => roles.map((r) => T(r));
-/** The roles at the given positions of the stack, bass first — a fill's shape is positional (AC-2.11.2/3). */
-const at = (roles, positions) => positions.map((i) => roles[i]);
+/*
+ * The role at a position of the stack, bass first — a fill's shape is
+ * positional (AC-2.11.2/3). The shapes are written for three members; over
+ * two — power chords, or every chord struck to root and 5th — the 3rd's
+ * position falls to the bass and the 5th's is the other member (AC-2.16.4/1).
+ */
+const position = (roles, i) => (roles.length >= 3 ? roles[i] : roles[i === 2 ? 1 : 0]);
+/** The roles at the given positions of the stack. */
+const at = (roles, positions) => positions.map((i) => position(roles, i));
 const interleave = (roles, between) => roles.flatMap((r) => [T(r), between]);
 /** A scale drone (AC-2.6.6/14): a degree of the Pattern's scale above the Key, whatever the chord. */
 const D = (drone, octave = 0) => (octave ? { drone, octave } : { drone });
@@ -571,7 +642,7 @@ const upDown = (roles) => (roles.length < 3 ? roles : [...roles, ...roles.slice(
  * the stack (AC-2.11.2/3).
  */
 const POSITION = { 1: 0, 3: 1, 5: 2 };
-const picking = (shape) => ({ roles }) => shape.map(([t, o]) => T(roles[POSITION[t]], o));
+const picking = (shape) => ({ roles }) => shape.map(([t, o]) => T(position(roles, POSITION[t]), o));
 
 /** The scales a walk can take (AC-2.6.6/11); `pattern` walks the Pattern's own. */
 export const WALK_SCALES = [
@@ -904,8 +975,16 @@ function bassName(chord, key) {
  */
 export function chordName(chord, key) {
   const root = noteName({ degree: chord.degree, octaveOffset: 0 }, key);
-  const name = `${root.letter}${root.accidental}${quality(chord.quality).suffix}`;
+  const name = `${root.letter}${root.accidental}${quality(chord.quality).suffix}${omissionMark(chord)}`;
   return inversionOf(chord) === 0 ? name : `${name}/${bassName(chord, key)}`;
+}
+
+/** What the name says is struck from the chord — (no3), (no3,5) — or nothing (AC-2.16.1/2). */
+function omissionMark(chord) {
+  const omit = omitOf(chord);
+  if (!omit.length) return '';
+  const struck = quality(chord.quality).intervals.filter((i) => omit.includes(roleOf(i)));
+  return `(no${struck.map(memberLabel).join(',')})`;
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
@@ -917,7 +996,7 @@ export function chordNumeral(chord) {
   let numeral = ROMAN[(Number(digits) - 1) % 7];
   if (q.intervals[1] === 3) numeral = numeral.toLowerCase();
   const glyph = accidental === 'b' ? '♭' : accidental === '#' ? '♯' : '';
-  const name = `${glyph}${numeral}${q.numeral}`;
+  const name = `${glyph}${numeral}${q.numeral}${omissionMark(chord)}`;
   // Over a member other than the root, the member in the bass: V/3 (AC-2.11.1/3).
   return inversionOf(chord) === 0 ? name : `${name}/${toneLabel(bassOf(chord).tone)}`;
 }
@@ -1006,7 +1085,13 @@ function rechord(chord, changes) {
   const bass = bassOf(chord).tone;
   const next = { ...chord, ...changes };
   delete next.inversion;
-  const k = quality(next.quality).intervals.findIndex((i) => roleOf(i) === bass);
+  // The omissions the new chord can carry — every one it has a member for,
+  // unless together they would leave it fewer than two members (AC-2.16.1/4).
+  delete next.omit;
+  const roles = quality(next.quality).intervals.map(roleOf);
+  const kept = omitOf(chord).filter((tone) => roles.includes(tone));
+  if (kept.length && roles.length - kept.length >= MIN_MEMBERS) next.omit = kept;
+  const k = intervalsOf(next).findIndex((i) => roleOf(i) === bass);
   if (k > 0) next.inversion = k;
   return next;
 }
@@ -1015,6 +1100,48 @@ export function setChordQuality(pattern, index, qualityId) {
   if (!isValidQuality(qualityId)) throw new Error(`Unknown chord quality: ${qualityId}`);
   return withHarmony(pattern, (h) => {
     h.chords[index] = rechord(h.chords[index], { quality: qualityId });
+  });
+}
+
+/**
+ * The Omit toggles a chord offers (AC-2.16.1/1): one per member of its quality
+ * but the root, labelled as a chart names the member, pressed where the member
+ * is struck, and disabled where striking it would leave fewer than two members.
+ *
+ * @returns {Array<{tone: number, label: string, omitted: boolean, disabled: boolean}>}
+ */
+export function omitOptions(chord) {
+  const omit = omitOf(chord);
+  const remaining = memberCount(chord);
+  return quality(chord.quality)
+    .intervals.filter((i) => i !== 0)
+    .map((i) => {
+      const tone = roleOf(i);
+      const omitted = omit.includes(tone);
+      return { tone, label: memberLabel(i), omitted, disabled: !omitted && remaining <= MIN_MEMBERS };
+    });
+}
+
+/**
+ * Strike a member from a chord, or restore it (AC-2.16.1/2). The chord keeps
+ * its root and at least one other member (AC-2.16.1/3); the bass stays on its
+ * member while the member remains and returns to the root when the member is
+ * struck (AC-2.16.1/5).
+ */
+export function setChordOmit(pattern, index, tone, omitted) {
+  return withHarmony(pattern, (h) => {
+    const chord = h.chords[index];
+    if (!chord) throw new Error(`No chord ${index}`);
+    const roles = quality(chord.quality).intervals.map(roleOf);
+    if (tone === 1 || !roles.includes(tone)) throw new Error(`A ${chord.quality} chord has no member ${tone} to leave out`);
+    const next = omitted ? [...new Set([...omitOf(chord), tone])].sort((a, b) => a - b) : omitOf(chord).filter((t) => t !== tone);
+    if (roles.length - next.length < MIN_MEMBERS) throw new Error(`A chord keeps at least ${MIN_MEMBERS} members`);
+    const bass = bassOf(chord).tone;
+    delete chord.inversion;
+    delete chord.omit;
+    if (next.length) chord.omit = next;
+    const k = intervalsOf(chord).findIndex((i) => roleOf(i) === bass);
+    if (k > 0) chord.inversion = k;
   });
 }
 
