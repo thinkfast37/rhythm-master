@@ -369,13 +369,21 @@ test("AC-2.6.1/18 — Every song progression files after its heading's own entri
 
 // --- AC-2.6.2 — Each chord's root and quality are adjusted individually ---
 
-test('AC-2.6.2/1 — The quality picker offers major, minor, diminished, augmented, sus2, sus4, 6, m6, maj7, m7, 7, m7♭5, dim7, mMaj7, 7sus4, add9, 9, maj9 and m9', async ({ page }) => {
+test('AC-2.6.2/1 — The quality picker offers the chord catalogue under its group headings, major first and 7♭13 last', async ({ page }) => {
   await harmonicBlank(page);
-  const labels = await page.locator('.chord-editor[data-chord="0"] .chord-quality option').allTextContents();
-  expect(labels).toEqual([
-    'major', 'minor', 'diminished', 'augmented', 'sus2', 'sus4', '6', 'm6', 'maj7', 'm7', '7',
-    'm7♭5', 'dim7', 'mMaj7', '7sus4', 'add9', '9', 'maj9', 'm9',
+  const picker = page.locator('.chord-editor[data-chord="0"] .chord-quality');
+  // Eight groups, forty-one qualities (US-2.16; the list in full is AC-2.16.3/1's).
+  expect(await picker.locator('optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual([
+    'Triads', 'Suspended', 'Sixths', 'Sevenths', 'Added', 'Ninths', 'Elevenths', 'Thirteenths',
   ]);
+  const labels = await picker.locator('option').allTextContents();
+  expect(labels).toHaveLength(41);
+  expect(labels[0]).toBe('major');
+  expect(labels.at(-1)).toBe('7♭13');
+  // The nineteen the picker always had are all still there.
+  for (const q of ['major', 'minor', 'diminished', 'augmented', 'sus2', 'sus4', '6', 'm6', 'maj7', 'm7', '7', 'm7♭5', 'dim7', 'mMaj7', '7sus4', 'add9', '9', 'maj9', 'm9']) {
+    expect(labels).toContain(q);
+  }
   // Setting one changes that chord alone, in the editor and on the strip.
   await page.locator('.chord-editor[data-chord="0"] .chord-quality').selectOption('maj7');
   expect(await chordNames(page)).toEqual(['Cmaj7', 'F', 'G']);

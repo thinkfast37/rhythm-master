@@ -185,7 +185,8 @@ describe('tools/chord-sheet — filing into the catalogue', () => {
   });
 
   it('refuses a one-chord section and a chord it cannot read', () => {
-    const plan = planAdditions([review('Wilco', 'Invented', [['verse', '1'], ['chorus', '1 4:m11']])], catalogue);
+    // m11 was the unreadable example until the catalogue learnt it (US-2.16); a quality no chart names stands in.
+    const plan = planAdditions([review('Wilco', 'Invented', [['verse', '1'], ['chorus', '1 4:m99']])], catalogue);
     expect(plan.problems).toHaveLength(2);
     expect(plan.credits).toEqual([]);
   });

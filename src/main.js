@@ -37,6 +37,7 @@ import {
   setChordDegree,
   setChordBass,
   setChordFill,
+  setChordOmit,
   setVoicing,
   addChord,
   removeChord,
@@ -1444,6 +1445,12 @@ const handlers = {
   async onChordBass(index, inversion) {
     if (!(await guardShipped())) return;
     apply(setChordBass, index, inversion);
+  },
+
+  /** Strike a member from the chord, or restore it (AC-2.16.1). */
+  async onChordOmit(index, tone, omitted) {
+    if (!(await guardShipped())) return;
+    apply(setChordOmit, index, tone, omitted);
   },
 
   /** The chord's own fill in place of the arpeggio, or As above to follow it (AC-2.15.1). */

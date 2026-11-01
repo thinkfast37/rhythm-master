@@ -1761,6 +1761,34 @@ body {
   color: var(--ink);
   background: #1c1f2b;
 }
+/* The quality catalogue's group headings (AC-2.16.3/1), styled as the progression picker's. */
+.chord-quality optgroup {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-dim);
+  background: #1c1f2b;
+}
+.chord-quality option {
+  color: var(--ink);
+  background: #1c1f2b;
+}
+/* Omit (AC-2.16.1): a label and one small toggle per member but the root; a pressed toggle is a struck member. */
+.chord-omit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.chord-omit-label {
+  font: 500 12px/1 var(--font-ui);
+  color: var(--ink-dim);
+}
+.harmony .chord-omit-toggle {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  font: 600 12px/1 var(--font-mono);
+}
+.harmony .chord-omit-toggle[aria-pressed='true'] { text-decoration: line-through; }
 .harmony button {
   min-height: 32px;
   padding: 0 10px;

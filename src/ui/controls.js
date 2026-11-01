@@ -31,6 +31,8 @@ import {
   PROGRESSIONS,
   PROGRESSION_GROUPS,
   QUALITIES,
+  QUALITY_GROUPS,
+  omitOptions,
   CHANGES,
   ARPEGGIOS,
   MAX_CHORDS,
@@ -1208,7 +1210,12 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     qualityPicker.dataset.action = 'set-chord-quality';
     qualityPicker.dataset.chord = String(index);
     qualityPicker.setAttribute('aria-label', `Chord ${index + 1} quality`);
-    for (const q of QUALITIES) qualityPicker.appendChild(el('option', null, { value: q.id, textContent: q.label }));
+    // The catalogue under its group headings (AC-2.16.3/1).
+    for (const heading of QUALITY_GROUPS) {
+      const group = el('optgroup', null, { label: heading });
+      for (const q of QUALITIES) if (q.group === heading) group.appendChild(el('option', null, { value: q.id, textContent: q.label }));
+      qualityPicker.appendChild(group);
+    }
     qualityPicker.value = chord.quality;
     qualityPicker.addEventListener('change', (e) => handlers.onChordQuality(index, e.target.value));
     row.appendChild(qualityPicker);
@@ -1232,6 +1239,24 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     bassPicker.value = String(Math.min(chord.inversion ?? 0, options.length - 1));
     bassPicker.addEventListener('change', (e) => handlers.onChordBass(index, Number(e.target.value)));
     row.appendChild(bassPicker);
+
+    // Omit (AC-2.16.1): one toggle per member but the root, pressed where the
+    // member is struck; the last toggle that would leave one member is disabled.
+    const omit = el('span', 'chord-omit', { role: 'group' });
+    omit.setAttribute('aria-label', `Chord ${index + 1} omit`);
+    omit.appendChild(el('span', 'chord-omit-label', { textContent: 'Omit', title: 'Leave a member out of this chord' }));
+    for (const { tone, label, omitted, disabled } of omitOptions(chord)) {
+      const toggle = el('button', 'chord-omit-toggle', { type: 'button', textContent: label });
+      toggle.dataset.action = 'toggle-chord-omit';
+      toggle.dataset.chord = String(index);
+      toggle.dataset.tone = String(tone);
+      toggle.setAttribute('aria-pressed', String(omitted));
+      toggle.setAttribute('aria-label', `Chord ${index + 1}: leave out the ${label}`);
+      toggle.disabled = disabled;
+      toggle.addEventListener('click', () => handlers.onChordOmit(index, tone, !omitted));
+      omit.appendChild(toggle);
+    }
+    row.appendChild(omit);
 
     // The chord's own fill (AC-2.15.1): As above — the Pattern's arpeggio, named
     // — then the catalogue. Only under an arpeggio; with None nothing is dealt.

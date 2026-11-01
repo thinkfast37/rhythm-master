@@ -17,7 +17,7 @@ import {
   setSwingAmount,
   setSwingFeel,
 } from '../../../src/core/pattern.js';
-import { setProgression, setChordQuality, setChange, setArpeggio, setChordFill } from '../../../src/core/harmony.js';
+import { setProgression, setChordQuality, setChange, setArpeggio, setChordFill, setChordOmit } from '../../../src/core/harmony.js';
 
 const withNote = (p, b = 0, s = 0) => cycleAccent(p, 0, b, s);
 
@@ -257,6 +257,16 @@ describe('core/similarity', () => {
     const fixed = harmonic('e');
     fixed.measures[0].beats[0].slots[0].pitch = { degree: '3', octaveOffset: 0 };
     expect(isDuplicate(a, fixed)).toBe(false);
+  });
+
+  it("AC-2.16.1/6 — An omission is Pattern content: it is saved with the Pattern and survives a reload, auto-saves into an owned Pattern, is one Undo step, is carried by the Pattern's JSON export and its submission, tells two otherwise identical Patterns apart, and on a shipped Pattern goes through the naming prompt, cancelling it leaving the Pattern as it was; a Pattern whose chords leave nothing out is exactly as it was before: duplicate identity", () => {
+    const a = harmonic('a');
+    // One chord's 5th struck (US-2.16) tells the two apart; restored, they are duplicates again.
+    const struck = setChordOmit(harmonic('b'), 0, 5, true);
+    expect(isDuplicate(a, struck)).toBe(false);
+    expect(isDuplicate(a, setChordOmit(struck, 0, 5, false))).toBe(true);
+    // Which member is struck matters too.
+    expect(isDuplicate(struck, setChordOmit(harmonic('c'), 0, 3, true))).toBe(false);
   });
 
   it('AC-2.6.9/2 — Two Patterns identical in all of those are duplicates, and Family detection is unchanged: the same rhythm under different harmony is the same Family', () => {
