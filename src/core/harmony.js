@@ -1022,6 +1022,20 @@ export function setProgression(pattern, progressionId) {
 }
 
 /**
+ * Start a progression from scratch (AC-2.17.1): one chord, the tonic of the Key
+ * spelled from the scale exactly as a catalogue pick spells its steps
+ * (AC-2.17.1/2), over its root. The change setting and the arpeggio are carried
+ * as `setProgression` carries them (AC-2.17.1/3), and every stored Pitch is left
+ * as it was (AC-2.17.1/4). The chord editor builds the rest.
+ */
+export function startProgression(pattern) {
+  const chords = voiceChords([diatonicChord(pattern.scale ?? DEFAULT_SCALE, '1')], DEFAULT_VOICING);
+  const harmony = { change: pattern.harmony?.change ?? DEFAULT_CHANGE, chords };
+  if (pattern.harmony?.arpeggio) harmony.arpeggio = pattern.harmony.arpeggio;
+  return { ...clone(pattern), harmony };
+}
+
+/**
  * Remove the progression. Every chord-tone Pitch becomes the degree it sounded
  * under the first chord, so the first pass is unchanged and no Slot is left
  * holding a role with nothing to resolve it (AC-2.6.1/6).

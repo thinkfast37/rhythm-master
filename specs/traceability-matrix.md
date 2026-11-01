@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 991 across 64 User Stories
+**Criteria**: 1000 across 65 User Stories
 
-**Coverage**: 864 of 991 criteria proven (87.2%)
+**Coverage**: 873 of 1000 criteria proven (87.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 864 | 87.2% |
+| 🟢 Proven | 873 | 87.3% |
 | 🟠 Gap — MEDIUM | 50 | 5.0% |
-| 🟡 Gap — LOW | 77 | 7.8% |
+| 🟡 Gap — LOW | 77 | 7.7% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -121,6 +121,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.14 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.15 | 13 | **13** | · | · | · | · | · |
 | 🟢 US-2.16 | 17 | **17** | · | · | · | · | · |
+| 🟢 US-2.17 | 9 | **9** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -622,7 +623,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.5 | `AC-2.5.4/4` | Every shipped Melodic Pattern carries its `scale` explicitly, a catalogue id, never left to the default | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.4/5` | On a shipped Pattern the scale is read-only in place, exactly as the Key is: changing it goes through the same guarded copy flow, never mutating the shipped Pattern | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.5 | `AC-2.5.5` 🖵 | The scale never changes what is stamped or heard | P-040 | T216 (1/1 done) | T217 (1/1 done) | `melodic.spec.js` | 🟢 OK |
-| US-2.6 | `AC-2.6.1/1` 🖵 | The picker offers None first, then every catalogue entry under nine group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
+| US-2.6 | `AC-2.6.1/1` 🖵 | The picker offers None first, then Custom, then every catalogue entry under nine group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.spec.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/2` | Choosing a progression gives the Pattern one chord per step, each named in the Pattern's Key: I–IV–V in C is C, F and G | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/3` | Qualities are diatonic to the scale at the moment of choosing: i–iv–v in C Aeolian is Cm, Fm and Gm, and ii–V–I in C Ionian is Dm7, G7 and Cmaj7 | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.test.js` | 🟢 OK |
 | US-2.6 | `AC-2.6.1/4` | A pentatonic or blues scale spells its chords from the parallel Ionian, or from Aeolian when the scale has ♭3 and no 3: I–IV–V under C Minor Pentatonic is Cm, Fm and Gm | P-041 | T249, T250, T253, T255, T257, T268, T303, T332, T342, T346, T360, T388, T390, T428, T434, T439 (16/16 done) | T251, T252, T254, T256, T258, T269, T304, T333, T343, T347, T361, T389, T391, T429, T435, T440 (16/16 done) | `harmony.test.js` | 🟢 OK |
@@ -1117,3 +1118,12 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.16 | `AC-2.16.3/4` 🖵 | Nothing already written changes: every catalogue progression spells the chords it did, a stored quality is unchanged, and the numeral is lowercase from a minor third as before — ii11 and I5 | P-069 | T456, T460 (2/2 done) | T457, T461 (2/2 done) | `chord-omit.test.js`, `chord-omit.spec.js` | 🟢 OK |
 | US-2.16 | `AC-2.16.3/5` 🖵 | Changing a chord's quality on a shipped Pattern still goes through the naming prompt, and a quality the picker gained can be chosen there as any other | P-069 | T456, T460 (2/2 done) | T457, T461 (2/2 done) | `chord-omit.spec.js` | 🟢 OK |
 | US-2.16 | `AC-2.16.4/1` | Alberti over C5 deals Root 5th Root 5th, Root and fifth deals Root 5th, Travis picking deals Root Root↑ 5th Root↑, and Up and down deals Root 5th as it does over two roles | P-069 | T456, T460 (2/2 done) | T457, T461 (2/2 done) | `chord-omit.test.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.1/1` 🖵 | The picker offers Custom second, after None and before the first catalogue heading, whether or not a progression is in force | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.1/2` 🖵 | Choosing Custom gives the Pattern one chord, the tonic of the Key spelled from the scale as a catalogue pick spells it, over its root: C in C Ionian, Cm in C Aeolian and under C Minor Pentatonic, D in D Mixolydian | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.test.js`, `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.1/3` 🖵 | The Arpeggio already chosen stays and Ascending is set only when it is None, as a catalogue pick does; a progression begun with none in force changes every pass, and one begun over a progression keeps its change setting | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.test.js`, `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.1/4` 🖵 | Choosing Custom while a catalogue progression is in force replaces its chords with the one chord, and every stored Pitch is left exactly as it was | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.test.js`, `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.1/5` 🖵 | Under Cycle progressions, choosing Custom turns the cycle off, as None does, so the one chord is what sounds | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.1/6` 🖵 | Starting from scratch is a Pattern edit: it is one Undo step, auto-saves into an owned Pattern, and on a shipped Pattern goes through the naming prompt, cancelling it leaving the Pattern as it was | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.2/1` 🖵 | The chord editor opens with one row; + Chord adds a copy of the last chord, up to sixteen, and a chord is removed down to one, never to none | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.test.js`, `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.2/2` 🖵 | The picker reads Custom while the chords match no catalogue entry and names the entry when they do: one chord built into C, F and G reads I–IV–V, and that progression with its second root set to ♭6 reads Custom again | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.test.js`, `progression-scratch.spec.js` | 🟢 OK |
+| US-2.17 | `AC-2.17.2/3` 🖵 | Chords begun from scratch are the Pattern's as a catalogue entry's are: saved with it and surviving a reload, dealt by the Arpeggio on the grid, and carried into the MIDI file | P-070 | T458 (1/1 done) | T459 (1/1 done) | `progression-scratch.spec.js` | 🟢 OK |

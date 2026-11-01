@@ -63,21 +63,24 @@ async function loadAsShipped(page) {
 
 // --- AC-2.6.1 — A progression is chosen from a catalogue of named progressions ---
 
-test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry under nine group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords', async ({ page }) => {
+test('AC-2.6.1/1 — The picker offers None first, then Custom, then every catalogue entry under nine group headings in this order: Three chords and repeats, Pop, Minor, Jazz, Blues, Modal and rock, Classical and folk, Indie and alt, Sus and open chords', async ({ page }) => {
   await melodicBlank(page);
   const picker = page.locator('.progression-picker');
-  // None stands first, outside every group.
+  // None stands first, then Custom, both outside every group (Custom's own
+  // behaviour is US-2.17's).
   const first = await picker.locator(':scope > :first-child').evaluate((n) => ({ tag: n.tagName, value: n.value, text: n.textContent }));
   expect(first).toEqual({ tag: 'OPTION', value: 'none', text: 'None' });
+  const second = await picker.locator(':scope > :nth-child(2)').evaluate((n) => ({ tag: n.tagName, value: n.value, text: n.textContent }));
+  expect(second).toEqual({ tag: 'OPTION', value: 'custom', text: 'Custom' });
   // Then the nine headings, in order.
   const headings = await picker.locator('optgroup').evaluateAll((gs) => gs.map((g) => g.label));
   expect(headings).toEqual([
     'Three chords and repeats', 'Pop', 'Minor', 'Jazz', 'Blues', 'Modal and rock', 'Classical and folk',
     'Indie and alt', 'Sus and open chords',
   ]);
-  // Every option but None sits under a heading, and the catalogue is the whole of it.
+  // Every option but None and Custom sits under a heading, and the catalogue is the whole of it.
   const stray = await picker.locator(':scope > option').count();
-  expect(stray).toBe(1);
+  expect(stray).toBe(2);
   const grouped = await picker.locator('optgroup option').count();
   const { PROGRESSIONS } = await import('../../src/core/harmony.js');
   expect(grouped).toBe(PROGRESSIONS.length);
@@ -87,8 +90,8 @@ test('AC-2.6.1/1 — The picker offers None first, then every catalogue entry un
   await picker.selectOption('I-IV-V');
   await page.locator('.voicing-picker').selectOption('root');
   expect(await chordNames(page)).toEqual(['C', 'F', 'G']);
-  // And Custom is not on offer until the chords stop matching the catalogue.
-  expect(await picker.locator('option[value="custom"]').count()).toBe(0);
+  // And Custom is still on offer, a progression in force or not.
+  expect(await picker.locator('option[value="custom"]').count()).toBe(1);
 });
 
 /** The entries under one heading, as [value, label] pairs, in order. */

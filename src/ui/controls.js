@@ -1064,12 +1064,17 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     })
   );
 
-  // The catalogue (AC-2.6.1/1). Once the chords are edited into something the
-  // catalogue does not hold, the picker says so rather than claiming an entry.
+  // None, Custom, then the catalogue (AC-2.6.1/1). Custom is both a start and
+  // a reading: choosing it begins a progression from one chord (AC-2.17.1), and
+  // it is what the picker says once the chords match no catalogue entry
+  // (AC-2.17.2/2), rather than claiming an entry they are not.
   const picker = el('select', 'progression-picker');
   picker.dataset.action = 'set-progression';
   picker.setAttribute('aria-label', 'Chord progression');
   picker.appendChild(el('option', null, { value: 'none', textContent: 'None' }));
+  picker.appendChild(
+    el('option', null, { value: 'custom', textContent: 'Custom', title: 'Start from one chord and build the progression yourself' })
+  );
   for (const group of PROGRESSION_GROUPS) {
     const heading = el('optgroup');
     heading.label = group.label;
@@ -1078,7 +1083,6 @@ function renderHarmonyInto(root, pattern, state, handlers) {
     }
     picker.appendChild(heading);
   }
-  if (harmonic && !matched) picker.appendChild(el('option', null, { value: 'custom', textContent: 'Custom' }));
   picker.value = harmonic ? (matched ?? 'custom') : 'none';
   picker.addEventListener('change', (e) => handlers.onProgression(e.target.value));
   head.appendChild(picker);

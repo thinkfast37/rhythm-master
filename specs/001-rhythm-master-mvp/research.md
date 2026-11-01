@@ -1083,3 +1083,44 @@ in one role would break the stack, which finds a role's member by its role.
   the 13ths.
 - *Altered chords with two members in one role* (7alt, 7♭9♯9) — not added: the stack finds a role's
   member by its role, and two would make one of them unreachable.
+
+## D-024 — Starting a progression from scratch: Custom is an entry, and it starts with one chord
+
+**Decision (2026-10-31)**: the progression picker's Custom entry is permanent — second, after None — and
+choosing it is a mutation: `core/harmony.startProgression(pattern)` gives the Pattern a progression
+of one chord, the tonic of its Key spelled from its scale through the same `diatonicChord` a catalogue
+pick uses, voiced over its root, with the change setting and arpeggio carried as `setProgression`
+carries them. The chord editor, which appears whenever a progression exists, then builds the rest
+with the controls it already has (US-2.17).
+
+**Why.** The maintainer could not find a way to write their own chords: "It seems I have to pick a
+progression and then just edit it." Every progression began as a catalogue entry because the editor
+was conditional on a progression existing and nothing but the catalogue could make one exist. The
+smallest honest fix is to let the entry that already names an edited progression also start one:
+the state "chords that match no catalogue entry" is the same whether reached by editing or by
+starting, so one word in the picker covers it. One chord rather than none because every reading of a
+progression — the deal, the chord in force, the strip, the data model's rule 14 — assumes at least one
+chord, and an empty progression would need a second notion of "a progression with nothing in it".
+The tonic chord rather than always major because a catalogue pick in C Aeolian gives Cm (AC-2.6.1/3)
+and a scratch progression that opened with C major in a minor Key would need an edit before it was
+right.
+
+**Consequences.**
+- AC-2.6.1/1 is revised: Custom is a second fixed entry, and no longer appears at the foot only once
+  chords are edited. The ordering test is rewritten to the revised criterion.
+- `onProgression('custom')` is a no-op only while the picker already reads Custom, which the select
+  cannot fire anyway; otherwise it is an edit — the shipped-Pattern naming guard, one history entry,
+  auto-save — and under Cycle progressions it turns the cycle off as None does, since the Composer is
+  asking for their own chords and the cycle would substitute the catalogue's.
+- No data-model change, no migration. `matchProgression`, `progressionIndexOf`, the dice and the
+  Heard in line already handle chords that match no entry.
+
+**Alternatives considered**:
+- *A separate "Start from scratch" entry beside a trailing Custom* — offered and declined by the
+  maintainer: two entries for one state, and the picker would read a different word from the one
+  chosen.
+- *A progression of zero chords, the editor showing only + Chord* — rejected: nothing downstream can
+  read an empty progression, and `hasHarmony` would need a second meaning.
+- *+ Chord visible with no progression* — rejected: the picker is where a progression begins
+  (AC-2.6.1), and the chord editor is conditional on a progression by design (AC-15.1.8).
+- *Always a major triad* — offered and declined by the maintainer: the tonic of the scale.

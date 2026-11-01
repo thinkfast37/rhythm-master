@@ -31,6 +31,7 @@ import { buildTimeline, buildBeatGrid } from './core/timeline.js';
 import {
   hasHarmony,
   setProgression,
+  startProgression,
   clearHarmony,
   setChange,
   setChordQuality,
@@ -1393,11 +1394,12 @@ const handlers = {
   /**
    * A catalogue entry, spelled under the Key and scale now (AC-2.6.1); None
    * removes the progression and bakes every role into the degree it sounded
-   * under the first chord (AC-2.6.1/6). "Custom" is the picker naming what is
-   * already there, so it is a no-op.
+   * under the first chord (AC-2.6.1/6). Custom starts a progression from one
+   * chord, the tonic (AC-2.17.1) — unless the picker already reads Custom, in
+   * which case it is naming what is there and nothing changes.
    */
   async onProgression(id) {
-    if (id === 'custom') {
+    if (id === 'custom' && hasHarmony(state.pattern) && matchProgression(state.pattern) === null) {
       render();
       return;
     }
@@ -1405,9 +1407,11 @@ const handlers = {
     // Under progression cycling the chosen progression is where the cycle
     // begins again, with its repeats counted afresh; None hands the notes
     // back to the stamped Pitches, which is progression cycling off
-    // (AC-2.10.2/7 — the same shape as AC-2.7.2/7 for a fill).
+    // (AC-2.10.2/7 — the same shape as AC-2.7.2/7 for a fill). Custom asks
+    // for the Composer's own chords, which the cycle would substitute, so it
+    // turns the cycle off too (AC-2.17.1/5).
     if (state.progressionCycle.on) {
-      const index = id === 'none' ? -1 : PROGRESSIONS.findIndex((p) => p.id === id);
+      const index = id === 'none' || id === 'custom' ? -1 : PROGRESSIONS.findIndex((p) => p.id === id);
       state.progressionCycle = index < 0
         ? { on: false, start: 0, baseLoop: 0 }
         : { on: true, start: index, baseLoop: state.isPlaying ? state.loop : 0 };
@@ -1417,6 +1421,12 @@ const handlers = {
       return;
     }
     const hadArpeggio = Boolean(state.pattern.harmony?.arpeggio);
+    if (id === 'custom') {
+      // One edit, one Undo step (AC-2.17.1/6): the chord and the Ascending it
+      // needs to be heard arrive together.
+      apply((p) => (hadArpeggio ? startProgression(p) : setArpeggio(startProgression(p), DEFAULT_ARPEGGIO)));
+      return;
+    }
     apply(setProgression, id);
     // A progression with no arpeggio changes the chord names and nothing
     // audible, because a stamped degree is fixed by design (AC-2.6.4/4). So
