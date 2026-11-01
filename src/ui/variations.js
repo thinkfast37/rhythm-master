@@ -29,7 +29,7 @@ function ensureHost() {
 /**
  * @param {object} model   see `update`
  * @param {object} handlers  onPhrase(n), onTechnique(id), onChoice(index, key, value), onRemove(index),
- *   onRoll(), onNoDice(group), onAccept(again), onClose()
+ *   onRoll(), onNoDice(group), onTransport(), onAccept(again), onClose()
  * @param {Element|null} returnTo  the control that opened it, focused again on close (AC-10.4.8/5)
  */
 export function openVariationDialog(model, handlers, returnTo = null) {
@@ -71,7 +71,7 @@ export function closeVariationDialog() {
  *   changeNote (what the copy falls over under every-Measure changes, or null),
  *   stack: [{id, label, fields: [{key, label, options, value}]}], dropped: [{id, label, reason}],
  *   availability: [{id, label, group, describe, reason}], groupReasons: {group: reason|null},
- *   noDice: Set<string>, canRoll: boolean
+ *   noDice: Set<string>, canRoll: boolean, playing: boolean, hasCandidate: boolean
  */
 export function updateVariationDialog(model, handlers) {
   const box = host?.querySelector('.variation-dialog');
@@ -84,6 +84,23 @@ export function updateVariationDialog(model, handlers) {
   h2.className = 'dialog-title';
   h2.textContent = 'Add variation';
   box.appendChild(h2);
+
+  // Play/Stop at the head, saying what the loop plays (AC-10.4.4/4, AC-10.4.8/2):
+  // the audition is the point of the dialog, so the transport is the first thing in it.
+  const transportRow = document.createElement('div');
+  transportRow.className = 'variation-transport';
+  const play = document.createElement('button');
+  play.type = 'button';
+  play.className = 'dialog-button variation-play';
+  play.setAttribute('aria-pressed', String(model.playing));
+  play.textContent = model.playing ? '■ Stop' : '▶ Play';
+  play.addEventListener('click', () => handlers.onTransport());
+  const playing = document.createElement('span');
+  playing.className = 'variation-playing';
+  playing.setAttribute('role', 'status');
+  transportRow.append(play, playing);
+  box.appendChild(transportRow);
+  updateVariationTransport(model);
 
   // The original (AC-10.4.2, AC-10.4.8/2).
   const original = document.createElement('div');
@@ -276,13 +293,31 @@ export function updateVariationDialog(model, handlers) {
   if (keepFocus) restoreFocus(box, keepFocus);
 }
 
+/**
+ * The Play/Stop line alone, patched in place: the transport starts and stops
+ * outside the dialog too, and a render on every such change must not rebuild
+ * the selects under the musician's finger (AC-10.4.4/4, AC-10.4.8/2).
+ */
+export function updateVariationTransport(model) {
+  const row = host?.querySelector('.variation-transport');
+  if (!row) return;
+  const play = row.querySelector('.variation-play');
+  play.setAttribute('aria-pressed', String(model.playing));
+  play.textContent = model.playing ? '■ Stop' : '▶ Play';
+  row.querySelector('.variation-playing').textContent = !model.playing
+    ? 'Stopped. Play hears the original, then the candidate.'
+    : model.hasCandidate
+      ? 'Playing the original, then the candidate.'
+      : 'Playing the original. Add a technique to hear it varied.';
+}
+
 /** Where focus was, in terms that survive a rebuild. */
 function describeFocus(el) {
   if (el.classList.contains('variation-field')) return { field: el.dataset.key, index: el.closest('.variation-entry')?.dataset.index };
   if (el.classList.contains('variation-technique')) return { technique: el.dataset.technique };
   if (el.classList.contains('variation-nodice')) return { nodice: el.dataset.group };
   if (el.classList.contains('variation-remove')) return { remove: el.closest('.variation-entry')?.dataset.index };
-  for (const cls of ['variation-roll', 'variation-accept', 'variation-accept-again', 'variation-close', 'variation-phrase']) {
+  for (const cls of ['variation-play', 'variation-roll', 'variation-accept', 'variation-accept-again', 'variation-close', 'variation-phrase']) {
     if (el.classList.contains(cls)) return { cls };
   }
   return null;

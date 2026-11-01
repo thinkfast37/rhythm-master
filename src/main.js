@@ -82,7 +82,7 @@ import {
   techniqueById,
   GROUPS as VARIATION_GROUPS,
 } from './core/variations.js';
-import { openVariationDialog, updateVariationDialog, closeVariationDialog } from './ui/variations.js';
+import { openVariationDialog, updateVariationDialog, updateVariationTransport, closeVariationDialog } from './ui/variations.js';
 import { LAB, ANY_LEVEL, pickAtLevel, libraryTagsFor, isPracticeGoal, goalById, LEGACY_GOALS, LEVELS } from './core/goals.js';
 import { buildEntries, neighbours, toggleTag, UNRATED } from './ui/library.js';
 import { downloadMidi } from './export/midi.js';
@@ -1050,6 +1050,8 @@ function variationModel() {
     availability: variationAvailability(base, ctx),
     groupReasons: Object.fromEntries(VARIATION_GROUPS.map((g) => [g, variationGroupReason(g, base)])),
     noDice: v.noDice,
+    playing: state.isPlaying,
+    hasCandidate: Boolean(v.candidate),
     canRoll: canRollVariation(src, v.phraseLength, v.noDice, ctx),
     nextFits: src.measures.length + 2 * v.phraseLength <= MAX_MEASURES,
   };
@@ -1057,13 +1059,14 @@ function variationModel() {
 
 /**
  * After the stack changed: the candidate is heard at once (AC-10.4.4/1, /3) —
- * a stopped transport starts for the first candidate (AC-10.4.4/4), a running
- * one takes it up from the next pass — and the dialog and the grid redraw.
+ * a running transport takes it up from the next pass, and a stopped one
+ * starts again unless the musician stopped it from the dialog's own Stop
+ * (AC-10.4.4/4) — and the dialog and the grid redraw.
  */
 function auditionChanged() {
   const v = state.variation;
   rebuildVariation();
-  if (v.candidate && !state.isPlaying) {
+  if (v.candidate && !state.isPlaying && !v.paused) {
     v.startedPlay = true;
     void handlers.onPlay();
   } else {
@@ -1191,6 +1194,19 @@ const variationHandlers = {
     // After the render that drew the new Measures (AC-10.4.1/4).
     requestAnimationFrame(() => focusMeasure(from));
   },
+  /** The dialog's own Play/Stop (AC-10.4.4/4, AC-10.4.8/2): Stop holds the loop until Play, whatever the stack does meanwhile. */
+  onTransport() {
+    const v = state.variation;
+    if (!v) return;
+    if (state.isPlaying) {
+      v.paused = true;
+      transport.stop();
+    } else {
+      v.paused = false;
+      v.startedPlay = true;
+      void handlers.onPlay();
+    }
+  },
   onClose() {
     if (!state.variation) return;
     closeVariation({ accepted: false });
@@ -1208,6 +1224,10 @@ function render(kind = 'full') {
   // The Song entry sounding, for the Compose group to mark (AC-18.1.3/3).
   state.songEntryInForce = songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
   for (const fn of listeners) fn(shown, state.transportPosition, state, kind);
+  // The Add variation dialog's Play/Stop line follows the transport, which starts
+  // and stops outside the dialog too (AC-10.4.4/4, AC-10.4.8/2); only the line,
+  // so a render never rebuilds the stack's selects under the musician's finger.
+  if (kind === 'full' && state.variation) updateVariationTransport(variationModel());
 }
 
 /**
@@ -2832,9 +2852,17 @@ const handlers = {
       stages: [],
       noDice: new Set(),
       startedPlay: false,
+      paused: false,
     };
     openVariationDialog(variationModel(), variationHandlers, returnTo ?? document.activeElement);
-    render();
+    // A stopped transport starts on opening, so the original is heard before
+    // anything is built and the candidate from its first pass (AC-10.4.4/4).
+    if (!state.isPlaying) {
+      state.variation.startedPlay = true;
+      void handlers.onPlay();
+    } else {
+      render();
+    }
   },
 
   onComposerAddVariation(returnTo = null) {
