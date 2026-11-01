@@ -324,15 +324,43 @@ describe('core/harmony', () => {
     expect(notes(2)).toEqual([67, 67]);
   });
 
-  it('AC-2.6.4/5 — Changing the Key transposes every chord and chord tone with it, altering no stored role, degree or octave', () => {
-    const inC = note(setProgression(melodic(), 'I-IV-V'), 0, 0, 0, { tone: 3, octaveOffset: 0 });
+  it('AC-2.6.4/5 — Changing the Key transposes every chord and chord tone with it inside the armed octave, altering no stored role, degree or octave: I–IV–V in C sounds C, F and G from C4, and in G sounds G, C and D from G4, the C and the D coming round below the G rather than climbing past B4', () => {
+    const inC = note(setProgression(melodic(), 'I-IV-V'), 0, 0, 0, { tone: 1, octaveOffset: 0 });
     const inG = { ...inC, key: 'G' };
     expect(names(inG)).toEqual(['G', 'C', 'D']);
     expect(inG.harmony).toEqual(inC.harmony);
     expect(pitches(inG)).toEqual(pitches(inC));
-    for (const pass of [0, 1, 2]) {
-      expect(buildTimeline(inG, pass)[0].pitch.midiNote).toBe(buildTimeline(inC, pass)[0].pitch.midiNote + 7);
-    }
+    const roots = (p) => [0, 1, 2].map((pass) => buildTimeline(p, pass)[0].pitch.midiNote);
+    expect(roots(inC)).toEqual([60, 65, 67]); // C4 F4 G4
+    expect(roots(inG)).toEqual([67, 60, 62]); // G4, then C4 and D4 below it — not C5 and D5
+    // The 3rd follows its chord: B4 over G, E4 over C, F♯4 over D.
+    const thirds = { ...note(setProgression(melodic(), 'I-IV-V'), 0, 0, 0, { tone: 3, octaveOffset: 0 }), key: 'G' };
+    expect(roots(thirds)).toEqual([71, 64, 66]);
+  });
+
+  it('AC-2.6.4/7 — The armed octave is the octave its number names, C up to B, whatever the Key: Em7 at octave 4 sounds E4 G4 B4 D5 in G exactly as it does in C, never E5 G5 B5 D6 counted upward from G4', () => {
+    // Em7 is the iii7 of C and the vi7 of G: one chord, one octave number, the same four notes.
+    const em7 = (key, degree) => {
+      let p = setChordQuality(setChordDegree(setProgression(melodic({ key }), 'I-IV-V'), 0, degree), 0, 'm7');
+      for (const [b, tone] of [[0, 1], [1, 3], [2, 5], [3, 7]]) p = note(p, 0, b, 0, { tone, octaveOffset: 0 });
+      return p;
+    };
+    const sounds = (p) => buildTimeline(p, 0).map((e) => e.pitch.midiNote);
+    const spelled = (p) => chordStack(p.harmony.chords[0], p.key).map((m) => chordToneName({ tone: m.tone, octaveOffset: 0 }, p.harmony.chords[0], p.key).text);
+    const inC = em7('C', '3');
+    const inG = em7('G', '6');
+    expect(chordName(inC.harmony.chords[0], 'C')).toBe('Em7');
+    expect(chordName(inG.harmony.chords[0], 'G')).toBe('Em7');
+    expect(sounds(inC)).toEqual([64, 67, 71, 74]);
+    expect(sounds(inG)).toEqual([64, 67, 71, 74]);
+    expect(spelled(inG)).toEqual(['E4', 'G4', 'B4', 'D5']);
+    expect(sounds(inG)).not.toEqual([76, 79, 83, 86]);
+    // A root at or above the tonic's letter still counts upward from it: in G the I is G4 B4 D5 and the iii is B4 D5 F♯5.
+    expect(spelled({ ...inG, harmony: { ...inG.harmony, chords: [{ degree: '1', quality: 'maj' }] } })).toEqual(['G4', 'B4', 'D5']);
+    expect(spelled({ ...inG, harmony: { ...inG.harmony, chords: [{ degree: '3', quality: 'min' }] } })).toEqual(['B4', 'D5', 'F#5']);
+    // The dealt steps and the drone on the chord's root sit in the same octave: Ascending over Em7 in G, then Chord root drone.
+    expect(sounds(setArpeggio(inG, 'up'))).toEqual([64, 67, 71, 74]);
+    expect(sounds(setArpeggio(inG, 'root-drone')).slice(0, 2)).toEqual([64, 76]);
   });
 
   // --- AC-2.6.6 — An arpeggio deals chord tones across the sounding Slots ---
@@ -861,7 +889,7 @@ describe('core/harmony', () => {
     let bm = sounding(setProgression(melodic({ key: 'B', scale: 'aeolian' }), 'i-iv-v'), 4);
     bm = setChordBass(bm, 0, 2);
     expect(chordName(bm.harmony.chords[0], bm.key)).toBe('Bm/F#');
-    expect(under('leap-home', bm)).toEqual([78, 86, 83, 78]);
+    expect(under('leap-home', bm)).toEqual([66, 74, 71, 66]);
     // And over C/E the same shape is E C′ G E.
     let ce = sounding(setProgression(melodic(), 'I-IV-V'), 4);
     ce = setChordBass(ce, 0, 1);
@@ -898,7 +926,7 @@ describe('core/harmony', () => {
     // Over Bm/F♯ the shape is positional: F♯ D B′.
     let bm = sounding(setProgression(melodic({ key: 'B', scale: 'aeolian' }), 'i-iv-v'), 4);
     bm = setChordBass(bm, 0, 2);
-    expect(under('open-triad', bm)).toEqual([78, 86, 95, 78]);
+    expect(under('open-triad', bm)).toEqual([66, 74, 83, 66]);
     // Over Dm7 the 7th is never dealt.
     const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 8);
     expect(under('open-triad', sevenths)).toEqual([62, 69, 77, 62, 69, 77, 62, 69]);
@@ -1139,11 +1167,29 @@ describe('core/harmony — voice each chord (US-2.11, research.md D-014)', () =>
     expect(stack(G)).toEqual(['G4', 'B4', 'D5']);
     // The armed octave moves the whole stack.
     expect(stack(over(G, 2), 1)).toEqual(['D5', 'G5', 'B5']);
-    // The armed octave runs up from the Key's tonic, as it always has: in G at octave 4 it is G4 to F♯5, so D/F♯ sits F♯5 A5 D6, as D itself sits D5 F♯5 A5.
-    const D = over({ degree: '5', quality: 'maj' }, 1);
-    expect(chordStack(D).map((m) => chordToneName({ tone: m.tone, octaveOffset: 0 }, D, 'G').text)).toEqual(['F#5', 'A5', 'D6']);
-    const Droot = spellProgression('I-V', 'ionian')[1];
-    expect(chordStack(Droot).map((m) => chordToneName({ tone: m.tone, octaveOffset: 0 }, Droot, 'G').text)).toEqual(['D5', 'F#5', 'A5']);
+  });
+
+  it('AC-2.11.2/7 — The armed octave is the same C-to-B octave in every Key, for the bass and for the shapes that choose it: in G at octave 4, Bm/F♯ sounds F♯4 B4 D5 and D/F♯ sounds F♯4 A4 D5, and Closest measures each candidate where it would sound in that octave', () => {
+    const spelled = (chord, key) => chordStack(chord, key).map((m) => chordToneName({ tone: m.tone, octaveOffset: 0 }, chord, key).text);
+    const bm = over({ degree: '3', quality: 'min' }, 2);
+    expect(chordName(bm, 'G')).toBe('Bm/F#');
+    expect(spelled(bm, 'G')).toEqual(['F#4', 'B4', 'D5']);
+    const d = over({ degree: '5', quality: 'maj' }, 1);
+    expect(spelled(d, 'G')).toEqual(['F#4', 'A4', 'D5']);
+    expect(spelled({ degree: '5', quality: 'maj' }, 'G')).toEqual(['D4', 'F#4', 'A4']);
+    // In C the same stacks are where they always were.
+    expect(spelled(bm, 'C')).toEqual(['B4', 'E5', 'G5']);
+    // Closest in G: G, C/G, D/F♯ — every bass between C4 and B4, the keyboard voicing.
+    const p = chooseProgression(melodic({ key: 'G' }), 'I-IV-V');
+    expect(names(p.harmony.chords, 'G')).toEqual(['G', 'C/G', 'D/F#']);
+    expect(matchVoicing(p.harmony.chords, 'G')).toBe('closest');
+    expect(p.harmony.chords.map((c) => spelled(c, 'G'))).toEqual([['G4', 'B4', 'D5'], ['G4', 'C5', 'E5'], ['F#4', 'A4', 'D5']]);
+    // Measured upward from the tonic, as before, D/A would have been chosen — a seventh above G instead of a step below it.
+    expect(names(voiceChords(p.harmony.chords, 'closest', 'C'), 'G')).toEqual(['G', 'C/G', 'D/A']);
+    // A stored Root under Bm/F♯ sounds B4, in playback as on paper.
+    let q = sounding(setChordBass(setChordQuality(setChordDegree(setVoicing(p, 'root'), 0, '3'), 0, 'min'), 0, 2), 1);
+    q = setPitch(q, 0, 0, 0, { tone: 1, octaveOffset: 0 });
+    expect(buildTimeline(q, 0)[0].pitch.midiNote).toBe(71);
   });
 
   it("AC-2.11.2/3 — A fill deals the stack from the bass up, each step keeping its role's name: Ascending over C/E sounds E G C′ as 3rd, 5th, Root; Descending C′ G E; Alberti E C′ G C′; Root only E; Up to the octave E G C′ E′; Travis picking E G′ C′ E′", () => {
@@ -1178,16 +1224,16 @@ describe('core/harmony — voice each chord (US-2.11, research.md D-014)', () =>
     // The chord's own members, from the bass up; the 7th it lacks is not dealt.
     expect(arpeggioRoles(p, bm)).toEqual([5, 1, 3]);
     const third = (id) => notesOf(setArpeggio(p, id)).slice(8, 12);
-    expect(third('leap-home')).toEqual([78, 86, 83, 78]); // F♯ D B F♯
-    expect(third('alberti')).toEqual([78, 86, 83, 86]); // F♯ D B D
-    expect(third('up')).toEqual([78, 83, 86, 78]); // F♯ B D, then round again
+    expect(third('leap-home')).toEqual([66, 74, 71, 66]); // F♯ D B F♯
+    expect(third('alberti')).toEqual([66, 74, 71, 74]); // F♯ D B D
+    expect(third('up')).toEqual([66, 71, 74, 66]); // F♯ B D, then round again
     expect(arpeggioSequence('up', p, bm).map(stepLabel)).toEqual(['5', 'R', '3']);
     expect(arpeggioSequence('travis', p, bm).map(stepLabel)).toEqual(['5', 'R↑', '3', '5↑']);
     // Over the same chord with its 3rd in the bass, Alberti is D B F♯ B.
     const bd = setChordBass(p, 2, 1);
-    expect(notesOf(setArpeggio(bd, 'alberti')).slice(8, 12)).toEqual([74, 83, 78, 83]);
+    expect(notesOf(setArpeggio(bd, 'alberti')).slice(8, 12)).toEqual([62, 71, 66, 71]);
     // The seventh chords are untouched: Descending over Em7(no3) is still D B E D (AC-2.16.2/1).
-    expect(notesOf(setArpeggio(p, 'down')).slice(0, 4)).toEqual([86, 83, 76, 86]);
+    expect(notesOf(setArpeggio(p, 'down')).slice(0, 4)).toEqual([74, 71, 64, 74]);
   });
 
   it('AC-2.11.2/4 — A stored chord-tone Pitch resolves through the same stack as a fill, in playback, on the score and in the MIDI file alike: a Root under C/E sounds C5', () => {
@@ -1302,7 +1348,7 @@ describe('core/harmony — voice each chord (US-2.11, research.md D-014)', () =>
     const shipped = seed.patterns.filter((p) => p.harmony?.chords?.length);
     expect(shipped.length).toBeGreaterThan(100);
     for (const p of shipped) {
-      expect(p.harmony.chords, p.name).toEqual(voiceChords(p.harmony.chords, 'closest'));
+      expect(p.harmony.chords, p.name).toEqual(voiceChords(p.harmony.chords, 'closest', p.key));
       expect(() => validate({ ...p, id: 'x' })).not.toThrow();
     }
     // Not root position across the board: the voicing did something.

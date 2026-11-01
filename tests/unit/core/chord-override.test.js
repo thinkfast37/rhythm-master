@@ -110,8 +110,8 @@ describe('US-10.4 — Vary a loop: a chord override is Pattern content that trav
   it('AC-10.4.7/5 — Playback, the grid’s note bands and chord names, the score and MIDI export all follow the override for its Measures, from the one timeline; the MIDI file and the JSON carry no technique name, stack or original length: the timeline and the files', () => {
     const p = varied();
     // Measure 2 sounds Em7's seventh (D) where Measure 1 repeats the root.
-    expect(notes(p, 0).slice(0, 4)).toEqual([76, 79, 83, 76]);
-    expect(notes(p, 0).slice(4)).toEqual([76, 79, 83, 86]);
+    expect(notes(p, 0).slice(0, 4)).toEqual([64, 67, 71, 64]);
+    expect(notes(p, 0).slice(4)).toEqual([64, 67, 71, 74]);
     const bytes = buildMidi(p);
     const text = Buffer.from(bytes).toString('latin1');
     for (const word of ['technique', 'stack', 'phraseLength', 'change-quality']) expect(text).not.toContain(word);
@@ -126,7 +126,7 @@ describe('US-10.4 — Vary a loop: a chord override is Pattern content that trav
     const baked = clearHarmony(p);
     expect(baked.harmony).toBeUndefined();
     expect(notes(baked, 0)).toEqual(before);
-    // Em7's seventh, stacked above the root, lands in the octave above (D5 over E4).
-    expect(baked.measures[1].beats[3].slots[0].pitch).toEqual({ degree: '5', octaveOffset: 1 });
+    // Em7 sits at E4 in G as in C (AC-2.6.4/7); its seventh, stacked above the root, is D5 — degree 5 of G at octave-offset 0.
+    expect(baked.measures[1].beats[3].slots[0].pitch).toEqual({ degree: '5', octaveOffset: 0 });
   });
 });
