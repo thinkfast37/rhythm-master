@@ -651,6 +651,8 @@ export function mountShell(root, ctx) {
       renderGrid(gridEl, pattern, position, {
         countingSystem: s.settings.countingSystem,
         recipeArmed: Boolean(s.armedRecipe),
+        // The candidate's Measures follow the Pattern's own (AC-10.4.4/2).
+        candidateFrom: s.variation?.candidate ? pattern.measures.length - s.variation.candidate.measures.length : null,
       });
       // Immediately after the render that built the Beats, and before this task
       // yields to paint, so the one-line fallback is never seen (AC-15.1.14).

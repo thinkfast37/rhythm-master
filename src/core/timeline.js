@@ -14,7 +14,7 @@ import { beatCount, beatDurationSeconds, beatNoteValue, tempoUnitOf } from './me
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
 import { resolve, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
-import { chordAt, resolveChordTone, resolveStep, arpeggioDeal, soundingPitch } from './harmony.js';
+import { chordAt, chordInMeasure, resolveChordTone, resolveStep, arpeggioDeal, soundingPitch } from './harmony.js';
 import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
 
 /**
@@ -64,7 +64,9 @@ export function buildTimeline(pattern, pass = 0) {
     const beatDuration = beatDurationSeconds(timeSignature, pattern.tempo, tempoUnitOf(pattern));
     const noteValue = beatNoteValue(timeSignature);
     const chordIndex = chordAt(pattern, pass, measureIndex);
-    const chord = chordIndex === null ? null : pattern.harmony.chords[chordIndex];
+    // The chord as this Measure plays it — with its override, where one is
+    // written (US-10.4) — so the file and the run follow the same chord.
+    const chord = chordIndex === null ? null : chordInMeasure(pattern, measureIndex, chordIndex);
 
     measure.beats.forEach((beat, beatIndex) => {
       const beatStart = measureStart + beatIndex * beatDuration;

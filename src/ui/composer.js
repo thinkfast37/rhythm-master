@@ -531,7 +531,14 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
     dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself, keeping the notes or starting percussive' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     dup.addEventListener('click', () => handlers.onComposerDuplicate?.());
-    wrap.appendChild(labelled('Measures', dup));
+    // Add variation beside it (AC-10.4.8/1): the variation keeps the draft's notes (AC-10.4.1/7).
+    const vary = button('action composer-add-variation', 'Add variation', 'composer-add-variation', { disabled: !canDuplicate(draft) });
+    vary.dataset.action = 'add-variation';
+    vary.setAttribute('title', canDuplicate(draft) ? 'Append a variation of the original — several techniques at once, heard before it is written' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
+    vary.addEventListener('click', () => handlers.onComposerAddVariation?.(vary));
+    const measures = el('div', 'control-group structure-row');
+    measures.append(vary, dup);
+    wrap.appendChild(labelled('Measures', measures));
   }
   return wrap;
 }

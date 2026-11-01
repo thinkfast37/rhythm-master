@@ -67,7 +67,7 @@ export function pitchFingerprint(pattern) {
   if (pattern.soundMode !== 'melodic') return null;
   const h = pattern.harmony;
   const harmony = h?.chords?.length
-    ? `harmony=${h.change}:${h.arpeggio ?? '-'}:${h.chords.map((c) => `${c.degree}${c.quality}${c.omit?.length ? `-${c.omit.join('.')}` : ''}${c.inversion ? `/${c.inversion}` : ''}${c.fill ? `~${c.fill}` : ''}`).join(',')}`
+    ? `harmony=${h.change}:${h.arpeggio ?? '-'}:${h.chords.map((c) => `${c.degree}${c.quality}${c.omit?.length ? `-${c.omit.join('.')}` : ''}${c.inversion ? `/${c.inversion}` : ''}${c.fill ? `~${c.fill}` : ''}`).join(',')}${overrideToken(h.overrides)}`
     : 'harmony=-';
   const pitchToken = (p) =>
     p.tone !== undefined ? `T${p.tone}@${p.octaveOffset ?? 0}` : `${p.degree}@${p.octaveOffset ?? 0}`;
@@ -78,6 +78,28 @@ export function pitchFingerprint(pattern) {
       m.beats.flatMap((b) => b.slots.map((s) => (s.on && s.pitch ? pitchToken(s.pitch) : '-')))
     ),
   ].join(' ');
+}
+
+/**
+ * A chord's changes in one Measure are Pitch content too: the same Measures
+ * under a different override sound different (AC-10.4.7/3). Keys sorted, so
+ * the token does not depend on the order they were written in.
+ */
+function overrideToken(overrides) {
+  if (!overrides) return '';
+  const entries = Object.keys(overrides)
+    .map(Number)
+    .sort((x, y) => x - y)
+    .flatMap((m) =>
+      Object.keys(overrides[m])
+        .map(Number)
+        .sort((x, y) => x - y)
+        .map((c) => {
+          const o = overrides[m][c];
+          return `${m}.${c}=${o.quality ?? ''}${o.omit?.length ? `-${o.omit.join('.')}` : ''}${o.inversion ? `/${o.inversion}` : ''}${o.fill ? `~${o.fill}` : ''}`;
+        })
+    );
+  return entries.length ? `|${entries.join(';')}` : '';
 }
 
 /** Identical in every musical aspect. AC-11.1.x */

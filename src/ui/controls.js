@@ -38,6 +38,8 @@ import {
   MAX_CHORDS,
 } from '../core/harmony.js';
 import { placeHelp } from './help.js';
+import { surfaceFor } from '../core/goals.js';
+import { phraseLengthOf, canAddVariation } from '../core/variations.js';
 import { VOICES, normaliseVoice } from '../core/voice.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
@@ -616,6 +618,11 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
     // Cycling and Keep sit with the picker whose catalogue they step through:
     // auditioning fills is melody work, not practice (AC-2.7.1, AC-2.8.1).
     if (hasHarmony(pattern)) fresh.appendChild(renderFillCycle(pattern, state, handlers));
+    // A making goal with no Rhythm group gets the Measures pair here (AC-10.4.8/1).
+    const goal = state?.settings?.goal;
+    if (goal && !surfaceFor(goal).tabs.includes('rhythm') && !surfaceFor(goal).readOnly) {
+      fresh.appendChild(renderMelodyMeasures(pattern, state, handlers));
+    }
     // Lab's Help, part of the group it describes (AC-14.1.3/3).
     placeHelp(fresh, 'melody', state);
   });
@@ -626,7 +633,7 @@ export function renderRhythmGroup(root, pattern, state, handlers) {
   root.className = 'controls workbench-group rhythm-group';
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderRecipeStrip(pattern, state, handlers));
-    fresh.appendChild(renderStructure(pattern, handlers));
+    fresh.appendChild(renderStructure(pattern, state, handlers));
     placeHelp(fresh, 'rhythm', state);
   });
 }
@@ -1498,7 +1505,7 @@ function renderTempo(pattern, handlers) {
  * (AC-1.1.8/1); Condense is disabled the same way when no halving is possible
  * (AC-10.2.3), so the Composer sees that the option exists.
  */
-function renderStructure(pattern, handlers) {
+function renderStructure(pattern, state, handlers) {
   const row = el('div', 'control-group structure-row');
   const measures = pattern.measures.length;
 
@@ -1512,10 +1519,47 @@ function renderStructure(pattern, handlers) {
 
   button('remove-measure', '− Measure', () => handlers.onRemoveMeasure(), measures <= 1);
   button('add-measure', '+ Measure', () => handlers.onAddMeasure(), measures >= MAX_MEASURES);
+  // Before Double Length, so Condense still follows Double Length directly (AC-10.2.3).
+  addVariationButton(row, pattern, state, handlers);
   button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), measures * 2 > MAX_MEASURES);
   button('condense-pattern', 'Condense', () => handlers.onCondense(), !canCondense(pattern));
   button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), measures >= MAX_MEASURES);
 
+  return labelledGroup('Measures', row);
+}
+
+/**
+ * Add variation, beside Double Length (AC-10.4.8/1): enabled while the Pattern
+ * plus its original fits under the cap, and saying so when it does not
+ * (AC-10.4.1/6).
+ */
+function addVariationButton(row, pattern, state, handlers) {
+  const n = phraseLengthOf(pattern, state?.phraseLength ?? null);
+  const fits = canAddVariation(pattern, n);
+  const b = el('button', 'action', { type: 'button', textContent: 'Add variation', disabled: !fits });
+  b.dataset.action = 'add-variation';
+  b.title = fits
+    ? 'Append a variation of the original — several techniques at once, heard before it is written'
+    : `A Pattern holds at most ${MAX_MEASURES} Measures; ${pattern.measures.length} plus the original’s ${n} will not fit`;
+  b.addEventListener('click', () => handlers.onAddVariation(b));
+  row.appendChild(b);
+  return b;
+}
+
+/**
+ * On a making goal with no Rhythm group — Make it melodic, Combine patterns —
+ * the Melody group ends with Double Length and Add variation (AC-10.4.8/1;
+ * AC-15.1.8 revised 2026-11-01), so D-018's ruling that Double Length is on
+ * every making goal holds there too.
+ */
+function renderMelodyMeasures(pattern, state, handlers) {
+  const row = el('div', 'control-group structure-row melody-measures');
+  const measures = pattern.measures.length;
+  addVariationButton(row, pattern, state, handlers);
+  const dup = el('button', 'action', { type: 'button', textContent: 'Double Length', disabled: measures * 2 > MAX_MEASURES });
+  dup.dataset.action = 'duplicate-pattern';
+  dup.addEventListener('click', () => handlers.onDuplicate());
+  row.appendChild(dup);
   return labelledGroup('Measures', row);
 }
 

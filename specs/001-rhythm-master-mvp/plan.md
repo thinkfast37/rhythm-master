@@ -278,6 +278,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-068** | US-2.15 — A fill for each chord of the progression | AC-2.15.1–AC-2.15.3 | T454 | T455 |
 | **P-069** | US-2.16 — Chords with a member left out, and a wider chord catalogue | AC-2.16.1–AC-2.16.4 | T456, T460, T464 | T457, T461, T465 |
 | **P-070** | US-2.17 — Start a chord progression from scratch | AC-2.17.1–AC-2.17.2 | T458 | T459 |
+| **P-071** | US-10.4 — Vary a loop | AC-10.4.1–AC-10.4.8 | T466 | T467 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of
