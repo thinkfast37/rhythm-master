@@ -27,6 +27,7 @@ import {
   chordStack,
   bassOptions,
   arpeggioSequence,
+  ARPEGGIOS,
 } from '../../../src/core/harmony.js';
 import { SCALES } from '../../../src/core/scales.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
@@ -82,7 +83,7 @@ describe('US-2.16 — a member left out', () => {
     expect(setProgression(p, 'I-V-vi-IV').harmony.chords.every((c) => !('omit' in c))).toBe(true);
   });
 
-  it("AC-2.16.2/1 — A fill deals the remaining members and no step for a struck one: with every chord of I–IV–V struck to root and 5th, Ascending over four Slots a Measure deals Root 5th Root 5th — C4 G4 C4 G4 — and Cm7(no3) among triads deals Root 5th 7th Root, C4 G4 B♭4 C4, Descending over Em7(no3) D B E D; a member a chord never had still falls to its next-lower member as before", () => {
+  it("AC-2.16.2/1 — A fill deals the remaining members and no step for a struck one: with every chord of I–IV–V struck to root and 5th, Ascending over four Slots a Measure deals Root 5th Root 5th — C4 G4 C4 G4 — and Cm7(no3) among triads deals Root 5th 7th Root, C4 G4 B♭4 C4, Descending over Em7(no3) D B E D; a member a chord never had is dealt no step either, so the G triad among sevenths under Descending deals D B G D", () => {
     let p = setArpeggio(setProgression(melodic(), 'I-IV-V'), 'up');
     expect(notes(p)).toEqual([60, 64, 67, 60]);
     let bare = p;
@@ -96,8 +97,8 @@ describe('US-2.16 — a member left out', () => {
     let em = setChordQuality(setChordDegree(setArpeggio(setProgression(melodic(), "I-IV-V"), "down"), 0, "3"), 0, "m7");
     em = setChordOmit(em, 0, 3, true);
     expect(notes(em)).toEqual([74, 71, 64, 74]);
-    // A member a chord never had still falls: the G triad among sevenths deals its 7th step on its 5th.
-    expect(notes(em, 2)).toEqual([74, 74, 71, 67]);
+    // A member a chord never had is dealt no step either: the G triad among sevenths deals D B G, then D.
+    expect(notes(em, 2)).toEqual([74, 71, 67, 74]);
   });
 
   it('AC-2.16.2/2 — The stack is the remaining members from the bass up and the bass is counted among them: Em7(no3) over its 5th in C at octave 4 sounds B4, D5, E5 as 5th, 7th, Root', () => {
@@ -214,6 +215,23 @@ describe('US-2.16 — the wider catalogue', () => {
     // Every fill in the catalogue still deals over two members.
     p = setArpeggio(p, 'sweep');
     expect(notes(p)).toHaveLength(4);
+  });
+
+  it('AC-2.16.4/1 — Alberti over C5 deals Root 5th Root 5th, Root and fifth deals Root 5th, Travis picking deals Root Root↑ 5th Root↑, and Up and down deals Root 5th as it does over two roles: every fill in the catalogue deals over two members', () => {
+    // Found by audit 2026-11-01: Repeated 5th on top and Upper neighbour on the 5th read the stack's third position
+    // directly, and over two members there is none — the deal threw and playback with it.
+    let power = setProgression(melodic(), 'I-IV-V');
+    for (let i = 0; i < 3; i++) power = setChordQuality(power, i, '5');
+    let struck = setProgression(melodic({ measures: 3 }), 'I-IV-V');
+    struck = setChordOmit(setChordOmit(struck, 1, 5, true), 2, 3, true); // C, F(no5), G(no3), every Measure
+    for (const fill of ARPEGGIOS) {
+      expect(() => notes(setArpeggio(power, fill.id)), fill.id).not.toThrow();
+      expect(notes(setArpeggio(power, fill.id)), fill.id).toHaveLength(4);
+      expect(() => notes(setArpeggio(struck, fill.id)), fill.id).not.toThrow();
+    }
+    // Over C5 the 5th position is the chord's other member, so the 5th on top is G, and its upper neighbour A.
+    expect(notes(setArpeggio(power, 'fifth-on-top'))).toEqual([60, 79, 67, 79]);
+    expect(notes(setArpeggio(power, 'upper-neighbour-fifth'))).toEqual([67, 67, 69, 67]);
   });
 });
 

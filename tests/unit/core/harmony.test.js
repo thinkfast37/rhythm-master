@@ -38,6 +38,8 @@ import { entryAt, playingAt } from '../../../src/core/song.js';
 import {
   chordStack,
   setChordBass,
+  setChordOmit,
+  arpeggioRoles,
   voiceChords,
   matchVoicing,
   chordNumeral,
@@ -402,12 +404,14 @@ describe('core/harmony', () => {
     expect(() => setArpeggio(p, 'sideways')).toThrow(/Unknown arpeggio/);
   });
 
-  it("AC-2.6.6/5 — The roles dealt are the members of the progression's fullest chord, so a progression of triads deals Root, 3rd and 5th only", () => {
+  it("AC-2.6.6/5 — The roles dealt are the members the chord in force has, so a progression of triads deals Root, 3rd and 5th only, and a triad among seventh chords deals its three while each seventh chord deals its four", () => {
     let p = setProgression(melodic(), 'I-IV-V');
     for (let s = 0; s < 4; s++) p = cycleAccent(p, 0, 0, s);
     expect(dealt(setArpeggio(p, 'up'))).toEqual([1, 3, 5, 1]);
-    // One seventh chord in the progression brings the 7th into the deal.
-    expect(dealt(setArpeggio(setChordQuality(p, 2, '7'), 'up'))).toEqual([1, 3, 5, 7]);
+    // One seventh chord in the progression: the C triad in force still deals its three, and G7 its four.
+    const withSeventh = setArpeggio(setChordQuality(p, 2, '7'), 'up');
+    expect(dealt(withSeventh)).toEqual([1, 3, 5, 1]);
+    expect(dealt(withSeventh, 2)).toEqual([1, 3, 5, 7]);
   });
 
   it('AC-2.6.6/6 — The deal follows the rhythm: a Slot turned on or off re-deals the line, and no stored Pitch, Slot or Accent Level changes — each Slot keeps its own octave', () => {
@@ -1158,6 +1162,32 @@ describe('core/harmony — voice each chord (US-2.11, research.md D-014)', () =>
     expect(under('travis')).toEqual([64, 79, 72, 76]);
     // Each chord deals its own stack: the IV, over its root, opens on F.
     expect(notesOf(setArpeggio(p, 'up'), 1)).toEqual([65, 69, 72, 65]);
+  });
+
+  it("AC-2.11.2/3 — A fill deals the stack from the bass up, each step keeping its role's name: Ascending over C/E sounds E G C′ as 3rd, 5th, Root; Descending C′ G E; Alberti E C′ G C′; Root only E; Up to the octave E G C′ E′; Travis picking E G′ C′ E′: a triad with a bass chosen among seventh chords", () => {
+    // The maintainer's Pattern (2026-11-01): Em7(no3), Em7(no3), Bm/F♯ in G. The 7th belongs to the Em7s only;
+    // it must not take a position in Bm's stack, which is F♯ B D from the bass up.
+    let p = setChange(setProgression(melodic({ key: 'G', measures: 3 }), 'I-IV-V'), 'measure');
+    for (let m = 0; m < 3; m++) for (let s = 0; s < 4; s++) p = cycleAccent(p, m, 0, s); // four Slots a Measure
+    for (const i of [0, 1]) {
+      p = setChordOmit(setChordQuality(setChordDegree(p, i, '6'), i, 'm7'), i, 3, true);
+    }
+    p = setChordBass(setChordQuality(setChordDegree(p, 2, '3'), 2, 'min'), 2, 2);
+    expect(p.harmony.chords.map((c) => chordName(c, 'G'))).toEqual(['Em7(no3)', 'Em7(no3)', 'Bm/F#']);
+    const bm = p.harmony.chords[2];
+    // The chord's own members, from the bass up; the 7th it lacks is not dealt.
+    expect(arpeggioRoles(p, bm)).toEqual([5, 1, 3]);
+    const third = (id) => notesOf(setArpeggio(p, id)).slice(8, 12);
+    expect(third('leap-home')).toEqual([78, 86, 83, 78]); // F♯ D B F♯
+    expect(third('alberti')).toEqual([78, 86, 83, 86]); // F♯ D B D
+    expect(third('up')).toEqual([78, 83, 86, 78]); // F♯ B D, then round again
+    expect(arpeggioSequence('up', p, bm).map(stepLabel)).toEqual(['5', 'R', '3']);
+    expect(arpeggioSequence('travis', p, bm).map(stepLabel)).toEqual(['5', 'R↑', '3', '5↑']);
+    // Over the same chord with its 3rd in the bass, Alberti is D B F♯ B.
+    const bd = setChordBass(p, 2, 1);
+    expect(notesOf(setArpeggio(bd, 'alberti')).slice(8, 12)).toEqual([74, 83, 78, 83]);
+    // The seventh chords are untouched: Descending over Em7(no3) is still D B E D (AC-2.16.2/1).
+    expect(notesOf(setArpeggio(p, 'down')).slice(0, 4)).toEqual([86, 83, 76, 86]);
   });
 
   it('AC-2.11.2/4 — A stored chord-tone Pitch resolves through the same stack as a fill, in playback, on the score and in the MIDI file alike: a Root under C/E sounds C5', () => {
