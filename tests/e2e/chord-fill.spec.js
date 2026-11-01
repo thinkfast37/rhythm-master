@@ -69,13 +69,13 @@ test("AC-2.15.1/1 — Each chord-editor row carries a Fill picker after the bass
   const first = picker.locator('option').first();
   await expect(first).toHaveAttribute('value', 'as-above');
   await expect(first).toHaveText('As above (Ascending)');
-  // After the bass picker in the row, and the catalogue under its seven headings.
+  // After the bass picker in the row, and the catalogue under its eight headings.
   const order = await page.locator('.chord-editor[data-chord="3"]').evaluate((row) =>
     [...row.children].map((el) => el.className).filter((c) => c === 'chord-bass' || c === 'chord-fill')
   );
   expect(order).toEqual(['chord-bass', 'chord-fill']);
   expect(await picker.locator('optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual([
-    'Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes', 'Chromatic',
+    'Chord tones', 'Fingerpicking', 'Open voicings', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes', 'Chromatic',
   ]);
   expect(await picker.locator('optgroup option').count()).toBe(await page.evaluate(() => window.__rm.catalogues().fills.length));
   // The label follows the Arpeggio.

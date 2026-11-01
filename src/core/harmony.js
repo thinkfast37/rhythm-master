@@ -692,7 +692,7 @@ const walkUpDown = (kind) => (ctx) => {
 };
 
 /**
- * The arpeggios a Pattern can follow (AC-2.6.6/1), in seven groups. Absent on
+ * The arpeggios a Pattern can follow (AC-2.6.6/1), in eight groups. Absent on
  * the Pattern means None. `steps(ctx)` takes `{ roles, walk(kind) }`. An entry
  * carrying `approach` has the deal turn the last sounding Slot before each
  * chord change into the semitone beside the next chord's bass (AC-2.6.6/23).
@@ -718,6 +718,17 @@ export const ARPEGGIOS = [
     group: 'Chord tones',
     steps: ({ roles }) => [...tones(roles), T(roles[0], 1), ...tones([...roles].reverse().slice(0, -1))],
   },
+  // Close-position figures (AC-2.6.6/28): the bottom three positions of the stack, as Alberti reads them.
+  { id: 'up-home', label: 'Up and home', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0, 1, 2, 0])) },
+  { id: 'leap-home', label: 'Leap up, step home', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0, 2, 1, 0])) },
+  { id: 'down-up', label: 'Down and up', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [2, 1, 0, 1])) },
+  { id: 'reverse-alberti', label: 'Reverse Alberti', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [2, 0, 1, 0])) },
+  { id: 'rocking', label: 'Rocking bass', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0, 1, 0, 2])) },
+  { id: 'rocking-fifth', label: 'Rocking bass, 5th first', group: 'Chord tones', steps: ({ roles }) => tones(at(roles, [0, 2, 0, 1])) },
+  { id: 'up-two-octaves', label: 'Ascending, two octaves', group: 'Chord tones', steps: ({ roles }) => [...tones(roles), ...roles.map((r) => T(r, 1))] },
+  { id: 'down-two-octaves', label: 'Descending, two octaves', group: 'Chord tones', steps: ({ roles }) => [...tones(roles), ...roles.map((r) => T(r, 1))].reverse() },
+  { id: 'bass-roll', label: 'Bass and treble roll', group: 'Chord tones', steps: picking([[1], [1, 1], [3, 1], [5, 1]]) },
+  { id: 'bass-roll-down', label: 'Bass and treble roll, descending', group: 'Chord tones', steps: picking([[1], [5, 1], [3, 1], [1, 1]]) },
   { id: 'travis', label: 'Travis picking', group: 'Fingerpicking', steps: picking([[1], [3, 1], [5], [1, 1]]) },
   { id: 'travis-down', label: 'Travis picking, treble descending', group: 'Fingerpicking', steps: picking([[1], [1, 1], [5], [3, 1]]) },
   { id: 'bass-treble-pair', label: 'Alternating bass, treble pair', group: 'Fingerpicking', steps: picking([[1], [3, 1], [5, 1], [5], [3, 1], [5, 1]]) },
@@ -726,6 +737,14 @@ export const ARPEGGIOS = [
   { id: 'outside-in', label: 'Outside in', group: 'Fingerpicking', steps: picking([[1], [1, 1], [3], [5]]) },
   { id: 'sweep', label: 'Six-string sweep', group: 'Fingerpicking', steps: picking([[1], [5], [1, 1], [3, 1], [5, 1], [1, 2]]) },
   { id: 'sweep-back', label: 'Six-string sweep, up and back', group: 'Fingerpicking', steps: picking([[1], [5], [1, 1], [3, 1], [5, 1], [3, 1], [1, 1], [5]]) },
+  // Open voicings (AC-2.6.6/29): the triad spread past an octave, the bass at the Slot's octave.
+  { id: 'root-tenth', label: 'Root and tenth', group: 'Open voicings', steps: picking([[1], [3, 1]]) },
+  { id: 'root-fifth-octave', label: 'Root, 5th, octave', group: 'Open voicings', steps: picking([[1], [5], [1, 1]]) },
+  { id: 'root-fifth-octave-fifth', label: 'Root, 5th, octave, 5th', group: 'Open voicings', steps: picking([[1], [5], [1, 1], [5]]) },
+  { id: 'open-triad', label: 'Open triad', group: 'Open voicings', steps: picking([[1], [5], [3, 1]]) },
+  { id: 'open-triad-back', label: 'Open triad and back', group: 'Open voicings', steps: picking([[1], [5], [3, 1], [5]]) },
+  { id: 'open-ascent', label: 'Open ascent', group: 'Open voicings', steps: picking([[1], [5], [1, 1], [3, 1]]) },
+  { id: 'open-ascent-back', label: 'Open ascent and back', group: 'Open voicings', steps: picking([[1], [5], [1, 1], [3, 1], [1, 1], [5]]) },
   { id: 'drone-above', label: 'Drone above (tonic)', group: 'Drones', steps: ({ roles }) => interleave(roles, DRONE_UP) },
   { id: 'drone-below', label: 'Drone below (tonic)', group: 'Drones', steps: ({ roles }) => interleave(roles, DRONE_DOWN) },
   { id: 'root-drone', label: 'Chord root drone', group: 'Drones', steps: ({ roles }) => interleave(roles, ROOT_UP) },
