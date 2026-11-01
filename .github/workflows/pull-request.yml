@@ -1,0 +1,35 @@
+# Every pull request runs the full gate set before it can merge. Until this
+# existed the gates ran only after a push to main, so a red merge reached the
+# live site before CI had said a word.
+#
+# `gates` is the one status main requires. It is a single context so that the
+# protection rule does not have to name every shard, and so a shard added or
+# removed in verify.yml cannot leave the rule pointing at a job that no longer
+# exists (which GitHub treats as "pending", i.e. never mergeable).
+name: Pull request
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+
+  gates:
+    name: All gates passed
+    needs: verify
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every gate must have passed — a skipped or cancelled gate is not a passing one
+        run: |
+          echo "verify: ${{ needs.verify.result }}"
+          test "${{ needs.verify.result }}" = "success"

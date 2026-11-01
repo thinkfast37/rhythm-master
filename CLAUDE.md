@@ -304,7 +304,10 @@ governs what to do next, and the answer is never to make the gate ask for less.
 
 Work is not delivered when it is committed, and it is not delivered when it is
 pushed. **`main` is the live site.** `.github/workflows/deploy.yml` fires on push
-to `main`, re-runs all six gates, and publishes to Pages. Nothing on a branch is
+to `main`, re-runs all the gates (`verify.yml`, Playwright split across four
+runners), and publishes to Pages. `pull-request.yml` runs the same gates on
+every PR, and `main` requires its **All gates passed** check, so a PR cannot
+merge red, however it was run locally. Nothing on a branch is
 visible to the musician, however green it is — so a branch left unmerged is a
 change that, from where they are sitting, did not happen.
 

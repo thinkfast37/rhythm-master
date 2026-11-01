@@ -269,6 +269,13 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
+**Amended 2026-10-31** (T460): the same gate set also runs on every pull request, and `main`
+requires it, so a merge cannot be the first time CI sees a change. Playwright is sharded across
+four runners — the same tests, drawn in four parts — because it was ten of the eleven minutes of
+every run. *Rejected*: running only the tests near the changed files. With a composition root most
+changes reach most of the application, and the Swing slider (T210) is the shape of defect no
+selective run would have caught. Speed comes from parallelism, never from asking less.
+
 **Amended 2026-08-18** (Constitution 3.5.0): GitHub Pages becomes *one* distribution channel of
 three, and an optional one. The maintainer: *"I want the web version to keep working, so I can
 test locally and optionally on github pages at times. but i may not host always on github pages."*
