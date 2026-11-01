@@ -1481,7 +1481,11 @@ export function arpeggioRoles(pattern, chord = null) {
   const chords = pattern.harmony?.chords ?? [];
   const roles = TONES.filter((tone) => chords.some((c) => hasTone(c, tone)));
   if (!chord) return roles;
+  // A member struck from this chord gets no step (AC-2.16.2/1); a member it
+  // never had still falls to the next-lower one (AC-2.6.4/2).
+  const omit = omitOf(chord);
   return roles
+    .filter((tone) => !omit.includes(tone))
     .map((tone, i) => ({ tone, i, offset: memberFor(chord, tone).offset }))
     .sort((a, b) => a.offset - b.offset || a.i - b.i)
     .map((m) => m.tone);

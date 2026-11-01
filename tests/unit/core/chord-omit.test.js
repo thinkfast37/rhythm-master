@@ -82,16 +82,22 @@ describe('US-2.16 — a member left out', () => {
     expect(setProgression(p, 'I-V-vi-IV').harmony.chords.every((c) => !('omit' in c))).toBe(true);
   });
 
-  it("AC-2.16.2/1 — A fill deals the remaining members: with every chord of I–IV–V struck to root and 5th, Ascending over four Slots a Measure deals Root 5th Root 5th — C4 G4 C4 G4 — and where another chord of the progression still has the member, the struck member's step falls to the chord's next-lower member, so Cm7(no3) among triads deals C4 C4 G4 B♭4", () => {
+  it("AC-2.16.2/1 — A fill deals the remaining members and no step for a struck one: with every chord of I–IV–V struck to root and 5th, Ascending over four Slots a Measure deals Root 5th Root 5th — C4 G4 C4 G4 — and Cm7(no3) among triads deals Root 5th 7th Root, C4 G4 B♭4 C4, Descending over Em7(no3) D B E D; a member a chord never had still falls to its next-lower member as before", () => {
     let p = setArpeggio(setProgression(melodic(), 'I-IV-V'), 'up');
     expect(notes(p)).toEqual([60, 64, 67, 60]);
     let bare = p;
     for (let i = 0; i < 3; i++) bare = setChordOmit(bare, i, 3, true);
     expect(notes(bare)).toEqual([60, 67, 60, 67]);
     expect(notes(bare, 1)).toEqual([65, 72, 65, 72]);
-    // Among triads that keep their 3rd, Cm7(no3)'s 3rd step falls to its root.
-    p = setChordOmit(setChordQuality(p, 0, 'm7'), 0, 3, true);
-    expect(notes(p)).toEqual([60, 60, 67, 70]);
+    // Among triads that keep their 3rd, Cm7(no3) is dealt no step for it: Root 5th 7th Root.
+    p = setChordOmit(setChordQuality(p, 0, "m7"), 0, 3, true);
+    expect(notes(p)).toEqual([60, 67, 70, 60]);
+    // Descending over Em7(no3): D B E D.
+    let em = setChordQuality(setChordDegree(setArpeggio(setProgression(melodic(), "I-IV-V"), "down"), 0, "3"), 0, "m7");
+    em = setChordOmit(em, 0, 3, true);
+    expect(notes(em)).toEqual([74, 71, 64, 74]);
+    // A member a chord never had still falls: the G triad among sevenths deals its 7th step on its 5th.
+    expect(notes(em, 2)).toEqual([74, 74, 71, 67]);
   });
 
   it('AC-2.16.2/2 — The stack is the remaining members from the bass up and the bass is counted among them: Em7(no3) over its 5th in C at octave 4 sounds B4, D5, E5 as 5th, 7th, Root', () => {
@@ -129,10 +135,10 @@ describe('US-2.16 — a member left out', () => {
   it('AC-2.16.2/4 — Choosing Progression None bakes the first pass as it sounded, the struck members gone from it, so the first pass sounds exactly as before', () => {
     let p = setArpeggio(setProgression(melodic(), 'I-IV-V'), 'up');
     p = setChordOmit(p, 0, 5, true);
-    expect(notes(p)).toEqual([60, 64, 64, 60]);
+    expect(notes(p)).toEqual([60, 64, 60, 64]);
     const baked = clearHarmony(p);
     expect(baked.harmony).toBeUndefined();
-    expect(notes(baked)).toEqual([60, 64, 64, 60]);
+    expect(notes(baked)).toEqual([60, 64, 60, 64]);
   });
 });
 
