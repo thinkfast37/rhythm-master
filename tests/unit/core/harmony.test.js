@@ -460,7 +460,9 @@ describe('core/harmony', () => {
     expect([...arpeggioDeal(setArpeggio(sounding(setProgression(melodic(), 'I-IV-V'), 4), 'walk-next-below'), 0).values()][3]).toEqual({ approach: -1, target: 5 });
     expect(ARPEGGIOS.map((a) => a.id)).toEqual([
       'up', 'down', 'up-down', 'up-down-turn', 'alberti', 'root', 'root-fifth', 'up-octave', 'down-octave', 'up-over-down',
+      'up-home', 'leap-home', 'down-up', 'reverse-alberti', 'rocking', 'rocking-fifth', 'up-two-octaves', 'down-two-octaves', 'bass-roll', 'bass-roll-down',
       'travis', 'travis-down', 'bass-treble-pair', 'backward-roll', 'inside-out', 'outside-in', 'sweep', 'sweep-back',
+      'root-tenth', 'root-fifth-octave', 'root-fifth-octave-fifth', 'open-triad', 'open-triad-back', 'open-ascent', 'open-ascent-back',
       'drone-above', 'drone-below', 'root-drone',
       'scale-root-drone', 'scale-root-octave', 'scale-fifth-drone', 'scale-fifth-above', 'scale-fifth-below',
       'scale-root-fifth', 'tanpura', 'scale-seventh-drone', 'scale-seventh-above', 'scale-seventh-below',
@@ -834,6 +836,79 @@ describe('core/harmony', () => {
     expect(under('backward-roll', changing)).toEqual([60, 72, 67, 64, 65, 77, 72, 69, 67, 79, 74, 71]);
   });
 
+  it("AC-2.6.6/28 — A close-position figure deals the bottom three positions of the stack within the Slot's octave, as Alberti does: Up and home sounds Root 3rd 5th Root; Leap up and step home Root 5th 3rd Root — F♯ D B F♯ over Bm/F♯, the figure asked for; Down and up 5th 3rd Root 3rd; Reverse Alberti 5th Root 3rd Root; Rocking bass Root 3rd Root 5th; Rocking bass with the 5th first Root 5th Root 3rd; Ascending over two octaves deals every role of the fullest chord rising, then again an octave up, and Descending over two octaves the same falling from the top; Bass and treble roll sounds Root Root↑ 3rd↑ 5th↑ and Bass and treble roll descending Root 5th↑ 3rd↑ Root↑ — each over the chord in force, so under an every-Measure change each new chord starts the figure again", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats, under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('up-home')).toEqual([60, 64, 67, 60, 60, 64, 67, 60, 60, 64, 67, 60]);
+    expect(under('leap-home')).toEqual([60, 67, 64, 60, 60, 67, 64, 60, 60, 67, 64, 60]);
+    expect(under('down-up')).toEqual([67, 64, 60, 64, 67, 64, 60, 64, 67, 64, 60, 64]);
+    expect(under('reverse-alberti')).toEqual([67, 60, 64, 60, 67, 60, 64, 60, 67, 60, 64, 60]);
+    expect(under('rocking')).toEqual([60, 64, 60, 67, 60, 64, 60, 67, 60, 64, 60, 67]);
+    expect(under('rocking-fifth')).toEqual([60, 67, 60, 64, 60, 67, 60, 64, 60, 67, 60, 64]);
+    expect(under('up-two-octaves')).toEqual([60, 64, 67, 72, 76, 79, 60, 64, 67, 72, 76, 79]);
+    expect(under('down-two-octaves')).toEqual([79, 76, 72, 67, 64, 60, 79, 76, 72, 67, 64, 60]);
+    expect(under('bass-roll')).toEqual([60, 72, 76, 79, 60, 72, 76, 79, 60, 72, 76, 79]);
+    expect(under('bass-roll-down')).toEqual([60, 79, 76, 72, 60, 79, 76, 72, 60, 79, 76, 72]);
+    // The band writes each step by its role, the treble with its octave mark.
+    expect(arpeggioSequence('leap-home', p).map(stepLabel)).toEqual(['R', '5', '3', 'R']);
+    expect(arpeggioSequence('bass-roll', p).map(stepLabel)).toEqual(['R', 'R↑', '3↑', '5↑']);
+    expect(arpeggioSequence('down-two-octaves', p).map(stepLabel)).toEqual(['5↑', '3↑', 'R↑', '5', '3', 'R']);
+    // The figure asked for: over Bm/F♯ in B minor, Leap up and step home sounds F♯ D B F♯ — bass, top, middle, bass.
+    let bm = sounding(setProgression(melodic({ key: 'B', scale: 'aeolian' }), 'i-iv-v'), 4);
+    bm = setChordBass(bm, 0, 2);
+    expect(chordName(bm.harmony.chords[0], bm.key)).toBe('Bm/F#');
+    expect(under('leap-home', bm)).toEqual([78, 86, 83, 78]);
+    // And over C/E the same shape is E C′ G E.
+    let ce = sounding(setProgression(melodic(), 'I-IV-V'), 4);
+    ce = setChordBass(ce, 0, 1);
+    expect(under('leap-home', ce)).toEqual([64, 72, 67, 64]);
+    expect(under('up-home', ce)).toEqual([64, 67, 72, 64]);
+    // The fixed shapes read three positions, so over Dm7 the 7th is never dealt; the two-octave figures deal all four.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 8);
+    expect(under('leap-home', sevenths)).toEqual([62, 69, 65, 62, 62, 69, 65, 62]);
+    expect(under('up-two-octaves', sevenths)).toEqual([62, 65, 69, 72, 74, 77, 81, 84]);
+    expect(under('down-two-octaves', sevenths)).toEqual([84, 81, 77, 74, 72, 69, 65, 62]);
+    // An every-Measure change starts the figure again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 4);
+    expect(under('up-home', changing)).toEqual([60, 64, 67, 60, 65, 69, 72, 65, 67, 71, 74, 67]);
+    // Every figure bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['up-home', 'leap-home', 'down-up', 'reverse-alberti', 'rocking', 'rocking-fifth', 'up-two-octaves', 'down-two-octaves', 'bass-roll', 'bass-roll-down']) {
+      const set = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(set))).toEqual(notesOf(set));
+    }
+  });
+
+  it("AC-2.6.6/29 — An open-voicing fill spreads the triad past an octave, the bass at the Slot's octave: Root and tenth sounds Root 3rd↑; Root 5th and octave sounds Root 5th Root↑; Root 5th octave and 5th sounds Root 5th Root↑ 5th; Open triad sounds Root 5th 3rd↑; Open triad and back Root 5th 3rd↑ 5th; Open ascent Root 5th Root↑ 3rd↑; Open ascent and back Root 5th Root↑ 3rd↑ Root↑ 5th — C G C′ E′ C′ G over C — each over the chord in force, so over Bm/F♯ Open triad sounds F♯ D B′ and a seventh chord's 7th is never dealt", () => {
+    const p = sounding(setProgression(melodic(), 'I-IV-V'), 12); // twelve Slots: one bar of 16ths, three Beats, under C
+    const under = (id, q = p) => notesOf(setArpeggio(q, id));
+    expect(under('root-tenth')).toEqual([60, 76, 60, 76, 60, 76, 60, 76, 60, 76, 60, 76]);
+    expect(under('root-fifth-octave')).toEqual([60, 67, 72, 60, 67, 72, 60, 67, 72, 60, 67, 72]);
+    expect(under('root-fifth-octave-fifth')).toEqual([60, 67, 72, 67, 60, 67, 72, 67, 60, 67, 72, 67]);
+    expect(under('open-triad')).toEqual([60, 67, 76, 60, 67, 76, 60, 67, 76, 60, 67, 76]);
+    expect(under('open-triad-back')).toEqual([60, 67, 76, 67, 60, 67, 76, 67, 60, 67, 76, 67]);
+    expect(under('open-ascent')).toEqual([60, 67, 72, 76, 60, 67, 72, 76, 60, 67, 72, 76]);
+    expect(under('open-ascent-back')).toEqual([60, 67, 72, 76, 72, 67, 60, 67, 72, 76, 72, 67]);
+    // The band writes the treble with its octave mark.
+    expect(arpeggioSequence('open-ascent', p).map(stepLabel)).toEqual(['R', '5', 'R↑', '3↑']);
+    expect(arpeggioSequence('root-tenth', p).map(stepLabel)).toEqual(['R', '3↑']);
+    // Over Bm/F♯ the shape is positional: F♯ D B′.
+    let bm = sounding(setProgression(melodic({ key: 'B', scale: 'aeolian' }), 'i-iv-v'), 4);
+    bm = setChordBass(bm, 0, 2);
+    expect(under('open-triad', bm)).toEqual([78, 86, 95, 78]);
+    // Over Dm7 the 7th is never dealt.
+    const sevenths = sounding(setProgression(melodic(), 'ii-V-I'), 8);
+    expect(under('open-triad', sevenths)).toEqual([62, 69, 77, 62, 69, 77, 62, 69]);
+    expect(under('root-tenth', sevenths)).toEqual([62, 77, 62, 77, 62, 77, 62, 77]);
+    // An every-Measure change starts the shape again on the new chord: C, F, G.
+    const changing = sounding(setChange(setProgression(melodic({ measures: 3 }), 'I-IV-V'), 'measure'), 4);
+    expect(under('open-ascent', changing)).toEqual([60, 67, 72, 76, 65, 72, 77, 81, 67, 74, 79, 83]);
+    // Every shape bakes back to fixed degrees that sound the same (AC-2.6.1/6).
+    for (const id of ['root-tenth', 'root-fifth-octave', 'root-fifth-octave-fifth', 'open-triad', 'open-triad-back', 'open-ascent', 'open-ascent-back']) {
+      const set = setArpeggio(p, id);
+      expect(notesOf(clearHarmony(set))).toEqual(notesOf(set));
+    }
+  });
+
   it('AC-2.6.6/7 — Setting the arpeggio to None returns every Slot to the Pitch it holds; while an arpeggio is set the degree chips are absent, the note bands are inert, and the pitch strip says the notes follow the arpeggio: the Pitches come back', () => {
     let p = setProgression(melodic(), 'I-IV-V');
     p = note(p, 0, 0, 0, { degree: '5', octaveOffset: 0 });
@@ -876,17 +951,17 @@ describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
     expect(fillIndexFor(p, one, 2)).toBe(5);
   });
 
-  it("AC-2.7.2/3 — Under All the order is the catalogue's, through all seven groups, wrapping from the last fill to the first; None is never in the cycle", () => {
+  it("AC-2.7.2/3 — Under All the order is the catalogue's, through all eight groups, wrapping from the last fill to the first; None is never in the cycle", () => {
     const p = setProgression(melodic(), 'I-IV-V');
     const n = ARPEGGIOS.length;
-    expect(n).toBe(79);
+    expect(n).toBe(96);
     const one = { start: 0, baseLoop: 0, repeats: 1 };
     const sequence = Array.from({ length: n + 2 }, (_, k) => ARPEGGIOS[fillIndexFor(p, one, k * cyclePasses(p))].id);
     expect(sequence.slice(0, n)).toEqual(ARPEGGIOS.map((a) => a.id));
     expect(sequence[n]).toBe(ARPEGGIOS[0].id);
     expect(sequence[n + 1]).toBe(ARPEGGIOS[1].id);
     expect(sequence).not.toContain('none');
-    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes', 'Chromatic']);
+    expect([...new Set(ARPEGGIOS.map((a) => a.group))]).toEqual(['Chord tones', 'Fingerpicking', 'Open voicings', 'Drones', 'Pedal points', 'Scale walks', 'Repeated notes', 'Chromatic']);
 
     // A Pattern's own fill is where the cycle starts; none means the first.
     expect(fillIndexOf(p)).toBe(0);
