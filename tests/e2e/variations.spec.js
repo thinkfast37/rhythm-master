@@ -41,7 +41,7 @@ async function loop(page, { arpeggio = 'up', progression = 'vi-IV-I-V', change =
 }
 
 const dialog = (page) => page.locator('.variation-dialog');
-const addButton = (page) => page.locator('.structure-row [data-action="add-variation"]');
+const addButton = (page) => page.locator('.rhythm-group .structure-row [data-action="add-variation"]');
 const technique = (page, id) => dialog(page).locator(`.variation-technique[data-technique="${id}"]`);
 const entries = (page) => dialog(page).locator('.variation-entry');
 const field = (page, index, key) => entries(page).nth(index).locator(`.variation-field[data-key="${key}"]`);
@@ -483,12 +483,23 @@ test.describe('AC-10.4.4 — A candidate is heard before it is written', () => {
     expect(s.loop).toBeGreaterThanOrEqual(loopBefore);
   });
 
-  test('AC-10.4.4/4 — When the transport was stopped, building the first candidate starts playback, and closing the dialog without accepting returns it to stopped; when it was playing it plays on', async ({ page }) => {
+  test('AC-10.4.4/4 — When the transport was stopped, opening the dialog starts the loop, so the original is heard before anything is built and the candidate from its first pass; closing the dialog without accepting returns a transport the dialog started to stopped; when it was playing it plays on', async ({ page }) => {
     await loop(page);
     expect((await state(page)).isPlaying).toBe(false);
     await open(page);
-    expect((await state(page)).isPlaying).toBe(false);
+    // Opening starts it, with nothing built: the original is the baseline.
+    await expect.poll(() => page.evaluate(() => window.__rm.getState().isPlaying)).toBe(true);
+    await expect(dialog(page).locator('.variation-playing')).toHaveText(/Playing the original\. Add a technique/);
+    await expect(entries(page)).toHaveCount(0);
     await technique(page, 'breathe').click();
+    await expect(dialog(page).locator('.variation-playing')).toHaveText(/Playing the original, then the candidate/);
+    // The dialog's own Stop holds the loop through a change; its Play starts it again.
+    await dialog(page).locator('.variation-play').click();
+    await expect.poll(() => page.evaluate(() => window.__rm.getState().isPlaying)).toBe(false);
+    await expect(dialog(page).locator('.variation-playing')).toHaveText(/^Stopped/);
+    await technique(page, 'lift').click();
+    expect((await state(page)).isPlaying).toBe(false);
+    await dialog(page).locator('.variation-play').click();
     await expect.poll(() => page.evaluate(() => window.__rm.getState().isPlaying)).toBe(true);
     await close(page).click();
     await expect.poll(() => page.evaluate(() => window.__rm.getState().isPlaying)).toBe(false);
@@ -676,7 +687,7 @@ test.describe('AC-10.4.7 — A chord override is Pattern content that travels wi
     await technique(page, 'change-quality').click();
     await field(page, 0, 'chord').selectOption('1');
     await accept(page).click();
-    await page.locator('[data-action="duplicate-pattern"]').click();
+    await page.locator('.rhythm-group [data-action="duplicate-pattern"]').click();
     await expect(gridMeasures(page)).toHaveCount(4);
     expect((await pattern(page)).harmony.overrides).toEqual({ 1: { 1: { quality: 'maj7' } }, 3: { 1: { quality: 'maj7' } } });
     await page.locator('[data-action="remove-measure"]').click();
@@ -710,13 +721,18 @@ test.describe('AC-10.4.7 — A chord override is Pattern content that travels wi
 });
 
 test.describe('AC-10.4.8 — The Add variation dialog', () => {
-  test('AC-10.4.8/1 — Add variation sits beside Double Length in the grid editor’s Measures row, in the Composer’s Measures control, and — on a making goal with no Rhythm group, Make it melodic and Combine patterns — in a Measures row at the foot of the Melody group carrying Double Length and Add variation; disabled with the reason when the cap refuses it', async ({ page }) => {
+  test('AC-10.4.8/1 — Add variation sits beside Double Length in the grid editor’s Measures row, in the Composer’s Measures control, and on every making goal in a Measures row at the foot of the Melody group carrying Add variation and Double Length; disabled with the reason when the cap refuses it', async ({ page }) => {
     await loop(page);
     const row = page.locator('.rhythm-group .structure-row');
     const actions = await row.locator('button').evaluateAll((bs) => bs.map((b) => b.dataset.action));
     expect(actions.indexOf('add-variation')).toBe(actions.indexOf('duplicate-pattern') - 1);
-    await expect(page.locator('.melody-group .melody-measures')).toHaveCount(0);
-    // Make it melodic: no Rhythm group, so the Melody group ends with the pair.
+    // Lab has a Rhythm group, and the Melody group still ends with the pair (revised 2026-11-01).
+    await showMelody(page);
+    const labPair = page.locator('.melody-group .melody-measures');
+    await expect(labPair).toBeVisible();
+    expect(await labPair.locator('button').evaluateAll((bs) => bs.map((b) => b.dataset.action))).toEqual(['add-variation', 'duplicate-pattern']);
+    expect(await page.locator('.melody-group > *').last().evaluate((e) => Boolean(e.querySelector('.melody-measures')) || e.classList.contains('control'))).toBe(true);
+    // Make it melodic: no Rhythm group, and the Melody group ends with the pair all the same.
     await page.evaluate(() => window.__rm.handlers.onGoal('melodic'));
     await expect(page.locator('.workbench-tab[data-tab="rhythm"]')).toBeHidden();
     await showMelody(page);
@@ -740,13 +756,18 @@ test.describe('AC-10.4.8 — The Add variation dialog', () => {
     await expect(page.locator('.composer-panel .composer-duplicate')).toBeVisible();
   });
 
-  test('AC-10.4.8/2 — The dialog names the original as Measures 1 to N with a control to change N, then the candidate’s stack — each technique with its choice as a control, and a remove control — then Roll the dice with its No dice toggles, then the techniques under the headings Rhythm, Dynamics, Chord and Pitch in the order of AC-10.4.5, each with its name and one line saying what it does', async ({ page }) => {
+  test('AC-10.4.8/2 — The dialog opens with a Play/Stop line saying what the loop plays — the original, then the candidate once there is one — then names the original as Measures 1 to N with a control to change N, then the candidate’s stack — each technique with its choice as a control, and a remove control — then Roll the dice with its No dice toggles, then the techniques under the headings Rhythm, Dynamics, Chord and Pitch in the order of AC-10.4.5, each with its name and one line saying what it does', async ({ page }) => {
     await loop(page);
     await page.evaluate(() => window.__rm.handlers.onAddMeasure());
     await open(page);
+    // The Play/Stop line is the first thing after the title, and says what plays.
+    expect(await dialog(page).locator('.dialog-title + *').evaluate((e) => e.className)).toBe('variation-transport');
+    await expect(dialog(page).locator('.variation-transport .variation-play')).toHaveText('■ Stop');
+    await expect(dialog(page).locator('.variation-transport .variation-playing')).toHaveText(/Playing the original/);
     await expect(original(page)).toContainText('Original: Measures 1–2');
     await expect(phrase(page)).toBeVisible();
     await technique(page, 'add-syllable').click();
+    await expect(dialog(page).locator('.variation-playing')).toHaveText(/then the candidate/);
     await expect(entries(page).nth(0).locator('.variation-entry-label')).toHaveText('Add a syllable');
     await expect(field(page, 0, 'slot')).toBeVisible();
     await expect(entries(page).nth(0).locator('.variation-remove')).toBeVisible();

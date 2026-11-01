@@ -618,9 +618,9 @@ export function renderMelodyGroup(root, pattern, state, handlers) {
     // Cycling and Keep sit with the picker whose catalogue they step through:
     // auditioning fills is melody work, not practice (AC-2.7.1, AC-2.8.1).
     if (hasHarmony(pattern)) fresh.appendChild(renderFillCycle(pattern, state, handlers));
-    // A making goal with no Rhythm group gets the Measures pair here (AC-10.4.8/1).
+    // Every making goal gets the Measures pair here (AC-10.4.8/1, revised 2026-11-01).
     const goal = state?.settings?.goal;
-    if (goal && !surfaceFor(goal).tabs.includes('rhythm') && !surfaceFor(goal).readOnly) {
+    if (goal && !surfaceFor(goal).readOnly) {
       fresh.appendChild(renderMelodyMeasures(pattern, state, handlers));
     }
     // Lab's Help, part of the group it describes (AC-14.1.3/3).
@@ -1547,10 +1547,11 @@ function addVariationButton(row, pattern, state, handlers) {
 }
 
 /**
- * On a making goal with no Rhythm group — Make it melodic, Combine patterns —
- * the Melody group ends with Double Length and Add variation (AC-10.4.8/1;
- * AC-15.1.8 revised 2026-11-01), so D-018's ruling that Double Length is on
- * every making goal holds there too.
+ * On every making goal the Melody group ends with Add variation and Double
+ * Length (AC-10.4.8/1; AC-15.1.8 revised 2026-11-01): varying a loop is
+ * melodic work far more often than percussive, so it is where the melodic
+ * work is, and D-018's ruling that Double Length is on every making goal
+ * holds on the goals with no Rhythm group too.
  */
 function renderMelodyMeasures(pattern, state, handlers) {
   const row = el('div', 'control-group structure-row melody-measures');

@@ -265,7 +265,7 @@ test('AC-10.1.1 — Duplicate copies the full Measure sequence exactly', async (
   // A Melodic Pattern opens on the Melody tab; Double Length sits with the
   // Measure controls on Rhythm (AC-15.1.7/3).
   await page.locator('.workbench-tab[data-tab="rhythm"]').click();
-  await page.locator('[data-action="duplicate-pattern"]').click();
+  await page.locator('.rhythm-group [data-action="duplicate-pattern"]').click();
 
   await expect(page.locator('.measure')).toHaveCount(6);
   expect(await meters(page)).toEqual(['4/4', '6/8', '3/4', '4/4', '6/8', '3/4']);
