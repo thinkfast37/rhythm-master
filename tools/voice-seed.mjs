@@ -23,7 +23,7 @@ const seed = JSON.parse(readFileSync(FILE, 'utf8'));
 let changed = 0;
 for (const pattern of seed.patterns) {
   if (!pattern.harmony?.chords?.length) continue;
-  const voiced = voiceChords(pattern.harmony.chords, DEFAULT_VOICING);
+  const voiced = voiceChords(pattern.harmony.chords, DEFAULT_VOICING, pattern.key);
   if (JSON.stringify(voiced) !== JSON.stringify(pattern.harmony.chords)) {
     changed += 1;
     pattern.harmony.chords = voiced;

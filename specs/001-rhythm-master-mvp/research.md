@@ -462,6 +462,8 @@ chord the Composer had set by hand).
 
 ---
 
+**Amended 2026-11-01: the armed octave is C to B, not tonic up to tonic (AC-2.6.4/5, /7; T469).** "The chord's root sits at the Pitch's octave" above was built as semitones upward from the Key's tonic, the tonic itself at C4–B4 by Key — so in G the armed octave ran G4 to F♯5 and Em7 sat at E5, an octave above the same chord in C, which the maintainer heard as Normal landing well in C and an octave too high in G. The stack now places the chord's bass in the octave the number names, C4 to B4 at octave 4, whatever the Key: a bass whose note lies below the tonic in that octave carries the whole stack down an octave, and every step a fill deals — chord tone, drone on the chord's root, scale walk from the root, neighbour, interval, approach — follows the same placement. Chords in C are unchanged. Rejected: a C3–B3 octave where a pianist comps (the maintainer's chords in C already sounded right at C4), the guitar's E2 octave (Bass would then reach E0), and leaving the Register to make up the difference (it cannot — the gap is per chord, not per Pattern). Changing the Key now transposes within the octave rather than carrying a chord past B4, which AC-2.6.4/5 says outright.
+
 ## D-012 — Sheet music: an engraver of our own over SVG, printed by the browser
 
 **Decision (2026-09-12)**: the score is drawn by the app itself — a pure `core/notation.js` that turns a
@@ -585,6 +587,8 @@ an edit to that file: ids are seed positions and are unchanged, so no overlay, r
 orphaned. A saved custom Pattern's chords name no bass and so are root position — exactly what they
 were — with no migration and no schema bump: the maintainer's condition was "make sure you don't kill
 all my settings", and a migration that rewrites saved Patterns cannot be undone by a later commit.
+
+**Amended 2026-11-01: the armed octave is C to B in every Key (AC-2.11.2/7; T469).** "Within one octave above the armed tonic" above is now within the octave C to B of the armed octave number, so `chordStack`, `voiceChords` and `matchVoicing` take the Key. The shapes measure their candidates where they sound: before, Closest in G judged C/E (a step below G in the C4–B4 octave) to be a seventh above it, because every offset was counted upward from G4. The shipped library's 158 progressions were re-voiced under the new placement by `tools/voice-seed.mjs` — 94 Patterns changed, mostly to root position, ids untouched. Saved Patterns are not rewritten, as before: their basses stand, and the Voicing reads Custom where Closest would now choose otherwise. The example "Falling bass under I–V puts G/B at B4 rather than B3" is in C and still holds.
 
 ## D-015 — Note aids on the score: fret-navigator's degree palette, and a second set of tints for notes outside the scale
 

@@ -187,7 +187,9 @@ The second form a Pitch can take, and only on a Pattern with `harmony`. `tone` i
 Measure in the pass being played (AC-2.6.3), the Pattern's `key`, and `octaveOffset`: the chord's
 root sits at that octave and its members stack above it (AC-2.6.4/1) — or, when the chord carries an
 `inversion`, its bass sits in that octave and the other members stack above it in the chord's own
-order, the members below the bass lifted an octave (AC-2.11.2). A role the chord lacks
+order, the members below the bass lifted an octave (AC-2.11.2). That octave is the one its number
+names, C up to B, in every Key (AC-2.6.4/7, AC-2.11.2/7): Em7 at `octaveOffset` 0 is E4 G4 B4 D5 in
+G as in C, not E5 counted upward from G4. A role the chord lacks
 sounds the chord's next-lower member (AC-2.6.4/2). A Pitch carries `degree` or `tone`, never both;
 either satisfies AC-2.2.8's "non-null Pitch". Removing the progression converts every chord-tone
 Pitch to the degree it sounded under the first chord (AC-2.6.1/6), so no Pattern ever holds a
@@ -241,7 +243,7 @@ produces a Medium Slot (odd *N* has no midpoint), and a 2-Slot Recipe never does
 | Chord name and numeral | `harmony.chords[i]` and `key` | AC-2.6.7/1 |
 | Harmonic cycle length, in passes | `harmony.change`, chord count, Measure count | AC-2.6.10/1 |
 | A chord tone's sounding note | `(tone, octaveOffset)`, the chord in force, `key` | AC-2.6.4 |
-| A chord's stack — each member's role and its semitones above the Key at the armed octave, bass first | `chords[i].quality`, `chords[i].degree`, `chords[i].inversion` | AC-2.11.2 |
+| A chord's stack — each member's role and its semitones above the Key's tonic, the bass in the armed octave C to B and so below the tonic where its note is, bass first | `chords[i].quality`, `chords[i].degree`, `chords[i].inversion`, `key` | AC-2.11.2 |
 | The basses a chord offers | `chords[i].quality` and `chords[i].degree`, named in `key` | AC-2.11.1/1 |
 | The voicing shape a progression matches, or none | every chord's `inversion` against each shape's own output | AC-2.11.3/1 |
 | The octave a Slot sounds in | the Slot's `octaveOffset` plus the Pattern's `register`, clamped to octaves 1–7 | AC-2.9.2/4 |

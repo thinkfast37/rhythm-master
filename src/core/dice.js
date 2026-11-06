@@ -117,7 +117,7 @@ export function rollMelody(pattern, { noDice = [], random, fills = ARPEGGIOS.map
     next = clearChordFills(setArpeggio(next, rolled.fill));
   }
   if (controls.includes('voicing')) {
-    rolled.voicing = other(VOICINGS.map((v) => v.id), matchVoicing(next.harmony.chords), random);
+    rolled.voicing = other(VOICINGS.map((v) => v.id), matchVoicing(next.harmony.chords, next.key), random);
     next = setVoicing(next, rolled.voicing);
   }
   return { pattern: next, rolled };

@@ -32821,8 +32821,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "down"
@@ -33649,12 +33648,12 @@
           },
           {
             "degree": "5",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "root"
@@ -34191,7 +34190,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "up-octave"
@@ -34707,17 +34706,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "down-octave"
@@ -34958,13 +34956,11 @@
           },
           {
             "degree": "b7",
-            "quality": "sus2",
-            "inversion": 1
+            "quality": "sus2"
           },
           {
             "degree": "b7",
-            "quality": "sus2",
-            "inversion": 1
+            "quality": "sus2"
           },
           {
             "degree": "4",
@@ -35279,11 +35275,13 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "min"
+            "quality": "min",
+            "inversion": 2
           }
         ],
         "arpeggio": "up"
@@ -35606,8 +35604,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "down"
@@ -36250,13 +36247,11 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "alberti"
@@ -36519,8 +36514,7 @@
           },
           {
             "degree": "5",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "root"
@@ -36775,13 +36769,11 @@
           },
           {
             "degree": "1",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "1",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           }
         ],
         "arpeggio": "root-fifth"
@@ -37036,12 +37028,12 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "up-octave"
@@ -38013,8 +38005,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "up"
@@ -38379,8 +38370,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "up-down"
@@ -39661,16 +39651,16 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "5",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "root-drone"
@@ -40284,17 +40274,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
-          },
-          {
-            "degree": "4",
             "quality": "maj"
           },
           {
-            "degree": "1",
+            "degree": "4",
             "quality": "maj",
             "inversion": 1
+          },
+          {
+            "degree": "1",
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major"
@@ -40891,7 +40880,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-major-pentatonic"
@@ -41198,7 +41187,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-pattern"
@@ -41429,7 +41418,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "alberti"
@@ -41702,12 +41691,12 @@
           },
           {
             "degree": "3",
-            "quality": "min"
+            "quality": "min",
+            "inversion": 2
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "5",
@@ -42212,13 +42201,11 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "down-octave"
@@ -42763,15 +42750,18 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "down"
@@ -43055,8 +43045,7 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "up-down"
@@ -43619,17 +43608,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "root-fifth"
@@ -44197,12 +44185,12 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "up-over-down"
@@ -44465,7 +44453,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-pattern"
@@ -44783,16 +44771,16 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "4",
-            "quality": "sus2"
+            "quality": "sus2",
+            "inversion": 1
           }
         ],
         "arpeggio": "down-octave"
@@ -45987,16 +45975,17 @@
           },
           {
             "degree": "b7",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
             "quality": "maj",
-            "inversion": 1
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "maj"
-          },
-          {
-            "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           }
         ],
         "arpeggio": "scale-up-major"
@@ -46293,8 +46282,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major"
@@ -46592,12 +46580,12 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-major-pentatonic"
@@ -47155,17 +47143,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
-          },
-          {
-            "degree": "4",
             "quality": "maj"
           },
           {
-            "degree": "1",
+            "degree": "4",
             "quality": "maj",
             "inversion": 1
+          },
+          {
+            "degree": "1",
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-pattern"
@@ -47961,7 +47948,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "up-over-down"
@@ -48209,12 +48196,12 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-pattern"
@@ -48460,16 +48447,17 @@
           },
           {
             "degree": "b7",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
             "quality": "maj",
             "inversion": 1
           },
           {
             "degree": "4",
-            "quality": "maj"
-          },
-          {
-            "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "down-octave"
@@ -48945,13 +48933,12 @@
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "1",
             "quality": "maj",
-            "inversion": 1
+            "inversion": 2
           },
           {
             "degree": "5",
@@ -49117,13 +49104,12 @@
           },
           {
             "degree": "b7",
-            "quality": "sus2",
-            "inversion": 1
+            "quality": "sus2"
           },
           {
             "degree": "b6",
             "quality": "sus2",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "root-drone"
@@ -49393,7 +49379,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-major"
@@ -50324,13 +50310,11 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major-pentatonic"
@@ -50602,16 +50586,17 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "6",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "5",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-pattern"
@@ -50927,8 +50912,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "alberti"
@@ -51190,7 +51174,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "up-octave"
@@ -51475,12 +51459,12 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "5",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "up-over-down"
@@ -51706,13 +51690,11 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-pattern"
@@ -52248,12 +52230,12 @@
           },
           {
             "degree": "3",
-            "quality": "min"
+            "quality": "min",
+            "inversion": 2
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "5",
@@ -52537,8 +52519,7 @@
           },
           {
             "degree": "5",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "drone-below"
@@ -52795,8 +52776,7 @@
           },
           {
             "degree": "1",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           }
         ],
         "arpeggio": "root-drone"
@@ -53041,11 +53021,13 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-major"
@@ -53299,8 +53281,7 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major"
@@ -54098,7 +54079,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor"
@@ -54398,7 +54379,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-minor-pentatonic"
@@ -54747,12 +54728,12 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor-pentatonic"
@@ -55043,29 +55024,30 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "b7",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
+          },
+          {
+            "degree": "b6",
+            "quality": "maj"
+          },
+          {
+            "degree": "b3",
             "quality": "maj",
             "inversion": 1
           },
           {
             "degree": "4",
-            "quality": "maj"
-          },
-          {
-            "degree": "b6",
-            "quality": "maj",
-            "inversion": 2
-          },
-          {
-            "degree": "b3",
-            "quality": "maj"
-          },
-          {
-            "degree": "4",
-            "quality": "min"
+            "quality": "min",
+            "inversion": 1
           },
           {
             "degree": "5",
@@ -55665,16 +55647,16 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
-          },
-          {
-            "degree": "b7",
-            "quality": "maj",
             "inversion": 1
           },
           {
-            "degree": "4",
+            "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "drone-above"
@@ -56260,18 +56242,15 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "5",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "up-down-turn"
@@ -56537,16 +56516,17 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "up-over-down"
@@ -56825,18 +56805,15 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "drone-below"
@@ -57530,7 +57507,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor"
@@ -57753,7 +57730,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-minor-pentatonic"
@@ -58082,7 +58059,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor-pentatonic"
@@ -58384,17 +58361,16 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-pattern"
@@ -67926,8 +67902,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "down"
@@ -68397,12 +68372,12 @@
           },
           {
             "degree": "5",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "root"
@@ -68698,7 +68673,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "up-octave"
@@ -68974,17 +68949,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "down-octave"
@@ -69105,8 +69079,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "up"
@@ -69424,8 +69397,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "up-down"
@@ -70315,16 +70287,16 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "5",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "root-drone"
@@ -70864,17 +70836,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
-          },
-          {
-            "degree": "4",
             "quality": "maj"
           },
           {
-            "degree": "1",
+            "degree": "4",
             "quality": "maj",
             "inversion": 1
+          },
+          {
+            "degree": "1",
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major"
@@ -71393,7 +71364,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-major-pentatonic"
@@ -71662,7 +71633,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "alberti"
@@ -72154,13 +72125,11 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "down-octave"
@@ -72543,15 +72512,18 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "down"
@@ -72794,8 +72766,7 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "up-down"
@@ -73277,17 +73248,16 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "root-fifth"
@@ -73779,7 +73749,7 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-pattern"
@@ -74060,16 +74030,16 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "4",
-            "quality": "sus2"
+            "quality": "sus2",
+            "inversion": 1
           }
         ],
         "arpeggio": "down-octave"
@@ -75116,16 +75086,17 @@
           },
           {
             "degree": "b7",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
             "quality": "maj",
-            "inversion": 1
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "maj"
-          },
-          {
-            "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           }
         ],
         "arpeggio": "scale-up-major"
@@ -75386,8 +75357,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major"
@@ -75880,13 +75850,12 @@
           },
           {
             "degree": "6",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "1",
             "quality": "maj",
-            "inversion": 1
+            "inversion": 2
           },
           {
             "degree": "5",
@@ -76025,18 +75994,16 @@
           },
           {
             "degree": "b7",
-            "quality": "sus2",
-            "inversion": 1
+            "quality": "sus2"
           },
           {
             "degree": "b7",
-            "quality": "sus2",
-            "inversion": 1
+            "quality": "sus2"
           },
           {
             "degree": "b6",
             "quality": "sus2",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "root-drone"
@@ -76565,8 +76532,7 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "alberti"
@@ -76788,13 +76754,11 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-pattern"
@@ -77007,8 +76971,7 @@
           },
           {
             "degree": "5",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "drone-below"
@@ -77226,13 +77189,11 @@
           },
           {
             "degree": "1",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           },
           {
             "degree": "1",
-            "quality": "min",
-            "inversion": 2
+            "quality": "min"
           }
         ],
         "arpeggio": "root-drone"
@@ -77438,15 +77399,18 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-major"
@@ -77666,8 +77630,7 @@
           },
           {
             "degree": "1",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-down-major"
@@ -78348,7 +78311,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor"
@@ -78610,12 +78573,12 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor-pentatonic"
@@ -78867,29 +78830,30 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
+            "inversion": 1
           },
           {
             "degree": "b7",
+            "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
+          },
+          {
+            "degree": "b6",
+            "quality": "maj"
+          },
+          {
+            "degree": "b3",
             "quality": "maj",
             "inversion": 1
           },
           {
             "degree": "4",
-            "quality": "maj"
-          },
-          {
-            "degree": "b6",
-            "quality": "maj",
-            "inversion": 2
-          },
-          {
-            "degree": "b3",
-            "quality": "maj"
-          },
-          {
-            "degree": "4",
-            "quality": "min"
+            "quality": "min",
+            "inversion": 1
           },
           {
             "degree": "5",
@@ -79408,16 +79372,16 @@
           {
             "degree": "5",
             "quality": "maj",
-            "inversion": 2
-          },
-          {
-            "degree": "b7",
-            "quality": "maj",
             "inversion": 1
           },
           {
-            "degree": "4",
+            "degree": "b7",
             "quality": "maj"
+          },
+          {
+            "degree": "4",
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "drone-above"
@@ -79924,18 +79888,15 @@
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "5",
-            "quality": "maj",
-            "inversion": 2
+            "quality": "maj"
           }
         ],
         "arpeggio": "up-down-turn"
@@ -80155,16 +80116,17 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "4",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 1
           }
         ],
         "arpeggio": "up-over-down"
@@ -80620,7 +80582,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-minor-pentatonic"
@@ -80908,7 +80870,7 @@
           {
             "degree": "5",
             "quality": "min",
-            "inversion": 2
+            "inversion": 1
           }
         ],
         "arpeggio": "scale-up-down-minor-pentatonic"
@@ -81167,17 +81129,16 @@
           },
           {
             "degree": "b3",
-            "quality": "maj"
+            "quality": "maj",
+            "inversion": 2
           },
           {
             "degree": "b7",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           },
           {
             "degree": "b6",
-            "quality": "maj",
-            "inversion": 1
+            "quality": "maj"
           }
         ],
         "arpeggio": "scale-up-pattern"
