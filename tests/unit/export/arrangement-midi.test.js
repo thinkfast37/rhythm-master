@@ -9,7 +9,7 @@ import { readZip } from '../../zip-reader.js';
 import { layered, layeredLoopDuration } from '../../../src/core/arrangement.js';
 import { create, cycleAccent, setPitch, addMeasure, setTimeSignatureAll } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, setChange, cyclePasses } from '../../../src/core/harmony.js';
-import { buildTimeline, loopDurationSeconds } from '../../../src/core/timeline.js';
+import { buildTimeline } from '../../../src/core/timeline.js';
 import { createSong, addEntry } from '../../../src/core/song.js';
 
 function findChunk(bytes, id) {
