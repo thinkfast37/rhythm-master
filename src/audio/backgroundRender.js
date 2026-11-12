@@ -25,7 +25,7 @@
  * purpose (AC-2.13.5). `core/timeline` decides when every event sounds, here as everywhere
  * (Constitution: one timeline).
  */
-import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
+import { timelineOf as buildTimeline, loopDurationOf as loopDurationSeconds, beatGridOf as buildBeatGrid } from '../core/arrangement.js';
 import { playPercussive, playClick } from './voices.js';
 import { playMelodic } from './melodic.js';
 

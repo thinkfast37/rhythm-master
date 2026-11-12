@@ -9,12 +9,13 @@ import { BACKUP_FORMAT, BACKUP_VERSION, backupFilename, buildBackup } from '../.
 import * as patternStore from '../../../src/storage/patterns.js';
 import * as overlayStore from '../../../src/storage/overlays.js';
 import * as songStore from '../../../src/storage/songs.js';
+import * as arrangementStore from '../../../src/storage/arrangements.js';
 import * as settingsStore from '../../../src/storage/settings.js';
 import * as localMetaStore from '../../../src/storage/localMeta.js';
 import * as seedStore from '../../../src/storage/seed.js';
 import { create, cycleAccent } from '../../../src/core/pattern.js';
 
-const KEYS = [patternStore.KEY, overlayStore.KEY, songStore.KEY, settingsStore.KEY, localMetaStore.KEY];
+const KEYS = [patternStore.KEY, overlayStore.KEY, songStore.KEY, arrangementStore.KEY, settingsStore.KEY, localMetaStore.KEY];
 const CREATED = '2026-10-03T14:05:09.000Z';
 
 let backing;
@@ -33,6 +34,7 @@ function fillLibrary() {
   overlayStore.setAddedTags(shipped().id, ['warmup']);
   overlayStore.setKeptFills(shipped().id, ['up']);
   songStore.upsert({ id: 'song_1', name: 'Verse', sections: [{ patternId: 'p_1', entries: [] }] });
+  arrangementStore.upsert({ id: 'arr_1', name: 'Bed', compositionId: 'p_1', layers: [{ patternId: shipped().id, muted: false }] });
   settingsStore.save({ countingSystem: 'numbered', goal: 'lab' });
   localMetaStore.update('p_1', { submittedAt: '2026-10-01T00:00:00Z', duplicateResolved: true });
 }
@@ -45,7 +47,7 @@ const backupOf = (stores, extra = {}) =>
   JSON.stringify({ format: BACKUP_FORMAT, schemaVersion: BACKUP_VERSION, createdAt: CREATED, stores, ...extra });
 
 describe('US-7.6 — backing up the whole library (AC-7.6.1)', () => {
-  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Songs, settings and Local Metadata — each exactly as stored, and a store never written is absent', () => {
+  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Songs, Arrangements, settings and Local Metadata — each exactly as stored, and a store never written is absent', () => {
     fillLibrary();
     const file = JSON.parse(backupText(CREATED));
     expect(Object.keys(file.stores).sort()).toEqual([...KEYS].sort());
@@ -53,7 +55,7 @@ describe('US-7.6 — backing up the whole library (AC-7.6.1)', () => {
     expect(file.stores[localMetaStore.KEY].byPatternId.p_1.submittedAt).toBe('2026-10-01T00:00:00Z');
   });
 
-  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Songs, settings and Local Metadata — each exactly as stored, and a store never written is absent: an untouched store is left out', () => {
+  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Songs, Arrangements, settings and Local Metadata — each exactly as stored, and a store never written is absent: an untouched store is left out', () => {
     overlayStore.setRating(shipped().id, 3);
     const file = JSON.parse(backupText(CREATED));
     expect(Object.keys(file.stores)).toEqual([overlayStore.KEY]);

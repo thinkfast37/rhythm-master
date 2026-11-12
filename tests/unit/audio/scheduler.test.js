@@ -479,3 +479,68 @@ describe('audio/scheduler — the count-in at written lengths (AC-4.2.7)', () =>
   });
 });
 
+
+/* --- layers under the composition (US-19.11) -------------------------------- */
+
+import { layered } from '../../../src/core/arrangement.js';
+
+describe('audio/scheduler under layers (US-19.11)', () => {
+  /** A one-Measure 4/4 Pattern, one syllable per Beat: events every 0.5s at 120 BPM. */
+  function fourBeats(name) {
+    let p = { ...create(name), tempo: 120 };
+    for (let b = 0; b < 4; b++) p = cycleAccent(p, 0, b, 0);
+    return p;
+  }
+
+  async function startWith(set) {
+    const startP = transport.start(set, { metronomeEnabled: false, countInEnabled: false });
+    await vi.runOnlyPendingTimersAsync?.() ?? Promise.resolve();
+    await startP;
+    ctx = (await import('../../../src/audio/context.js')).getContext();
+  }
+
+  /** Poll every 0.1s of audio time up to `until`, as a timely browser would. */
+  async function runUntil(until) {
+    for (let t = ctx.currentTime + 0.1; t <= until + 1e-9; t += 0.1) await tickAt(Math.round(t * 10) / 10);
+  }
+
+  it('AC-19.11.2/1 — Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound', async () => {
+    // The composition's Beat 1 sixteenths and a layer's four Beats: at the
+    // Beat-1 downbeat both have an event, so two oscillators start at one time.
+    const set = layered(pattern(), [{ pattern: fourBeats('Bed') }]);
+    await startWith(set);
+    const origin = transport._eventTime(0, 0);
+    await runUntil(1.9);
+    const whens = starts.map((s) => Math.round((s.when - origin) * 1000) / 1000);
+    const downbeat = whens.filter((w) => w === 0);
+    expect(downbeat).toHaveLength(2);
+    // And the layer's other Beats are in the same run, between the composition's events.
+    expect(whens.filter((w) => w === 0.5 || w === 1 || w === 1.5)).toHaveLength(3);
+    expect(whens.filter((w) => w === 0.125 || w === 0.25 || w === 0.375)).toHaveLength(3);
+  });
+
+  it('AC-19.11.2/4 — Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted', async () => {
+    await startTransport();
+    const origin = transport._eventTime(0, 0);
+    await runUntil(0.1);
+    // A layer added mid-pass: pending until the boundary, then its events join from pass 1.
+    transport.update(layered(pattern(), [{ pattern: fourBeats('Bed') }]), { metronomeEnabled: false, countInEnabled: false });
+    await runUntil(1.0);
+    const firstPass = starts.filter((s) => s.when < origin + 2 - 1e-9).length;
+    expect(firstPass).toBe(4); // the composition alone: nothing was restarted
+    await runUntil(3.9);
+    const secondPass = starts.filter((s) => s.when >= origin + 2 - 1e-9 && s.when < origin + 4 - 1e-9);
+    expect(secondPass).toHaveLength(8); // four of each
+    // The second pass's boundary is exactly where the first pass ended: no re-anchor gap.
+    expect(Math.min(...secondPass.map((s) => s.when))).toBeCloseTo(origin + 2, 6);
+    expect(transport.isRunning).toBe(true);
+    // Muting it is heard from the next boundary not yet scheduled, in the same way:
+    // the lookahead has already handed pass 2's start to Web Audio, so pass 3.
+    transport.update(layered(pattern(), [{ pattern: fourBeats('Bed'), muted: true }]), { metronomeEnabled: false, countInEnabled: false });
+    await runUntil(7.9);
+    const thirdPass = starts.filter((s) => s.when >= origin + 4 - 1e-9 && s.when < origin + 6 - 1e-9);
+    expect(thirdPass).toHaveLength(8);
+    const fourthPass = starts.filter((s) => s.when >= origin + 6 - 1e-9 && s.when < origin + 8 - 1e-9);
+    expect(fourthPass).toHaveLength(4);
+  });
+});

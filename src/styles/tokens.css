@@ -2194,6 +2194,37 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .compose-unsaved { font: 500 12px/1.4 var(--font-ui); color: var(--warn, #e0a030); }
 .score-fill { font: italic 500 13px/1.3 Georgia, 'Times New Roman', serif; }
 
+/* --- layers under the composition (US-19.11) ------------------------------ */
+
+.composer-layers { margin: 14px 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); display: flex; flex-direction: column; gap: 10px; }
+.layers-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.layers-title { margin: 0; font: 700 14px/1.3 var(--font-ui); color: var(--ink); }
+.layers-arrangement-name { font: 600 13px/1.3 var(--font-ui); color: var(--brand); }
+.layers-unsaved { font: 500 12px/1.4 var(--font-ui); color: var(--warn, #e0a030); }
+.layer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.layer-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+.layer-item.composition { border-color: var(--brand); }
+.layer-item.muted .layer-name, .layer-item.muted .layer-kind { opacity: 0.5; }
+.layer-item.missing .layer-name { color: var(--warn, #e0a030); }
+.layer-name { font: 600 13px/1.4 var(--font-ui); color: var(--ink); flex: 1 1 100px; min-width: 0; }
+.layer-kind { font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.layer-repeats { font: 600 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.layers-empty, .layers-loop { margin: 0; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.layers-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.layers-label { font: 600 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.arrangement-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.arrangement-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+.arrangement-item.current .arrangement-load { border-color: var(--brand); color: var(--brand); }
+.composer-layers button {
+  padding: 8px 12px;
+  font: 600 13px/1 var(--font-ui);
+  color: var(--ink); background: #1c1f2b;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.composer-layers button:disabled { opacity: 0.5; cursor: default; }
+.layer-mute.on { border-color: var(--brand); color: var(--brand); }
+
 /* --- goals (US-14.1) ------------------------------------------------------ */
 
 /*

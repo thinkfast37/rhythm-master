@@ -10,9 +10,10 @@
  * The visual cursor is driven from this same queue rather than a separate
  * animation loop, so the highlighted Slot cannot disagree with what is heard.
  */
-import { buildTimeline, loopDurationSeconds, buildBeatGrid } from '../core/timeline.js';
 import { beatDurationSeconds, tempoUnitOf } from '../core/meter.js';
-import { hasHarmony } from '../core/harmony.js';
+// A layered set (US-19.11) and a Pattern go through the same four dispatchers,
+// so this file never asks which it holds (research.md D-026).
+import { timelineOf as buildTimeline, loopDurationOf as loopDurationSeconds, beatGridOf as buildBeatGrid, anyHarmony as hasHarmony } from '../core/arrangement.js';
 import { resume, onSuspended, onResumed } from './context.js';
 import { startTicking } from './tickSource.js';
 import { playPercussive, playClick } from './voices.js';

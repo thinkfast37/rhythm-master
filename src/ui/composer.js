@@ -32,6 +32,7 @@ import {
   hasAnyNote,
   sameSlot,
 } from '../core/composer.js';
+import { renderLayers } from './layers.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 
@@ -75,13 +76,18 @@ export function renderComposer(root, state, handlers) {
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderBar(composer, draft, instrument, state, handlers));
     fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers));
-    if (draft) fresh.appendChild(renderComposingGrid(draft, composer, state));
-    else {
+    if (draft) {
+      fresh.appendChild(renderComposingGrid(draft, composer, state));
+      // The layers under it (US-19.11), absent without a composition (AC-19.11.1/5).
+      fresh.appendChild(renderLayers(state, handlers));
+    } else {
       const empty = el('p', 'composer-empty', {
         textContent: 'Choose a rhythm from the library to compose on. Its syllables will appear here; Record fills them from the instrument above.',
       });
       empty.dataset.empty = 'true';
       fresh.appendChild(empty);
+      // Saved Arrangements can be opened from here too (AC-19.11.1/5, AC-19.11.4/2).
+      if ((state.arrangements ?? []).length > 0) fresh.appendChild(renderLayers(state, handlers));
     }
     fresh.appendChild(renderControls(draft, instrument, key, scale, state, handlers));
     const credit = el('p', 'composer-attribution');

@@ -13,6 +13,7 @@ import { migrate, CURRENT_VERSION } from './migrate.js';
 import * as patterns from './patterns.js';
 import * as overlays from './overlays.js';
 import * as songs from './songs.js';
+import * as arrangements from './arrangements.js';
 import * as settings from './settings.js';
 import * as localMeta from './localMeta.js';
 
@@ -21,6 +22,7 @@ const SHAPES = {
   [patterns.KEY]: { list: 'patterns' },
   [overlays.KEY]: { map: 'byPatternId' },
   [songs.KEY]: { list: 'songs' },
+  [arrangements.KEY]: { list: 'arrangements' },
   [settings.KEY]: {},
   [localMeta.KEY]: { map: 'byPatternId' },
 };
