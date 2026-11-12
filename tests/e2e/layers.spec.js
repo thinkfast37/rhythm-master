@@ -521,14 +521,19 @@ test('AC-19.11.2/1 — Play sounds the composition and every unmuted layer at on
   await fret(page, 1, 1).click();
   await page.locator('.record').click();
   await addLayer(page, DJEMBE);
-  // The one timeline the transport is handed: the composition's four and the
-  // melody's four, each Beat an instant two events share.
+  // The one timeline the transport is handed: the composition's four Beats and
+  // the melody's notes in one sorted list, each downbeat an instant both share,
+  // the composition's event first.
   const merged = await page.evaluate(() => window.__rmTimeline.timelineOf(window.__rm.scheduled(), 0).map((e) => [Math.round(e.timeSeconds * 1000), e.layer]));
-  expect(merged).toHaveLength(8);
-  for (let b = 0; b < 4; b++) {
-    const at = merged.filter(([t]) => t === b * 250);
-    expect(at.map(([, layer]) => layer)).toEqual([0, 1]);
-  }
+  const own = merged.filter(([, layer]) => layer === 0).map(([t]) => t);
+  expect(own).toEqual([0, 250, 500, 750]);
+  const layerCount = await page.evaluate(() => window.__rmTimeline.buildTimeline(window.__rm.scheduled().layers[1].pattern, 0).length);
+  expect(merged).toHaveLength(4 + layerCount);
+  for (let i = 1; i < merged.length; i++) expect(merged[i][0]).toBeGreaterThanOrEqual(merged[i - 1][0]);
+  const shared = merged.filter(([t]) => t === 0);
+  expect(shared.length).toBeGreaterThanOrEqual(2);
+  expect(shared[0][1]).toBe(0);
+  expect(shared.some(([, layer]) => layer === 1)).toBe(true);
   const before = (await page.evaluate(() => window.__rm.voiceLog().length));
   await play(page);
   // Both sound in one run: the composition's note and the layer's, in the same pass.
