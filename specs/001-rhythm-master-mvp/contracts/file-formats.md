@@ -81,6 +81,18 @@ you author is what you hear, in the app *and* in any export") enforceable: a div
 
 **Rule**: no Local Metadata, no `id`, no rating, no tags. A `.mid` is music.
 
+### 2a. Arrangement export — `.zip` of `.mid` files (US-19.11, AC-19.11.5)
+
+**Consumer**: the user's DAW, one track per layer.
+
+A ZIP archive with stored (uncompressed) entries, UTF-8 names and CRC-32, written by `core/zip.js`.
+One entry per layer of the Arrangement, the composition first, named `NN-<pattern-name>.mid` with
+`NN` the layer's position from 01. Each entry is a `.mid` exactly as §2 describes, built by the
+same `buildMidi` with the layer's Pattern under the composition's tempo, tempo unit, swing and Key,
+for as many passes as the layer repeats in one combined loop — so every entry has the same duration.
+Muted layers are included. The archive is named after the Arrangement when saved, the composition
+otherwise.
+
 ---
 
 ## 3. Pattern submission payload — prefilled GitHub issue

@@ -1269,7 +1269,10 @@ first layer is playing back … I go through and pick the notes for that layer. 
 them both together." The composition is already a draft the transport plays per pass; layers are
 other Patterns on the same clock. Merging in `core/` keeps the one-timeline rule (Constitution III,
 D-011): the cursor, the audio and the handover still consume one list, and the MIDI exporter still
-consumes `buildTimeline` of one Pattern — an Arrangement has no MIDI export in this version. The
+consumes `buildTimeline` of one Pattern — an Arrangement's export is one `.mid` per layer, each the
+layer's Pattern under the composition's settings for its repeats in the combined loop, delivered as
+one ZIP (`core/zip.js`, stored entries, no dependency) because a browser blocks a click that starts
+several downloads (AC-19.11.5, added the same day at the maintainer's request). The
 harmonic-cycle length is the unit cycle mode and Songs already count in, so a progression layer
 returns to its first chord at every loop start. Refusing past 32 repeats bounds the combined loop:
 a 7/8 bar under a 4/4 bar is eight against seven, which fits; two long, coprime layers are told so

@@ -589,3 +589,102 @@ test('AC-19.11.2/6 — The screen-off handover renders the combined loop with ev
   expect(rendered.seconds).toBeCloseTo(2, 3);
   await play(page);
 });
+
+// --- AC-19.11.5: exporting an Arrangement as MIDI ------------------------------------
+
+/** Press Export arrangement MIDI and return the download's name and its entries' names. */
+async function exportArrangement(page) {
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.arrangement-export').click()]);
+  const { readFile } = await import('node:fs/promises');
+  const bytes = new Uint8Array(await readFile(await download.path()));
+  const { readZip } = await import('../zip-reader.js');
+  return { name: download.suggestedFilename(), entries: readZip(bytes) };
+}
+
+test("AC-19.11.5/1 — Export arrangement MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await addLayer(page, SON);
+  await addLayer(page, BOSSA);
+  await layerItems(page).nth(1).locator('.layer-mute').click();
+  const { name, entries } = await exportArrangement(page);
+  expect(name).toBe('my-line.zip');
+  expect(entries.map((e) => e.name)).toEqual(['01-my-line.mid', '02-son-clave-3-2.mid', '03-bossa-nova.mid']);
+  for (const e of entries) expect(String.fromCharCode(...e.bytes.slice(0, 4))).toBe('MThd');
+  expect(entries[2].bytes.length).toBeGreaterThan(30);
+});
+
+test('AC-19.11.5/3 — The archive is named after the Arrangement once it has been saved, and after the composition otherwise', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await saveComposition(page);
+  await addLayer(page, SON);
+  expect((await exportArrangement(page)).name).toBe('my-line.zip');
+  await page.locator('.arrangement-save').click();
+  await nameInDialog(page, 'Evening Bed');
+  expect((await exportArrangement(page)).name).toBe('evening-bed.zip');
+});
+
+test("AC-19.11.5/4 — Export arrangement MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await expect(page.locator('.arrangement-export')).toBeDisabled();
+  await expect(page.locator('.arrangement-export')).toHaveAttribute('title', 'Add a layer first');
+  await addLayer(page, SON);
+  await expect(page.locator('.arrangement-export')).toBeEnabled();
+  await layerItems(page).first().locator('.layer-remove').click();
+  await expect(page.locator('.arrangement-export')).toBeDisabled();
+});
+
+/** The end-of-track tick and note-on count of a format-0 .mid. */
+function midiSummary(bytes) {
+  let i = 14; // past MThd
+  while (String.fromCharCode(...bytes.slice(i, i + 4)) !== 'MTrk') i += 1;
+  const len = (bytes[i + 4] << 24) | (bytes[i + 5] << 16) | (bytes[i + 6] << 8) | bytes[i + 7];
+  const track = bytes.slice(i + 8, i + 8 + len);
+  let at = 0;
+  let tick = 0;
+  let ons = 0;
+  let end = 0;
+  while (at < track.length) {
+    let delta = 0;
+    for (;;) {
+      const b = track[at++];
+      delta = (delta << 7) | (b & 0x7f);
+      if ((b & 0x80) === 0) break;
+    }
+    tick += delta;
+    const status = track[at++];
+    if (status === 0xff) {
+      const type = track[at++];
+      const n = track[at++];
+      if (type === 0x2f) end = tick;
+      at += n;
+    } else {
+      if ((status & 0xf0) === 0x90 && track[at + 1] > 0) ons += 1;
+      at += 2;
+    }
+  }
+  return { end, ons };
+}
+
+test("AC-19.11.5/2 — Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await setTempo(page, 100);
+  await addLayer(page, SON);
+  await addLayer(page, BOSSA);
+  // One combined loop is two bars: the composition twice, the clave once, Bossa Nova twice.
+  await expect(page.locator('.layers-loop')).toHaveAttribute('data-passes', '2');
+  const { entries } = await exportArrangement(page);
+  const summaries = entries.map((e) => midiSummary(e.bytes));
+  // Every file the same length: two bars of 4/4 at 480 ticks a quarter.
+  expect(summaries.map((s) => s.end)).toEqual([3840, 3840, 3840]);
+  // The composition's four syllables twice; Bossa Nova's own count twice; the clave's once.
+  const counts = await page.evaluate(() => {
+    const set = window.__rm.scheduled();
+    return set.layers.map((l) => window.__rmTimeline.buildTimeline(l.pattern, 0).length * l.repeats);
+  });
+  expect(summaries.map((s) => s.ons)).toEqual(counts);
+  expect(summaries[0].ons).toBe(8);
+});

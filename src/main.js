@@ -66,7 +66,7 @@ import {
   entryAt,
   validateSong,
 } from './core/song.js';
-import { downloadSongMidi, songMidiFilename } from './export/midi.js';
+import { downloadSongMidi, songMidiFilename, downloadArrangementMidi, arrangementZipFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
 import {
   phraseLengthOf,
@@ -2670,6 +2670,14 @@ const handlers = {
     state.composer = { ...state.composer, arrangement: { id: saved.id, name: saved.name, saved: structuredClone(saved.layers) } };
     refreshArrangements();
     render();
+  },
+
+  /** One ZIP, one .mid per layer, each one combined loop long (AC-19.11.5). */
+  onArrangementExport() {
+    const c = state.composer;
+    if (!c.draft || c.layers.length === 0) return;
+    const set = layered(c.draft, resolvedLayers());
+    downloadArrangementMidi(set, arrangementZipFilename(c.arrangement, c.draft));
   },
 
   /** Clear the layers: a new, unsaved Arrangement over the same composition. */

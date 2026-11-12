@@ -82,6 +82,14 @@ describe('core/arrangement — the combined loop (AC-19.11.3)', () => {
     expect(quiet.loopEighths).toBe(loud.loopEighths);
     expect(quiet.layers.map((l) => l.repeats)).toEqual(loud.layers.map((l) => l.repeats));
     expect(layeredLoopDuration(quiet)).toBeCloseTo(layeredLoopDuration(loud), 9);
+    // A repeat of a progression layer is a whole cycle: two repeats of I–IV–V are six passes,
+    // walking the chords across them, and the loop is six bars long.
+    const events = layeredTimeline(loud);
+    expect(events.filter((e) => e.layer === 1)).toHaveLength(24);
+    expect(events.filter((e) => e.layer === 1).map((e) => e.repeat)).toEqual([...Array(24).keys()].map((i) => Math.floor(i / 4)));
+    expect(layeredLoopDuration(loud)).toBeCloseTo(6 * loopDurationSeconds(fourBeats()), 9);
+    const perPass = [0, 1, 2, 3, 4, 5].flatMap((pass) => buildTimeline(loud.layers[1].pattern, pass).map((e) => e.pitch.midiNote));
+    expect(events.filter((e) => e.layer === 1).map((e) => e.pitch.midiNote)).toEqual(perPass);
   });
 
   it('AC-19.11.3/2 — A one-Measure layer under a four-Measure composition plays four times in each loop, and a four-Measure layer under a one-Measure composition makes the composition play four times', () => {

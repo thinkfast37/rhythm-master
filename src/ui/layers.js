@@ -150,6 +150,13 @@ export function renderLayers(state, handlers) {
     fresh.addEventListener('click', () => handlers.onArrangementNew?.());
     actions.appendChild(fresh);
   }
+  // One ZIP, one MIDI file per layer, each one combined loop long (AC-19.11.5).
+  const exportBtn = button('arrangement-export', 'Export arrangement MIDI', 'arrangement-export', {
+    disabled: !hasLayers,
+    title: hasLayers ? 'Download a ZIP with one MIDI file per layer, each one loop long' : 'Add a layer first',
+  });
+  exportBtn.addEventListener('click', () => handlers.onArrangementExport?.());
+  actions.appendChild(exportBtn);
   wrap.appendChild(actions);
 
   wrap.appendChild(renderSaved(state, handlers));

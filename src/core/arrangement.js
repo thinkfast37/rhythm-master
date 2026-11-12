@@ -139,8 +139,9 @@ export function layeredTimeline(set, pass = 0) {
   set.layers.forEach((layer, index) => {
     if (layer.muted) return;
     const once = loopDurationSeconds(layer.pattern);
-    for (let k = 0; k < layer.repeats; k++) {
-      for (const event of buildTimeline(layer.pattern, pass * layer.repeats + k)) {
+    const passes = passesPerLoop(layer);
+    for (let k = 0; k < passes; k++) {
+      for (const event of buildTimeline(layer.pattern, pass * passes + k)) {
         events.push({
           ...event,
           timeSeconds: event.timeSeconds + k * once,
@@ -154,19 +155,27 @@ export function layeredTimeline(set, pass = 0) {
   return events.sort((a, b) => a.timeSeconds - b.timeSeconds || Number(b.composition) - Number(a.composition) || a.layer - b.layer);
 }
 
+/**
+ * How many passes of its Pattern a layer plays in one combined loop: its
+ * repeats are of its harmonic cycle, and a cycle is `cyclePasses` passes.
+ */
+export function passesPerLoop(layer) {
+  return layer.repeats * cyclePasses(layer.pattern);
+}
+
 /** The combined loop's length: the composition's own, repeated to fill it. */
 export function layeredLoopDuration(set) {
   const composition = set.layers[0];
-  return loopDurationSeconds(composition.pattern) * composition.repeats;
+  return loopDurationSeconds(composition.pattern) * passesPerLoop(composition);
 }
 
-/** The metronome's Beats: the composition's, once per repeat. */
+/** The metronome's Beats: the composition's, once per pass. */
 export function layeredBeatGrid(set) {
   const composition = set.layers[0];
   const once = loopDurationSeconds(composition.pattern);
   const grid = buildBeatGrid(composition.pattern);
   const beats = [];
-  for (let k = 0; k < composition.repeats; k++) {
+  for (let k = 0; k < passesPerLoop(composition); k++) {
     for (const beat of grid) beats.push({ ...beat, timeSeconds: beat.timeSeconds + k * once });
   }
   return beats;
