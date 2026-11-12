@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1065 across 66 User Stories
+**Criteria**: 1093 across 67 User Stories
 
-**Coverage**: 938 of 1065 criteria proven (88.1%)
+**Coverage**: 966 of 1093 criteria proven (88.4%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 938 | 88.1% |
-| 🟠 Gap — MEDIUM | 50 | 4.7% |
-| 🟡 Gap — LOW | 77 | 7.2% |
+| 🟢 Proven | 966 | 88.4% |
+| 🟠 Gap — MEDIUM | 50 | 4.6% |
+| 🟡 Gap — LOW | 77 | 7.0% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -123,6 +123,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.16 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.17 | 9 | **9** | · | · | · | · | · |
 | 🟢 US-10.4 | 61 | **61** | · | · | · | · | · |
+| 🟢 US-19.11 | 28 | **28** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -882,7 +883,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-14.1 | `AC-14.1.4/5` 🖵 | Under Any level the dice draws from every shipped Pattern, whatever its level or Mode, and Pick from the library filters to nothing | P-049 | T326, T328, T330, T352, T410 (5/5 done) | T327, T329, T331, T353, T411 (5/5 done) | `goals.test.js`, `goals.spec.js` | 🟢 OK |
 | US-14.1 | `AC-14.1.4/6` 🖵 | Under Practise a rhythm Prev and Next step through the rhythms the dice draws from — the level's Tag, within whatever filter the library already has — in the library's order; under Any level, and under the other goals, they step through the library as filtered, as before | P-049 | T326, T328, T330, T352, T410 (5/5 done) | T327, T329, T331, T353, T411 (5/5 done) | `goals.spec.js` | 🟢 OK |
 | US-7.6 | `AC-7.6.1/1` 🖵 | A Back up library control in the library panel, offered under every goal, downloads one JSON file named for the day it was made | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.spec.js` | 🟢 OK |
-| US-7.6 | `AC-7.6.1/2` | The file holds every store the app keeps — Patterns, overlays, Songs, settings and Local Metadata — each exactly as stored, and a store never written is absent | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
+| US-7.6 | `AC-7.6.1/2` | The file holds every store the app keeps — Patterns, overlays, Songs, Arrangements, settings and Local Metadata — each exactly as stored, and a store never written is absent | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
 | US-7.6 | `AC-7.6.1/3` | The file names its format and carries its own schemaVersion and the time it was made | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
 | US-7.6 | `AC-7.6.1/4` | Shipped Patterns are not in the file; the ratings, added Tags and Keeps on them are, in the overlays | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.test.js` | 🟢 OK |
 | US-7.6 | `AC-7.6.2/1` 🖵 | A Restore library control beside Back up library opens a file picker; once a file is picked, a prompt says the current library will be replaced, and Cancel changes nothing | P-050 | T354 (1/1 done) | T355 (1/1 done) | `backup.spec.js` | 🟢 OK |
@@ -1193,3 +1194,31 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-10.4 | `AC-10.4.8/5` 🖵 | The dialog is a named dialog that takes focus on opening, returns it to Add variation on closing, and whose techniques, choices and reasons are read by assistive technology as buttons and selects with their descriptions | P-071 | T466 (1/1 done) | T467 (1/1 done) | `variations.spec.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.8/6` 🖵 | On a phone the dialog fills the width within the mobile breakpoint with the groups stacked, each technique a full-width row; on desktop and tablet it is a dialog over the editor | P-071 | T466 (1/1 done) | T467 (1/1 done) | `variations.spec.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.8/7` 🖵 | Help gains an entry for Add variation naming the original, the stack, the dice and the chord override | P-071 | T466 (1/1 done) | T467 (1/1 done) | `variations.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.1/1` 🖵 | A Layers section under the composing grid lists the composition first, then each layer in the order added, naming each and its kind — rhythm, melody or chords — and says when there are no layers | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.1/2` 🖵 | Add layer offers every library Pattern, shipped or owned, percussive, melodic or carrying a progression, except the composition itself, searchable by name; ticking one adds it as the last layer and unticking it removes it | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.1/3` 🖵 | Remove takes a layer out; the same Pattern is never layered twice; at most 8 layers, Add layer saying so at the cap | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.1/4` 🖵 | Mute silences a layer without removing it or changing the loop, and Unmute brings it back | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.1/5` 🖵 | Without a composition the Layers section holds only the saved Arrangements, to open one from, and is absent when there are none; the layers go when another rhythm is opened into the Composer | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/1` 🖵 | Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `scheduler.test.js`, `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/2` 🖵 | The composition sounds with the instrument shown; a melodic layer sounds with the melodic voice Practice would use; a percussive layer, and an unpitched syllable in any layer, sounds percussively at its Accent Level | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/3` 🖵 | Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/4` 🖵 | Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `scheduler.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/5` 🖵 | Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the composition's, and a note recorded is heard from the next pass | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/6` 🖵 | The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `backgroundRender.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.3/1` | The combined loop is the shortest length in which the composition and every layer each play a whole number of times, a layer with a progression counting one harmonic cycle as its length, and a muted layer counting as an unmuted one | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.3/2` | A one-Measure layer under a four-Measure composition plays four times in each loop, and a four-Measure layer under a one-Measure composition makes the composition play four times | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.3/3` | Layers in different meters fit by time: a Measure of 7/8 against a Measure of 4/4 gives a loop of seven Measures of 4/4 in which the 7/8 plays eight times | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.3/4` | A layer that would need more than 32 repeats in the loop, or would make the composition or another layer need more, is refused with a message, and nothing is added | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.3/5` | The Layers section states the loop's length in passes of the composition and each layer's repeats in it | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.3/6` | The cursor runs through the composing grid once per pass of the composition, as many times per combined loop as the composition repeats | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/1` | Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order and which are muted; it is unavailable until the composition is saved and has a layer, saying why | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/2` | A saved Arrangement survives a reload and is listed in the Layers section; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/3` | An Arrangement can be renamed and deleted from the Layers section, deletion asking first | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/4` | Edits to a loaded Arrangement's layers are not saved until Save arrangement is pressed again, which updates it in place; the section says when the loaded Arrangement has unsaved changes | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/5` | Deleting a Pattern that an Arrangement uses, as its composition or as a layer, is refused with a message naming the Arrangement or Arrangements, until they are deleted | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement.test.js`, `arrangements.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/6` | An Arrangement is not Pattern content: saving one changes nothing on any Pattern, and the composition's JSON and MIDI exports and its submission carry nothing of it | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/7` | Arrangements are stored in `rm.arrangements.v1`, apart from Patterns, overlays, Songs, settings and Local Metadata, and the whole-library backup carries the store as it does every other | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangements.test.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.5/1` 🖵 | Export arrangement MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `zip.test.js`, `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.5/2` 🖵 | Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.5/3` 🖵 | The archive is named after the Arrangement once it has been saved, and after the composition otherwise | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.5/4` 🖵 | Export arrangement MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged | P-072 | T471, T473 (2/2 done) | T472, T474 (2/2 done) | `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |

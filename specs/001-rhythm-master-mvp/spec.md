@@ -3459,7 +3459,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 **As** the Composer, **I want** to chain the fills I kept into an ordered Section — each for a number of cycles — over the Pattern's progression, play it end to end, save it under a name and export it as one MIDI file, **so that** a rhythm I like and a progression I like become the bed of a song rather than a loop I listen to.
 
-*(Added 2026-09-13 at the maintainer's request: "one fill may run for, let's say, four bars, and then you tweak it to using a different fill on top of the same progression … I wanna be able to chain the fills into one long set, and I wanna retain that chain and … export it." Decisions taken with the maintainer the same day: the first deliverable is a **Section** — one Pattern, one progression, a sequence of fills with repeat counts — not a multi-layer arrangement, which they do not want ("I would be building a polyphonic sounding layer for this entire tool. I don't think I wanna go there yet"). The nouns are **Song** and **Section**; "Arrangement" is not used, and the earlier "multi-section Arrangements" scope exclusion is narrowed accordingly (Assumptions). A repeat is one harmonic cycle, the unit AC-2.7.2/1 already defines. A Song records which Pattern each Section plays over from the first version, so that a later Section on a different progression — verse to chorus — is a change to what the Compose group offers, not to what a Song is; this version's Compose group keeps every Section on the Pattern that is open. The progression is set in the Melody group and shown, not edited, in Compose: one place to change it. Compose is a fourth workbench group rather than a mode inside Melody, because a mode is remembered state the musician has to find, and the 2026-09-13 usability review (T272) was about exactly that.)*
+*(Added 2026-09-13 at the maintainer's request: "one fill may run for, let's say, four bars, and then you tweak it to using a different fill on top of the same progression … I wanna be able to chain the fills into one long set, and I wanna retain that chain and … export it." Decisions taken with the maintainer the same day: the first deliverable is a **Section** — one Pattern, one progression, a sequence of fills with repeat counts — not a multi-layer arrangement, which they do not want ("I would be building a polyphonic sounding layer for this entire tool. I don't think I wanna go there yet"). The nouns are **Song** and **Section**; "Arrangement" is not used, and the earlier "multi-section Arrangements" scope exclusion is narrowed accordingly (Assumptions). *(2026-11-12: "Arrangement" is now the name of US-19.11's layered set — a composition with library Patterns sounding under it. A Song is unchanged: one Pattern, one progression, a chain of fills.)* A repeat is one harmonic cycle, the unit AC-2.7.2/1 already defines. A Song records which Pattern each Section plays over from the first version, so that a later Section on a different progression — verse to chorus — is a change to what the Compose group offers, not to what a Song is; this version's Compose group keeps every Section on the Pattern that is open. The progression is set in the Melody group and shown, not edited, in Compose: one place to change it. Compose is a fourth workbench group rather than a mode inside Melody, because a mode is remembered state the musician has to find, and the 2026-09-13 usability review (T272) was about exactly that.)*
 
 **Independent Test**: With three fills kept on a Melodic Pattern under I–IV–V, add two of them to the Section at 2 and 1 repeats, press Play song, and assert that the first fill is in force for six passes and the second for three, that the switch happens at a pass boundary with no stop, that the list loops, that Save under a name stores the Song apart from the Pattern and it is offered again when the Pattern is next opened, that deleting the Pattern is refused naming the Song, and that Export Song MIDI writes nine passes in order while the Pattern's own MIDI export is unchanged.
 
@@ -3725,7 +3725,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-10-03 at the maintainer's request: "a backup and restore feature where you can just … store the whole file, like the whole library on a file and then restore it from that file … It should have all the stuff that's in the local storage … whatever you've configured, everything." Decisions taken with the maintainer the same day: Local Metadata is included, which Constitution 3.6.0 permits for this file alone (FR-006); and restore **replaces** — the app afterwards holds exactly what the backup did, after a confirmation — rather than merging, since a restore that half-keeps the current library is not a restore. Shipped Patterns are not copied: they ship with the app, and what the musician added to them lives in the overlays, which are. The file is local and the musician's own; nothing is sent anywhere (Principle V).)*
 
-**Independent Test**: With a custom Pattern, a rating on a shipped Pattern, a Song, a changed setting and a submission mark stored, press Back up library and assert one JSON file downloads holding all five stores as stored. Change the library, choose Restore library with that file, confirm, and assert the app reloads holding exactly the backed-up library and nothing from after it. Choose a file that is not a backup and assert a message says so and nothing changed.
+**Independent Test**: With a custom Pattern, a rating on a shipped Pattern, a Song, an Arrangement, a changed setting and a submission mark stored, press Back up library and assert one JSON file downloads holding all six stores as stored. Change the library, choose Restore library with that file, confirm, and assert the app reloads holding exactly the backed-up library and nothing from after it. Choose a file that is not a backup and assert a message says so and nothing changed.
 
 **Acceptance Scenarios**:
 
@@ -3735,9 +3735,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** one JSON file downloads holding every store the app keeps, exactly as stored, naming its format and carrying a `schemaVersion`; nothing in the app changes
   - **Cases**:
     - **AC-7.6.1/1** — A Back up library control in the library panel, offered under every goal, downloads one JSON file named for the day it was made
-    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Songs, settings and Local Metadata — each exactly as stored, and a store never written is absent
+    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Songs, Arrangements, settings and Local Metadata — each exactly as stored, and a store never written is absent
     - **AC-7.6.1/3** — The file names its format and carries its own schemaVersion and the time it was made
     - **AC-7.6.1/4** — Shipped Patterns are not in the file; the ratings, added Tags and Keeps on them are, in the overlays
+  - *(Revised 2026-11-12 with US-19.11: /2 listed the stores by name, and Arrangements, `rm.arrangements.v1`, joined them; the backup copies every store, so the list names it. Nothing else in the criterion changed.)*
 
 - **AC-7.6.2** — Restore replaces the library with the file's
   - **Given** a backup file
@@ -4804,6 +4805,80 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - *(Cross-references, kept out of the Case wording: /1 restores the Melody-group row AC-15.1.8 lost on 2026-10-31; /6's breakpoint is AC-15.1.1's; /7's Help is US-14.1's.)*
   - *(Revised 2026-11-01 with T468, from the maintainer's first use on a phone: /1 placed the Melody group's Measures row only on the goals with no Rhythm group, so on Lab and Play it in a Melodic Pattern offered Add variation in the Rhythm group alone — "I had to go to rhythm in order to actually find it, which I don't know why I would have to go to rhythm." Varying a loop is melodic work far more often than percussive, so the row is now at the foot of the Melody group on every making goal, Double Length with it, which repeats Double Length in two groups on Lab and Play it in; D-018's ruling that Double Length is on every making goal is kept either way. /2 gains the Play/Stop line that AC-10.4.4/4's revision calls for, at the head of the dialog where the transport is looked for.)*
 
+### User Story 68 - Layer Patterns under the composition
+
+*Traceability: `US-19.11` — Layer Patterns under the composition*
+
+**As** the Composer, **I want** to put Patterns from the library under the composition I am recording — a percussive groove, a melody, a chord progression with its fill and its variations — each kept as a distinct layer that repeats to fill the longest, and hear them all together while I pick the next note, **so that** I write a line over an arrangement rather than over a click, and two notes that fall together are heard together.
+
+*(Added 2026-11-12 at the maintainer's request: "take an existing layer or an existing pattern, which could be either percussive or melodic, and then create another pattern on top of that … there'll be really distinct layers … like an arrangement you're basically creating … while the first layer is playing back … I go through and pick the notes for that layer. And then I can hear them both together. And if there's 2 notes that sound at the same time, it would actually become polyphonic … if one layer was only 1 measure and one layer was 4 measures, then that first measure would actually repeat 4 times … I also want to be able to pick … the layers that I've composed that are just based on chord progressions and fills … that may have variations in them." This reverses the 2026-09-13 ruling under US-18.1 that kept "a polyphonic sounding layer" out, and the Assumptions' exclusion of two Patterns sounding at once; both are revised the same day. Decisions taken with the maintainer the same day: a layer is a library Pattern, shipped or owned, of any kind — a Song is not a layer in this version; a layer with a progression counts one harmonic cycle as its length, the unit a Song's repeat already is (AC-2.7.2/1), so the combined loop is a whole number of chord cycles; the layered set is saved under a name as an **Arrangement** in a store of its own, `rm.arrangements.v1`, as Songs are; Auto landing. Decisions taken without asking: every layer plays at the composition's tempo, tempo unit, swing and Key, since a layer in its own tempo is not a layer; the composition sounds with the instrument shown and a melodic layer with the voice Practice would use, so the line being written is told from its bed; the composing grid, the record target and the cursor stay the composition's; a layer is muted rather than soloed. MIDI export of an Arrangement was added the same day as AC-19.11.5, one file per layer in one ZIP. The one timeline stands (Constitution Principle III, research.md D-011): the layers are merged in `core/` into one list of events per combined pass, which is what the transport, the cursor and the screen-off handover all consume, and polyphony is two events sharing an instant.)*
+
+**Independent Test**: Record two of four syllables on a one-Measure composition, add a shipped four-Measure percussive Pattern and an owned one-Measure melody as layers, press Play and assert that the combined loop is four passes of the composition, that the percussive layer's events and the melody's and the composition's all appear in one timeline with the composition's repeated four times, that two events at one instant are both scheduled, that the composition's pitched notes sound with the instrument shown and the melody's with the Practice voice, mute the melody and assert its events go from the next pass while the loop length holds, add a 7/8 Pattern and assert eight repeats against seven, try a Pattern needing more than 32 repeats and assert it is refused; save the composition, save the Arrangement under a name, reload, load it and assert the composition opens with the same layers and mutes; assert deleting a layered Pattern is refused naming the Arrangement, and that the composition's JSON and MIDI exports carry nothing of it.
+
+**Acceptance Scenarios**:
+
+- **AC-19.11.1** — The Layers section
+  - **Given** a composition in the Composer
+  - **When** the Composer looks under the composing grid
+  - **Then** a Layers section lists the composition first and each layer beneath it, offers Add layer from the library, and lets a layer be muted or removed
+  - **Cases**:
+    - **AC-19.11.1/1** — A Layers section under the composing grid lists the composition first, then each layer in the order added, naming each and its kind — rhythm, melody or chords — and says when there are no layers
+    - **AC-19.11.1/2** — Add layer offers every library Pattern, shipped or owned, percussive, melodic or carrying a progression, except the composition itself, searchable by name; ticking one adds it as the last layer and unticking it removes it
+    - **AC-19.11.1/3** — Remove takes a layer out; the same Pattern is never layered twice; at most 8 layers, Add layer saying so at the cap
+    - **AC-19.11.1/4** — Mute silences a layer without removing it or changing the loop, and Unmute brings it back
+    - **AC-19.11.1/5** — Without a composition the Layers section holds only the saved Arrangements, to open one from, and is absent when there are none; the layers go when another rhythm is opened into the Composer
+
+- **AC-19.11.2** — Layers sound together
+  - **Given** a composition with layers
+  - **When** the Composer presses Play
+  - **Then** the composition and every unmuted layer sound together from one timeline, the composition on the instrument shown and each layer in its own voice, and the Composer carries on recording and editing under them
+  - **Cases**:
+    - **AC-19.11.2/1** — Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound
+    - **AC-19.11.2/2** — The composition sounds with the instrument shown; a melodic layer sounds with the melodic voice Practice would use; a percussive layer, and an unpitched syllable in any layer, sounds percussively at its Accent Level
+    - **AC-19.11.2/3** — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key
+    - **AC-19.11.2/4** — Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted
+    - **AC-19.11.2/5** — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the composition's, and a note recorded is heard from the next pass
+    - **AC-19.11.2/6** — The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it
+
+- **AC-19.11.3** — The combined loop
+  - **Given** a composition and layers of different lengths
+  - **When** they play
+  - **Then** the loop is the shortest length in which the composition and every layer, each counted as one harmonic cycle, play a whole number of times, and each repeats to fill it
+  - **Cases**:
+    - **AC-19.11.3/1** — The combined loop is the shortest length in which the composition and every layer each play a whole number of times, a layer with a progression counting one harmonic cycle as its length, and a muted layer counting as an unmuted one
+    - **AC-19.11.3/2** — A one-Measure layer under a four-Measure composition plays four times in each loop, and a four-Measure layer under a one-Measure composition makes the composition play four times
+    - **AC-19.11.3/3** — Layers in different meters fit by time: a Measure of 7/8 against a Measure of 4/4 gives a loop of seven Measures of 4/4 in which the 7/8 plays eight times
+    - **AC-19.11.3/4** — A layer that would need more than 32 repeats in the loop, or would make the composition or another layer need more, is refused with a message, and nothing is added
+    - **AC-19.11.3/5** — The Layers section states the loop's length in passes of the composition and each layer's repeats in it
+    - **AC-19.11.3/6** — The cursor runs through the composing grid once per pass of the composition, as many times per combined loop as the composition repeats
+
+- **AC-19.11.4** — Saving an Arrangement
+  - **Given** a saved composition with layers
+  - **When** the Composer presses Save arrangement
+  - **Then** a name is asked and an Arrangement — the composition and its layers in order, with which are muted — is stored apart from Patterns and Songs, listed in the Layers section, and loaded from there
+  - **Cases**:
+    - **AC-19.11.4/1** — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order and which are muted; it is unavailable until the composition is saved and has a layer, saying why
+    - **AC-19.11.4/2** — A saved Arrangement survives a reload and is listed in the Layers section; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes
+    - **AC-19.11.4/3** — An Arrangement can be renamed and deleted from the Layers section, deletion asking first
+    - **AC-19.11.4/4** — Edits to a loaded Arrangement's layers are not saved until Save arrangement is pressed again, which updates it in place; the section says when the loaded Arrangement has unsaved changes
+    - **AC-19.11.4/5** — Deleting a Pattern that an Arrangement uses, as its composition or as a layer, is refused with a message naming the Arrangement or Arrangements, until they are deleted
+    - **AC-19.11.4/6** — An Arrangement is not Pattern content: saving one changes nothing on any Pattern, and the composition's JSON and MIDI exports and its submission carry nothing of it
+    - **AC-19.11.4/7** — Arrangements are stored in `rm.arrangements.v1`, apart from Patterns, overlays, Songs, settings and Local Metadata, and the whole-library backup carries the store as it does every other
+
+- **AC-19.11.5** — Exporting an Arrangement as MIDI
+  - **Given** a composition with layers
+  - **When** the Composer presses Export arrangement MIDI
+  - **Then** one ZIP downloads holding one MIDI file per layer, the composition first, each file one combined loop long, so the files line up when laid side by side in a DAW
+  - *(Added 2026-11-12, the same day as the story, at the maintainer's request: "make sure you can export the layered arrangement in MIDI … ideally separate MIDI files, one for each layer." Decisions the same day: one ZIP rather than several downloads, since a browser blocks a click that starts more than one; every file one combined loop long, the shorter layers repeated to fill it, so they line up. The exporter still consumes `buildTimeline` of one Pattern per file — each layer is a Pattern under the composition's settings — so what each file holds is what that layer plays.)*
+  - **Cases**:
+    - **AC-19.11.5/1** — Export arrangement MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included
+    - **AC-19.11.5/2** — Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length
+    - **AC-19.11.5/3** — The archive is named after the Arrangement once it has been saved, and after the composition otherwise
+    - **AC-19.11.5/4** — Export arrangement MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged
+
+---
+
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -4943,11 +5018,15 @@ specified in the Acceptance Scenarios above.
   mechanically from the predecessor application; their musical content is assumed correct as
   authored and is not re-evaluated here. That figure is a record of the conversion, not a size the
   library holds to — it grows by appending to `data/seed-patterns.json` (AC-16.1.1).
-- **Out of scope for this version**: multi-layer arrangements — two Patterns sounding at once, or a
-  Section whose entries play over different Patterns (US-18.1 stores which Pattern each Section plays
-  over so that this can come later without changing what a Song is); a guided tutorial system;
-  layering two Patterns by merging their accents; and cloud sync, or any export/import beyond MIDI
-  and the whole-library backup file (US-7.6). *(Revised 2026-10-03: the backup file is in scope —
+- **Out of scope for this version**: a Section whose entries play over different Patterns (US-18.1
+  stores which Pattern each Section plays over so that this can come later without changing what a
+  Song is); a guided tutorial system; layering two Patterns by merging their accents; and cloud
+  sync, or any export/import beyond MIDI, the per-layer MIDI archive of an Arrangement (AC-19.11.5)
+  and the whole-library backup file (US-7.6). *(Revised 2026-11-12: "multi-layer arrangements — two Patterns sounding at once" was
+  excluded here, on the maintainer's 2026-09-13 ruling. The maintainer asked for exactly that on
+  2026-11-12 — distinct layers heard together, polyphonic where they coincide, the shorter repeating
+  to fill the longer — and US-19.11 admits it as layers under the Composer's composition, saved as
+  an Arrangement. Merging accents stays out, as does a Section over several Patterns.)* *(Revised 2026-10-03: the backup file is in scope —
   a local file the musician saves and restores, not a sync service (Constitution Principle V).)*
   *(Revised 2026-09-20: "a guided tutorial system" stays excluded as a walkthrough; what Epic 14 delivers instead is US-14.1, a goals screen that shows each job its own controls.)* *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
   single-layer Song of Sections over one Pattern, which is the maintainer's songwriting workflow, and

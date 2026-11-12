@@ -463,6 +463,36 @@ A repeat is one harmonic cycle, the unit cycle mode counts in (AC-2.7.2/1). A Pa
 references cannot be deleted while the Song exists (AC-18.1.4/5). A Song is barred from every
 Pattern export and submission (AC-18.1.4/6); its own export is the Song MIDI file (AC-18.1.5).
 
+### `rm.arrangements.v1` — Arrangements (US-19.11)
+
+An Arrangement is the Composer's composition with library Patterns layered under it. It references
+every Pattern by id — the composition's and each layer's — and carries nothing else of them: tempo,
+swing and Key are the composition's own, read from the library at play time (AC-19.11.2/3). It is
+stored apart from every other store, as a Song is (AC-19.11.4/7).
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "arrangements": [
+    {
+      "id": "arr_1",
+      "name": "Bossa line arrangement",
+      "compositionId": "p_7",              // an owned Melodic Pattern: the composition
+      "layers": [
+        { "patternId": "s_12", "muted": false },   // shipped or owned; percussive, melodic or harmonic
+        { "patternId": "p_3",  "muted": true }
+      ]
+    }
+  ]
+}
+```
+
+Layers are in the order added, at most 8, no Pattern twice (AC-19.11.1/3). How long the combined
+loop is, and how many times each layer repeats in it, is derived from the Patterns at play time
+(`core/arrangement.js`, AC-19.11.3) and never stored. A Pattern that any Arrangement uses cannot be
+deleted while the Arrangement exists (AC-19.11.4/5). An Arrangement is barred from every Pattern
+export and submission (AC-19.11.4/6).
+
 ### Seed file — `data/seed-patterns.json`
 
 ```jsonc
@@ -484,6 +514,7 @@ tempo, tags, and measures, nothing bookkeeping-shaped.
     "rm.patterns.v1":  { "schemaVersion": 1, "patterns": [ /* … */ ] },
     "rm.overlays.v1":  { "schemaVersion": 1, "byPatternId": { /* … */ } },
     "rm.songs.v1":     { "schemaVersion": 1, "songs": [ /* … */ ] },
+    "rm.arrangements.v1": { "schemaVersion": 1, "arrangements": [ /* … */ ] },
     "rm.settings.v1":  { "schemaVersion": 1, /* … */ },
     "rm.localMeta.v1": { "schemaVersion": 1, "byPatternId": { /* … */ } }
   }

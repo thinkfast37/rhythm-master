@@ -201,3 +201,64 @@ describe('audio/backgroundRender — the melodic voice (AC-2.13.5)', () => {
     URL.revokeObjectURL(synth.result.url);
   });
 });
+
+describe('audio/backgroundRender — layers under the composition (US-19.11)', () => {
+  it('AC-19.11.2/6 — The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it', async () => {
+    const { layered, layeredTimeline, layeredLoopDuration } = await import('../../../src/core/arrangement.js');
+    const { cycleAccent, addMeasure } = await import('../../../src/core/pattern.js');
+    let composition = { ...create('Line'), tempo: 120 };
+    for (let b = 0; b < 4; b++) composition = cycleAccent(composition, 0, b, 0);
+    let bed = addMeasure({ ...create('Bed'), tempo: 120 });
+    for (let m = 0; m < 2; m++) for (let b = 0; b < 4; b++) bed = cycleAccent(bed, m, b, 0);
+    const set = layered(composition, [{ pattern: bed }, { pattern: seed.patterns.find((p) => p.soundMode === 'melodic'), muted: true }]);
+    const saved = globalThis.OfflineAudioContext;
+    const contexts = [];
+    globalThis.OfflineAudioContext = class {
+      constructor(channels, frames, rate) {
+        Object.assign(this, fakeContext());
+        this.frames = frames;
+        this.sampleRate = rate;
+        // Every oscillator start, with its time: what the percussive voice schedules.
+        this.started = [];
+        const base = this.createOscillator;
+        this.createOscillator = () => {
+          const o = base();
+          o.start = (t) => this.started.push(t);
+          return o;
+        };
+        contexts.push(this);
+      }
+      startRendering() {
+        const samples = new Float32Array(this.frames);
+        return Promise.resolve({ sampleRate: this.sampleRate, getChannelData: () => samples });
+      }
+    };
+    try {
+      // The composition alone: how many oscillators one percussive event takes.
+      const alone = await renderCycle({ patternAt: () => composition, passes: 1, settings: {}, sampleRate: 8000 });
+      expect(alone.passes).toBe(1);
+      const perEvent = contexts[0].started.length / 4;
+      expect(perEvent).toBeGreaterThan(0);
+      const result = await renderCycle({ patternAt: () => set, passes: 1, settings: {}, sampleRate: 8000 });
+      // One combined pass: the composition twice under the two-Measure bed, the muted melody absent.
+      expect(result.passes).toBe(1);
+      expect(result.seconds).toBeCloseTo(layeredLoopDuration(set), 6);
+      // The muted layer still counts in the loop: longer than the bed's two bars when it is.
+      const [own, bedLayer, muted] = set.layers;
+      expect(result.seconds).toBeCloseTo(2 * own.repeats, 6);
+      expect(own.repeats).toBe(2 * bedLayer.repeats);
+      expect(muted.muted).toBe(true);
+      const expected = layeredTimeline(set, 0);
+      expect(expected).toHaveLength(4 * own.repeats + 8 * bedLayer.repeats);
+      // Every event in the merged list was scheduled on the offline context, coincident ones both.
+      const started = contexts[1].started;
+      expect(started.length).toBe(expected.length * perEvent);
+      const times = [...new Set(started.map((t) => Math.round(t * 1000) / 1000))].sort((a, b) => a - b);
+      expect(times).toEqual([...new Set(expected.map((e) => Math.round(e.timeSeconds * 1000) / 1000))].sort((a, b) => a - b));
+      expect(times).toHaveLength(4 * own.repeats);
+    } finally {
+      if (saved === undefined) delete globalThis.OfflineAudioContext;
+      else globalThis.OfflineAudioContext = saved;
+    }
+  });
+});

@@ -32,6 +32,7 @@ export const HELP = Object.freeze({
     ['Prev / Next', 'Steps to the neighbouring Pattern in the library list as it is filtered now.', '[data-action="next-pattern"]'],
     ['Goals', 'Back to the goals screen, to work a different way or leave Lab.', '.goals-button'],
     ['Practice / Composer', 'Practice is the grid and the workbench; Composer puts a guitar or piano over the rhythm to play a melody in. Play it in will be its own goal.', '.mode-switch'],
+    ['Layers', 'In the Composer, library Patterns sounding under the composition — each repeating to fill the longest, a chord progression counting one cycle — heard together while you record. Save the set as an Arrangement.', '.composer-layers .layers-title'],
   ],
   melody: [
     ['Roll the dice', 'Re-picks every Melody control at random — Key, Scale, Register, Progression, Chord changes, Fill, Voicing — except the ones marked No dice.', '[data-action="roll-dice"]'],

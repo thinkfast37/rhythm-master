@@ -543,6 +543,14 @@ inside the Melody group instead of a fourth workbench group (rejected: hidden st
 length and meter can change between Sections, which is real transport work, and the maintainer's
 first need is one Section over one progression).
 
+**Amended 2026-11-12 (D-026)**: the deferred case arrived by another door. The maintainer asked for
+distinct layers heard together under the composition they are recording, the shorter repeating to
+fill the longer. That is not several Patterns per Song — a Song stays one Pattern, one progression,
+a chain of fills — but layers under the Composer's draft, saved as an Arrangement. The transport work
+this entry deferred — loop length and meter differing between the things sounding — is done in
+`core/arrangement.js` as one merged timeline per combined pass, so the seam this entry describes is
+unchanged: the transport is still handed one Pattern-shaped thing per pass.
+
 ## D-014 — Voicing: a bass per chord, the stack it implies, and shapes that write the data
 
 **Decision (2026-10-18)**: a chord carries an optional `inversion` — the index of the member in its bass,
@@ -1220,3 +1228,62 @@ Measures rather than from the whole Pattern.
   they need a chord boundary at a Slot, a change to the harmony model before it is a technique.
 - *Muted strums, boom-chick bass* — out of reach: a Slot has no stroke type.
 - *Humanise* — rejected: it fights the syllable grid the app exists to teach.
+
+## D-026 — Layers under the composition: one merged timeline per combined pass, the shorter repeating to fill the longer
+
+**Decision (2026-11-12)**: a layer (US-19.11) is a library Pattern — shipped or owned, percussive,
+melodic or carrying a progression — placed under the Composer's composition. `core/arrangement.js`
+is pure and does three things. It **measures** each Pattern's length as one harmonic cycle in
+eighth notes: `cyclePasses × Σ numerator × 8 / denominator` over its Measures, an integer for every
+supported Time Signature. It **fits** the composition and its layers into the shortest common
+loop — the least common multiple of those lengths — and gives each its repeat count, refusing any
+set in which something would repeat more than 32 times. And it **merges**: `layeredTimeline(set,
+pass)` builds each unmuted layer's own `buildTimeline` for each of its repeats in the combined pass,
+offsets them by the repeat's start, tags each event with its layer and whether that layer is the
+composition, and returns one list sorted by time. `loopDurationSeconds`, `buildBeatGrid` and the
+count-in read the composition's repeats, so the metronome and the count-in are the composition's.
+Before any of that, every layer is given the composition's tempo, tempo unit, swing amount and
+feel, and — melodic layers only — its Key: the Pattern's own stay in the library, untouched.
+
+The transport (`audio/scheduler.js`) and the screen-off renderer (`audio/backgroundRender.js`)
+call the timeline, loop-duration and beat-grid functions through four one-line dispatchers that
+hand a layered set to `core/arrangement.js` and a Pattern to `core/timeline.js`. Nothing else in
+either changes: a layered set is a Pattern-shaped object carrying the composition's `measures`,
+`tempo`, `tempoUnit` and `name`, so the count-in and the lock-screen title read it as they read a
+Pattern. Which voice an event sounds with is decided per event in `main.js` from the tag: the
+composition's pitched events take the Composer's instrument, as before; a layer's take the voice
+Practice would use (`resolveVoice` with `composer: false`), so the line being written is told from
+its bed by ear. Two events at one instant are two Web Audio voices at one `when` — polyphony is a
+property of the merged list, not a mode.
+
+An Arrangement is `{ id, name, compositionId, layers: [{ patternId, muted }] }` in
+`rm.arrangements.v1`, a list store shaped like `rm.songs.v1` and handled by the same backup and
+restore code (AC-7.6.1/2 revised). Tempo, swing and Key are not stored on it: they are the
+composition's, and the composition is a Pattern in the library. Loading one opens its composition
+through US-19.8's rules — an owned melody, opened for editing — and sets the layers; a Pattern that
+any Arrangement uses, as composition or layer, cannot be deleted while it exists, as a Pattern a
+Song plays over cannot (AC-18.1.4/5).
+
+**Why**: the maintainer's workflow is to hear the bed while choosing the next note — "while the
+first layer is playing back … I go through and pick the notes for that layer. And then I can hear
+them both together." The composition is already a draft the transport plays per pass; layers are
+other Patterns on the same clock. Merging in `core/` keeps the one-timeline rule (Constitution III,
+D-011): the cursor, the audio and the handover still consume one list, and the MIDI exporter still
+consumes `buildTimeline` of one Pattern — an Arrangement's export is one `.mid` per layer, each the
+layer's Pattern under the composition's settings for its repeats in the combined loop, delivered as
+one ZIP (`core/zip.js`, stored entries, no dependency) because a browser blocks a click that starts
+several downloads (AC-19.11.5, added the same day at the maintainer's request). The
+harmonic-cycle length is the unit cycle mode and Songs already count in, so a progression layer
+returns to its first chord at every loop start. Refusing past 32 repeats bounds the combined loop:
+a 7/8 bar under a 4/4 bar is eight against seven, which fits; two long, coprime layers are told so
+rather than producing a loop of hundreds of bars that no one meant.
+
+**Alternatives considered**: a second transport per layer (rejected: two origins, two re-anchors
+and two cursors that can disagree — the failure the one-timeline rule exists to prevent); baking
+the layers into the composition's Measures as Append does (rejected: the Measure cap, and a layer is
+a reference to a Pattern that goes on being edited in the library, not a copy); a Song as a layer
+(deferred: its fill changes per pass against the Song's own counter, which has to be re-based
+against a combined loop; the maintainer chose Patterns only for this version); storing the
+Arrangement's tempo and Key on it (rejected: the composition carries them, and a second copy would
+drift); a per-layer voice picker (not asked for; the composition-on-the-instrument, layers-as-
+Practice split tells the two apart without a setting); solo as well as mute (not asked for).
