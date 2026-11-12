@@ -817,9 +817,11 @@ function melodicVoice() {
 const voiceLog = [];
 function logVoice(event, via) {
   const instrument = state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? 'guitar' : 'piano';
-  const layer = event.layer ?? null;
   const voice = event.composition === false ? resolveVoice({ composer: false, voice: state.settings.melodicVoice }) : currentVoice();
-  voiceLog.push({ instrument, voice, via: via ?? 'synth', midi: event.pitch?.midiNote ?? null, layer, composition: event.composition !== false });
+  const entry = { instrument, voice, via: via ?? 'synth', midi: event.pitch?.midiNote ?? null };
+  // Under layers, which layer sounded and whether it was the composition (US-19.11).
+  if (event.layer !== undefined) Object.assign(entry, { layer: event.layer, composition: event.composition !== false });
+  voiceLog.push(entry);
   if (voiceLog.length > 500) voiceLog.shift();
 }
 
