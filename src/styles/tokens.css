@@ -2204,6 +2204,9 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .layer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .layer-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
 .layer-item.composition { border-color: var(--brand); }
+.layer-pick { text-align: left; }
+.layer-pick:disabled { opacity: 1; cursor: default; color: var(--brand); border-color: transparent; background: transparent; padding-left: 0; }
+.layer-part-unsaved { font: 500 12px/1.4 var(--font-ui); color: var(--warn, #e0a030); }
 .layer-item.muted .layer-name, .layer-item.muted .layer-kind { opacity: 0.5; }
 .layer-item.missing .layer-name { color: var(--warn, #e0a030); }
 .layer-name { font: 600 13px/1.4 var(--font-ui); color: var(--ink); flex: 1 1 100px; min-width: 0; }
@@ -2223,7 +2226,8 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   cursor: pointer;
 }
 .composer-layers button:disabled { opacity: 0.5; cursor: default; }
-.layer-mute.on { border-color: var(--brand); color: var(--brand); }
+.layer-mute.on, .layer-add.on { border-color: var(--brand); color: var(--brand); }
+.layers-picking { font: 500 12px/1.4 var(--font-ui); color: var(--brand); align-self: center; }
 
 /* --- goals (US-14.1) ------------------------------------------------------ */
 

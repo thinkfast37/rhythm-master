@@ -481,7 +481,8 @@ stored apart from every other store, as a Song is (AC-19.11.4/7).
       "layers": [
         { "patternId": "s_12", "muted": false },   // shipped or owned; percussive, melodic or harmonic
         { "patternId": "p_3",  "muted": true }
-      ]
+      ],
+      "active": 0                            // the part on screen: 0 the composition, n the nth layer (AC-19.11.6/6)
     }
   ]
 }

@@ -25,6 +25,7 @@ import {
   tagRefusal,
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
+import { DEFAULT_SCALE } from './core/scales.js';
 import { MAX_MEASURES } from './core/pattern.js';
 import { canCondense, canHalve, condense, condenseTargets } from './core/condense.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
@@ -55,7 +56,7 @@ import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import * as songStore from './storage/songs.js';
 import * as arrangementStore from './storage/arrangements.js';
-import { layered, timelineOf, loopDurationOf, refusal as layerRefusal, createArrangement, addLayer, removeLayer, setLayerMuted, validateArrangement, MAX_LAYERS, layerKind } from './core/arrangement.js';
+import { layered, underComposition, timelineOf, loopDurationOf, refusal as layerRefusal, createArrangement, addLayer, removeLayer, setLayerMuted, validateArrangement, MAX_LAYERS } from './core/arrangement.js';
 import {
   createSong,
   addEntry,
@@ -282,7 +283,14 @@ const state = {
     midiFlash: null,
     /** Library Patterns sounding under the composition (US-19.11): `{ patternId, muted }`, in order. */
     layers: [],
-    /** The Arrangement the layers were loaded from or saved as, with the layers as saved (AC-19.11.4/4). */
+    /**
+     * Where the part on screen — `draft` — sits among the parts, in their order
+     * (AC-19.11.6): 0 is the first part, n the nth; `layers` are the others.
+     */
+    activeIndex: 0,
+    /** Add layer is waiting on the library for a Pattern (AC-19.11.1/2). */
+    pickingLayer: false,
+    /** The Arrangement the layers were loaded from or saved as, with the parts as saved (AC-19.11.4/4). */
     arrangement: { id: null, name: '', saved: null },
   },
   /** Every saved Arrangement, read from its store only when it changes (US-19.11). */
@@ -581,11 +589,38 @@ function libraryPattern(id) {
   return shipped ? overlayStore.applyPlaybackTo(overlayStore.applyTo(shipped)) : null;
 }
 
-/** The Composer's layers with their Patterns, those still in the library (US-19.11). */
+/**
+ * A part not on screen, as it plays: the draft it kept from its time on screen
+ * (AC-19.11.6/1), else its Pattern from the library.
+ */
+function layerPattern(layer) {
+  return layer.draft ?? (layer.patternId ? libraryPattern(layer.patternId) : null);
+}
+
+/** The Composer's layers with their Patterns, those that still resolve (US-19.11). */
 function resolvedLayers() {
   return (state.composer.layers ?? [])
-    .map((l) => ({ ...l, pattern: libraryPattern(l.patternId) }))
+    .map((l) => ({ ...l, pattern: layerPattern(l) }))
     .filter((l) => l.pattern);
+}
+
+/**
+ * Every part in order, the one on screen among them (AC-19.11.6): each with
+ * its Pattern as it plays, its library id where it has one, and `active`.
+ */
+function parts() {
+  const c = state.composer;
+  const others = (c.layers ?? []).map((l) => ({ ...l, pattern: layerPattern(l), active: false, id: l.patternId }));
+  const own = { pattern: c.draft, draft: c.draft, savedId: c.savedId, patternId: c.savedId ?? null, id: c.savedId, muted: false, active: true };
+  const at = Math.min(Math.max(0, c.activeIndex ?? 0), others.length);
+  return [...others.slice(0, at), own, ...others.slice(at)];
+}
+
+/** A part that has work the library does not: never saved, or saved and since given a syllable without a note. */
+function partUnsaved(part) {
+  const draft = part.draft;
+  if (!draft) return false;
+  return !part.savedId || !isComplete(draft);
 }
 
 function refreshArrangements() {
@@ -801,7 +836,13 @@ function restartTransport() {
 
 /** What leaving would lose (AC-19.1.4/1). */
 function discardMessage() {
-  const { draft, savedId } = state.composer;
+  const unsaved = parts().filter(partUnsaved);
+  // Several parts with unsaved work: every one is named (AC-19.11.6/6).
+  if (unsaved.length > 1) {
+    const names = unsaved.map((p) => `"${p.draft.name}"`).join(', ');
+    return `${names} hold work the library does not — never saved, or with syllables without a note. Leave anyway and lose it?`;
+  }
+  const { draft, savedId } = unsaved[0] ?? { draft: state.composer.draft, savedId: state.composer.savedId };
   const missing = draft ? draft.measures.reduce((n, m) => n + m.beats.reduce((k, b) => k + b.slots.filter((x) => x.on && !x.pitch).length, 0), 0) : 0;
   if (!savedId) return `"${draft.name}" has not been saved to the library yet. Leave anyway and lose it?`;
   return `"${draft.name}" has ${missing} ${missing === 1 ? 'syllable' : 'syllables'} without a note, which the library cannot hold. Leave anyway and lose ${missing === 1 ? 'it' : 'them'}?`;
@@ -813,7 +854,115 @@ function discardDraft() {
 
 /** The layers and their Arrangement cleared: another rhythm opened, or New (AC-19.11.1/5). */
 function noLayers() {
-  return { layers: [], arrangement: { id: null, name: '', saved: null } };
+  return { layers: [], activeIndex: 0, pickingLayer: false, arrangement: { id: null, name: '', saved: null } };
+}
+
+/**
+ * The Composer's layer state for a saved Arrangement being opened (AC-19.11.4/2,
+ * AC-19.11.6/6): every part but the one on screen, in order, and where that one sits.
+ */
+function partsOf(arrangement) {
+  const all = [{ patternId: arrangement.compositionId, muted: false }, ...arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) }))];
+  const active = Math.min(Math.max(0, arrangement.active ?? 0), all.length - 1);
+  return {
+    layers: all.filter((_, i) => i !== active),
+    activeIndex: active,
+    arrangement: { id: arrangement.id, name: arrangement.name, saved: savedShape(arrangement) },
+  };
+}
+
+/** What an Arrangement's saved state is compared by: parts, mutes and the part on screen. */
+function savedShape(arrangement) {
+  return { parts: [{ patternId: arrangement.compositionId, muted: false }, ...arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) }))], active: arrangement.active ?? 0 };
+}
+
+/**
+ * A library Pattern chosen for Add layer: refused when it is already a part or
+ * would not fit the loop (AC-19.11.1/3, AC-19.11.3/4), appended as the last
+ * layer otherwise, heard from the next pass (AC-19.11.2/4).
+ */
+function addLayerById(id) {
+  const c = state.composer;
+  const pattern = libraryPattern(id);
+  const all = parts();
+  let notice = null;
+  if (!pattern) notice = 'That Pattern could not be opened.';
+  else if (all.some((p) => p.id === id)) notice = `"${pattern.name}" is already a part of this arrangement.`;
+  else if (c.layers.length >= MAX_LAYERS) notice = `At most ${MAX_LAYERS} layers.`;
+  else notice = layerRefusal(all.map((p) => p.pattern).filter(Boolean), pattern);
+  if (notice) {
+    state.composer = { ...c, notice, pickingLayer: false };
+    render();
+    return false;
+  }
+  const next = addLayer({ ...createArrangement('', c.savedId ?? ''), layers: c.layers }, id);
+  state.composer = { ...c, layers: next.layers, notice: null, pickingLayer: false };
+  ui?.hideLibrary();
+  syncTransport();
+  render();
+  return true;
+}
+
+/**
+ * A saved part put on screen is the open Pattern in Practice too (AC-19.11.7/3),
+ * taken over without the restart a library load makes (AC-4.1.8): the run is
+ * the arrangement's and switching parts stops nothing (AC-19.11.6/3).
+ */
+function adoptOpenPattern(draft) {
+  history.length = 0;
+  state.pattern = draft;
+  state.isOwned = true;
+  state.compose = { song: null, saved: null, on: false, baseLoop: 0 };
+  refreshComposeRecords();
+  state.view = { ...state.view, currentId: draft.id ?? null };
+}
+
+/** The Arrangement the parts would save as now: ids, mutes and the part on screen (AC-19.11.4/1). */
+function arrangementNow(name) {
+  const all = parts();
+  const arrangement = createArrangement(name, all[0].id ?? '', all.slice(1));
+  return { ...arrangement, active: state.composer.activeIndex ?? 0 };
+}
+
+/**
+ * Put a part on screen (AC-19.11.6): the part there goes back among the layers
+ * with its notes, saved or not; the chosen part opens from the draft it kept,
+ * or from the library through US-19.8's rules; and it takes the arrangement's
+ * tempo, tempo unit, swing and Key from the part it replaces (/4).
+ */
+async function activatePart(index) {
+  const c = state.composer;
+  const all = parts();
+  const target = all[index];
+  if (!target || target.active || !c.draft) return false;
+  const leaving = c.draft;
+  let draft = target.draft ?? null;
+  let savedId = target.savedId ?? null;
+  let notice = null;
+  if (!draft) {
+    const pattern = target.pattern;
+    if (!pattern) return false;
+    const owned = Boolean(patternStore.findById(target.patternId));
+    const opened = await draftFrom(pattern, owned, { editOwned: true, adopt: true });
+    if (!opened) {
+      render();
+      return false;
+    }
+    ({ draft, savedId, notice } = opened);
+  }
+  // The arrangement's settings travel with the part on screen (AC-19.11.6/4).
+  draft = underComposition(draft, leaving);
+  if (draft.soundMode === 'melodic' && leaving.scale) draft = { ...draft, scale: leaving.scale };
+  if (savedId && isComplete(draft)) patternStore.upsert(draft);
+  // The part leaving keeps its place in the order and its notes (AC-19.11.6/1).
+  const left = { patternId: c.savedId ?? null, muted: false, draft: leaving, savedId: c.savedId ?? null };
+  const next = all.map((p, i) => (p.active ? left : i === index ? null : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId }));
+  const layers = next.filter(Boolean);
+  state.composer = { ...state.composer, draft, savedId, layers, activeIndex: index, recording: false, target: null, selected: null, notice };
+  if (savedId && isComplete(draft)) adoptOpenPattern(draft);
+  syncTransport();
+  render();
+  return true;
 }
 
 /**
@@ -963,14 +1112,13 @@ function previewNote(midi) {
  * chosen, it is simply the one open, so an owned melody skips the Edit-or-copy
  * ask and opens for editing directly.
  */
-async function openInComposer(pattern, owned, { editOwned = false, arrangement = null } = {}) {
-  if (composerUnsaved(state.composer)) {
-    const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and open', cancelLabel: 'Keep composing' });
-    if (!ok) {
-      render();
-      return false;
-    }
-  }
+/**
+ * A library Pattern as a composition, through the rules of ownership (US-19.8):
+ * a percussive one as a new unpitched composition under a name, a harmonic one
+ * baked under a name, an owned melody edited in place (or copied), a shipped
+ * melody copied under a name. Null when a prompt is declined.
+ */
+async function draftFrom(pattern, owned, { editOwned = false, adopt = false } = {}) {
   const kind = loadKind(pattern);
   // Pre-filled so the name need not be typed from scratch (AC-19.8.1/1).
   const askName = (message) =>
@@ -982,8 +1130,7 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
   if (kind === 'percussive') {
     const name = await askName(`"${pattern.name}" is a rhythm with no notes yet. Name the composition it becomes.`);
     if (name === null) {
-      render();
-      return false;
+      return null;
     }
     draft = fromPercussive(pattern, name);
   } else if (kind === 'harmonic') {
@@ -991,8 +1138,7 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
       `"${pattern.name}" follows a chord progression. Its notes will be written out so you can edit them. Name the composition.`
     );
     if (name === null) {
-      render();
-      return false;
+      return null;
     }
     const baked = bakeHarmony(pattern, name);
     draft = baked.pattern;
@@ -1012,8 +1158,7 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
           ],
         });
     if (choice === 'cancel') {
-      render();
-      return false;
+      return null;
     }
     if (choice === 'edit') {
       // The Register folded into the notes, so what the instrument shows is what
@@ -1021,7 +1166,9 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
       // edit is, sounding exactly as before.
       const folded = foldRegister(pattern);
       if (pattern.register) patternStore.upsert(folded);
-      loadPattern(folded, { owned: true });
+      // A part switched to mid-run is taken over without the restart a load makes (AC-19.11.6/3).
+      if (adopt) adoptOpenPattern(folded);
+      else loadPattern(folded, { owned: true });
       draft = state.pattern;
       savedId = pattern.id;
     } else {
@@ -1035,18 +1182,32 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
   } else {
     const name = await askName(`"${pattern.name}" is built in, so your changes need a composition of their own. Name it.`);
     if (name === null) {
-      render();
-      return false;
+      return null;
     }
     draft = copyMelody(pattern, name);
   }
+  return { draft, savedId, notice };
+}
+
+async function openInComposer(pattern, owned, { editOwned = false, arrangement = null } = {}) {
+  if (composerUnsaved(state.composer)) {
+    const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and open', cancelLabel: 'Keep composing' });
+    if (!ok) {
+      render();
+      return false;
+    }
+  }
+  const opened = await draftFrom(pattern, owned, { editOwned });
+  if (!opened) {
+    render();
+    return false;
+  }
+  const { draft, savedId, notice } = opened;
 
   if (state.isPlaying) transport.stop();
   // The layers go with the rhythm they were under (AC-19.11.1/5), unless an
   // Arrangement is being opened, whose layers these are (AC-19.11.4/2).
-  const layerState = arrangement
-    ? { layers: arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) })), arrangement: { id: arrangement.id, name: arrangement.name, saved: structuredClone(arrangement.layers) } }
-    : noLayers();
+  const layerState = arrangement ? partsOf(arrangement) : noLayers();
   state.composer = { ...state.composer, draft, savedId, recording: false, target: null, selected: null, notice, ...layerState };
   ensureGuitarLoaded();
   ui?.hideLibrary();
@@ -2338,6 +2499,8 @@ const handlers = {
       // (AC-19.1.2/1, /4). Declining falls back to choosing from the library
       // (AC-19.1.2/3).
       const keep = Boolean(state.composer.draft) && state.composer.savedId === state.pattern.id;
+      // Edits made to the part in Practice — Measures, meter — come back with it (AC-19.11.7/3).
+      if (keep && state.pattern !== state.composer.draft) state.composer = { ...state.composer, draft: state.pattern, recording: false, target: null, selected: null };
       if (!keep) {
         render();
         const opened = await openInComposer(state.pattern, state.isOwned, { editOwned: true });
@@ -2615,67 +2778,127 @@ const handlers = {
   },
 
   /**
-   * Add layer: a tick list of the whole library, the composition left out
-   * (AC-19.11.1/2). Each tick is tried against the loop at once (AC-19.11.3/4)
-   * and heard from the next pass (AC-19.11.2/4).
+   * Add layer: the library itself, with its search and Tag filters, asked for
+   * a Pattern (AC-19.11.1/2). The choice lands in `onOpen`.
    */
-  async onLayerAdd() {
-    const draft = state.composer.draft;
-    if (!draft) return;
-    const self = new Set([state.composer.savedId, draft.id].filter(Boolean));
-    const item = (p) => ({ id: p.id, label: `${p.name} · ${layerKind(p)}`, search: `${p.name} ${(p.tags ?? []).join(' ')}` });
-    const mine = patternStore.loadAll().filter((p) => !self.has(p.id));
-    const shipped = seedStore.loadAll().filter((p) => !self.has(p.id));
-    const groups = [];
-    if (mine.length > 0) groups.push({ label: 'Your Patterns', items: mine.map(item) });
-    groups.push({ label: 'Shipped', items: shipped.map(item) });
-    await chooseCycleList({
-      title: 'Add layers',
-      groups,
-      searchable: true,
-      picked: () => state.composer.layers.map((l) => l.patternId),
-      onChange: (ids) => {
-        const current = new Set(state.composer.layers.map((l) => l.patternId));
-        const wanted = new Set(ids);
-        let next = { ...createArrangement('', state.composer.savedId ?? draft.id ?? ''), layers: state.composer.layers };
-        for (let i = next.layers.length - 1; i >= 0; i--) if (!wanted.has(next.layers[i].patternId)) next = removeLayer(next, i);
-        let notice = null;
-        for (const id of ids) {
-          if (current.has(id)) continue;
-          const pattern = libraryPattern(id);
-          if (!pattern) continue;
-          if (next.layers.length >= MAX_LAYERS) {
-            notice = `At most ${MAX_LAYERS} layers.`;
-            break;
-          }
-          const under = [draft, ...next.layers.map((l) => libraryPattern(l.patternId)).filter(Boolean)];
-          const why = layerRefusal(under, pattern);
-          if (why) {
-            notice = why;
-            continue;
-          }
-          next = addLayer(next, id);
-        }
-        state.composer = { ...state.composer, layers: next.layers, notice };
-        syncTransport();
-        render();
-      },
-    });
+  onLayerAdd() {
+    const c = state.composer;
+    if (!c.draft) return;
+    if (c.layers.length >= MAX_LAYERS) {
+      state.composer = { ...c, notice: `At most ${MAX_LAYERS} layers.` };
+      render();
+      return;
+    }
+    state.composer = { ...c, pickingLayer: true, notice: null };
+    ui?.showLibrary();
     render();
   },
 
-  onLayerRemove(index) {
-    if (!state.composer.layers[index]) return;
-    const next = removeLayer({ ...createArrangement('', 'x'), layers: state.composer.layers }, index);
-    state.composer = { ...state.composer, layers: next.layers };
+  /** Leave Add layer without choosing (AC-19.11.1/2). */
+  onLayerPickCancel() {
+    state.composer = { ...state.composer, pickingLayer: false };
+    render();
+  },
+
+  /** Every part in order, for the Layers section (AC-19.11.6/5). */
+  parts() {
+    return parts();
+  },
+
+  /** Put the part at `index` of the parts' order on screen (AC-19.11.6). */
+  onLayerActivate(index) {
+    return activatePart(index);
+  },
+
+  /**
+   * New layer (AC-19.11.7/1): a blank one-Measure Pattern, saved to the library
+   * under a name asked for — pre-filled, as every Composer name is — and put on
+   * screen as a part at once, the part it replaces going among the layers. It
+   * starts percussive and silent, as a new Pattern in Practice does, in the
+   * arrangement's meter, tempo, swing and Key.
+   */
+  async onLayerNew() {
+    const c = state.composer;
+    if (!c.draft) return;
+    if (c.layers.length >= MAX_LAYERS) {
+      state.composer = { ...c, notice: `At most ${MAX_LAYERS} layers.` };
+      render();
+      return;
+    }
+    const name = await askNewPatternName(freeName(`${c.draft.name} layer`), uniqueNameValidator(), { message: 'Name the new layer.', confirmLabel: 'Create' });
+    if (name === null) {
+      render();
+      return;
+    }
+    let fresh = { ...create(name), id: patternStore.nextId(), soundMode: 'melodic', key: c.draft.key ?? 'C', scale: c.draft.scale ?? DEFAULT_SCALE };
+    fresh = setTimeSignature(fresh, 0, c.draft.measures[0].timeSignature);
+    fresh = underComposition(fresh, c.draft);
+    patternStore.upsert(fresh);
+    const all = parts();
+    const left = { patternId: c.savedId ?? null, muted: false, draft: c.draft, savedId: c.savedId ?? null };
+    const layers = all.map((p) => (p.active ? left : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId }));
+    state.composer = { ...state.composer, draft: fresh, savedId: fresh.id, layers, activeIndex: layers.length, recording: false, target: null, selected: null, notice: null, pickingLayer: false };
+    adoptOpenPattern(fresh);
     syncTransport();
     render();
   },
 
-  /** Mute silences a layer and leaves the loop as it was (AC-19.11.1/4). */
+  /** Measures on the part on screen, as Practice's grid offers them (AC-19.11.7/2). */
+  onComposerAddMeasure() {
+    const draft = state.composer.draft;
+    if (!draft || draft.measures.length >= MAX_MEASURES) return;
+    applyDraft(addMeasure);
+  },
+
+  onComposerRemoveMeasure() {
+    const draft = state.composer.draft;
+    if (!draft || draft.measures.length <= 1) return;
+    applyDraft(removeMeasure, draft.measures.length - 1);
+  },
+
+  /** A Measure's Time Signature on the part on screen, the first offering Apply to all (AC-1.1.5, AC-19.11.7/2). */
+  async onComposerTimeSignature(measureIndex) {
+    const draft = state.composer.draft;
+    if (!draft?.measures[measureIndex]) return;
+    const options = TIME_SIGNATURES.map((ts) => ({ label: ts, value: ts }));
+    options.push({ label: 'Cancel', value: null });
+    const chosen = await ask({ message: `Time signature for Measure ${measureIndex + 1}`, options });
+    if (chosen === null || chosen === 'null') {
+      render();
+      return;
+    }
+    if (measureIndex === 0 && draft.measures.length > 1) {
+      const scope = await askApplyToAllMeasures(chosen);
+      if (scope === 'cancel') {
+        render();
+        return;
+      }
+      if (scope === 'all') {
+        applyDraft(setTimeSignatureAll, chosen);
+        return;
+      }
+    }
+    applyDraft(setTimeSignature, measureIndex, chosen);
+  },
+
+  /** Remove the part at `index` of the parts' order; never the one on screen (AC-19.11.6/5). */
+  onLayerRemove(index) {
+    const all = parts();
+    if (!all[index] || all[index].active) return;
+    const layerIndex = index < state.composer.activeIndex ? index : index - 1;
+    const next = removeLayer({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex);
+    const activeIndex = index < state.composer.activeIndex ? state.composer.activeIndex - 1 : state.composer.activeIndex;
+    state.composer = { ...state.composer, layers: next.layers, activeIndex };
+    syncTransport();
+    render();
+  },
+
+  /** Mute silences a layer and leaves the loop as it was (AC-19.11.1/4); never the part on screen. */
   onLayerMute(index, muted) {
-    if (!state.composer.layers[index]) return;
-    const next = setLayerMuted({ ...createArrangement('', 'x'), layers: state.composer.layers }, index, muted);
+    const all = parts();
+    if (!all[index] || all[index].active) return;
+    const layerIndex = index < state.composer.activeIndex ? index : index - 1;
+    const next = setLayerMuted({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex, muted);
     state.composer = { ...state.composer, layers: next.layers };
     syncTransport();
     render();
@@ -2684,8 +2907,8 @@ const handlers = {
   /** Save the layers as an Arrangement (AC-19.11.4/1), or update the one loaded (/4). */
   async onArrangementSave() {
     const c = state.composer;
-    if (!c.draft || !c.savedId || c.layers.length === 0) return;
-    let arrangement = createArrangement(c.arrangement.name, c.savedId, c.layers);
+    if (!c.draft || c.layers.length === 0 || parts().some((p) => !p.id || partUnsaved(p))) return;
+    let arrangement = arrangementNow(c.arrangement.name);
     if (c.arrangement.id) arrangement = { ...arrangement, id: c.arrangement.id };
     else {
       const taken = (name) =>
@@ -2702,7 +2925,7 @@ const handlers = {
     }
     if (validateArrangement(arrangement).length > 0) return;
     const saved = arrangementStore.upsert(arrangement);
-    state.composer = { ...state.composer, arrangement: { id: saved.id, name: saved.name, saved: structuredClone(saved.layers) } };
+    state.composer = { ...state.composer, arrangement: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
     refreshArrangements();
     render();
   },
@@ -2711,8 +2934,10 @@ const handlers = {
   onArrangementExport() {
     const c = state.composer;
     if (!c.draft || c.layers.length === 0) return;
-    const set = layered(c.draft, resolvedLayers());
-    downloadArrangementMidi(set, arrangementZipFilename(c.arrangement, c.draft));
+    // The files in the parts' order, whichever is on screen (AC-19.11.5/1).
+    const all = parts().filter((p) => p.pattern);
+    const set = layered(all[0].pattern, all.slice(1));
+    downloadArrangementMidi(set, arrangementZipFilename(c.arrangement, all[0].pattern));
   },
 
   /** Clear the layers: a new, unsaved Arrangement over the same composition. */
@@ -2726,18 +2951,17 @@ const handlers = {
   async onArrangementLoad(id) {
     const arrangement = arrangementStore.findById(id);
     if (!arrangement) return;
-    const composition = patternStore.findById(arrangement.compositionId);
+    // The part that was on screen opens on screen again (AC-19.11.6/6).
+    const ids = [arrangement.compositionId, ...arrangement.layers.map((l) => l.patternId)];
+    const active = Math.min(Math.max(0, arrangement.active ?? 0), ids.length - 1);
+    const composition = patternStore.findById(ids[active]);
     if (!composition) {
-      state.composer = { ...state.composer, notice: `"${arrangement.name}" can't be opened: its composition is no longer in the library.` };
+      state.composer = { ...state.composer, notice: `"${arrangement.name}" can't be opened: the part it was open on is no longer in the library.` };
       render();
       return;
     }
     if (state.composer.savedId === composition.id && state.composer.draft) {
-      state.composer = {
-        ...state.composer,
-        layers: arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) })),
-        arrangement: { id: arrangement.id, name: arrangement.name, saved: structuredClone(arrangement.layers) },
-      };
+      state.composer = { ...state.composer, ...partsOf(arrangement) };
       syncTransport();
       render();
       return;
@@ -2855,6 +3079,11 @@ const handlers = {
       ? patternStore.findById(id)
       : overlayStore.applyPlaybackTo(overlayStore.applyTo(seedStore.findById(id)));
     if (!pattern) return;
+    // Add layer asked the library for a Pattern: it becomes a layer (AC-19.11.1/2).
+    if (state.composer.mode === 'composer' && state.composer.pickingLayer) {
+      addLayerById(id);
+      return;
+    }
     // In the Composer the library opens into the Composer (AC-19.1.2/2).
     if (state.composer.mode === 'composer') {
       void openInComposer(owned ? pattern : structuredClone(pattern), owned);

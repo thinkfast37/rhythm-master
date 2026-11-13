@@ -21,14 +21,23 @@ const layerItems = (page) => page.locator('.composer-layers .layer-item:not(.com
 const play = (page) => page.locator('.transport').first().click();
 const state = (page) => appState(page);
 
-/** Open Add layer, tick `id`, and close the list. */
+/** Press Add layer, then choose `id` in the library pane, as a tap on its row does. */
 async function addLayer(page, id) {
   await page.locator('.layer-add').click();
-  await expect(page.locator('.cycle-list-view')).toBeVisible();
-  await page.locator(`.cycle-list-view input[data-id="${id}"]`).check();
-  await page.locator('[data-action="cycle-list-done"]').click();
-  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(page.locator('.composer-layers [data-picking="true"]')).toBeVisible();
+  await page.locator(`.pattern-item[data-pattern-id="${id}"] [data-action="open-pattern"]`).click();
   await expect(page.locator(`.composer-layers .layer-item[data-pattern-id="${id}"]`)).toBeVisible();
+}
+const exact = (name) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+const partRow = (page, name) => page.locator('.composer-layers .layer-item', { has: page.locator('.layer-pick', { hasText: exact(name) }) });
+/** Record a fret onto every syllable without a note until record mode ends on its own. */
+async function recordUntilDone(page) {
+  await page.locator('.record').click();
+  for (let i = 0; i < 64; i++) {
+    if ((await page.locator('.record').getAttribute('aria-pressed')) === 'false') return;
+    await fret(page, 1, 1).click();
+  }
+  await expect(page.locator('.record')).toHaveAttribute('aria-pressed', 'false');
 }
 
 async function setTempo(page, bpm) {
@@ -83,36 +92,40 @@ test(`AC-19.11.1/1 — A Layers section under the composing grid lists the compo
   }
 });
 
-test(`AC-19.11.1/2 — Add layer offers every library Pattern, shipped or owned, percussive, melodic or carrying a progression, except the composition itself, searchable by name; ticking one adds it as the last layer and unticking it removes it`, async ({ page }) => {
+test('AC-19.11.1/2 — Add layer opens the library, with its search and Tag filters as they are, and asks for a Pattern; choosing one — shipped or owned, percussive, melodic or carrying a progression — adds it as the last layer and closes the library, a Pattern already among the parts is refused with a message, and Cancel leaves the list as it was', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
-  const id = await saveComposition(page);
   await page.locator('.layer-add').click();
-  const list = page.locator('.cycle-list-view');
-  await expect(list).toBeVisible();
-  // Shipped and owned, kinds alike; the composition itself left out.
-  await expect(list.locator('.cycle-list-group[data-group="Your Patterns"] input[data-id="p_test"]')).toHaveCount(1);
-  await expect(list.locator(`input[data-id="${id}"]`)).toHaveCount(0);
-  await expect(list.locator(`input[data-id="${BOSSA}"]`)).toHaveCount(1);
-  await expect(list.locator(`input[data-id="${DJEMBE}"]`)).toHaveCount(1);
-  const shipped = await page.evaluate(() => window.__rm.seedStore.loadAll().length);
-  await expect(list.locator('.cycle-list-group[data-group="Shipped"] input')).toHaveCount(shipped);
-  // Search narrows by name.
-  await list.locator('.cycle-list-search').fill('Bossa Nova');
-  await expect(list.locator('.cycle-list-item:visible')).toHaveCount(await list.locator('.cycle-list-item:visible').count());
-  await expect(list.locator(`.cycle-list-item[data-id="${BOSSA}"]`)).toBeVisible();
-  await expect(list.locator(`.cycle-list-item[data-id="${SON}"]`)).toBeHidden();
-  await list.locator(`input[data-id="${BOSSA}"]`).check();
-  await list.locator('.cycle-list-search').fill('Son Clave 3-2');
-  await list.locator(`input[data-id="${SON}"]`).check();
-  // Ticked in that order: Bossa Nova, then Son Clave last.
-  expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([BOSSA, SON]);
-  await list.locator('.cycle-list-search').fill('');
-  await list.locator(`input[data-id="${BOSSA}"]`).uncheck();
+  // The library pane, open and asked.
+  await expect(page.locator('.composer-layers [data-picking="true"]')).toBeVisible();
+  await expect(page.locator('.library-search')).toBeVisible();
+  await expect(page.locator('.pattern-item[data-pattern-id="p_test"]')).toBeVisible();
+  // Its search narrows the list while choosing.
+  await page.locator('.library-search').fill('Son Clave 3-2');
+  await expect(page.locator(`.pattern-item[data-pattern-id="${SON}"]`)).toBeVisible();
+  await expect(page.locator(`.pattern-item[data-pattern-id="${BOSSA}"]`)).toHaveCount(0);
+  await page.locator(`.pattern-item[data-pattern-id="${SON}"] [data-action="open-pattern"]`).click();
   expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON]);
-  await page.locator('[data-action="cycle-list-done"]').click();
-  await expect(layerItems(page)).toHaveCount(1);
-  await expect(layerItems(page).first().locator('.layer-name')).toHaveText('Son Clave 3-2');
+  expect((await composerState(page)).pickingLayer).toBe(false);
+  // The composition is still the composition: the pick did not open into the Composer.
+  expect((await composerState(page)).draft.name).toBe('My line');
+  await page.locator('.library-toggle').click();
+  await page.locator('.library-search').fill('');
+  await page.locator('.library-toggle').click();
+  // Owned and melodic Patterns are Patterns like any other.
+  await addLayer(page, 'p_test');
+  await addLayer(page, DJEMBE);
+  expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON, 'p_test', DJEMBE]);
+  // Already a part: refused with a message, nothing added.
+  await page.locator('.layer-add').click();
+  await page.locator(`.pattern-item[data-pattern-id="${SON}"] [data-action="open-pattern"]`).click();
+  await expect(page.locator('.composer-notice')).toContainText('already a part');
+  expect((await composerState(page)).layers).toHaveLength(3);
+  // Cancel leaves the list as it was.
+  await page.locator('.layer-add').click();
+  await page.locator('.layer-pick-cancel').click();
+  await expect(page.locator('.composer-layers [data-picking="true"]')).toHaveCount(0);
+  expect((await composerState(page)).layers).toHaveLength(3);
 });
 
 test(`AC-19.11.1/3 — Remove takes a layer out; the same Pattern is never layered twice; at most 8 layers, Add layer saying so at the cap`, async ({ page }) => {
@@ -124,32 +137,19 @@ test(`AC-19.11.1/3 — Remove takes a layer out; the same Pattern is never layer
   await layerItems(page).first().locator('.layer-remove').click();
   await expect(layerItems(page)).toHaveCount(1);
   await expect(layerItems(page).first().locator('.layer-name')).toHaveText('Son Clave 3-2');
-  // Ticking it again in the list is the same layer, not a second.
+  // Choosing it again is refused, not layered twice.
   await page.locator('.layer-add').click();
-  await expect(page.locator(`.cycle-list-view input[data-id="${SON}"]`)).toBeChecked();
-  await page.locator('[data-action="cycle-list-done"]').click();
+  await page.locator(`.pattern-item[data-pattern-id="${SON}"] [data-action="open-pattern"]`).click();
+  await expect(page.locator('.composer-notice')).toContainText('already a part');
   expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON]);
-  // Up to eight: the ninth is refused and Add layer says so. One-bar 4/4
-  // Patterns with no triplet Recipe, so every one fits the loop at once.
+  // Up to eight: Add layer is then disabled and says so.
   const ids = await page.evaluate(() => window.__rm.seedStore.loadAll().filter((s) => s.soundMode !== 'melodic' && s.measures.length === 1 && s.measures[0].timeSignature === '4/4').slice(0, 9).map((s) => s.id));
-  await page.locator('.layer-add').click();
   for (const id of ids) {
     if (id === SON) continue;
-    const tick = page.locator(`.cycle-list-view input[data-id="${id}"]`);
-    await tick.click();
-    if ((await composerState(page)).layers.length === 8) {
-      // The ninth: refused, the tick reverting, and the section saying why.
-      const have = new Set((await composerState(page)).layers.map((l) => l.patternId));
-      const ninth = ids.find((other) => !have.has(other));
-      await page.locator(`.cycle-list-view input[data-id="${ninth}"]`).click();
-      await expect(page.locator(`.cycle-list-view input[data-id="${ninth}"]`)).not.toBeChecked();
-      expect((await composerState(page)).layers).toHaveLength(8);
-      break;
-    }
+    if ((await composerState(page)).layers.length === 8) break;
+    await addLayer(page, id);
   }
-  await page.locator('[data-action="cycle-list-done"]').click();
   expect((await composerState(page)).layers).toHaveLength(8);
-  await expect(page.locator('.composer-notice')).toHaveText('At most 8 layers.');
   await expect(page.locator('.layer-add')).toBeDisabled();
   await expect(page.locator('.layer-add')).toHaveAttribute('title', /At most 8 layers/);
 });
@@ -314,7 +314,7 @@ test(`AC-19.11.3/5 — The Layers section states the loop's length in passes of 
   await loadFourBeats(page);
   await addLayer(page, SON);
   await addLayer(page, BOSSA);
-  await expect(page.locator('.layers-loop')).toHaveText('Loop: 2 passes of the composition — My line ×2, Son Clave 3-2 ×1, Bossa Nova ×2');
+  await expect(page.locator('.layers-loop')).toHaveText('Loop: 2 passes of the part on screen — My line ×2, Son Clave 3-2 ×1, Bossa Nova ×2');
   await expect(page.locator('.layers-loop')).toHaveAttribute('data-passes', '2');
   await expect(layerItems(page).nth(0).locator('.layer-repeats')).toHaveText('×1');
   await expect(layerItems(page).nth(1).locator('.layer-repeats')).toHaveText('×2');
@@ -341,11 +341,11 @@ test(`AC-19.11.3/6 — The cursor runs through the composing grid once per pass 
 
 // --- AC-19.11.4: saving an Arrangement ----------------------------------------------
 
-test(`AC-19.11.4/1 — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order and which are muted; it is unavailable until the composition is saved and has a layer, saying why`, async ({ page }) => {
+test(`AC-19.11.4/1 — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order, which are muted and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await expect(page.locator('.arrangement-save')).toBeDisabled();
-  await expect(page.locator('.arrangement-save')).toHaveAttribute('title', /Save the composition to the library first/);
+  await expect(page.locator('.arrangement-save')).toHaveAttribute('title', /Save every part to the library first.*My line/);
   const id = await saveComposition(page);
   await expect(page.locator('.arrangement-save')).toBeDisabled();
   await expect(page.locator('.arrangement-save')).toHaveAttribute('title', /Add a layer first/);
@@ -358,7 +358,7 @@ test(`AC-19.11.4/1 — Save arrangement asks a name, pre-filled with the composi
   await nameInDialog(page);
   const stored = await page.evaluate(() => window.__rm.arrangementStore.loadAll());
   expect(stored).toEqual([
-    { id: 'arr_1', name: 'My line arrangement', compositionId: id, layers: [{ patternId: SON, muted: false }, { patternId: BOSSA, muted: true }] },
+    { id: 'arr_1', name: 'My line arrangement', compositionId: id, layers: [{ patternId: SON, muted: false }, { patternId: BOSSA, muted: true }], active: 0 },
   ]);
   await expect(page.locator('.layers-arrangement-name')).toHaveText('My line arrangement');
   // A second, under the same suggestion: numbered, and a taken name refused.
@@ -692,4 +692,265 @@ test("AC-19.11.5/2 — Each file spans one combined loop: the layer's own timeli
   });
   expect(summaries.map((s) => s.ons)).toEqual(counts);
   expect(summaries[0].ons).toBe(8);
+});
+
+// --- AC-19.11.6: any part can be the one on screen ----------------------------------
+
+const activeName = (page) => page.locator('.composer-bar .composer-name');
+
+test('AC-19.11.6/1 — Choosing a part in the Layers section puts it in the composing grid: its notes in the Slots, its name in the record bar, the record target and the selection its own, Record and a tap on the instrument writing onto it; the part left keeps its notes, saved or not, and is listed as a layer', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  // Two notes on My line, never saved.
+  await page.locator('.record').click();
+  await fret(page, 1, 1).click();
+  await fret(page, 1, 3).click();
+  await page.locator('.record').click();
+  await addLayer(page, BOSSA);
+  // Bossa Nova on screen: a shipped rhythm, so a new composition under a name (AC-19.11.6/2).
+  await partRow(page, 'Bossa Nova').locator('.layer-pick').click();
+  await nameInDialog(page, 'Bossa line');
+  await expect(activeName(page)).toHaveText('Bossa line');
+  await expect(page.locator('.composer-grid .slot.has-note')).toHaveCount(0);
+  expect(await page.locator('.composer-grid .slot.unpitched').count()).toBeGreaterThan(0);
+  // Record writes onto it, and the target is its own first syllable.
+  await page.locator('.record').click();
+  const target = (await composerState(page)).target;
+  expect(target.measureIndex).toBe(0);
+  expect(target.beatIndex).toBe(0);
+  await fret(page, 2, 2).click();
+  await expect(page.locator('.composer-grid .slot.has-note')).toHaveCount(1);
+  await page.locator('.record').click();
+  // My line is a layer now, its notes kept, not yet saved.
+  const left = partRow(page, 'My line');
+  await expect(left).toHaveAttribute('data-active', 'false');
+  await expect(left.locator('[data-part-unsaved="true"]')).toBeVisible();
+  const kept = (await composerState(page)).layers.find((l) => l.draft?.name === 'My line');
+  expect(kept.draft.measures[0].beats[0].slots[0].pitch).not.toBeNull();
+  expect(kept.draft.measures[0].beats[1].slots[0].pitch).not.toBeNull();
+  // Back to My line: its two notes are on screen again, and Bossa line is kept with its one.
+  await left.locator('.layer-pick').click();
+  await expect(activeName(page)).toHaveText('My line');
+  await expect(page.locator('.composer-grid .slot.has-note')).toHaveCount(2);
+  await expect(partRow(page, 'Bossa line').locator('[data-part-unsaved="true"]')).toBeVisible();
+});
+
+test("AC-19.11.6/2 — An owned melody opens directly; a shipped, percussive or progression-carrying part opens through US-19.8's rules — a name asked, pre-filled — and the new composition takes that part's place in the list; cancelling the prompt changes nothing", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const mine = await saveComposition(page);
+  // A second composition on screen, My line among its layers.
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await nameInDialog(page, 'Line two');
+  await addLayer(page, mine);
+  await addLayer(page, BOSSA);
+  // The owned melody: on screen with no ask, saved as it is.
+  await partRow(page, 'My line').locator('.layer-pick').click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(activeName(page)).toHaveText('My line');
+  expect((await composerState(page)).savedId).toBe(mine);
+  // The shipped rhythm: a name, pre-filled; cancelling changes nothing.
+  await partRow(page, 'Bossa Nova').locator('.layer-pick').click();
+  await expect(page.locator('.dialog-input')).toHaveValue('Bossa Nova melody');
+  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  await expect(activeName(page)).toHaveText('My line');
+  await expect(partRow(page, 'Bossa Nova')).toHaveAttribute('data-active', 'false');
+  // Accepting: the new composition takes Bossa Nova's place in the list.
+  const orderBefore = await page.locator('.composer-layers .layer-pick').allTextContents();
+  await partRow(page, 'Bossa Nova').locator('.layer-pick').click();
+  await nameInDialog(page, 'Bossa line');
+  const orderAfter = await page.locator('.composer-layers .layer-pick').allTextContents();
+  expect(orderAfter).toEqual(orderBefore.map((n) => (n === 'Bossa Nova' ? 'Bossa line' : n)));
+  await expect(activeName(page)).toHaveText('Bossa line');
+  expect((await composerState(page)).savedId).toBeNull();
+});
+
+test('AC-19.11.6/3 — Switching while playing stops and restarts nothing: every part goes on sounding, the part now on screen sounds with the instrument shown and the one left with the Practice voice from the next pass, and the cursor follows the part on screen', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const mine = await saveComposition(page);
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await nameInDialog(page, 'Line two');
+  await setTempo(page, 240);
+  await addLayer(page, mine);
+  await play(page);
+  await expect.poll(() => page.evaluate(() => window.__rm.getState().loop), { timeout: 8000 }).toBeGreaterThan(0);
+  const loopBefore = await page.evaluate(() => window.__rm.getState().loop);
+  const logBefore = await page.evaluate(() => window.__rm.voiceLog().length);
+  await partRow(page, 'My line').locator('.layer-pick').click();
+  const after = await state(page);
+  expect(after.isPlaying).toBe(true);
+  expect(after.loop).toBeGreaterThanOrEqual(loopBefore);
+  // The set the transport is handed: My line on screen, Line two beneath, both sounding.
+  const set = await page.evaluate(() => window.__rm.scheduled().layers.map((l) => ({ name: l.pattern.name, composition: l.composition, muted: l.muted })));
+  expect(set).toEqual([{ name: 'My line', composition: true, muted: false }, { name: 'Line two', composition: false, muted: false }]);
+  // From the next pass My line's notes sound with the instrument (guitar), as the composition's.
+  await expect.poll(async () => (await page.evaluate(() => window.__rm.voiceLog())).slice(logBefore).some((v) => v.composition === true && v.voice === 'guitar'), { timeout: 8000 }).toBe(true);
+  // The cursor follows the part on screen.
+  await expect.poll(() => page.evaluate(() => window.__rm.getState().transportPosition?.composition), { timeout: 8000 }).toBe(true);
+  await expect(page.locator('.composer-grid .slot.playing')).toHaveCount(1);
+  await play(page);
+});
+
+test("AC-19.11.6/4 — Tempo, tempo unit, swing and Key are the arrangement's, carried by the part on screen: the Composer's controls show and set them whichever part that is, a part made the one on screen takes them from the part it replaces, and nothing heard changes at the switch", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const mine = await saveComposition(page);
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await nameInDialog(page, 'Line two');
+  await addLayer(page, mine);
+  await setTempo(page, 150);
+  await page.locator('.composer-key').selectOption('G');
+  await page.locator('.composer-swing-entry').fill('25');
+  await page.locator('.composer-swing-entry').press('Enter');
+  const heardBefore = await page.evaluate(() => window.__rm.scheduled().layers.map((l) => [l.pattern.tempo, l.pattern.swingAmount, l.pattern.key ?? null]));
+  await partRow(page, 'My line').locator('.layer-pick').click();
+  // The controls show the arrangement's settings on the part now on screen.
+  await expect(page.locator('.composer-tempo-entry')).toHaveValue('150');
+  await expect(page.locator('.composer-key')).toHaveValue('G');
+  await expect(page.locator('.composer-swing-entry')).toHaveValue('25');
+  const c = await composerState(page);
+  expect([c.draft.tempo, c.draft.swingAmount, c.draft.key]).toEqual([150, 25, 'G']);
+  const heardAfter = await page.evaluate(() => window.__rm.scheduled().layers.map((l) => [l.pattern.tempo, l.pattern.swingAmount, l.pattern.key ?? null]));
+  expect(heardAfter).toEqual(heardBefore.slice().reverse());
+  // And setting them here sets them for every part.
+  await setTempo(page, 90);
+  expect(await page.evaluate(() => window.__rm.scheduled().layers.map((l) => l.pattern.tempo))).toEqual([90, 90]);
+});
+
+test("AC-19.11.6/5 — The part on screen is marked in the Layers section and cannot be muted or removed there; each part's repeats in the loop are unchanged by which part is on screen, the loop readout counting in passes of that part", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const mine = await saveComposition(page);
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await nameInDialog(page, 'Line two');
+  await addLayer(page, mine);
+  await addLayer(page, SON);
+  const onScreen = page.locator('.composer-layers .layer-item[data-active="true"]');
+  await expect(onScreen).toHaveCount(1);
+  await expect(onScreen.locator('.layer-pick')).toHaveText('Line two');
+  await expect(onScreen.locator('.layer-pick')).toBeDisabled();
+  await expect(onScreen.locator('.layer-mute')).toHaveCount(0);
+  await expect(onScreen.locator('.layer-remove')).toHaveCount(0);
+  const repeatsBefore = await page.locator('.composer-layers .layer-repeats').allTextContents();
+  // Line two, one bar, under the two-bar clave: a loop of two of its passes.
+  await expect(page.locator('.layers-loop')).toHaveAttribute('data-passes', '2');
+  await partRow(page, 'Son Clave 3-2').locator('.layer-pick').click();
+  await nameInDialog(page, 'Clave line');
+  await expect(page.locator('.composer-layers .layer-item[data-active="true"] .layer-pick')).toHaveText('Clave line');
+  expect(await page.locator('.composer-layers .layer-repeats').allTextContents()).toEqual(repeatsBefore);
+  // The same loop, counted in passes of the two-bar part now on screen.
+  await expect(page.locator('.layers-loop')).toHaveAttribute('data-passes', '1');
+  await expect(partRow(page, 'Line two').locator('.layer-mute')).toBeVisible();
+});
+
+test('AC-19.11.6/6 — Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Arrangement remembers which part was on screen and opens on it', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await addLayer(page, BOSSA);
+  await partRow(page, 'Bossa Nova').locator('.layer-pick').click();
+  await nameInDialog(page, 'Bossa line');
+  // Two unsaved parts: both named.
+  await page.locator('.mode-switch [data-mode="practice"]').click();
+  await expect(page.locator('.dialog')).toContainText('"My line"');
+  await expect(page.locator('.dialog')).toContainText('"Bossa line"');
+  await page.locator('.dialog-button', { hasText: 'Stay' }).click();
+  expect((await composerState(page)).mode).toBe('composer');
+  // Save both, save the Arrangement with Bossa line on screen, and come back to it.
+  await recordUntilDone(page);
+  await page.locator('.composer-save').click();
+  await partRow(page, 'My line').locator('.layer-pick').click();
+  await recordUntilDone(page);
+  await page.locator('.composer-save').click();
+  await partRow(page, 'Bossa line').locator('.layer-pick').click();
+  await expect(page.locator('.arrangement-save')).toBeEnabled();
+  await page.locator('.arrangement-save').click();
+  await nameInDialog(page, 'Two lines');
+  expect((await page.evaluate(() => window.__rm.arrangementStore.findById('arr_1'))).active).toBe(1);
+  await page.reload();
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await page.locator('.mode-switch [data-mode="composer"]').click();
+  await expect(page.locator('.composer-panel')).toBeVisible();
+  await page.waitForTimeout(300);
+  if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
+  await page.locator('.arrangement-item[data-arrangement-id="arr_1"] .arrangement-load').click();
+  await page.waitForTimeout(300);
+  if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Discard and open' }).click();
+  await expect(activeName(page)).toHaveText('Bossa line');
+  expect((await composerState(page)).activeIndex).toBe(1);
+  await expect(page.locator('.composer-layers .layer-pick').first()).toHaveText('My line');
+});
+
+// --- AC-19.11.7: a new part from nothing ---------------------------------------------
+
+test(`AC-19.11.7/1 — New layer asks a name, pre-filled with the part on screen's name and "layer", creates a one-Measure Pattern in that part's meter, tempo, swing and Key with every Slot silent, saves it to the library, and puts it on screen as the last part, the part it replaces going among the layers`, async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await setTempo(page, 132);
+  await page.locator('.composer-key').selectOption('D');
+  await page.locator('.layer-new').click();
+  await expect(page.locator('.dialog-input')).toHaveValue('My line layer');
+  await nameInDialog(page);
+  await expect(activeName(page)).toHaveText('My line layer');
+  const c = await composerState(page);
+  expect(c.savedId).not.toBeNull();
+  expect(c.draft.measures).toHaveLength(1);
+  expect(c.draft.measures[0].timeSignature).toBe('4/4');
+  expect([c.draft.tempo, c.draft.key, c.draft.soundMode]).toEqual([132, 'D', 'melodic']);
+  expect(c.draft.measures[0].beats.every((b) => b.slots.every((s) => !s.on))).toBe(true);
+  expect(c.activeIndex).toBe(1);
+  expect(await page.evaluate((id) => Boolean(window.__rm.patternStore.findById(id)), c.savedId)).toBe(true);
+  await expect(page.locator('.composer-grid .slot.unpitched, .composer-grid .slot.has-note')).toHaveCount(0);
+  await expect(partRow(page, 'My line')).toHaveAttribute('data-active', 'false');
+  await expect(page.locator('.composer-layers .layer-pick').last()).toHaveText('My line layer');
+});
+
+test("AC-19.11.7/2 — The Composer's Measures row adds a Measure after the last, in its meter, up to the cap, and removes the last down to one; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await setTempo(page, 240);
+  await addLayer(page, BOSSA);
+  await play(page);
+  await expect(page.locator('.composer-remove-measure')).toBeDisabled();
+  await page.locator('.composer-add-measure').click();
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
+  await expect(page.locator('.composer-grid .measure[data-measure="1"]')).toHaveAttribute('data-time-signature', '4/4');
+  // A Measure other than the first changes alone.
+  await page.locator('.composer-grid .measure[data-measure="1"] .measure-meter').click();
+  await page.locator('.dialog-button', { hasText: /^3\/4$/ }).click();
+  await expect(page.locator('.composer-grid .measure[data-measure="1"]')).toHaveAttribute('data-time-signature', '3/4');
+  await expect(page.locator('.composer-grid .measure[data-measure="0"]')).toHaveAttribute('data-time-signature', '4/4');
+  // The first offers Apply to all.
+  await page.locator('.composer-grid .measure[data-measure="0"] .measure-meter').click();
+  await page.locator('.dialog-button', { hasText: /^6\/8$/ }).click();
+  await expect(page.locator('.dialog')).toContainText(/all/i);
+  await page.locator('.dialog-button', { hasText: /all/i }).click();
+  await expect(page.locator('.composer-grid .measure[data-measure="0"]')).toHaveAttribute('data-time-signature', '6/8');
+  await expect(page.locator('.composer-grid .measure[data-measure="1"]')).toHaveAttribute('data-time-signature', '6/8');
+  // Still playing, the edit handed to the transport, and the layer untouched.
+  expect((await state(page)).isPlaying).toBe(true);
+  const set = await page.evaluate(() => window.__rm.scheduled().layers.map((l) => l.pattern.measures.map((m) => m.timeSignature)));
+  expect(set[0]).toEqual(['6/8', '6/8']);
+  expect(set[1]).toEqual(['4/4']);
+  await page.locator('.composer-remove-measure').click();
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(1);
+  await expect(page.locator('.composer-remove-measure')).toBeDisabled();
+  await play(page);
+});
+
+test('AC-19.11.7/3 — A saved part on screen is the open Pattern in Practice: Measures, meter and anything else changed there are on screen again on returning to the Composer, the layers kept', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await saveComposition(page);
+  await addLayer(page, SON);
+  await page.locator('.mode-switch [data-mode="practice"]').click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  expect((await state(page)).pattern.name).toBe('My line');
+  await page.evaluate(() => window.__rm.handlers.onAddMeasure());
+  expect((await state(page)).pattern.measures).toHaveLength(2);
+  await page.locator('.mode-switch [data-mode="composer"]').click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(page.locator('.composer-grid .measure')).toHaveCount(2);
+  expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON]);
+  await expect(partRow(page, 'Son Clave 3-2')).toBeVisible();
 });

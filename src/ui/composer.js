@@ -40,10 +40,10 @@ const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
 
 /** Whether the composition holds work the library does not (AC-19.1.4). */
 export function composerUnsaved(composer) {
-  const draft = composer?.draft;
-  if (!draft) return false;
-  if (!composer.savedId) return true;
-  return !isComplete(draft);
+  const unsaved = (draft, savedId) => Boolean(draft) && (!savedId || !isComplete(draft));
+  if (unsaved(composer?.draft, composer?.savedId)) return true;
+  // A part left for another keeps its notes in memory (AC-19.11.6/1, /6).
+  return (composer?.layers ?? []).some((l) => unsaved(l.draft, l.savedId));
 }
 
 function button(className, text, action, props = {}) {
@@ -77,7 +77,7 @@ export function renderComposer(root, state, handlers) {
     fresh.appendChild(renderBar(composer, draft, instrument, state, handlers));
     fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers));
     if (draft) {
-      fresh.appendChild(renderComposingGrid(draft, composer, state));
+      fresh.appendChild(renderComposingGrid(draft, composer, state, handlers));
       // The layers under it (US-19.11), absent without a composition (AC-19.11.1/5).
       fresh.appendChild(renderLayers(state, handlers));
     } else {
@@ -284,7 +284,7 @@ function renderInstrument(instrument, key, scale, state, handlers) {
  * Measures flow left to right and wrap, centred (tokens.css); a Slot's two
  * boxes are two buttons, so each has its own hit area and accessible name.
  */
-function renderComposingGrid(draft, composer, state) {
+function renderComposingGrid(draft, composer, state, handlers) {
   const grid = el('div', 'composer-grid');
   grid.dataset.measures = String(draft.measures.length);
   const system = effectiveSystem(draft, state.settings.countingSystem ?? 'takadimi');
@@ -294,7 +294,13 @@ function renderComposingGrid(draft, composer, state) {
     const row = el('section', 'measure');
     row.dataset.measure = String(measureIndex);
     row.dataset.timeSignature = measure.timeSignature;
-    row.appendChild(el('span', 'measure-meter prominent', { textContent: measure.timeSignature }));
+    // The meter label is the Time Signature control, as in Practice's grid (AC-1.4.1, AC-19.11.7/2).
+    const meter = el('button', 'measure-meter prominent', { type: 'button', textContent: measure.timeSignature });
+    meter.dataset.action = 'composer-time-signature';
+    meter.dataset.measure = String(measureIndex);
+    meter.setAttribute('aria-label', `Measure ${measureIndex + 1} time signature ${measure.timeSignature}; tap to change`);
+    meter.addEventListener('click', () => handlers.onComposerTimeSignature?.(measureIndex));
+    row.appendChild(meter);
     const beats = el('div', 'beats');
     beats.style.setProperty('--beat-count', String(measure.beats.length));
     const noteValue = beatNoteValue(measure.timeSignature);
@@ -542,8 +548,16 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     vary.dataset.action = 'add-variation';
     vary.setAttribute('title', canDuplicate(draft) ? 'Append a variation of the original — several techniques at once, heard before it is written' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     vary.addEventListener('click', () => handlers.onComposerAddVariation?.(vary));
+    // + Measure and − Measure as Practice's grid offers them (AC-1.1.3, AC-1.1.8, AC-19.11.7/2).
+    const count = draft.measures.length;
+    const addM = button('action composer-add-measure', '+ Measure', 'composer-add-measure', { disabled: count >= MAX_MEASURES });
+    addM.setAttribute('title', count >= MAX_MEASURES ? `A Pattern may hold at most ${MAX_MEASURES} Measures` : 'Add a Measure after the last, in its meter');
+    addM.addEventListener('click', () => handlers.onComposerAddMeasure?.());
+    const removeM = button('action composer-remove-measure', '− Measure', 'composer-remove-measure', { disabled: count <= 1 });
+    removeM.setAttribute('title', count <= 1 ? 'A Pattern keeps at least one Measure' : 'Remove the last Measure');
+    removeM.addEventListener('click', () => handlers.onComposerRemoveMeasure?.());
     const measures = el('div', 'control-group structure-row');
-    measures.append(vary, dup);
+    measures.append(addM, removeM, vary, dup);
     wrap.appendChild(labelled('Measures', measures));
   }
   return wrap;

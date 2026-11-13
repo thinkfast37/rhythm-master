@@ -252,4 +252,18 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     expect(validateArrangement({ ...a, layers: [] })).toContain('An Arrangement needs at least one layer');
     expect(validateArrangement({ ...a, layers: [{ patternId: 's_1' }, { patternId: 's_1' }] })).toContain('"s_1" is layered twice');
   });
+
+  it('AC-19.11.6/6 — Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Arrangement remembers which part was on screen and opens on it: the part on screen is stored as a position among the parts', () => {
+    const a = addLayer(addLayer(createArrangement('Bed', 'p_1'), 's_1'), 'p_2');
+    expect(a.active).toBe(0);
+    expect(createArrangement('Bed', 'p_1', [{ patternId: 's_1' }], 1).active).toBe(1);
+    expect(validateArrangement({ ...a, active: 2 })).toEqual([]);
+    expect(validateArrangement({ ...a, active: 3 })).toContain('The part on screen must be one of the parts');
+    expect(validateArrangement({ ...a, active: -1 })).toContain('The part on screen must be one of the parts');
+    expect(validateArrangement({ ...a, active: 1.5 })).toContain('The part on screen must be one of the parts');
+    // An Arrangement saved before the field existed opens on its composition.
+    const old = { ...a };
+    delete old.active;
+    expect(validateArrangement(old)).toEqual([]);
+  });
 });
