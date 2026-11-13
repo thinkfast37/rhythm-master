@@ -707,13 +707,13 @@ function rebaseCycle() {
   const previous = state.isPlaying ? generationOf(state.fillCycle, state.settings.fillCycleRepeats, fillOrder()) : null;
   state.fillCycle.start = index ?? fillIndexOf(state.pattern);
   state.fillCycle.baseLoop = state.isPlaying ? state.loop : 0;
-  state.fillCycle.previous = previous;
+  if (previous) state.fillCycle.previous = previous;
+  else delete state.fillCycle.previous;
 }
 
 /** A cycle's counting rule frozen as it stands: what a pass scheduled under it is read with. */
 function generationOf(cycle, repeats, order) {
-  const previous = cycle.previous;
-  return { start: cycle.start, baseLoop: cycle.baseLoop, repeats, order, previous: previous ?? null };
+  return { start: cycle.start, baseLoop: cycle.baseLoop, repeats, order, previous: cycle.previous ?? null };
 }
 
 /** As `rebaseCycle`, for progression cycling (US-2.10). */
@@ -722,7 +722,14 @@ function rebaseProgressionCycle() {
   const previous = state.isPlaying ? generationOf(state.progressionCycle, state.settings.fillCycleRepeats, progressionOrder()) : null;
   state.progressionCycle.start = index ?? progressionIndexOf(state.pattern);
   state.progressionCycle.baseLoop = state.isPlaying ? state.loop : 0;
-  state.progressionCycle.previous = previous;
+  if (previous) state.progressionCycle.previous = previous;
+  else delete state.progressionCycle.previous;
+}
+
+/** A cycle without its previous rule: a run that counts from 0 again has no pass scheduled under one. */
+function fresh(cycle) {
+  const { previous: _previous, ...rest } = cycle;
+  return rest;
 }
 
 /**
@@ -780,11 +787,9 @@ function restartTransport() {
   // A restart resets the loop counter (AC-4.2.2); the fill and progression in
   // force carry on.
   rebaseCycle();
-  state.fillCycle.baseLoop = 0;
-  state.fillCycle.previous = null;
+  state.fillCycle = { ...fresh(state.fillCycle), baseLoop: 0 };
   rebaseProgressionCycle();
-  state.progressionCycle.baseLoop = 0;
-  state.progressionCycle.previous = null;
+  state.progressionCycle = { ...fresh(state.progressionCycle), baseLoop: 0 };
   // Tempo, swing and settings all restart the run, and all change what the
   // screen-off handover would play (AC-4.1.15/5).
   refreshBackgroundAudio();
@@ -2234,8 +2239,8 @@ const handlers = {
     // whatever the last Stop held, or the Pattern's own when the cycle was
     // turned on since. Only the counting is reset. The ordinary Play loops the
     // Pattern, never the Section (AC-18.1.3/4).
-    state.fillCycle = { ...state.fillCycle, baseLoop: 0, previous: null };
-    state.progressionCycle = { ...state.progressionCycle, baseLoop: 0, previous: null };
+    state.fillCycle = { ...fresh(state.fillCycle), baseLoop: 0 };
+    state.progressionCycle = { ...fresh(state.progressionCycle), baseLoop: 0 };
     state.compose.on = false;
     render();
 
@@ -3385,8 +3390,8 @@ const transport = createTransport({
     // `baseLoop: 0` against a cleared counter means the next Play carries on
     // from what is held, with its repeats counted afresh. A Song still ends on
     // the Pattern's own, since its entries are not these cycles (AC-18.1.3/5).
-    state.fillCycle = { ...state.fillCycle, start: heldFill, baseLoop: 0, previous: null };
-    state.progressionCycle = { ...state.progressionCycle, start: heldProgression, baseLoop: 0, previous: null };
+    state.fillCycle = { ...fresh(state.fillCycle), start: heldFill, baseLoop: 0 };
+    state.progressionCycle = { ...fresh(state.progressionCycle), start: heldProgression, baseLoop: 0 };
     state.compose.on = false;
     mediaSession.setStopped();
     // Only a stop ends the keep-alive — a recoverable suspension never reaches
