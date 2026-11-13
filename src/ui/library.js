@@ -190,6 +190,34 @@ export function renderLibrary(root, entries, viewState, handlers) {
   backupRow.append(backupButton, restoreButton, restoreFile);
   root.appendChild(backupRow);
 
+  // Saved Arrangements, ahead of the Patterns, searched with them (AC-19.11.9/1).
+  const arrangements = (handlers.arrangementList?.() ?? []).filter((a) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return a.name.toLowerCase().includes(q) || a.parts.some((n) => n.toLowerCase().includes(q));
+  });
+  if ((handlers.arrangementList?.() ?? []).length > 0) {
+    const section = el('div', 'library-arrangements');
+    section.appendChild(el('h2', 'library-arrangements-title', { textContent: 'Arrangements' }));
+    if (arrangements.length === 0) {
+      section.appendChild(el('p', 'library-arrangements-empty', { textContent: 'No Arrangement matches.' }));
+    } else {
+      const list = el('ul', 'arrangement-entries');
+      for (const a of arrangements) {
+        const item = el('li', 'arrangement-entry');
+        item.dataset.arrangementId = a.id;
+        const open = el('button', 'arrangement-entry-name', { type: 'button', textContent: a.name });
+        open.dataset.action = 'open-arrangement';
+        open.addEventListener('click', () => handlers.onOpenArrangement?.(a.id));
+        item.appendChild(open);
+        item.appendChild(el('span', 'arrangement-entry-parts', { textContent: a.parts.join(' · ') }));
+        list.appendChild(item);
+      }
+      section.appendChild(list);
+    }
+    root.appendChild(section);
+  }
+
   const ratingFilter = el('div', 'rating-filter');
   // Unrated sits beside All; 5★ takes no "+", since nothing rates above it (AC-6.1.8).
   for (const min of [0, UNRATED, 3, 4, 5]) {

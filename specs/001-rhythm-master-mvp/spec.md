@@ -4911,6 +4911,17 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.8/2** — While playing, the cursor runs in the part on screen's staff and nowhere else, following the loop through every repeat
     - **AC-19.11.8/3** — Grid puts the composing grid back; the choice is remembered in `rm.settings.v1` and is in force after a reload; the score follows every change — a note recorded, a Measure added, a part added, muted, removed or switched to — on the next render
 
+- **AC-19.11.9** — Finding an Arrangement again, and a Pattern in many
+  - **Given** saved Arrangements
+  - **When** the Composer is anywhere in the app
+  - **Then** the library pane lists every Arrangement, a Pattern names the Arrangements it is a part of, and either opens the Composer on that Arrangement; a Pattern may be a part of any number of Arrangements
+  - *(Added 2026-11-13 at the maintainer's question: "if I go elsewhere in the app and come back how do I find that arrangement again? I should be able to use the same pattern or layer in multiple arrangements." Arrangements were listed in the Composer's Layers section alone. Decisions taken with the maintainer the same day: a section at the head of the library pane, searchable with the Patterns; and a line on a Pattern in Practice naming the Arrangements it is in. A Pattern is referenced by id and never copied into an Arrangement, so it can be a part of as many as wanted.)*
+  - **Cases**:
+    - **AC-19.11.9/1** — The library pane opens with an Arrangements section ahead of the Patterns, each Arrangement named with the names of its parts in order; the library's search narrows it by an Arrangement's name or any part's; the section is absent while there are none
+    - **AC-19.11.9/2** — Choosing an Arrangement in the library pane, from Practice or from the Composer, opens the Composer on it — the part it was saved on in the composing grid, its layers beneath — asking first when unsaved work would be lost, and closes the pane as opening a Pattern does
+    - **AC-19.11.9/3** — In Practice, under a making goal, a Pattern that is a part of any Arrangement shows In arrangements naming each, and a tap on a name opens the Composer on that Arrangement; the line is absent on a Pattern in none, and under a practice goal
+    - **AC-19.11.9/4** — A Pattern may be a part of any number of Arrangements and is never copied into one: an edit to the Pattern is heard in every Arrangement it is in, and every Arrangement it is in refuses its deletion
+
 ---
 
 

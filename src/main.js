@@ -56,7 +56,7 @@ import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import * as songStore from './storage/songs.js';
 import * as arrangementStore from './storage/arrangements.js';
-import { layered, underComposition, timelineOf, loopDurationOf, refusal as layerRefusal, createArrangement, addLayer, removeLayer, setLayerMuted, validateArrangement, MAX_LAYERS } from './core/arrangement.js';
+import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, createArrangement, addLayer, removeLayer, setLayerMuted, validateArrangement, MAX_LAYERS } from './core/arrangement.js';
 import {
   createSong,
   addEntry,
@@ -295,6 +295,8 @@ const state = {
   },
   /** Every saved Arrangement, read from its store only when it changes (US-19.11). */
   arrangements: [],
+  /** The Arrangements the open Pattern is a part of (AC-19.11.9/3). */
+  inArrangements: [],
   /**
    * MIDI input (US-19.10): whether the browser allowed it, and the devices
    * connected. Never stored; the device chosen is a setting (AC-19.10.4/3).
@@ -625,6 +627,17 @@ function partUnsaved(part) {
 
 function refreshArrangements() {
   state.arrangements = arrangementStore.loadAll();
+  const id = state.pattern?.id;
+  state.inArrangements = id ? state.arrangements.filter((a) => usesPattern(a, id)).map((a) => ({ id: a.id, name: a.name })) : [];
+}
+
+/** Every Arrangement with its parts' names in order, for the library pane (AC-19.11.9/1). */
+function arrangementList() {
+  return (state.arrangements ?? []).map((a) => ({
+    id: a.id,
+    name: a.name,
+    parts: [a.compositionId, ...a.layers.map((l) => l.patternId)].map((id) => libraryPattern(id)?.name ?? 'Missing Pattern'),
+  }));
 }
 
 /** The Section under construction for the open Pattern, created on first touch. */
@@ -2976,6 +2989,32 @@ const handlers = {
     await openInComposer(composition, true, { editOwned: true, arrangement });
   },
 
+  /** The saved Arrangements with their parts' names, for the library pane (AC-19.11.9/1). */
+  arrangementList() {
+    return arrangementList();
+  },
+
+  /**
+   * Open the Composer on an Arrangement from anywhere (AC-19.11.9/2, /3): the
+   * mode switched without the entry prompt, then the Arrangement loaded, which
+   * asks first when unsaved work would be lost.
+   */
+  async onOpenArrangement(id) {
+    if (isPracticeGoal(state.settings.goal)) return;
+    if (!arrangementStore.findById(id)) return;
+    if (state.composer.mode !== 'composer') {
+      if (state.isPlaying) transport.stop();
+      state.composer = { ...state.composer, mode: 'composer', recording: false, target: null, selected: null };
+      ensureGuitarLoaded();
+      refreshArrangements();
+      void midiInput.request();
+      render();
+    }
+    await handlers.onArrangementLoad(id);
+    ui?.hideLibrary();
+    render();
+  },
+
   async onArrangementRename(id) {
     const arrangement = arrangementStore.findById(id);
     if (!arrangement) return;
@@ -3677,7 +3716,7 @@ export function mount(root) {
     familyMembers,
     canUndo,
     fillLabel,
-    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY) }),
+    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), arrangements: rawOf(arrangementStore.KEY) }),
   });
 }
 
