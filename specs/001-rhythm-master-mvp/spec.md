@@ -2169,6 +2169,80 @@ field survives showing it.)*
 
 ---
 
+### User Story 69 - Import a MIDI file as a Melodic Pattern
+
+*Traceability: `US-12.4` — Import a MIDI file as a Melodic Pattern*
+
+**As** the Composer, **I want** to pick a `.mid` file and have it become a Melodic Pattern in my library — each note on the syllable nearest its start, at the Accent Level nearest its velocity, named by me — **so that** a line I already have in a DAW or a notation program becomes something I can practise here without re-tapping it.
+
+*(Added 2026-11-13 at the maintainer's request: "import a midi file as a melodic pattern. it needs to set the velocity of each note closest to the velocities used for the accent levels in the app. it also needs to ignore the duration and just sound the syllable at the duration. it also needs to realize that each note may not be exactly lined up with the start of the syllable so it should go to the nearest syllable to where the start is whether the note is sounding late or early. it will import the pattern and let you name it accordingly. if the midi file has a name it can propose that as the name but if there is another pattern with that name then it should ask you to rename." Decisions taken with the maintainer the same day: every Beat of the result is Straight 16ths, so the syllables are the 16th-note grid and a swung or triplet file is re-brushed afterwards; the Key is the file's key signature, else C; when several notes start on one syllable the highest wins; the control sits in the library panel beside Back up and Restore library; a file longer than the 32-Measure cap imports its first 32 Measures with a message; Auto landing. See research.md D-027.)*
+
+**Independent Test**: Write a two-Measure 3/4 file at 96 bpm in G major whose notes start a little before and a little after their 16ths at velocities 40, 70 and 120, two of them together on one syllable, one of them lasting a whole Measure, and a drum-channel track beside them; import it, and assert that a two-Measure 3/4 Melodic Pattern in G at 96 bpm is created, owned and loaded, every Beat Straight 16ths, each note on its nearest syllable at Weak, Medium or Strong, the shared syllable holding the higher note, the long note sounding for one syllable only, and the drum track absent; that the name prompt proposed the file's track name and refused a name already in the library; that Cancel created nothing; that a text file and a file with no notes are refused with a message and the library is as it was; and that a Pattern exported as MIDI and imported again holds every Slot it had.
+
+**Acceptance Scenarios**:
+
+- **AC-12.4.1** — An Import MIDI control in the library panel
+  - **Given** the library panel
+  - **When** the Composer looks beside Back up library and Restore library
+  - **Then** an Import MIDI control sits with them, under every goal, and opens a file picker for `.mid` and `.midi` files; reading the file happens entirely in the browser, with no server round-trip
+  - **Cases**:
+    - **AC-12.4.1/1** — An Import MIDI control sits beside Back up library and Restore library in the library panel, under every goal
+    - **AC-12.4.1/2** — It opens a file picker accepting `.mid` and `.midi` files, and the file is read and turned into a Pattern entirely in the browser
+
+- **AC-12.4.2** — Each note lands on the syllable nearest its start
+  - **Given** a MIDI file whose notes start early, late or exactly on the 16th-note grid, some lasting longer than a syllable and some starting together
+  - **When** it is imported
+  - **Then** every Beat of the result is Straight 16ths, each note turns on the syllable nearest its start whether it is early or late, its duration is ignored so the Slot sounds for its syllable only, a syllable several notes start on takes the highest of them, and the Measures, their Time Signatures and the tempo are the file's
+  - **Cases**:
+    - **AC-12.4.2/1** — Every Beat of the imported Pattern is Straight 16ths, on a quarter-note Beat and on an eighth-note Beat alike, so the syllables are the 16th-note grid throughout
+    - **AC-12.4.2/2** — A note that starts before its nearest 16th and one that starts after it both turn on that 16th; a note exactly halfway between two 16ths goes to the earlier; a note snapped past the end of one Beat lands on the first syllable of the next
+    - **AC-12.4.2/3** — A note's duration changes nothing: a note held for a whole Measure turns on one Slot, and the syllables it sounded across stay as the other notes left them
+    - **AC-12.4.2/4** — When two or more notes land on one syllable the Slot takes the highest pitch and that note's velocity, whichever track or order they arrived in
+    - **AC-12.4.2/5** — The Pattern has as many Measures as the file spans, each with the Time Signature in force in the file at its start, and the tempo the file sets at its start, rounded to a whole number; a file that says neither is 4/4 at 120 bpm
+    - **AC-12.4.2/6** — Every track's notes are taken together, except notes on the drum channel (channel 10), which are ignored
+
+- **AC-12.4.3** — Velocity maps to the nearest Accent Level
+  - **Given** notes at every MIDI velocity
+  - **When** the file is imported
+  - **Then** each note's Slot takes the Accent Level whose export velocity (48, 80 or 112 — AC-12.1.3) is nearest the note's: Weak below 64, Medium from 64 to 95, Strong from 96 up; a note-on at velocity 0 is a note-off and turns nothing on
+  - **Cases**:
+    - **AC-12.4.3/1** — Velocity 1 to 63 is Weak (Accent Level 1)
+    - **AC-12.4.3/2** — Velocity 64 to 95 is Medium (Accent Level 2)
+    - **AC-12.4.3/3** — Velocity 96 to 127 is Strong (Accent Level 3)
+    - **AC-12.4.3/4** — A note-on at velocity 0 turns no Slot on
+
+- **AC-12.4.4** — Pitches are stored against the file's Key
+  - **Given** a MIDI file with or without a key signature
+  - **When** it is imported
+  - **Then** the Pattern is Melodic in the Key the file's key signature names, or C without one, every note stored as the chromatic degree and octave that sounds it there, so what plays is the note the file held
+  - **Cases**:
+    - **AC-12.4.4/1** — A key signature sets the Key to its tonic — a major key signature with the Ionian scale, a minor one with the Aeolian scale on the minor tonic — and a file with none is in C, Ionian
+    - **AC-12.4.4/2** — Each note is stored as the degree and octave that resolve to its MIDI note in that Key, a note outside the scale as a chromatic degree (b3, #4, …), so the imported Pattern sounds the file's notes
+    - **AC-12.4.4/3** — A note above octave 7 or below octave 1 is held at that end of the octave range, as the stepper holds it (AC-2.2.3)
+    - **AC-12.4.4/4** — A Pattern in C exported as MIDI (US-12.1) and imported again holds the same Slots — on, Accent Level and Pitch — as the Pattern it came from, with every Beat Straight 16ths; one in another Key comes back in C sounding the same notes, since the file carries no key signature
+
+- **AC-12.4.5** — The import is named, and the name must be free
+  - **Given** a file that can be imported
+  - **When** the Composer picks it
+  - **Then** they are asked for a name, offered the file's own, a name the library already holds is refused and asked for again, Cancel creates nothing, and on confirming an owned Melodic Pattern under that name is in the library, loaded and saved
+  - **Cases**:
+    - **AC-12.4.5/1** — The prompt proposes the file's sequence or track name when it has one, otherwise the file name without its extension
+    - **AC-12.4.5/2** — A name the library already holds, compared case-insensitively as Make Copy compares (AC-7.4.4), is refused with a message and the prompt stays open for another
+    - **AC-12.4.5/3** — Cancel creates nothing: the library and the loaded Pattern are as they were
+    - **AC-12.4.5/4** — Confirming creates an owned Melodic Pattern under that name in `rm.patterns.v1`, loads it, and shows it in the library at once
+
+- **AC-12.4.6** — A file that cannot be imported changes nothing, and a long one is cut to the cap
+  - **Given** a file that is not a usable MIDI file, or one longer than 32 Measures
+  - **When** the Composer picks it
+  - **Then** a file that is not MIDI, holds no note off the drum channel, or uses a Time Signature the app does not offer is refused with a message saying why before anything is written, and a file longer than 32 Measures imports its first 32 with a message saying so
+  - **Cases**:
+    - **AC-12.4.6/1** — A file that is not a Standard MIDI File is refused with a message and nothing is written
+    - **AC-12.4.6/2** — A file with no note-on off the drum channel is refused with a message and nothing is written
+    - **AC-12.4.6/3** — A file whose Time Signature at any Measure is not one the app offers (data-model §2's list) is refused with a message naming it, and nothing is written
+    - **AC-12.4.6/4** — A file longer than 32 Measures imports its first 32 Measures, and a message says how many were left out
+
+---
+
 ### User Story 31 - Submit a Pattern for review
 
 *Traceability: `US-13.1` — Submit a Pattern for review*
@@ -5022,7 +5096,7 @@ specified in the Acceptance Scenarios above.
   stores which Pattern each Section plays over so that this can come later without changing what a
   Song is); a guided tutorial system; layering two Patterns by merging their accents; and cloud
   sync, or any export/import beyond MIDI, the per-layer MIDI archive of an Arrangement (AC-19.11.5)
-  and the whole-library backup file (US-7.6). *(Revised 2026-11-12: "multi-layer arrangements — two Patterns sounding at once" was
+  and the whole-library backup file (US-7.6). *(Revised 2026-11-13: MIDI now runs both ways — US-12.4 imports a `.mid` file as a Melodic Pattern.)* *(Revised 2026-11-12: "multi-layer arrangements — two Patterns sounding at once" was
   excluded here, on the maintainer's 2026-09-13 ruling. The maintainer asked for exactly that on
   2026-11-12 — distinct layers heard together, polyphonic where they coincide, the shorter repeating
   to fill the longer — and US-19.11 admits it as layers under the Composer's composition, saved as

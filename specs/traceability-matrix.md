@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1093 across 67 User Stories
+**Criteria**: 1117 across 68 User Stories
 
-**Coverage**: 966 of 1093 criteria proven (88.4%)
+**Coverage**: 990 of 1117 criteria proven (88.6%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 966 | 88.4% |
-| 🟠 Gap — MEDIUM | 50 | 4.6% |
-| 🟡 Gap — LOW | 77 | 7.0% |
+| 🟢 Proven | 990 | 88.6% |
+| 🟠 Gap — MEDIUM | 50 | 4.5% |
+| 🟡 Gap — LOW | 77 | 6.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -87,6 +87,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-11.2 | 6 | **6** | · | · | · | · | · |
 | 🟡 US-11.3 | 5 | 4 | · | · | · | · | 1 |
 | 🟢 US-12.1 | 4 | **4** | · | · | · | · | · |
+| 🟢 US-12.4 | 24 | **24** | · | · | · | · | · |
 | 🟢 US-13.1 | 11 | **11** | · | · | · | · | · |
 | 🟠 US-15.1 | 51 | 40 | · | · | · | 8 | 3 |
 | 🟠 US-16.1 | 11 | 7 | · | · | · | 4 | · |
@@ -186,7 +187,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.1 | `AC-2.1.6/3` 🖵 | On a 390px viewport the switch is reachable without opening any tab or accordion | P-014 | T065, T272, T450 (3/3 done) | T066, T273, T451 (3/3 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.1` | One Pitch per Slot, no chords | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.2 | `AC-2.2.2` 🖵 | Armed pitch defaults to degree 1, octave 4, and stays armed | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
+| US-2.2 | `AC-2.2.3` 🖵 | Octave stepper clamps at its bounds | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `midi-file.test.js`, `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-2.2 | `AC-2.2.4/1` 🖵 | All twelve chromatic degrees are shown at once, each armed by a single tap | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.4/2` 🖵 | There is no flat/natural/sharp mode: a chip is the degree it names, so arming `b3` never relabels or re-pitches any other chip | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
 | US-2.2 | `AC-2.2.4/3` 🖵 | Degrees above the octave are reached with the octave stepper — a ninth is stamped as degree `2` an octave up — while a stored Pattern whose tokens use `8`–`15` still displays and plays unchanged | P-016 | T069, T160, T162, T163, T164, T165, T212, T214, T232, T272, T295 (11/11 done) | T070, T161, T162, T163, T164, T165, T213, T215, T233, T273, T296 (11/11 done) | `melodic.spec.js` | 🟢 OK |
@@ -448,7 +449,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-7.4 | `AC-7.4.1` | Make Copy prompts for a name with no default | P-022 | T083 (1/1 done) | T084 (1/1 done) | `storage.test.js`, `operations.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.2` 🖵 | Confirming Make Copy creates an independent Pattern | P-022 | T083 (1/1 done) | T084 (1/1 done) | `operations.spec.js`, `trace-pattern-ops.spec.js` | 🟢 OK |
 | US-7.4 | `AC-7.4.3` 🖵 | Canceling Make Copy creates nothing | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-7.4 | `AC-7.4.4` | Make Copy enforces unique Pattern names | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-7.4 | `AC-7.4.4` | Make Copy enforces unique Pattern names | P-022 | T083 (1/1 done) | T084 (1/1 done) | `midi-import.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.5` | A Make Copy result immediately qualifies as a Pattern Family member | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.4 | `AC-7.4.6` 🖵 | Make Copy is unavailable on shipped Patterns | P-022 | T083 (1/1 done) | T084 (1/1 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-7.5 | `AC-7.5.1` | Delete requires a naming confirmation | P-023 | T085 (1/1 done) | T086 (1/1 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
@@ -491,6 +492,30 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-12.1 | `AC-12.1.2` | Percussive exports to a drum channel; Melodic exports pitched notes | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.test.js`, `export.test.js` | 🟢 OK |
 | US-12.1 | `AC-12.1.3` | Accent Level maps to a fixed MIDI velocity table | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.test.js`, `export.test.js` | 🟢 OK |
 | US-12.1 | `AC-12.1.4` | Mixed-meter Pattern exports each Measure by its own Time Signature | P-034 | T109 (1/1 done) | T110 (1/1 done) | `trace-pattern-ops.test.js`, `export.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.1/1` 🖵 | An Import MIDI control sits beside Back up library and Restore library in the library panel, under every goal | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.1/2` 🖵 | It opens a file picker accepting `.mid` and `.midi` files, and the file is read and turned into a Pattern entirely in the browser | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.2/1` | Every Beat of the imported Pattern is Straight 16ths, on a quarter-note Beat and on an eighth-note Beat alike, so the syllables are the 16th-note grid throughout | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.2/2` | A note that starts before its nearest 16th and one that starts after it both turn on that 16th; a note exactly halfway between two 16ths goes to the earlier; a note snapped past the end of one Beat lands on the first syllable of the next | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.2/3` | A note's duration changes nothing: a note held for a whole Measure turns on one Slot, and the syllables it sounded across stay as the other notes left them | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.2/4` | When two or more notes land on one syllable the Slot takes the highest pitch and that note's velocity, whichever track or order they arrived in | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.2/5` | The Pattern has as many Measures as the file spans, each with the Time Signature in force in the file at its start, and the tempo the file sets at its start, rounded to a whole number; a file that says neither is 4/4 at 120 bpm | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.2/6` | Every track's notes are taken together, except notes on the drum channel (channel 10), which are ignored | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.3/1` | Velocity 1 to 63 is Weak (Accent Level 1) | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.3/2` | Velocity 64 to 95 is Medium (Accent Level 2) | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.3/3` | Velocity 96 to 127 is Strong (Accent Level 3) | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.3/4` | A note-on at velocity 0 turns no Slot on | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.4/1` | A key signature sets the Key to its tonic — a major key signature with the Ionian scale, a minor one with the Aeolian scale on the minor tonic — and a file with none is in C, Ionian | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.4/2` | Each note is stored as the degree and octave that resolve to its MIDI note in that Key, a note outside the scale as a chromatic degree (b3, #4, …), so the imported Pattern sounds the file's notes | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.4/3` | A note above octave 7 or below octave 1 is held at that end of the octave range, as the stepper holds it (AC-2.2.3) | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.4/4` | A Pattern in C exported as MIDI (US-12.1) and imported again holds the same Slots — on, Accent Level and Pitch — as the Pattern it came from, with every Beat Straight 16ths; one in another Key comes back in C sounding the same notes, since the file carries no key signature | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.5/1` 🖵 | The prompt proposes the file's sequence or track name when it has one, otherwise the file name without its extension | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js`, `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.5/2` 🖵 | A name the library already holds, compared case-insensitively as Make Copy compares (AC-7.4.4), is refused with a message and the prompt stays open for another | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.5/3` | Cancel creates nothing: the library and the loaded Pattern are as they were | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.5/4` 🖵 | Confirming creates an owned Melodic Pattern under that name in `rm.patterns.v1`, loads it, and shows it in the library at once | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.6/1` | A file that is not a Standard MIDI File is refused with a message and nothing is written | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js`, `midi-import.spec.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.6/2` | A file with no note-on off the drum channel is refused with a message and nothing is written | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.6/3` | A file whose Time Signature at any Measure is not one the app offers (data-model §2's list) is refused with a message naming it, and nothing is written | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js` | 🟢 OK |
+| US-12.4 | `AC-12.4.6/4` | A file longer than 32 Measures imports its first 32 Measures, and a message says how many were left out | P-073 | T475 (1/1 done) | T476 (1/1 done) | `midi-file.test.js`, `midi-import.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/1` 🖵 | The submission URL carries the title, the `new-pattern` label and the Pattern's full definition as query parameters | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/2` 🖵 | Submit presents the URL as a clickable link that opens GitHub's own issue page in a new tab | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `submission.spec.js` | 🟢 OK |
 | US-13.1 | `AC-13.1.1/3` 🖵 | No GitHub credential is held and GitHub's API is never called | P-035 | T111, T112, T169, T173 (4/4 done) | T113, T170, T174 (3/3 done) | `export.test.js`, `submission.spec.js` | 🟢 OK |

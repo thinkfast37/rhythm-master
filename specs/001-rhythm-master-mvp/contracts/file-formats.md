@@ -95,6 +95,28 @@ otherwise.
 
 ---
 
+### 2b. MIDI import — `.mid` → a Melodic Pattern (US-12.4, research.md D-027)
+
+**Producer**: the user's DAW or notation program. Formats 0 and 1 are read; running status honoured.
+
+| MIDI fact | Pattern |
+|---|---|
+| Time Signature meta event | the meter of every Measure from that point; absent means 4/4; one the app does not offer refuses the file |
+| Set Tempo at the start | `tempo`, rounded to a whole number and held inside 18–300; absent means 120 |
+| Key Signature | `key` — the tonic; major Ionian, minor Aeolian on the minor tonic; absent means C Ionian |
+| Note-on, velocity 1–63 / 64–95 / 96–127 | Accent Level 1 / 2 / 3 — the nearest of the export velocities 48 / 80 / 112 |
+| Note-on, velocity 0 | nothing |
+| Note start | the nearest 16th-note syllable, a tie to the earlier; every Beat is Straight 16ths |
+| Note duration | ignored |
+| Several notes on one syllable | the highest pitch, with its velocity |
+| MIDI note | `{ degree, octaveOffset }` such that `core/pitch.resolve` gives the note back in `key`; octave held inside 1–7 |
+| Drum channel (10) | ignored; a file with no other note-on is refused |
+| Sequence or track name | the name proposed in the prompt; else the file name |
+| More than 32 Measures | the first 32, with a message |
+
+**Rule**: the table above is §2 read backwards, and a Pattern exported then imported holds the same
+Slots (AC-12.4.4/4).
+
 ## 3. Pattern submission payload — prefilled GitHub issue
 
 **Consumer**: GitHub's new-issue form, reached by a URL the user clicks (US-13.1).

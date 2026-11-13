@@ -26,6 +26,7 @@ import {
 } from './core/pattern.js';
 import { TIME_SIGNATURES } from './core/meter.js';
 import { MAX_MEASURES } from './core/pattern.js';
+import { patternFromMidi } from './core/midi-file.js';
 import { canCondense, canHalve, condense, condenseTargets } from './core/condense.js';
 import { buildTimeline, buildBeatGrid } from './core/timeline.js';
 import {
@@ -3203,6 +3204,35 @@ const handlers = {
     if (!replace) return;
     backupStore.restoreBackup(text);
     location.reload();
+  },
+
+  /**
+   * A .mid file as a new owned Melodic Pattern (US-12.4). The file is converted
+   * before the musician is asked anything, so one that cannot be imported is
+   * refused with its reason and nothing written (AC-12.4.6); the name must be
+   * free, as Make Copy's must (AC-12.4.5/2); Cancel creates nothing (AC-12.4.5/3).
+   */
+  async onImportMidi(file) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const result = patternFromMidi(bytes, { fileName: file.name ?? '' });
+    if (!result.ok) {
+      await ask({ message: result.error, options: [{ label: 'OK', value: true, primary: true }] });
+      return;
+    }
+    if (result.droppedMeasures > 0) {
+      await ask({
+        message: `This MIDI file is longer than ${MAX_MEASURES} Measures. The first ${MAX_MEASURES} are imported and ${result.droppedMeasures} ${result.droppedMeasures === 1 ? 'Measure is' : 'Measures are'} left out.`,
+        options: [{ label: 'OK', value: true, primary: true }],
+      });
+    }
+    const name = await askNewPatternName(result.name, uniqueNameValidator(), {
+      message: 'Name the imported Pattern.',
+      confirmLabel: 'Import',
+    });
+    if (!name) return;
+    const pattern = { ...result.pattern, name, id: patternStore.nextId() };
+    patternStore.upsert(pattern);
+    loadPattern(pattern, { owned: true });
   },
 
   /**

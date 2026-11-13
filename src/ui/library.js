@@ -187,7 +187,17 @@ export function renderLibrary(root, entries, viewState, handlers) {
   const restoreButton = el('button', 'restore-library', { type: 'button', textContent: 'Restore library' });
   restoreButton.dataset.action = 'restore-library';
   restoreButton.addEventListener('click', () => restoreFile.click());
-  backupRow.append(backupButton, restoreButton, restoreFile);
+  // A .mid file as a Melodic Pattern (US-12.4), beside the other file controls (AC-12.4.1/1).
+  const midiFile = el('input', 'import-midi-file', { type: 'file', accept: '.mid,.midi,audio/midi', hidden: true });
+  midiFile.addEventListener('change', () => {
+    const file = midiFile.files?.[0];
+    midiFile.value = '';
+    if (file) handlers.onImportMidi(file);
+  });
+  const importButton = el('button', 'import-midi', { type: 'button', textContent: 'Import MIDI' });
+  importButton.dataset.action = 'import-midi';
+  importButton.addEventListener('click', () => midiFile.click());
+  backupRow.append(backupButton, restoreButton, restoreFile, importButton, midiFile);
   root.appendChild(backupRow);
 
   const ratingFilter = el('div', 'rating-filter');

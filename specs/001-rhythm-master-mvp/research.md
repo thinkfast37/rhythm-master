@@ -1287,3 +1287,33 @@ against a combined loop; the maintainer chose Patterns only for this version); s
 Arrangement's tempo and Key on it (rejected: the composition carries them, and a second copy would
 drift); a per-layer voice picker (not asked for; the composition-on-the-instrument, layers-as-
 Practice split tells the two apart without a setting); solo as well as mute (not asked for).
+
+## D-027 — MIDI import: a reader of our own, the export table read backwards, 16ths as the syllable grid
+
+**Decision (2026-11-13)**: a `.mid` file becomes a Melodic Pattern (US-12.4) through a Standard MIDI
+File reader written in `core/midi-file.js` — formats 0 and 1, running status, the meta events the
+exporter writes (Set Tempo, Time Signature, Key Signature, sequence and track names) and note-ons; no
+dependency. The conversion is the export contract (`contracts/file-formats.md` §2) read backwards:
+velocity to the Accent Level whose export velocity is nearest (below 64 Weak, 64–95 Medium, 96 up
+Strong), a MIDI note to the degree and octave `core/pitch.resolve` turns back into it in the file's Key,
+a Time Signature event to a Measure's meter. Every Beat of the result is Straight 16ths, each note
+snapped to the nearest 16th whether early or late (a tie to the earlier), its duration dropped, the
+highest note keeping a syllable several start on. Tracks are merged, the drum channel ignored.
+
+**Why.** The maintainer asked for it on 2026-11-13: velocities to the nearest accent, duration
+ignored, each note to its nearest syllable. The exporter already fixes the encoding of every musical
+fact the app holds, so an importer that inverts that table and nothing else is the smallest one that
+round-trips: a Pattern exported and imported again is the same Pattern (AC-12.4.4/4), which is the one
+test that proves the two tables agree. Choosing one regular grid — 16ths — rather than guessing a
+Recipe per Beat was taken with the maintainer: the result is predictable, every note is within a 32nd
+of a syllable, and a triplet or swung Beat is re-brushed in the grid afterwards.
+
+**Alternatives considered.** A MIDI parsing library (rejected: a few hundred lines of a fixed, stable
+format, and Constitution Principle V); inferring each Beat's Recipe from where its notes fall
+(deferred: least predictable, most to prove, and the maintainer chose the fixed grid); a Key picker in
+the import dialog (not asked for; the file's key signature or C, and the Key stepper transposes
+afterwards as for any Pattern); the lowest or loudest note winning a shared syllable (the maintainer
+chose the highest, where the melody usually sits); importing the drum channel as a Percussive Pattern
+(not asked for — this story is the melodic one; a percussive import would be its own decision);
+refusing a file longer than 32 Measures (the maintainer chose cutting it to the cap with a message).
+

@@ -280,6 +280,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-070** | US-2.17 — Start a chord progression from scratch | AC-2.17.1–AC-2.17.2 | T458 | T459 |
 | **P-071** | US-10.4 — Vary a loop | AC-10.4.1–AC-10.4.8 | T466 | T467 |
 | **P-072** | US-19.11 — Layer Patterns under the composition | AC-19.11.1–AC-19.11.5 | T471, T473 | T472, T474 |
+| **P-073** | US-12.4 — Import a MIDI file as a Melodic Pattern | AC-12.4.1–AC-12.4.6 | T475 | T476 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of
