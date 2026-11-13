@@ -497,3 +497,41 @@ describe('core/notation — the item at the transport position (AC-12.2.9)', () 
     expect(itemAt(score, null)).toBeNull();
   });
 });
+
+// --- the arrangement as sheet music (AC-19.11.8) ---------------------------------
+
+import { create as arrCreate, cycleAccent as arrAccent, setPitch as arrPitch } from '../../../src/core/pattern.js';
+import { setProgression as arrProgression, setChange as arrChange, setArpeggio as arrArpeggio, cyclePasses as arrCycle } from '../../../src/core/harmony.js';
+import { buildScore as arrScore } from '../../../src/core/notation.js';
+import { buildTimeline as arrTimeline } from '../../../src/core/timeline.js';
+
+describe('core/notation — a part engraved for its passes in the combined loop (AC-19.11.8)', () => {
+  it(`AC-19.11.8/1 — A Grid | Score switch sits in the record bar, Grid on first use; Score puts one staff per part in the composing grid's place, in the parts' order, each headed by the part's name, the part on screen marked and a muted part marked, each staff one combined loop long with the part repeated as it plays and a progression walking its chords: the engraver writes as many passes as it is handed, a progression walking its chords across them`, () => {
+    let p = { ...arrCreate('Changes'), soundMode: 'melodic', key: 'C', scale: 'ionian', tempo: 120 };
+    for (let b = 0; b < 4; b++) p = arrAccent(p, 0, b, 0);
+    for (let b = 0; b < 4; b++) p = arrPitch(p, 0, b, 0, { degree: '1', octaveOffset: 0 });
+    p = arrChange(arrArpeggio(arrProgression(p, 'I-IV-V'), 'up'), 'pass');
+    expect(arrCycle(p)).toBe(3);
+    // Its own score: one harmonic cycle, as Practice prints it.
+    expect(arrScore(p).passCount).toBe(3);
+    // As a part repeating twice in the loop: six passes, the chords walking on.
+    const six = arrScore(p, { passes: 6, title: 'Changes, as a part' });
+    expect(six.passCount).toBe(6);
+    expect(six.passes).toHaveLength(6);
+    expect(six.title).toBe('Changes, as a part');
+    const names = six.passes.map((pass) => pass.measures[0].chordLabel);
+    expect(names[0]).toBe('C');
+    expect(new Set(names.slice(0, 3)).size).toBe(3);
+    expect(names.slice(3, 6)).toEqual(names.slice(0, 3));
+    // Every pass is the timeline's own notes for that pass.
+    for (let pass = 0; pass < 6; pass++) {
+      const steps = six.passes[pass].measures[0].beats.flatMap((b) => b.items.filter((i) => i.kind === 'note').map((i) => i.midiNote ?? i.step));
+      expect(steps.length).toBe(arrTimeline(p, pass).length);
+    }
+    // A percussive part repeated: the same bar, as many times as asked.
+    let bar = { ...arrCreate('Bar'), tempo: 120 };
+    for (let b = 0; b < 4; b++) bar = arrAccent(bar, 0, b, 0);
+    expect(arrScore(bar, { passes: 4 }).passes).toHaveLength(4);
+    expect(arrScore(bar).passes).toHaveLength(1);
+  });
+});

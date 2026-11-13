@@ -7,6 +7,7 @@
  */
 import { el } from './controls.js';
 import { layered, layerKind, MAX_LAYERS } from '../core/arrangement.js';
+import { isComplete } from '../core/composer.js';
 
 const KIND_LABELS = { rhythm: 'rhythm', melody: 'melody', chords: 'chords' };
 
@@ -16,12 +17,18 @@ function button(className, text, action, props = {}) {
   return b;
 }
 
-/** Whether the layers differ from the Arrangement they were loaded from, or are new (AC-19.11.4/4). */
+/** Whether the parts differ from the Arrangement they were loaded from, or are new (AC-19.11.4/4). */
 export function arrangementUnsaved(composer) {
   const layers = composer?.layers ?? [];
   const arrangement = composer?.arrangement;
   if (!arrangement?.id) return layers.length > 0;
-  return JSON.stringify(layers) !== JSON.stringify(arrangement.saved ?? []);
+  const own = { patternId: composer.savedId ?? null, muted: false };
+  const at = Math.min(Math.max(0, composer.activeIndex ?? 0), layers.length);
+  const now = {
+    parts: [...layers.slice(0, at), own, ...layers.slice(at)].map((l) => ({ patternId: l.patternId ?? null, muted: Boolean(l.muted) })),
+    active: at,
+  };
+  return JSON.stringify(now) !== JSON.stringify(arrangement.saved ?? null);
 }
 
 /**
@@ -59,63 +66,74 @@ export function renderLayers(state, handlers) {
   }
   wrap.appendChild(head);
 
-  // Resolve every layer; one that no longer exists in the library is shown as missing.
-  const resolved = (composer.layers ?? []).map((l) => ({ ...l, pattern: handlers.patternById?.(l.patternId) ?? null }));
-  const playable = resolved.filter((l) => l.pattern);
-  const set = layered(draft, playable);
-  const repeatsOf = new Map(playable.map((l, i) => [l.patternId, set.layers[i + 1].repeats]));
+  // Every part in order, the one on screen among them (AC-19.11.6/5); a part
+  // whose Pattern no longer resolves is shown as missing.
+  const all = handlers.parts?.() ?? [];
+  const active = all.find((p) => p.active) ?? { pattern: draft, active: true, muted: false };
+  const others = all.filter((p) => !p.active);
+  const playable = others.filter((p) => p.pattern);
+  const set = layered(active.pattern, playable);
+  const repeatsOf = new Map(playable.map((p, i) => [p, set.layers[i + 1].repeats]));
+  repeatsOf.set(active, set.layers[0].repeats);
 
   const list = el('ol', 'layer-list');
-  const own = el('li', 'layer-item composition');
-  own.dataset.layer = 'composition';
-  own.appendChild(el('span', 'layer-name', { textContent: draft.name }));
-  own.appendChild(el('span', 'layer-kind', { textContent: 'composition' }));
-  const ownRepeats = el('span', 'layer-repeats', { textContent: `×${set.layers[0].repeats}` });
-  ownRepeats.dataset.repeats = String(set.layers[0].repeats);
-  own.appendChild(ownRepeats);
-  list.appendChild(own);
-
-  resolved.forEach((layer, index) => {
-    const item = el('li', `layer-item${layer.muted ? ' muted' : ''}${layer.pattern ? '' : ' missing'}`);
+  all.forEach((part, index) => {
+    const item = el('li', `layer-item${part.active ? ' composition active' : ''}${part.muted ? ' muted' : ''}${part.pattern ? '' : ' missing'}`);
     item.dataset.layer = String(index);
-    item.dataset.patternId = layer.patternId;
-    item.dataset.muted = String(Boolean(layer.muted));
-    const name = el('span', 'layer-name', { textContent: layer.pattern ? layer.pattern.name : 'Missing Pattern' });
+    item.dataset.patternId = part.id ?? '';
+    item.dataset.active = String(Boolean(part.active));
+    item.dataset.muted = String(Boolean(part.muted));
+    // The name is the way onto the screen (AC-19.11.6/1); the part there is marked.
+    const name = button('layer-name layer-pick', part.pattern ? part.pattern.name : 'Missing Pattern', 'layer-pick', {
+      disabled: Boolean(part.active) || !part.pattern,
+      title: part.active ? 'On screen now' : 'Put this part in the composing grid, to see and record its notes',
+    });
+    name.dataset.layer = String(index);
+    name.setAttribute('aria-pressed', String(Boolean(part.active)));
+    name.addEventListener('click', () => handlers.onLayerActivate?.(index));
     item.appendChild(name);
-    if (layer.pattern) {
-      const kind = layerKind(layer.pattern);
-      const k = el('span', 'layer-kind', { textContent: KIND_LABELS[kind] });
+    if (part.pattern) {
+      const kind = part.active ? 'composition' : layerKind(part.pattern);
+      const k = el('span', 'layer-kind', { textContent: part.active ? 'on screen' : KIND_LABELS[kind] });
       k.dataset.kind = kind;
       item.appendChild(k);
-      const r = el('span', 'layer-repeats', { textContent: `×${repeatsOf.get(layer.patternId)}` });
-      r.dataset.repeats = String(repeatsOf.get(layer.patternId));
+      if (!part.id) {
+        const u = el('span', 'layer-part-unsaved', { textContent: 'not saved' });
+        u.dataset.partUnsaved = 'true';
+        item.appendChild(u);
+      }
+      const r = el('span', 'layer-repeats', { textContent: `×${repeatsOf.get(part)}` });
+      r.dataset.repeats = String(repeatsOf.get(part));
       item.appendChild(r);
     }
-    const mute = button(`layer-mute${layer.muted ? ' on' : ''}`, layer.muted ? 'Unmute' : 'Mute', 'layer-mute', {
-      title: layer.muted ? 'Hear this layer again' : 'Silence this layer; it still counts in the loop',
-    });
-    mute.dataset.layer = String(index);
-    mute.setAttribute('aria-pressed', String(Boolean(layer.muted)));
-    mute.addEventListener('click', () => handlers.onLayerMute?.(index, !layer.muted));
-    item.appendChild(mute);
-    const remove = button('layer-remove', 'Remove', 'layer-remove', { title: 'Take this layer out' });
-    remove.dataset.layer = String(index);
-    remove.addEventListener('click', () => handlers.onLayerRemove?.(index));
-    item.appendChild(remove);
+    if (!part.active) {
+      const mute = button(`layer-mute${part.muted ? ' on' : ''}`, part.muted ? 'Unmute' : 'Mute', 'layer-mute', {
+        title: part.muted ? 'Hear this part again' : 'Silence this part; it still counts in the loop',
+      });
+      mute.dataset.layer = String(index);
+      mute.setAttribute('aria-pressed', String(Boolean(part.muted)));
+      mute.addEventListener('click', () => handlers.onLayerMute?.(index, !part.muted));
+      item.appendChild(mute);
+      const remove = button('layer-remove', 'Remove', 'layer-remove', { title: 'Take this part out' });
+      remove.dataset.layer = String(index);
+      remove.addEventListener('click', () => handlers.onLayerRemove?.(index));
+      item.appendChild(remove);
+    }
     list.appendChild(item);
   });
   wrap.appendChild(list);
 
+  const resolved = others;
   if (resolved.length === 0) {
     const empty = el('p', 'layers-empty', { textContent: 'No layers yet. Add layer puts a library Pattern under the composition, repeating to fill the loop.' });
     empty.dataset.empty = 'true';
     wrap.appendChild(empty);
   } else {
     const passes = set.layers[0].repeats;
-    const names = [draft.name, ...playable.map((l) => l.pattern.name)];
     const loop = el('p', 'layers-loop', {
-      textContent: `Loop: ${passes} ${passes === 1 ? 'pass' : 'passes'} of the composition — ${set.layers
-        .map((l, i) => `${names[i]} ×${l.repeats}`)
+      textContent: `Loop: ${passes} ${passes === 1 ? 'pass' : 'passes'} of the part on screen — ${all
+        .filter((p) => p.pattern)
+        .map((p) => `${p.pattern.name} ×${repeatsOf.get(p)}`)
         .join(', ')}`,
     });
     loop.dataset.passes = String(passes);
@@ -124,19 +142,38 @@ export function renderLayers(state, handlers) {
 
   const actions = el('div', 'layers-actions');
   const atCap = (composer.layers?.length ?? 0) >= MAX_LAYERS;
-  const add = button('layer-add', 'Add layer…', 'layer-add', {
-    disabled: atCap,
-    title: atCap ? `At most ${MAX_LAYERS} layers` : 'Choose library Patterns to sound under the composition',
+  const picking = Boolean(composer.pickingLayer);
+  const add = button(`layer-add${picking ? ' on' : ''}`, picking ? 'Choosing from the library…' : 'Add layer…', 'layer-add', {
+    disabled: atCap || picking,
+    title: atCap ? `At most ${MAX_LAYERS} layers` : 'Open the library and choose a Pattern to sound under the composition',
   });
+  add.setAttribute('aria-pressed', String(picking));
   add.addEventListener('click', () => handlers.onLayerAdd?.());
   actions.appendChild(add);
+  const fresh = button('layer-new', 'New layer…', 'layer-new', {
+    disabled: atCap || picking,
+    title: atCap ? `At most ${MAX_LAYERS} layers` : 'A blank Pattern, saved under a name and put on screen to compose',
+  });
+  fresh.addEventListener('click', () => handlers.onLayerNew?.());
+  actions.appendChild(fresh);
+  if (picking) {
+    // The library is open and waiting (AC-19.11.1/2).
+    const hint = el('span', 'layers-picking', { textContent: 'Choose a Pattern in the library to add it as a layer.' });
+    hint.dataset.picking = 'true';
+    hint.setAttribute('role', 'status');
+    actions.appendChild(hint);
+    const cancel = button('layer-pick-cancel', 'Cancel', 'layer-pick-cancel');
+    cancel.addEventListener('click', () => handlers.onLayerPickCancel?.());
+    actions.appendChild(cancel);
+  }
 
-  const saved = Boolean(composer.savedId);
+  const unsavedParts = all.filter((p) => !p.id || (p.draft && (!p.savedId || !isComplete(p.draft))));
+  const saved = unsavedParts.length === 0;
   const hasLayers = (composer.layers?.length ?? 0) > 0;
   const save = button('arrangement-save', arrangement?.id ? 'Save arrangement' : 'Save arrangement…', 'arrangement-save', {
     disabled: !saved || !hasLayers,
     title: !saved
-      ? 'Save the composition to the library first — an Arrangement names it by id'
+      ? `Save every part to the library first — an Arrangement names them by id. Not saved: ${unsavedParts.map((p) => p.pattern?.name ?? '?').join(', ')}`
       : !hasLayers
         ? 'Add a layer first'
         : arrangement?.id
@@ -146,9 +183,9 @@ export function renderLayers(state, handlers) {
   save.addEventListener('click', () => handlers.onArrangementSave?.());
   actions.appendChild(save);
   if (arrangement?.id || hasLayers) {
-    const fresh = button('arrangement-new', 'New', 'arrangement-new', { title: 'Clear the layers and start a new Arrangement' });
-    fresh.addEventListener('click', () => handlers.onArrangementNew?.());
-    actions.appendChild(fresh);
+    const clear = button('arrangement-new', 'Clear layers', 'arrangement-new', { title: 'Take every layer out and start a new Arrangement' });
+    clear.addEventListener('click', () => handlers.onArrangementNew?.());
+    actions.appendChild(clear);
   }
   // One ZIP, one MIDI file per layer, each one combined loop long (AC-19.11.5).
   const exportBtn = button('arrangement-export', 'Export arrangement MIDI', 'arrangement-export', {

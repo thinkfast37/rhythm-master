@@ -33,6 +33,9 @@ import {
   sameSlot,
 } from '../core/composer.js';
 import { renderLayers } from './layers.js';
+import { renderScore } from './score.js';
+import { buildScore } from '../core/notation.js';
+import { layered, passesPerLoop } from '../core/arrangement.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 
@@ -40,10 +43,10 @@ const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
 
 /** Whether the composition holds work the library does not (AC-19.1.4). */
 export function composerUnsaved(composer) {
-  const draft = composer?.draft;
-  if (!draft) return false;
-  if (!composer.savedId) return true;
-  return !isComplete(draft);
+  const unsaved = (draft, savedId) => Boolean(draft) && (!savedId || !isComplete(draft));
+  if (unsaved(composer?.draft, composer?.savedId)) return true;
+  // A part left for another keeps its notes in memory (AC-19.11.6/1, /6).
+  return (composer?.layers ?? []).some((l) => unsaved(l.draft, l.savedId));
 }
 
 function button(className, text, action, props = {}) {
@@ -77,7 +80,9 @@ export function renderComposer(root, state, handlers) {
     fresh.appendChild(renderBar(composer, draft, instrument, state, handlers));
     fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers));
     if (draft) {
-      fresh.appendChild(renderComposingGrid(draft, composer, state));
+      // Grid or Score (AC-19.11.8): the composing grid, or one staff per part.
+      if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderArrangementScore(state, handlers));
+      else fresh.appendChild(renderComposingGrid(draft, composer, state, handlers));
       // The layers under it (US-19.11), absent without a composition (AC-19.11.1/5).
       fresh.appendChild(renderLayers(state, handlers));
     } else {
@@ -138,6 +143,25 @@ function renderBar(composer, draft, instrument, state, handlers) {
   const name = el('span', 'composer-name', { textContent: draft ? draft.name : 'No rhythm chosen' });
   name.dataset.name = draft?.name ?? '';
   bar.appendChild(name);
+
+  // Grid | Score (AC-19.11.8/1): the composing grid, or every part as a staff.
+  const views = el('div', 'composer-view-switch', { role: 'group' });
+  views.setAttribute('aria-label', 'Composer view');
+  const view = state.settings.composerView ?? 'grid';
+  views.dataset.view = view;
+  for (const [id, label] of [
+    ['grid', 'Grid'],
+    ['score', 'Score'],
+  ]) {
+    const b = button('mode-option', label, 'composer-view', { disabled: !draft });
+    b.dataset.view = id;
+    b.setAttribute('aria-pressed', String(view === id));
+    b.addEventListener('click', () => {
+      if (view !== id) handlers.onComposerView?.(id);
+    });
+    views.appendChild(b);
+  }
+  bar.appendChild(views);
 
   const recording = Boolean(composer.recording);
   const canRecord = Boolean(draft) && (recording || recordTarget(draft) !== null);
@@ -284,7 +308,7 @@ function renderInstrument(instrument, key, scale, state, handlers) {
  * Measures flow left to right and wrap, centred (tokens.css); a Slot's two
  * boxes are two buttons, so each has its own hit area and accessible name.
  */
-function renderComposingGrid(draft, composer, state) {
+function renderComposingGrid(draft, composer, state, handlers) {
   const grid = el('div', 'composer-grid');
   grid.dataset.measures = String(draft.measures.length);
   const system = effectiveSystem(draft, state.settings.countingSystem ?? 'takadimi');
@@ -294,7 +318,13 @@ function renderComposingGrid(draft, composer, state) {
     const row = el('section', 'measure');
     row.dataset.measure = String(measureIndex);
     row.dataset.timeSignature = measure.timeSignature;
-    row.appendChild(el('span', 'measure-meter prominent', { textContent: measure.timeSignature }));
+    // The meter label is the Time Signature control, as in Practice's grid (AC-1.4.1, AC-19.11.7/2).
+    const meter = el('button', 'measure-meter prominent', { type: 'button', textContent: measure.timeSignature });
+    meter.dataset.action = 'composer-time-signature';
+    meter.dataset.measure = String(measureIndex);
+    meter.setAttribute('aria-label', `Measure ${measureIndex + 1} time signature ${measure.timeSignature}; tap to change`);
+    meter.addEventListener('click', () => handlers.onComposerTimeSignature?.(measureIndex));
+    row.appendChild(meter);
     const beats = el('div', 'beats');
     beats.style.setProperty('--beat-count', String(measure.beats.length));
     const noteValue = beatNoteValue(measure.timeSignature);
@@ -542,8 +572,16 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     vary.dataset.action = 'add-variation';
     vary.setAttribute('title', canDuplicate(draft) ? 'Append a variation of the original — several techniques at once, heard before it is written' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     vary.addEventListener('click', () => handlers.onComposerAddVariation?.(vary));
+    // + Measure and − Measure as Practice's grid offers them (AC-1.1.3, AC-1.1.8, AC-19.11.7/2).
+    const count = draft.measures.length;
+    const addM = button('action composer-add-measure', '+ Measure', 'composer-add-measure', { disabled: count >= MAX_MEASURES });
+    addM.setAttribute('title', count >= MAX_MEASURES ? `A Pattern may hold at most ${MAX_MEASURES} Measures` : 'Add a Measure after the last, in its meter');
+    addM.addEventListener('click', () => handlers.onComposerAddMeasure?.());
+    const removeM = button('action composer-remove-measure', '− Measure', 'composer-remove-measure', { disabled: count <= 1 });
+    removeM.setAttribute('title', count <= 1 ? 'A Pattern keeps at least one Measure' : 'Remove the last Measure');
+    removeM.addEventListener('click', () => handlers.onComposerRemoveMeasure?.());
     const measures = el('div', 'control-group structure-row');
-    measures.append(vary, dup);
+    measures.append(addM, removeM, vary, dup);
     wrap.appendChild(labelled('Measures', measures));
   }
   return wrap;
@@ -569,8 +607,66 @@ function renderMidiPicker(state, handlers) {
   return field;
 }
 
-/** Move the playback cursor in the composing grid without rebuilding it. */
+/**
+ * The arrangement as sheet music (AC-19.11.8): one staff per part, in the
+ * parts' order, each one combined loop long — the part repeated as it plays, a
+ * progression walking its chords — with the part on screen marked and the
+ * cursor running in its staff. Each part is the same engraver Practice prints
+ * with, handed the part's passes in the loop; the one timeline, read as notes.
+ */
+function renderArrangementScore(state, handlers) {
+  const wrap = el('div', 'composer-scores');
+  const all = handlers.parts?.() ?? [];
+  const active = all.find((p) => p.active);
+  const others = all.filter((p) => !p.active && p.pattern);
+  const set = active ? layered(active.pattern, others) : null;
+  const passesOf = new Map();
+  if (set) {
+    passesOf.set(active, passesPerLoop(set.layers[0]));
+    others.forEach((p, i) => passesOf.set(p, passesPerLoop(set.layers[i + 1])));
+  }
+  const position = state.isPlaying && state.transportPosition?.composition !== false ? state.transportPosition : null;
+  const width = Math.max(320, (state.composer.widthPx ?? 0) - 32);
+  const scores = [];
+  all.forEach((part, index) => {
+    if (!part.pattern) return;
+    const block = el('section', `part-score${part.active ? ' active' : ''}${part.muted ? ' muted' : ''}`);
+    block.dataset.part = String(index);
+    block.dataset.active = String(Boolean(part.active));
+    block.dataset.passes = String(passesOf.get(part) ?? 1);
+    block.dataset.measures = String(part.pattern.measures.length);
+    block.setAttribute('aria-label', `${part.pattern.name}${part.active ? ', on screen' : ''}${part.muted ? ', muted' : ''}`);
+    const head = el('div', 'part-score-head');
+    head.appendChild(el('span', 'part-score-name', { textContent: part.pattern.name }));
+    if (part.active) head.appendChild(el('span', 'part-score-tag', { textContent: 'on screen' }));
+    if (part.muted) head.appendChild(el('span', 'part-score-tag muted', { textContent: 'muted' }));
+    block.appendChild(head);
+    const host = el('div', 'score part-score-staff');
+    const score = buildScore(part.pattern, { countingSystem: state.settings.countingSystem ?? 'takadimi', passes: passesOf.get(part) ?? 1, title: part.pattern.name });
+    renderScore(host, score, {
+      width,
+      transportPosition: part.active && position ? { ...position, pass: position.repeat ?? 0 } : null,
+      aids: state.settings.sheetAids,
+    });
+    block.appendChild(host);
+    wrap.appendChild(block);
+    scores.push({ host, score, active: Boolean(part.active), width, aids: state.settings.sheetAids });
+  });
+  wrap.__scores = scores;
+  return wrap;
+}
+
+/** Move the playback cursor in the composing grid, or the score, without rebuilding it. */
 export function moveComposerCursor(root, position) {
+  const scores = root.querySelector('.composer-scores');
+  if (scores?.__scores) {
+    // The cursor runs in the part on screen's staff (AC-19.11.8/2); a layer's event moves nothing.
+    const own = scores.__scores.find((s) => s.active);
+    if (own && (!position || position.composition !== false)) {
+      renderScore(own.host, own.score, { width: own.width, transportPosition: position ? { ...position, pass: position.repeat ?? 0 } : null, aids: own.aids });
+    }
+    return root;
+  }
   const grid = root.querySelector('.composer-grid');
   if (!grid) return root;
   const previous = grid.querySelector('.slot.playing');

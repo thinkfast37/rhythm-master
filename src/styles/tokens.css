@@ -2204,6 +2204,9 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .layer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .layer-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
 .layer-item.composition { border-color: var(--brand); }
+.layer-pick { text-align: left; }
+.layer-pick:disabled { opacity: 1; cursor: default; color: var(--brand); border-color: transparent; background: transparent; padding-left: 0; }
+.layer-part-unsaved { font: 500 12px/1.4 var(--font-ui); color: var(--warn, #e0a030); }
 .layer-item.muted .layer-name, .layer-item.muted .layer-kind { opacity: 0.5; }
 .layer-item.missing .layer-name { color: var(--warn, #e0a030); }
 .layer-name { font: 600 13px/1.4 var(--font-ui); color: var(--ink); flex: 1 1 100px; min-width: 0; }
@@ -2223,7 +2226,21 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
   cursor: pointer;
 }
 .composer-layers button:disabled { opacity: 0.5; cursor: default; }
-.layer-mute.on { border-color: var(--brand); color: var(--brand); }
+.layer-mute.on, .layer-add.on { border-color: var(--brand); color: var(--brand); }
+.layers-picking { font: 500 12px/1.4 var(--font-ui); color: var(--brand); align-self: center; }
+
+/* --- the arrangement as a score (AC-19.11.8) ------------------------------- */
+
+.composer-view-switch { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.composer-scores { margin: 0 16px; display: flex; flex-direction: column; gap: 14px; }
+.part-score { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 0 4px; }
+.part-score.active { border-color: var(--brand); }
+.part-score.muted { opacity: 0.6; }
+.part-score-head { display: flex; align-items: baseline; gap: 10px; padding: 0 12px 4px; }
+.part-score-name { font: 700 14px/1.3 var(--font-ui); color: var(--ink); }
+.part-score-tag { font: 600 11px/1.3 var(--font-ui); color: var(--brand); text-transform: uppercase; letter-spacing: 0.04em; }
+.part-score-tag.muted { color: var(--ink-dim); }
+.part-score-staff .score-title { display: none; }
 
 /* --- goals (US-14.1) ------------------------------------------------------ */
 

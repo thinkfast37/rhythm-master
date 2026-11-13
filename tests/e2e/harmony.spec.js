@@ -1363,15 +1363,17 @@ test("AC-2.10.2/1 — One repeat is one harmonic cycle of the Pattern's own prog
   expect(await fillInForce(page)).toBe('up');
 
   // Held through the first pass — well inside the three-pass repeat — nothing has moved yet.
+  // The pass HEARD, as the views read it: the transport schedules up to a lookahead
+  // ahead, a whole pass under a throttled timer (AC-4.1.1), and that is not what is in force.
   await page.waitForTimeout(800);
-  expect(await page.evaluate(() => window.__rm.getState().loop)).toBeLessThan(3);
+  expect(await page.evaluate(() => window.__rm.getState().transportPosition?.loop ?? window.__rm.getState().loop)).toBeLessThan(3);
   expect(await progressionInForce(page)).toBe('I-IV-V');
   expect(await fillInForce(page)).toBe('up');
 
   const { PROGRESSIONS, ARPEGGIOS } = await import('../../src/core/harmony.js');
   expect(await untilProgression(page, PROGRESSIONS[1].id)).toBe(true);
   // The repeat boundary moved both catalogues — independently, not one in place of the other.
-  expect(await page.evaluate(() => window.__rm.getState().loop)).toBeGreaterThanOrEqual(3);
+  expect(await page.evaluate(() => window.__rm.getState().transportPosition?.loop ?? window.__rm.getState().loop)).toBeGreaterThanOrEqual(3);
   expect(await fillInForce(page)).toBe(ARPEGGIOS[1].id);
 
   await page.locator('[data-action="stop"]').click();

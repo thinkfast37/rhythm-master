@@ -196,8 +196,8 @@ export const anyHarmony = (p) => (isLayered(p) ? layeredHasHarmony(p) : hasHarmo
 /* --- the Arrangement: what is saved (AC-19.11.4) ---------------------------- */
 
 /** A new, unsaved Arrangement over a composition. `id` is null until the store assigns one. */
-export function createArrangement(name, compositionId, layers = []) {
-  return { id: null, name, compositionId, layers: layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) })) };
+export function createArrangement(name, compositionId, layers = [], active = 0) {
+  return { id: null, name, compositionId, layers: layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) })), active };
 }
 
 /**
@@ -231,6 +231,9 @@ export function validateArrangement(arrangement) {
   if (typeof arrangement.compositionId !== 'string' || !arrangement.compositionId) problems.push('An Arrangement needs a composition');
   if (!Array.isArray(arrangement.layers) || arrangement.layers.length === 0) problems.push('An Arrangement needs at least one layer');
   else {
+    // The part on screen: the composition (0) or a layer, by position (AC-19.11.6/6).
+    const active = arrangement.active ?? 0;
+    if (!Number.isInteger(active) || active < 0 || active > arrangement.layers.length) problems.push('The part on screen must be one of the parts');
     if (arrangement.layers.length > MAX_LAYERS) problems.push(`At most ${MAX_LAYERS} layers`);
     const seen = new Set();
     for (const layer of arrangement.layers) {

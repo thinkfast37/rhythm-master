@@ -66,6 +66,8 @@ export const DEFAULTS = {
    * (AC-19.8.4, data-model §6).
    */
   composerInstrument: 'guitar',
+  /** Grid or Score in the Composer (AC-19.11.8/3). */
+  composerView: 'grid',
   composerLabelMode: 'notes',
   composerCapo: 0,
   composerFretRange: [0, 24],
