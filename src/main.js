@@ -386,9 +386,19 @@ function cycling() {
   return state.fillCycle.on && state.pattern.soundMode === 'melodic' && hasHarmony(state.pattern);
 }
 
-/** The catalogue index of the fill in force for a pass, or null outside cycle mode. */
+/**
+ * The catalogue index of the fill in force for a pass, or null outside cycle mode.
+ *
+ * A re-based cycle (`rebaseCycle`) starts from the pass the transport has
+ * SCHEDULED, which runs up to its lookahead ahead of the pass being HEARD; a
+ * pass before the new base was handed to the transport under the cycle as it
+ * was, and is read under that cycle still, so the views name the fill that is
+ * actually sounding (AC-2.12.3/4, AC-4.1.9).
+ */
 function fillIndexAt(loop) {
   if (!cycling()) return null;
+  const previous = state.fillCycle.previous;
+  if (previous && loop < state.fillCycle.baseLoop) return fillIndexFor(state.pattern, previous, loop);
   return fillIndexFor(
     state.pattern,
     { ...state.fillCycle, repeats: state.settings.fillCycleRepeats, order: fillOrder() },
@@ -415,6 +425,8 @@ function progressionCycling() {
 /** The catalogue index of the progression in force for a pass, or null outside progression cycling. */
 function progressionIndexAt(loop) {
   if (!progressionCycling()) return null;
+  const previous = state.progressionCycle.previous;
+  if (previous && loop < state.progressionCycle.baseLoop) return progressionIndexFor(state.pattern, previous, loop);
   return progressionIndexFor(
     state.pattern,
     { ...state.progressionCycle, repeats: state.settings.fillCycleRepeats, order: progressionOrder() },
@@ -691,15 +703,34 @@ function fillLabel() {
  */
 function rebaseCycle() {
   const index = fillIndexAt(state.isPlaying ? state.loop : 0);
+  // The cycle as it was, for the passes already scheduled under it (see `fillIndexAt`).
+  const previous = state.isPlaying ? generationOf(state.fillCycle, state.settings.fillCycleRepeats, fillOrder()) : null;
   state.fillCycle.start = index ?? fillIndexOf(state.pattern);
   state.fillCycle.baseLoop = state.isPlaying ? state.loop : 0;
+  if (previous) state.fillCycle.previous = previous;
+  else delete state.fillCycle.previous;
+}
+
+/** A cycle's counting rule frozen as it stands: what a pass scheduled under it is read with. */
+function generationOf(cycle, repeats, order) {
+  return { start: cycle.start, baseLoop: cycle.baseLoop, repeats, order, previous: cycle.previous ?? null };
 }
 
 /** As `rebaseCycle`, for progression cycling (US-2.10). */
 function rebaseProgressionCycle() {
   const index = progressionIndexAt(state.isPlaying ? state.loop : 0);
+  const previous = state.isPlaying ? generationOf(state.progressionCycle, state.settings.fillCycleRepeats, progressionOrder()) : null;
   state.progressionCycle.start = index ?? progressionIndexOf(state.pattern);
   state.progressionCycle.baseLoop = state.isPlaying ? state.loop : 0;
+  if (previous) state.progressionCycle.previous = previous;
+  else delete state.progressionCycle.previous;
+}
+
+/** A cycle without its previous rule: a run that counts from 0 again has no pass scheduled under one. */
+function fresh(cycle) {
+  const rest = { ...cycle };
+  delete rest.previous;
+  return rest;
 }
 
 /**
@@ -757,9 +788,9 @@ function restartTransport() {
   // A restart resets the loop counter (AC-4.2.2); the fill and progression in
   // force carry on.
   rebaseCycle();
-  state.fillCycle.baseLoop = 0;
+  state.fillCycle = { ...fresh(state.fillCycle), baseLoop: 0 };
   rebaseProgressionCycle();
-  state.progressionCycle.baseLoop = 0;
+  state.progressionCycle = { ...fresh(state.progressionCycle), baseLoop: 0 };
   // Tempo, swing and settings all restart the run, and all change what the
   // screen-off handover would play (AC-4.1.15/5).
   refreshBackgroundAudio();
@@ -815,6 +846,8 @@ function melodicVoice() {
 
 /** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2, AC-2.13.2). */
 const voiceLog = [];
+/** Test seam: the MIDI notes sounded by taps on the instrument alone, newest last (AC-19.2.4, AC-19.3.4). */
+const tapLog = [];
 function logVoice(event, via) {
   const instrument = state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? 'guitar' : 'piano';
   const voice = event.composition === false ? resolveVoice({ composer: false, voice: state.settings.melodicVoice }) : currentVoice();
@@ -910,6 +943,8 @@ function previewNote(midi) {
     return;
   }
   ensurePianoLoaded();
+  tapLog.push(midi);
+  if (tapLog.length > 500) tapLog.shift();
   const event = { accent: 2, pitch: { midiNote: midi, frequency: midiToFrequency(midi) } };
   const sound = (c) => {
     const via = melodicVoice()(c, c.destination, event, c.currentTime + 0.01);
@@ -2205,8 +2240,8 @@ const handlers = {
     // whatever the last Stop held, or the Pattern's own when the cycle was
     // turned on since. Only the counting is reset. The ordinary Play loops the
     // Pattern, never the Section (AC-18.1.3/4).
-    state.fillCycle = { ...state.fillCycle, baseLoop: 0 };
-    state.progressionCycle = { ...state.progressionCycle, baseLoop: 0 };
+    state.fillCycle = { ...fresh(state.fillCycle), baseLoop: 0 };
+    state.progressionCycle = { ...fresh(state.progressionCycle), baseLoop: 0 };
     state.compose.on = false;
     render();
 
@@ -3356,8 +3391,8 @@ const transport = createTransport({
     // `baseLoop: 0` against a cleared counter means the next Play carries on
     // from what is held, with its repeats counted afresh. A Song still ends on
     // the Pattern's own, since its entries are not these cycles (AC-18.1.3/5).
-    state.fillCycle = { ...state.fillCycle, start: heldFill, baseLoop: 0 };
-    state.progressionCycle = { ...state.progressionCycle, start: heldProgression, baseLoop: 0 };
+    state.fillCycle = { ...fresh(state.fillCycle), start: heldFill, baseLoop: 0 };
+    state.progressionCycle = { ...fresh(state.progressionCycle), start: heldProgression, baseLoop: 0 };
     state.compose.on = false;
     mediaSession.setStopped();
     // Only a stop ends the keep-alive — a recoverable suspension never reaches
@@ -3674,6 +3709,8 @@ if (typeof window !== 'undefined') {
     composerUnsaved: () => composerUnsaved(state.composer),
     /** Which voice sounded each melodic event (AC-19.6.1/2, AC-19.7.1/2). */
     voiceLog: () => voiceLog.slice(),
+    /** The notes tapped on the instrument, apart from anything the transport played (AC-19.3.4). */
+    tapLog: () => tapLog.slice(),
     guitar,
     piano,
     /** The voice a melodic note would sound with now (US-2.13). */

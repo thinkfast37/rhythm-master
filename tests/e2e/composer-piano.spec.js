@@ -180,7 +180,9 @@ test('AC-19.3.4 — Tapping a key sounds its note at any time', async ({ page })
   await openApp(page);
   await loadFourBeats(page);
   await toPiano(page);
-  const count = () => page.evaluate(() => window.__rm.voiceLog().filter((v) => v.midi === 67).length);
+  // Taps alone: the transport plays a recorded note back from the next pass
+  // (AC-19.6.2/1), scheduled up to its lookahead early, and that is not a tap.
+  const count = () => page.evaluate(() => window.__rm.tapLog().filter((m) => m === 67).length);
   await key(page, 67).click();
   expect(await count()).toBe(1);
   // The first tap is what asks for the piano's recordings (AC-2.13.4/1), so it

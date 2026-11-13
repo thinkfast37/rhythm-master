@@ -454,13 +454,58 @@ test('AC-2.12.3/4 — Changing the list, or switching between All and My list, w
   expect(seen[0]).toBe(fill(1));
   expect(seen.slice(1, 3)).toEqual([fill(10), fill(20)]);
 
-  // Back to All while playing: the fill in force keeps its place, then the catalogue's next.
+  // Back to All while playing: the fill in force keeps its place, then the cycle
+  // moves on through the catalogue, consecutively. The pass after the one heard
+  // may already have been handed to the transport — the lookahead widens past a
+  // whole pass under a throttled timer (AC-4.1.1) — and a pass handed over plays
+  // as it was (AC-4.1.9): under My list, that is the list's next. From there the
+  // cycle steps through All.
   const inForce = await fillInForce(page);
   await option(page, 'fills', 'all').click();
   expect(await fillInForce(page)).toBe(inForce);
-  const next = ARPEGGIOS[(ARPEGGIOS.findIndex((a) => a.id === inForce) + 1) % ARPEGGIOS.length].id;
-  expect(await untilFill(page, next)).toBe(true);
+  const all = ARPEGGIOS.map((a) => a.id);
+  const successor = (id, order) => order[(order.indexOf(id) + 1) % order.length];
+  const seenAfter = await watchFills(page, 9000);
+  expect(seenAfter[0]).toBe(inForce);
+  expect(seenAfter.length).toBeGreaterThanOrEqual(3);
+  expect([successor(inForce, all), successor(inForce, [fill(10), fill(20)])]).toContain(seenAfter[1]);
+  for (let i = 2; i < seenAfter.length; i++) expect(seenAfter[i]).toBe(successor(seenAfter[i - 1], all));
   expect(await page.evaluate(() => window.__rm.getState().isPlaying)).toBe(true);
+  await page.locator('[data-action="stop"]').click();
+});
+
+test('AC-2.12.3/4 — Changing the list, or switching between All and My list, while playing applies without a restart: the entry in force keeps its place and plays its repeats from the pass it is on before the cycle moves on through what it now steps through: switched in the lookahead, after the next pass is scheduled and before this one has finished sounding', async ({ page }) => {
+  await cyclingBlank(page);
+  await page.locator('.fill-cycle').click();
+  await page.locator('[data-action="play"]').click();
+  expect(await untilFill(page, fill(1))).toBe(true);
+  await pick(page, 'fills', [fill(10), fill(20)]);
+  // The window the transport opens on every pass — the next pass scheduled,
+  // this one still heard — is a lookahead wide, so the switch is made from
+  // inside the page in the frame the window is seen, with no round trip.
+  const seen = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const started = performance.now();
+        const tick = () => {
+          const s = window.__rm.getState();
+          if (s.isPlaying && s.transportPosition && s.loop > s.transportPosition.loop) {
+            const heard = s.transportPosition.loop;
+            const before = window.__rm.fillInForce();
+            window.__rm.handlers.onCycleFrom('fills', 'all');
+            const after = window.__rm.fillInForce();
+            resolve({ before, after, heard, heardAfter: window.__rm.getState().transportPosition.loop, playing: window.__rm.getState().isPlaying });
+          } else if (performance.now() - started > 15000) resolve(null);
+          else requestAnimationFrame(tick);
+        };
+        tick();
+      })
+  );
+  expect(seen).not.toBeNull();
+  expect(seen.playing).toBe(true);
+  expect(seen.heardAfter).toBe(seen.heard);
+  // The pass being heard names the fill it is playing, for as long as it lasts.
+  expect(seen.after).toBe(seen.before);
   await page.locator('[data-action="stop"]').click();
 });
 

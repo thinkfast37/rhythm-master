@@ -361,13 +361,22 @@ can catch either and a merge deploys them straight to the musician:
 
 Say so in the option text and let them choose. Do not change the default.
 
-**A red deploy is your problem, not GitHub's.** Re-run the failed job if you
-can. If the token cannot (`403 Resource not accessible by integration` on
-`rerun-failed-jobs` and on `workflow_dispatch` — it holds `contents` and `pages`
-write, not `actions: write`), say plainly that the maintainer has to press
-**Re-run failed jobs** on the run, and give them the link. The next merge to
-`main` also retriggers it, so a genuinely transient outage clears itself on the
-following change.
+**A red deploy is your problem, not GitHub's.** When `verify` fails on
+`main`, a test failed, and a test that fails is evidence about the code (§2a)
+— **"flaky" is not a diagnosis.** Read the failing assertion, find the cause,
+fix it, prove it with a run that failed before and passes after, and land that
+fix: the next merge to `main` retriggers the deploy. Only when you have tried
+and genuinely cannot find or fix the cause do you come to the maintainer, and
+then with what you tried. *(Added 2026-11-13: the deploy of PR #165 failed on
+two timing tests and the maintainer was asked to press Re-run; three real
+defects were behind the "flakes" (T475). "Stop asking me to go and investigate
+when deploys fail because of failing tests. Diagnose and fix the tests; only if
+you are unable, let me know.")* The token cannot re-run a job itself
+(`403 Resource not accessible by integration` on `rerun-failed-jobs` and on
+`workflow_dispatch` — it holds `contents` and `pages` write, not
+`actions: write`), and a re-run would prove nothing anyway. When the `deploy`
+job alone fails — a Pages outage, a rate-limited action download — say so and
+land any pending change, which retriggers it.
 
 ---
 

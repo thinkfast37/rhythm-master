@@ -704,6 +704,37 @@ test('AC-15.1.16/9 — A scroll of the main panel the app did not itself perform
   }
 });
 
+test('AC-15.1.16/9 — A scroll of the main panel the app did not itself perform stands the autoscroll down, whatever gesture produced it and whether or not it raised a pointer or keyboard event: a scroll landing in the same frame as an autoscroll', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  await page.locator('.library-toggle').click();
+  await loadTallPattern(page);
+  await page.locator('[data-action="play"]').click();
+  const panel = page.locator('.main-panel');
+  for (let i = 0; i < 40; i++) {
+    const before = await panel.evaluate((el) => el.scrollTop);
+    await page.waitForTimeout(250);
+    if (before === (await panel.evaluate((el) => el.scrollTop))) break;
+  }
+  /*
+   * The musician's scroll and the autoscroll's own, in one task, before the
+   * browser has dispatched a single scroll event: momentum stopping as a Beat
+   * sounds. The scroll event the musician's move raises arrives after the
+   * app's, and attribution by time alone reads it as the app's.
+   */
+  const parked = await panel.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+    const parked = el.scrollTop;
+    window.__rmFollowCursor();
+    return parked;
+  });
+  expect(parked).toBeGreaterThan(0);
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(500);
+    expect(await panel.evaluate((el) => el.scrollTop), `offset held at ${(i + 1) * 500}ms`).toBe(parked);
+  }
+});
+
 test('AC-15.1.16/3 — A control keeps its place on screen when an update changes the height of the content above it', async ({
   page,
 }) => {
