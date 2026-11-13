@@ -728,7 +728,8 @@ function rebaseProgressionCycle() {
 
 /** A cycle without its previous rule: a run that counts from 0 again has no pass scheduled under one. */
 function fresh(cycle) {
-  const { previous: _previous, ...rest } = cycle;
+  const rest = { ...cycle };
+  delete rest.previous;
   return rest;
 }
 
