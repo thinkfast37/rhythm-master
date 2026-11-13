@@ -4901,6 +4901,16 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.7/2** — The Composer's Measures row adds a Measure after the last, in its meter, up to the cap, and removes the last down to one; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass
     - **AC-19.11.7/3** — A saved part on screen is the open Pattern in Practice: Measures, meter and anything else changed there are on screen again on returning to the Composer, the layers kept
 
+- **AC-19.11.8** — The arrangement as sheet music
+  - **Given** a composition with layers
+  - **When** the Composer chooses Score in the record bar
+  - **Then** every part is engraved as its own staff, in the parts' order, each one combined loop long, the part on screen marked and the cursor running in its staff
+  - *(Added 2026-11-13 at the maintainer's request: "I also need to be able to do things like see sheet music that shows both layers when I open the pattern that consists of multiple layers." Decisions taken without asking: the staves are stacked, one per part, each engraved by the engraver Practice's sheet view uses (US-12.2, US-12.3) and handed the part's passes in the combined loop, so a short part is written out as many times as it plays and a progression walks its chords; the record target is the grid's and is not drawn on the score; printing the arrangement is not in this version.)*
+  - **Cases**:
+    - **AC-19.11.8/1** — A Grid | Score switch sits in the record bar, Grid on first use; Score puts one staff per part in the composing grid's place, in the parts' order, each headed by the part's name, the part on screen marked and a muted part marked, each staff one combined loop long with the part repeated as it plays and a progression walking its chords
+    - **AC-19.11.8/2** — While playing, the cursor runs in the part on screen's staff and nowhere else, following the loop through every repeat
+    - **AC-19.11.8/3** — Grid puts the composing grid back; the choice is remembered in `rm.settings.v1` and is in force after a reload; the score follows every change — a note recorded, a Measure added, a part added, muted, removed or switched to — on the next render
+
 ---
 
 

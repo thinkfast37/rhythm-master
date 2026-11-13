@@ -2544,6 +2544,13 @@ const handlers = {
   },
 
   /** The instrument view's remembered settings (AC-19.2.2/5, AC-19.3.1/3). */
+  /** Grid or Score in the Composer, remembered (AC-19.11.8/1, /3). */
+  onComposerView(view) {
+    if (view !== 'grid' && view !== 'score') throw new Error(`Unknown Composer view: ${view}`);
+    state.settings = settingsStore.save({ composerView: view });
+    render();
+  },
+
   onComposerSetting(partial) {
     state.settings = settingsStore.save(partial);
     render();

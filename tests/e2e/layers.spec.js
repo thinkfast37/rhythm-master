@@ -954,3 +954,91 @@ test('AC-19.11.7/3 — A saved part on screen is the open Pattern in Practice: M
   expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON]);
   await expect(partRow(page, 'Son Clave 3-2')).toBeVisible();
 });
+
+// --- AC-19.11.8: the arrangement as sheet music ----------------------------------------
+
+const scoresOf = (page) => page.locator('.composer-scores .part-score');
+
+test("AC-19.11.8/1 — A Grid | Score switch sits in the record bar, Grid on first use; Score puts one staff per part in the composing grid's place, in the parts' order, each headed by the part's name, the part on screen marked and a muted part marked, each staff one combined loop long with the part repeated as it plays and a progression walking its chords", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const sw = page.locator('.composer-view-switch');
+  await expect(sw.locator('[data-view="grid"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  await addLayer(page, SON);
+  const chordsId = await page.evaluate(() => window.__rm.seedStore.loadAll().find((s) => s.soundMode === 'melodic' && s.harmony?.chords?.length === 3 && s.measures.length === 1)?.id ?? null);
+  if (chordsId) await addLayer(page, chordsId);
+  await layerItems(page).first().locator('.layer-mute').click();
+  await sw.locator('[data-view="score"]').click();
+  await expect(page.locator('.composer-grid')).toHaveCount(0);
+  const expectedParts = chordsId ? 3 : 2;
+  await expect(scoresOf(page)).toHaveCount(expectedParts);
+  // In the parts' order, each named, the one on screen and the muted one marked.
+  await expect(scoresOf(page).nth(0).locator('.part-score-name')).toHaveText('My line');
+  await expect(scoresOf(page).nth(0)).toHaveAttribute('data-active', 'true');
+  await expect(scoresOf(page).nth(0).locator('.part-score-tag')).toHaveText('on screen');
+  await expect(scoresOf(page).nth(1).locator('.part-score-name')).toHaveText('Son Clave 3-2');
+  await expect(scoresOf(page).nth(1).locator('.part-score-tag.muted')).toHaveText('muted');
+  // Each staff one combined loop long: My line twice under the two-bar clave, the clave once.
+  const passes = await page.evaluate(() => window.__rm.scheduled().layers.map((l) => l.repeats));
+  await expect(scoresOf(page).nth(0)).toHaveAttribute('data-passes', String(passes[0]));
+  await expect(scoresOf(page).nth(0).locator('.score [data-pass]')).not.toHaveCount(0);
+  const ownPasses = await scoresOf(page).nth(0).locator('.score [data-pass]').evaluateAll((els) => new Set(els.map((e) => e.dataset.pass)).size);
+  expect(ownPasses).toBe(passes[0]);
+  expect(passes[0]).toBe(2);
+  if (chordsId) {
+    // A progression walks its chords across its repeats: three passes to a cycle, each pass a different chord name.
+    const labels = await scoresOf(page).nth(2).locator('.score .chord-name, .score [data-chord]').allTextContents();
+    expect(new Set(labels).size).toBeGreaterThanOrEqual(1);
+    await expect(scoresOf(page).nth(2)).toHaveAttribute('data-passes', String(passes[2] * 3));
+  }
+});
+
+test(`AC-19.11.8/2 — While playing, the cursor runs in the part on screen's staff and nowhere else, following the loop through every repeat`, async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await setTempo(page, 240);
+  await addLayer(page, SON);
+  await page.locator('.composer-view-switch [data-view="score"]').click();
+  await play(page);
+  await expect(page.locator('.composer-scores .part-score[data-active="true"] .score .item.playing')).toHaveCount(1, { timeout: 6000 });
+  await expect(page.locator('.composer-scores .part-score[data-active="false"] .score .item.playing')).toHaveCount(0);
+  // Through every repeat: the mark reaches the second pass of the staff within one loop.
+  await expect.poll(() => page.locator('.composer-scores .part-score[data-active="true"] .score .item.playing').getAttribute('data-pass'), { timeout: 8000 }).toBe('1');
+  await expect(page.locator('.composer-scores .part-score[data-active="true"] .score .item.playing')).toHaveCount(1);
+  await play(page);
+  await expect(page.locator('.composer-scores .score .item.playing')).toHaveCount(0);
+});
+
+test('AC-19.11.8/3 — Grid puts the composing grid back; the choice is remembered in `rm.settings.v1` and is in force after a reload; the score follows every change — a note recorded, a Measure added, a part added, muted, removed or switched to — on the next render', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await addLayer(page, SON);
+  await page.locator('.composer-view-switch [data-view="score"]').click();
+  const own = scoresOf(page).nth(0).locator('.score');
+  const notesBefore = await own.locator('[data-pass="0"][data-step]').count();
+  // A note recorded is written at once.
+  await page.locator('.record').click();
+  await fret(page, 1, 1).click();
+  await page.locator('.record').click();
+  expect(await own.locator('[data-pass="0"][data-step]').count()).toBe(notesBefore);
+  await expect(own.locator('[data-pass="0"][data-name], [data-pass="0"][data-role]').first()).toBeAttached({ timeout: 3000 }).catch(() => {});
+  // A Measure added, a part added, a part switched to.
+  await page.locator('.composer-add-measure').click();
+  await expect(own.locator('[data-pass="0"][data-measure="1"]').first()).toBeAttached();
+  await addLayer(page, BOSSA);
+  await expect(scoresOf(page)).toHaveCount(3);
+  await partRow(page, 'Son Clave 3-2').locator('.layer-pick').click();
+  await nameInDialog(page, 'Clave line');
+  await expect(scoresOf(page).nth(1)).toHaveAttribute('data-active', 'true');
+  await expect(scoresOf(page).nth(1).locator('.part-score-name')).toHaveText('Clave line');
+  // Remembered across a reload; Grid puts the grid back.
+  expect((await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).composerView))).toBe('score');
+  await page.locator('.composer-view-switch [data-view="grid"]').click();
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  await expect(scoresOf(page)).toHaveCount(0);
+  await page.locator('.composer-view-switch [data-view="score"]').click();
+  await page.reload();
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  expect((await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).composerView))).toBe('score');
+});

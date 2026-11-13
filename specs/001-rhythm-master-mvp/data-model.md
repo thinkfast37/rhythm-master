@@ -374,6 +374,7 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "labHelp": false,               // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
   "sheetAids": false,             // AC-12.3.1/2 — whether the melodic score's Note aids (note names and degree colours) are on
   "composerInstrument": "guitar", // AC-19.1.3/3 — "guitar" | "piano", the Composer's instrument view
+  "composerView": "grid",         // AC-19.11.8/3 — "grid" | "score", the composing grid or every part as a staff
   "composerLabelMode": "notes",   // AC-19.2.2/5 — "notes" | "degrees" | "intervals", how in-scale notes are labelled
   "composerCapo": 0,              // AC-19.2.2/5 — 0–12, the fretboard's capo
   "composerFretRange": [0, 24],   // AC-19.2.2/5 — lower and upper visible fret, 0–24
