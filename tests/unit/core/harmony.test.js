@@ -958,6 +958,34 @@ describe('core/harmony', () => {
 });
 
 describe('core/harmony — cycle mode: the fill in force (US-2.7)', () => {
+  it('AC-2.12.3/4 — Changing the list, or switching between All and My list, while playing applies without a restart: the entry in force keeps its place and plays its repeats from the pass it is on before the cycle moves on through what it now steps through: a pass scheduled before the switch is read under the rule it was scheduled with', () => {
+    const p = setProgression(melodic(), 'I-IV-V');
+    // My list [10, 20] from pass 2, one cycle each: passes 2–4 fill 10, 5–7 fill 20, 8–10 fill 10, 11–13 fill 20.
+    const list = { start: 10, baseLoop: 2, repeats: 1, order: [10, 20] };
+    expect([5, 11].map((loop) => fillIndexFor(p, list, loop))).toEqual([20, 20]);
+    // Switched to All while pass 11 is heard and pass 12 already scheduled: the new rule
+    // starts from pass 12's fill under the old one, and pass 11 still reads the old.
+    const all = { start: fillIndexFor(p, list, 12), baseLoop: 12, repeats: 1, order: null, previous: list };
+    expect(all.start).toBe(20);
+    expect(fillIndexFor(p, all, 11)).toBe(20);
+    expect(fillIndexFor(p, all, 10)).toBe(10);
+    expect(fillIndexFor(p, all, 12)).toBe(20);
+    expect(fillIndexFor(p, all, 15)).toBe(21);
+    // Two switches inside one lookahead chain: the oldest rule still reads the oldest passes.
+    const again = { start: fillIndexFor(p, all, 13), baseLoop: 13, repeats: 1, order: [20, 30], previous: all };
+    expect(fillIndexFor(p, again, 10)).toBe(10);
+    expect(fillIndexFor(p, again, 12)).toBe(20);
+    expect(fillIndexFor(p, again, 16)).toBe(30);
+    // Without a previous rule a pass before the base reads the base's own start, as before.
+    expect(fillIndexFor(p, { start: 7, baseLoop: 12, repeats: 1 }, 3)).toBe(7);
+    // The progression counterpart carries a previous rule the same way.
+    const q = setProgression(melodic(), 'I-IV-V');
+    const old = { start: 0, baseLoop: 0, repeats: 1, order: [0, 5] };
+    const fresh = { start: progressionIndexFor(q, old, 6), baseLoop: 6, repeats: 1, order: null, previous: old };
+    expect(progressionIndexFor(q, fresh, 5)).toBe(progressionIndexFor(q, old, 5));
+    expect(progressionIndexFor(q, fresh, 6)).toBe(fresh.start);
+  });
+
   it('AC-2.7.2/1 — One repeat is one harmonic cycle — the passes the progression needs to return to its first chord at Measure 1 — so with the count at 4 under I–IV–V a fill is in force for twelve passes, and under the twelve-bar blues over eight Measures for twelve passes of eight Measures', () => {
     const p = setProgression(melodic(), 'I-IV-V');
     expect(cyclePasses(p)).toBe(3);

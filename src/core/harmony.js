@@ -1567,7 +1567,9 @@ export function fillIndexOf(pattern) {
  * is never in the cycle. Pure, so the grid, the score and the transport agree
  * about which fill a pass is under by construction.
  */
-export function fillIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, order = null } = {}, loop = 0) {
+export function fillIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, order = null, previous = null } = {}, loop = 0) {
+  // A pass before this rule took over is read with the rule it was scheduled under.
+  if (previous && loop < baseLoop) return fillIndexFor(pattern, previous, loop);
   const period = Math.max(1, Math.floor(repeats)) * cyclePasses(pattern);
   const steps = Math.floor(Math.max(0, loop - baseLoop) / period);
   return stepThrough(start, steps, order, ARPEGGIOS.length);
@@ -1615,7 +1617,8 @@ export function progressionIndexOf(pattern) {
  * catalogues that can both be driven by the same `repeats`, stepping forward on
  * the same cadence without being coupled into one combined step (AC-2.10.2/1).
  */
-export function progressionIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, order = null } = {}, loop = 0) {
+export function progressionIndexFor(pattern, { start = 0, baseLoop = 0, repeats = 4, order = null, previous = null } = {}, loop = 0) {
+  if (previous && loop < baseLoop) return progressionIndexFor(pattern, previous, loop);
   const period = Math.max(1, Math.floor(repeats)) * cyclePasses(pattern);
   const steps = Math.floor(Math.max(0, loop - baseLoop) / period);
   return stepThrough(start, steps, order, PROGRESSIONS.length);

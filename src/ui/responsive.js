@@ -76,22 +76,32 @@ export function isLibraryOpen(shell) {
  *
  * The box is whatever scrolls the grid: the main panel on a narrow one, which
  * is bounded to the viewport and starts at its top, or the grid pane on a wide
- * one, which starts under the pinned bar (AC-15.1.18). `scrollIntoView` walks
- * up to the same ancestor.
+ * one, which starts under the pinned bar (AC-15.1.18).
+ *
+ * Returns where the scroll goes — `{ container, from, to }` — or null when the
+ * Measure is already in view. The caller animates it, so the app owns every
+ * frame of its own scrolling (see `shell.js`).
  */
 export function scrollMeasureIntoView(gridEl, measureIndex) {
   const measure = gridEl.querySelector(`.measure[data-measure="${measureIndex}"]`);
-  if (!measure) return false;
+  if (!measure) return null;
 
   const rect = measure.getBoundingClientRect();
-  const box = scrollContainerOf(measure, null)?.getBoundingClientRect();
+  const container = scrollContainerOf(measure, null);
+  const box = container?.getBoundingClientRect();
   const top = box?.top ?? 0;
   const bottom = box?.bottom ?? window.innerHeight;
   const fullyVisible = rect.top >= top && rect.bottom <= bottom;
-  if (fullyVisible) return false;
+  if (fullyVisible) return null;
 
-  measure.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  return true;
+  // The nearest edge, as `scrollIntoView({ block: 'nearest' })` chooses it —
+  // worked out here rather than asked of the browser, so the app knows exactly
+  // where its own scroll is going and can tell it from the musician's
+  // (AC-15.1.16/9) and stop it when they take the view (AC-15.1.16/2).
+  const scroller = container ?? document.scrollingElement ?? document.documentElement;
+  const delta = rect.top < top ? rect.top - top : rect.bottom - bottom;
+  const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+  return { container: scroller, from: scroller.scrollTop, to: Math.min(max, Math.max(0, scroller.scrollTop + delta)) };
 }
 
 /**

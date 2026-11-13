@@ -428,8 +428,7 @@ export function mountShell(root, ctx) {
       collapseLibrary(shell);
       syncLibraryToggle();
       // Whichever of them scrolls in the layout in force (AC-15.1.18).
-      appScrolled();
-      for (const el of [main, bandEl, surfaceEl]) el.scrollTop = 0;
+      for (const el of [main, bandEl, surfaceEl]) appScroll.set(el, 0);
     }
   });
 
@@ -476,6 +475,9 @@ export function mountShell(root, ctx) {
   let autoscrollStoodDown = false;
   const noteInteraction = () => {
     autoscrollStoodDown = true;
+    // A scroll of the app's still in flight would carry the view on after the
+    // musician has taken it (AC-15.1.16/2): it stops where it is.
+    appScroll.cancel();
   };
   for (const type of ['pointerdown', 'input', 'keydown', 'wheel', 'touchstart']) {
     main.addEventListener(type, noteInteraction, true);
@@ -497,31 +499,85 @@ export function mountShell(root, ctx) {
    * Capture sees them all, and the target check keeps the library's own
    * scrolling out of it.
    */
-  let appScrollUntil = 0;
   /*
    * Scrolls the app performs are not the musician's: the autoscroll itself, the
    * height compensation (AC-15.1.16/3), the reset on loading a Pattern
-   * (AC-15.1.12). Without this the autoscroll's first scroll would stand the
-   * autoscroll down, and hands-off tracking (AC-15.1.11) would never survive
-   * one. The window covers a smooth scroll's animation, which keeps raising
-   * events long after the call that started it; a real gesture inside that
-   * window still stands down through the input listeners above, which no
-   * programmatic scroll can raise.
+   * (AC-15.1.12). Every one of them goes through `appScroll`, which writes the
+   * box's `scrollTop` itself — frame by frame for the autoscroll, with no
+   * browser-driven smooth scroll — and remembers each value it wrote. A scroll
+   * event whose offset is one the app just wrote is the app's; any other offset
+   * is the musician's, whatever raised it and however it interleaved with the
+   * app's own. Attribution used to be by time — a window after each app scroll
+   * — and a scroll of the musician's whose event arrived after an autoscroll in
+   * the same frame was read as the app's and overridden (AC-15.1.16/9).
    */
-  const APP_SCROLL_MS = 900;
-  const appScrolled = () => {
-    appScrollUntil = performance.now() + APP_SCROLL_MS;
-  };
+  const appScroll = (() => {
+    /** Per box: the offsets the app wrote lately, with when. */
+    const written = new Map();
+    const KEEP_MS = 1500;
+    let animation = null;
+    const remember = (box, value) => {
+      const now = performance.now();
+      const list = (written.get(box) ?? []).filter((w) => now - w.at < KEEP_MS);
+      list.push({ value, at: now });
+      written.set(box, list);
+    };
+    const set = (box, top) => {
+      box.scrollTop = top;
+      remember(box, box.scrollTop);
+    };
+    const cancel = () => {
+      if (animation) cancelAnimationFrame(animation.frame);
+      animation = null;
+    };
+    const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    /** Ease the box from where it is to `to`, as a smooth scroll would. */
+    const animate = (box, to) => {
+      if (animation && animation.box === box && animation.to === to) return;
+      cancel();
+      const from = box.scrollTop;
+      const distance = Math.abs(to - from);
+      if (distance < 1 || reduced()) {
+        set(box, to);
+        return;
+      }
+      const duration = Math.min(450, 150 + distance / 4);
+      const started = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - started) / duration);
+        const eased = 1 - (1 - t) * (1 - t);
+        set(box, from + (to - from) * eased);
+        if (t < 1) animation.frame = requestAnimationFrame(step);
+        else animation = null;
+      };
+      animation = { box, to, frame: requestAnimationFrame(step) };
+    };
+    /** Whether `box` sits at an offset the app wrote lately. */
+    const own = (box) => {
+      const now = performance.now();
+      const value = box.scrollTop;
+      return (written.get(box) ?? []).some((w) => now - w.at < KEEP_MS && Math.abs(w.value - value) <= 1);
+    };
+    return { set, animate, cancel, own };
+  })();
+  /*
+   * The view having moved is the real signal, not any particular input
+   * (AC-15.1.16/9). On `window`, because `scroll` does not bubble and the
+   * scrolling element differs by layout — the panel at narrow widths, the band
+   * or the surface when wide (AC-15.1.18), the document if a browser scrolls
+   * that instead. Capture sees them all, and the target check keeps the
+   * library's own scrolling out of it.
+   */
   window.addEventListener(
     'scroll',
     (event) => {
-      if (performance.now() < appScrollUntil) return;
       const target = event.target;
-      const ours =
-        target === document ||
-        target === document.scrollingElement ||
-        (target instanceof Node && main.contains(target));
-      if (ours) autoscrollStoodDown = true;
+      const box = target === document ? (document.scrollingElement ?? document.documentElement) : target;
+      const ours = box === document.scrollingElement || box === document.documentElement || (box instanceof Node && main.contains(box));
+      if (!ours) return;
+      if (appScroll.own(box)) return;
+      autoscrollStoodDown = true;
+      appScroll.cancel();
     },
     true
   );
@@ -537,14 +593,19 @@ export function mountShell(root, ctx) {
    */
   const followCursor = (position) => {
     if (!position || gridEl.hidden || autoscrollStoodDown) return;
-    // Only when it actually scrolls. Playback renders on every sounding event
-    // and the sounding Measure is usually already in view, so marking every
-    // render as an app scroll would hold the window permanently open and the
-    // musician's own scrolling would never be seen (AC-15.1.16/9).
-    if (scrollMeasureIntoView(gridEl, position.measureIndex)) appScrolled();
+    const plan = scrollMeasureIntoView(gridEl, position.measureIndex);
+    if (plan) appScroll.animate(plan.container, plan.to);
   };
 
+  /** The last transport position the shell drew, for the test seam below. */
+  let lastPosition = null;
+  if (typeof window !== 'undefined') {
+    /** Test seam: run the autoscroll for the last position now, as a playback render would (AC-15.1.16/9). */
+    window.__rmFollowCursor = () => followCursor(lastPosition);
+  }
+
   subscribe((pattern, position, s, kind) => {
+    lastPosition = position;
     /*
      * The cursor path (see `render`): the highlight moving within a pass. The
      * grid keeps its DOM and one class moves; the chord strip is redrawn
@@ -740,8 +801,8 @@ export function mountShell(root, ctx) {
     if (anchor && anchor.el.isConnected) {
       const delta = anchor.el.getBoundingClientRect().top - anchor.top;
       if (delta !== 0) {
-        appScrolled();
-        scrollContainerOf(anchor.el, main).scrollTop += delta;
+        const box = scrollContainerOf(anchor.el, main);
+        appScroll.set(box, box.scrollTop + delta);
       }
     }
 
