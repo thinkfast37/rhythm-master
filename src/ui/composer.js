@@ -634,6 +634,7 @@ function renderArrangementScore(state, handlers) {
     block.dataset.part = String(index);
     block.dataset.active = String(Boolean(part.active));
     block.dataset.passes = String(passesOf.get(part) ?? 1);
+    block.dataset.measures = String(part.pattern.measures.length);
     block.setAttribute('aria-label', `${part.pattern.name}${part.active ? ', on screen' : ''}${part.muted ? ', muted' : ''}`);
     const head = el('div', 'part-score-head');
     head.appendChild(el('span', 'part-score-name', { textContent: part.pattern.name }));

@@ -985,7 +985,8 @@ test("AC-19.11.8/1 — A Grid | Score switch sits in the record bar, Grid on fir
   await expect(scoresOf(page).nth(0).locator('.score [data-pass]')).not.toHaveCount(0);
   const ownPasses = await scoresOf(page).nth(0).locator('.score [data-pass]').evaluateAll((els) => new Set(els.map((e) => e.dataset.pass)).size);
   expect(ownPasses).toBe(passes[0]);
-  expect(passes[0]).toBe(2);
+  // Under the two-bar clave alone My line would play twice; a three-chord part makes it six.
+  expect(passes[0]).toBe(chordsId ? 6 : 2);
   if (chordsId) {
     // A progression walks its chords across its repeats: three passes to a cycle, each pass a different chord name.
     const labels = await scoresOf(page).nth(2).locator('.score .chord-name, .score [data-chord]').allTextContents();
@@ -1022,10 +1023,10 @@ test('AC-19.11.8/3 — Grid puts the composing grid back; the choice is remember
   await fret(page, 1, 1).click();
   await page.locator('.record').click();
   expect(await own.locator('[data-pass="0"][data-step]').count()).toBe(notesBefore);
-  await expect(own.locator('[data-pass="0"][data-name], [data-pass="0"][data-role]').first()).toBeAttached({ timeout: 3000 }).catch(() => {});
   // A Measure added, a part added, a part switched to.
+  await expect(scoresOf(page).nth(0)).toHaveAttribute('data-measures', '1');
   await page.locator('.composer-add-measure').click();
-  await expect(own.locator('[data-pass="0"][data-measure="1"]').first()).toBeAttached();
+  await expect(scoresOf(page).nth(0)).toHaveAttribute('data-measures', '2');
   await addLayer(page, BOSSA);
   await expect(scoresOf(page)).toHaveCount(3);
   await partRow(page, 'Son Clave 3-2').locator('.layer-pick').click();
