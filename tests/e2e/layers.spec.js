@@ -1043,3 +1043,117 @@ test('AC-19.11.8/3 — Grid puts the composing grid back; the choice is remember
   await expect(page.locator('.mode-switch')).toBeVisible();
   expect((await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1')).composerView))).toBe('score');
 });
+
+// --- AC-19.11.9: finding an Arrangement again ------------------------------------------
+
+/** A saved composition with two layers, saved as the Arrangement `name`; returns the composition's id. */
+async function savedArrangement(page, name) {
+  await loadFourBeats(page);
+  const id = await saveComposition(page);
+  await addLayer(page, SON);
+  await addLayer(page, BOSSA);
+  await page.locator('.arrangement-save').click();
+  await nameInDialog(page, name);
+  return id;
+}
+
+test("AC-19.11.9/1 — The library pane opens with an Arrangements section ahead of the Patterns, each Arrangement named with the names of its parts in order; the library's search narrows it by an Arrangement's name or any part's; the section is absent while there are none", async ({ page }) => {
+  await openApp(page);
+  await page.locator('.library-toggle').click();
+  await expect(page.locator('.library-arrangements')).toHaveCount(0);
+  await page.locator('.library-toggle').click();
+  await savedArrangement(page, 'Evening bed');
+  await page.locator('.library-toggle').click();
+  const section = page.locator('.library-arrangements');
+  await expect(section).toBeVisible();
+  // Ahead of the Patterns.
+  const order = await page.locator('.library').evaluate((el) => [...el.children].map((c) => c.className));
+  expect(order.indexOf('library-arrangements')).toBeLessThan(order.indexOf('pattern-list'));
+  await expect(section.locator('.arrangement-entry-name')).toHaveText(['Evening bed']);
+  await expect(section.locator('.arrangement-entry-parts')).toHaveText('My line · Son Clave 3-2 · Bossa Nova');
+  // Searched with the Patterns: by its name, by a part's name, and narrowed away.
+  await page.locator('.library-search').fill('evening');
+  await expect(section.locator('.arrangement-entry')).toHaveCount(1);
+  await page.locator('.library-search').fill('bossa');
+  await expect(section.locator('.arrangement-entry')).toHaveCount(1);
+  await page.locator('.library-search').fill('zzz');
+  await expect(section.locator('.arrangement-entry')).toHaveCount(0);
+  await expect(section.locator('.library-arrangements-empty')).toBeVisible();
+  await page.locator('.library-search').fill('');
+});
+
+test('AC-19.11.9/2 — Choosing an Arrangement in the library pane, from Practice or from the Composer, opens the Composer on it — the part it was saved on in the composing grid, its layers beneath — asking first when unsaved work would be lost, and closes the pane as opening a Pattern does', async ({ page }) => {
+  await openApp(page);
+  await savedArrangement(page, 'Evening bed');
+  // From Practice, on another Pattern.
+  await page.locator('.mode-switch [data-mode="practice"]').click();
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await page.locator('.library-toggle').click();
+  await page.locator('.library-arrangements .arrangement-entry-name', { hasText: 'Evening bed' }).click();
+  await expect(page.locator('.composer-panel')).toBeVisible();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(activeName(page)).toHaveText('My line');
+  expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON, BOSSA]);
+  expect((await composerState(page)).arrangement.id).toBe('arr_1');
+  await expect(page.locator('.library-toggle')).toHaveText(/Library/);
+  // From the Composer with unsaved work: asked first.
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await nameInDialog(page, 'Scratch');
+  await page.locator('.library-toggle').click();
+  await page.locator('.library-arrangements .arrangement-entry-name', { hasText: 'Evening bed' }).click();
+  await expect(page.locator('.dialog')).toContainText('Scratch');
+  await page.locator('.dialog-button', { hasText: 'Keep composing' }).click();
+  await expect(activeName(page)).toHaveText('Scratch');
+});
+
+test('AC-19.11.9/3 — In Practice, under a making goal, a Pattern that is a part of any Arrangement shows In arrangements naming each, and a tap on a name opens the Composer on that Arrangement; the line is absent on a Pattern in none, and under a practice goal', async ({ page }) => {
+  await openApp(page);
+  const id = await savedArrangement(page, 'Evening bed');
+  await page.locator('.mode-switch [data-mode="practice"]').click();
+  // The composition is the open Pattern: it names the Arrangement.
+  await expect(page.locator('.pattern-arrangements')).toBeVisible();
+  await expect(page.locator('.pattern-arrangements .pattern-arrangement')).toHaveText(['Evening bed']);
+  // A layer of it too, shipped though it is.
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_22', false));
+  await expect(page.locator('.pattern-arrangements .pattern-arrangement')).toHaveText(['Evening bed']);
+  // A Pattern in none: no line.
+  await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
+  await expect(page.locator('.pattern-arrangements')).toHaveCount(0);
+  // A tap opens the Composer on it.
+  await page.evaluate((i) => window.__rm.handlers.onOpen(i, true), id);
+  await page.locator('.pattern-arrangements .pattern-arrangement', { hasText: 'Evening bed' }).click();
+  await expect(page.locator('.composer-panel')).toBeVisible();
+  await expect(activeName(page)).toHaveText('My line');
+  expect((await composerState(page)).arrangement.id).toBe('arr_1');
+  // Under a practice goal the header shows no such line.
+  await page.locator('.mode-switch [data-mode="practice"]').click();
+  await page.locator('[data-action="show-goals"]').click();
+  await page.locator('.goal-card[data-goal="practise"]').click();
+  await page.evaluate((i) => window.__rm.handlers.onOpen(i, true), id);
+  await expect(page.locator('.pattern-arrangements')).toHaveCount(0);
+});
+
+test('AC-19.11.9/4 — A Pattern may be a part of any number of Arrangements and is never copied into one: an edit to the Pattern is heard in every Arrangement it is in, and every Arrangement it is in refuses its deletion', async ({ page }) => {
+  await openApp(page);
+  const id = await savedArrangement(page, 'Evening bed');
+  // A second Arrangement on the same composition with one of the same layers.
+  await page.locator('.arrangement-new').click();
+  await addLayer(page, SON);
+  await page.locator('.arrangement-save').click();
+  await nameInDialog(page, 'Morning bed');
+  const stored = await page.evaluate(() => window.__rm.arrangementStore.loadAll());
+  expect(stored.map((a) => a.compositionId)).toEqual([id, id]);
+  expect(stored.map((a) => a.layers.map((l) => l.patternId))).toEqual([[SON, BOSSA], [SON]]);
+  // The Pattern names both, and an edit to it is heard in both: the stores hold ids, no copies.
+  await page.locator('.mode-switch [data-mode="practice"]').click();
+  await expect(page.locator('.pattern-arrangements .pattern-arrangement')).toHaveText(['Evening bed', 'Morning bed']);
+  await page.evaluate(() => window.__rm.handlers.onTempo(77));
+  const tempos = await page.evaluate((i) => window.__rm.arrangementStore.loadAll().map(() => window.__rm.patternStore.findById(i).tempo), id);
+  expect(tempos).toEqual([77, 77]);
+  expect(JSON.stringify(stored)).not.toContain('"measures"');
+  // Deletion is refused naming both.
+  await page.evaluate(() => void window.__rm.handlers.onDelete());
+  await expect(page.locator('.dialog')).toContainText('"Evening bed", "Morning bed"');
+  await page.locator('.dialog-button', { hasText: 'OK' }).click();
+  expect(await page.evaluate((i) => Boolean(window.__rm.patternStore.findById(i)), id)).toBe(true);
+});

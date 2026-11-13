@@ -422,6 +422,23 @@ function renderHeaderInto(root, pattern, state, handlers) {
   // something you do while looking at — and playing — the Pattern, and on a
   // phone it should not require opening the drawer. Same control, same
   // `onRate`, so there is one Rating however it is reached.
+  // The Arrangements this Pattern is a part of, each a way into the Composer
+  // on it (AC-19.11.9/3). Not under a practice goal, which has no Composer.
+  const inArrangements = readOnly ? [] : (state.inArrangements ?? []);
+  if (inArrangements.length > 0) {
+    const line = el('p', 'pattern-arrangements');
+    line.dataset.arrangements = String(inArrangements.length);
+    line.appendChild(el('span', 'pattern-arrangements-label', { textContent: 'In arrangements: ' }));
+    inArrangements.forEach((a, i) => {
+      const b = el('button', 'pattern-arrangement', { type: 'button', textContent: a.name });
+      b.dataset.action = 'open-arrangement';
+      b.dataset.arrangementId = a.id;
+      b.addEventListener('click', () => handlers.onOpenArrangement?.(a.id));
+      if (i > 0) line.appendChild(el('span', 'pattern-arrangements-sep', { textContent: ', ' }));
+      line.appendChild(b);
+    });
+    root.appendChild(line);
+  }
   if (handlers.onRate) root.appendChild(renderStars(pattern, handlers));
 
   // Provenance reads as a Tag below, not as a sentence here.

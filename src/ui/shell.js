@@ -54,6 +54,8 @@ function sameLibrarySignature(a, b) {
     a !== null &&
     a.patterns === b.patterns &&
     a.overlays === b.overlays &&
+    // The Arrangements section at the pane's head follows its store (AC-19.11.9/1).
+    a.arrangements === b.arrangements &&
     a.query === b.query &&
     a.minRating === b.minRating &&
     a.tags === b.tags &&

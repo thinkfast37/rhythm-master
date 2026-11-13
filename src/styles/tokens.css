@@ -2242,6 +2242,18 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .part-score-tag.muted { color: var(--ink-dim); }
 .part-score-staff .score-title { display: none; }
 
+/* --- finding an Arrangement (AC-19.11.9) ------------------------------------ */
+
+.library-arrangements { margin: 8px 0 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); }
+.library-arrangements-title { margin: 0 0 6px; font: 700 12px/1.3 var(--font-ui); color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+.library-arrangements-empty { margin: 0; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.arrangement-entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.arrangement-entry { display: flex; flex-direction: column; gap: 2px; }
+.arrangement-entry-name { text-align: left; padding: 6px 8px; font: 600 13px/1.3 var(--font-ui); color: var(--ink); background: #1c1f2b; border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.arrangement-entry-parts { font: 500 11px/1.4 var(--font-ui); color: var(--ink-dim); padding: 0 8px; }
+.pattern-arrangements { margin: 4px 0 0; font: 500 12px/1.5 var(--font-ui); color: var(--ink-dim); }
+.pattern-arrangement { padding: 0; border: 0; background: none; font: 600 12px/1.5 var(--font-ui); color: var(--brand); cursor: pointer; text-decoration: underline; }
+
 /* --- goals (US-14.1) ------------------------------------------------------ */
 
 /*
