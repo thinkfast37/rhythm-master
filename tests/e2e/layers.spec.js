@@ -439,7 +439,7 @@ test(`AC-19.11.4/3 — An Arrangement can be renamed and deleted from the Layers
   await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'new');
 });
 
-test(`AC-19.11.4/4 — Edits to a loaded Arrangement's layers are not saved until Save arrangement is pressed again, which updates it in place; the section says when the loaded Arrangement has unsaved changes`, async ({ page }) => {
+test(`AC-19.11.4/4 — Once an Arrangement is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Arrangement waits, the Layers section naming the part, and saves as soon as that part is saved`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await saveComposition(page);
@@ -447,17 +447,49 @@ test(`AC-19.11.4/4 — Edits to a loaded Arrangement's layers are not saved unti
   await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'new');
   await page.locator('.arrangement-save').click();
   await nameInDialog(page, 'Bed');
-  await expect(page.locator('.layers-unsaved')).toHaveCount(0);
+  await expect(page.locator('.layers-saved')).toBeVisible();
+  await expect(page.locator('.arrangement-save')).toBeDisabled();
+  const stored = () => page.evaluate(() => window.__rm.arrangementStore.findById('arr_1'));
+  // Muting saves at once.
   await layerItems(page).first().locator('.layer-mute').click();
-  await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'changes');
-  expect((await page.evaluate(() => window.__rm.arrangementStore.findById('arr_1').layers[0].muted))).toBe(false);
+  expect((await stored()).layers).toEqual([{ patternId: SON, muted: true }]);
+  // A layer added saves at once.
   await addLayer(page, BOSSA);
-  await page.locator('.arrangement-save').click();
-  await expect(page.locator('.dialog')).toHaveCount(0);
-  await expect(page.locator('.layers-unsaved')).toHaveCount(0);
-  const stored = await page.evaluate(() => window.__rm.arrangementStore.loadAll());
-  expect(stored).toHaveLength(1);
-  expect(stored[0].layers).toEqual([{ patternId: SON, muted: true }, { patternId: BOSSA, muted: false }]);
+  expect((await stored()).layers).toEqual([{ patternId: SON, muted: true }, { patternId: BOSSA, muted: false }]);
+  // The maintainer's case: a third part made with New layer, saved to the library, and in the Arrangement after a reload.
+  await page.locator('.layer-new').click();
+  await nameInDialog(page, 'Third part');
+  const third = (await composerState(page)).savedId;
+  const afterNew = await stored();
+  expect(afterNew.layers.map((l) => l.patternId)).toEqual([SON, BOSSA, third]);
+  expect(afterNew.active).toBe(3);
+  await expect(page.locator('.layers-saved')).toBeVisible();
+  // Removing saves at once.
+  await partRow(page, 'Bossa Nova').locator('.layer-remove').click();
+  expect((await stored()).layers.map((l) => l.patternId)).toEqual([SON, third]);
+  // A shipped part put on screen becomes a new, unsaved composition: the Arrangement waits, naming it.
+  await partRow(page, 'Son Clave 3-2').locator('.layer-pick').click();
+  await nameInDialog(page, 'Clave line');
+  await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'waiting');
+  await expect(page.locator('.layers-unsaved')).toContainText('"Clave line"');
+  expect((await stored()).layers.map((l) => l.patternId)).toEqual([SON, third]);
+  // Saving the part saves the Arrangement with it.
+  await recordUntilDone(page);
+  await page.locator('.composer-save').click();
+  const clave = (await composerState(page)).savedId;
+  await expect(page.locator('.layers-saved')).toBeVisible();
+  const final = await stored();
+  expect([final.compositionId, ...final.layers.map((l) => l.patternId)]).toContain(clave);
+  expect(final.active).toBe((await composerState(page)).activeIndex);
+  // A reload holds every part.
+  await page.reload();
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  // The pane may open on load at this width; open it only if it is closed.
+  if (!(await page.locator('.library-arrangements').isVisible())) await page.locator('.library-toggle').click();
+  await page.locator('.library-arrangements .arrangement-entry-name', { hasText: 'Bed' }).click();
+  await expect(page.locator('.composer-layers .layer-item')).toHaveCount(3);
+  await expect(partRow(page, 'Third part')).toBeVisible();
+  await expect(partRow(page, 'Clave line')).toHaveAttribute('data-active', 'true');
 });
 
 test(`AC-19.11.4/5 — Deleting a Pattern that an Arrangement uses, as its composition or as a layer, is refused with a message naming the Arrangement or Arrangements, until they are deleted`, async ({ page }) => {
