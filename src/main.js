@@ -163,6 +163,8 @@ import {
   retune,
   octaveShiftRefusal,
   shiftOctave,
+  keyChangeRefusal,
+  transposeToKey,
   octaveCopy,
 } from './core/composer.js';
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
@@ -2935,10 +2937,49 @@ const handlers = {
     applyDraft(choice === 'keep' ? duplicate : duplicateUnpitched);
   },
 
-  onComposerKey(key) {
+  /**
+   * The scale root picker (US-19.15). Over written notes nothing changes until
+   * a question is answered: keep the notes where they sound and re-spell them
+   * in the new Key, or move them up or down to its root.
+   */
+  async onComposerKey(key) {
+    const before = state.composer.draft;
+    if (!before || before.key === key) return;
     // A part on Drums keeps every note on its drum: the notes are re-spelled in
-    // the new Key rather than moved with it (AC-19.13.3/1).
-    applyDraft((p) => (hasFixedNotes(activeInstrument()) ? retune(p, key) : { ...p, key }));
+    // the new Key rather than moved with it (AC-19.13.3/1), with nothing to ask.
+    if (hasFixedNotes(activeInstrument())) {
+      applyDraft(retune, key);
+      return;
+    }
+    // Nothing written, nothing to choose (AC-19.15.1/2).
+    if (before.soundMode !== 'melodic' || !hasAnyNote(before)) {
+      applyDraft((p) => ({ ...p, key }));
+      return;
+    }
+    const options = [{ label: 'Keep the notes', value: 'keep', primary: true }];
+    const refused = [];
+    for (const [direction, way] of [
+      [1, 'up'],
+      [-1, 'down'],
+    ]) {
+      const refusal = keyChangeRefusal(before, key, direction);
+      // A direction out of reach is not offered, and the question says why (AC-19.15.3/4).
+      if (refusal) refused.push(`Transposing ${way} is out of reach: ${refusal.charAt(0).toLowerCase()}${refusal.slice(1)}.`);
+      else options.push({ label: `Transpose ${way} to ${key}`, value: direction });
+    }
+    options.push({ label: 'Cancel', value: 'cancel' });
+    const message = [
+      `Change the Key from ${before.key} to ${key}? Keep the notes where they sound and name them in ${key}, or move every note up or down to ${key}.`,
+      ...refused,
+      // Every other part plays at the composition's Key (AC-19.11.2/3, AC-19.15.1/4).
+      ...(parts().length > 1 ? ['The other parts follow the Key.'] : []),
+    ].join(' ');
+    const choice = await ask({ message, options });
+    // The prompt was awaited: act on the draft as it is now.
+    const draft = state.composer.draft;
+    if (choice === 'keep') applyDraft(retune, key);
+    else if ((choice === 1 || choice === -1) && draft && !keyChangeRefusal(draft, key, choice)) applyDraft(transposeToKey, key, choice);
+    else render();
   },
 
   onComposerScale(scale) {

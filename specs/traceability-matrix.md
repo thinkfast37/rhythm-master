@@ -14,13 +14,13 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1163 across 70 User Stories
+**Criteria**: 1173 across 71 User Stories
 
-**Coverage**: 1037 of 1163 criteria proven (89.2%)
+**Coverage**: 1047 of 1173 criteria proven (89.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1037 | 89.2% |
+| 🟢 Proven | 1047 | 89.3% |
 | 🟠 Gap — MEDIUM | 50 | 4.3% |
 | 🟡 Gap — LOW | 76 | 6.5% |
 
@@ -127,6 +127,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.12 | 21 | **21** | · | · | · | · | · |
 | 🟢 US-19.13 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-19.14 | 11 | **11** | · | · | · | · | · |
+| 🟢 US-19.15 | 10 | **10** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1295,3 +1296,13 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.14 | `AC-19.14.4/1` | Make a copy asks a name, pre-filled with the Pattern's name followed by octave up or octave down and unique in the library, and cancelling it changes nothing | P-076 | T499 (1/1 done) | T500 (1/1 done) | `octave.spec.js` | 🟢 OK |
 | US-19.14 | `AC-19.14.4/2` 🖵 | The copy holds every note shifted and takes the part's place in the parts' order with its instrument, volume and mute, on screen if the part was; the Pattern it was copied from is unchanged and still in the library | P-076 | T499 (1/1 done) | T500 (1/1 done) | `composer.test.js`, `octave.spec.js` | 🟢 OK |
 | US-19.14 | `AC-19.14.4/3` | A copy with a note on every syllable is saved to the library at once, and one with a syllable still without a note is an unsaved composition as any other | P-076 | T499 (1/1 done) | T500 (1/1 done) | `octave.spec.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.1/1` 🖵 | Choosing another scale root while the part on screen has a note asks first, naming the new Key, and offers Keep the notes, Transpose up, Transpose down and Cancel; Cancel leaves the Key and every note as they were | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.1/2` 🖵 | A part with no note yet takes the new Key with no question | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.1/3` 🖵 | A part on Drums takes the new Key with no question and keeps its drums | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.1/4` 🖵 | With layers under the composition the question says that the other parts follow the Key | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.2/1` 🖵 | Choosing Keep the notes sets the Key and leaves every note on the MIDI note it sounded, shown as its degree in the new Key | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.2/2` | For every pair of Keys the kept notes resolve to the MIDI notes they did, and a note outside the scale of the new Key is stored as a chromatic degree of it | P-077 | T501 (1/1 done) | T502 (1/1 done) | `composer.test.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.3/1` | Transposing up moves every note up by the interval from the old root to the new root above it, from one to eleven semitones, and transposing down moves every note down to the new root below it, the two results an octave apart | P-077 | T501 (1/1 done) | T502 (1/1 done) | `composer.test.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.3/2` | After a transposition every degree, chromatic ones included, every syllable and every Accent Level is as it was | P-077 | T501 (1/1 done) | T502 (1/1 done) | `composer.test.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.3/3` | A direction that would carry a note past the lowest or highest octave a note can be stored in is refused with the reason, and nothing is squashed to fit | P-077 | T501 (1/1 done) | T502 (1/1 done) | `composer.test.js` | 🟢 OK |
+| US-19.15 | `AC-19.15.3/4` 🖵 | Choosing Transpose up or Transpose down sets the Key and moves the notes on screen, a saved composition is saved as it now is, and a direction that is refused is not offered, the question saying why | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |

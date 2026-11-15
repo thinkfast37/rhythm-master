@@ -4322,6 +4322,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.9.2/1** — Replacing a note, clearing and re-recording one, changing tempo, swing, Key or scale, or turning a syllable off saves immediately while every sounding Slot is pitched
     - **AC-19.9.2/2** — Turning a syllable on, clearing a note or doubling the length leaves the stored Pattern as it was, and an unsaved mark with the number of missing notes is shown
     - **AC-19.9.2/3** — Recording the missing notes saves the composition again, and the unsaved mark goes
+  - *(Note 2026-11-15 with US-19.15, T501: a Key change over written notes is saved once its question is answered — kept or transposed, the composition is saved as it then is, and cancelled, nothing is written. /1 stands as worded.)*
 
 - **AC-19.9.3** — Unsaved syllables do not survive a reload
   - **Given** a saved composition with a syllable added and not yet recorded
@@ -5130,6 +5131,48 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.14.4/1** — Make a copy asks a name, pre-filled with the Pattern's name followed by octave up or octave down and unique in the library, and cancelling it changes nothing
     - **AC-19.14.4/2** — The copy holds every note shifted and takes the part's place in the parts' order with its instrument, volume and mute, on screen if the part was; the Pattern it was copied from is unchanged and still in the library
     - **AC-19.14.4/3** — A copy with a note on every syllable is saved to the library at once, and one with a syllable still without a note is an unsaved composition as any other
+
+---
+
+### User Story 72 - Choose what a Key change does to the notes
+
+*Traceability: `US-19.15` — Choose what a Key change does to the notes*
+
+**As** the Composer, **I want** to be asked what a change of Key should do to the notes I have already written — leave them where they sound, or move them up or down to the new root — **so that** naming the Key I was in all along does not move my line, and moving a line to another Key puts it in the octave I mean.
+
+*(Added 2026-11-15 at the maintainer's request, T501: "sometimes I have not picked the key when I start composing. And then when I decide the key it automatically transposes everything I have written. I would like it to ask me whether to transpose or not … I may be writing something in what I think is C but then I add an F# and realize it's probably in G. So in that case I don't want to transpose … But when I do transpose it should also give me the option to transpose either up or down to the key since there are two possibilities octave wise. So three options there: no transpose, transpose up to X or transpose down to X - in both cases X is the root of the key. All intervals are retained including chromatics." Decisions the same day: the question is the Composer's alone, and Practice's Key picker transposes as it always has (AC-2.3.2); a part with no note yet, and a part on Drums, are not asked, since there is nothing to choose; under layers the question is about the part on screen, and the other parts follow the Key as AC-19.11.2/3 has them do. Until this story a Key change in the Composer always moved the notes, which is what Transpose up or Transpose down now does, whichever of the two keeps each stored octave.)*
+
+**Independent Test**: Record C4 E4 F#4 G4 in the Composer in C, choose G as the scale root and assert a question offers Keep the notes, Transpose up to G, Transpose down to G and Cancel; cancel and assert the Key is C and no note moved; choose G again with Keep the notes and assert the Key is G and the four MIDI notes are what they were, the F# now the seventh degree; go back to C with Transpose down to C and assert every note is seven semitones lower with its degree unchanged; clear the notes and assert a Key change asks nothing.
+
+**Acceptance Scenarios**:
+
+- **AC-19.15.1** — A Key change over written notes asks first
+  - **Given** the Composer with a part on screen
+  - **When** another scale root is chosen
+  - **Then** a part with a note is not changed until a question is answered, and a part with nothing to choose about takes the Key at once
+  - **Cases**:
+    - **AC-19.15.1/1** — Choosing another scale root while the part on screen has a note asks first, naming the new Key, and offers Keep the notes, Transpose up, Transpose down and Cancel; Cancel leaves the Key and every note as they were
+    - **AC-19.15.1/2** — A part with no note yet takes the new Key with no question
+    - **AC-19.15.1/3** — A part on Drums takes the new Key with no question and keeps its drums
+    - **AC-19.15.1/4** — With layers under the composition the question says that the other parts follow the Key
+
+- **AC-19.15.2** — Keep the notes changes the Key and no pitch
+  - **Given** the question of AC-19.15.1
+  - **When** the Composer chooses Keep the notes
+  - **Then** the Key is the new one and every note sounds the MIDI note it did, stored as the degree the new Key gives it
+  - **Cases**:
+    - **AC-19.15.2/1** — Choosing Keep the notes sets the Key and leaves every note on the MIDI note it sounded, shown as its degree in the new Key
+    - **AC-19.15.2/2** — For every pair of Keys the kept notes resolve to the MIDI notes they did, and a note outside the scale of the new Key is stored as a chromatic degree of it
+
+- **AC-19.15.3** — Transposing moves every note by one interval, up or down
+  - **Given** the question of AC-19.15.1
+  - **When** the Composer chooses Transpose up or Transpose down
+  - **Then** the Key is the new one and every note has moved by the same interval, up to the new root or down to it, with every degree as it was
+  - **Cases**:
+    - **AC-19.15.3/1** — Transposing up moves every note up by the interval from the old root to the new root above it, from one to eleven semitones, and transposing down moves every note down to the new root below it, the two results an octave apart
+    - **AC-19.15.3/2** — After a transposition every degree, chromatic ones included, every syllable and every Accent Level is as it was
+    - **AC-19.15.3/3** — A direction that would carry a note past the lowest or highest octave a note can be stored in is refused with the reason, and nothing is squashed to fit
+    - **AC-19.15.3/4** — Choosing Transpose up or Transpose down sets the Key and moves the notes on screen, a saved composition is saved as it now is, and a direction that is refused is not offered, the question saying why
 
 ---
 
