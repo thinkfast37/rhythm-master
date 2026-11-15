@@ -13,7 +13,7 @@
 import { beatDurationSeconds, tempoUnitOf } from '../core/meter.js';
 // A layered set (US-19.11) and a Pattern go through the same four dispatchers,
 // so this file never asks which it holds (research.md D-026).
-import { timelineOf as buildTimeline, loopDurationOf as loopDurationSeconds, beatGridOf as buildBeatGrid, anyHarmony as hasHarmony } from '../core/arrangement.js';
+import { timelineOf as buildTimeline, loopDurationOf as loopDurationSeconds, beatGridOf as buildBeatGrid, anyHarmony as hasHarmony } from '../core/section.js';
 import { resume, onSuspended, onResumed } from './context.js';
 import { startTicking } from './tickSource.js';
 import { playPercussive, playClick } from './voices.js';
@@ -69,6 +69,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
   /** An edited Pattern waiting for the next pass boundary (AC-4.1.9). */
   let pending = null;
   let running = false;
+  /** Test seam: metronome clicks handed to Web Audio since Play, the count-in's apart. */
+  let clicksScheduled = 0;
   /** Paused by a recoverable device suspension, waiting for the context to
    *  come back (AC-4.1.5, AC-4.1.6) — distinct from `running` false because
    *  the transport is not stopped: its position is held, not reset. */
@@ -131,6 +133,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
             break;
           }
           playClick(ctx, master, { downbeat: beat.isDownbeat, when });
+          clicksScheduled += 1;
           nextBeatIndex += 1;
         }
       }
@@ -399,6 +402,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       pending = null;
       pendingVisuals.length = 0;
       running = true;
+      clicksScheduled = 0;
 
       // Every start (fresh Play or a restart) begins a new run at loop 0
       // (AC-4.2.2), reported directly rather than left to whenever the first
@@ -507,6 +511,22 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
     },
 
     /**
+     * The click switched on or off under a run, with nothing stopped or
+     * restarted (AC-19.6.3/3). Switched on, the Beat cursor starts at the first
+     * Beat still ahead of the audio clock — the Beats this pass has already
+     * passed were never scheduled, and scheduled now they would all sound at once.
+     */
+    setMetronome(enabled) {
+      const on = Boolean(enabled);
+      if (pending?.settings) pending.settings = { ...pending.settings, metronomeEnabled: on };
+      if (settings.metronomeEnabled === on) return;
+      settings = { ...settings, metronomeEnabled: on };
+      if (!running || !on || !ctx) return;
+      const offset = ctx.currentTime - eventTime(nextLoop, 0);
+      nextBeatIndex = firstAtOrAfter(beatGrid, Math.max(0, offset));
+    },
+
+    /**
      * A content edit made while playing: the current pass finishes under the
      * Pattern as it sounded, and the next pass plays the edit (AC-4.1.9).
      * Only the latest edit matters — a newer one simply replaces the pending
@@ -546,6 +566,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       beatTimes: beatGrid.map((b) => b.timeSeconds),
       countInSeconds,
       timelineLength: timeline.length,
+      metronomeEnabled: Boolean(settings.metronomeEnabled),
+      clicksScheduled,
       pendingEdit: Boolean(pending),
       lookaheadSeconds: lookahead,
       suspendedForRecovery,

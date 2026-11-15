@@ -3,7 +3,7 @@ import { buildZip, crc32 } from '../../../src/core/zip.js';
 import { readZip } from '../../zip-reader.js';
 
 describe('core/zip', () => {
-  it("AC-19.11.5/1 — Export arrangement MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included: the archive round-trips with its CRCs holding", () => {
+  it("AC-19.11.5/1 — Export section MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included: the archive round-trips with its CRCs holding", () => {
     // The check value every CRC-32 implementation agrees on.
     expect(crc32(new TextEncoder().encode('123456789'))).toBe(0xcbf43926);
     const entries = [

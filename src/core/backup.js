@@ -50,7 +50,7 @@ const NEWER = 'This backup was made by a newer version of Rhythm Master. Update 
  * for a flat one. `storeVersion` is the newest store schemaVersion this build
  * understands; an older one is upgraded by the caller's migrations.
  */
-export function readBackup(text, { shapes, storeVersion }) {
+export function readBackup(text, { shapes, storeVersion, renamed = {} }) {
   const fail = (error) => ({ ok: false, error });
 
   let file;
@@ -63,6 +63,22 @@ export function readBackup(text, { shapes, storeVersion }) {
   if (!Number.isInteger(file.schemaVersion) || file.schemaVersion < 1) return fail(NOT_A_BACKUP);
   if (file.schemaVersion > BACKUP_VERSION) return fail(NEWER);
   if (!isPlainObject(file.stores)) return fail(NOT_A_BACKUP);
+
+  // A store this build keeps under another name (AC-19.11.4/8): read as the
+  // store it became, its list under the list's new name, unless the file
+  // already holds that store.
+  for (const [oldKey, { key, from, to }] of Object.entries(renamed)) {
+    const store = file.stores[oldKey];
+    if (store === undefined) continue;
+    const stores = { ...file.stores };
+    delete stores[oldKey];
+    if (!(key in stores) && isPlainObject(store)) {
+      const moved = { ...store, [to]: store[from] };
+      delete moved[from];
+      stores[key] = moved;
+    }
+    file.stores = stores;
+  }
 
   for (const [key, store] of Object.entries(file.stores)) {
     const shape = shapes[key];

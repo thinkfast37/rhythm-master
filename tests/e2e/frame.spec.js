@@ -39,7 +39,7 @@ async function loadBars(page, count = 8) {
   await expect(page.locator('.measure')).toHaveCount(count);
 }
 
-test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; Related is a placeholder, disabled and saying so, until Share and tidy up lands', async ({ page }) => {
+test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; while the Composer plays, a Metronome toggle joins Play/Stop; Related is a placeholder, disabled and saying so, until Share and tidy up lands', async ({ page }) => {
   await page.goto('/');
   const barOrder = () =>
     page.locator('.main-top-bar > *:not(.goal-strip)').evaluateAll((els) => els.map((e) => e.className.split(' ')[0]));
@@ -70,6 +70,8 @@ test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, 
       // No Practice | Composer switch in the bar's own row (AC-15.1.20): the
       // strip carries it where a goal has one.
       await expect(bar.locator('> .mode-switch'), tag).toHaveCount(0);
+      // The Metronome toggle is the Composer's, while it plays: never here (AC-19.6.3/1).
+      await expect(bar.locator('.composer-metronome'), tag).toHaveCount(0);
     }
   }
   // Related: there, disabled, and saying what it waits for.

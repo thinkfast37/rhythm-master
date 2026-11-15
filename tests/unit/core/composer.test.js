@@ -22,6 +22,9 @@ import {
   foldRegister,
   copyMelody,
   retune,
+  octaveShiftRefusal,
+  shiftOctave,
+  octaveCopy,
 } from '../../../src/core/composer.js';
 import { resolve, KEYS } from '../../../src/core/pitch.js';
 import { SCALES } from '../../../src/core/scales.js';
@@ -366,5 +369,74 @@ describe('core/composer — saving (US-19.9)', () => {
     expect(validate(p).valid).toBe(false);
     for (let b = 0; b < 4; b++) p = recordNote(p, at(0, b), 60 + b);
     expect(validate(p)).toEqual({ valid: true, errors: [] });
+  });
+});
+
+describe('core/composer — a whole part, an octave at a time (US-19.14)', () => {
+  const octaves = (p) => soundingSlots(p).map((a) => pitchAt(p, a)?.octaveOffset ?? null);
+  /** C4 D4 E4 F4 on the four Beats. */
+  const line = () => [60, 62, 64, 65].reduce((p, midi, b) => recordNote(p, at(0, b), midi), blankDraft());
+
+  it('AC-19.14.1/2 — Octave up is disabled, saying why, when any note of the part is already in octave 7, Octave down when any is in octave 1, and both on a part with no note: the rule the buttons read', () => {
+    expect(octaveShiftRefusal(blankDraft(), 1)).toMatch(/No note/);
+    expect(octaveShiftRefusal(blankDraft(), -1)).toMatch(/No note/);
+    expect(octaveShiftRefusal(line(), 1)).toBeNull();
+    expect(octaveShiftRefusal(line(), -1)).toBeNull();
+    // One note in octave 7 stops the whole part going up, and only up.
+    const high = recordNote(line(), at(0, 3), 96);
+    expect(pitchAt(high, at(0, 3)).octaveOffset).toBe(3);
+    expect(octaveShiftRefusal(high, 1)).toMatch(/octave 7/);
+    expect(octaveShiftRefusal(high, -1)).toBeNull();
+    expect(shiftOctave(high, 1)).toBe(high);
+    // One note in octave 1 stops it going down, and only down.
+    const low = recordNote(line(), at(0, 0), 24);
+    expect(pitchAt(low, at(0, 0)).octaveOffset).toBe(-3);
+    expect(octaveShiftRefusal(low, -1)).toMatch(/octave 1/);
+    expect(octaveShiftRefusal(low, 1)).toBeNull();
+    expect(shiftOctave(low, -1)).toBe(low);
+  });
+
+  it('AC-19.14.3/1 — Every note of the part moves one octave in the direction pressed, and no degree, syllable, Accent Level or other setting changes: the pure shift', () => {
+    // A syllable without a note among them: it stays one.
+    const before = cycleAccent(line(), 0, 1, 1);
+    for (const step of [1, -1]) {
+      const after = shiftOctave(before, step);
+      expect(after).not.toBe(before);
+      expect(octaves(after)).toEqual(octaves(before).map((o) => (o === null ? null : o + step)));
+      // Each note is exactly twelve semitones away.
+      for (const a of soundingSlots(before)) {
+        if (!pitchAt(before, a)) continue;
+        expect(resolve(pitchAt(after, a), after.key).midiNote).toBe(resolve(pitchAt(before, a), before.key).midiNote + 12 * step);
+      }
+      // Put the octaves back and nothing else has moved.
+      const undone = structuredClone(after);
+      for (const a of soundingSlots(undone)) if (pitchAt(undone, a)) pitchAt(undone, a).octaveOffset -= step;
+      expect(undone).toEqual(before);
+    }
+    // Up then down is where it began.
+    expect(shiftOctave(shiftOctave(before, 1), -1)).toEqual(before);
+  });
+
+  it('AC-19.14.3/1 — Every note of the part moves one octave in the direction pressed, and no degree, syllable, Accent Level or other setting changes: a chord layer keeps its roles and its progression', () => {
+    let p = setProgression({ ...blankDraft(), soundMode: 'melodic' }, 'I-IV-V');
+    p = structuredClone(p);
+    p.measures[0].beats.forEach((beat, b) => {
+      beat.slots[0].pitch = { tone: [1, 3, 5, 7][b], octaveOffset: 0 };
+    });
+    const up = shiftOctave(p, 1);
+    expect(up.harmony).toEqual(p.harmony);
+    expect(soundingSlots(up).map((a) => pitchAt(up, a))).toEqual([1, 3, 5, 7].map((tone) => ({ tone, octaveOffset: 1 })));
+  });
+
+  it("AC-19.14.4/2 — The copy holds every note shifted and takes the part's place in the parts' order with its instrument, volume and mute, on screen if the part was; the Pattern it was copied from is unchanged and still in the library: the copy as data", () => {
+    const original = { ...line(), id: 'p_7', rating: 4 };
+    const frozen = structuredClone(original);
+    const copy = octaveCopy(original, -1, 'My line octave down');
+    expect(original).toEqual(frozen);
+    expect(copy.id).toBeUndefined();
+    expect(copy.name).toBe('My line octave down');
+    expect(copy.rating).toBe(0);
+    expect(octaves(copy)).toEqual([-1, -1, -1, -1]);
+    expect({ ...copy, name: original.name, rating: 4, id: 'p_7' }).toEqual(shiftOctave(original, -1));
   });
 });

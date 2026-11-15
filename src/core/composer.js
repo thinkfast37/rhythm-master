@@ -7,7 +7,7 @@
  * points, what a tapped MIDI note becomes, how a library Pattern turns into a
  * draft, and whether the draft is complete enough to be a Pattern again.
  */
-import { resolve, keySemitones, noteName, degreeSemitones, isSupportedKey } from './pitch.js';
+import { resolve, keySemitones, noteName, degreeSemitones, isSupportedKey, octaveNumber, MIN_OCTAVE, MAX_OCTAVE } from './pitch.js';
 import { chromaticStrip, DEFAULT_SCALE, isValidScale } from './scales.js';
 import { cycleAccent, append, MAX_MEASURES } from './pattern.js';
 import { buildTimeline } from './timeline.js';
@@ -187,6 +187,63 @@ export function clearAllNotes(pattern) {
     for (const beat of measure.beats) for (const slot of beat.slots) delete slot.pitch;
   }
   return next;
+}
+
+/* --- a whole part, an octave at a time (US-19.14) ---------------------------- */
+
+/** Every note's octave number, lowest and highest, or null for a part with no note. */
+function octaveSpan(pattern) {
+  let low = Infinity;
+  let high = -Infinity;
+  for (const at of soundingSlots(pattern)) {
+    const slot = slotAt(pattern, at);
+    if (!hasNote(slot)) continue;
+    const octave = octaveNumber(slot.pitch.octaveOffset ?? 0);
+    low = Math.min(low, octave);
+    high = Math.max(high, octave);
+  }
+  return high === -Infinity ? null : { low, high };
+}
+
+/**
+ * Why a part cannot move an octave the way asked, or null when it can
+ * (AC-19.14.1/2): there is no note to move, or one already sits in the last
+ * octave a note can be stored in. Refused rather than squashed — notes held at
+ * the edge while the rest moved could not be shifted back.
+ */
+export function octaveShiftRefusal(pattern, direction) {
+  const span = octaveSpan(pattern);
+  if (!span) return 'No note to move';
+  if (direction > 0 && span.high >= MAX_OCTAVE) return `A note is already in octave ${MAX_OCTAVE}, the highest`;
+  if (direction < 0 && span.low <= MIN_OCTAVE) return `A note is already in octave ${MIN_OCTAVE}, the lowest`;
+  return null;
+}
+
+/**
+ * Every note one octave up (`direction` 1) or down (-1), and nothing else: each
+ * Pitch keeps its degree or its chord-tone role, each Slot its accent
+ * (AC-19.14.3/1). The Pattern handed in is returned when the shift is refused.
+ */
+export function shiftOctave(pattern, direction) {
+  const step = direction > 0 ? 1 : -1;
+  if (octaveShiftRefusal(pattern, step)) return pattern;
+  const next = clone(pattern);
+  for (const measure of next.measures) {
+    for (const beat of measure.beats) {
+      for (const slot of beat.slots) {
+        if (hasNote(slot)) slot.pitch.octaveOffset = (slot.pitch.octaveOffset ?? 0) + step;
+      }
+    }
+  }
+  return next;
+}
+
+/** A part as a new Pattern an octave away, under another name (AC-19.14.4/2). */
+export function octaveCopy(pattern, direction, name) {
+  const next = shiftOctave(pattern, direction);
+  const copy = { ...clone(next), name, rating: 0 };
+  delete copy.id;
+  return copy;
 }
 
 /**

@@ -482,7 +482,7 @@ describe('audio/scheduler — the count-in at written lengths (AC-4.2.7)', () =>
 
 /* --- layers under the composition (US-19.11) -------------------------------- */
 
-import { layered } from '../../../src/core/arrangement.js';
+import { layered } from '../../../src/core/section.js';
 
 describe('audio/scheduler under layers (US-19.11)', () => {
   /** A one-Measure 4/4 Pattern, one syllable per Beat: events every 0.5s at 120 BPM. */
@@ -606,5 +606,45 @@ describe('audio/scheduler — an edit to the part on screen under layers (AC-19.
     const rel = starts.map((s) => Math.round((s.when - origin) * 1000) / 1000);
     expect(rel.filter((t) => t === 2.5 || t === 4.5 || t === 6.5)).toHaveLength(0);
     expect(rel.filter((t) => t === 8.5)).toHaveLength(1);
+  });
+});
+
+describe('audio/scheduler — the click switched under a run (AC-19.6.3)', () => {
+  it('AC-19.6.3/3 — Switching it while playing stops and restarts nothing: the click begins or ceases from the next Beat and every part carries on: the transport', async () => {
+    // 4/4 at 120: Beats at 0, 0.5, 1 and 1.5s of a 2s pass.
+    await startTransport();
+    const origin = transport._eventTime(0, 0);
+    for (const t of [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]) await tickAt(origin + t);
+    expect(transport._snapshot().clicksScheduled).toBe(0);
+    const notesBefore = starts.length;
+
+    transport.setMetronome(true);
+    expect(transport._snapshot().metronomeEnabled).toBe(true);
+    for (const t of [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7]) await tickAt(origin + t);
+    // Within this pass the Beats at 1 and 1.5s click, each at its own time; the
+    // two already passed do not, and nothing sounds at once. (The Pattern's own
+    // events of this pass all fall before 0.6s, so what starts here is a click.)
+    const inPass = starts
+      .slice(notesBefore)
+      .map((s) => Math.round((s.when - origin) * 1000) / 1000)
+      .filter((t) => t < 2);
+    expect([...new Set(inPass)]).toEqual([1, 1.5]);
+    expect(transport._snapshot().clicksScheduled).toBeGreaterThanOrEqual(2);
+    // Nothing restarted: the run is anchored where it was, with no edit pending.
+    expect(transport._eventTime(0, 0)).toBe(origin);
+    expect(transport._snapshot().pendingEdit).toBe(false);
+
+    // Into the next pass the click carries on, and the Pattern with it.
+    for (const t of [1.8, 1.9, 2.0, 2.1, 2.2, 2.3]) await tickAt(origin + t);
+    const on = transport._snapshot().clicksScheduled;
+    expect(on).toBeGreaterThanOrEqual(3);
+
+    transport.setMetronome(false);
+    const offAt = starts.length;
+    for (const t of [2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3]) await tickAt(origin + t);
+    expect(transport._snapshot().clicksScheduled).toBe(on);
+    // The Pattern's own events went on sounding: the third pass's first Beat.
+    expect(starts.length).toBeGreaterThan(offAt);
+    expect(transport._eventTime(0, 0)).toBe(origin);
   });
 });

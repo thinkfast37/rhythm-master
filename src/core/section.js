@@ -1,7 +1,7 @@
 /**
  * Layers under the composition (US-19.11, research.md D-026).
  *
- * An Arrangement is the Composer's composition with library Patterns sounding
+ * A Section is the Composer's composition with library Patterns sounding
  * under it, each a distinct layer that repeats to fill the longest. Everything
  * here is pure: this module measures each Pattern's length, fits the set into
  * the shortest common loop, and merges every layer's own timeline into ONE
@@ -209,16 +209,16 @@ export const loopDurationOf = (p) => (isLayered(p) ? layeredLoopDuration(p) : lo
 export const beatGridOf = (p) => (isLayered(p) ? layeredBeatGrid(p) : buildBeatGrid(p));
 export const anyHarmony = (p) => (isLayered(p) ? layeredHasHarmony(p) : hasHarmony(p));
 
-/* --- the Arrangement: what is saved (AC-19.11.4) ---------------------------- */
+/* --- the Section: what is saved (AC-19.11.4) ---------------------------- */
 
-/** A new, unsaved Arrangement over a composition. `id` is null until the store assigns one. */
-export function createArrangement(name, compositionId, layers = [], active = 0, sound = {}) {
+/** A new, unsaved Section over a composition. `id` is null until the store assigns one. */
+export function createSection(name, compositionId, layers = [], active = 0, sound = {}) {
   return { id: null, name, compositionId, ...soundOf(sound), layers: layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted), ...soundOf(l) })), active };
 }
 
 /**
  * A part's instrument and volume, where it has them (US-19.12). Left out when
- * unset, so an Arrangement saved before parts had either reads back exactly
+ * unset, so a Section saved before parts had either reads back exactly
  * as it was written (AC-19.12.4/3).
  */
 export function soundOf(part) {
@@ -229,9 +229,9 @@ export function soundOf(part) {
 }
 
 /** Set a layer's instrument or volume (AC-19.12.2/2, AC-19.12.3/2). */
-export function setLayerSound(arrangement, index, sound) {
-  if (!arrangement.layers[index]) throw new Error(`No layer at index ${index}`);
-  return { ...arrangement, layers: arrangement.layers.map((l, i) => (i === index ? { ...l, ...sound } : l)) };
+export function setLayerSound(section, index, sound) {
+  if (!section.layers[index]) throw new Error(`No layer at index ${index}`);
+  return { ...section, layers: section.layers.map((l, i) => (i === index ? { ...l, ...sound } : l)) };
 }
 
 /**
@@ -240,44 +240,44 @@ export function setLayerSound(arrangement, index, sound) {
  * (AC-19.11.1/3). Whether it FITS is the caller's check, since that needs the
  * Patterns themselves (`refusal`).
  */
-export function addLayer(arrangement, patternId, sound = {}) {
-  if (patternId === arrangement.compositionId) throw new Error('The composition cannot be a layer under itself');
-  if (arrangement.layers.some((l) => l.patternId === patternId)) throw new Error('That Pattern is already a layer');
-  if (arrangement.layers.length >= MAX_LAYERS) throw new Error(`At most ${MAX_LAYERS} layers`);
-  return { ...arrangement, layers: [...arrangement.layers, { patternId, muted: false, ...soundOf(sound) }] };
+export function addLayer(section, patternId, sound = {}) {
+  if (patternId === section.compositionId) throw new Error('The composition cannot be a layer under itself');
+  if (section.layers.some((l) => l.patternId === patternId)) throw new Error('That Pattern is already a layer');
+  if (section.layers.length >= MAX_LAYERS) throw new Error(`At most ${MAX_LAYERS} layers`);
+  return { ...section, layers: [...section.layers, { patternId, muted: false, ...soundOf(sound) }] };
 }
 
-export function removeLayer(arrangement, index) {
-  if (!arrangement.layers[index]) throw new Error(`No layer at index ${index}`);
-  return { ...arrangement, layers: arrangement.layers.filter((_, i) => i !== index) };
+export function removeLayer(section, index) {
+  if (!section.layers[index]) throw new Error(`No layer at index ${index}`);
+  return { ...section, layers: section.layers.filter((_, i) => i !== index) };
 }
 
-export function setLayerMuted(arrangement, index, muted) {
-  if (!arrangement.layers[index]) throw new Error(`No layer at index ${index}`);
-  return { ...arrangement, layers: arrangement.layers.map((l, i) => (i === index ? { ...l, muted: Boolean(muted) } : l)) };
+export function setLayerMuted(section, index, muted) {
+  if (!section.layers[index]) throw new Error(`No layer at index ${index}`);
+  return { ...section, layers: section.layers.map((l, i) => (i === index ? { ...l, muted: Boolean(muted) } : l)) };
 }
 
-/** Problems with an Arrangement's shape, as messages; empty when it is sound. */
-export function validateArrangement(arrangement) {
+/** Problems with a Section's shape, as messages; empty when it is sound. */
+export function validateSection(section) {
   const problems = [];
-  if (!arrangement || typeof arrangement !== 'object') return ['An Arrangement must be an object'];
-  if (typeof arrangement.name !== 'string' || !arrangement.name.trim()) problems.push('An Arrangement needs a name');
-  if (typeof arrangement.compositionId !== 'string' || !arrangement.compositionId) problems.push('An Arrangement needs a composition');
-  if (!Array.isArray(arrangement.layers) || arrangement.layers.length === 0) problems.push('An Arrangement needs at least one layer');
+  if (!section || typeof section !== 'object') return ['A Section must be an object'];
+  if (typeof section.name !== 'string' || !section.name.trim()) problems.push('A Section needs a name');
+  if (typeof section.compositionId !== 'string' || !section.compositionId) problems.push('A Section needs a composition');
+  if (!Array.isArray(section.layers) || section.layers.length === 0) problems.push('A Section needs at least one layer');
   else {
     // The part on screen: the composition (0) or a layer, by position (AC-19.11.6/6).
-    const active = arrangement.active ?? 0;
-    if (!Number.isInteger(active) || active < 0 || active > arrangement.layers.length) problems.push('The part on screen must be one of the parts');
-    if (arrangement.layers.length > MAX_LAYERS) problems.push(`At most ${MAX_LAYERS} layers`);
+    const active = section.active ?? 0;
+    if (!Number.isInteger(active) || active < 0 || active > section.layers.length) problems.push('The part on screen must be one of the parts');
+    if (section.layers.length > MAX_LAYERS) problems.push(`At most ${MAX_LAYERS} layers`);
     const seen = new Set();
-    for (const layer of arrangement.layers) {
+    for (const layer of section.layers) {
       if (!layer || typeof layer.patternId !== 'string') problems.push('A layer needs a Pattern');
       else if (seen.has(layer.patternId)) problems.push(`"${layer.patternId}" is layered twice`);
-      else if (layer.patternId === arrangement.compositionId) problems.push('The composition cannot be a layer under itself');
+      else if (layer.patternId === section.compositionId) problems.push('The composition cannot be a layer under itself');
       seen.add(layer?.patternId);
       problems.push(...soundProblems(layer));
     }
-    problems.push(...soundProblems(arrangement));
+    problems.push(...soundProblems(section));
   }
   return problems;
 }
@@ -292,7 +292,7 @@ function soundProblems(part) {
   return problems;
 }
 
-/** Whether the Arrangement uses `patternId` as its composition or a layer (AC-19.11.4/5). */
-export function usesPattern(arrangement, patternId) {
-  return arrangement.compositionId === patternId || (arrangement.layers ?? []).some((l) => l.patternId === patternId);
+/** Whether the Section uses `patternId` as its composition or a layer (AC-19.11.4/5). */
+export function usesPattern(section, patternId) {
+  return section.compositionId === patternId || (section.layers ?? []).some((l) => l.patternId === patternId);
 }

@@ -54,7 +54,7 @@ describe('core/song', () => {
     expect(p.harmony.arpeggio).toBe('up'); // the Pattern itself is untouched
   });
 
-  it('AC-18.1.3/2 — After the last entry the first is in force again; the Section loops until stopped: the resolver', () => {
+  it('AC-18.1.3/2 — After the last entry the first is in force again; the Chain loops until stopped: the resolver', () => {
     const p = harmonicPattern();
     let song = createSong('Study', 'p_1');
     song = addEntry(song, 0, 'up', 2);
@@ -67,7 +67,7 @@ describe('core/song', () => {
     expect(entryAt(song, byId, 9 * 100).fill).toBe('up');
   });
 
-  it('AC-18.1.2/4 — The Section is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty: the resolver', () => {
+  it('AC-18.1.2/4 — The Chain is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty: the resolver', () => {
     const p = harmonicPattern();
     const byId = library(p);
     const empty = createSong('Study', 'p_1');
@@ -122,7 +122,7 @@ describe('core/song', () => {
     expect(validateSong({ ...song, sections: [{ patternId: '', entries: [{ fill: 'nope', repeats: 1 }] }] })).toHaveLength(2);
   });
 
-  it('AC-18.1.2/3 — An entry can be moved up, moved down and removed; the same fill may appear in the Section more than once: the resolver', () => {
+  it('AC-18.1.2/3 — An entry can be moved up, moved down and removed; the same fill may appear in the Chain more than once: the resolver', () => {
     let song = createSong('Study', 'p_1');
     song = addEntry(song, 0, 'up', 1);
     song = addEntry(song, 0, 'down', 2);

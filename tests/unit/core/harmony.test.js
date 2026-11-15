@@ -799,19 +799,19 @@ describe('core/harmony', () => {
     expect(notesOf(setArpeggio(p, 'walk-next-above'), 1)).toEqual([65, 69, 72, 65]); // F into C/E from above
   });
 
-  it("AC-2.6.6/26 — The approach to the next chord is reckoned within the Pattern: a Pattern playing as a Section of a Song aims its last approach at the chord the Pattern itself would play next, not at the next Section's", () => {
+  it("AC-2.6.6/26 — The approach to the next chord is reckoned within the Pattern: a Pattern playing as a Chain of a Song aims its last approach at the chord the Pattern itself would play next, not at the next Chain's", () => {
     const a = { ...sounding(setProgression(melodic(), 'I-IV'), 4), id: 'a' };
     const b = { ...sounding(setProgression(melodic(), 'ii-V-I'), 4), id: 'b' };
     const byId = (id) => ({ a, b })[id];
     const song = {
       id: null,
-      name: 'Two Sections',
+      name: 'Two Chains',
       sections: [
         { patternId: 'a', entries: [{ fill: 'walk-next-below', repeats: 1 }] },
         { patternId: 'b', entries: [{ fill: 'up', repeats: 1 }] },
       ],
     };
-    // The first Section's last pass, under F: the approach aims at its own C (B), not the next Section's Dm (C♯).
+    // The first Chain's last pass, under F: the approach aims at its own C (B), not the next Chain's Dm (C♯).
     const at = entryAt(song, byId, 1);
     expect(at.sectionIndex).toBe(0);
     expect(notesOf(playingAt(song, byId, 1), at.passInEntry)).toEqual([65, 69, 72, 59]);

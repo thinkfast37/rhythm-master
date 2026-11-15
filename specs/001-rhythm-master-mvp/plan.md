@@ -231,7 +231,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-021** | US-7.3 — Editing a shipped Pattern requires naming a new Pattern first | AC-7.3.1–AC-7.3.5 | T081 | T082 |
 | **P-022** | US-7.4 — Make a named copy of a Pattern you own | AC-7.4.1–AC-7.4.6 | T083 | T084 |
 | **P-023** | US-7.5 — Delete a Pattern | AC-7.5.1–AC-7.5.4 | T085 | T086 |
-| **P-024** | US-5.1 — Browse the library | AC-5.1.1–AC-5.1.7 | T087, T316 | T088, T317 |
+| **P-024** | US-5.1 — Browse the library | AC-5.1.1–AC-5.1.8 | T087, T316, T495 | T088, T317, T496 |
 | **P-025** | US-5.2 — Search by text | AC-5.2.1–AC-5.2.4 | T089, T312, T452 | T090, T313, T453 |
 | **P-026** | US-5.3 — Organise by Tag, including automatic Tags | AC-5.3.1–AC-5.3.11 | T091–T092, T452 | T093, T453 |
 | **P-027** | US-5.5 — Navigate sequentially | AC-5.5.1–AC-5.5.3 | T094, T246, T272, T452 | T095, T247, T273, T453 |
@@ -243,7 +243,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-033** | US-11.3 — Detect when a library update duplicates your own Pattern | AC-11.3.1–AC-11.3.5 | T107 | T108 |
 | **P-034** | US-12.1 — Export a single Pattern as MIDI | AC-12.1.1–AC-12.1.4 | T109 | T110 |
 | **P-035** | US-13.1 — Submit a Pattern for review | AC-13.1.1–AC-13.1.5 | T111–T112, T169, T173 | T113, T170, T174 |
-| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.20 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410, T475 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411, T476 |
+| **P-036** | US-15.1 — Desktop, tablet, and mobile adaptation | AC-15.1.1–AC-15.1.20 | T114–T116, T160, T167, T208, T218, T236, T238, T246, T272, T282, T284, T286, T288, T290, T293, T297, T334, T410, T475, T497 | T117, T161, T168, T209, T219, T237, T239, T247, T273, T283, T285, T287, T289, T291, T294, T298, T335, T411, T476, T498 |
 | **P-037** | Polish & cross-cutting concerns | — | T119, T123–T124 | T118, T120–T122 |
 | **P-038** | US-15.2 — Structural boundaries in the grid are visible | AC-15.2.1–AC-15.2.8 | T160, T169, T184, T186, T290 | T161, T169, T185, T187, T291 |
 | **P-039** | US-17.1 — Buy the app on the App Store and Google Play | AC-17.1.1–AC-17.1.9 | T190, T191, T192, T193 | T194, T195 |
@@ -253,11 +253,11 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346, T348, T388, T390, T394, T439, T462 | T264, T273, T283, T324, T333, T335, T347, T349, T389, T391, T395, T440, T463 |
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.6 | T266, T402 | T267, T403 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
-| **P-046** | US-18.1 — Compose a Section from kept fills | AC-18.1.1–AC-18.1.5 | T284 | T285 |
+| **P-046** | US-18.1 — Compose a Chain from kept fills | AC-18.1.1–AC-18.1.5 | T284, T493 | T285, T494 |
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |
 | **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334, T348, T394 | T311, T324, T335, T349, T395 |
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352, T410 | T327, T329, T331, T353, T411 |
-| **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354 | T355 |
+| **P-050** | US-7.6 — Back up and restore the whole library | AC-7.6.1–AC-7.6.3 | T354, T493 | T355, T494 |
 | **P-051** | US-2.11 — Voice each chord | AC-2.11.1–AC-2.11.4 | T365, T464, T469 | T366, T465, T470 |
 | **P-052** | US-12.3 — Read the score with note names and colours | AC-12.3.1–AC-12.3.4 | T367 | T368 |
 | **P-053** | US-19.1 — Compose on an instrument | AC-19.1.1–AC-19.1.4 | T369, T416 | T370, T417 |
@@ -265,7 +265,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-055** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T373, T475 | T374, T476 |
 | **P-056** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T375 | T376 |
 | **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.6 | T377, T418, T432 | T378, T419, T433 |
-| **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.2 | T379 | T380 |
+| **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.3 | T379, T497 | T380, T498 |
 | **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381, T423 | T382, T424 |
 | **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
 | **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |
@@ -279,9 +279,10 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-069** | US-2.16 — Chords with a member left out, and a wider chord catalogue | AC-2.16.1–AC-2.16.4 | T456, T460, T464 | T457, T461, T465 |
 | **P-070** | US-2.17 — Start a chord progression from scratch | AC-2.17.1–AC-2.17.2 | T458 | T459 |
 | **P-071** | US-10.4 — Vary a loop | AC-10.4.1–AC-10.4.8 | T466 | T467 |
-| **P-072** | US-19.11 — Layer Patterns under the composition | AC-19.11.1–AC-19.11.9 | T471, T473, T477, T479, T481, T483, T485 | T472, T474, T478, T480, T482, T484, T486 |
-| **P-074** | US-19.12 — An instrument and a volume for each part | AC-19.12.1–AC-19.12.5 | T487, T488 | T489 |
-| **P-075** | US-19.13 — A drum part, played on the keyboard | AC-19.13.1–AC-19.13.4 | T490 | T491 |
+| **P-072** | US-19.11 — Layer Patterns under the composition | AC-19.11.1–AC-19.11.9 | T471, T473, T477, T479, T481, T483, T485, T493 | T472, T474, T478, T480, T482, T484, T486, T494 |
+| **P-074** | US-19.12 — An instrument and a volume for each part | AC-19.12.1–AC-19.12.5 | T487, T488, T493 | T489, T494 |
+| **P-075** | US-19.13 — A drum part, played on the keyboard | AC-19.13.1–AC-19.13.4 | T490, T493 | T491, T494 |
+| **P-076** | US-19.14 — Shift a part by an octave | AC-19.14.1–AC-19.14.4 | T499 | T500 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

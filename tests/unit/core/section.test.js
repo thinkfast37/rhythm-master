@@ -1,6 +1,6 @@
 /**
  * Layers under the composition (US-19.11): lengths, the common loop, the
- * merged timeline, and the Arrangement editors. research.md D-026.
+ * merged timeline, and the Section editors. research.md D-026.
  */
 import { describe, it, expect } from 'vitest';
 import {
@@ -19,17 +19,17 @@ import {
   loopDurationOf,
   beatGridOf,
   anyHarmony,
-  createArrangement,
+  createSection,
   addLayer,
   removeLayer,
   setLayerMuted,
-  validateArrangement,
+  validateSection,
   usesPattern,
   setLayerSound,
   soundOf,
   MAX_LAYERS,
   MAX_REPEATS,
-} from '../../../src/core/arrangement.js';
+} from '../../../src/core/section.js';
 import { create, cycleAccent, setPitch, addMeasure, setTimeSignatureAll, setSwingAmount } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, cyclePasses } from '../../../src/core/harmony.js';
 import { buildTimeline, loopDurationSeconds } from '../../../src/core/timeline.js';
@@ -69,7 +69,7 @@ function sevenEight(name = 'Seven') {
   return p;
 }
 
-describe('core/arrangement — the combined loop (AC-19.11.3)', () => {
+describe('core/section — the combined loop (AC-19.11.3)', () => {
   it('AC-19.11.3/1 — The combined loop is the shortest length in which the composition and every layer each play a whole number of times, a layer with a progression counting one harmonic cycle as its length, and a muted layer counting as an unmuted one', () => {
     // A bar of 4/4 is eight eighths; three Measures, twenty-four.
     expect(cycleEighths(fourBeats())).toBe(8);
@@ -141,7 +141,7 @@ describe('core/arrangement — the combined loop (AC-19.11.3)', () => {
   });
 });
 
-describe('core/arrangement — layers sound together (AC-19.11.2)', () => {
+describe('core/section — layers sound together (AC-19.11.2)', () => {
   it('AC-19.11.2/1 — Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound', () => {
     const set = layered(fourBeats('Line'), [{ pattern: fourBeats('Bed') }, { pattern: melody('Tune'), muted: true }]);
     const events = layeredTimeline(set);
@@ -223,9 +223,9 @@ describe('core/arrangement — layers sound together (AC-19.11.2)', () => {
   });
 });
 
-describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => {
+describe('core/section — the Section (AC-19.11.1, AC-19.11.4)', () => {
   it('AC-19.11.1/3 — Remove takes a layer out; the same Pattern is never layered twice; at most 8 layers, Add layer saying so at the cap', () => {
-    let a = createArrangement('Bed', 'p_1');
+    let a = createSection('Bed', 'p_1');
     a = addLayer(a, 's_1');
     a = addLayer(a, 's_2');
     expect(a.layers).toEqual([
@@ -239,7 +239,7 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     for (let i = 3; i <= MAX_LAYERS; i++) a = addLayer(a, `s_${i}`);
     expect(a.layers).toHaveLength(MAX_LAYERS);
     expect(() => addLayer(a, 's_99')).toThrow(new RegExp(`At most ${MAX_LAYERS}`));
-    expect(validateArrangement({ ...a, layers: [...a.layers, { patternId: 's_99', muted: false }] })).toContain(`At most ${MAX_LAYERS} layers`);
+    expect(validateSection({ ...a, layers: [...a.layers, { patternId: 's_99', muted: false }] })).toContain(`At most ${MAX_LAYERS} layers`);
     // Mute is a flag on the layer, nothing more.
     expect(setLayerMuted(a, 1, true).layers[1]).toEqual({ patternId: 's_2', muted: true });
     expect(setLayerMuted(setLayerMuted(a, 1, true), 1, false).layers[1].muted).toBe(false);
@@ -249,19 +249,19 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     expect(layerKind(chords())).toBe('chords');
   });
 
-  it('AC-19.11.4/5 — Deleting a Pattern that an Arrangement uses, as its composition or as a layer, is refused with a message naming the Arrangement or Arrangements, until they are deleted: usesPattern', () => {
-    const a = addLayer(addLayer(createArrangement('Bed', 'p_1'), 's_1'), 'p_2');
+  it('AC-19.11.4/5 — Deleting a Pattern that a Section uses, as its composition or as a layer, is refused with a message naming the Section or Sections, until they are deleted: usesPattern', () => {
+    const a = addLayer(addLayer(createSection('Bed', 'p_1'), 's_1'), 'p_2');
     expect(usesPattern(a, 'p_1')).toBe(true);
     expect(usesPattern(a, 's_1')).toBe(true);
     expect(usesPattern(a, 'p_2')).toBe(true);
     expect(usesPattern(a, 'p_3')).toBe(false);
-    expect(validateArrangement(a)).toEqual([]);
-    expect(validateArrangement({ ...a, name: '' })).toContain('An Arrangement needs a name');
-    expect(validateArrangement({ ...a, layers: [] })).toContain('An Arrangement needs at least one layer');
-    expect(validateArrangement({ ...a, layers: [{ patternId: 's_1' }, { patternId: 's_1' }] })).toContain('"s_1" is layered twice');
+    expect(validateSection(a)).toEqual([]);
+    expect(validateSection({ ...a, name: '' })).toContain('A Section needs a name');
+    expect(validateSection({ ...a, layers: [] })).toContain('A Section needs at least one layer');
+    expect(validateSection({ ...a, layers: [{ patternId: 's_1' }, { patternId: 's_1' }] })).toContain('"s_1" is layered twice');
   });
 
-  it("AC-19.13.3/2 — A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the arrangement's Key", () => {
+  it("AC-19.13.3/2 — A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the Section's Key", () => {
     // A kick-and-snare line written in C, under a composition in G.
     let kit = { ...fourBeats('Kit'), soundMode: 'melodic', key: 'C', scale: 'ionian' };
     [36, 38, 36, 38].forEach((midi, b) => (kit = recordNote(kit, { measureIndex: 0, beatIndex: b, slotIndex: 0 }, midi)));
@@ -271,18 +271,18 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     // On Drums: the notes as written, and the part's own Key kept.
     expect(notesOf(1)).toEqual([36, 38, 36, 38]);
     expect(set.layers[1].pattern.key).toBe('C');
-    // Any other instrument, or none: moved with the arrangement's Key, a fifth up.
+    // Any other instrument, or none: moved with the section's Key, a fifth up.
     expect(notesOf(2)).toEqual([43, 45, 43, 45]);
     expect(notesOf(3)).toEqual([43, 45, 43, 45]);
     expect(set.layers[2].pattern.key).toBe('G');
-    // Tempo and swing are still the arrangement's (AC-19.11.2/3).
+    // Tempo and swing are still the section's (AC-19.11.2/3).
     expect(set.layers[1].pattern.tempo).toBe(composition.tempo);
     expect(underComposition(kit, composition, { keepKey: true }).key).toBe('C');
     expect(underComposition(kit, composition).key).toBe('G');
   });
 
-  it("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume, and opening the Arrangement restores them: the Arrangement's shape carries them, and refuses what is neither an instrument nor a volume", () => {
-    const a = createArrangement('Band', 'p_1', [{ patternId: 's_1', volume: 60 }, { patternId: 'p_2', muted: true, instrument: 'bass', volume: 90 }], 1, { instrument: 'sax', volume: 70 });
+  it("AC-19.12.4/1 — Save section stores each part's instrument and volume, and opening the Section restores them: the Section's shape carries them, and refuses what is neither an instrument nor a volume", () => {
+    const a = createSection('Band', 'p_1', [{ patternId: 's_1', volume: 60 }, { patternId: 'p_2', muted: true, instrument: 'bass', volume: 90 }], 1, { instrument: 'sax', volume: 70 });
     expect(a).toEqual({
       id: null,
       name: 'Band',
@@ -295,7 +295,7 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
       ],
       active: 1,
     });
-    expect(validateArrangement(a)).toEqual([]);
+    expect(validateSection(a)).toEqual([]);
     // A layer added on an instrument, and a layer's sound set afterwards.
     const b = addLayer(a, 'p_3', { instrument: 'trumpet' });
     expect(b.layers[2]).toEqual({ patternId: 'p_3', muted: false, instrument: 'trumpet' });
@@ -304,32 +304,32 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     expect(() => setLayerSound(b, 9, { volume: 40 })).toThrow();
     // Mute and removal leave a part's sound alone.
     expect(setLayerMuted(a, 1, false).layers[1]).toEqual({ patternId: 'p_2', muted: false, instrument: 'bass', volume: 90 });
-    expect(validateArrangement({ ...a, instrument: 'harpsichord' })).toContain('"harpsichord" is not an instrument');
-    expect(validateArrangement({ ...a, layers: [{ patternId: 's_1', muted: false, volume: 0 }] })).toContain('A volume must be a whole number from 1 to 100');
-    expect(validateArrangement({ ...a, volume: 101 })).toContain('A volume must be a whole number from 1 to 100');
-    expect(validateArrangement({ ...a, volume: 50.5 })).toContain('A volume must be a whole number from 1 to 100');
+    expect(validateSection({ ...a, instrument: 'harpsichord' })).toContain('"harpsichord" is not an instrument');
+    expect(validateSection({ ...a, layers: [{ patternId: 's_1', muted: false, volume: 0 }] })).toContain('A volume must be a whole number from 1 to 100');
+    expect(validateSection({ ...a, volume: 101 })).toContain('A volume must be a whole number from 1 to 100');
+    expect(validateSection({ ...a, volume: 50.5 })).toContain('A volume must be a whole number from 1 to 100');
   });
 
-  it("AC-19.12.4/3 — An Arrangement saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80: such an Arrangement is still sound, and reads back with nothing added", () => {
+  it("AC-19.12.4/3 — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80: such a Section is still sound, and reads back with nothing added", () => {
     const old = { id: 'arr_1', name: 'Bed', compositionId: 'p_1', layers: [{ patternId: 's_1', muted: false }], active: 0 };
-    expect(validateArrangement(old)).toEqual([]);
+    expect(validateSection(old)).toEqual([]);
     expect(soundOf(old)).toEqual({});
     expect(soundOf(old.layers[0])).toEqual({});
     // Made again from its own parts, it is the same record: nothing is stamped on it.
-    expect({ ...createArrangement(old.name, old.compositionId, old.layers, old.active, old), id: old.id }).toEqual(old);
+    expect({ ...createSection(old.name, old.compositionId, old.layers, old.active, old), id: old.id }).toEqual(old);
   });
 
-  it('AC-19.11.6/6 — Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Arrangement remembers which part was on screen and opens on it: the part on screen is stored as a position among the parts', () => {
-    const a = addLayer(addLayer(createArrangement('Bed', 'p_1'), 's_1'), 'p_2');
+  it('AC-19.11.6/6 — Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Section remembers which part was on screen and opens on it: the part on screen is stored as a position among the parts', () => {
+    const a = addLayer(addLayer(createSection('Bed', 'p_1'), 's_1'), 'p_2');
     expect(a.active).toBe(0);
-    expect(createArrangement('Bed', 'p_1', [{ patternId: 's_1' }], 1).active).toBe(1);
-    expect(validateArrangement({ ...a, active: 2 })).toEqual([]);
-    expect(validateArrangement({ ...a, active: 3 })).toContain('The part on screen must be one of the parts');
-    expect(validateArrangement({ ...a, active: -1 })).toContain('The part on screen must be one of the parts');
-    expect(validateArrangement({ ...a, active: 1.5 })).toContain('The part on screen must be one of the parts');
-    // An Arrangement saved before the field existed opens on its composition.
+    expect(createSection('Bed', 'p_1', [{ patternId: 's_1' }], 1).active).toBe(1);
+    expect(validateSection({ ...a, active: 2 })).toEqual([]);
+    expect(validateSection({ ...a, active: 3 })).toContain('The part on screen must be one of the parts');
+    expect(validateSection({ ...a, active: -1 })).toContain('The part on screen must be one of the parts');
+    expect(validateSection({ ...a, active: 1.5 })).toContain('The part on screen must be one of the parts');
+    // A Section saved before the field existed opens on its composition.
     const old = { ...a };
     delete old.active;
-    expect(validateArrangement(old)).toEqual([]);
+    expect(validateSection(old)).toEqual([]);
   });
 });

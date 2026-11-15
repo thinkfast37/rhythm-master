@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /*
- * US-18.1 — Compose a Section from kept fills. The Section is the Composer's,
+ * US-18.1 — Compose a Chain from kept fills. The Chain is the Composer's,
  * never Pattern data; it plays through the same pass-boundary seam as cycle
  * mode and is saved as a Song in its own store.
  */
@@ -17,7 +17,7 @@ async function keptBlank(page) {
   await melodicBlank(page);
   await page.locator('.progression-picker').selectOption('I-IV-V');
   // A progression brings its own fill; the Pattern's own is None here, so the
-  // fill in force is always the Section's doing.
+  // fill in force is always the Chain's doing.
   await page.locator('.arpeggio-picker').selectOption('none');
   // A progression chosen is voiced Closest (AC-2.11.3/7); the criteria here
   // read the chords over their roots, so the voicing is put at Root position.
@@ -123,7 +123,7 @@ test("AC-18.1.2/2 — Each entry's repeats can be set from 1 to 16 in place", as
   await expect(repeats).toHaveValue('16');
 });
 
-test('AC-18.1.2/3 — An entry can be moved up, moved down and removed; the same fill may appear in the Section more than once', async ({ page }) => {
+test('AC-18.1.2/3 — An entry can be moved up, moved down and removed; the same fill may appear in the Chain more than once', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
@@ -138,7 +138,7 @@ test('AC-18.1.2/3 — An entry can be moved up, moved down and removed; the same
   expect(await names()).toEqual(['Alberti', 'Root and fifth']);
 });
 
-test('AC-18.1.2/4 — The Section is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty', async ({ page }) => {
+test('AC-18.1.2/4 — The Chain is shown as an ordered list naming each fill and its repeats, with the total number of passes it plays, and says when it is empty', async ({ page }) => {
   await keptBlank(page);
   await expect(compose(page).locator('.compose-empty')).toBeVisible();
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
@@ -149,7 +149,7 @@ test('AC-18.1.2/4 — The Section is shown as an ordered list naming each fill a
   await expect(compose(page).locator('.compose-empty')).toHaveCount(0);
 });
 
-test("AC-18.1.2/5 — Unkeeping a fill leaves every entry that uses it in the Section; the palette is a shortlist, not the Section's source of truth", async ({ page }) => {
+test("AC-18.1.2/5 — Unkeeping a fill leaves every entry that uses it in the Chain; the palette is a shortlist, not the Chain's source of truth", async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await page.evaluate(() => window.__rm.handlers.onKeepFill('alberti'));
@@ -180,7 +180,7 @@ test('AC-18.1.3/1 — Each entry is in force for its repeats, one repeat being o
   await page.locator('[data-action="stop"]').click();
 });
 
-test('AC-18.1.3/2 — After the last entry the first is in force again; the Section loops until stopped', async ({ page }) => {
+test('AC-18.1.3/2 — After the last entry the first is in force again; the Chain loops until stopped', async ({ page }) => {
   await keptBlank(page);
   await onTab(page, 'melody');
   await page.locator('.fill-cycle-repeats').fill('1');
@@ -208,7 +208,7 @@ test('AC-18.1.3/3 — Every view follows the fill in force exactly as under cycl
   await page.locator('[data-action="stop"]').click();
 });
 
-test('AC-18.1.3/4 — Play song is unavailable while the Section is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has', async ({ page }) => {
+test('AC-18.1.3/4 — Play song is unavailable while the Chain is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has', async ({ page }) => {
   await keptBlank(page);
   await expect(compose(page).locator('[data-action="play-song"]')).toBeDisabled();
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
@@ -250,7 +250,7 @@ test('AC-18.1.3/6 — Play song and cycle mode are exclusive: starting either en
   expect((await patternState(page)).harmony.arpeggio ?? null).toBeNull();
 });
 
-test('AC-18.1.3/7 — Editing the Section while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists', async ({ page }) => {
+test('AC-18.1.3/7 — Editing the Chain while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists', async ({ page }) => {
   await keptBlank(page);
   await onTab(page, 'melody');
   await page.locator('.fill-cycle-repeats').fill('1');
@@ -277,7 +277,7 @@ test('AC-18.1.3/7 — Editing the Section while it plays — repeats, order, an 
   await page.locator('[data-action="stop"]').click();
 });
 
-test("AC-18.1.4/1 — Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Section", async ({ page }) => {
+test("AC-18.1.4/1 — Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Chain", async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
@@ -331,7 +331,7 @@ test('AC-18.1.4/3 — A Song can be renamed and deleted from the Compose group, 
   await expect(compose(page).locator('.song-item')).toHaveCount(0);
 });
 
-test("AC-18.1.4/4 — Edits to a loaded Song's Section are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes", async ({ page }) => {
+test("AC-18.1.4/4 — Edits to a loaded Song's Chain are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes", async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('[data-action="song-save"]').click();
@@ -414,7 +414,7 @@ test('AC-18.1.5/2 — The file is named after the Song when it has been saved, a
   expect(savedName).toContain('named-song');
 });
 
-test('AC-18.1.5/4 — Export Song MIDI is unavailable while the Section is empty', async ({ page }) => {
+test('AC-18.1.5/4 — Export Song MIDI is unavailable while the Chain is empty', async ({ page }) => {
   await keptBlank(page);
   await expect(compose(page).locator('[data-action="song-export"]')).toBeDisabled();
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();

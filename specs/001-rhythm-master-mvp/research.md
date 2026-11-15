@@ -431,7 +431,7 @@ changes every pass and `lcm(n, M) / M` when it changes every Measure.
 
 **Amended 2026-10-18: two more step kinds (T390, AC-2.6.6/18–/19).** Three kinds could not write a neighbour note or a boogie. A **scale neighbour** — the next note of the Pattern's scale above or below a chord tone — is counted from the Key, because the scale step rooted on the chord spells the upper neighbour of B over iii in C as C♯; its scale is the seven degrees the chords are stacked from, as the scale drones' is, so a pentatonic Pattern's neighbour is one step away rather than a third. An **interval above the chord's root**, fixed whatever the Key, carries the boogie's major 6th and minor 7th. Rejected: a diatonic boogie (B, not B♭, over I in C major — not a boogie), and a fill offered only over dominant-seventh progressions, which would make the cycle's catalogue depend on the Pattern. Chosen by the maintainer. The interval sits above the root as voiced, so under an inversion it stays above the stack's 5th.
 
-**Amended 2026-10-25: two chromatic step kinds, and the first step that looks ahead (T439, AC-2.6.6/20–/27).** A **chromatic neighbour** `{ chromatic: ±1, of }` is the semitone beside a chord tone, outside the Key on purpose — the approach note and the enclosure are chromatic by definition, and a diatonic version is the scale neighbour already there. A **chromatic approach** `{ approach: ±1, target }` is the semitone beside the next chord's bass. Every earlier step resolves against the chord it sounds over alone; this one cannot, so the catalogue entry only declares that it walks into the next chord and `arpeggioDeal` — the one place that already knows where each chord's span ends — writes the target into the last sounding Slot of the span, read from the same next-chord rule the Now/Next strip uses, wrapping at the end of the cycle. The target is carried as semitones above the tonic, so every consumer resolves the step exactly as it does any other and none needs the next chord. Rejected: resolving it in each consumer (four places that would have to agree about the next chord, against the one-timeline rule), and following a Song into its next Section (one Section's notes would depend on another's, and a Section played alone would sound different from the same Section in its Song). Within a Song the approach is reckoned from the Pattern alone, which the maintainer accepted when choosing the fill with its wider reach named.
+**Amended 2026-10-25: two chromatic step kinds, and the first step that looks ahead (T439, AC-2.6.6/20–/27).** A **chromatic neighbour** `{ chromatic: ±1, of }` is the semitone beside a chord tone, outside the Key on purpose — the approach note and the enclosure are chromatic by definition, and a diatonic version is the scale neighbour already there. A **chromatic approach** `{ approach: ±1, target }` is the semitone beside the next chord's bass. Every earlier step resolves against the chord it sounds over alone; this one cannot, so the catalogue entry only declares that it walks into the next chord and `arpeggioDeal` — the one place that already knows where each chord's span ends — writes the target into the last sounding Slot of the span, read from the same next-chord rule the Now/Next strip uses, wrapping at the end of the cycle. The target is carried as semitones above the tonic, so every consumer resolves the step exactly as it does any other and none needs the next chord. Rejected: resolving it in each consumer (four places that would have to agree about the next chord, against the one-timeline rule), and following a Song into its next Chain (one Chain's notes would depend on another's, and a Chain played alone would sound different from the same Chain in its Song). Within a Song the approach is reckoned from the Pattern alone, which the maintainer accepted when choosing the fill with its wider reach named.
 
 **Amended 2026-09-12: cycle mode puts a fill in force without touching the Pattern (US-2.7).** The
 maintainer wants playback to step through the whole fill catalogue, each fill for a few harmonic
@@ -523,9 +523,9 @@ disagree about which note a Slot is.
 
 ---
 
-## D-013 — Songs: a Section plays through the seam cycle mode already uses
+## D-013 — Songs: a Chain plays through the seam cycle mode already uses
 
-**Decision (2026-09-13)**: a Song (US-18.1) is its own store, `rm.songs.v1`, holding Sections that
+**Decision (2026-09-13)**: a Song (US-18.1) is its own store, `rm.songs.v1`, holding Chains that
 reference Patterns by id, and it plays through exactly the mechanism cycle mode (US-2.7) introduced:
 at each pass boundary the transport is handed the Pattern with the fill in force substituted
 (`withArpeggio`), and which fill is in force is a pure function of the pass number — `core/song.js`
@@ -537,8 +537,8 @@ Pattern and belongs with the rest of their judgements about it.
 **Why**: the maintainer's workflow is judge, then sequence — audition fills over a progression,
 shortlist the ones that work, chain them with repeat counts, and build a song on that bed. The
 transport already knows how to switch fills at a pass boundary without stopping; a Song only changes
-who decides the next fill. Storing `patternId` per Section from the first version means the verse →
-chorus case later — different progressions per Section — changes the Compose group, not the schema.
+who decides the next fill. Storing `patternId` per Chain from the first version means the verse →
+chorus case later — different progressions per Chain — changes the Compose group, not the schema.
 
 **Alternatives considered**: a Song as a chain of Pattern copies concatenated by Append (rejected
 for the same reason as in D-011 — the Measure cap — and because a Song of fills over one progression
@@ -546,15 +546,15 @@ has no copies to make); Keeps stored on the Song rather than the Pattern (reject
 made before any Song exists, while auditioning, and belongs to the Pattern being auditioned); a mode
 inside the Melody group instead of a fourth workbench group (rejected: hidden state, exactly what the
 2026-09-13 usability review removed); multiple Patterns per Song in this version (deferred: loop
-length and meter can change between Sections, which is real transport work, and the maintainer's
-first need is one Section over one progression).
+length and meter can change between Chains, which is real transport work, and the maintainer's
+first need is one Chain over one progression).
 
 **Amended 2026-11-12 (D-026)**: the deferred case arrived by another door. The maintainer asked for
 distinct layers heard together under the composition they are recording, the shorter repeating to
 fill the longer. That is not several Patterns per Song — a Song stays one Pattern, one progression,
-a chain of fills — but layers under the Composer's draft, saved as an Arrangement. The transport work
+a chain of fills — but layers under the Composer's draft, saved as a Section. The transport work
 this entry deferred — loop length and meter differing between the things sounding — is done in
-`core/arrangement.js` as one merged timeline per combined pass, so the seam this entry describes is
+`core/section.js` as one merged timeline per combined pass, so the seam this entry describes is
 unchanged: the transport is still handed one Pattern-shaped thing per pass.
 
 ## D-014 — Voicing: a bass per chord, the stack it implies, and shapes that write the data
@@ -900,7 +900,7 @@ than silently appending an exact copy, which Double Length already provides.
   whole Pattern: the current fill's first-pass deal into the Measures already there, the next fill's
   into the copy, through `stepAsDegree` as removing a progression bakes (AC-2.6.1/6), and the fill set
   to None. That is what "vary the fill from one loop to the next" means once the loop is Measures; the
-  live way — the Fills cycle at Repeats 1, or a Section — is untouched and stays the way to audition.
+  live way — the Fills cycle at Repeats 1, or a Chain — is untouched and stays the way to audition.
 - **Roll the dice** takes its random number from the UI, as `pickAtLevel` does for Give me one
   (US-14.1): `core/variations.js` exposes `rollable(devices, noDice)` and a `pick(list, random)`, and
   `Math.random` is called in `src/ui/`. The per-group **No dice** toggles are session state in the
@@ -928,7 +928,7 @@ the life of the picker and nowhere else.
 
 **Alternatives considered**:
 - *A variation set beside the Pattern, committed on request* — declined, above.
-- *Variations as Section entries (US-18.1)* — rejected: a Section chains fills over one Pattern; its
+- *Variations as Chain entries (US-18.1)* — rejected: a Chain chains fills over one Pattern; its
   entries are arpeggio choices, not Measures, and Songs exist only on a Melodic Pattern with a
   progression. A percussive loop needs this just as much.
 - *A single "Vary" button choosing a device at random* — rejected: `core/` is pure, and the musician
@@ -1026,7 +1026,7 @@ saved before has no `fill` on any chord and sounds as it did.
   story, both a chord's fill under None and an "as stamped" entry in the chord's picker: each is the
   mixed state the pitch strip and degree chips would have to show, and the broader variations work
   is where that is decided.
-- **A fill in force wins everywhere.** Cycle fills and a Song's Section put a fill in force through
+- **A fill in force wins everywhere.** Cycle fills and a Song's Chain put a fill in force through
   `withArpeggio` (AC-2.7.1/4, D-013); the overlay it returns deals every chord, each chord's own fill
   suspended, so the fill being auditioned is always heard — the maintainer's ruling. The overlay still
   writes nothing: the Pattern's chords keep their fills and they return when the cycle or Song ends.
@@ -1238,7 +1238,7 @@ Measures rather than from the whole Pattern.
 ## D-026 — Layers under the composition: one merged timeline per combined pass, the shorter repeating to fill the longer
 
 **Decision (2026-11-12)**: a layer (US-19.11) is a library Pattern — shipped or owned, percussive,
-melodic or carrying a progression — placed under the Composer's composition. `core/arrangement.js`
+melodic or carrying a progression — placed under the Composer's composition. `core/section.js`
 is pure and does three things. It **measures** each Pattern's length as one harmonic cycle in
 eighth notes: `cyclePasses × Σ numerator × 8 / denominator` over its Measures, an integer for every
 supported Time Signature. It **fits** the composition and its layers into the shortest common
@@ -1253,7 +1253,7 @@ feel, and — melodic layers only — its Key: the Pattern's own stay in the lib
 
 The transport (`audio/scheduler.js`) and the screen-off renderer (`audio/backgroundRender.js`)
 call the timeline, loop-duration and beat-grid functions through four one-line dispatchers that
-hand a layered set to `core/arrangement.js` and a Pattern to `core/timeline.js`. Nothing else in
+hand a layered set to `core/section.js` and a Pattern to `core/timeline.js`. Nothing else in
 either changes: a layered set is a Pattern-shaped object carrying the composition's `measures`,
 `tempo`, `tempoUnit` and `name`, so the count-in and the lock-screen title read it as they read a
 Pattern. Which voice an event sounds with is decided per event in `main.js` from the tag: the
@@ -1262,12 +1262,14 @@ Practice would use (`resolveVoice` with `composer: false`), so the line being wr
 its bed by ear. Two events at one instant are two Web Audio voices at one `when` — polyphony is a
 property of the merged list, not a mode.
 
-An Arrangement is `{ id, name, compositionId, layers: [{ patternId, muted }] }` in
-`rm.arrangements.v1`, a list store shaped like `rm.songs.v1` and handled by the same backup and
+*(Amended 2026-11-15, T493: what this decision called an Arrangement is a Section, at the maintainer's request, so that Arrangement is free for a feature of its own; the store is `rm.sections.v1`, moved from `rm.arrangements.v1` on load, and `core/arrangement.js` is `core/section.js`. The decision itself — one merged timeline, a store of its own, references by id — stands unchanged.)*
+
+A Section is `{ id, name, compositionId, layers: [{ patternId, muted }] }` in
+`rm.sections.v1`, a list store shaped like `rm.songs.v1` and handled by the same backup and
 restore code (AC-7.6.1/2 revised). Tempo, swing and Key are not stored on it: they are the
 composition's, and the composition is a Pattern in the library. Loading one opens its composition
 through US-19.8's rules — an owned melody, opened for editing — and sets the layers; a Pattern that
-any Arrangement uses, as composition or layer, cannot be deleted while it exists, as a Pattern a
+any Section uses, as composition or layer, cannot be deleted while it exists, as a Pattern a
 Song plays over cannot (AC-18.1.4/5).
 
 **Why**: the maintainer's workflow is to hear the bed while choosing the next note — "while the
@@ -1275,7 +1277,7 @@ first layer is playing back … I go through and pick the notes for that layer. 
 them both together." The composition is already a draft the transport plays per pass; layers are
 other Patterns on the same clock. Merging in `core/` keeps the one-timeline rule (Constitution III,
 D-011): the cursor, the audio and the handover still consume one list, and the MIDI exporter still
-consumes `buildTimeline` of one Pattern — an Arrangement's export is one `.mid` per layer, each the
+consumes `buildTimeline` of one Pattern — a Section's export is one `.mid` per layer, each the
 layer's Pattern under the composition's settings for its repeats in the combined loop, delivered as
 one ZIP (`core/zip.js`, stored entries, no dependency) because a browser blocks a click that starts
 several downloads (AC-19.11.5, added the same day at the maintainer's request). The
@@ -1290,7 +1292,7 @@ the layers into the composition's Measures as Append does (rejected: the Measure
 a reference to a Pattern that goes on being edited in the library, not a copy); a Song as a layer
 (deferred: its fill changes per pass against the Song's own counter, which has to be re-based
 against a combined loop; the maintainer chose Patterns only for this version); storing the
-Arrangement's tempo and Key on it (rejected: the composition carries them, and a second copy would
+Section's tempo and Key on it (rejected: the composition carries them, and a second copy would
 drift); a per-layer voice picker (not asked for; the composition-on-the-instrument, layers-as-
 Practice split tells the two apart without a setting); solo as well as mute (not asked for).
 
@@ -1298,8 +1300,8 @@ Practice split tells the two apart without a setting); solo as well as mute (not
 
 ## D-028 — An instrument and a volume for each part: one loader for every fetched voice, held notes, and a decibel taper
 
-**Decision (2026-11-15, US-19.12)**: every part of an arrangement carries an instrument and a volume.
-Both belong to the Arrangement — the Composer's state while it is open, `rm.arrangements.v1` once
+**Decision (2026-11-15, US-19.12)**: every part of a section carries an instrument and a volume.
+Both belong to the Section — the Composer's state while it is open, `rm.sections.v1` once
 saved — and never to a Pattern.
 
 **The catalogue** lives in `core/voice.js` (`INSTRUMENTS`): Piano, Synth, Guitar, Electric guitar,
@@ -1325,9 +1327,9 @@ every timeline event (a change to the one timeline for the sake of four voices).
 **Where the instrument comes from.** The part on screen: the Composer's own choice
 (`composer.instrument`), falling back to the remembered `composerInstrument` setting. A layer: its
 `instrument`, stamped with Practice's chosen voice when the layer is added, and falling back to that
-voice when an Arrangement saved before this change names none — which is exactly how such an
-Arrangement sounded before, so nothing is migrated and an old Arrangement does not open as "unsaved".
-`core/arrangement.layered` passes each layer's instrument and volume into the set, and
+voice when a Section saved before this change names none — which is exactly how such an
+Section sounded before, so nothing is migrated and an old Section does not open as "unsaved".
+`core/section.layered` passes each layer's instrument and volume into the set, and
 `layeredTimeline` stamps them on every event, so the transport and the screen-off render read the
 part's sound off the event itself.
 
@@ -1373,7 +1375,7 @@ table (`core/drums.DRUMS`) that is the single place to correct a name or a sound
 MIDI 36 C2 (middle C is C4 here, AC-2.2.3); the key labels keep the app's names, as asked.
 
 **Why exempt from the Key.** A composed note is stored as a degree of the Key plus an octave
-(`core/composer.pitchFromMidi`), and every layer is played in the arrangement's Key
+(`core/composer.pitchFromMidi`), and every layer is played in the section's Key
 (`underComposition`, AC-19.11.2/3). For a melody that is the point. For drums it would make a Key
 change turn the kick into the rim. So:
 
@@ -1381,12 +1383,12 @@ change turn the kick into the rim. So:
   instrument whose notes are fixed), and so sounds the MIDI notes it was written with;
 - when the Key changes with a Drums part on screen, or a Drums part is put on screen under another
   Key, its notes are **re-spelled** in the new Key (`core/composer.retune`) rather than moved: same
-  MIDI notes, new degree tokens. The part still carries the arrangement's Key, as AC-19.11.6/4
+  MIDI notes, new degree tokens. The part still carries the section's Key, as AC-19.11.6/4
   needs of whichever part is on screen, and nothing heard changes.
 
 *Rejected*: storing absolute MIDI notes for drum parts (a second pitch representation in the Pattern,
 for one instrument, and the instrument is not Pattern content, AC-19.12.4/4); a fixed Key of C for
-drum parts (the part on screen is what carries the arrangement's Key, so it cannot have a private one).
+drum parts (the part on screen is what carries the section's Key, so it cannot have a private one).
 
 **What it leaves as it is.** A drum part saved to the library is an ordinary Melodic Pattern of low
 notes: opened in Practice it plays whatever voice Practice is on — Drums, if that is chosen. The

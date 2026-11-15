@@ -1,12 +1,12 @@
 /**
- * An Arrangement's MIDI export (AC-19.11.5): one file per layer, each one
+ * A Section's MIDI export (AC-19.11.5): one file per layer, each one
  * combined loop long, in one archive.
  */
 import { describe, it, expect } from 'vitest';
-import { buildMidi, buildSongMidi, buildArrangementMidi, arrangementZipFilename, midiFilename, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
+import { buildMidi, buildSongMidi, buildSectionMidi, sectionZipFilename, midiFilename, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
 import { buildZip } from '../../../src/core/zip.js';
 import { readZip } from '../../zip-reader.js';
-import { layered, layeredLoopDuration } from '../../../src/core/arrangement.js';
+import { layered, layeredLoopDuration } from '../../../src/core/section.js';
 import { create, cycleAccent, setPitch, addMeasure, setTimeSignatureAll } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, setChange, cyclePasses } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
@@ -72,10 +72,10 @@ function twoBars(name) {
   return p;
 }
 
-describe('export/midi for an Arrangement (AC-19.11.5)', () => {
-  it("AC-19.11.5/1 — Export arrangement MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included", () => {
+describe('export/midi for a Section (AC-19.11.5)', () => {
+  it("AC-19.11.5/1 — Export section MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included", () => {
     const set = layered(melody('My Line'), [{ pattern: twoBars('Son Clave 3-2') }, { pattern: fourBeats('Bossa Nova!'), muted: true }]);
-    const files = buildArrangementMidi(set);
+    const files = buildSectionMidi(set);
     expect(files.map((f) => f.name)).toEqual(['01-my-line.mid', '02-son-clave-3-2.mid', '03-bossa-nova.mid']);
     for (const f of files) expect(String.fromCharCode(...f.bytes.slice(0, 4))).toBe('MThd');
     // The muted layer is a file like any other, with its notes.
@@ -87,22 +87,22 @@ describe('export/midi for an Arrangement (AC-19.11.5)', () => {
   });
 
   it('AC-19.11.5/5 — A part on Drums is written on the General MIDI drum channel, at the note numbers its keys name, so a DAW opens it as a drum kit; every other pitched part stays on channel 1', () => {
-    // Kick and snare written in C; the arrangement is in G.
+    // Kick and snare written in C; the section is in G.
     let kit = { ...melody('Kit', 'C') };
     [36, 38, 36, 38].forEach((midi, b) => (kit = recordNote(kit, { measureIndex: 0, beatIndex: b, slotIndex: 0 }, midi)));
     const composition = melody('Line', 'G');
     const set = layered(composition, [{ pattern: kit, instrument: 'drums' }, { pattern: { ...kit, name: 'Low line' }, instrument: 'bass' }]);
-    const files = buildArrangementMidi(set);
+    const files = buildSectionMidi(set);
     const ons = (i) => trackEvents(files[i].bytes).filter((e) => (e.status & 0xf0) === 0x90);
     // The Drums part: channel 10 (status 0x99), at the notes its keys name — not moved to G.
     expect(ons(1).every((e) => e.status === 0x99)).toBe(true);
     expect(ons(1).map((e) => e.data[0])).toEqual([36, 38, 36, 38]);
-    // Every other pitched part: channel 1 (status 0x90), in the arrangement's Key.
+    // Every other pitched part: channel 1 (status 0x90), in the section's Key.
     expect(ons(0).every((e) => e.status === 0x90)).toBe(true);
     expect(ons(2).every((e) => e.status === 0x90)).toBe(true);
     expect(ons(2).map((e) => e.data[0])).toEqual([43, 45, 43, 45]);
     // The composition itself on Drums is written the same way.
-    const own = buildArrangementMidi(layered(kit, [{ pattern: composition }], { instrument: 'drums' }));
+    const own = buildSectionMidi(layered(kit, [{ pattern: composition }], { instrument: 'drums' }));
     const first = trackEvents(own[0].bytes).filter((e) => (e.status & 0xf0) === 0x90);
     expect(first.every((e) => e.status === 0x99)).toBe(true);
     expect(first.map((e) => e.data[0])).toEqual([36, 38, 36, 38]);
@@ -115,7 +115,7 @@ describe('export/midi for an Arrangement (AC-19.11.5)', () => {
     const set = layered(composition, [{ pattern: twoBars('Bed') }, { pattern: { ...chords('Changes'), tempo: 200 } }]);
     // Loop: the composition (1 bar) × 6, the bed (2 bars) × 3, the progression (3 bars) × 2.
     expect(set.layers.map((l) => l.repeats)).toEqual([6, 3, 2]);
-    const files = buildArrangementMidi(set);
+    const files = buildSectionMidi(set);
     const ends = files.map((f) => endTick(f.bytes));
     expect(new Set(ends).size).toBe(1);
     // Six bars of 4/4 at 480 ticks a quarter.
@@ -140,15 +140,15 @@ describe('export/midi for an Arrangement (AC-19.11.5)', () => {
     expect(endTick(files[1].bytes) / TICKS_PER_QUARTER).toBeCloseTo(layeredLoopDuration(set) / (60 / 90), 6);
   });
 
-  it('AC-19.11.5/3 — The archive is named after the Arrangement once it has been saved, and after the composition otherwise', () => {
+  it('AC-19.11.5/3 — The archive is named after the Section once it has been saved, and after the composition otherwise', () => {
     const composition = melody('My Line');
-    expect(arrangementZipFilename({ id: 'arr_1', name: 'Evening Bed' }, composition)).toBe('evening-bed.zip');
-    expect(arrangementZipFilename({ id: null, name: '' }, composition)).toBe('my-line.zip');
-    expect(arrangementZipFilename(null, composition)).toBe('my-line.zip');
-    expect(arrangementZipFilename({ id: 'arr_2', name: '   ' }, composition)).toBe('my-line.zip');
+    expect(sectionZipFilename({ id: 'arr_1', name: 'Evening Bed' }, composition)).toBe('evening-bed.zip');
+    expect(sectionZipFilename({ id: null, name: '' }, composition)).toBe('my-line.zip');
+    expect(sectionZipFilename(null, composition)).toBe('my-line.zip');
+    expect(sectionZipFilename({ id: 'arr_2', name: '   ' }, composition)).toBe('my-line.zip');
   });
 
-  it("AC-19.11.5/4 — Export arrangement MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged", () => {
+  it("AC-19.11.5/4 — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged", () => {
     // The Pattern's own file: one harmonic cycle, as before, however it is layered.
     const changes = chords('Changes');
     const alone = buildMidi(changes);
@@ -165,7 +165,7 @@ describe('export/midi for an Arrangement (AC-19.11.5)', () => {
     // 7/8 under 4/4 exports eight bars against seven, both the same length.
     let seven = setTimeSignatureAll({ ...create('Seven'), id: 'seven', tempo: 120 }, '7/8');
     for (let b = 0; b < 7; b++) seven = cycleAccent(seven, 0, b, 0);
-    const files = buildArrangementMidi(layered(fourBeats('Four'), [{ pattern: seven }]));
+    const files = buildSectionMidi(layered(fourBeats('Four'), [{ pattern: seven }]));
     expect(endTick(files[0].bytes)).toBe(endTick(files[1].bytes));
     expect(noteOns(files[1].bytes)).toHaveLength(56);
   });

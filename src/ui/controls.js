@@ -422,19 +422,19 @@ function renderHeaderInto(root, pattern, state, handlers) {
   // something you do while looking at — and playing — the Pattern, and on a
   // phone it should not require opening the drawer. Same control, same
   // `onRate`, so there is one Rating however it is reached.
-  // The Arrangements this Pattern is a part of, each a way into the Composer
+  // The Sections this Pattern is a part of, each a way into the Composer
   // on it (AC-19.11.9/3). Not under a practice goal, which has no Composer.
-  const inArrangements = readOnly ? [] : (state.inArrangements ?? []);
-  if (inArrangements.length > 0) {
-    const line = el('p', 'pattern-arrangements');
-    line.dataset.arrangements = String(inArrangements.length);
-    line.appendChild(el('span', 'pattern-arrangements-label', { textContent: 'In arrangements: ' }));
-    inArrangements.forEach((a, i) => {
-      const b = el('button', 'pattern-arrangement', { type: 'button', textContent: a.name });
-      b.dataset.action = 'open-arrangement';
-      b.dataset.arrangementId = a.id;
-      b.addEventListener('click', () => handlers.onOpenArrangement?.(a.id));
-      if (i > 0) line.appendChild(el('span', 'pattern-arrangements-sep', { textContent: ', ' }));
+  const inSections = readOnly ? [] : (state.inSections ?? []);
+  if (inSections.length > 0) {
+    const line = el('p', 'pattern-sections');
+    line.dataset.sections = String(inSections.length);
+    line.appendChild(el('span', 'pattern-sections-label', { textContent: 'In sections: ' }));
+    inSections.forEach((a, i) => {
+      const b = el('button', 'pattern-section', { type: 'button', textContent: a.name });
+      b.dataset.action = 'open-section';
+      b.dataset.sectionId = a.id;
+      b.addEventListener('click', () => handlers.onOpenSection?.(a.id));
+      if (i > 0) line.appendChild(el('span', 'pattern-sections-sep', { textContent: ', ' }));
       line.appendChild(b);
     });
     root.appendChild(line);
@@ -1418,6 +1418,22 @@ function renderTransport(state, handlers) {
   // Audio starts ONLY from this handler — a user gesture (FR-010, FR-011).
   play.addEventListener('click', () => (state.isPlaying ? handlers.onStop() : handlers.onPlay()));
   group.appendChild(play);
+
+  // The Composer's metronome (AC-19.6.3/1): beside Play while it plays, recording
+  // or not, and nowhere else — Practice has the click in its own group. It is
+  // the app's one click setting (/2), and not a transport button (AC-15.1.17/4).
+  if (state.isPlaying && state.composer?.mode === 'composer' && state.composer?.draft) {
+    const on = Boolean(state.settings.metronomeEnabled);
+    const metronome = el('button', `toggle composer-metronome${on ? ' on' : ''}`, {
+      type: 'button',
+      textContent: 'Metronome',
+      title: on ? 'Metronome on: a click on every Beat. Tap to turn it off.' : 'Metronome off. Tap for a click on every Beat.',
+    });
+    metronome.dataset.action = 'composer-metronome';
+    metronome.setAttribute('aria-pressed', String(on));
+    metronome.addEventListener('click', () => handlers.onComposerMetronome?.());
+    group.appendChild(metronome);
+  }
 
   // Stopped under a cycle, Stop stays beside Play: the second press begins the
   // cycle again from the Pattern's own fill and progression, the way a deck

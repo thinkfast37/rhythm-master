@@ -66,6 +66,8 @@ export const DEFAULTS = {
    * (AC-19.8.4, data-model §6).
    */
   composerInstrument: 'guitar',
+  /** The library groups folded away, by id: 'sections', 'patterns' (AC-5.1.8/3). */
+  libraryFolded: [],
   /** Grid or Score in the Composer (AC-19.11.8/3). */
   composerView: 'grid',
   composerLabelMode: 'notes',

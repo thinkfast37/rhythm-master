@@ -13,7 +13,7 @@ import { beatDurationSeconds, beatCount, quarterSeconds, tempoUnitOf } from '../
 import { cyclePasses } from '../core/harmony.js';
 import { totalPasses, entryAt, playingAt } from '../core/song.js';
 import { buildZip } from '../core/zip.js';
-import { passesPerLoop } from '../core/arrangement.js';
+import { passesPerLoop } from '../core/section.js';
 import { hasFixedNotes } from '../core/voice.js';
 
 export const TICKS_PER_QUARTER = 480;
@@ -55,7 +55,7 @@ function chunk(id, data) {
  * Build a .mid for a Pattern: one loop pass, or under a progression every pass
  * of its harmonic cycle, so the file carries the whole progression rather than
  * its first chord (AC-2.6.10). Each pass comes from the same `buildTimeline`
- * playback uses, offset by whole passes. A layer of an Arrangement passes its
+ * playback uses, offset by whole passes. A layer of a Section passes its
  * repeats in the combined loop instead (AC-19.11.5/2).
  *
  * `channel` overrides the channel the Pattern's Sound Mode would choose — a
@@ -142,7 +142,7 @@ const tempoMeta = (secondsPerQuarter) => {
  * Build a .mid for a Song (AC-18.1.5/1): every entry's passes in order, each
  * entry for its repeats with its fill in force, once through and not looped.
  * Each pass is the same `buildTimeline` playback sounds for it, offset by the
- * passes before it, so the file cannot disagree with what the Section plays.
+ * passes before it, so the file cannot disagree with what the Chain plays.
  * The Pattern's own export is untouched (AC-18.1.5/3).
  *
  * @param {object} song
@@ -223,7 +223,7 @@ export function downloadSongMidi(song, patternById, pattern = patternById(song.s
   download(buildSongMidi(song, patternById), songMidiFilename(song, pattern));
 }
 
-/* --- an Arrangement: one file per layer (AC-19.11.5) ---------------------- */
+/* --- a Section: one file per layer (AC-19.11.5) ---------------------- */
 
 /** A filename-safe stem, as `midiFilename` makes it, without the extension. */
 const stem = (name) => name.trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase() || 'layer';
@@ -233,13 +233,13 @@ const stem = (name) => name.trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
  * first, each spanning one combined loop: the layer's own `buildTimeline` for
  * each of its repeats, at the composition's tempo, swing and Key, which the
  * set already applied (AC-19.11.5/1, /2). Muted layers are exported too — the
- * export is the Arrangement, not the audition. Names are numbered so a DAW
+ * export is the Section, not the audition. Names are numbered so a DAW
  * lists them in order.
  *
- * @param {object} set  from `core/arrangement.layered`
+ * @param {object} set  from `core/section.layered`
  * @returns {Array<{name: string, bytes: Uint8Array}>}
  */
-export function buildArrangementMidi(set) {
+export function buildSectionMidi(set) {
   const width = String(set.layers.length).length;
   return set.layers.map((layer, i) => ({
     name: `${String(i + 1).padStart(Math.max(2, width), '0')}-${stem(layer.pattern.name)}.mid`,
@@ -249,14 +249,14 @@ export function buildArrangementMidi(set) {
   }));
 }
 
-/** The archive is named after the Arrangement once saved, and after the composition otherwise (AC-19.11.5/3). */
-export function arrangementZipFilename(arrangement, composition) {
-  const named = arrangement?.id && typeof arrangement.name === 'string' && arrangement.name.trim() !== '';
-  return `${stem(named ? arrangement.name : composition.name)}.zip`;
+/** The archive is named after the Section once saved, and after the composition otherwise (AC-19.11.5/3). */
+export function sectionZipFilename(section, composition) {
+  const named = section?.id && typeof section.name === 'string' && section.name.trim() !== '';
+  return `${stem(named ? section.name : composition.name)}.zip`;
 }
 
-export function downloadArrangementMidi(set, filename) {
-  const blob = new Blob([buildZip(buildArrangementMidi(set))], { type: 'application/zip' });
+export function downloadSectionMidi(set, filename) {
+  const blob = new Blob([buildZip(buildSectionMidi(set))], { type: 'application/zip' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

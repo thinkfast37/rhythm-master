@@ -35,7 +35,7 @@ import {
 import { renderLayers } from './layers.js';
 import { renderScore } from './score.js';
 import { buildScore } from '../core/notation.js';
-import { layered, passesPerLoop } from '../core/arrangement.js';
+import { layered, passesPerLoop } from '../core/section.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
 import { INSTRUMENTS, FETCHED, instrumentOf, viewOf, normaliseVoice, DEFAULT_INSTRUMENT } from '../core/voice.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
@@ -85,7 +85,7 @@ export function renderComposer(root, state, handlers) {
     fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers, voice));
     if (draft) {
       // Grid or Score (AC-19.11.8): the composing grid, or one staff per part.
-      if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderArrangementScore(state, handlers));
+      if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderSectionScore(state, handlers));
       else fresh.appendChild(renderComposingGrid(draft, composer, state, handlers));
       // The layers under it (US-19.11), absent without a composition (AC-19.11.1/5).
       fresh.appendChild(renderLayers(state, handlers));
@@ -95,8 +95,8 @@ export function renderComposer(root, state, handlers) {
       });
       empty.dataset.empty = 'true';
       fresh.appendChild(empty);
-      // Saved Arrangements can be opened from here too (AC-19.11.1/5, AC-19.11.4/2).
-      if ((state.arrangements ?? []).length > 0) fresh.appendChild(renderLayers(state, handlers));
+      // Saved Sections can be opened from here too (AC-19.11.1/5, AC-19.11.4/2).
+      if ((state.sections ?? []).length > 0) fresh.appendChild(renderLayers(state, handlers));
     }
     fresh.appendChild(renderControls(draft, instrument, key, scale, state, handlers));
     const credit = el('p', 'composer-attribution');
@@ -636,13 +636,13 @@ function renderMidiPicker(state, handlers) {
 }
 
 /**
- * The arrangement as sheet music (AC-19.11.8): one staff per part, in the
+ * The section as sheet music (AC-19.11.8): one staff per part, in the
  * parts' order, each one combined loop long — the part repeated as it plays, a
  * progression walking its chords — with the part on screen marked and the
  * cursor running in its staff. Each part is the same engraver Practice prints
  * with, handed the part's passes in the loop; the one timeline, read as notes.
  */
-function renderArrangementScore(state, handlers) {
+function renderSectionScore(state, handlers) {
   const wrap = el('div', 'composer-scores');
   const all = handlers.parts?.() ?? [];
   const active = all.find((p) => p.active);

@@ -217,7 +217,7 @@ test("AC-2.15.3/1 — While Cycle fills has a fill in force it deals every chord
   expect(JSON.stringify(await pattern(page))).toBe(json);
 });
 
-test("AC-2.15.3/2 — While a Song plays, the Section's fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together", async ({ page }) => {
+test("AC-2.15.3/2 — While a Song plays, the Chain's fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together", async ({ page }) => {
   await varied(page);
   await fillPicker(page, 3).selectOption('down');
   const json = JSON.stringify(await pattern(page));
