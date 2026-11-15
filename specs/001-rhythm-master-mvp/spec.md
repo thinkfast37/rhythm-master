@@ -2329,7 +2329,7 @@ field survives showing it.)*
 - **AC-15.1.8** — Fixed main-panel section order
   - **Given** the main panel at any viewport width
   - **When** its sections are laid out
-  - **Then** the order is fixed top to bottom, below the pinned bar (‹ Goals, the library toggle, Related, Play/Stop with the exact tempo entry and its ♩/♪ unit, and quick navigation — AC-5.5.3, AC-15.1.17, AC-15.1.20/1) and the goal strip under it (AC-15.1.20/2): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the View control, Grid | Sheet, at its head (AC-12.2.1) and the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: Roll the dice (US-2.14), then pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Chain, Play song, Save and Export Song MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
+  - **Then** the order is fixed top to bottom, below the pinned bar (‹ Goals, the library toggle, Related, Play/Stop with the exact tempo entry and its ♩/♪ unit, and quick navigation — AC-5.5.3, AC-15.1.17, AC-15.1.20/1) and the goal strip under it (AC-15.1.20/2): Pattern header, carrying the Sound Mode switch (AC-2.1.6) → chord strip (US-2.6, Melodic with a progression only) → grid, with the View control, Grid | Sheet, at its head (AC-12.2.1) and the brush line under it (AC-1.3.12) → the workbench tab bar (AC-15.1.7) → Melody group: Roll the dice (US-2.14), then pitch strip (US-2.2) then harmony controls (US-2.6), then fill cycling and Keep (US-2.7, US-2.8) (Melodic only) → Rhythm group: Subdivision strip (US-1.3) then the Measure controls (US-1.1, US-8.1, US-10.1, US-10.2) → Practice group: click and count-in (US-4.3), tempo slider and presets (US-4.2), swing (US-4.4), counting system (US-5.6) → Compose group: progression, kept-fill palette, the Chain, Play chain, Save and Export Chain MIDI (US-18.1) (Melodic with a progression only) → Pattern actions: copy, MIDI export (US-12.1), duplicates (US-11.1), submission (US-13.1), delete (US-7.5) → family members (US-11.2, ≥768px only)
   - **And** in Percussive mode the Melody and Compose groups, their tabs and the chord strip are absent rather than empty rows, so the order there is the same list with those entries removed — Compose likewise absent on a Melodic Pattern without a progression; likewise the family members area is absent below 768px, and absent at any width when the Pattern has no family members
   - **And** the same list is the frame's two parts, one above the other (AC-15.1.20): the Pattern header, chord strip and grid with its View control are the rhythm band; the tab bar, the groups, Pattern actions and family members are the work surface — each keeping the order above, so no section ever swaps places with another, and on a wide panel each scrolling on its own (AC-15.1.18)
   - *(Revised 2026-10-25 with US-2.14 (T442): the Melody group gains a first entry, Roll the dice, ahead of the pitch strip, and a No dice toggle beside each of the seven controls the roll can change — Key, Scale and Register on the pitch strip, Progression, Chord changes, Fill and Voicing among the harmony controls. The maintainer chose the head of the group over its foot. The section order is untouched: the entry is inside the Melody group.)*
@@ -3098,7 +3098,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.6.6/23** — Walking into the next chord deals the chord tones rising and makes the last sounding Slot before the chord changes a semitone below — or, from above, a semitone above — the next chord's bass: under an every-Measure change through C then F, four Slots a Measure from below sound C E G E then F A C B, the last aimed at C at the top of the next pass; from above, C E G F♯ then F A C D♭
     - **AC-2.6.6/24** — Under a once-a-pass change, walking into the next chord falls on the last sounding Slot of the pass, aimed at the chord the next pass opens on, and the last pass of the harmonic cycle aims back at its first chord
     - **AC-2.6.6/25** — Over a next chord with a bass chosen, the approach aims at that bass: walking into C/E from below sounds E♭
-    - **AC-2.6.6/26** — The approach to the next chord is reckoned within the Pattern: a Pattern playing as a Chain of a Song aims its last approach at the chord the Pattern itself would play next, not at the next Chain's
+    - **AC-2.6.6/26** — The approach to the next chord is reckoned within the Pattern: a Pattern playing under a Chain aims its last approach at the chord the Pattern itself would play next, not at the next Chain's
     - **AC-2.6.6/27** — The note band marks an approach to the next chord →−½ from below and →+½ from above
     - **AC-2.6.6/28** — A close-position figure deals the bottom three positions of the stack within the Slot's octave, as Alberti does: Up and home sounds Root 3rd 5th Root; Leap up and step home Root 5th 3rd Root — F♯ D B F♯ over Bm/F♯, the figure asked for; Down and up 5th 3rd Root 3rd; Reverse Alberti 5th Root 3rd Root; Rocking bass Root 3rd Root 5th; Rocking bass with the 5th first Root 5th Root 3rd; Ascending over two octaves deals every role of the fullest chord rising, then again an octave up, and Descending over two octaves the same falling from the top; Bass and treble roll sounds Root Root↑ 3rd↑ 5th↑ and Bass and treble roll descending Root 5th↑ 3rd↑ Root↑ — each over the chord in force, so under an every-Measure change each new chord starts the figure again
     - **AC-2.6.6/29** — An open-voicing fill spreads the triad past an octave, the bass at the Slot's octave: Root and tenth sounds Root 3rd↑; Root 5th and octave sounds Root 5th Root↑; Root 5th octave and 5th sounds Root 5th Root↑ 5th; Open triad sounds Root 5th 3rd↑; Open triad and back Root 5th 3rd↑ 5th; Open ascent Root 5th Root↑ 3rd↑; Open ascent and back Root 5th Root↑ 3rd↑ Root↑ 5th — C G C′ E′ C′ G over C — each over the chord in force, so over Bm/F♯ Open triad sounds F♯ D B′ and a seventh chord's 7th is never dealt
@@ -3476,9 +3476,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-09-13 at the maintainer's request: "one fill may run for, let's say, four bars, and then you tweak it to using a different fill on top of the same progression … I wanna be able to chain the fills into one long set, and I wanna retain that chain and … export it." Decisions taken with the maintainer the same day: the first deliverable is a **Chain** — one Pattern, one progression, a sequence of fills with repeat counts — not a multi-layer arrangement, which they do not want ("I would be building a polyphonic sounding layer for this entire tool. I don't think I wanna go there yet"). The nouns are **Song** and **Chain**; "Arrangement" is not used, and the earlier "multi-section Arrangements" scope exclusion is narrowed accordingly (Assumptions). *(2026-11-12: "Arrangement" is now the name of US-19.11's layered set — a composition with library Patterns sounding under it. A Song is unchanged: one Pattern, one progression, a chain of fills.)* A repeat is one harmonic cycle, the unit AC-2.7.2/1 already defines. A Song records which Pattern each Chain plays over from the first version, so that a later Chain on a different progression — verse to chorus — is a change to what the Compose group offers, not to what a Song is; this version's Compose group keeps every Chain on the Pattern that is open. The progression is set in the Melody group and shown, not edited, in Compose: one place to change it. Compose is a fourth workbench group rather than a mode inside Melody, because a mode is remembered state the musician has to find, and the 2026-09-13 usability review (T272) was about exactly that.)*
 
-**Independent Test**: With three fills kept on a Melodic Pattern under I–IV–V, add two of them to the Chain at 2 and 1 repeats, press Play song, and assert that the first fill is in force for six passes and the second for three, that the switch happens at a pass boundary with no stop, that the list loops, that Save under a name stores the Song apart from the Pattern and it is offered again when the Pattern is next opened, that deleting the Pattern is refused naming the Song, and that Export Song MIDI writes nine passes in order while the Pattern's own MIDI export is unchanged.
+**Independent Test**: With three fills kept on a Melodic Pattern under I–IV–V, add two of them to the Chain at 2 and 1 repeats, press Play chain, and assert that the first fill is in force for six passes and the second for three, that the switch happens at a pass boundary with no stop, that the list loops, that Save under a name stores the Chain apart from the Pattern and it is offered again when the Pattern is next opened, that deleting the Pattern is refused naming the Chain, and that Export Chain MIDI writes nine passes in order while the Pattern's own MIDI export is unchanged.
 
 *(Renamed 2026-11-15 at the maintainer's request, T493: what this story called a Section is a **Chain** — the maintainer's first word for it, "chain the fills into one long set" — because Section now names the Composer's saved set of layers (US-19.11). Only the word changed. A stored Song keeps its list under the name `sections`, nothing saved is rewritten, and the dated notes above and below keep the word they were written with.)*
+
+*(Renamed again 2026-11-15 at the maintainer's request, T506: what this story called a **Song** — the Chain once saved under a name — is a Chain too, saved or not, so that Arrangement (the feature the maintainer asked for the same day: Sections and Patterns laid out in sequence) is the only word for a whole piece. Asked what the saved thing should be called, the maintainer chose "Chain". Play song is Play chain, Save as Song is Save as Chain, Export Song MIDI is Export Chain MIDI. Only the words changed: saved Chains stay in the store named `rm.songs.v1` with their `song_` ids, nothing saved is rewritten, and the dated notes above and below keep the word they were written with. The Tag named Song, and the songs the songbook credits, are other things and keep their name. AC-18.1.6 was added in the same change: "When I create a chain I would like for it to be available as a section as well and available in the Composer for me to tweak it. Of course if I tweak it, it is no longer the chain and needs to be renamed", and, of how: "write the Chain itself out as a new pattern that can be opened in Composer so it will always be created as a new pattern.")*
 
 **Acceptance Scenarios**:
 
@@ -3504,40 +3506,50 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 - **AC-18.1.3** — Playing the Chain
   - **Given** a Chain with at least one entry
-  - **When** the Composer presses Play song
+  - **When** the Composer presses Play chain
   - **Then** the entries play in order, each for its repeats, and the Chain loops
   - **Cases**:
     - **AC-18.1.3/1** — Each entry is in force for its repeats, one repeat being one harmonic cycle, and the next entry takes over from the very next pass with nothing stopped or restarted, the loop counter still counting
     - **AC-18.1.3/2** — After the last entry the first is in force again; the Chain loops until stopped
     - **AC-18.1.3/3** — Every view follows the fill in force exactly as under cycle mode, and the Compose group marks the entry playing
-    - **AC-18.1.3/4** — Play song is unavailable while the Chain is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has
+    - **AC-18.1.3/4** — Play chain is unavailable while the Chain is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has
     - **AC-18.1.3/5** — Stop returns the Pattern's own arpeggio, exactly as stopping cycle mode does
-    - **AC-18.1.3/6** — Play song and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern
+    - **AC-18.1.3/6** — Play chain and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern
     - **AC-18.1.3/7** — Editing the Chain while it plays — repeats, order, an added or removed entry — takes effect from the next pass without a restart, the entry in force keeping its place where it still exists
   - *(Note 2026-10-31 with US-2.15 (T454): an entry's fill deals every chord, a chord's own fill suspended while the Chain plays, exactly as under cycle mode (/3), and Stop returns the arpeggio and each chord's own fill together (AC-2.15.3/2).)*
 
-- **AC-18.1.4** — Saving a Song
+- **AC-18.1.4** — Saving a Chain
   - **Given** a Chain with at least one entry
   - **When** the Composer presses Save and gives a name
-  - **Then** the Song is stored under that name, apart from the Pattern, and is offered again whenever the Pattern is open
+  - **Then** the Chain is stored under that name, apart from the Pattern, and is offered again whenever the Pattern is open
   - **Cases**:
-    - **AC-18.1.4/1** — Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Chain
-    - **AC-18.1.4/2** — A saved Song survives a reload and is listed only on the Pattern it was composed over
-    - **AC-18.1.4/3** — A Song can be renamed and deleted from the Compose group, deletion asking first
-    - **AC-18.1.4/4** — Edits to a loaded Song's Chain are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes
-    - **AC-18.1.4/5** — Deleting a Pattern that a Song is composed over is refused with a message naming the Song or Songs, until they are deleted
-    - **AC-18.1.4/6** — A Song is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission
-    - **AC-18.1.4/7** — Songs are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Song
+    - **AC-18.1.4/1** — Save asks for a name, and a Chain is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Chains and choosing one loads it
+    - **AC-18.1.4/2** — A saved Chain survives a reload and is listed only on the Pattern it was composed over
+    - **AC-18.1.4/3** — A Chain can be renamed and deleted from the Compose group, deletion asking first
+    - **AC-18.1.4/4** — Edits to a loaded Chain are not saved until Save is pressed again, which updates it in place; Compose says when the loaded Chain has unsaved changes
+    - **AC-18.1.4/5** — Deleting a Pattern that a Chain is composed over is refused with a message naming the Chain or Chains, until they are deleted
+    - **AC-18.1.4/6** — A Chain is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission
+    - **AC-18.1.4/7** — Chains are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Chain
 
-- **AC-18.1.5** — Exporting a Song as MIDI
+- **AC-18.1.5** — Exporting a Chain as MIDI
   - **Given** a Chain with at least one entry
-  - **When** the Composer presses Export Song MIDI
+  - **When** the Composer presses Export Chain MIDI
   - **Then** one MIDI file holds the Chain end to end, once through
   - **Cases**:
     - **AC-18.1.5/1** — The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Chain once through, not looped
-    - **AC-18.1.5/2** — The file is named after the Song when it has been saved, and after the Pattern otherwise
+    - **AC-18.1.5/2** — The file is named after the Chain when it has been saved, and after the Pattern otherwise
     - **AC-18.1.5/3** — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Chain
-    - **AC-18.1.5/4** — Export Song MIDI is unavailable while the Chain is empty
+    - **AC-18.1.5/4** — Export Chain MIDI is unavailable while the Chain is empty
+
+- **AC-18.1.6** — Writing a Chain out as a Pattern
+  - **Given** a Chain with at least one entry
+  - **When** the Composer presses Write out as Pattern
+  - **Then** a name is asked, and a new Melodic Pattern holding the notes the Chain sounds end to end is saved to the library and opened in the Composer, the Chain and the Pattern it plays over untouched
+  - **Cases**:
+    - **AC-18.1.6/1** — Write out as Pattern asks a name, pre-filled and unique in the library, and cancelling it changes nothing
+    - **AC-18.1.6/2** — The new Pattern holds as stored notes every pass of the Chain in order, each entry for its repeats, one Measure for each Measure of each pass, with no progression and no Register, in the Key, scale, tempo and swing of the Pattern the Chain plays over
+    - **AC-18.1.6/3** — The new Pattern is saved to the library as one of the Composer's own and opened in the Composer, and the Chain and the Pattern it plays over are unchanged
+    - **AC-18.1.6/4** — A Chain that would need more than 32 Measures is refused with the number it needs, and Write out as Pattern is unavailable while the Chain is empty
 
 ### User Story 44 - Place the melody in a register
 
@@ -3738,21 +3750,21 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *Traceability: `US-7.6` — Back up and restore the whole library*
 
-**As** the Composer, **I want** to save everything the app holds for me — my Patterns, Songs, ratings, Tags, Keeps, settings and its bookkeeping — to one file, and to restore the app from that file, **so that** clearing the browser, losing a phone or moving to another device does not cost me my library.
+**As** the Composer, **I want** to save everything the app holds for me — my Patterns, Chains, ratings, Tags, Keeps, settings and its bookkeeping — to one file, and to restore the app from that file, **so that** clearing the browser, losing a phone or moving to another device does not cost me my library.
 
 *(Added 2026-10-03 at the maintainer's request: "a backup and restore feature where you can just … store the whole file, like the whole library on a file and then restore it from that file … It should have all the stuff that's in the local storage … whatever you've configured, everything." Decisions taken with the maintainer the same day: Local Metadata is included, which Constitution 3.6.0 permits for this file alone (FR-006); and restore **replaces** — the app afterwards holds exactly what the backup did, after a confirmation — rather than merging, since a restore that half-keeps the current library is not a restore. Shipped Patterns are not copied: they ship with the app, and what the musician added to them lives in the overlays, which are. The file is local and the musician's own; nothing is sent anywhere (Principle V).)*
 
-**Independent Test**: With a custom Pattern, a rating on a shipped Pattern, a Song, a Section, a changed setting and a submission mark stored, press Back up library and assert one JSON file downloads holding all six stores as stored. Change the library, choose Restore library with that file, confirm, and assert the app reloads holding exactly the backed-up library and nothing from after it. Choose a file that is not a backup and assert a message says so and nothing changed.
+**Independent Test**: With a custom Pattern, a rating on a shipped Pattern, a Chain, a Section, a changed setting and a submission mark stored, press Back up library and assert one JSON file downloads holding all six stores as stored. Change the library, choose Restore library with that file, confirm, and assert the app reloads holding exactly the backed-up library and nothing from after it. Choose a file that is not a backup and assert a message says so and nothing changed.
 
 **Acceptance Scenarios**:
 
 - **AC-7.6.1** — Back up writes the whole library to one file
-  - **Given** a library with custom Patterns, Songs, ratings, added Tags and Keeps, settings and Local Metadata
+  - **Given** a library with custom Patterns, Chains, ratings, added Tags and Keeps, settings and Local Metadata
   - **When** the Composer presses Back up library
   - **Then** one JSON file downloads holding every store the app keeps, exactly as stored, naming its format and carrying a `schemaVersion`; nothing in the app changes
   - **Cases**:
     - **AC-7.6.1/1** — A Back up library control in the library panel, offered under every goal, downloads one JSON file named for the day it was made
-    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Songs, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent
+    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Chains, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent
     - **AC-7.6.1/3** — The file names its format and carries its own schemaVersion and the time it was made
     - **AC-7.6.1/4** — Shipped Patterns are not in the file; the ratings, added Tags and Keeps on them are, in the overlays
   - *(Revised 2026-11-12 with US-19.11: /2 listed the stores by name, and Arrangements, `rm.arrangements.v1`, joined them; the backup copies every store, so the list names it. Nothing else in the criterion changed.)*
@@ -3764,7 +3776,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-7.6.2/1** — A Restore library control beside Back up library opens a file picker; once a file is picked, a prompt says the current library will be replaced, and Cancel changes nothing
     - **AC-7.6.2/2** — Confirmed, every store in the file is written and every store the file lacks is cleared, so the stores afterwards are exactly the backup's
-    - **AC-7.6.2/3** — After restoring, the app shows the backed-up library — its custom Patterns, ratings, Songs and settings — and nothing added since the backup
+    - **AC-7.6.2/3** — After restoring, the app shows the backed-up library — its custom Patterns, ratings, Chains and settings — and nothing added since the backup
     - **AC-7.6.2/4** — Backing up and restoring round-trips: a backup restored into an emptied app gives back every store unchanged
 
 - **AC-7.6.3** — A file that cannot be restored changes nothing
@@ -3774,7 +3786,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-7.6.3/1** — A file that is not JSON, or not a Rhythm Master backup, is refused with a message and leaves the library as it was
     - **AC-7.6.3/2** — A backup, or any store in it, at a schemaVersion newer than this build understands is refused rather than downgraded, and nothing is written
-    - **AC-7.6.3/3** — A backup with a malformed store — Patterns or Songs not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written
+    - **AC-7.6.3/3** — A backup with a malformed store — Patterns or Chains not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written
 
 ### User Story 48 - Voice each chord
 
@@ -4611,11 +4623,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 - **AC-2.15.3** — A fill in force, and a roll of the dice, reach every chord
   - **Given** a Pattern in which a chord carries its own fill
-  - **When** Cycle fills or a Song puts a fill in force, or the Fill control is rolled
+  - **When** Cycle fills or a Chain puts a fill in force, or the Fill control is rolled
   - **Then** the fill in force deals every chord while it lasts, writing nothing, and the roll sets the Arpeggio and clears every chord's own fill, so what is being auditioned or rolled is heard on every chord
   - **Cases**:
     - **AC-2.15.3/1** — While Cycle fills has a fill in force it deals every chord, each chord's own fill suspended; turning cycle mode off, or stopping where stopping returns the Pattern's own fill, returns the Arpeggio and each chord's own fill together, and the Pattern's JSON is unchanged throughout
-    - **AC-2.15.3/2** — While a Song plays, the Chain's fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together
+    - **AC-2.15.3/2** — While a Chain plays, its fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together
     - **AC-2.15.3/3** — Rolling the Fill control sets the Arpeggio to the rolled fill and clears every chord's own fill, as one edit that one Undo takes back whole; with Fill marked No dice each chord's own fill is as it was
   - *(Cross-references, kept out of the Case wording so each Case's criterion stays its own: /1's cycle is AC-2.7.1 and AC-2.7.2's, /2's Chain is AC-18.1.3's, /3's roll is AC-2.14.2/6's and its No dice AC-2.14.3's.)*
 
@@ -4897,7 +4909,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.11.4** — Saving a Section
   - **Given** a saved composition with layers
   - **When** the Composer presses Save section
-  - **Then** a name is asked and a Section — the composition and its layers in order, with which are muted — is stored apart from Patterns and Songs, listed in the Layers section, and loaded from there
+  - **Then** a name is asked and a Section — the composition and its layers in order, with which are muted — is stored apart from Patterns and Chains, listed in the Layers section, and loaded from there
   - *(Revised 2026-11-13 with AC-19.11.6: which part the Composer is working in joined what is stored, and "the composition is saved" became "every part is saved", since any part may now be an unsaved composition.)*
   - *(Revised 2026-11-15, /4: a loaded Arrangement used to change only when Save arrangement was pressed again. The maintainer, on the live build: "although the piece says 'saved' at the top — if I actually reload the arrangement the third layer is missing." The top bar's Saved is the Pattern of the part being composed, and the Arrangement's small "unsaved changes" mark went unseen. Decision the same day: once named, an Arrangement saves every change on its own, as a composition does after its first save (US-19.9); the first save still asks the name.)*
   - **Cases**:
@@ -4907,7 +4919,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.4/4** — Once a Section is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Section waits, the Layers section naming the part, and saves as soon as that part is saved
     - **AC-19.11.4/5** — Deleting a Pattern that a Section uses, as its composition or as a layer, is refused with a message naming the Section or Sections, until they are deleted
     - **AC-19.11.4/6** — A Section is not Pattern content: saving one changes nothing on any Pattern, and the composition's JSON and MIDI exports and its submission carry nothing of it
-    - **AC-19.11.4/7** — Sections are stored in `rm.sections.v1`, apart from Patterns, overlays, Songs, settings and Local Metadata, and the whole-library backup carries the store as it does every other
+    - **AC-19.11.4/7** — Sections are stored in `rm.sections.v1`, apart from Patterns, overlays, Chains, settings and Local Metadata, and the whole-library backup carries the store as it does every other
     - **AC-19.11.4/8** — What was saved under `rm.arrangements.v1` is moved to `rm.sections.v1` on load with every entry kept as it was and the old store cleared, and a backup made before the move restores its entries as Sections
   - *(/8 added 2026-11-15 with the rename, T493. A migration of this kind rewrites saved work and cannot be taken back by a later change, which the maintainer was told before choosing it. An entry is never dropped: one whose id the new store already uses is given the next free id.)*
 
@@ -4920,7 +4932,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.5/1** — Export section MIDI downloads one ZIP holding one `.mid` per layer, the composition first and the rest in their order, each named with its position and the Pattern's name; muted layers are included
     - **AC-19.11.5/2** — Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length
     - **AC-19.11.5/3** — The archive is named after the Section once it has been saved, and after the composition otherwise
-    - **AC-19.11.5/4** — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged
+    - **AC-19.11.5/4** — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Chain's are unchanged
     - **AC-19.11.5/5** — A part on Drums is written on the General MIDI drum channel, at the note numbers its keys name, so a DAW opens it as a drum kit; every other pitched part stays on channel 1
   - *(/5 added 2026-11-15 with US-19.13. The maintainer, told that a drum part on channel 1 opens in Logic as low piano notes, chose the drum channel. This is the one thing of a part's instrument the export carries; volumes and the other instruments are still not in it.)*
 
@@ -5295,11 +5307,10 @@ specified in the Acceptance Scenarios above.
 - **Keep**: The Composer's mark that a fill is worth composing with over a Pattern. Lives with the
   Pattern's Rating and added Tags in the Composer's own records, never in the Pattern, and is
   cleared only by the Composer.
-- **Song**: A named, ordered sequence of Chains the Composer has saved. Stored apart from
-  Patterns; a Pattern a Song plays over cannot be deleted while the Song exists.
-- **Chain**: One run of a Song: which Pattern it plays over, an ordered list of entries, each a
-  fill and the number of harmonic cycles it is in force for. This version's Compose group keeps every
-  Chain of a Song on the one Pattern that is open.
+- **Chain**: A named, ordered run of fills over a Pattern's progression that the Composer has saved
+  (US-18.1): which Pattern it plays over, and an ordered list of entries, each a fill and the number of
+  harmonic cycles it is in force for. Stored apart from Patterns; a Pattern a Chain plays over cannot be
+  deleted while the Chain exists. *(Until 2026-11-15 a saved Chain was called a Song; T506.)*
 
 ## Success Criteria *(mandatory)*
 
@@ -5357,7 +5368,7 @@ specified in the Acceptance Scenarios above.
   library holds to — it grows by appending to `data/seed-patterns.json` (AC-16.1.1).
 - **Out of scope for this version**: a Chain whose entries play over different Patterns (US-18.1
   stores which Pattern each Chain plays over so that this can come later without changing what a
-  Song is); a guided tutorial system; layering two Patterns by merging their accents; and cloud
+  Chain is); a guided tutorial system; layering two Patterns by merging their accents; and cloud
   sync, or any export/import beyond MIDI, the per-layer MIDI archive of a Section (AC-19.11.5)
   and the whole-library backup file (US-7.6). *(Revised 2026-11-12: "multi-layer Sections — two Patterns sounding at once" was
   excluded here, on the maintainer's 2026-09-13 ruling. The maintainer asked for exactly that on

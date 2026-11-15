@@ -4,10 +4,10 @@
  * with a progression (AC-18.1.1/1); absent, not empty, otherwise.
  *
  * Nothing here is Pattern data. The Chain lives in `state.compose`, the
- * shortlist in the Composer's overlay, and saved Songs in their own store.
+ * shortlist in the Composer's overlay, and saved Chains in their own store.
  */
 import { ARPEGGIOS, hasHarmony, chordNumeral } from '../core/harmony.js';
-import { entryPasses, totalPasses } from '../core/song.js';
+import { entryPasses, totalPasses } from '../core/chain.js';
 import { el, rebuild } from './controls.js';
 import { placeHelp } from './help.js';
 
@@ -38,7 +38,7 @@ export function renderComposeGroup(root, pattern, state, handlers) {
     over.appendChild(el('span', 'compose-hint', { textContent: ' — set in Melody' }));
     fresh.appendChild(over);
 
-    fresh.appendChild(renderSongs(state, handlers));
+    fresh.appendChild(renderChains(state, handlers));
     fresh.appendChild(renderPalette(state, handlers));
     fresh.appendChild(renderSection(pattern, state, handlers));
     // Lab's Help, part of the group it describes (AC-14.1.3/3).
@@ -46,28 +46,28 @@ export function renderComposeGroup(root, pattern, state, handlers) {
   });
 }
 
-/** This Pattern's saved Songs: load, rename, delete (AC-18.1.4). */
-function renderSongs(state, handlers) {
-  const wrap = el('div', 'compose-songs');
-  const songs = state.songs ?? [];
-  const current = state.compose?.song;
-  if (songs.length === 0) return wrap;
-  wrap.appendChild(el('span', 'compose-label', { textContent: 'Songs on this Pattern' }));
-  const list = el('ul', 'compose-song-list');
-  for (const song of songs) {
-    const item = el('li', `song-item${current?.id === song.id ? ' current' : ''}`);
-    item.dataset.songId = song.id;
-    const load = button('song-load', song.name, 'song-load', { title: 'Load this Song into the Chain' });
-    load.dataset.songId = song.id;
-    load.addEventListener('click', () => handlers.onSongLoad(song.id));
+/** This Pattern's saved Chains: load, rename, delete (AC-18.1.4). */
+function renderChains(state, handlers) {
+  const wrap = el('div', 'compose-chains');
+  const chains = state.chains ?? [];
+  const current = state.compose?.chain;
+  if (chains.length === 0) return wrap;
+  wrap.appendChild(el('span', 'compose-label', { textContent: 'Chains on this Pattern' }));
+  const list = el('ul', 'compose-chain-list');
+  for (const chain of chains) {
+    const item = el('li', `chain-item${current?.id === chain.id ? ' current' : ''}`);
+    item.dataset.chainId = chain.id;
+    const load = button('chain-load', chain.name, 'chain-load', { title: 'Load this Chain' });
+    load.dataset.chainId = chain.id;
+    load.addEventListener('click', () => handlers.onChainLoad(chain.id));
     item.appendChild(load);
-    const rename = button('song-rename', 'Rename', 'song-rename');
-    rename.dataset.songId = song.id;
-    rename.addEventListener('click', () => handlers.onSongRename(song.id));
+    const rename = button('chain-rename', 'Rename', 'chain-rename');
+    rename.dataset.chainId = chain.id;
+    rename.addEventListener('click', () => handlers.onChainRename(chain.id));
     item.appendChild(rename);
-    const del = button('song-delete', 'Delete', 'song-delete');
-    del.dataset.songId = song.id;
-    del.addEventListener('click', () => handlers.onSongDelete(song.id));
+    const del = button('chain-delete', 'Delete', 'chain-delete');
+    del.dataset.chainId = chain.id;
+    del.addEventListener('click', () => handlers.onChainDelete(chain.id));
     item.appendChild(del);
     list.appendChild(item);
   }
@@ -105,11 +105,11 @@ function renderPalette(state, handlers) {
 /** The Chain: entries in order, each with its repeats; play, save, export (AC-18.1.2–AC-18.1.5). */
 function renderSection(pattern, state, handlers) {
   const wrap = el('div', 'compose-section');
-  const song = state.compose?.song;
-  const entries = song?.sections[0]?.entries ?? [];
-  const inForce = state.songEntryInForce;
+  const chain = state.compose?.chain;
+  const entries = chain?.sections[0]?.entries ?? [];
+  const inForce = state.chainEntryInForce;
   const head = el('div', 'compose-section-head');
-  head.appendChild(el('span', 'compose-label', { textContent: song?.name ? `Chain — ${song.name}` : 'Chain' }));
+  head.appendChild(el('span', 'compose-label', { textContent: chain?.name ? `Chain — ${chain.name}` : 'Chain' }));
   if (unsaved(state)) head.appendChild(el('span', 'compose-unsaved', { textContent: 'unsaved changes' }));
   wrap.appendChild(head);
 
@@ -155,40 +155,47 @@ function renderSection(pattern, state, handlers) {
       list.appendChild(item);
     });
     wrap.appendChild(list);
-    const total = totalPasses(song, (id) => (id === pattern.id ? pattern : null));
+    const total = totalPasses(chain, (id) => (id === pattern.id ? pattern : null));
     wrap.appendChild(el('p', 'compose-total', { textContent: `${total} passes in all, then it loops` }));
   }
 
   const actions = el('div', 'compose-actions');
   const empty = entries.length === 0;
-  const playingSong = Boolean(state.compose?.on && state.isPlaying);
-  const play = button(`play-song${playingSong ? ' on' : ''}`, playingSong ? 'Playing song' : 'Play song', 'play-song', {
+  const playingChain = Boolean(state.compose?.on && state.isPlaying);
+  const play = button(`play-chain${playingChain ? ' on' : ''}`, playingChain ? 'Playing chain' : 'Play chain', 'play-chain', {
     disabled: empty,
     title: empty ? 'Add an entry first' : 'Play the Chain in order, looping',
   });
-  play.setAttribute('aria-pressed', String(playingSong));
-  play.addEventListener('click', () => handlers.onPlaySong());
+  play.setAttribute('aria-pressed', String(playingChain));
+  play.addEventListener('click', () => handlers.onPlayChain());
   actions.appendChild(play);
-  const save = button('song-save', song?.id ? 'Save' : 'Save as Song…', 'song-save', { disabled: empty });
-  save.addEventListener('click', () => handlers.onSongSave());
+  const save = button('chain-save', chain?.id ? 'Save' : 'Save as Chain…', 'chain-save', { disabled: empty });
+  save.addEventListener('click', () => handlers.onChainSave());
   actions.appendChild(save);
-  if (song?.id || !empty) {
-    const fresh = button('song-new', 'New Chain', 'song-new');
-    fresh.addEventListener('click', () => handlers.onSongNew());
+  if (chain?.id || !empty) {
+    const fresh = button('chain-new', 'New Chain', 'chain-new');
+    fresh.addEventListener('click', () => handlers.onChainNew());
     actions.appendChild(fresh);
   }
-  const exportBtn = button('song-export', 'Export Song MIDI', 'song-export', { disabled: empty });
-  exportBtn.addEventListener('click', () => handlers.onSongExport());
+  const exportBtn = button('chain-export', 'Export Chain MIDI', 'chain-export', { disabled: empty });
+  exportBtn.addEventListener('click', () => handlers.onChainExport());
   actions.appendChild(exportBtn);
+  // The Chain as a Pattern of its own, to be changed in the Composer (AC-18.1.6).
+  const writeOut = button('chain-write-out', 'Write out as Pattern', 'chain-write-out', {
+    disabled: empty,
+    title: empty ? 'Add an entry first' : "Save the Chain's notes as a new Pattern and open it in the Composer",
+  });
+  writeOut.addEventListener('click', () => handlers.onChainWriteOut());
+  actions.appendChild(writeOut);
   wrap.appendChild(actions);
   return wrap;
 }
 
-/** Whether the Chain differs from the Song it was loaded from, or is new with entries (AC-18.1.4/4). */
+/** Whether the Chain differs from the Chain it was loaded from, or is new with entries (AC-18.1.4/4). */
 function unsaved(state) {
-  const song = state.compose?.song;
-  if (!song) return false;
-  const entries = song.sections[0]?.entries ?? [];
+  const chain = state.compose?.chain;
+  if (!chain) return false;
+  const entries = chain.sections[0]?.entries ?? [];
   if (!state.compose.saved) return entries.length > 0;
-  return JSON.stringify(song.sections) !== JSON.stringify(state.compose.saved.sections);
+  return JSON.stringify(chain.sections) !== JSON.stringify(state.compose.saved.sections);
 }
