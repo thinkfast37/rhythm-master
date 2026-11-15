@@ -33,6 +33,7 @@ import {
 import { create, cycleAccent, setPitch, addMeasure, setTimeSignatureAll, setSwingAmount } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, cyclePasses } from '../../../src/core/harmony.js';
 import { buildTimeline, loopDurationSeconds } from '../../../src/core/timeline.js';
+import { recordNote } from '../../../src/core/composer.js';
 
 /** A one-Measure 4/4 Pattern, one syllable on each Beat, at `tempo`. */
 function fourBeats(name = 'Four', tempo = 120) {
@@ -192,7 +193,7 @@ describe('core/arrangement — layers sound together (AC-19.11.2)', () => {
     expect(sounded.filter((e) => e.composition).every((e) => e.instrument === undefined)).toBe(true);
   });
 
-  it("AC-19.11.2/3 — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key", () => {
+  it("AC-19.11.2/3 — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key, and a layer on Drums keeps the notes it was written with", () => {
     const composition = { ...setSwingAmount(melody('Line', 'G'), 40), tempo: 90, tempoUnit: 'eighth', swingFeel: 'sixteenth' };
     const bed = { ...fourBeats('Bed', 200), swingAmount: 0 };
     const tune = { ...melody('Tune', 'C'), tempo: 160 };
@@ -258,6 +259,26 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     expect(validateArrangement({ ...a, name: '' })).toContain('An Arrangement needs a name');
     expect(validateArrangement({ ...a, layers: [] })).toContain('An Arrangement needs at least one layer');
     expect(validateArrangement({ ...a, layers: [{ patternId: 's_1' }, { patternId: 's_1' }] })).toContain('"s_1" is layered twice');
+  });
+
+  it("AC-19.13.3/2 — A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the arrangement's Key", () => {
+    // A kick-and-snare line written in C, under a composition in G.
+    let kit = { ...fourBeats('Kit'), soundMode: 'melodic', key: 'C', scale: 'ionian' };
+    [36, 38, 36, 38].forEach((midi, b) => (kit = recordNote(kit, { measureIndex: 0, beatIndex: b, slotIndex: 0 }, midi)));
+    const composition = melody('Line', 'G');
+    const set = layered(composition, [{ pattern: kit, instrument: 'drums' }, { pattern: kit, instrument: 'bass' }, { pattern: kit }]);
+    const notesOf = (layer) => layeredTimeline(set).filter((e) => e.layer === layer).map((e) => e.pitch.midiNote);
+    // On Drums: the notes as written, and the part's own Key kept.
+    expect(notesOf(1)).toEqual([36, 38, 36, 38]);
+    expect(set.layers[1].pattern.key).toBe('C');
+    // Any other instrument, or none: moved with the arrangement's Key, a fifth up.
+    expect(notesOf(2)).toEqual([43, 45, 43, 45]);
+    expect(notesOf(3)).toEqual([43, 45, 43, 45]);
+    expect(set.layers[2].pattern.key).toBe('G');
+    // Tempo and swing are still the arrangement's (AC-19.11.2/3).
+    expect(set.layers[1].pattern.tempo).toBe(composition.tempo);
+    expect(underComposition(kit, composition, { keepKey: true }).key).toBe('C');
+    expect(underComposition(kit, composition).key).toBe('G');
   });
 
   it("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume, and opening the Arrangement restores them: the Arrangement's shape carries them, and refuses what is neither an instrument nor a volume", () => {

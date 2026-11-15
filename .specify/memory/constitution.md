@@ -3,20 +3,22 @@ SYNC IMPACT REPORT
 ==================
 Version change: 3.9.0 → 3.10.0
 
-3.10.0 — Principle V's audio rule admits four more sampled voices, all from the set the guitar
+3.10.0 — Principle V's audio rule admits five more sampled voices, all from the set the guitar
   already comes from: FluidR3_GM's overdriven electric guitar, fingered electric bass, alto
-  saxophone and trumpet, **fetched** through soundfont-player exactly as the steel-string guitar
+  saxophone, trumpet and flute, **fetched** through soundfont-player exactly as the steel-string guitar
   is, each no earlier than the first moment it could sound. They exist so that each part of an
   arrangement can be given its own instrument (US-19.12), and Practice's voice switch offers
-  them too. "Exactly two sampled voices" becomes the bundled piano and a named list of five
+  them too. "Exactly two sampled voices" becomes the bundled piano and a named list of six
   fetched FluidR3_GM instruments. Principle III's non-blocking, synth-fallback rule governs all
-  of them unchanged, and nothing new ships in the build: the four are fetched, not bundled.
+  of them unchanged, and nothing new ships in the build: the five are fetched, not bundled.
+  Drums, added the same day (US-19.13), are Web Audio synthesis and so are not an asset at all.
 
   Asked for on 2026-11-15: "I want to be able to choose which instrument each layer uses … a
   brass instrument like a sax or a trumpet (or both if it's easy). I want a bass guitar. I want
   an electric guitar that has some sustain on the sound." Before any work the maintainer was
   told that real samples need this amendment and synthesised imitations would not, and chose
-  samples.
+  samples. The flute was asked for later the same day, before the amendment landed, and is named
+  with the four.
 
   MINOR rather than MAJOR: no principle is removed or redefined. The rule still limits audio
   assets to voices named here and approved by the maintainer, under the same loading
@@ -24,10 +26,10 @@ Version change: 3.9.0 → 3.10.0
 
   Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅ (none name audio
   assets).
-  Follow-up: spec.md US-19.12 added (AC-19.12.1–AC-19.12.5); AC-2.13.1, AC-2.13.3, AC-19.1.3,
+  Follow-up: spec.md US-19.12 added (AC-19.12.1–AC-19.12.5) and US-19.13 (AC-19.13.1–AC-19.13.4); AC-2.13.1, AC-2.13.3, AC-19.1.3,
   AC-19.6.1, AC-19.7.1/1, AC-19.11.2/2, AC-19.11.4/1 and AC-19.11.6/3 revised; AC-2.13.2/5
   added; research.md D-003 amended, D-028 added; data-model §6 and `rm.arrangements.v1`;
-  plan.md P-074 (T485–T487).
+  plan.md P-074 (T485–T487) and P-075 (T488–T489).
 
 Version change: 3.8.0 → 3.9.0
 
@@ -578,8 +580,9 @@ Billing — so this adds no backend, no account and no secret. The rules for tha
   - *The guitar* (US-19.7): the FluidR3_GM steel-string guitar, **fetched** through
     soundfont-player, never vendored. It sounds in the Composer for a part set to Guitar,
     and in Practice when Guitar is the chosen melodic voice.
-  - *The electric guitar, the bass, the saxophone and the trumpet* (US-19.12, 3.10.0):
-    FluidR3_GM's `overdriven_guitar`, `electric_bass_finger`, `alto_sax` and `trumpet`,
+  - *The electric guitar, the bass, the saxophone, the trumpet and the flute* (US-19.12,
+    US-19.13, 3.10.0): FluidR3_GM's `overdriven_guitar`, `electric_bass_finger`, `alto_sax`,
+    `trumpet` and `flute`,
     **fetched** the same way and from the same place as the guitar, never vendored. Each
     sounds in the Composer for a part set to it, and in Practice when it is the chosen
     melodic voice.

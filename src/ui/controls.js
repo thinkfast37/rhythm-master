@@ -508,6 +508,8 @@ const VOICE_TITLES = {
   bass: 'A sampled fingered electric bass.',
   sax: 'A sampled alto saxophone.',
   trumpet: 'A sampled trumpet.',
+  flute: 'A sampled flute.',
+  drums: 'A synthesised drum kit: each note is the drum General MIDI gives it, Kick on 36, Snare on 38.',
 };
 
 /**

@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1130 across 68 User Stories
+**Criteria**: 1144 across 69 User Stories
 
-**Coverage**: 1003 of 1130 criteria proven (88.8%)
+**Coverage**: 1017 of 1144 criteria proven (88.9%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1003 | 88.8% |
+| 🟢 Proven | 1017 | 88.9% |
 | 🟠 Gap — MEDIUM | 50 | 4.4% |
-| 🟡 Gap — LOW | 77 | 6.8% |
+| 🟡 Gap — LOW | 77 | 6.7% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -116,15 +116,16 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.8 | 10 | **10** | · | · | · | · | · |
 | 🟢 US-19.9 | 7 | **7** | · | · | · | · | · |
 | 🟢 US-2.12 | 14 | **14** | · | · | · | · | · |
-| 🟢 US-2.13 | 16 | **16** | · | · | · | · | · |
+| 🟢 US-2.13 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-19.10 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.14 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.15 | 13 | **13** | · | · | · | · | · |
 | 🟢 US-2.16 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.17 | 9 | **9** | · | · | · | · | · |
 | 🟢 US-10.4 | 61 | **61** | · | · | · | · | · |
-| 🟢 US-19.11 | 44 | **44** | · | · | · | · | · |
-| 🟢 US-19.12 | 20 | **20** | · | · | · | · | · |
+| 🟢 US-19.11 | 45 | **45** | · | · | · | · | · |
+| 🟢 US-19.12 | 21 | **21** | · | · | · | · | · |
+| 🟢 US-19.13 | 11 | **11** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -942,7 +943,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.1 | `AC-19.1.2/3` 🖵 | Declining the prompt leaves no composition: the grid's place shows a prompt to choose a rhythm from the library, the library is opened, and Record and Save are disabled | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
 | US-19.1 | `AC-19.1.2/4` 🖵 | Re-entering the Composer while the composition is the open Pattern keeps it: no prompt, no reload | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
 | US-19.1 | `AC-19.1.2/5` 🖵 | Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
-| US-19.1 | `AC-19.1.3/1` 🖵 | An instrument switch sits in the record bar offering Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, Guitar in force on first use | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
+| US-19.1 | `AC-19.1.3/1` 🖵 | An instrument switch sits in the record bar offering Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, Guitar in force on first use | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
 | US-19.1 | `AC-19.1.3/2` 🖵 | Switching between a fretboard instrument and a keyboard instrument shows the other instrument view, and no switch changes a recorded note | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
 | US-19.1 | `AC-19.1.3/3` 🖵 | The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
 | US-19.1 | `AC-19.1.4/1` | Choosing Practice, or opening another library Pattern, with unsaved work puts up a confirmation naming the unsaved composition | P-053 | T369, T416 (2/2 done) | T370, T417 (2/2 done) | `composer.spec.js` | 🟢 OK |
@@ -1046,7 +1047,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.12 | `AC-2.12.3/3` 🖵 | A fill or progression chosen by hand in the picker while cycling is where the cycle begins again, listed or not; after its repeats the cycle moves on to the first listed entry after it | P-063 | T394, T428, T434, T475 (4/4 done) | T395, T429, T435, T476 (4/4 done) | `harmony.test.js`, `cycle-list.spec.js` | 🟢 OK |
 | US-2.12 | `AC-2.12.3/4` | Changing the list, or switching between All and My list, while playing applies without a restart: the entry in force keeps its place and plays its repeats from the pass it is on before the cycle moves on through what it now steps through | P-063 | T394, T428, T434, T475 (4/4 done) | T395, T429, T435, T476 (4/4 done) | `harmony.test.js`, `cycle-list.spec.js` | 🟢 OK |
 | US-2.12 | `AC-2.12.3/5` 🖵 | What is rendered for the screen off is the whole cycle of the list: a cycle on My list repeats after as many entries as the list holds | P-063 | T394, T428, T434, T475 (4/4 done) | T395, T429, T435, T476 (4/4 done) | `cycle-list.spec.js` | 🟢 OK |
-| US-2.13 | `AC-2.13.1/1` 🖵 | While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.1/1` 🖵 | While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute, Drums — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.1/2` 🖵 | Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.1/3` 🖵 | Choosing a voice while playing changes it from the next melodic note, with no restart | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/1` | Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.test.js`, `voice.spec.js` | 🟢 OK |
@@ -1054,6 +1055,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.13 | `AC-2.13.2/3` | Under Guitar, a melodic note sounds through the sampled guitar of US-19.7 | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/4` 🖵 | Percussive notes and the metronome click sound the same whatever the voice | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/5` | Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.2/6` | Under Flute, a melodic note sounds through the flute's samples, and under Drums it sounds the synthesised drum its MIDI note names (AC-19.13.1) | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.3/1` 🖵 | A part's melodic notes sound through the instrument chosen for that part, whatever voice Practice has chosen | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.3/2` 🖵 | Synth is an instrument of its own: a part on Piano sounds the sampled piano and a part on Synth the synth, whatever voice Practice has chosen | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.4/1` 🖵 | The recordings are served from the app's own origin, and none is requested on page load; the first moment the piano could sound — Play, a note sounded at once, or choosing Piano — requests them, each once | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.spec.js` | 🟢 OK |
@@ -1203,7 +1205,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.11 | `AC-19.11.1/5` 🖵 | Without a composition the Layers section holds only the saved Arrangements, to open one from, and is absent when there are none; the layers go when another rhythm is opened into the Composer | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.2/1` 🖵 | Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `scheduler.test.js`, `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.2/2` 🖵 | Each part's pitched notes sound with that part's own instrument, on screen or not; a percussive layer, and an unpitched syllable in any part, sounds percussively at its Accent Level | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
-| US-19.11 | `AC-19.11.2/3` 🖵 | Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.2/3` 🖵 | Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key, and a layer on Drums keeps the notes it was written with | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.2/4` 🖵 | Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `scheduler.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.2/5` 🖵 | Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `scheduler.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.2/6` 🖵 | The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `backgroundRender.test.js`, `layers.spec.js` | 🟢 OK |
@@ -1224,6 +1226,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.11 | `AC-19.11.5/2` 🖵 | Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.5/3` 🖵 | The archive is named after the Arrangement once it has been saved, and after the composition otherwise | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.5/4` 🖵 | Export arrangement MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement-midi.test.js`, `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.5/5` 🖵 | A part on Drums is written on the General MIDI drum channel, at the note numbers its keys name, so a DAW opens it as a drum kit; every other pitched part stays on channel 1 | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `arrangement-midi.test.js`, `drums.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.6/1` 🖵 | Choosing a part in the Layers section puts it in the composing grid: its notes in the Slots, its name in the record bar, the record target and the selection its own, Record and a tap on the instrument writing onto it; the part left keeps its notes, saved or not, and is listed as a layer | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.6/2` 🖵 | An owned melody opens directly; a shipped, percussive or progression-carrying part opens through US-19.8's rules — a name asked, pre-filled — and the new composition takes that part's place in the list; cancelling the prompt changes nothing | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.6/3` 🖵 | Switching while playing stops and restarts nothing: every part goes on sounding on its own instrument, the one left and the one now on screen included, and the cursor follows the part on screen | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
@@ -1240,7 +1243,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.11 | `AC-19.11.9/2` | Choosing an Arrangement in the library pane, from Practice or from the Composer, opens the Composer on it — the part it was saved on in the composing grid, its layers beneath — asking first when unsaved work would be lost, and closes the pane as opening a Pattern does | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.9/3` 🖵 | In Practice, under a making goal, a Pattern that is a part of any Arrangement shows In arrangements naming each, and a tap on a name opens the Composer on that Arrangement; the line is absent on a Pattern in none, and under a practice goal | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.9/4` | A Pattern may be a part of any number of Arrangements and is never copied into one: an edit to the Pattern is heard in every Arrangement it is in, and every Arrangement it is in refuses its deletion | P-072 | T471, T473, T477, T479, T481, T483 (6/6 done) | T472, T474, T478, T480, T482, T484 (6/6 done) | `layers.spec.js` | 🟢 OK |
-| US-19.12 | `AC-19.12.1/1` | The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, in that order | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `voice.test.js` | 🟢 OK |
+| US-19.12 | `AC-19.12.1/1` | The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, in that order | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `voice.test.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.1/2` | Guitar and Electric guitar are played on the fretboard, and every other instrument on the keyboard | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `voice.test.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.2/1` 🖵 | In the Layers section every part that can sound a pitched note carries an instrument picker showing its instrument, and a percussive layer carries none | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.2/2` 🖵 | Choosing an instrument for a part changes that part alone, and is heard from its next note with nothing stopped or restarted | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `part-sound.spec.js` | 🟢 OK |
@@ -1260,3 +1263,15 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.12 | `AC-19.12.5/2` 🖵 | While an instrument's samples load, or when they cannot, its notes sound through the synth; the record bar in the Composer and the voice switch in Practice say which instrument is loading, and a failure shows a non-blocking notice with Retry, which requests the samples again | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `soundfont.test.js`, `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.5/3` 🖵 | On Electric guitar, Bass, Sax and Trumpet a note is held until that part's next note begins or its recording ends; Piano, Synth and Guitar ring as they did | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `soundfont.test.js`, `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.5/4` 🖵 | The screen-off render sounds every part through its own instrument at its own volume, and through the synth where an instrument's samples are not ready | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `backgroundRender.test.js`, `part-sound.spec.js` | 🟢 OK |
+| US-19.12 | `AC-19.12.5/5` 🖵 | Flute is the FluidR3_GM `flute` samples, requested, held and falling back exactly as the four above are | P-074 | T485, T486 (2/2 done) | T487 (1/1 done) | `soundfont.test.js`, `voice.test.js`, `part-sound.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.1/1` | Each MIDI note from 35 to 81 is the drum General MIDI's percussion key map gives it, as Logic's Drum Kit Designer plays them: Kick on 36, Rim on 37, Snare on 38, Clap on 39, Closed hat on 42, Pedal hat on 44, Open hat on 46, Crash on 49, Ride on 51 | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.test.js`, `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.1/2` | Every drum is Web Audio synthesis: choosing Drums requests no audio file, and a drum sounds at once | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.test.js`, `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.1/3` | A note below 35 or above 81 has no drum and is silent | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.test.js`, `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.1/4` | A drum is louder at each stronger Accent Level and scaled by its part's volume, and a closed or pedal hat cuts off an open hat still ringing in the same part and in no other | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.test.js`, `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.2/1` 🖵 | While the part on screen is on Drums, every key with a drum carries its drum's name written vertically up the key, on white keys and black, and under any other instrument no key carries one | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.2/2` 🖵 | The note labels stay as they are: an in-scale key keeps its label and its colour, and each C its name | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.2/3` 🖵 | A key's accessible name says its drum | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.3/1` 🖵 | Changing the Key with a Drums part on screen leaves each of its notes on the same MIDI note, while every other pitched part moves with the Key | P-075 | T488 (1/1 done) | T489 (1/1 done) | `composer.test.js`, `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.3/2` 🖵 | A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the arrangement's Key | P-075 | T488 (1/1 done) | T489 (1/1 done) | `arrangement.test.js`, `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.3/3` 🖵 | Putting a Drums part on screen, and taking it off again, changes none of its MIDI notes | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.spec.js` | 🟢 OK |
+| US-19.13 | `AC-19.13.4/1` | Several parts may be on Drums at once, each sounding its own notes, so two drums written at the same instant in different parts are both heard | P-075 | T488 (1/1 done) | T489 (1/1 done) | `drums.spec.js` | 🟢 OK |

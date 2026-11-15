@@ -48,7 +48,7 @@ describe('audio/soundfont — the fetched instruments', () => {
     });
     // Every instrument has a player, and only the five are fetched.
     expect(Object.keys(PLAYERS).sort()).toEqual([...VOICES].sort());
-    expect(VOICES.filter(isFetched)).toEqual(['guitar', 'electric', 'bass', 'sax', 'trumpet']);
+    expect(VOICES.filter(isFetched)).toEqual(['guitar', 'electric', 'bass', 'sax', 'trumpet', 'flute']);
     for (const id of ['electric', 'bass', 'sax', 'trumpet']) {
       const voice = fetched[id];
       const loader = vi.fn(() => new Promise(() => {}));
@@ -122,6 +122,31 @@ describe('audio/soundfont — the fetched instruments', () => {
     fetched.guitar.play(ctx, null, note(60), 1);
     fetched.guitar.play(ctx, null, note(62), 1.5);
     expect(strings.nodes[0].stop).not.toHaveBeenCalled();
+  });
+
+  it('AC-19.12.5/5 — Flute is the FluidR3_GM `flute` samples, requested, held and falling back exactly as the four above are', async () => {
+    const flute = fetched.flute;
+    expect(flute.name).toBe('flute');
+    expect(flute.held).toBe(true);
+    // Requested once, at the first note, with the fallback sounding meanwhile.
+    let arrive;
+    const loader = vi.fn(() => new Promise((resolve) => (arrive = resolve)));
+    flute.seams.setLoader(loader);
+    expect(loader).not.toHaveBeenCalled();
+    const fallback = vi.fn();
+    expect(flute.play(ctx, null, note(72), 1, fallback)).toBe('fallback');
+    expect(flute.play(ctx, null, note(74), 2, fallback)).toBe('fallback');
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(fallback).toHaveBeenCalledTimes(2);
+    const instrument = fakeInstrument();
+    arrive(instrument);
+    await flute.load(ctx);
+    // Held: each note is let go as the next begins.
+    flute.play(ctx, null, note(72), 3, fallback);
+    flute.play(ctx, null, note(74), 3.5, fallback);
+    expect(fallback).toHaveBeenCalledTimes(2);
+    expect(instrument.nodes[0].stop).toHaveBeenCalledWith(3.5);
+    expect(instrument.nodes[1].stop).not.toHaveBeenCalled();
   });
 
   it("AC-19.12.3/3 — A volume scales the loudness of every note of its part by 0.4 dB a step: 100 is the full level, 80 is 8 dB under it and 1 is 39.6 dB under it: a sampled note is played at its Accent Level scaled by the part's gain", async () => {

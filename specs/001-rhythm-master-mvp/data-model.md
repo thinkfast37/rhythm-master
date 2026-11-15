@@ -493,7 +493,7 @@ stored apart from every other store, as a Song is (AC-19.11.4/7).
 
 `instrument` and `volume` were added 2026-11-15 with US-19.12, on the Arrangement for its composition
 and on each layer. `instrument` is one of `piano`, `synth`, `guitar`, `electric`, `bass`, `sax`,
-`trumpet` (AC-19.12.1/1); `volume` is an integer from 1 to 100 (AC-19.12.3). Both are optional, and
+`trumpet`, `flute`, `drums` (AC-19.12.1/1); `volume` is an integer from 1 to 100 (AC-19.12.3). Both are optional, and
 the schema version is unchanged: an Arrangement that names neither — every one saved before — opens
 with its part on screen on the `composerInstrument` setting, every other part on `melodicVoice`, and
 every volume at 80 (AC-19.12.4/3). Neither is ever written to a Pattern (AC-19.12.4/4).

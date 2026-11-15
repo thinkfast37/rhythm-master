@@ -3919,7 +3919,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** an instrument switch chooses the instrument of the part on screen — its voice, and with it the instrument view: the fretboard for Guitar and Electric guitar, the keyboard for every other (AC-19.12.1) — Guitar on first use; switching never changes a note of the composition; and the choice is remembered across reloads
   - *(Title, Then, /1 and /2 revised 2026-11-15 with US-19.12. It read "Guitar or piano, switched at any time": a two-way switch that chose a view and, by the view, a voice. The switch now chooses among seven instruments and the view follows the instrument.)*
   - **Cases**:
-    - **AC-19.1.3/1** — An instrument switch sits in the record bar offering Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, Guitar in force on first use
+    - **AC-19.1.3/1** — An instrument switch sits in the record bar offering Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, Guitar in force on first use
     - **AC-19.1.3/2** — Switching between a fretboard instrument and a keyboard instrument shows the other instrument view, and no switch changes a recorded note
     - **AC-19.1.3/3** — The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload
 
@@ -4372,10 +4372,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-2.13.1** — The voice switch offers every instrument beside the Sound Mode switch
   - **Given** a Melodic Pattern open in Practice
   - **When** the Practicing Musician looks at the Pattern header
-  - **Then** beside the Sound Mode switch a voice switch offers Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, with the voice in force pressed; the choice is an app preference, never Pattern content, and takes effect at once
+  - **Then** beside the Sound Mode switch a voice switch offers Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, with the voice in force pressed; the choice is an app preference, never Pattern content, and takes effect at once
   - *(Title, Then and /1 revised 2026-11-15 with US-19.12: the switch offered three voices. The maintainer, asked whether Practice should gain the four new instruments or keep its three, chose to offer them all, told the header control grows wider.)*
   - **Cases**:
-    - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
+    - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute, Drums — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
     - **AC-2.13.1/2** — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
     - **AC-2.13.1/3** — Choosing a voice while playing changes it from the next melodic note, with no restart
 
@@ -4389,7 +4389,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.13.2/3** — Under Guitar, a melodic note sounds through the sampled guitar of US-19.7
     - **AC-2.13.2/4** — Percussive notes and the metronome click sound the same whatever the voice
     - **AC-2.13.2/5** — Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says
-  - *(/5 added 2026-11-15 with US-19.12.)*
+    - **AC-2.13.2/6** — Under Flute, a melodic note sounds through the flute's samples, and under Drums it sounds the synthesised drum its MIDI note names (AC-19.13.1)
+  - *(/5 added 2026-11-15 with US-19.12, and /6 the same day with US-19.13.)*
 
 - **AC-2.13.3** — The Composer plays each part's own instrument
   - **Given** the Composer
@@ -4841,10 +4842,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** the composition and every unmuted layer sound together from one timeline, each part on its own instrument (US-19.12), and the Composer carries on recording and editing under them
   - *(Revised 2026-11-15, /5: "heard from the next pass" was read as the next pass of the combined loop, so under an 8-bar layer an edit to a 1-bar part waited up to eight bars. The maintainer, on the live build: "once I added a second measure while it's still playing and added a syllable … I could not hear the added syllables when it cycles until I hit stop and restart the playback." The pass meant is the part's own, as it is with no layers (AC-19.6.2/1); /5 now says so. Adding, muting or removing a layer is unchanged, /4.)*
   - *(/2 revised 2026-11-15 with US-19.12, at the maintainer's request: "I want to be able to choose which instrument each layer uses. So I could have one layer be guitar and another be piano." It read: the composition with the instrument shown, a melodic layer with the melodic voice Practice would use.)*
+  - *(/3 revised 2026-11-15 with US-19.13: a part on Drums is exempt from the Key, since a transposed kick is a different drum. It read: every layer plays at the composition's Key, a percussive layer taking none.)*
   - **Cases**:
     - **AC-19.11.2/1** — Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound
     - **AC-19.11.2/2** — Each part's pitched notes sound with that part's own instrument, on screen or not; a percussive layer, and an unpitched syllable in any part, sounds percussively at its Accent Level
-    - **AC-19.11.2/3** — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key
+    - **AC-19.11.2/3** — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key, and a layer on Drums keeps the notes it was written with
     - **AC-19.11.2/4** — Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted
     - **AC-19.11.2/5** — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is
     - **AC-19.11.2/6** — The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it
@@ -4885,6 +4887,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.5/2** — Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length
     - **AC-19.11.5/3** — The archive is named after the Arrangement once it has been saved, and after the composition otherwise
     - **AC-19.11.5/4** — Export arrangement MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged
+    - **AC-19.11.5/5** — A part on Drums is written on the General MIDI drum channel, at the note numbers its keys name, so a DAW opens it as a drum kit; every other pitched part stays on channel 1
+  - *(/5 added 2026-11-15 with US-19.13. The maintainer, told that a drum part on channel 1 opens in Logic as low piano notes, chose the drum channel. This is the one thing of a part's instrument the export carries; volumes and the other instruments are still not in it.)*
 
 - **AC-19.11.6** — Any part can be the one on screen
   - **Given** a composition with layers
@@ -4892,6 +4896,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** that part is the one in the composing grid — its notes shown, Record and the instrument writing onto it, the cursor following it — while every other part, the one just left included, keeps sounding beneath
   - *(Added 2026-11-13 at the maintainer's request, after using the first build: "I can see the name of the additional layer but I don't see the notes for it. If I click on the layer name it doesn't show me that layer … I need to be able to edit just the notes of the new layer and see them while the whole composition of layers is playing back." And: "The tempo and swing are constant for the composition." Decisions taken without asking: the part on screen carries the arrangement's tempo, tempo unit, swing and Key, and a part made the one on screen takes them from the part it replaces, so switching changes nothing heard; a part left keeps its notes in memory, saved or not, and comes back as it was; a shipped or percussive part opens through US-19.8's rules, as a new composition under a name, which then takes that part's place.)*
   - *(/3 revised 2026-11-15 with US-19.12: it had the part now on screen take the instrument shown and the one left take the Practice voice. A part now keeps its instrument wherever it is, AC-19.12.2/4.)*
+  - *(Note 2026-11-15 with US-19.13: /4 stands as written for a part on Drums — it takes the arrangement's Key as any part does, and nothing heard changes, because its notes are re-spelled in that Key rather than moved, AC-19.13.3.)*
   - **Cases**:
     - **AC-19.11.6/1** — Choosing a part in the Layers section puts it in the composing grid: its notes in the Slots, its name in the record bar, the record target and the selection its own, Record and a tap on the instrument writing onto it; the part left keeps its notes, saved or not, and is listed as a layer
     - **AC-19.11.6/2** — An owned melody opens directly; a shipped, percussive or progression-carrying part opens through US-19.8's rules — a name asked, pre-filled — and the new composition takes that part's place in the list; cancelling the prompt changes nothing
@@ -4945,12 +4950,13 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 **Acceptance Scenarios**:
 
-- **AC-19.12.1** — Seven instruments, each played on the fretboard or the keyboard
+- **AC-19.12.1** — Nine instruments, each played on the fretboard or the keyboard
   - **Given** the instruments a part may be set to
   - **When** the Composer chooses one
-  - **Then** it is one of Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, and the instrument decides where its notes are played: the fretboard for the two guitars, the keyboard for the rest
+  - *(Title, Then and /1 revised 2026-11-15, before this story landed: Flute and Drums joined the seven at the maintainer's request, US-19.13.)*
+  - **Then** it is one of Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, and the instrument decides where its notes are played: the fretboard for the two guitars, the keyboard for the rest
   - **Cases**:
-    - **AC-19.12.1/1** — The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, in that order
+    - **AC-19.12.1/1** — The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, in that order
     - **AC-19.12.1/2** — Guitar and Electric guitar are played on the fretboard, and every other instrument on the keyboard
 
 - **AC-19.12.2** — Each part has its own instrument
@@ -4994,6 +5000,56 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.12.5/2** — While an instrument's samples load, or when they cannot, its notes sound through the synth; the record bar in the Composer and the voice switch in Practice say which instrument is loading, and a failure shows a non-blocking notice with Retry, which requests the samples again
     - **AC-19.12.5/3** — On Electric guitar, Bass, Sax and Trumpet a note is held until that part's next note begins or its recording ends; Piano, Synth and Guitar ring as they did
     - **AC-19.12.5/4** — The screen-off render sounds every part through its own instrument at its own volume, and through the synth where an instrument's samples are not ready
+    - **AC-19.12.5/5** — Flute is the FluidR3_GM `flute` samples, requested, held and falling back exactly as the four above are
+
+---
+
+### User Story 70 - A drum part, played on the keyboard
+
+*Traceability: `US-19.13` — A drum part, played on the keyboard*
+
+**As** the Composer, **I want** Drums as an instrument a part can be set to — played on the keyboard, each key the drum Logic puts there, with the drum's name written on the key — and as many drum parts as I need, **so that** I can write a kick and snare line, put the hi-hats on a part of their own over it, and take the lot into Logic with every note already on the right drum.
+
+*(Added 2026-11-15 at the maintainer's request, the same day as US-19.12 and before it landed: "One more instrument I want to add is drums. I want it to use the piano for input and I want the notes to correspond to the midi mappings that logic uses for drums. Also the piano keys should have labels for the drum part names on it. I would suggest writing the names vertically. also keep the note labels that are there. It will be possible to add multiple drum parts as well since hi hats may need their own track because they are played concurrently with other drum parts. Also add flute as another instrument." Before any work the maintainer was told what else this changes and approved it: a composed note is stored as a degree of the Key, and every layer takes the arrangement's Key (AC-19.11.2/3), so a Key change would turn a kick into another drum — a part on Drums is therefore exempt; Flute and Drums join every instrument list, Practice's voice switch included (AC-2.13.1, AC-19.1.3, AC-19.12.1); the FluidR3_GM set the other instruments come from holds a flute but no drum kit. They then chose: the drums are **synthesised** in Web Audio — no asset, nothing to load, no Constitution change, and a drum machine's sound rather than an acoustic kit's; a Drums part is exported on the General MIDI drum channel (AC-19.11.5/5); the work joins US-19.12's pull request, Auto landing. Flute is a fifth fetched FluidR3_GM voice, named in Constitution 3.10.0 with the other four. Decisions taken without asking: the map is General MIDI's percussion key map, MIDI 35 to 81, which is what Logic's Drum Kit Designer plays — Kick on 36, the key Logic calls C1, Snare on 38, Closed hat on 42; the keyboard's default 49 keys already begin on 36; the keys keep this app's own note names, which call that key C2 where Logic says C1; a closed or pedal hat cuts off an open hat ringing in the same part, as a real hi-hat does, and not one in another part; several drum parts need nothing new, since any number of parts may be set to one instrument; the Score view draws a drum part as the low notes it is stored as, not in drum notation. research.md D-029.)*
+
+**Independent Test**: Set the part on screen to Drums and assert the keyboard is shown, that the key for MIDI 36 reads Kick and the one for 42 Closed hat with the names written up the keys, that the in-scale keys keep their labels and colours and each C its name, and that no audio file is requested; tap 36 and assert a drum is synthesised at once; record a kick and a snare, change the Key and assert both notes are still MIDI 36 and 38 while a melody layer has moved with the Key; add two more parts on Drums and assert all three sound together; export the arrangement and assert the drum parts' files are on channel 10 at notes 36 and 38; set a part to Flute and assert the `flute` samples are requested once.
+
+**Acceptance Scenarios**:
+
+- **AC-19.13.1** — Drums are synthesised, on the keys Logic gives them
+  - **Given** a part on Drums
+  - **When** one of its notes sounds
+  - **Then** the drum General MIDI's percussion key map gives that note is synthesised in Web Audio, at once and with nothing loaded
+  - **Cases**:
+    - **AC-19.13.1/1** — Each MIDI note from 35 to 81 is the drum General MIDI's percussion key map gives it, as Logic's Drum Kit Designer plays them: Kick on 36, Rim on 37, Snare on 38, Clap on 39, Closed hat on 42, Pedal hat on 44, Open hat on 46, Crash on 49, Ride on 51
+    - **AC-19.13.1/2** — Every drum is Web Audio synthesis: choosing Drums requests no audio file, and a drum sounds at once
+    - **AC-19.13.1/3** — A note below 35 or above 81 has no drum and is silent
+    - **AC-19.13.1/4** — A drum is louder at each stronger Accent Level and scaled by its part's volume, and a closed or pedal hat cuts off an open hat still ringing in the same part and in no other
+
+- **AC-19.13.2** — The keyboard names each drum
+  - **Given** the Composer with the part on screen on Drums
+  - **When** the Composer looks at the keyboard
+  - **Then** every key that has a drum carries that drum's name, written vertically up the key, and the note labels are as they were
+  - **Cases**:
+    - **AC-19.13.2/1** — While the part on screen is on Drums, every key with a drum carries its drum's name written vertically up the key, on white keys and black, and under any other instrument no key carries one
+    - **AC-19.13.2/2** — The note labels stay as they are: an in-scale key keeps its label and its colour, and each C its name
+    - **AC-19.13.2/3** — A key's accessible name says its drum
+
+- **AC-19.13.3** — A drum part keeps its drums whatever the Key
+  - **Given** a part on Drums with notes recorded
+  - **When** the Key changes, or the part goes on or off the screen
+  - **Then** every one of its notes is still the drum it was, while the other parts follow the Key
+  - **Cases**:
+    - **AC-19.13.3/1** — Changing the Key with a Drums part on screen leaves each of its notes on the same MIDI note, while every other pitched part moves with the Key
+    - **AC-19.13.3/2** — A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the arrangement's Key
+    - **AC-19.13.3/3** — Putting a Drums part on screen, and taking it off again, changes none of its MIDI notes
+
+- **AC-19.13.4** — As many drum parts as are wanted
+  - **Given** an arrangement
+  - **When** the Composer sets more than one part to Drums
+  - **Then** each is a line of its own and they sound together
+  - **Cases**:
+    - **AC-19.13.4/1** — Several parts may be on Drums at once, each sounding its own notes, so two drums written at the same instant in different parts are both heard
 
 ---
 

@@ -10,6 +10,7 @@ import { layered, layeredLoopDuration } from '../../../src/core/arrangement.js';
 import { create, cycleAccent, setPitch, addMeasure, setTimeSignatureAll } from '../../../src/core/pattern.js';
 import { setProgression, setArpeggio, setChange, cyclePasses } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
+import { recordNote } from '../../../src/core/composer.js';
 import { createSong, addEntry } from '../../../src/core/song.js';
 
 function findChunk(bytes, id) {
@@ -83,6 +84,30 @@ describe('export/midi for an Arrangement (AC-19.11.5)', () => {
     const back = readZip(buildZip(files));
     expect(back.map((e) => e.name)).toEqual(files.map((f) => f.name));
     back.forEach((e, i) => expect([...e.bytes]).toEqual([...files[i].bytes]));
+  });
+
+  it('AC-19.11.5/5 — A part on Drums is written on the General MIDI drum channel, at the note numbers its keys name, so a DAW opens it as a drum kit; every other pitched part stays on channel 1', () => {
+    // Kick and snare written in C; the arrangement is in G.
+    let kit = { ...melody('Kit', 'C') };
+    [36, 38, 36, 38].forEach((midi, b) => (kit = recordNote(kit, { measureIndex: 0, beatIndex: b, slotIndex: 0 }, midi)));
+    const composition = melody('Line', 'G');
+    const set = layered(composition, [{ pattern: kit, instrument: 'drums' }, { pattern: { ...kit, name: 'Low line' }, instrument: 'bass' }]);
+    const files = buildArrangementMidi(set);
+    const ons = (i) => trackEvents(files[i].bytes).filter((e) => (e.status & 0xf0) === 0x90);
+    // The Drums part: channel 10 (status 0x99), at the notes its keys name — not moved to G.
+    expect(ons(1).every((e) => e.status === 0x99)).toBe(true);
+    expect(ons(1).map((e) => e.data[0])).toEqual([36, 38, 36, 38]);
+    // Every other pitched part: channel 1 (status 0x90), in the arrangement's Key.
+    expect(ons(0).every((e) => e.status === 0x90)).toBe(true);
+    expect(ons(2).every((e) => e.status === 0x90)).toBe(true);
+    expect(ons(2).map((e) => e.data[0])).toEqual([43, 45, 43, 45]);
+    // The composition itself on Drums is written the same way.
+    const own = buildArrangementMidi(layered(kit, [{ pattern: composition }], { instrument: 'drums' }));
+    const first = trackEvents(own[0].bytes).filter((e) => (e.status & 0xf0) === 0x90);
+    expect(first.every((e) => e.status === 0x99)).toBe(true);
+    expect(first.map((e) => e.data[0])).toEqual([36, 38, 36, 38]);
+    // A Pattern's own export is untouched: melodic on channel 1.
+    expect(trackEvents(buildMidi(kit)).filter((e) => (e.status & 0xf0) === 0x90).every((e) => e.status === 0x90)).toBe(true);
   });
 
   it("AC-19.11.5/2 — Each file spans one combined loop: the layer's own timeline for each of its repeats, a progression walking its chords across them, at the composition's tempo, tempo unit, swing and Key, so every file in the archive has the same length", () => {

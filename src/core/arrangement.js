@@ -15,7 +15,7 @@
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from './timeline.js';
 import { cyclePasses, hasHarmony } from './harmony.js';
 import { beatCount, beatNoteValue, tempoUnitOf } from './meter.js';
-import { VOICES, MIN_VOLUME, MAX_VOLUME } from './voice.js';
+import { VOICES, MIN_VOLUME, MAX_VOLUME, hasFixedNotes } from './voice.js';
 
 /** How many layers may sit under a composition (AC-19.11.1/3). */
 export const MAX_LAYERS = 8;
@@ -79,10 +79,11 @@ export function layerKind(pattern) {
 
 /**
  * A layer as it plays under the composition: the composition's tempo, tempo
- * unit, swing amount and feel, and — melodic layers only — its Key. The
+ * unit, swing amount and feel, and — melodic layers only, and not a part on
+ * an instrument with fixed notes (`keepKey`) — its Key. The
  * Pattern in the library is untouched (AC-19.11.2/3).
  */
-export function underComposition(layer, composition) {
+export function underComposition(layer, composition, { keepKey = false } = {}) {
   // The unit is stated outright: a Pattern that states none counts its own
   // first Measure's Beat (AC-4.2.7/5), and a 7/8 layer under a 4/4 composition
   // must count the composition's quarter, not its own eighth.
@@ -93,7 +94,9 @@ export function underComposition(layer, composition) {
     swingAmount: composition.swingAmount ?? 0,
     swingFeel: composition.swingFeel,
   };
-  if (layer.soundMode === 'melodic' && composition.key) next.key = composition.key;
+  // A part whose notes name drums keeps the Key they were written in, and so
+  // the MIDI notes themselves (AC-19.13.3/2).
+  if (layer.soundMode === 'melodic' && composition.key && !keepKey) next.key = composition.key;
   return next;
 }
 
@@ -105,9 +108,10 @@ export function underComposition(layer, composition) {
  *
  * @param {object} composition  the draft
  * @param {Array<{pattern: object, muted?: boolean, instrument?: string, volume?: number}>} layers
+ * @param {{instrument?: string}} [own]  the composition's own instrument, for the export (AC-19.11.5/5)
  */
-export function layered(composition, layers) {
-  const under = layers.map((l) => underComposition(l.pattern, composition));
+export function layered(composition, layers, { instrument } = {}) {
+  const under = layers.map((l) => underComposition(l.pattern, composition, { keepKey: hasFixedNotes(l.instrument) }));
   const { eighths, repeats } = fitLoop([composition, ...under]);
   return {
     layered: true,
@@ -118,7 +122,7 @@ export function layered(composition, layers) {
     soundMode: composition.soundMode,
     loopEighths: eighths,
     layers: [
-      { pattern: composition, repeats: repeats[0], muted: false, composition: true },
+      { pattern: composition, repeats: repeats[0], muted: false, composition: true, ...(instrument ? { instrument } : {}) },
       // Each layer's instrument and volume travel with it (US-19.12), so every
       // event can say how its part sounds.
       ...under.map((pattern, i) => ({

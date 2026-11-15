@@ -14,6 +14,7 @@ import { cyclePasses } from '../core/harmony.js';
 import { totalPasses, entryAt, playingAt } from '../core/song.js';
 import { buildZip } from '../core/zip.js';
 import { passesPerLoop } from '../core/arrangement.js';
+import { hasFixedNotes } from '../core/voice.js';
 
 export const TICKS_PER_QUARTER = 480;
 
@@ -57,9 +58,12 @@ function chunk(id, data) {
  * playback uses, offset by whole passes. A layer of an Arrangement passes its
  * repeats in the combined loop instead (AC-19.11.5/2).
  *
+ * `channel` overrides the channel the Pattern's Sound Mode would choose — a
+ * part on Drums is written on the drum channel (AC-19.11.5/5).
+ *
  * @returns {Uint8Array}
  */
-export function buildMidi(pattern, passes = cyclePasses(pattern)) {
+export function buildMidi(pattern, passes = cyclePasses(pattern), { channel = channelFor(pattern) } = {}) {
   const passSeconds = loopDurationSeconds(pattern);
   const events = [];
   for (let pass = 0; pass < passes; pass++) {
@@ -102,7 +106,6 @@ export function buildMidi(pattern, passes = cyclePasses(pattern)) {
     const note = event.pitch ? event.pitch.midiNote : PERCUSSIVE_NOTE;
     const velocity = VELOCITY[event.accent] ?? VELOCITY[1];
     const onTick = toTicks(event.timeSeconds);
-    const channel = channelFor(pattern);
     timed.push({ tick: onTick, bytes: [0x90 | channel, note & 0x7f, velocity] });
     timed.push({ tick: onTick + NOTE_LENGTH_TICKS, bytes: [0x80 | channel, note & 0x7f, 0] });
   }
@@ -240,7 +243,9 @@ export function buildArrangementMidi(set) {
   const width = String(set.layers.length).length;
   return set.layers.map((layer, i) => ({
     name: `${String(i + 1).padStart(Math.max(2, width), '0')}-${stem(layer.pattern.name)}.mid`,
-    bytes: buildMidi(layer.pattern, passesPerLoop(layer)),
+    // A part on Drums goes on the drum channel at its own note numbers, so a DAW
+    // opens a kit for it (AC-19.11.5/5); every other part as its Pattern is.
+    bytes: buildMidi(layer.pattern, passesPerLoop(layer), hasFixedNotes(layer.instrument) ? { channel: DRUM_CHANNEL } : {}),
   }));
 }
 

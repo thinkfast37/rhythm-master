@@ -137,7 +137,7 @@ import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
 import * as guitar from './audio/guitar.js';
 import * as piano from './audio/pianoSamples.js';
-import { resolveVoice, normaliseVoice, viewOf, FETCHED, DEFAULT_INSTRUMENT, normaliseVolume, volumeGain } from './core/voice.js';
+import { resolveVoice, normaliseVoice, viewOf, FETCHED, DEFAULT_INSTRUMENT, normaliseVolume, volumeGain, hasFixedNotes } from './core/voice.js';
 import * as instruments from './audio/instruments.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
@@ -160,6 +160,7 @@ import {
   bakeHarmony,
   foldRegister,
   copyMelody,
+  retune,
 } from './core/composer.js';
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
 import { composerUnsaved } from './ui/composer.js';
@@ -1059,6 +1060,12 @@ async function activatePart(index) {
     }
     ({ draft, savedId, notice } = opened);
   }
+  // A percussive layer has no instrument of its own: on screen it takes the one
+  // the Composer was on, so the hands stay where they are (AC-19.12.2/6).
+  const arriving = target.instrument ?? (target.pattern && layerKind(target.pattern) === 'rhythm' ? activeInstrument() : target.sounds);
+  // A part on Drums comes into the arrangement's Key with its notes where they
+  // were, re-spelled rather than transposed (AC-19.13.3/3).
+  if (hasFixedNotes(arriving) && draft.soundMode === 'melodic' && draft.key && leaving.key) draft = retune(draft, leaving.key);
   // The arrangement's settings travel with the part on screen (AC-19.11.6/4).
   draft = underComposition(draft, leaving);
   if (draft.soundMode === 'melodic' && leaving.scale) draft = { ...draft, scale: leaving.scale };
@@ -1069,9 +1076,6 @@ async function activatePart(index) {
   const left = { patternId: c.savedId ?? null, muted: false, draft: leaving, savedId: c.savedId ?? null, instrument: activeInstrument(), ...soundOf({ volume: c.volume }) };
   const next = all.map((p, i) => (p.active ? left : i === index ? null : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId, ...soundOf(p) }));
   const layers = next.filter(Boolean);
-  // A percussive layer has no instrument of its own: on screen it takes the one
-  // the Composer was on, so the hands stay where they are (AC-19.12.2/6).
-  const arriving = target.instrument ?? (target.pattern && layerKind(target.pattern) === 'rhythm' ? activeInstrument() : target.sounds);
   state.composer = { ...state.composer, draft, savedId, layers, activeIndex: index, instrument: arriving, volume: target.volume ?? null, recording: false, target: null, selected: null, notice };
   ensureSamplesLoaded();
   if (savedId && isComplete(draft)) adoptOpenPattern(draft);
@@ -2905,7 +2909,9 @@ const handlers = {
   },
 
   onComposerKey(key) {
-    applyDraft((p) => ({ ...p, key }));
+    // A part on Drums keeps every note on its drum: the notes are re-spelled in
+    // the new Key rather than moved with it (AC-19.13.3/1).
+    applyDraft((p) => (hasFixedNotes(activeInstrument()) ? retune(p, key) : { ...p, key }));
   },
 
   onComposerScale(scale) {
@@ -3110,8 +3116,12 @@ const handlers = {
     const c = state.composer;
     if (!c.draft || c.layers.length === 0) return;
     // The files in the parts' order, whichever is on screen (AC-19.11.5/1).
-    const all = parts().filter((p) => p.pattern);
-    const set = layered(all[0].pattern, all.slice(1));
+    // Each part with the instrument it sounds with: a part on Drums is written
+    // on the drum channel, at the notes it was written with (AC-19.11.5/5).
+    const all = parts()
+      .filter((p) => p.pattern)
+      .map((p) => ({ ...p, instrument: p.sounds }));
+    const set = layered(all[0].pattern, all.slice(1), { instrument: all[0].sounds });
     downloadArrangementMidi(set, arrangementZipFilename(c.arrangement, all[0].pattern));
   },
 

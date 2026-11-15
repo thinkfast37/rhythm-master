@@ -23,6 +23,9 @@ export const INSTRUMENTS = Object.freeze(
     { id: 'bass', label: 'Bass', view: 'piano', soundfont: 'electric_bass_finger', held: true },
     { id: 'sax', label: 'Sax', view: 'piano', soundfont: 'alto_sax', held: true },
     { id: 'trumpet', label: 'Trumpet', view: 'piano', soundfont: 'trumpet', held: true },
+    { id: 'flute', label: 'Flute', view: 'piano', soundfont: 'flute', held: true },
+    // Synthesised (US-19.13). `fixed`: its notes name drums, so they never move with the Key.
+    { id: 'drums', label: 'Drums', view: 'piano', fixed: true },
   ].map(Object.freeze)
 );
 
@@ -48,6 +51,11 @@ export function instrumentOf(id) {
 /** Where an instrument's notes are played: `guitar` the fretboard, `piano` the keyboard (AC-19.12.1/2). */
 export function viewOf(id) {
   return instrumentOf(id).view;
+}
+
+/** Whether an instrument's notes stay where they were written whatever the Key — the drums (AC-19.13.3). */
+export function hasFixedNotes(id) {
+  return Boolean(INSTRUMENTS.find((i) => i.id === id)?.fixed);
 }
 
 /** The instruments fetched as FluidR3_GM samples, by id. */

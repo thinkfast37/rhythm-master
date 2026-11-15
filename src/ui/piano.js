@@ -6,6 +6,7 @@
  */
 import { rangeFor, keysIn, splitRows, whiteKeyCount, keyName, MIDDLE_C, DEFAULT_KEY_COUNT, isValidKeyCount } from '../core/piano.js';
 import { describeNote, labelFor } from '../core/composer.js';
+import { drumName } from '../core/drums.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /** Drawn units: a white key's width, and the bounds of its height. The keys are
@@ -46,7 +47,8 @@ function svgEl(tag, attrs = {}) {
 
 /**
  * @param {HTMLElement} root
- * @param {{key: string, scale: string, labelMode: string, count: number, widthPx: number, lit?: number|null}} model
+ * @param {{key: string, scale: string, labelMode: string, count: number, widthPx: number, lit?: number|null, drums?: boolean}} model
+ *   `drums`: name each key for the drum it plays, vertically, beside the note labels (AC-19.13.2)
  * @param {{onNote?: (midi: number) => void}} handlers
  */
 export function renderPiano(root, model, handlers = {}) {
@@ -60,6 +62,7 @@ export function renderPiano(root, model, handlers = {}) {
   wrap.dataset.low = keyName(range.low);
   wrap.dataset.high = keyName(range.high);
   wrap.dataset.rows = String(rows.length);
+  wrap.dataset.drums = String(Boolean(model.drums));
   wrap.setAttribute('role', 'group');
   wrap.setAttribute('aria-label', `Piano keyboard, ${count} keys, ${keyName(range.low)} to ${keyName(range.high)}`);
 
@@ -88,14 +91,17 @@ export function renderPiano(root, model, handlers = {}) {
         if (k.midi === MIDDLE_C) classes.push('middle-c');
         // A MIDI note just played lights its key (AC-19.10.2/1).
         if (k.midi === model.lit) classes.push('lit');
+        const drum = model.drums ? drumName(k.midi) : '';
+        if (drum) classes.push('has-drum');
         const g = svgEl('g', {
           class: classes.join(' '),
           'data-midi': k.midi,
           'data-name': keyName(k.midi),
           'data-label': label,
+          ...(drum ? { 'data-drum': drum } : {}),
           role: 'button',
           tabindex: '0',
-          'aria-label': `${label || keyName(k.midi)}${note.isRoot ? ', root' : note.inScale ? ', in scale' : ''}${k.midi === MIDDLE_C ? ', middle C' : ''}`,
+          'aria-label': `${drum ? `${drum}, ` : ''}${label || keyName(k.midi)}${note.isRoot ? ', root' : note.inScale ? ', in scale' : ''}${k.midi === MIDDLE_C ? ', middle C' : ''}`,
         });
         const x = k.black ? (k.whiteIndex + 1) * WHITE_W - BLACK_W / 2 : k.whiteIndex * WHITE_W;
         const w = k.black ? BLACK_W : WHITE_W;
@@ -114,6 +120,21 @@ export function renderPiano(root, model, handlers = {}) {
         }
         if (k.midi === MIDDLE_C) {
           g.appendChild(svgEl('circle', { class: 'middle-c-mark', cx: x + w / 2, cy: h - 40, r: 3 }));
+        }
+        if (drum) {
+          // The drum's name, written up the key (AC-19.13.2/1). A white key's
+          // name runs up the strip the black keys leave of it, which is why it
+          // is vertical: that strip is ten units wide. A black key's sits above
+          // its label band. Both read bottom to top.
+          const before = keys.find((o) => o.midi === k.midi - 1);
+          const after = keys.find((o) => o.midi === k.midi + 1);
+          const left = !k.black && before?.black ? BLACK_W / 2 : 0;
+          const right = !k.black && after?.black ? BLACK_W / 2 : 0;
+          const cx = x + (left + (w - right)) / 2;
+          const cy = k.black ? h - 28 : BLACK_H - 6;
+          const d = svgEl('text', { class: 'key-drum', x: cx, y: cy, transform: `rotate(-90 ${cx} ${cy})` });
+          d.textContent = drum;
+          g.appendChild(d);
         }
         const activate = () => handlers.onNote?.(k.midi, { key: k.midi });
         g.addEventListener('click', activate);

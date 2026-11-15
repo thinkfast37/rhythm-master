@@ -88,9 +88,9 @@ core feature); a vendored soundfont (built, then removed — several MB in the r
 maintainer liked less); a small pitch-shifted sample set (rejected earlier on stretch artefacts, and
 moot now).
 
-**Amended 2026-11-15 (US-19.12, Constitution 3.10.0, D-028).** Four more fetched voices join the
-guitar, from the same FluidR3_GM set and through the same loader: `overdriven_guitar`,
-`electric_bass_finger`, `alto_sax` and `trumpet`. The maintainer was offered synthesised imitations,
+**Amended 2026-11-15 (US-19.12, US-19.13, Constitution 3.10.0, D-028, D-029).** Five more fetched
+voices join the guitar, from the same FluidR3_GM set and through the same loader: `overdriven_guitar`,
+`electric_bass_finger`, `alto_sax`, `trumpet` and `flute`. Drums are synthesised (D-029). The maintainer was offered synthesised imitations,
 which need no amendment and work offline, and chose samples. The objection to a CDN is answered as
 it was for the guitar: the synth sounds every note until the samples arrive, and whenever they cannot.
 
@@ -1348,3 +1348,55 @@ way to raise a part above the others, which is half of what a relative control i
 The gain is applied in each voice, as a multiplier on the envelope it already builds
 (`event.gain`), rather than through a bus per part: the voices route themselves to the shared
 compressor, and a bus per part would mean re-plumbing every one for a number each can simply multiply by.
+
+---
+
+## D-029 — Drums: synthesised, on General MIDI's keys, and exempt from the Key
+
+**Decision (2026-11-15, US-19.13)**: Drums are an instrument a part is set to. They are Web Audio
+synthesis, laid out on General MIDI's percussion key map, and a part on Drums does not move with the Key.
+
+**Why synthesised.** The FluidR3_GM set served by gleitz/midi-js-soundfonts — where every other
+fetched voice comes from — has no drum kit: only pitched percussion (steel drums, taiko, a synth
+drum). A recorded kit would mean a new source, a licence to choose and a further Constitution
+amendment. The maintainer chose synthesis: nothing to load, works offline, and Principle V's first
+rule ("Audio is Web Audio synthesis") already covers it. `audio/drums.js` builds each drum from a
+handful of recipes — a pitch-swept sine for kick and toms, noise through a filter for snare, hats,
+cymbals and shakers, a pair of detuned squares for bells — parameterised per note by
+`core/drums.js`. The cost, said beforehand: it sounds like a drum machine.
+
+**Why General MIDI's map.** The maintainer asked for "the midi mappings that logic uses for drums".
+Logic's Drum Kit Designer is General MIDI compatible: Kick on 36 (the key Logic names C1, since
+Logic calls middle C C3), Snare on 38, Closed hat on 42, and so on to 81. Apple's own table is
+published only as an image, so the map here is the General MIDI percussion key map itself, in one
+table (`core/drums.DRUMS`) that is the single place to correct a name or a sound. This app names
+MIDI 36 C2 (middle C is C4 here, AC-2.2.3); the key labels keep the app's names, as asked.
+
+**Why exempt from the Key.** A composed note is stored as a degree of the Key plus an octave
+(`core/composer.pitchFromMidi`), and every layer is played in the arrangement's Key
+(`underComposition`, AC-19.11.2/3). For a melody that is the point. For drums it would make a Key
+change turn the kick into the rim. So:
+
+- a Drums layer keeps its own Key when the set is built (`layered` passes `keepKey` for an
+  instrument whose notes are fixed), and so sounds the MIDI notes it was written with;
+- when the Key changes with a Drums part on screen, or a Drums part is put on screen under another
+  Key, its notes are **re-spelled** in the new Key (`core/composer.retune`) rather than moved: same
+  MIDI notes, new degree tokens. The part still carries the arrangement's Key, as AC-19.11.6/4
+  needs of whichever part is on screen, and nothing heard changes.
+
+*Rejected*: storing absolute MIDI notes for drum parts (a second pitch representation in the Pattern,
+for one instrument, and the instrument is not Pattern content, AC-19.12.4/4); a fixed Key of C for
+drum parts (the part on screen is what carries the arrangement's Key, so it cannot have a private one).
+
+**What it leaves as it is.** A drum part saved to the library is an ordinary Melodic Pattern of low
+notes: opened in Practice it plays whatever voice Practice is on — Drums, if that is chosen. The
+Score view engraves it as those notes, not in drum notation. Both were named to the maintainer.
+
+**Export.** A part on Drums is written on channel 10 at its own note numbers (AC-19.11.5/5), so
+Logic opens a kit for it. This is the one trace of a part's instrument in the export.
+
+**Hi-hats.** A closed or pedal hat cuts off an open hat still ringing in the same part, as the pedal
+does on a real one — per part, so hats on a part of their own choke only each other. The Composer is
+monophonic per part by design (D-019), which is why simultaneous drums are separate parts, and
+why "several drum parts" needed nothing new: any number of parts may be set to one instrument.
+

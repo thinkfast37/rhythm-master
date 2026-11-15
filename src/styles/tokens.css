@@ -2971,3 +2971,16 @@ button:disabled.palette-fill, .play-song:disabled, .song-save:disabled, .song-ex
 .layer-volume-slider { width: 110px; accent-color: var(--brand); }
 .layer-volume-entry { width: 3.6em; }
 .layer-item.muted .layer-volume, .layer-item.muted .layer-instrument { opacity: 0.5; }
+
+/* --- the drum kit's names on the keys (AC-19.13.2) ------------------------- */
+/* Written up the key, bottom to top: a white key's along the strip the black
+   keys leave of it, a black key's above its label band. */
+.piano .key-drum {
+  font: 700 7px var(--font-ui);
+  text-anchor: start;
+  dominant-baseline: central;
+  fill: #2a2e3d;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+.piano .key.black .key-drum { fill: #f2f3f7; }

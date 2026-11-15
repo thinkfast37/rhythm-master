@@ -23,13 +23,14 @@ import {
   MIN_VOLUME,
   MAX_VOLUME,
   DEFAULT_VOLUME,
+  hasFixedNotes,
 } from '../../../src/core/voice.js';
 import { DEFAULTS } from '../../../src/storage/settings.js';
 
 describe('core/voice — the choice', () => {
   it('AC-2.13.1/2 — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it: the stored default and its reading', () => {
     // Revised with AC-2.13.1 (2026-11-15): the switch offers all seven instruments.
-    expect(VOICES).toEqual(['piano', 'synth', 'guitar', 'electric', 'bass', 'sax', 'trumpet']);
+    expect(VOICES).toEqual(['piano', 'synth', 'guitar', 'electric', 'bass', 'sax', 'trumpet', 'flute', 'drums']);
     expect(DEFAULT_VOICE).toBe('piano');
     expect(DEFAULTS.melodicVoice).toBe('piano');
     expect(normaliseVoice(undefined)).toBe('piano');
@@ -59,8 +60,8 @@ describe('core/voice — the choice', () => {
     }
   });
 
-  it('AC-19.12.1/1 — The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, in that order', () => {
-    expect(INSTRUMENTS.map((i) => i.label)).toEqual(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet']);
+  it('AC-19.12.1/1 — The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, in that order', () => {
+    expect(INSTRUMENTS.map((i) => i.label)).toEqual(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet', 'Flute', 'Drums']);
     expect(INSTRUMENTS.map((i) => i.id)).toEqual(VOICES);
     expect(instrumentOf('sax').label).toBe('Sax');
     expect(instrumentOf('harpsichord').id).toBe('piano');
@@ -68,13 +69,22 @@ describe('core/voice — the choice', () => {
 
   it('AC-19.12.1/2 — Guitar and Electric guitar are played on the fretboard, and every other instrument on the keyboard', () => {
     expect(VOICES.filter((id) => viewOf(id) === 'guitar')).toEqual(['guitar', 'electric']);
-    expect(VOICES.filter((id) => viewOf(id) === 'piano')).toEqual(['piano', 'synth', 'bass', 'sax', 'trumpet']);
+    expect(VOICES.filter((id) => viewOf(id) === 'piano')).toEqual(['piano', 'synth', 'bass', 'sax', 'trumpet', 'flute', 'drums']);
   });
 
   it('AC-19.12.5/1 — Electric guitar, Bass, Sax and Trumpet are the FluidR3_GM `overdriven_guitar`, `electric_bass_finger`, `alto_sax` and `trumpet` samples, each requested once, when a part in the Composer is first set to it or at the first melodic note in Practice under it, and never on page load: the catalogue names them', () => {
     const fonts = Object.fromEntries(INSTRUMENTS.filter((i) => i.soundfont).map((i) => [i.id, i.soundfont]));
-    expect(fonts).toEqual({ guitar: 'acoustic_guitar_steel', electric: 'overdriven_guitar', bass: 'electric_bass_finger', sax: 'alto_sax', trumpet: 'trumpet' });
-    expect(FETCHED).toEqual(['guitar', 'electric', 'bass', 'sax', 'trumpet']);
+    expect(fonts).toMatchObject({ guitar: 'acoustic_guitar_steel', electric: 'overdriven_guitar', bass: 'electric_bass_finger', sax: 'alto_sax', trumpet: 'trumpet' });
+    expect(FETCHED.slice(0, 5)).toEqual(['guitar', 'electric', 'bass', 'sax', 'trumpet']);
+  });
+
+  it('AC-19.12.5/5 — Flute is the FluidR3_GM `flute` samples, requested, held and falling back exactly as the four above are: the catalogue names it, and the drums are no fetched voice', () => {
+    expect(instrumentOf('flute')).toMatchObject({ soundfont: 'flute', held: true, view: 'piano' });
+    expect(FETCHED).toEqual(['guitar', 'electric', 'bass', 'sax', 'trumpet', 'flute']);
+    expect(instrumentOf('drums').soundfont).toBeUndefined();
+    // Only the drums' notes are fixed against the Key (AC-19.13.3).
+    expect(VOICES.filter(hasFixedNotes)).toEqual(['drums']);
+    expect(hasFixedNotes(undefined)).toBe(false);
   });
 });
 

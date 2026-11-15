@@ -45,7 +45,7 @@ async function withSettings(page, partial) {
 
 // --- AC-2.13.1: the switch ------------------------------------------------------
 
-test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown', async ({ page }) => {
+test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute, Drums — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.grid .slot[data-beat="0"][data-slot="0"]').click();
@@ -55,7 +55,7 @@ test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a v
   await page.locator('.sound-mode [data-mode="melodic"]').click();
   const sw = page.locator('.pattern-header .voice-switch');
   await expect(sw).toBeVisible();
-  await expect(sw.locator('button')).toHaveText(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet']);
+  await expect(sw.locator('button')).toHaveText(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet', 'Flute', 'Drums']);
   await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
   await expect(sw.locator('[aria-pressed="true"]')).toHaveCount(1);
   // Beside the Sound Mode switch: the next thing in the header, on the same row.
@@ -351,6 +351,36 @@ test("AC-2.13.2/5 — Under Electric guitar, Bass, Sax or Trumpet, a melodic not
     await stop(page);
     expect(requests).toHaveLength(before + 1);
   }
+});
+
+test("AC-2.13.2/6 — Under Flute, a melodic note sounds through the flute's samples, and under Drums it sounds the synthesised drum its MIDI note names (AC-19.13.1)", async ({ page }) => {
+  const requests = [];
+  await page.route('https://gleitz.github.io/**', (route) => {
+    requests.push(route.request().url());
+    route.fulfill({ status: 200, contentType: 'application/javascript', body: fakeSoundfont() });
+  });
+  await page.goto('/');
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await melodicPattern(page);
+  await voiceButton(page, 'flute').click();
+  expect(requests).toHaveLength(0);
+  await play(page);
+  await expect.poll(() => requests.length).toBe(1);
+  expect(requests[0]).toBe(SAMPLE_URL.replace('acoustic_guitar_steel', 'flute'));
+  await expect.poll(() => page.evaluate(() => window.__rm.instruments.statusOf('flute').status)).toBe('ready');
+  let at = (await voiceLog(page)).length;
+  await expect.poll(async () => (await voiceLog(page)).length).toBeGreaterThan(at + 2);
+  expect((await voiceLog(page)).slice(at).every((e) => e.voice === 'flute' && e.via === 'sampled')).toBe(true);
+  // Drums: no request, and each note the drum its MIDI number names — synthesised, or silent where the kit has none.
+  await voiceButton(page, 'drums').click();
+  at = (await voiceLog(page)).length;
+  await expect.poll(async () => (await voiceLog(page)).length).toBeGreaterThan(at + 2);
+  const drums = (await voiceLog(page)).slice(at).filter((e) => e.voice === 'drums');
+  expect(drums.length).toBeGreaterThan(0);
+  expect(drums.every((e) => e.via === (e.midi >= 35 && e.midi <= 81 ? 'drum' : 'silent'))).toBe(true);
+  expect(drums.some((e) => e.via === 'drum')).toBe(true);
+  await stop(page);
+  expect(requests).toHaveLength(1);
 });
 
 // --- AC-2.13.4: shipped, lazy, never blocking ------------------------------------

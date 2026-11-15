@@ -10,6 +10,7 @@ import { createSoundfontVoice } from './soundfont.js';
 import { voice as guitarVoice, playGuitar } from './guitar.js';
 import * as piano from './pianoSamples.js';
 import { playMelodic } from './melodic.js';
+import { playDrum } from './drums.js';
 
 /** The fetched voices by instrument id; the guitar is the one `guitar.js` has always held. */
 export const fetched = Object.freeze(
@@ -21,6 +22,8 @@ export const fetched = Object.freeze(
 /** Each instrument as a player: `(ctx, destination, event, when) → 'sampled' | 'fallback' | undefined`. */
 export const PLAYERS = Object.freeze({
   synth: playMelodic,
+  // Synthesised, so always ready and never a fallback (AC-19.13.1/2).
+  drums: playDrum,
   piano: (ctx, destination, event, when) => piano.playPiano(ctx, destination, event, when, playMelodic),
   ...Object.fromEntries(FETCHED.map((id) => [id, (ctx, destination, event, when) => fetched[id].play(ctx, destination, event, when, playMelodic)])),
   guitar: (ctx, destination, event, when) => playGuitar(ctx, destination, event, when, playMelodic),
@@ -47,5 +50,7 @@ export async function prepare(id, ctx) {
     const instrument = await fetched[id].prepare(ctx);
     return instrument ? (c, d, event, when) => fetched[id].playOn(instrument, event, when) : null;
   }
+  // The drums need nothing prepared: the same synthesis on the render's context.
+  if (id === 'drums') return playDrum;
   return null;
 }

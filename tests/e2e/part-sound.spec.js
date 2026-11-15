@@ -93,7 +93,7 @@ test('AC-19.12.2/1 — In the Layers section every part that can sound a pitched
   await loadFourBeats(page);
   // Before any layer: the composition is a part, with its picker on the Composer's instrument.
   await expect(picker(onScreen(page))).toHaveValue('guitar');
-  await expect(picker(onScreen(page)).locator('option')).toHaveText(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet']);
+  await expect(picker(onScreen(page)).locator('option')).toHaveText(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet', 'Flute', 'Drums']);
   await addLayer(page, DJEMBE);
   await addLayer(page, BOSSA);
   await expect(picker(row(page, DJEMBE))).toHaveValue('piano');
@@ -568,6 +568,59 @@ test("AC-19.12.5/3 — On Electric guitar, Bass, Sax and Trumpet a note is held 
   await fret(page, 0, 0).click();
   await fret(page, 0, 2).click();
   expect((await notes('guitar')).map((n) => n.stopped)).toEqual([null, null]);
+});
+
+test('AC-19.12.5/5 — Flute is the FluidR3_GM `flute` samples, requested, held and falling back exactly as the four above are', async ({ page }) => {
+  let serve = false;
+  const requests = [];
+  await page.route('https://gleitz.github.io/**', (route) => {
+    requests.push(route.request().url());
+    if (serve) route.fulfill({ status: 200, contentType: 'application/javascript', body: fakeSoundfont() });
+    else route.abort();
+  });
+  await page.goto('/');
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await withSettings(page, { composerInstrument: 'piano' });
+  await loadFourBeats(page);
+  expect(requests).toHaveLength(0);
+  // Requested when the part is set to it; failing, it says so and the synth sounds the note.
+  await switchTo(page, 'flute').click();
+  await expect.poll(() => requests).toEqual([FONT('flute')]);
+  const status = page.locator('.composer-bar .sample-status[data-sample="flute"]');
+  await expect(status).toHaveAttribute('data-status', 'error');
+  await key(page, 72).click();
+  expect((await voiceLog(page)).at(-1)).toMatchObject({ voice: 'flute', via: 'fallback', midi: 72 });
+  // Retry brings the samples, and the keyboard stays the flute's place.
+  serve = true;
+  await status.locator('.sample-retry').click();
+  await expect(page.locator('.composer-bar .sample-status')).toHaveCount(0);
+  await expect(page.locator('.composer-instrument .piano')).toBeVisible();
+  await key(page, 72).click();
+  expect((await voiceLog(page)).at(-1)).toMatchObject({ voice: 'flute', via: 'sampled', midi: 72 });
+  // Held: with a recording instrument stood in, each note is let go as the next begins.
+  await page.evaluate(() => {
+    window.__flute = [];
+    const voice = window.__rm.instruments.fetched.flute;
+    voice.seams.reset();
+    voice.seams.setLoader(() =>
+      Promise.resolve({
+        play(midi, when) {
+          const note = { midi, when, stopped: null, stop: (at) => (note.stopped = at) };
+          window.__flute.push(note);
+          return note;
+        },
+      })
+    );
+  });
+  await switchTo(page, 'piano').click();
+  await switchTo(page, 'flute').click();
+  await expect.poll(() => page.evaluate(() => window.__rm.instruments.statusOf('flute').status)).toBe('ready');
+  await key(page, 72).click();
+  await key(page, 74).click();
+  const played = await page.evaluate(() => window.__flute.map((n) => ({ when: n.when, stopped: n.stopped })));
+  expect(played).toHaveLength(2);
+  expect(played[0].stopped).toBe(played[1].when);
+  expect(played[1].stopped).toBeNull();
 });
 
 test("AC-19.12.5/4 — The screen-off render sounds every part through its own instrument at its own volume, and through the synth where an instrument's samples are not ready", async ({ page }) => {

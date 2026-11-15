@@ -23,7 +23,7 @@ import { ACCENT_AMPS } from './voices.js';
 export const SOUNDFONT = 'FluidR3_GM';
 
 export const ATTRIBUTION = Object.freeze({
-  text: 'Guitar, bass, saxophone and trumpet samples: FluidR3_GM SoundFont by Frank Wen, served via gleitz/midi-js-soundfonts, licensed CC BY 3.0.',
+  text: 'Guitar, bass, saxophone, trumpet and flute samples: FluidR3_GM SoundFont by Frank Wen, served via gleitz/midi-js-soundfonts, licensed CC BY 3.0.',
   sourceUrl: 'https://github.com/gleitz/midi-js-soundfonts',
   licenseUrl: 'https://creativecommons.org/licenses/by/3.0/',
 });

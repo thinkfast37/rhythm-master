@@ -545,7 +545,7 @@ test('AC-19.11.2/1 — Play sounds the composition and every unmuted layer at on
   await play(page);
 });
 
-test("AC-19.11.2/3 — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key", async ({ page }) => {
+test("AC-19.11.2/3 — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key, and a layer on Drums keeps the notes it was written with", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await addLayer(page, DJEMBE);

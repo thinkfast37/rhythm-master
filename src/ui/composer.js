@@ -82,7 +82,7 @@ export function renderComposer(root, state, handlers) {
 
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderBar(composer, draft, voice, state, handlers));
-    fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers));
+    fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers, voice));
     if (draft) {
       // Grid or Score (AC-19.11.8): the composing grid, or one staff per part.
       if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderArrangementScore(state, handlers));
@@ -102,7 +102,7 @@ export function renderComposer(root, state, handlers) {
     const credit = el('p', 'composer-attribution');
     credit.dataset.attribution = 'guitar-samples';
     credit.append(
-      'Guitar, bass, saxophone and trumpet samples: FluidR3_GM SoundFont by Frank Wen, served via ',
+      'Guitar, bass, saxophone, trumpet and flute samples: FluidR3_GM SoundFont by Frank Wen, served via ',
       el('a', null, { href: ATTRIBUTION.sourceUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'gleitz/midi-js-soundfonts' }),
       ', licensed ',
       el('a', null, { href: ATTRIBUTION.licenseUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'CC BY 3.0' }),
@@ -312,7 +312,7 @@ function renderBar(composer, draft, instrument, state, handlers) {
   return bar;
 }
 
-function renderInstrument(instrument, key, scale, state, handlers) {
+function renderInstrument(instrument, key, scale, state, handlers, voice = instrument) {
   const wrap = el('div', 'composer-instrument');
   wrap.dataset.instrument = instrument;
   // The MIDI note just played lights where it landed (AC-19.10.2).
@@ -325,7 +325,8 @@ function renderInstrument(instrument, key, scale, state, handlers) {
       { onNote }
     );
   } else {
-    renderPiano(wrap, { ...model, count: state.settings.composerKeys ?? 49, widthPx: state.composer.widthPx ?? 0 }, { onNote });
+    // On Drums every key that has a drum is named for it (AC-19.13.2/1).
+    renderPiano(wrap, { ...model, count: state.settings.composerKeys ?? 49, widthPx: state.composer.widthPx ?? 0, drums: voice === 'drums' }, { onNote });
   }
   return wrap;
 }
