@@ -333,6 +333,12 @@ Every change lands the same way:
    leaving the maintainer to infer it from a file list. If it comes back empty,
    say so — a change touching no criterion is a fine thing to be told.
 5. **Auto: merge it.** Review: hand over the link and stop.
+
+   In Auto, do not wait for the maintainer to report that CI is green. Queue
+   the merge (`gh pr merge --auto --merge`, or the app's auto-merge switch) so
+   GitHub merges the moment the required check passes, and switch on the app's
+   CI monitor so a red run wakes the session. Both are allowed in
+   `.claude/settings.json`; the repository has auto-merge enabled (T503).
 6. **Watch the deploy, and report what is actually live.** Merging is not
    landing. `verify` and `build` can both pass and the `deploy` job still fail
    on its own — a Pages outage, a rate-limited action download — leaving `main`
