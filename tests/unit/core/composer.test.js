@@ -25,6 +25,8 @@ import {
   octaveShiftRefusal,
   shiftOctave,
   octaveCopy,
+  keyChangeRefusal,
+  transposeToKey,
 } from '../../../src/core/composer.js';
 import { resolve, KEYS } from '../../../src/core/pitch.js';
 import { SCALES } from '../../../src/core/scales.js';
@@ -438,5 +440,90 @@ describe('core/composer — a whole part, an octave at a time (US-19.14)', () =>
     expect(copy.rating).toBe(0);
     expect(octaves(copy)).toEqual([-1, -1, -1, -1]);
     expect({ ...copy, name: original.name, rating: 4, id: 'p_7' }).toEqual(shiftOctave(original, -1));
+  });
+});
+
+describe('core/composer — what a Key change does to the notes (US-19.15)', () => {
+  /** C4 E4 F#4 G4: a line that reads as C with a raised fourth, or as G. */
+  const WRITTEN = [60, 64, 66, 67];
+  const line = (key = 'C') => WRITTEN.reduce((p, midi, b) => recordNote(p, at(0, b), midi), blankDraft(key));
+  const midiOf = (p) => [0, 1, 2, 3].map((b) => resolve(pitchAt(p, at(0, b)), p.key).midiNote);
+  const degreesOf = (p) => [0, 1, 2, 3].map((b) => pitchAt(p, at(0, b)).degree);
+  const semis = (key) => KEYS.indexOf(key);
+
+  it('AC-19.15.2/2 — For every pair of Keys the kept notes resolve to the MIDI notes they did, and a note outside the scale of the new Key is stored as a chromatic degree of it', () => {
+    for (const from of KEYS) {
+      const written = line(from);
+      const before = midiOf(written);
+      for (const to of KEYS) {
+        const kept = retune(written, to);
+        expect(kept.key).toBe(to);
+        expect(midiOf(kept)).toEqual(before);
+      }
+    }
+    // Thought to be C, found to be G: the F# is G's seventh, plain.
+    expect(degreesOf(line('C'))).toEqual(['1', '3', '#4', '5']);
+    expect(degreesOf(retune(line('C'), 'G'))).toEqual(['4', '6', '7', '1']);
+    // And into F, where E, F# and G are the seventh, a chromatic degree and the second.
+    const inF = degreesOf(retune(line('C'), 'F'));
+    expect(inF[0]).toBe('5');
+    expect(inF[2]).toMatch(/^[b#]/);
+  });
+
+  it('AC-19.15.3/1 — Transposing up moves every note up by the interval from the old root to the new root above it, from one to eleven semitones, and transposing down moves every note down to the new root below it, the two results an octave apart', () => {
+    for (const from of KEYS) {
+      const written = line(from);
+      const before = midiOf(written);
+      for (const to of KEYS) {
+        if (to === from) continue;
+        const interval = (semis(to) - semis(from) + 12) % 12;
+        expect(interval).toBeGreaterThanOrEqual(1);
+        expect(interval).toBeLessThanOrEqual(11);
+        const up = transposeToKey(written, to, 1);
+        const down = transposeToKey(written, to, -1);
+        expect(up.key).toBe(to);
+        expect(down.key).toBe(to);
+        expect(midiOf(up)).toEqual(before.map((m) => m + interval));
+        expect(midiOf(down)).toEqual(before.map((m) => m + interval - 12));
+        expect(midiOf(up).map((m, i) => m - midiOf(down)[i])).toEqual([12, 12, 12, 12]);
+      }
+    }
+  });
+
+  it('AC-19.15.3/2 — After a transposition every degree, chromatic ones included, every syllable and every Accent Level is as it was', () => {
+    const written = line('C');
+    const shape = (p) => p.measures.map((m) => m.beats.map((b) => b.slots.map((s) => [s.on, s.accent ?? null, s.pitch?.degree ?? null])));
+    for (const to of KEYS.filter((k) => k !== 'C')) {
+      for (const way of [1, -1]) {
+        const moved = transposeToKey(written, to, way);
+        expect(degreesOf(moved)).toEqual(['1', '3', '#4', '5']);
+        expect(shape(moved)).toEqual(shape(written));
+        // Nothing else of the Pattern changes: only the Key and the notes' octaves.
+        expect({ ...moved, key: written.key, measures: written.measures }).toEqual(written);
+      }
+    }
+    // The Pattern handed in is not changed.
+    expect(written.key).toBe('C');
+    expect(midiOf(written)).toEqual(WRITTEN);
+  });
+
+  it('AC-19.15.3/3 — A direction that would carry a note past the lowest or highest octave a note can be stored in is refused with the reason, and nothing is squashed to fit', () => {
+    // A note in the highest octave: up to a root that lies below the old one needs an octave more.
+    let high = line('G');
+    while (!octaveShiftRefusal(high, 1)) high = shiftOctave(high, 1);
+    expect(keyChangeRefusal(high, 'C', 1)).toMatch(/highest/);
+    expect(transposeToKey(high, 'C', 1)).toBe(high);
+    // Down to C is within reach, and so is up to a root above G.
+    expect(keyChangeRefusal(high, 'C', -1)).toBeNull();
+    expect(keyChangeRefusal(high, 'A', 1)).toBeNull();
+    expect(midiOf(transposeToKey(high, 'A', 1))).toEqual(midiOf(high).map((m) => m + 2));
+    // And the mirror at the bottom.
+    let low = line('C');
+    while (!octaveShiftRefusal(low, -1)) low = shiftOctave(low, -1);
+    expect(keyChangeRefusal(low, 'G', -1)).toMatch(/lowest/);
+    expect(transposeToKey(low, 'G', -1)).toBe(low);
+    expect(keyChangeRefusal(low, 'G', 1)).toBeNull();
+    // Nothing to refuse where there is no note, or no change of Key.
+    expect(keyChangeRefusal(blankDraft('C'), 'G', 1)).toBeNull();
   });
 });
