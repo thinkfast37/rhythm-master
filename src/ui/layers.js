@@ -5,7 +5,8 @@
  * Arrangements with Save, New, Load, Rename and Delete. A pure function of
  * `state.composer`, the stores' lists and the Patterns the handlers resolve.
  */
-import { el } from './controls.js';
+import { el, valueEntry } from './controls.js';
+import { INSTRUMENTS, MIN_VOLUME, MAX_VOLUME, DEFAULT_VOLUME, normaliseVolume, volumeDb } from '../core/voice.js';
 import { layered, layerKind, MAX_LAYERS } from '../core/arrangement.js';
 import { isComplete } from '../core/composer.js';
 
@@ -22,13 +23,63 @@ export function arrangementUnsaved(composer) {
   const layers = composer?.layers ?? [];
   const arrangement = composer?.arrangement;
   if (!arrangement?.id) return layers.length > 0;
-  const own = { patternId: composer.savedId ?? null, muted: false };
+  const own = { patternId: composer.savedId ?? null, muted: false, instrument: composer.instrument, volume: composer.volume };
   const at = Math.min(Math.max(0, composer.activeIndex ?? 0), layers.length);
   const now = {
-    parts: [...layers.slice(0, at), own, ...layers.slice(at)].map((l) => ({ patternId: l.patternId ?? null, muted: Boolean(l.muted) })),
+    // Each part's instrument and volume are part of what is saved (AC-19.12.4/2).
+    parts: [...layers.slice(0, at), own, ...layers.slice(at)].map((l) => ({
+      patternId: l.patternId ?? null,
+      muted: Boolean(l.muted),
+      instrument: l.instrument ?? null,
+      volume: l.volume ?? null,
+    })),
     active: at,
   };
   return JSON.stringify(now) !== JSON.stringify(arrangement.saved ?? null);
+}
+
+/**
+ * A part's instrument and volume (US-19.12): a picker on every part that can
+ * sound a pitched note — the part on screen, a melody, a chord layer — and
+ * none on a percussive layer (AC-19.12.2/1); a volume slider and number box on
+ * every part, showing one value (AC-19.12.3/1). The listeners read the part's
+ * place from the element, which the keep-alive rebuild may carry across renders.
+ */
+function renderSound(item, part, index, handlers) {
+  const pitched = part.active || layerKind(part.pattern) !== 'rhythm';
+  item.dataset.instrument = pitched ? part.sounds : '';
+  if (pitched) {
+    const picker = el('select', 'layer-instrument');
+    picker.dataset.action = 'layer-instrument';
+    picker.dataset.layer = String(index);
+    picker.setAttribute('aria-label', `Instrument for ${part.pattern.name}`);
+    for (const i of INSTRUMENTS) picker.appendChild(el('option', null, { value: i.id, textContent: i.label }));
+    picker.value = part.sounds;
+    picker.addEventListener('change', (e) => handlers.onPartInstrument?.(Number(e.target.dataset.layer), e.target.value));
+    item.appendChild(picker);
+  }
+
+  const level = normaliseVolume(part.level ?? DEFAULT_VOLUME);
+  item.dataset.volume = String(level);
+  const volume = el('span', 'layer-volume');
+  volume.title = `Volume ${level} of ${MAX_VOLUME}: ${level === MAX_VOLUME ? 'full level' : `${Math.abs(volumeDb(level)).toFixed(1)} dB under full`}`;
+  const slider = el('input', 'layer-volume-slider', { type: 'range', min: String(MIN_VOLUME), max: String(MAX_VOLUME), step: '1', value: String(level) });
+  slider.dataset.action = 'layer-volume';
+  slider.dataset.layer = String(index);
+  slider.setAttribute('aria-label', `Volume for ${part.pattern.name}`);
+  slider.addEventListener('input', (e) => handlers.onPartVolume?.(Number(e.target.dataset.layer), Number(e.target.value)));
+  volume.appendChild(slider);
+  const entry = valueEntry('layer-volume-entry', {
+    min: MIN_VOLUME,
+    max: MAX_VOLUME,
+    value: level,
+    label: `Volume for ${part.pattern.name}, ${MIN_VOLUME} to ${MAX_VOLUME}`,
+    action: 'layer-volume-entry',
+    onCommit: (v) => handlers.onPartVolume?.(index, v),
+  });
+  entry.dataset.layer = String(index);
+  volume.appendChild(entry);
+  item.appendChild(volume);
 }
 
 /**
@@ -117,6 +168,7 @@ export function renderLayers(state, handlers) {
       r.dataset.repeats = String(repeatsOf.get(part));
       item.appendChild(r);
     }
+    if (part.pattern) renderSound(item, part, index, handlers);
     if (!part.active) {
       const mute = button(`layer-mute${part.muted ? ' on' : ''}`, part.muted ? 'Unmute' : 'Mute', 'layer-mute', {
         title: part.muted ? 'Hear this part again' : 'Silence this part; it still counts in the loop',

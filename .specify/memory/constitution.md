@@ -1,6 +1,36 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.9.0 → 3.10.0
+
+3.10.0 — Principle V's audio rule admits five more sampled voices, all from the set the guitar
+  already comes from: FluidR3_GM's overdriven electric guitar, fingered electric bass, alto
+  saxophone, trumpet and flute, **fetched** through soundfont-player exactly as the steel-string guitar
+  is, each no earlier than the first moment it could sound. They exist so that each part of an
+  arrangement can be given its own instrument (US-19.12), and Practice's voice switch offers
+  them too. "Exactly two sampled voices" becomes the bundled piano and a named list of six
+  fetched FluidR3_GM instruments. Principle III's non-blocking, synth-fallback rule governs all
+  of them unchanged, and nothing new ships in the build: the five are fetched, not bundled.
+  Drums, added the same day (US-19.13), are Web Audio synthesis and so are not an asset at all.
+
+  Asked for on 2026-11-15: "I want to be able to choose which instrument each layer uses … a
+  brass instrument like a sax or a trumpet (or both if it's easy). I want a bass guitar. I want
+  an electric guitar that has some sustain on the sound." Before any work the maintainer was
+  told that real samples need this amendment and synthesised imitations would not, and chose
+  samples. The flute was asked for later the same day, before the amendment landed, and is named
+  with the four.
+
+  MINOR rather than MAJOR: no principle is removed or redefined. The rule still limits audio
+  assets to voices named here and approved by the maintainer, under the same loading
+  discipline. Not PATCH: the list of what may sound grows.
+
+  Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅ (none name audio
+  assets).
+  Follow-up: spec.md US-19.12 added (AC-19.12.1–AC-19.12.5) and US-19.13 (AC-19.13.1–AC-19.13.4); AC-2.13.1, AC-2.13.3, AC-19.1.3,
+  AC-19.6.1, AC-19.7.1/1, AC-19.11.2/2, AC-19.11.4/1 and AC-19.11.6/3 revised; AC-2.13.2/5
+  added; research.md D-003 amended, D-028 added; data-model §6 and `rm.arrangements.v1`;
+  plan.md P-074 (T487–T489) and P-075 (T490–T491).
+
 Version change: 3.8.0 → 3.9.0
 
 3.9.0 — Principle V's audio rule admits a second sampled voice, the piano, and lets the
@@ -541,20 +571,26 @@ Billing — so this adds no backend, no account and no secret. The rules for tha
   Canvas, SVG) over heavyweight UI frameworks. A new dependency requires explicit
   justification that it cannot reasonably be replaced with a modest amount of direct
   DOM/API code. Audio is Web Audio synthesis — Percussive, the click, and the Synth
-  melodic voice, with the reverb impulse generated at runtime — **with exactly two
-  sampled voices, both chosen by the maintainer by ear and named here (3.9.0):**
+  melodic voice, with the reverb impulse generated at runtime — **with the sampled
+  voices named here and no others, each chosen by the maintainer (3.9.0, 3.10.0):**
   - *The piano* (US-2.13): the Salamander Grand Piano recordings fret-navigator plays,
     **bundled** with the app and served from its own origin, so it works offline and in
     the store builds. It is the default melodic voice, and the voice of the Composer's
-    Piano view unless Synth is chosen.
+    Composer for a part set to Piano.
   - *The guitar* (US-19.7): the FluidR3_GM steel-string guitar, **fetched** through
-    soundfont-player, never vendored. It sounds in the Composer's Guitar view, and in
-    Practice when Guitar is the chosen melodic voice.
+    soundfont-player, never vendored. It sounds in the Composer for a part set to Guitar,
+    and in Practice when Guitar is the chosen melodic voice.
+  - *The electric guitar, the bass, the saxophone, the trumpet and the flute* (US-19.12,
+    US-19.13, 3.10.0): FluidR3_GM's `overdriven_guitar`, `electric_bass_finger`, `alto_sax`,
+    `trumpet` and `flute`,
+    **fetched** the same way and from the same place as the guitar, never vendored. Each
+    sounds in the Composer for a part set to it, and in Practice when it is the chosen
+    melodic voice.
 
-  Neither is requested on page load; each is requested no earlier than the first moment
-  it could sound. Both MUST load without blocking and MUST fall back to the synthesised
+  None is requested on page load; each is requested no earlier than the first moment
+  it could sound. All MUST load without blocking and MUST fall back to the synthesised
   voice while loading or on failure (Principle III). Synthesis stays one choice away
-  wherever a sampled voice plays. No third sampled voice, and no other audio file, may
+  wherever a sampled voice plays. No further sampled voice, and no other audio file, may
   ship without a further amendment. (A sampled piano soundfont was retired on
   2026-08-17 when the maintainer preferred the synthesised engine to it, research.md
   D-003; the Salamander recordings are a different instrument, asked for by name.)
@@ -657,4 +693,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.9.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-10-24
+**Version**: 3.10.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-11-15

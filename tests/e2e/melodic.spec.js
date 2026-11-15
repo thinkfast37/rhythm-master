@@ -969,7 +969,7 @@ test('AC-2.4.2 — Percussive and Synth fetch no audio asset: playing both Sound
   expect(audioRequests, `unexpected audio requests: ${audioRequests.join(', ')}`).toEqual([]);
 });
 
-test('AC-2.4.1 — a Melodic note runs the ported chorus, filter and reverb chain', async ({ page }) => {
+test('AC-2.4.1 — The Synth voice uses the ported synthesis chain: a note runs the chorus, the low-pass filter and the shared reverb', async ({ page }) => {
   await page.goto('/');
   const chain = await page.evaluate(() => {
     const { playMelodic } = window.__rm.melodic;

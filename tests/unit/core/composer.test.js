@@ -21,6 +21,7 @@ import {
   bakeHarmony,
   foldRegister,
   copyMelody,
+  retune,
 } from '../../../src/core/composer.js';
 import { resolve, KEYS } from '../../../src/core/pitch.js';
 import { SCALES } from '../../../src/core/scales.js';
@@ -38,6 +39,31 @@ function blankDraft(key = 'C', scale = 'ionian') {
 }
 const at = (measureIndex, beatIndex, slotIndex = 0) => ({ measureIndex, beatIndex, slotIndex });
 const pitchAt = (p, a) => p.measures[a.measureIndex].beats[a.beatIndex].slots[a.slotIndex].pitch;
+
+describe('core/composer — a part whose notes are fixed', () => {
+  it('AC-19.13.3/1 — Changing the Key with a Drums part on screen leaves each of its notes on the same MIDI note, while every other pitched part moves with the Key: the notes re-spelled in the new Key', () => {
+    let kit = blankDraft('C');
+    const written = [36, 38, 42, 46];
+    written.forEach((midi, b) => (kit = recordNote(kit, at(0, b), midi)));
+    const midiOf = (p) => [0, 1, 2, 3].map((b) => resolve(pitchAt(p, at(0, b)), p.key).midiNote);
+    expect(midiOf(kit)).toEqual(written);
+    for (const key of KEYS) {
+      const moved = retune(kit, key);
+      expect(moved.key).toBe(key);
+      // Same MIDI notes under the new Key …
+      expect(midiOf(moved)).toEqual(written);
+      // … where simply changing the Key would have moved them.
+      if (key !== 'C') expect(midiOf({ ...kit, key })).not.toEqual(written);
+      // And back again is where it started.
+      expect(midiOf(retune(moved, 'C'))).toEqual(written);
+    }
+    // The original is untouched, and a Slot without a note stays without one.
+    expect(kit.key).toBe('C');
+    const partial = retune(clearNote(kit, at(0, 1)), 'G');
+    expect(pitchAt(partial, at(0, 1)) ?? null).toBeNull();
+    expect(() => retune(kit, 'H')).toThrow();
+  });
+});
 
 describe('core/composer — a tapped note as a Pitch of the Key (AC-19.4.4)', () => {
   it('AC-19.4.4/1 — For every fret of the board and every key of the keyboard, the stored Pitch resolves through `core/pitch.js` to exactly the MIDI note tapped — a round trip with no loss', () => {

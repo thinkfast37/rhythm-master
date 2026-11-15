@@ -43,7 +43,7 @@ const CUT_EPSILON = 1e-6;
 /** The same safety offset start() uses, reused when a stall re-anchors. */
 const START_OFFSET_SECONDS = 0.06;
 
-export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null } = {}) {
+export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null, gainOf = null } = {}) {
   let ctx = null;
   let master = null;
   /** The polling cadence in force, or null when nothing is running
@@ -114,7 +114,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
         }
 
         if (event.pitch && playMelodic) playMelodic(ctx, master, event, when);
-        else playPercussive(ctx, master, event.accent, when);
+        else playPercussive(ctx, master, event.accent, when, gainOf ? gainOf(event) : 1);
 
         pendingVisuals.push({ when, position: { ...event, loop: loopOffset + nextLoop } });
         nextIndex += 1;

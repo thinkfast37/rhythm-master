@@ -45,7 +45,7 @@ async function withSettings(page, partial) {
 
 // --- AC-2.13.1: the switch ------------------------------------------------------
 
-test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a three-way voice switch — Piano, Synth, Guitar — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown', async ({ page }) => {
+test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute, Drums — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.grid .slot[data-beat="0"][data-slot="0"]').click();
@@ -55,7 +55,7 @@ test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a t
   await page.locator('.sound-mode [data-mode="melodic"]').click();
   const sw = page.locator('.pattern-header .voice-switch');
   await expect(sw).toBeVisible();
-  await expect(sw.locator('button')).toHaveText(['Piano', 'Synth', 'Guitar']);
+  await expect(sw.locator('button')).toHaveText(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet', 'Flute', 'Drums']);
   await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
   await expect(sw.locator('[aria-pressed="true"]')).toHaveCount(1);
   // Beside the Sound Mode switch: the next thing in the header, on the same row.
@@ -181,7 +181,7 @@ test('AC-2.13.2/1 — Under Piano, a melodic note sounds through the Salamander 
   expect(shape.peaks[1]).toBeLessThan(shape.peaks[2]);
 });
 
-test('AC-2.13.2/2 — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1', async ({ page }) => {
+test('AC-2.13.2/2 — Under Synth, a melodic note sounds through the ported synthesis chain', async ({ page }) => {
   const piano = watchPiano(page);
   await openApp(page);
   await melodicPattern(page);
@@ -283,26 +283,33 @@ test('AC-2.13.2/4 — Percussive notes and the metronome click sound the same wh
 
 // --- AC-2.13.3: the Composer plays the instrument on screen -----------------------
 
-test('AC-2.13.3/1 — In the Guitar view every melodic note sounds through the guitar, whatever voice is chosen', async ({ page }) => {
+test("AC-2.13.3/1 — A part's melodic notes sound through the instrument chosen for that part, whatever voice Practice has chosen", async ({ page }) => {
   await openApp(page);
-  for (const voice of ['piano', 'synth', 'guitar']) {
+  for (const voice of ['piano', 'synth', 'guitar', 'sax']) {
     await withSettings(page, { melodicVoice: voice, composerInstrument: 'guitar' });
     await enterComposer(page);
     await expect(page.locator('.fretboard')).toBeVisible();
     await fret(page, 0, 0).click();
     const last = (await voiceLog(page)).at(-1);
     expect(last).toMatchObject({ instrument: 'guitar', voice: 'guitar', midi: 64 });
+    // And a keyboard instrument the same (revised 2026-11-15 with AC-2.13.3): the part's, not Practice's.
+    await page.locator('.instrument-switch [data-instrument="trumpet"]').click();
+    await key(page, 60).click();
+    expect((await voiceLog(page)).at(-1)).toMatchObject({ instrument: 'piano', voice: 'trumpet', midi: 60 });
   }
 });
 
-test('AC-2.13.3/2 — In the Piano view every melodic note sounds through the synth when Synth is the chosen voice, and through the sampled piano when Piano or Guitar is', async ({ page }) => {
+test('AC-2.13.3/2 — Synth is an instrument of its own: a part on Piano sounds the sampled piano and a part on Synth the synth, whatever voice Practice has chosen', async ({ page }) => {
   await openApp(page);
-  for (const [voice, heard] of [
-    ['synth', 'synth'],
-    ['piano', 'piano'],
-    ['guitar', 'piano'],
+  // Rewritten 2026-11-15 with AC-2.13.3/2's revision: the instrument is the
+  // part's own, so Practice being on Synth no longer turns the piano into it.
+  for (const [voice, instrument, heard] of [
+    ['synth', 'piano', 'piano'],
+    ['piano', 'synth', 'synth'],
+    ['guitar', 'piano', 'piano'],
+    ['guitar', 'synth', 'synth'],
   ]) {
-    await withSettings(page, { melodicVoice: voice, composerInstrument: 'piano' });
+    await withSettings(page, { melodicVoice: voice, composerInstrument: instrument });
     await enterComposer(page);
     await expect(page.locator('.piano')).toBeVisible();
     await key(page, 60).click();
@@ -316,6 +323,114 @@ test('AC-2.13.3/2 — In the Piano view every melodic note sounds through the sy
       expect((await voiceLog(page)).at(-1)).toMatchObject({ voice: 'piano', via: 'sampled', midi: 62 });
     }
   }
+});
+
+test('AC-2.4.1 — The Synth voice uses the ported synthesis chain: the Synth instrument builds three detuned sines, the low-pass sweep and the reverb send', async ({ page }) => {
+  await openApp(page);
+  const chain = await page.evaluate(() => {
+    // The player the dispatcher hands every Synth note to, in Practice and in the Composer alike.
+    const synth = window.__rm.instruments.PLAYERS.synth;
+    const ctx = new OfflineAudioContext(2, 44100, 44100);
+    const made = { oscillators: [], filters: [], convolvers: 0, sweep: [] };
+    const osc = ctx.createOscillator.bind(ctx);
+    ctx.createOscillator = () => {
+      const o = osc();
+      made.oscillators.push(o);
+      return o;
+    };
+    const filter = ctx.createBiquadFilter.bind(ctx);
+    ctx.createBiquadFilter = () => {
+      const f = filter();
+      const set = f.frequency.setValueAtTime.bind(f.frequency);
+      const ramp = f.frequency.exponentialRampToValueAtTime.bind(f.frequency);
+      f.frequency.setValueAtTime = (v, t) => (made.sweep.push(['from', v]), set(v, t));
+      f.frequency.exponentialRampToValueAtTime = (v, t) => (made.sweep.push(['to', v]), ramp(v, t));
+      made.filters.push(f);
+      return f;
+    };
+    const conv = ctx.createConvolver.bind(ctx);
+    ctx.createConvolver = () => {
+      made.convolvers += 1;
+      return conv();
+    };
+    synth(ctx, ctx.destination, { accent: 3, pitch: { frequency: 440, midiNote: 69 } }, 0);
+    return {
+      same: synth === window.__rm.melodic.playMelodic,
+      types: made.oscillators.map((o) => o.type),
+      detunes: made.oscillators.map((o) => o.detune.value).sort((a, b) => a - b),
+      filterTypes: made.filters.map((f) => f.type),
+      sweep: made.sweep,
+      convolvers: made.convolvers,
+    };
+  });
+  // The predecessor's chain, unchanged: three detuned sines, a low-pass sweeping 2000 Hz down to 600 Hz, a reverb send.
+  expect(chain.same).toBe(true);
+  expect(chain.types).toEqual(['sine', 'sine', 'sine']);
+  expect(chain.detunes).toEqual([-5, 0, 5]);
+  expect(chain.filterTypes).toEqual(['lowpass']);
+  expect(chain.sweep).toEqual([
+    ['from', 2000],
+    ['to', 600],
+  ]);
+  expect(chain.convolvers).toBe(1);
+});
+
+test("AC-2.13.2/5 — Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says", async ({ page }) => {
+  const requests = [];
+  await page.route('https://gleitz.github.io/**', (route) => {
+    requests.push(route.request().url());
+    route.fulfill({ status: 200, contentType: 'application/javascript', body: fakeSoundfont() });
+  });
+  await page.goto('/');
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await melodicPattern(page);
+  const fonts = { electric: 'overdriven_guitar', bass: 'electric_bass_finger', sax: 'alto_sax', trumpet: 'trumpet' };
+  for (const [voice, font] of Object.entries(fonts)) {
+    const before = requests.length;
+    await voiceButton(page, voice).click();
+    await expect(voiceButton(page, voice)).toHaveAttribute('aria-pressed', 'true');
+    // Choosing it asks for nothing; the first melodic note does, once.
+    expect(requests).toHaveLength(before);
+    await play(page);
+    await expect.poll(() => requests.length).toBe(before + 1);
+    expect(requests.at(-1)).toBe(SAMPLE_URL.replace('acoustic_guitar_steel', font));
+    await expect.poll(() => page.evaluate((v) => window.__rm.instruments.statusOf(v).status, voice)).toBe('ready');
+    const at = (await voiceLog(page)).length;
+    await expect.poll(async () => (await voiceLog(page)).length).toBeGreaterThan(at + 2);
+    expect((await voiceLog(page)).slice(at).every((e) => e.voice === voice && e.via === 'sampled')).toBe(true);
+    await stop(page);
+    expect(requests).toHaveLength(before + 1);
+  }
+});
+
+test("AC-2.13.2/6 — Under Flute, a melodic note sounds through the flute's samples, and under Drums it sounds the synthesised drum its MIDI note names (AC-19.13.1)", async ({ page }) => {
+  const requests = [];
+  await page.route('https://gleitz.github.io/**', (route) => {
+    requests.push(route.request().url());
+    route.fulfill({ status: 200, contentType: 'application/javascript', body: fakeSoundfont() });
+  });
+  await page.goto('/');
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await melodicPattern(page);
+  await voiceButton(page, 'flute').click();
+  expect(requests).toHaveLength(0);
+  await play(page);
+  await expect.poll(() => requests.length).toBe(1);
+  expect(requests[0]).toBe(SAMPLE_URL.replace('acoustic_guitar_steel', 'flute'));
+  await expect.poll(() => page.evaluate(() => window.__rm.instruments.statusOf('flute').status)).toBe('ready');
+  let at = (await voiceLog(page)).length;
+  await expect.poll(async () => (await voiceLog(page)).length).toBeGreaterThan(at + 2);
+  expect((await voiceLog(page)).slice(at).every((e) => e.voice === 'flute' && e.via === 'sampled')).toBe(true);
+  // Drums: no request, and each note the drum its MIDI number names — synthesised, or silent where the kit has none.
+  await voiceButton(page, 'drums').click();
+  at = (await voiceLog(page)).length;
+  await expect.poll(async () => (await voiceLog(page)).length).toBeGreaterThan(at + 2);
+  const drums = (await voiceLog(page)).slice(at).filter((e) => e.voice === 'drums');
+  expect(drums.length).toBeGreaterThan(0);
+  expect(drums.every((e) => e.via === (e.midi >= 35 && e.midi <= 81 ? 'drum' : 'silent'))).toBe(true);
+  expect(drums.some((e) => e.via === 'drum')).toBe(true);
+  await stop(page);
+  expect(requests).toHaveLength(1);
 });
 
 // --- AC-2.13.4: shipped, lazy, never blocking ------------------------------------

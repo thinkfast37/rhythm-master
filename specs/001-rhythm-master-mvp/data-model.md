@@ -373,13 +373,13 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "level": "Beginner",            // AC-14.1.4/1 — "Beginner" | "Intermediate" | "Advanced" | "any", the level the dice and Prev/Next draw from; "any" is every level (AC-14.1.4/5)
   "labHelp": false,               // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
   "sheetAids": false,             // AC-12.3.1/2 — whether the melodic score's Note aids (note names and degree colours) are on
-  "composerInstrument": "guitar", // AC-19.1.3/3 — "guitar" | "piano", the Composer's instrument view
+  "composerInstrument": "guitar", // AC-19.1.3/3 — an instrument id (AC-19.12.1/1), the instrument of the part on screen
   "composerView": "grid",         // AC-19.11.8/3 — "grid" | "score", the composing grid or every part as a staff
   "composerLabelMode": "notes",   // AC-19.2.2/5 — "notes" | "degrees" | "intervals", how in-scale notes are labelled
   "composerCapo": 0,              // AC-19.2.2/5 — 0–12, the fretboard's capo
   "composerFretRange": [0, 24],   // AC-19.2.2/5 — lower and upper visible fret, 0–24
   "composerKeys": 49,             // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
-  "melodicVoice": "piano",        // AC-2.13.1/2 — "piano" | "synth" | "guitar", the voice melodic notes sound with
+  "melodicVoice": "piano",        // AC-2.13.1/2 — an instrument id (AC-19.12.1/1), the voice melodic notes sound with
   "composerMidiInput": "all"      // AC-19.10.4/3 — "all", or the name of the one MIDI input device whose notes the Composer takes
 }
 ```
@@ -479,15 +479,24 @@ stored apart from every other store, as a Song is (AC-19.11.4/7).
       "id": "arr_1",
       "name": "Bossa line arrangement",
       "compositionId": "p_7",              // an owned Melodic Pattern: the composition
+      "instrument": "sax",                 // the composition's instrument and volume (US-19.12); see below
+      "volume": 80,
       "layers": [
-        { "patternId": "s_12", "muted": false },   // shipped or owned; percussive, melodic or harmonic
-        { "patternId": "p_3",  "muted": true }
+        { "patternId": "s_12", "muted": false, "volume": 60 },   // shipped or owned; percussive, melodic or harmonic
+        { "patternId": "p_3",  "muted": true, "instrument": "bass", "volume": 80 }
       ],
       "active": 0                            // the part on screen: 0 the composition, n the nth layer (AC-19.11.6/6)
     }
   ]
 }
 ```
+
+`instrument` and `volume` were added 2026-11-15 with US-19.12, on the Arrangement for its composition
+and on each layer. `instrument` is one of `piano`, `synth`, `guitar`, `electric`, `bass`, `sax`,
+`trumpet`, `flute`, `drums` (AC-19.12.1/1); `volume` is an integer from 1 to 100 (AC-19.12.3). Both are optional, and
+the schema version is unchanged: an Arrangement that names neither — every one saved before — opens
+with its part on screen on the `composerInstrument` setting, every other part on `melodicVoice`, and
+every volume at 80 (AC-19.12.4/3). Neither is ever written to a Pattern (AC-19.12.4/4).
 
 Layers are in the order added, at most 8, no Pattern twice (AC-19.11.1/3). How long the combined
 loop is, and how many times each layer repeats in it, is derived from the Patterns at play time

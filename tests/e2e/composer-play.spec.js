@@ -42,7 +42,7 @@ test('AC-19.6.1/1 — Play loops the composition, with the playback cursor movin
   await expect(page.locator('.composer-grid .slot.playing')).toHaveCount(0);
 });
 
-test('AC-19.6.1/2 — A pitched Slot sounds with the voice of the instrument shown, guitar or piano, and an unpitched sounding Slot sounds percussively at its Accent Level', async ({ page }) => {
+test("AC-19.6.1/2 — A pitched Slot sounds with the voice of the part's instrument, and an unpitched sounding Slot sounds percussively at its Accent Level", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await page.locator('.composer-tempo-entry').fill('240');
@@ -76,7 +76,7 @@ test('AC-19.6.1/2 — A pitched Slot sounds with the voice of the instrument sho
   await play(page);
 });
 
-test('AC-19.6.1/3 — Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart', async ({ page }) => {
+test('AC-19.6.1/3 — Switching the instrument while playing changes the voice from the next event without a restart', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await page.locator('.composer-tempo-entry').fill('240');

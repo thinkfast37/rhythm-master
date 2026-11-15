@@ -56,7 +56,7 @@ import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import * as songStore from './storage/songs.js';
 import * as arrangementStore from './storage/arrangements.js';
-import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, createArrangement, addLayer, removeLayer, setLayerMuted, validateArrangement, MAX_LAYERS } from './core/arrangement.js';
+import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createArrangement, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateArrangement, MAX_LAYERS } from './core/arrangement.js';
 import {
   createSong,
   addEntry,
@@ -137,7 +137,8 @@ import { createTransport } from './audio/scheduler.js';
 import * as melodic from './audio/melodic.js';
 import * as guitar from './audio/guitar.js';
 import * as piano from './audio/pianoSamples.js';
-import { resolveVoice, normaliseVoice } from './core/voice.js';
+import { resolveVoice, normaliseVoice, viewOf, FETCHED, DEFAULT_INSTRUMENT, normaliseVolume, volumeGain, hasFixedNotes } from './core/voice.js';
+import * as instruments from './audio/instruments.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
@@ -159,6 +160,7 @@ import {
   bakeHarmony,
   foldRegister,
   copyMelody,
+  retune,
 } from './core/composer.js';
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
 import { composerUnsaved } from './ui/composer.js';
@@ -283,6 +285,9 @@ const state = {
     midiFlash: null,
     /** Library Patterns sounding under the composition (US-19.11): `{ patternId, muted }`, in order. */
     layers: [],
+    /** The instrument and volume of the part on screen (US-19.12); null is the remembered instrument, and 80. */
+    instrument: null,
+    volume: null,
     /**
      * Where the part on screen — `draft` — sits among the parts, in their order
      * (AC-19.11.6): 0 is the first part, n the nth; `layers` are the others.
@@ -304,6 +309,8 @@ const state = {
   midi: { status: 'idle', devices: [] },
   /** The piano's recordings: idle, loading, ready or error (AC-2.13.4). */
   pianoStatus: piano.getStatus(),
+  /** Each fetched instrument's samples: idle, loading, ready or error (AC-19.12.5/2). */
+  samples: Object.fromEntries(FETCHED.map((id) => [id, instruments.statusOf(id)])),
   /**
    * The store build's entitlement (US-17.1). `hasStore` is false on the web, where
    * the app is free and none of this exists. Entitlement is re-derived from the
@@ -333,7 +340,7 @@ function clearMidiMarkLater(field, ms) {
 /** The instrument view on screen, as `core/midi.placeFor` reads it. */
 function currentInstrumentView() {
   const s = state.settings;
-  return s.composerInstrument === 'piano'
+  return viewOf(activeInstrument()) === 'piano'
     ? { instrument: 'piano', count: s.composerKeys ?? 49 }
     : { instrument: 'guitar', capo: s.composerCapo ?? 0, range: s.composerFretRange ?? [0, 24] };
 }
@@ -493,31 +500,37 @@ let rendered = null;
 /** How long the screen-off render waits for a sampled voice still loading. */
 const VOICE_WAIT_MS = 3000;
 
-/** Whether the live voice is a sampled one whose samples are still loading. */
+/** Every instrument that sounds in the run as it stands: the live voice, and in the Composer each layer's. */
+function instrumentsInUse() {
+  const used = new Set([currentVoice()]);
+  if (composerActive()) for (const sound of layerSounds()) used.add(sound.instrument);
+  return [...used];
+}
+
+/** Whether a sampled instrument in use is still loading its samples. */
 function sampledVoiceLoading() {
-  const voice = currentVoice();
-  if (voice === 'piano') return piano.getStatus().status === 'loading';
-  if (voice === 'guitar') return guitar.getStatus().status === 'loading';
-  return false;
+  return instrumentsInUse().some((id) => instruments.statusOf(id).status === 'loading');
 }
 
 /**
- * The voice the screen-off render sounds melodic notes with: the live one,
- * loaded on the render's own context once its samples are ready on the live
- * context, and the synth until then (AC-2.13.5).
+ * The voices the screen-off render sounds melodic notes with: each part's own
+ * instrument, loaded on the render's context once its samples are ready on
+ * the live one, and the synth until then (AC-2.13.5, AC-19.12.5/4). `voice`
+ * reports the live voice's, as it always has.
  */
-function renderVoice(voice) {
-  if (voice === 'piano') {
-    return async (ctx) =>
-      (await piano.prepare(ctx)) ? { voice: 'piano', play: (c, d, e, w) => piano.playPiano(c, d, e, w, melodic.playMelodic) } : null;
-  }
-  if (voice === 'guitar') {
-    return async (ctx) => {
-      const instrument = await guitar.prepare(ctx);
-      return instrument ? { voice: 'guitar', play: (c, d, e, w) => guitar.playOn(instrument, e, w) } : null;
+function renderVoice() {
+  const live = currentVoice();
+  const used = instrumentsInUse();
+  return async (ctx) => {
+    const players = {};
+    for (const id of used) players[id] = await instruments.prepare(id, ctx);
+    if (used.every((id) => !players[id])) return null;
+    return {
+      voice: players[live] ? live : 'synth',
+      voices: used.filter((id) => players[id]),
+      play: (c, d, event, when) => (players[instrumentFor(event)] ?? melodic.playMelodic)(c, d, event, when),
     };
-  }
-  return null;
+  };
 }
 
 /**
@@ -550,7 +563,8 @@ async function refreshBackgroundAudio() {
     passes: cyclePasses(),
     settings: state.settings,
     sampleRate: 44100,
-    prepareMelodic: renderVoice(currentVoice()),
+    prepareMelodic: renderVoice(),
+    gainOf,
   });
   // A later render started while this one ran: that one owns the element.
   if (token !== renderToken || !next) {
@@ -602,8 +616,51 @@ function layerPattern(layer) {
 /** The Composer's layers with their Patterns, those that still resolve (US-19.11). */
 function resolvedLayers() {
   return (state.composer.layers ?? [])
-    .map((l) => ({ ...l, pattern: layerPattern(l) }))
+    .map((l) => ({ ...l, pattern: layerPattern(l), instrument: layerInstrument(l), volume: normaliseVolume(l.volume) }))
     .filter((l) => l.pattern);
+}
+
+/** The instrument of the part on screen (AC-19.1.3): the Composer's own choice, else the one remembered. */
+function activeInstrument() {
+  return normaliseVoice(state.composer.instrument ?? state.settings.composerInstrument, DEFAULT_INSTRUMENT);
+}
+
+/**
+ * A layer's instrument: its own, or — for one that names none, as every layer
+ * saved before US-19.12 — the voice Practice has chosen (AC-19.12.4/3).
+ */
+function layerInstrument(layer) {
+  return normaliseVoice(layer.instrument ?? state.settings.melodicVoice);
+}
+
+/**
+ * Each sounding layer's instrument and volume, in the order the layered set
+ * holds them, read as they stand NOW — so a change is heard from the part's
+ * next note rather than its next pass (AC-19.12.2/2, AC-19.12.3/4). Kept
+ * until the layers or the Practice voice change: this is read at every note.
+ */
+let soundsMemo = { layers: null, voice: null, sounds: [] };
+function layerSounds() {
+  const layers = state.composer.layers ?? [];
+  const voice = state.settings.melodicVoice;
+  if (soundsMemo.layers !== layers || soundsMemo.voice !== voice) {
+    soundsMemo = { layers, voice, sounds: resolvedLayers().map((l) => ({ instrument: l.instrument, volume: l.volume })) };
+  }
+  return soundsMemo.sounds;
+}
+
+/** The instrument an event sounds with: its part's own (AC-19.11.2/2, AC-2.13.3). */
+function instrumentFor(event) {
+  if (event.composition !== false) return currentVoice();
+  const live = layerSounds()[event.layer - 1];
+  return normaliseVoice(live?.instrument ?? event.instrument ?? state.settings.melodicVoice);
+}
+
+/** The multiplier an event's part puts on its level: 1 in Practice, the part's volume in the Composer (AC-19.12.3/3). */
+function gainOf(event) {
+  if (!composerActive()) return 1;
+  if (event.composition !== false) return volumeGain(state.composer.volume);
+  return volumeGain(layerSounds()[event.layer - 1]?.volume ?? event.volume);
 }
 
 /**
@@ -612,8 +669,22 @@ function resolvedLayers() {
  */
 function parts() {
   const c = state.composer;
-  const others = (c.layers ?? []).map((l) => ({ ...l, pattern: layerPattern(l), active: false, id: l.patternId }));
-  const own = { pattern: c.draft, draft: c.draft, savedId: c.savedId, patternId: c.savedId ?? null, id: c.savedId, muted: false, active: true };
+  // `instrument` and `volume` are as stored, unset included; `sounds` and
+  // `level` are what the part plays with (US-19.12).
+  const others = (c.layers ?? []).map((l) => ({ ...l, pattern: layerPattern(l), active: false, id: l.patternId, sounds: layerInstrument(l), level: normaliseVolume(l.volume) }));
+  const own = {
+    pattern: c.draft,
+    draft: c.draft,
+    savedId: c.savedId,
+    patternId: c.savedId ?? null,
+    id: c.savedId,
+    muted: false,
+    active: true,
+    instrument: c.instrument ?? undefined,
+    volume: c.volume ?? undefined,
+    sounds: activeInstrument(),
+    level: normaliseVolume(c.volume),
+  };
   const at = Math.min(Math.max(0, c.activeIndex ?? 0), others.length);
   return [...others.slice(0, at), own, ...others.slice(at)];
 }
@@ -872,7 +943,7 @@ function discardDraft() {
 
 /** The layers and their Arrangement cleared: another rhythm opened, or New (AC-19.11.1/5). */
 function noLayers() {
-  return { layers: [], activeIndex: 0, pickingLayer: false, arrangement: { id: null, name: '', saved: null } };
+  return { layers: [], activeIndex: 0, pickingLayer: false, instrument: null, volume: null, arrangement: { id: null, name: '', saved: null } };
 }
 
 /**
@@ -880,18 +951,22 @@ function noLayers() {
  * AC-19.11.6/6): every part but the one on screen, in order, and where that one sits.
  */
 function partsOf(arrangement) {
-  const all = [{ patternId: arrangement.compositionId, muted: false }, ...arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) }))];
+  const all = [{ patternId: arrangement.compositionId, muted: false, ...soundOf(arrangement) }, ...arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted), ...soundOf(l) }))];
   const active = Math.min(Math.max(0, arrangement.active ?? 0), all.length - 1);
   return {
     layers: all.filter((_, i) => i !== active),
     activeIndex: active,
+    // The part on screen's own instrument and volume, as saved (AC-19.12.4/1).
+    instrument: all[active].instrument ?? null,
+    volume: all[active].volume ?? null,
     arrangement: { id: arrangement.id, name: arrangement.name, saved: savedShape(arrangement) },
   };
 }
 
 /** What an Arrangement's saved state is compared by: parts, mutes and the part on screen. */
 function savedShape(arrangement) {
-  return { parts: [{ patternId: arrangement.compositionId, muted: false }, ...arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) }))], active: arrangement.active ?? 0 };
+  const shape = (patternId, muted, part) => ({ patternId, muted, instrument: part.instrument ?? null, volume: part.volume ?? null });
+  return { parts: [shape(arrangement.compositionId, false, arrangement), ...arrangement.layers.map((l) => shape(l.patternId, Boolean(l.muted), l))], active: arrangement.active ?? 0 };
 }
 
 /**
@@ -913,13 +988,33 @@ function addLayerById(id) {
     render();
     return false;
   }
-  const next = addLayer({ ...createArrangement('', c.savedId ?? ''), layers: c.layers }, id);
+  // A new layer that can sound a pitched note starts on the voice Practice has
+  // chosen (AC-19.12.2/5); a percussive one has no instrument to start on.
+  const sound = layerKind(pattern) === 'rhythm' ? {} : { instrument: normaliseVoice(state.settings.melodicVoice) };
+  const next = addLayer({ ...createArrangement('', c.savedId ?? ''), layers: c.layers }, id, sound);
   state.composer = { ...c, layers: next.layers, notice: null, pickingLayer: false };
+  ensureSamplesLoaded();
   autosaveArrangement();
   ui?.hideLibrary();
   syncTransport();
   render();
   return true;
+}
+
+/**
+ * Give the layer at `index` of the parts' order an instrument or a volume.
+ * Nothing is restarted: each note reads its part's sound as it is scheduled
+ * (AC-19.12.2/2, AC-19.12.3/4).
+ */
+function setPartSound(index, sound) {
+  const layerIndex = index < state.composer.activeIndex ? index : index - 1;
+  const next = setLayerSound({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex, sound);
+  state.composer = { ...state.composer, layers: next.layers };
+  ensureSamplesLoaded();
+  // A saved Arrangement saves the change on its own (AC-19.12.4/2).
+  autosaveArrangement();
+  if (state.isPlaying) refreshBackgroundAudio();
+  render();
 }
 
 /**
@@ -956,8 +1051,7 @@ function autosaveArrangement() {
 /** The Arrangement the parts would save as now: ids, mutes and the part on screen (AC-19.11.4/1). */
 function arrangementNow(name) {
   const all = parts();
-  const arrangement = createArrangement(name, all[0].id ?? '', all.slice(1));
-  return { ...arrangement, active: state.composer.activeIndex ?? 0 };
+  return createArrangement(name, all[0].id ?? '', all.slice(1), state.composer.activeIndex ?? 0, all[0]);
 }
 
 /**
@@ -986,15 +1080,24 @@ async function activatePart(index) {
     }
     ({ draft, savedId, notice } = opened);
   }
+  // A percussive layer has no instrument of its own: on screen it takes the one
+  // the Composer was on, so the hands stay where they are (AC-19.12.2/6).
+  const arriving = target.instrument ?? (target.pattern && layerKind(target.pattern) === 'rhythm' ? activeInstrument() : target.sounds);
+  // A part on Drums comes into the arrangement's Key with its notes where they
+  // were, re-spelled rather than transposed (AC-19.13.3/3).
+  if (hasFixedNotes(arriving) && draft.soundMode === 'melodic' && draft.key && leaving.key) draft = retune(draft, leaving.key);
   // The arrangement's settings travel with the part on screen (AC-19.11.6/4).
   draft = underComposition(draft, leaving);
   if (draft.soundMode === 'melodic' && leaving.scale) draft = { ...draft, scale: leaving.scale };
   if (savedId && isComplete(draft)) patternStore.upsert(draft);
   // The part leaving keeps its place in the order and its notes (AC-19.11.6/1).
-  const left = { patternId: c.savedId ?? null, muted: false, draft: leaving, savedId: c.savedId ?? null };
-  const next = all.map((p, i) => (p.active ? left : i === index ? null : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId }));
+  // Each part keeps its instrument and volume wherever it is (AC-19.12.2/4):
+  // the one leaving takes what it sounded with, the one arriving brings its own.
+  const left = { patternId: c.savedId ?? null, muted: false, draft: leaving, savedId: c.savedId ?? null, instrument: activeInstrument(), ...soundOf({ volume: c.volume }) };
+  const next = all.map((p, i) => (p.active ? left : i === index ? null : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId, ...soundOf(p) }));
   const layers = next.filter(Boolean);
-  state.composer = { ...state.composer, draft, savedId, layers, activeIndex: index, recording: false, target: null, selected: null, notice };
+  state.composer = { ...state.composer, draft, savedId, layers, activeIndex: index, instrument: arriving, volume: target.volume ?? null, recording: false, target: null, selected: null, notice };
+  ensureSamplesLoaded();
   if (savedId && isComplete(draft)) adoptOpenPattern(draft);
   autosaveArrangement();
   syncTransport();
@@ -1004,44 +1107,46 @@ async function activatePart(index) {
 
 /**
  * The voice a melodic note sounds with (US-2.13): the chosen one in Practice;
- * in the Composer the instrument on screen — the guitar in the Guitar view,
- * the piano or the synth in the Piano view (AC-2.13.3, AC-19.6.1/2).
+ * in the Composer the instrument of the part on screen (AC-2.13.3, AC-19.6.1/2).
  */
 function currentVoice() {
   return resolveVoice({
     composer: state.composer.mode === 'composer',
-    instrument: state.settings.composerInstrument,
+    instrument: activeInstrument(),
     voice: state.settings.melodicVoice,
   });
 }
 
 /**
- * Each voice behind `playMelodic`'s signature. The sampled ones sound through
- * the synth while their samples are not ready (AC-2.13.4/2, AC-19.7.2/1).
- * Read at every note, so a switch changes the voice from the next event with
- * no restart (AC-2.13.1/3, AC-19.6.1/3).
+ * Sound one melodic event through its part's instrument at its part's volume
+ * (US-19.12), and log which voice sounded it. Read at every note, so a switch
+ * changes the voice from the next event with no restart (AC-2.13.1/3,
+ * AC-19.6.1/3, AC-19.12.2/2).
  */
-const VOICE_PLAYERS = {
-  guitar: (ctx, destination, event, when) => guitar.playGuitar(ctx, destination, event, when, melodic.playMelodic),
-  piano: (ctx, destination, event, when) => piano.playPiano(ctx, destination, event, when, melodic.playMelodic),
-  synth: melodic.playMelodic,
-};
-function melodicVoice() {
-  return VOICE_PLAYERS[currentVoice()];
+function soundMelodic(ctx, destination, event, when) {
+  const voice = instrumentFor(event);
+  const gain = gainOf(event);
+  const sounded = gain === 1 ? event : { ...event, gain };
+  logVoice(event, instruments.PLAYERS[voice](ctx, destination, sounded, when), voice, gain);
 }
 
 /** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2, AC-2.13.2). */
 const voiceLog = [];
+/** Test seam: each melodic event as `voiceLog` has it, with the gain its part's volume put on it (AC-19.12.3). */
+const levelLog = [];
 /** Test seam: the MIDI notes sounded by taps on the instrument alone, newest last (AC-19.2.4, AC-19.3.4). */
 const tapLog = [];
-function logVoice(event, via) {
-  const instrument = state.composer.mode === 'composer' && state.settings.composerInstrument === 'guitar' ? 'guitar' : 'piano';
-  const voice = event.composition === false ? resolveVoice({ composer: false, voice: state.settings.melodicVoice }) : currentVoice();
+function logVoice(event, via, voice = instrumentFor(event), gain = 1) {
+  // `instrument` is the view on screen, as it always was; `voice` what sounded.
+  const instrument = state.composer.mode === 'composer' && viewOf(activeInstrument()) === 'guitar' ? 'guitar' : 'piano';
   const entry = { instrument, voice, via: via ?? 'synth', midi: event.pitch?.midiNote ?? null };
   // Under layers, which layer sounded and whether it was the composition (US-19.11).
   if (event.layer !== undefined) Object.assign(entry, { layer: event.layer, composition: event.composition !== false });
   voiceLog.push(entry);
   if (voiceLog.length > 500) voiceLog.shift();
+  // The same note with the level its part's volume gave it (AC-19.12.3).
+  levelLog.push({ ...entry, gain });
+  if (levelLog.length > 500) levelLog.shift();
 }
 
 /**
@@ -1095,7 +1200,7 @@ function persistDraft() {
  * request stays with the Guitar view and its first note (AC-19.7.1/1).
  */
 function ensurePianoLoaded() {
-  if (currentVoice() !== 'piano') return;
+  if (!instrumentsInUse().includes('piano')) return;
   if (state.composer.mode !== 'composer' && state.pattern.soundMode !== 'melodic') return;
   let ctx;
   try {
@@ -1107,16 +1212,25 @@ function ensurePianoLoaded() {
   state.pianoStatus = piano.getStatus(ctx);
 }
 
-/** Ask for the guitar's samples when, and only when, the Guitar view is shown (AC-19.7.1/1). */
-function ensureGuitarLoaded() {
-  if (state.composer.mode !== 'composer' || state.settings.composerInstrument !== 'guitar') return;
+/**
+ * Ask for the samples of every fetched instrument a part in the Composer is
+ * set to (AC-19.7.1/1, AC-19.12.5/1). Each voice asks once; nothing is asked
+ * outside the Composer, where the first note under a fetched voice asks.
+ */
+function ensureSamplesLoaded() {
+  if (state.composer.mode !== 'composer') return;
+  const wanted = instrumentsInUse().filter((id) => instruments.isFetched(id));
+  if (wanted.length === 0) return;
   let ctx;
   try {
     ctx = getContext();
   } catch {
     return;
   }
-  guitar.load(ctx).catch(() => {});
+  for (const id of wanted) {
+    instruments.fetched[id].load(ctx).catch(() => {});
+    state.samples[id] = instruments.statusOf(id, ctx);
+  }
   state.composer.guitar = guitar.getStatus(ctx);
 }
 
@@ -1131,11 +1245,8 @@ function previewNote(midi) {
   ensurePianoLoaded();
   tapLog.push(midi);
   if (tapLog.length > 500) tapLog.shift();
-  const event = { accent: 2, pitch: { midiNote: midi, frequency: midiToFrequency(midi) } };
-  const sound = (c) => {
-    const via = melodicVoice()(c, c.destination, event, c.currentTime + 0.01);
-    logVoice(event, via);
-  };
+  const event = { accent: 2, tap: true, pitch: { midiNote: midi, frequency: midiToFrequency(midi) } };
+  const sound = (c) => soundMelodic(c, c.destination, event, c.currentTime + 0.01);
   if (ctx.state === 'running') sound(ctx);
   else resumeAudio().then(sound).catch(() => {});
 }
@@ -1246,7 +1357,7 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
   // Arrangement is being opened, whose layers these are (AC-19.11.4/2).
   const layerState = arrangement ? partsOf(arrangement) : noLayers();
   state.composer = { ...state.composer, draft, savedId, recording: false, target: null, selected: null, notice, ...layerState };
-  ensureGuitarLoaded();
+  ensureSamplesLoaded();
   ui?.hideLibrary();
   render();
   return true;
@@ -2471,10 +2582,10 @@ const handlers = {
   onResetAudio() {
     if (state.isPlaying) transport.stop();
     const ctx = replaceAudio();
-    ensureGuitarLoaded();
+    ensureSamplesLoaded();
     ensurePianoLoaded();
     const event = { accent: 2, pitch: { midiNote: 64, frequency: midiToFrequency(64) } };
-    logVoice(event, melodicVoice()(ctx, ctx.destination, event, ctx.currentTime + 0.01));
+    soundMelodic(ctx, ctx.destination, event, ctx.currentTime + 0.01);
     state.audioNotice = null;
     render();
     clockIsRunning(ctx).then((running) => {
@@ -2527,7 +2638,7 @@ const handlers = {
     if (state.isPlaying) transport.stop();
     state.composer = { ...state.composer, mode, recording: false, target: null, selected: null };
     if (mode === 'composer') {
-      ensureGuitarLoaded();
+      ensureSamplesLoaded();
       // The saved Arrangements, as they are now (AC-19.11.4/2).
       refreshArrangements();
       // Asked for here, once a page load (AC-19.10.5/1).
@@ -2547,10 +2658,57 @@ const handlers = {
     render();
   },
 
-  /** Guitar | Piano (AC-19.1.3): a view and a voice, never a note. */
+  /**
+   * The instrument of the part on screen (AC-19.1.3, AC-19.12.2/3): a voice,
+   * and by it a view, never a note. Remembered for the next composition.
+   */
   onComposerInstrument(instrument) {
-    state.settings = settingsStore.save({ composerInstrument: instrument === 'piano' ? 'piano' : 'guitar' });
-    ensureGuitarLoaded();
+    const chosen = normaliseVoice(instrument, DEFAULT_INSTRUMENT);
+    state.settings = settingsStore.save({ composerInstrument: chosen });
+    state.composer = { ...state.composer, instrument: chosen };
+    // The fetched instruments are asked for now; the piano's recordings at its
+    // first note, as they always were (AC-2.13.4/1).
+    ensureSamplesLoaded();
+    // A saved Arrangement saves the change on its own (AC-19.12.4/2).
+    autosaveArrangement();
+    if (state.isPlaying) refreshBackgroundAudio();
+    render();
+  },
+
+  /** A part's instrument, by its place in the parts' order (AC-19.12.2/2); the part on screen's is the switch's. */
+  onPartInstrument(index, instrument) {
+    const all = parts();
+    if (!all[index]) return;
+    if (all[index].active) return handlers.onComposerInstrument(instrument);
+    setPartSound(index, { instrument: normaliseVoice(instrument) });
+  },
+
+  /** A part's volume, 1 to 100, by its place in the parts' order (AC-19.12.3/2). */
+  onPartVolume(index, volume) {
+    const all = parts();
+    if (!all[index]) return;
+    const level = normaliseVolume(volume);
+    if (all[index].active) {
+      state.composer = { ...state.composer, volume: level };
+      autosaveArrangement();
+      if (state.isPlaying) refreshBackgroundAudio();
+      render();
+      return;
+    }
+    setPartSound(index, { volume: level });
+  },
+
+  /** Ask for a fetched instrument's samples again after a failure (AC-19.12.5/2). */
+  onSampleRetry(id) {
+    if (!instruments.isFetched(id)) return;
+    let ctx;
+    try {
+      ctx = getContext();
+    } catch {
+      return;
+    }
+    instruments.fetched[id].retry(ctx);
+    state.samples[id] = instruments.statusOf(id, ctx);
     render();
   },
 
@@ -2775,7 +2933,9 @@ const handlers = {
   },
 
   onComposerKey(key) {
-    applyDraft((p) => ({ ...p, key }));
+    // A part on Drums keeps every note on its drum: the notes are re-spelled in
+    // the new Key rather than moved with it (AC-19.13.3/1).
+    applyDraft((p) => (hasFixedNotes(activeInstrument()) ? retune(p, key) : { ...p, key }));
   },
 
   onComposerScale(scale) {
@@ -2881,9 +3041,10 @@ const handlers = {
     fresh = underComposition(fresh, c.draft);
     patternStore.upsert(fresh);
     const all = parts();
-    const left = { patternId: c.savedId ?? null, muted: false, draft: c.draft, savedId: c.savedId ?? null };
-    const layers = all.map((p) => (p.active ? left : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId }));
-    state.composer = { ...state.composer, draft: fresh, savedId: fresh.id, layers, activeIndex: layers.length, recording: false, target: null, selected: null, notice: null, pickingLayer: false };
+    const left = { patternId: c.savedId ?? null, muted: false, draft: c.draft, savedId: c.savedId ?? null, instrument: activeInstrument(), ...soundOf({ volume: c.volume }) };
+    const layers = all.map((p) => (p.active ? left : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId, ...soundOf(p) }));
+    // The new part starts on the instrument the Composer was on, at the default volume.
+    state.composer = { ...state.composer, draft: fresh, savedId: fresh.id, layers, activeIndex: layers.length, instrument: activeInstrument(), volume: null, recording: false, target: null, selected: null, notice: null, pickingLayer: false };
     adoptOpenPattern(fresh);
     autosaveArrangement();
     syncTransport();
@@ -2984,8 +3145,12 @@ const handlers = {
     const c = state.composer;
     if (!c.draft || c.layers.length === 0) return;
     // The files in the parts' order, whichever is on screen (AC-19.11.5/1).
-    const all = parts().filter((p) => p.pattern);
-    const set = layered(all[0].pattern, all.slice(1));
+    // Each part with the instrument it sounds with: a part on Drums is written
+    // on the drum channel, at the notes it was written with (AC-19.11.5/5).
+    const all = parts()
+      .filter((p) => p.pattern)
+      .map((p) => ({ ...p, instrument: p.sounds }));
+    const set = layered(all[0].pattern, all.slice(1), { instrument: all[0].sounds });
     downloadArrangementMidi(set, arrangementZipFilename(c.arrangement, all[0].pattern));
   },
 
@@ -3034,7 +3199,7 @@ const handlers = {
     if (state.composer.mode !== 'composer') {
       if (state.isPlaying) transport.stop();
       state.composer = { ...state.composer, mode: 'composer', recording: false, target: null, selected: null };
-      ensureGuitarLoaded();
+      ensureSamplesLoaded();
       refreshArrangements();
       void midiInput.request();
       render();
@@ -3617,11 +3782,10 @@ const transport = createTransport({
   // Dispatched per note rather than bound once, so the Composer's instrument
   // switch changes the voice from the next event (AC-19.6.1/3).
   playMelodic(ctx, destination, event, when) {
-    // A layer's note sounds with the voice Practice would use; the composition's
-    // with the instrument shown (AC-19.11.2/2).
-    const player = event.composition === false ? VOICE_PLAYERS[resolveVoice({ composer: false, voice: state.settings.melodicVoice })] : melodicVoice();
-    logVoice(event, player(ctx, destination, event, when));
+    // Every part sounds with its own instrument, at its own volume (AC-19.11.2/2).
+    soundMelodic(ctx, destination, event, when);
   },
+  gainOf,
   onPosition(position) {
     // Under layers the cursor is the composition's (AC-19.11.2/5): a layer's
     // event moves nothing on screen.
@@ -3709,9 +3873,21 @@ const transport = createTransport({
 
 export { transport };
 
+// A fetched instrument's samples arriving, or failing, is a change the record
+// bar and the voice switch show (AC-19.12.5/2), and one the screen-off render
+// should hear (AC-19.12.5/4). The guitar has its own listener below.
+for (const id of FETCHED.filter((f) => f !== 'guitar')) {
+  instruments.fetched[id].onStatus((status) => {
+    state.samples[id] = status;
+    if ((status.status === 'ready' || status.status === 'error') && state.isPlaying) refreshBackgroundAudio();
+    render();
+  });
+}
+
 // The guitar's samples arriving, or failing, is a change the record bar shows (AC-19.7.2).
 guitar.onStatus((status) => {
   state.composer.guitar = status;
+  state.samples.guitar = status;
   // Arrived or failed, the render waiting on them runs now (AC-2.13.5/2).
   if ((status.status === 'ready' || status.status === 'error') && state.isPlaying) refreshBackgroundAudio();
   render();
@@ -3990,7 +4166,7 @@ if (typeof window !== 'undefined') {
     /** Test seam: the keep-alive element, once one exists (AC-4.1.12). */
     keepAlive: () => keepAlive.current(),
     /** Test seam: the rendered cycle the element carries, or null (AC-4.1.15). */
-    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole, voice: rendered.voice },
+    rendered: () => rendered && { seconds: rendered.seconds, passes: rendered.passes, whole: rendered.whole, voice: rendered.voice, voices: rendered.voices },
     /** Test seam: whether the carrier has the sound rather than the transport. */
     carrying: () => keepAlive.isCarrying(),
     /** Test seam: the carrier element holding the render, or null (AC-4.1.15). */
@@ -4013,10 +4189,14 @@ if (typeof window !== 'undefined') {
     composerUnsaved: () => composerUnsaved(state.composer),
     /** Which voice sounded each melodic event (AC-19.6.1/2, AC-19.7.1/2). */
     voiceLog: () => voiceLog.slice(),
+    /** Each melodic event with the gain its part's volume gave it (AC-19.12.3). */
+    levelLog: () => levelLog.slice(),
     /** The notes tapped on the instrument, apart from anything the transport played (AC-19.3.4). */
     tapLog: () => tapLog.slice(),
     guitar,
     piano,
+    /** Every instrument's voice and status (US-19.12). */
+    instruments,
     /** The voice a melodic note would sound with now (US-2.13). */
     currentVoice,
     /** The Song entry in force on the pass on screen, or null (US-18.1). */

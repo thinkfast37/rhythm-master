@@ -160,18 +160,21 @@ test('AC-19.1.2/5 — Opening a library Pattern while in Composer loads it into 
 
 // --- AC-19.1.3: Guitar or piano ------------------------------------------------
 
-test('AC-19.1.3/1 — A Guitar | Piano switch sits in the record bar, Guitar in force on first use', async ({ page }) => {
+test('AC-19.1.3/1 — An instrument switch sits in the record bar offering Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, Guitar in force on first use', async ({ page }) => {
   await openApp(page);
   await enterComposer(page);
   const sw = page.locator('.composer-bar .instrument-switch');
   await expect(sw).toBeVisible();
   await expect(sw.locator('[data-instrument="guitar"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(sw.locator('[data-instrument="piano"]')).toHaveAttribute('aria-pressed', 'false');
+  // All seven (revised 2026-11-15 with US-19.12), one of them in force.
+  expect((await sw.locator('button').allTextContents()).sort()).toEqual(['Bass', 'Drums', 'Electric guitar', 'Flute', 'Guitar', 'Piano', 'Sax', 'Synth', 'Trumpet']);
+  await expect(sw.locator('[aria-pressed="true"]')).toHaveCount(1);
   await expect(page.locator('.composer-instrument .fretboard')).toBeVisible();
   await expect(page.locator('.piano')).toHaveCount(0);
 });
 
-test('AC-19.1.3/2 — Switching shows the other instrument view and leaves every recorded note exactly as it was', async ({ page }) => {
+test('AC-19.1.3/2 — Switching between a fretboard instrument and a keyboard instrument shows the other instrument view, and no switch changes a recorded note', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await recordAll(page);
@@ -183,6 +186,13 @@ test('AC-19.1.3/2 — Switching shows the other instrument view and leaves every
   await page.locator('.instrument-switch [data-instrument="guitar"]').click();
   await expect(page.locator('.composer-instrument .fretboard')).toBeVisible();
   expect(await page.evaluate(() => JSON.stringify(window.__rm.composer().draft.measures))).toBe(before);
+  // Every instrument: the two guitars on the fretboard, the rest on the keyboard (AC-19.12.1/2), and never a note changed.
+  for (const [id, view] of [['synth', 'piano'], ['electric', 'fretboard'], ['bass', 'piano'], ['sax', 'piano'], ['trumpet', 'piano'], ['flute', 'piano'], ['drums', 'piano'], ['guitar', 'fretboard']]) {
+    await page.locator(`.instrument-switch [data-instrument="${id}"]`).click();
+    await expect(page.locator(`.composer-instrument .${view}`)).toBeVisible();
+    await expect(page.locator(`.composer-instrument .${view === 'piano' ? 'fretboard' : 'piano'}`)).toHaveCount(0);
+    expect(await page.evaluate(() => JSON.stringify(window.__rm.composer().draft.measures))).toBe(before);
+  }
 });
 
 test('AC-19.1.3/3 — The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload', async ({ page }) => {

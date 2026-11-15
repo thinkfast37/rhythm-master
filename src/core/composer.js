@@ -136,6 +136,29 @@ export function previousSounding(pattern, at) {
 
 /* --- mutations: every one returns a NEW Pattern ------------------------------ */
 
+/**
+ * The same notes in another Key: every pitch re-spelled so it resolves to the
+ * MIDI note it did before. What a Key change does to a part whose notes name
+ * drums rather than degrees (AC-19.13.3, research.md D-029).
+ */
+export function retune(pattern, key) {
+  if (!isSupportedKey(key)) throw new Error(`Unsupported Key: ${key}`);
+  const from = pattern.key;
+  if (!isSupportedKey(from) || from === key) return { ...pattern, key };
+  const next = clone(pattern);
+  const scale = next.scale ?? DEFAULT_SCALE;
+  for (const measure of next.measures) {
+    for (const beat of measure.beats) {
+      for (const slot of beat.slots) {
+        if (!slot.pitch) continue;
+        slot.pitch = { ...slot.pitch, ...pitchFromMidi(resolve(slot.pitch, from).midiNote, key, scale) };
+      }
+    }
+  }
+  next.key = key;
+  return next;
+}
+
 /** Give a sounding Slot the note a MIDI number names in this draft's Key (AC-19.4.2/1). */
 export function recordNote(pattern, at, midi) {
   const next = clone(pattern);

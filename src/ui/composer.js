@@ -37,6 +37,7 @@ import { renderScore } from './score.js';
 import { buildScore } from '../core/notation.js';
 import { layered, passesPerLoop } from '../core/arrangement.js';
 import { ATTRIBUTION } from '../audio/guitar.js';
+import { INSTRUMENTS, FETCHED, instrumentOf, viewOf, normaliseVoice, DEFAULT_INSTRUMENT } from '../core/voice.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 
 const ACCENT_CLASS = { 0: 'off', 1: 'weak', 2: 'medium', 3: 'strong' };
@@ -71,14 +72,17 @@ export function renderComposer(root, state, handlers) {
   const draft = composer.draft;
   const key = draft?.key ?? 'C';
   const scale = draft?.scale ?? DEFAULT_SCALE;
-  const instrument = state.settings.composerInstrument === 'piano' ? 'piano' : 'guitar';
+  // The part on screen's instrument, and the view it is played on (AC-19.1.3, AC-19.12.1/2).
+  const voice = normaliseVoice(composer.instrument ?? state.settings.composerInstrument, DEFAULT_INSTRUMENT);
+  const instrument = viewOf(voice);
   root.dataset.instrument = instrument;
+  root.dataset.voice = voice;
   root.dataset.recording = String(Boolean(composer.recording));
   root.dataset.loaded = String(Boolean(draft));
 
   return rebuild(root, (fresh) => {
-    fresh.appendChild(renderBar(composer, draft, instrument, state, handlers));
-    fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers));
+    fresh.appendChild(renderBar(composer, draft, voice, state, handlers));
+    fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers, voice));
     if (draft) {
       // Grid or Score (AC-19.11.8): the composing grid, or one staff per part.
       if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderArrangementScore(state, handlers));
@@ -98,7 +102,7 @@ export function renderComposer(root, state, handlers) {
     const credit = el('p', 'composer-attribution');
     credit.dataset.attribution = 'guitar-samples';
     credit.append(
-      'Guitar samples: FluidR3_GM SoundFont by Frank Wen, served via ',
+      'Guitar, bass, saxophone, trumpet and flute samples: FluidR3_GM SoundFont by Frank Wen, served via ',
       el('a', null, { href: ATTRIBUTION.sourceUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'gleitz/midi-js-soundfonts' }),
       ', licensed ',
       el('a', null, { href: ATTRIBUTION.licenseUrl, target: '_blank', rel: 'noopener noreferrer', textContent: 'CC BY 3.0' }),
@@ -122,15 +126,17 @@ export function renderComposer(root, state, handlers) {
 /** The record bar: instrument, Record, Delete, Save, and the composition's standing. */
 function renderBar(composer, draft, instrument, state, handlers) {
   const bar = el('div', 'composer-bar');
+  // `instrument` here is the part on screen's instrument id, not its view.
 
   const sw = el('div', 'instrument-switch', { role: 'group' });
   sw.setAttribute('aria-label', 'Instrument');
   sw.dataset.instrument = instrument;
-  for (const [id, label] of [
-    ['guitar', 'Guitar'],
-    ['piano', 'Piano'],
-  ]) {
+  // Every instrument (AC-19.1.3/1), the two the Composer began with first.
+  const order = ['guitar', 'piano', ...INSTRUMENTS.map((i) => i.id).filter((id) => id !== 'guitar' && id !== 'piano')];
+  for (const id of order) {
+    const { label, view } = instrumentOf(id);
     const b = button('mode-option', label, 'set-instrument');
+    b.title = `${label}, played on the ${view === 'guitar' ? 'fretboard' : 'keyboard'}`;
     b.dataset.instrument = id;
     b.setAttribute('aria-pressed', String(instrument === id));
     b.addEventListener('click', () => {
@@ -269,6 +275,27 @@ function renderBar(composer, draft, instrument, state, handlers) {
     }
   }
 
+  // The other fetched instruments any part is set to: on their way, or not coming (AC-19.12.5/2).
+  const inUse = new Set([instrument, ...(handlers.parts?.() ?? []).filter((p) => p.pattern).map((p) => p.sounds)]);
+  for (const id of FETCHED) {
+    if (id === 'guitar' || !inUse.has(id)) continue;
+    const status = state.samples?.[id]?.status ?? 'idle';
+    if (status !== 'loading' && status !== 'error') continue;
+    const { label } = instrumentOf(id);
+    const s = el('span', `guitar-status sample-status ${status}`);
+    s.dataset.status = status;
+    s.dataset.sample = id;
+    s.setAttribute('role', 'status');
+    s.append(status === 'loading' ? `Loading ${label} samples… the synth voice sounds meanwhile.` : `${label} samples didn’t load — the synth voice is sounding instead. `);
+    if (status === 'error') {
+      const retry = button('guitar-retry sample-retry', 'Retry', 'sample-retry');
+      retry.dataset.sample = id;
+      retry.addEventListener('click', (e) => handlers.onSampleRetry?.(e.currentTarget.dataset.sample));
+      s.appendChild(retry);
+    }
+    bar.appendChild(s);
+  }
+
   // A MIDI note the instrument view has no place for (AC-19.10.3).
   if (composer.midiFlash) {
     const f = el('span', 'midi-out-of-range', { textContent: composer.midiFlash.message });
@@ -285,7 +312,7 @@ function renderBar(composer, draft, instrument, state, handlers) {
   return bar;
 }
 
-function renderInstrument(instrument, key, scale, state, handlers) {
+function renderInstrument(instrument, key, scale, state, handlers, voice = instrument) {
   const wrap = el('div', 'composer-instrument');
   wrap.dataset.instrument = instrument;
   // The MIDI note just played lights where it landed (AC-19.10.2).
@@ -298,7 +325,8 @@ function renderInstrument(instrument, key, scale, state, handlers) {
       { onNote }
     );
   } else {
-    renderPiano(wrap, { ...model, count: state.settings.composerKeys ?? 49, widthPx: state.composer.widthPx ?? 0 }, { onNote });
+    // On Drums every key that has a drum is named for it (AC-19.13.2/1).
+    renderPiano(wrap, { ...model, count: state.settings.composerKeys ?? 49, widthPx: state.composer.widthPx ?? 0, drums: voice === 'drums' }, { onNote });
   }
   return wrap;
 }
