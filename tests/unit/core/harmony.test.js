@@ -34,7 +34,7 @@ import { create, cycleAccent, setPitch, addMeasure } from '../../../src/core/pat
 import { fillIndexFor, fillIndexOf, withArpeggio, progressionIndexFor, progressionIndexOf, withProgression } from '../../../src/core/harmony.js';
 import { cycleOrder, cycleStart } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
-import { entryAt, playingAt } from '../../../src/core/song.js';
+import { entryAt, playingAt } from '../../../src/core/chain.js';
 import {
   chordStack,
   setChordBass,
@@ -799,7 +799,7 @@ describe('core/harmony', () => {
     expect(notesOf(setArpeggio(p, 'walk-next-above'), 1)).toEqual([65, 69, 72, 65]); // F into C/E from above
   });
 
-  it("AC-2.6.6/26 — The approach to the next chord is reckoned within the Pattern: a Pattern playing as a Chain of a Song aims its last approach at the chord the Pattern itself would play next, not at the next Chain's", () => {
+  it("AC-2.6.6/26 — The approach to the next chord is reckoned within the Pattern: a Pattern playing under a Chain aims its last approach at the chord the Pattern itself would play next, not at the next Chain's", () => {
     const a = { ...sounding(setProgression(melodic(), 'I-IV'), 4), id: 'a' };
     const b = { ...sounding(setProgression(melodic(), 'ii-V-I'), 4), id: 'b' };
     const byId = (id) => ({ a, b })[id];

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 /*
  * US-18.1 — Compose a Chain from kept fills. The Chain is the Composer's,
  * never Pattern data; it plays through the same pass-boundary seam as cycle
- * mode and is saved as a Song in its own store.
+ * mode and is saved as a Chain in its own store.
  */
 
 async function melodicBlank(page, timeSignature = '4/4') {
@@ -34,7 +34,7 @@ const compose = (page) => page.locator('[data-section="compose"]');
 const onTab = (page, name) => page.locator(`.workbench-tab[data-tab="${name}"]`).click();
 const entries = (page) => compose(page).locator('.compose-entry');
 const fillInForce = (page) => page.evaluate(() => window.__rm.fillInForce());
-const songs = (page) => page.evaluate(() => window.__rm.songStore.loadAll());
+const chains = (page) => page.evaluate(() => window.__rm.chainStore.loadAll());
 const patternState = (page) => page.evaluate(() => window.__rm.getState().pattern);
 
 async function untilFill(page, id, timeout = 9000) {
@@ -46,8 +46,8 @@ async function untilFill(page, id, timeout = 9000) {
   return false;
 }
 
-/** Name a Song through the naming prompt (ui/dialogs.js). */
-async function nameSong(page, name) {
+/** Name a Chain through the naming prompt (ui/dialogs.js). */
+async function nameChain(page, name) {
   const input = page.locator('.dialog .dialog-input');
   await input.fill(name);
   await page.locator('.dialog .dialog-button.primary').click();
@@ -169,7 +169,7 @@ test('AC-18.1.3/1 — Each entry is in force for its repeats, one repeat being o
   await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
   await onTab(page, 'compose');
-  await compose(page).locator('[data-action="play-song"]').click();
+  await compose(page).locator('[data-action="play-chain"]').click();
   expect(await fillInForce(page)).toBe('alberti');
   // One harmonic cycle of I–IV–V is three passes; the second entry follows.
   expect(await untilFill(page, 'root-fifth')).toBe(true);
@@ -191,7 +191,7 @@ test('AC-18.1.3/2 — After the last entry the first is in force again; the Chai
   await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
   await onTab(page, 'compose');
-  await compose(page).locator('[data-action="play-song"]').click();
+  await compose(page).locator('[data-action="play-chain"]').click();
   expect(await untilFill(page, 'root-fifth')).toBe(true);
   expect(await untilFill(page, 'alberti', 12000)).toBe(true);
   expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(true);
@@ -201,49 +201,49 @@ test('AC-18.1.3/2 — After the last entry the first is in force again; the Chai
 test('AC-18.1.3/3 — Every view follows the fill in force exactly as under cycle mode, and the Compose group marks the entry playing', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="play-song"]').click();
+  await compose(page).locator('[data-action="play-chain"]').click();
   await expect(page.locator('.arpeggio-picker')).toHaveValue('alberti');
   await expect(entries(page).first()).toHaveClass(/playing/);
   await expect(page.locator('.pitch-strip')).toContainText('Alberti');
   await page.locator('[data-action="stop"]').click();
 });
 
-test('AC-18.1.3/4 — Play song is unavailable while the Chain is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has', async ({ page }) => {
+test('AC-18.1.3/4 — Play chain is unavailable while the Chain is empty, and the ordinary Play is unchanged: it loops the Pattern with its own arpeggio as it always has', async ({ page }) => {
   await keptBlank(page);
-  await expect(compose(page).locator('[data-action="play-song"]')).toBeDisabled();
+  await expect(compose(page).locator('[data-action="play-chain"]')).toBeDisabled();
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await expect(compose(page).locator('[data-action="play-song"]')).toBeEnabled();
+  await expect(compose(page).locator('[data-action="play-chain"]')).toBeEnabled();
   await page.locator('[data-action="play"]').click();
   await page.waitForTimeout(200);
   expect(await fillInForce(page)).toBeNull();
-  expect(await page.evaluate(() => window.__rm.songEntryInForce())).toBeNull();
+  expect(await page.evaluate(() => window.__rm.chainEntryInForce())).toBeNull();
   await page.locator('[data-action="stop"]').click();
 });
 
 test("AC-18.1.3/5 — Stop returns the Pattern's own arpeggio, exactly as stopping cycle mode does", async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="play-song"]').click();
+  await compose(page).locator('[data-action="play-chain"]').click();
   expect(await fillInForce(page)).toBe('alberti');
   await page.locator('[data-action="stop"]').click();
   expect(await fillInForce(page)).toBeNull();
   expect((await patternState(page)).harmony.arpeggio ?? null).toBeNull();
-  await expect(compose(page).locator('[data-action="play-song"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(compose(page).locator('[data-action="play-chain"]')).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('AC-18.1.3/6 — Play song and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern', async ({ page }) => {
+test('AC-18.1.3/6 — Play chain and cycle mode are exclusive: starting either ends the other, and neither writes anything into the Pattern', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await onTab(page, 'melody');
   await page.locator('.fill-cycle').click();
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'true');
   await onTab(page, 'compose');
-  await compose(page).locator('[data-action="play-song"]').click();
+  await compose(page).locator('[data-action="play-chain"]').click();
   await expect(page.locator('.fill-cycle')).toHaveAttribute('aria-pressed', 'false');
   expect(await fillInForce(page)).toBe('alberti');
   await onTab(page, 'melody');
   await page.locator('.fill-cycle').click();
-  expect(await page.evaluate(() => window.__rm.songEntryInForce())).toBeNull();
+  expect(await page.evaluate(() => window.__rm.chainEntryInForce())).toBeNull();
   await page.locator('[data-action="stop"]').click();
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.patterns.v1')));
   expect(JSON.stringify(stored)).not.toContain('alberti');
@@ -260,11 +260,11 @@ test('AC-18.1.3/7 — Editing the Chain while it plays — repeats, order, an ad
   await onTab(page, 'practice');
   await page.locator('[data-action="preset-tempo"][data-bpm="300"]').click();
   await onTab(page, 'compose');
-  await compose(page).locator('[data-action="play-song"]').click();
+  await compose(page).locator('[data-action="play-chain"]').click();
   await page.waitForTimeout(300);
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
   const now = await page.evaluate(() => ({
-    entry: window.__rm.songEntryInForce(),
+    entry: window.__rm.chainEntryInForce(),
     running: window.__rm.transport.isRunning,
     loop: window.__rm.getState().loop,
   }));
@@ -277,97 +277,97 @@ test('AC-18.1.3/7 — Editing the Chain while it plays — repeats, order, an ad
   await page.locator('[data-action="stop"]').click();
 });
 
-test("AC-18.1.4/1 — Save asks for a name, and a Song is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Songs and choosing one loads its Chain", async ({ page }) => {
+test("AC-18.1.4/1 — Save asks for a name, and a Chain is stored with its name, its Pattern and its entries in order; the Compose group lists this Pattern's Chains and choosing one loads it", async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'Verse bed');
-  const stored = await songs(page);
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Verse bed');
+  const stored = await chains(page);
   const saved = Object.values(stored.songs ?? stored)[0];
   expect(saved.name).toBe('Verse bed');
   expect(saved.sections[0].patternId).toBe('p_test');
   expect(saved.sections[0].entries.map((e) => e.fill)).toEqual(['alberti', 'root-fifth']);
-  await expect(compose(page).locator('.song-item')).toHaveCount(1);
-  await compose(page).locator('[data-action="song-new"]').click();
+  await expect(compose(page).locator('.chain-item')).toHaveCount(1);
+  await compose(page).locator('[data-action="chain-new"]').click();
   await expect(entries(page)).toHaveCount(0);
-  await compose(page).locator('.song-item [data-action="song-load"]').click();
+  await compose(page).locator('.chain-item [data-action="chain-load"]').click();
   await expect(entries(page)).toHaveCount(2);
   await expect(compose(page).locator('.compose-section-head')).toContainText('Verse bed');
 });
 
-test('AC-18.1.4/2 — A saved Song survives a reload and is listed only on the Pattern it was composed over', async ({ page }) => {
+test('AC-18.1.4/2 — A saved Chain survives a reload and is listed only on the Pattern it was composed over', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'Kept');
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Kept');
   await page.reload();
   await page.evaluate(() => {
     const p = window.__rm.patternStore.findById('p_test');
     window.__rm.loadPattern(p, { owned: true });
   });
-  await expect(compose(page).locator('.song-item')).toHaveCount(1);
+  await expect(compose(page).locator('.chain-item')).toHaveCount(1);
   await page.evaluate(() => {
     const p = window.__rm.getState().pattern;
     window.__rm.loadPattern({ ...p, id: 'p_other', name: 'Other' }, { owned: true });
   });
-  await expect(compose(page).locator('.song-item')).toHaveCount(0);
+  await expect(compose(page).locator('.chain-item')).toHaveCount(0);
 });
 
-test('AC-18.1.4/3 — A Song can be renamed and deleted from the Compose group, deletion asking first', async ({ page }) => {
+test('AC-18.1.4/3 — A Chain can be renamed and deleted from the Compose group, deletion asking first', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'First');
-  await compose(page).locator('.song-item [data-action="song-rename"]').click();
-  await nameSong(page, 'Renamed');
-  await expect(compose(page).locator('.song-item .song-load')).toHaveText('Renamed');
-  await compose(page).locator('.song-item [data-action="song-delete"]').click();
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'First');
+  await compose(page).locator('.chain-item [data-action="chain-rename"]').click();
+  await nameChain(page, 'Renamed');
+  await expect(compose(page).locator('.chain-item .chain-load')).toHaveText('Renamed');
+  await compose(page).locator('.chain-item [data-action="chain-delete"]').click();
   // Asked first: cancelling keeps it.
   await dialogCancel(page);
-  await expect(compose(page).locator('.song-item')).toHaveCount(1);
-  await compose(page).locator('.song-item [data-action="song-delete"]').click();
+  await expect(compose(page).locator('.chain-item')).toHaveCount(1);
+  await compose(page).locator('.chain-item [data-action="chain-delete"]').click();
   await dialogAccept(page);
-  await expect(compose(page).locator('.song-item')).toHaveCount(0);
+  await expect(compose(page).locator('.chain-item')).toHaveCount(0);
 });
 
-test("AC-18.1.4/4 — Edits to a loaded Song's Chain are not saved until Save is pressed again, which updates the Song in place; Compose says when the loaded Song has unsaved changes", async ({ page }) => {
+test("AC-18.1.4/4 — Edits to a loaded Chain are not saved until Save is pressed again, which updates it in place; Compose says when the loaded Chain has unsaved changes", async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'Bed');
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Bed');
   await expect(compose(page).locator('.compose-unsaved')).toHaveCount(0);
   await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
   await expect(compose(page).locator('.compose-unsaved')).toBeVisible();
-  let stored = await songs(page);
+  let stored = await chains(page);
   expect(Object.values(stored.songs ?? stored)[0].sections[0].entries).toHaveLength(1);
-  await compose(page).locator('[data-action="song-save"]').click();
+  await compose(page).locator('[data-action="chain-save"]').click();
   await expect(compose(page).locator('.compose-unsaved')).toHaveCount(0);
-  stored = await songs(page);
+  stored = await chains(page);
   const all = Object.values(stored.songs ?? stored);
   expect(all).toHaveLength(1);
   expect(all[0].sections[0].entries).toHaveLength(2);
 });
 
-test('AC-18.1.4/5 — Deleting a Pattern that a Song is composed over is refused with a message naming the Song or Songs, until they are deleted', async ({ page }) => {
+test('AC-18.1.4/5 — Deleting a Pattern that a Chain is composed over is refused with a message naming the Chain or Chains, until they are deleted', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'Holds it');
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Holds it');
   page.evaluate(() => window.__rm.handlers.onDelete()).catch(() => {});
   await expect(page.locator('.dialog')).toContainText('Holds it');
   await dialogAccept(page);
   expect(await page.evaluate(() => Boolean(window.__rm.patternStore.findById('p_test')))).toBe(true);
-  await compose(page).locator('.song-item [data-action="song-delete"]').click();
+  await compose(page).locator('.chain-item [data-action="chain-delete"]').click();
   await dialogAccept(page);
-  await expect(compose(page).locator('.song-item')).toHaveCount(0);
+  await expect(compose(page).locator('.chain-item')).toHaveCount(0);
   page.evaluate(() => window.__rm.handlers.onDelete()).catch(() => {});
   await expect(page.locator('.dialog')).toContainText('permanently');
   await dialogAccept(page);
   await expect.poll(() => page.evaluate(() => Boolean(window.__rm.patternStore.findById('p_test')))).toBe(false);
 });
 
-test('AC-18.1.4/6 — A Song is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission', async ({ page }) => {
+test('AC-18.1.4/6 — A Chain is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission', async ({ page }) => {
   await page.goto('/');
   const seedId = await page.evaluate(() => {
     const s = window.__rm.seedStore.loadAll().find((s) => s.soundMode === 'melodic' && s.harmony?.chords?.length);
@@ -377,8 +377,8 @@ test('AC-18.1.4/6 — A Song is not Pattern content: saving one changes nothing 
   });
   await onTab(page, 'compose');
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'On a shipped one');
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'On a shipped one');
   const after = await page.evaluate((id) => ({
     seed: JSON.stringify(window.__rm.seedStore.findById(id)),
     owned: localStorage.getItem('rm.patterns.v1'),
@@ -390,33 +390,152 @@ test('AC-18.1.4/6 — A Song is not Pattern content: saving one changes nothing 
   await expect(page.locator('.dialog')).toHaveCount(0);
 });
 
-test('AC-18.1.4/7 — Songs are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Song', async ({ page }) => {
+test('AC-18.1.4/7 — Chains are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Chain', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'Safe');
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Safe');
   await page.evaluate(() => {
     localStorage.removeItem('rm.overlays.v1');
     localStorage.removeItem('rm.patterns.v1');
   });
-  const stored = await songs(page);
+  const stored = await chains(page);
   expect(Object.values(stored.songs ?? stored).map((s) => s.name)).toEqual(['Safe']);
 });
 
-test('AC-18.1.5/2 — The file is named after the Song when it has been saved, and after the Pattern otherwise', async ({ page }) => {
+test('AC-18.1.5/2 — The file is named after the Chain when it has been saved, and after the Pattern otherwise', async ({ page }) => {
   await keptBlank(page);
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  const unsavedName = await page.evaluate(() => window.__rm.songMidiFilename());
+  const unsavedName = await page.evaluate(() => window.__rm.chainMidiFilename());
   expect(unsavedName).toContain('test-pattern');
-  await compose(page).locator('[data-action="song-save"]').click();
-  await nameSong(page, 'Named song');
-  const savedName = await page.evaluate(() => window.__rm.songMidiFilename());
-  expect(savedName).toContain('named-song');
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Named chain');
+  const savedName = await page.evaluate(() => window.__rm.chainMidiFilename());
+  expect(savedName).toContain('named-chain');
 });
 
-test('AC-18.1.5/4 — Export Song MIDI is unavailable while the Chain is empty', async ({ page }) => {
+test('AC-18.1.5/4 — Export Chain MIDI is unavailable while the Chain is empty', async ({ page }) => {
   await keptBlank(page);
-  await expect(compose(page).locator('[data-action="song-export"]')).toBeDisabled();
+  await expect(compose(page).locator('[data-action="chain-export"]')).toBeDisabled();
   await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
-  await expect(compose(page).locator('[data-action="song-export"]')).toBeEnabled();
+  await expect(compose(page).locator('[data-action="chain-export"]')).toBeEnabled();
+});
+
+// --- AC-18.1.6: a Chain written out as a Pattern ---------------------------------
+
+const writeOut = (page) => compose(page).locator('[data-action="chain-write-out"]');
+/** The MIDI notes a Pattern sounds over one pass, by the one timeline. */
+const notesOf = (page, pattern) => page.evaluate((p) => window.__rmTimeline.buildTimeline(p, 0).filter((e) => e.pitch).map((e) => e.pitch.midiNote), pattern);
+
+test('AC-18.1.6/1 — Write out as Pattern asks a name, pre-filled and unique in the library, and cancelling it changes nothing', async ({ page }) => {
+  await keptBlank(page);
+  await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
+  const before = await page.evaluate(() => localStorage.getItem('rm.patterns.v1'));
+  const base = (await patternState(page)).name;
+  await writeOut(page).click();
+  const input = page.locator('.dialog .dialog-input');
+  await expect(input).toHaveValue(`${base} chain`);
+  // A name already in the library is refused.
+  await input.fill(base);
+  await dialogAccept(page);
+  await expect(page.locator('.dialog .dialog-error')).toBeVisible();
+  await expect(page.locator('.dialog')).toBeVisible();
+  // Cancelled: no Pattern made, the Chain as it was, still in Practice.
+  await dialogCancel(page);
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('rm.patterns.v1'))).toBe(before);
+  await expect(entries(page)).toHaveCount(1);
+  expect(await page.evaluate(() => window.__rm.composer().mode)).not.toBe('composer');
+  // A saved Chain offers its own name.
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Verse bed');
+  await writeOut(page).click();
+  await expect(input).toHaveValue('Verse bed');
+  await dialogCancel(page);
+});
+
+/** keptBlank, with a syllable sounding on every Beat so the fills have notes to deal. */
+async function keptBeats(page) {
+  await page.goto('/');
+  await page.evaluate(() => window.__rm.loadBlank('4/4'));
+  for (let b = 0; b < 4; b++) await page.locator(`.grid .slot[data-beat="${b}"][data-slot="0"]`).click();
+  await page.locator('.sound-mode [data-mode="melodic"]').click();
+  await page.locator('.progression-picker').selectOption('I-IV-V');
+  await page.locator('.arpeggio-picker').selectOption('none');
+  await page.locator('.voicing-picker').selectOption('root');
+  await page.evaluate(() => {
+    window.__rm.handlers.onKeepFill('root-fifth');
+    window.__rm.handlers.onKeepFill('alberti');
+  });
+  await onTab(page, 'compose');
+}
+
+test("AC-18.1.6/3 — The new Pattern is saved to the library as one of the Composer's own and opened in the Composer, and the Chain and the Pattern it plays over are unchanged", async ({ page }) => {
+  await keptBeats(page);
+  await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
+  await compose(page).locator('.palette-fill[data-fill="root-fifth"]').click();
+  for (const item of await entries(page).all()) {
+    await item.locator('.entry-repeats').fill('1');
+    await item.locator('.entry-repeats').dispatchEvent('change');
+  }
+  await compose(page).locator('[data-action="chain-save"]').click();
+  await nameChain(page, 'Verse bed');
+  const base = await patternState(page);
+  const baseStored = await page.evaluate((id) => JSON.stringify(window.__rm.patternStore.findById(id)), base.id);
+  const chainBefore = JSON.stringify(await chains(page));
+  // What the Chain sounds once through: each entry for one cycle of I, IV, V — six passes.
+  const heard = await page.evaluate(() => {
+    const chain = window.__rm.chainStore.loadAll()[0];
+    const pattern = window.__rm.getState().pattern;
+    const out = [];
+    for (const entry of chain.sections[0].entries) {
+      const sounding = { ...pattern, harmony: { ...pattern.harmony, arpeggio: entry.fill } };
+      for (let pass = 0; pass < 3; pass++) out.push(...window.__rmTimeline.buildTimeline(sounding, pass).filter((e) => e.pitch).map((e) => e.pitch.midiNote));
+    }
+    return out;
+  });
+  expect(heard).toHaveLength(24);
+
+  await writeOut(page).click();
+  await nameChain(page, 'Verse written out');
+
+  // Saved as one of the Composer's own: six Measures of stored notes, no progression.
+  const written = await page.evaluate(() => window.__rm.patternStore.loadAll().find((p) => p.name === 'Verse written out'));
+  expect(written).toBeTruthy();
+  expect(written.id).not.toBe(base.id);
+  expect(written.harmony).toBeUndefined();
+  expect(written.measures).toHaveLength(6);
+  expect(await notesOf(page, written)).toEqual(heard);
+  // Opened in the Composer, as a saved composition.
+  await expect(page.locator('.composer-grid')).toBeVisible();
+  const c = await page.evaluate(() => window.__rm.composer());
+  expect(c.mode).toBe('composer');
+  expect(c.savedId).toBe(written.id);
+  expect(c.draft.name).toBe('Verse written out');
+  // The Chain and the Pattern it plays over are as they were.
+  expect(JSON.stringify(await chains(page))).toBe(chainBefore);
+  expect(await page.evaluate((id) => JSON.stringify(window.__rm.patternStore.findById(id)), base.id)).toBe(baseStored);
+});
+
+test('AC-18.1.6/4 — A Chain that would need more than 32 Measures is refused with the number it needs, and Write out as Pattern is unavailable while the Chain is empty', async ({ page }) => {
+  await keptBlank(page);
+  await expect(writeOut(page)).toBeDisabled();
+  await compose(page).locator('.palette-fill[data-fill="alberti"]').click();
+  await expect(writeOut(page)).toBeEnabled();
+  // Eleven repeats of a three-pass cycle over a one-Measure Pattern is 33 Measures.
+  await entries(page).first().locator('.entry-repeats').fill('11');
+  await entries(page).first().locator('.entry-repeats').dispatchEvent('change');
+  const before = await page.evaluate(() => localStorage.getItem('rm.patterns.v1'));
+  await writeOut(page).click();
+  await expect(page.locator('.dialog .dialog-message')).toContainText('33 Measures');
+  await expect(page.locator('.dialog .dialog-input')).toHaveCount(0);
+  await dialogAccept(page);
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('rm.patterns.v1'))).toBe(before);
+  // Ten repeats is 30: it can be written out.
+  await entries(page).first().locator('.entry-repeats').fill('10');
+  await entries(page).first().locator('.entry-repeats').dispatchEvent('change');
+  await writeOut(page).click();
+  await expect(page.locator('.dialog .dialog-input')).toBeVisible();
+  await dialogCancel(page);
 });

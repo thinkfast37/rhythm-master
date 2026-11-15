@@ -1,6 +1,6 @@
 /**
  * Sections, in `rm.sections.v1` (US-19.11). Its own store, shaped as
- * `rm.songs.v1` is, so nothing that happens to Patterns, overlays or Songs
+ * `rm.songs.v1` is, so nothing that happens to Patterns, overlays or Chains
  * can lose one (AC-19.11.4/7). A Section references its composition and
  * every layer by Pattern id; it never carries a Pattern itself.
  */
@@ -61,7 +61,7 @@ export function referencingPattern(patternId) {
     .map((a) => a.name);
 }
 
-/** Ids are opaque and never reused — a counter, as Songs use, so tests stay reproducible. */
+/** Ids are opaque and never reused — a counter, as Chains use, so tests stay reproducible. */
 function nextId(existing) {
   const used = new Set(existing.map((a) => a.id));
   let n = existing.length + 1;

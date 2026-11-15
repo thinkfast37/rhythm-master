@@ -434,7 +434,13 @@ recorded, so every shipped Pattern counts as new once and the check runs in full
 app bookkeeping, not a preference and not Pattern data; no Pattern export carries it, and the
 whole-library backup copies it with the rest of this store.
 
-### `rm.songs.v1` — Songs (US-18.1)
+### `rm.songs.v1` — Chains (US-18.1)
+
+*(Renamed 2026-11-15, T506: a saved Chain was called a Song until then, and this section says Song where it
+describes what is stored. Only the word the musician sees changed. The store keeps its key, its list keeps the
+name `songs`, ids keep their `song_` prefix and the list of runs inside each keeps the name `sections`, so nothing
+saved is rewritten and no backup needs converting. Read "Song" below as "saved Chain", and "each Chain" as each
+run of one.)*
 
 A Song is the Composer's own sequence of fills over a Pattern's progression. It is neither Pattern
 content nor an overlay on one: it references Patterns by id and is stored apart from every other

@@ -13,6 +13,7 @@ import { cycleAccent, append, MAX_MEASURES } from './pattern.js';
 import { buildTimeline } from './timeline.js';
 import { cyclePasses, hasHarmony } from './harmony.js';
 import { roleIdFor, intervalLabelFor } from './fretboard.js';
+import { totalPasses, entryAt, playingAt } from './chain.js';
 
 const clone = (v) => structuredClone(v);
 const mod12 = (n) => ((n % 12) + 12) % 12;
@@ -335,6 +336,34 @@ export function fromPercussive(pattern, name) {
 }
 
 /**
+ * One pass of a Pattern as Measures of stored notes: its own Measures, each
+ * Slot carrying the degree of the note the pass sounds there, and none where
+ * the pass is silent or unpitched.
+ */
+function bakedPass(pattern, pass, key, scale) {
+  const chunk = clone(pattern.measures);
+  for (const measure of chunk) {
+    for (const beat of measure.beats) for (const slot of beat.slots) delete slot.pitch;
+  }
+  for (const event of buildTimeline(pattern, pass)) {
+    if (!event.pitch) continue;
+    const slot = chunk[event.measureIndex].beats[event.beatIndex].slots[event.slotIndex];
+    slot.pitch = pitchFromMidi(event.pitch.midiNote, key, scale);
+  }
+  return chunk;
+}
+
+/** A Pattern as a composition of stored notes alone: no progression, no Register, no id. */
+function asWrittenOut(pattern, name, measures, scale) {
+  const next = { ...clone(pattern), name, measures, rating: 0 };
+  delete next.id;
+  delete next.harmony;
+  delete next.register;
+  next.scale = scale;
+  return next;
+}
+
+/**
  * A Pattern with a progression, as the notes it would sound (AC-19.8.2): the
  * timeline of each pass — the same one playback and the MIDI file use, Register
  * included — written back as stored degrees, the harmonic cycle unrolled into
@@ -345,29 +374,53 @@ export function bakeHarmony(pattern, name) {
   const perPass = pattern.measures.length;
   const unrolled = passes * perPass <= MAX_MEASURES;
   const passCount = unrolled ? passes : 1;
-  const key = pattern.key;
   const scale = pattern.scale ?? DEFAULT_SCALE;
 
   const measures = [];
-  for (let pass = 0; pass < passCount; pass++) {
-    const chunk = clone(pattern.measures);
-    for (const measure of chunk) {
-      for (const beat of measure.beats) for (const slot of beat.slots) delete slot.pitch;
-    }
-    for (const event of buildTimeline(pattern, pass)) {
-      if (!event.pitch) continue;
-      const slot = chunk[event.measureIndex].beats[event.beatIndex].slots[event.slotIndex];
-      slot.pitch = pitchFromMidi(event.pitch.midiNote, key, scale);
-    }
-    measures.push(...chunk);
-  }
+  for (let pass = 0; pass < passCount; pass++) measures.push(...bakedPass(pattern, pass, pattern.key, scale));
+  return { pattern: asWrittenOut(pattern, name, measures, scale), unrolled, passes };
+}
 
-  const next = { ...clone(pattern), name, measures, rating: 0 };
-  delete next.id;
-  delete next.harmony;
-  delete next.register;
-  next.scale = scale;
-  return { pattern: next, unrolled, passes };
+/* --- a Chain written out as a Pattern (AC-18.1.6) ---------------------------- */
+
+/** How many Measures a Chain is, once through: every pass of every entry. */
+export function chainMeasureCount(chain, patternById) {
+  const passes = totalPasses(chain, patternById);
+  let count = 0;
+  for (let loop = 0; loop < passes; loop++) count += playingAt(chain, patternById, loop).measures.length;
+  return count;
+}
+
+/**
+ * Why a Chain cannot be written out as a Pattern, or null when it can
+ * (AC-18.1.6/4): it has nothing in it, or it is longer than a Pattern holds.
+ * Refused whole rather than cut short — a Chain missing its last entries is
+ * not the Chain.
+ */
+export function chainWriteOutRefusal(chain, patternById) {
+  if (totalPasses(chain, patternById) < 1) return 'The Chain is empty';
+  const count = chainMeasureCount(chain, patternById);
+  if (count > MAX_MEASURES) return `Written out, this Chain is ${count} Measures, and a Pattern holds at most ${MAX_MEASURES}`;
+  return null;
+}
+
+/**
+ * The Chain once through as a new Melodic Pattern of stored notes
+ * (AC-18.1.6/2): every entry's passes in order, the progression restarting at
+ * its first chord when an entry takes over, exactly as the Chain plays and as
+ * its MIDI file is written. Null when the write-out is refused.
+ */
+export function chainAsPattern(chain, patternById, name) {
+  if (chainWriteOutRefusal(chain, patternById)) return null;
+  const base = patternById(chain.sections[0].patternId);
+  const scale = base.scale ?? DEFAULT_SCALE;
+  const passes = totalPasses(chain, patternById);
+  const measures = [];
+  for (let loop = 0; loop < passes; loop++) {
+    const at = entryAt(chain, patternById, loop);
+    measures.push(...bakedPass(playingAt(chain, patternById, loop), at.passInEntry, base.key, scale));
+  }
+  return asWrittenOut(base, name, measures, scale);
 }
 
 /** A melody with its Register folded into every note's octave, so what is shown is what sounds (AC-19.8.3/3). */

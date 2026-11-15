@@ -103,11 +103,11 @@ test('AC-7.6.2/1 — A Restore library control beside Back up library opens a fi
   expect(await stores(page)).toEqual(before);
 });
 
-test('AC-7.6.2/3 — After restoring, the app shows the backed-up library — its custom Patterns, ratings, Songs and settings — and nothing added since the backup', async ({ page }) => {
+test('AC-7.6.2/3 — After restoring, the app shows the backed-up library — its custom Patterns, ratings, Chains and settings — and nothing added since the backup', async ({ page }) => {
   const shippedId = await fillLibrary(page);
   const { file, text } = await backUp(page);
 
-  // After the backup: a new Pattern, a changed rating, a changed setting, a Song gone.
+  // After the backup: a new Pattern, a changed rating, a changed setting, a Chain gone.
   await page.evaluate((id) => {
     const rm = window.__rm;
     rm.patternStore.upsert({ ...structuredClone(rm.getState().pattern), id: 'p_2', name: 'Added Later' });

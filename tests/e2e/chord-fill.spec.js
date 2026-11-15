@@ -1,7 +1,7 @@
 /*
  * US-2.15 — A fill for each chord of the progression, proved on the screen:
  * the Fill picker on each chord-editor row, the grid's note bands, the score,
- * the MIDI file, Cycle fills, a Song and Roll the dice. The pure deal is proved
+ * the MIDI file, Cycle fills, a Chain and Roll the dice. The pure deal is proved
  * in tests/unit/core/chord-fill.test.js.
  */
 import { test, expect } from '@playwright/test';
@@ -217,14 +217,14 @@ test("AC-2.15.3/1 — While Cycle fills has a fill in force it deals every chord
   expect(JSON.stringify(await pattern(page))).toBe(json);
 });
 
-test("AC-2.15.3/2 — While a Song plays, the Chain's fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together", async ({ page }) => {
+test("AC-2.15.3/2 — While a Chain plays, its fill in force deals every chord the same way, and Stop returns the Arpeggio and each chord's own fill together", async ({ page }) => {
   await varied(page);
   await fillPicker(page, 3).selectOption('down');
   const json = JSON.stringify(await pattern(page));
   await page.evaluate(() => window.__rm.handlers.onKeepFill('alberti'));
   await onTab(page, 'compose');
   await page.locator('[data-section="compose"] .palette-fill[data-fill="alberti"]').click();
-  await page.locator('[data-section="compose"] [data-action="play-song"]').click();
+  await page.locator('[data-section="compose"] [data-action="play-chain"]').click();
   expect(await fillInForce(page)).toBe('alberti');
   expect(await namesIn(page, 3)).toEqual(ALBERTI_IV);
   expect(await namesIn(page, 0)).toEqual(['C4', 'G4', 'E4', 'G4']);

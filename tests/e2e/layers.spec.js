@@ -662,7 +662,7 @@ test('AC-19.11.5/3 — The archive is named after the Section once it has been s
   expect((await exportSection(page)).name).toBe('evening-bed.zip');
 });
 
-test("AC-19.11.5/4 — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged", async ({ page }) => {
+test("AC-19.11.5/4 — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Chain's are unchanged", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await expect(page.locator('.section-export')).toBeDisabled();

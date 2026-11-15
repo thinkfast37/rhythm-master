@@ -253,7 +253,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-043** | US-2.7 — Cycle through the fill patterns while practising | AC-2.7.1–AC-2.7.3 | T263, T272, T282, T323, T332, T334, T346, T348, T388, T390, T394, T439, T462 | T264, T273, T283, T324, T333, T335, T347, T349, T389, T391, T395, T440, T463 |
 | **P-044** | US-10.2 — Condense a Pattern to its simplest subdivision | AC-10.2.1–AC-10.2.6 | T266, T402 | T267, T403 |
 | **P-045** | US-2.8 — Keep the fills worth composing with | AC-2.8.1–AC-2.8.2 | T282 | T283 |
-| **P-046** | US-18.1 — Compose a Chain from kept fills | AC-18.1.1–AC-18.1.5 | T284, T493 | T285, T494 |
+| **P-046** | US-18.1 — Compose a Chain from kept fills | AC-18.1.1–AC-18.1.6 | T284, T493, T506 | T285, T494, T507 |
 | **P-047** | US-2.9 — Place the melody in a register | AC-2.9.1–AC-2.9.5 | T295, T305 | T296, T306 |
 | **P-048** | US-2.10 — Cycle through chord progressions while practising | AC-2.10.1–AC-2.10.3 | T310, T323, T334, T348, T394 | T311, T324, T335, T349, T395 |
 | **P-049** | US-14.1 — Choose a goal | AC-14.1.1–AC-14.1.5 | T326, T328, T330, T352, T410 | T327, T329, T331, T353, T411 |

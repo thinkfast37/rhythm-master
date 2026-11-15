@@ -12,7 +12,7 @@ import { rawOf, writeStore, clearStore } from './keyValue.js';
 import { migrate, CURRENT_VERSION } from './migrate.js';
 import * as patterns from './patterns.js';
 import * as overlays from './overlays.js';
-import * as songs from './songs.js';
+import * as chains from './chains.js';
 import * as sections from './sections.js';
 import * as settings from './settings.js';
 import * as localMeta from './localMeta.js';
@@ -21,7 +21,7 @@ import * as localMeta from './localMeta.js';
 const SHAPES = {
   [patterns.KEY]: { list: 'patterns' },
   [overlays.KEY]: { map: 'byPatternId' },
-  [songs.KEY]: { list: 'songs' },
+  [chains.KEY]: { list: 'songs' },
   [sections.KEY]: { list: 'sections' },
   [settings.KEY]: {},
   [localMeta.KEY]: { map: 'byPatternId' },

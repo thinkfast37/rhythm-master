@@ -67,7 +67,7 @@ export const HELP = Object.freeze({
     ['Progression', 'Set in Melody; shown here so you know what the Chain plays over.', '.compose-hint'],
     ['Kept fills', 'The fills you shortlisted with Keep; tap one to add it to the Chain.', '.compose-palette > .compose-label'],
     ['Chain', 'The fills in order, each for a number of cycles; move, remove or change repeats in place.', '.compose-section-head > .compose-label'],
-    ['Play song / Save / Export Song MIDI', 'Plays the Chain end to end, stores it under a name, or writes it as one MIDI file.', '.song-export'],
+    ['Play chain / Save / Export Chain MIDI', 'Plays the Chain end to end, stores it under a name, or writes it as one MIDI file.', '.chain-export'],
   ],
 });
 

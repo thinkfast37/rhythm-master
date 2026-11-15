@@ -11,7 +11,7 @@
 import { buildTimeline, loopDurationSeconds } from '../core/timeline.js';
 import { beatDurationSeconds, beatCount, quarterSeconds, tempoUnitOf } from '../core/meter.js';
 import { cyclePasses } from '../core/harmony.js';
-import { totalPasses, entryAt, playingAt } from '../core/song.js';
+import { totalPasses, entryAt, playingAt } from '../core/chain.js';
 import { buildZip } from '../core/zip.js';
 import { passesPerLoop } from '../core/section.js';
 import { hasFixedNotes } from '../core/voice.js';
@@ -139,24 +139,24 @@ const tempoMeta = (secondsPerQuarter) => {
 };
 
 /**
- * Build a .mid for a Song (AC-18.1.5/1): every entry's passes in order, each
+ * Build a .mid for a Chain (AC-18.1.5/1): every entry's passes in order, each
  * entry for its repeats with its fill in force, once through and not looped.
  * Each pass is the same `buildTimeline` playback sounds for it, offset by the
  * passes before it, so the file cannot disagree with what the Chain plays.
  * The Pattern's own export is untouched (AC-18.1.5/3).
  *
- * @param {object} song
+ * @param {object} chain
  * @param {(id: string) => object|null} patternById
  * @returns {Uint8Array}
  */
-export function buildSongMidi(song, patternById) {
-  const passes = totalPasses(song, patternById);
+export function buildChainMidi(chain, patternById) {
+  const passes = totalPasses(chain, patternById);
   const timed = [];
   let startTick = 0;
   let previousTempo = null;
   for (let loop = 0; loop < passes; loop++) {
-    const at = entryAt(song, patternById, loop);
-    const pattern = playingAt(song, patternById, loop);
+    const at = entryAt(chain, patternById, loop);
+    const pattern = playingAt(chain, patternById, loop);
     const secondsPerQuarter = quarterSeconds(pattern.tempo, tempoUnitOf(pattern));
     const toTicks = (seconds) => startTick + Math.round((seconds / secondsPerQuarter) * TICKS_PER_QUARTER);
 
@@ -195,12 +195,12 @@ export function midiFilename(pattern) {
 }
 
 /**
- * The Song's file is named after the Song once it has been saved, and after
+ * The Chain's file is named after the Chain once it has been saved, and after
  * the Pattern otherwise (AC-18.1.5/2).
  */
-export function songMidiFilename(song, pattern) {
-  const named = song?.id && typeof song.name === 'string' && song.name.trim() !== '';
-  return midiFilename(named ? song : pattern);
+export function chainMidiFilename(chain, pattern) {
+  const named = chain?.id && typeof chain.name === 'string' && chain.name.trim() !== '';
+  return midiFilename(named ? chain : pattern);
 }
 
 function download(bytes, filename) {
@@ -219,8 +219,8 @@ export function downloadMidi(pattern) {
   download(buildMidi(pattern), midiFilename(pattern));
 }
 
-export function downloadSongMidi(song, patternById, pattern = patternById(song.sections[0]?.patternId)) {
-  download(buildSongMidi(song, patternById), songMidiFilename(song, pattern));
+export function downloadChainMidi(chain, patternById, pattern = patternById(chain.sections[0]?.patternId)) {
+  download(buildChainMidi(chain, patternById), chainMidiFilename(chain, pattern));
 }
 
 /* --- a Section: one file per layer (AC-19.11.5) ---------------------- */
