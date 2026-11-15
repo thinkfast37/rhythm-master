@@ -310,7 +310,7 @@ describe('core/section — the Section (AC-19.11.1, AC-19.11.4)', () => {
     expect(validateSection({ ...a, volume: 50.5 })).toContain('A volume must be a whole number from 1 to 100');
   });
 
-  it("AC-19.12.4/3 — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80: such a Section is still sound, and reads back with nothing added", () => {
+  it("AC-19.12.4/3 — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice remembers for its Pattern or on Piano when there is none, and every volume at 80: such a Section is still sound, and reads back with nothing added", () => {
     const old = { id: 'arr_1', name: 'Bed', compositionId: 'p_1', layers: [{ patternId: 's_1', muted: false }], active: 0 };
     expect(validateSection(old)).toEqual([]);
     expect(soundOf(old)).toEqual({});

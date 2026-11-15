@@ -4401,8 +4401,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - *(Title, Then and /1 revised 2026-11-15 with US-19.12: the switch offered three voices. The maintainer, asked whether Practice should gain the four new instruments or keep its three, chose to offer them all, told the header control grows wider.)*
   - **Cases**:
     - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute, Drums — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
-    - **AC-2.13.1/2** — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
+    - **AC-2.13.1/2** — Piano is the voice of a Pattern until another is chosen for it; the choice is remembered for that Pattern alone across loads, and is never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
     - **AC-2.13.1/3** — Choosing a voice while playing changes it from the next melodic note, with no restart
+  - *(/2 revised 2026-11-15 at the maintainer's request, T504. It read: "Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content". The maintainer, asking for Arrangements: "if you change the instrument in practice mode it gets assigned to the pattern for next time you load that pattern", and, asked whether a choice should still carry to Patterns with none of their own: "The global default should be piano." So the one app-wide voice is retired: every Pattern is on Piano until a voice is chosen for it, and the choice is kept beside the Pattern in `rm.overlays.v1`, for owned and shipped Patterns alike, where a Pattern export never reaches. What `melodicVoice` held in `rm.settings.v1` is no longer read.)*
 
 - **AC-2.13.2** — Practice plays the voice chosen
   - **Given** a Melodic Pattern in Practice
@@ -4998,8 +4999,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.12.2/2** — Choosing an instrument for a part changes that part alone, and is heard from its next note with nothing stopped or restarted
     - **AC-19.12.2/3** — The picker of the part on screen and the record bar's instrument switch are one choice: setting either shows in the other, and the instrument view follows it
     - **AC-19.12.2/4** — A part keeps its instrument when it is put on screen and when it leaves: the part left sounds as it did, and the instrument view becomes the one the part now on screen is played on
-    - **AC-19.12.2/5** — A layer newly added starts on the voice Practice has chosen
+    - **AC-19.12.2/5** — A layer newly added starts on the voice Practice remembers for its Pattern, and on Piano when there is none
     - **AC-19.12.2/6** — A percussive layer has no instrument of its own, and put on screen it takes the instrument of the part it replaces
+  - *(/5 revised 2026-11-15 with AC-2.13.1/2, T504: it read "A layer newly added starts on the voice Practice has chosen", and Practice no longer has one voice to give — each Pattern has its own, Piano until chosen.)*
 
 - **AC-19.12.3** — Each part has its own volume
   - **Given** a composition in the Composer, with or without layers
@@ -5019,8 +5021,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Cases**:
     - **AC-19.12.4/1** — Save section stores each part's instrument and volume, and opening the Section restores them
     - **AC-19.12.4/2** — Changing an instrument or a volume in a saved Section saves it in place at once, as every other change to its parts does
-    - **AC-19.12.4/3** — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80
+    - **AC-19.12.4/3** — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice remembers for its Pattern or on Piano when there is none, and every volume at 80
     - **AC-19.12.4/4** — Choosing an instrument or a volume changes no Pattern, and no Pattern export carries either
+  - *(/3 revised 2026-11-15 with AC-2.13.1/2, T504: "every other part on the voice Practice has chosen" became the voice remembered for that part's Pattern, else Piano. /4 stands: an instrument chosen in the Composer is the Section's and is not what Practice remembers for the Pattern.)*
 
 - **AC-19.12.5** — The fetched instruments load on first need, never block and never silence
   - **Given** a part in the Composer, or the chosen voice in Practice, on Electric guitar, Bass, Sax or Trumpet
@@ -5173,6 +5176,39 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.15.3/2** — After a transposition every degree, chromatic ones included, every syllable and every Accent Level is as it was
     - **AC-19.15.3/3** — A direction that would carry a note past the lowest or highest octave a note can be stored in is refused with the reason, and nothing is squashed to fit
     - **AC-19.15.3/4** — Choosing Transpose up or Transpose down sets the Key and moves the notes on screen, a saved composition is saved as it now is, and a direction that is refused is not offered, the question saying why
+
+---
+
+### User Story 73 - Hear a Percussive Pattern on a drum kit
+
+*Traceability: `US-2.18` — Hear a Percussive Pattern on a drum kit*
+
+**As** a Learner, **I want** to hear a Percussive Pattern either as the accent tones it has always had or on a drum kit that picks the drum from the accent, **so that** a rhythm I am practising can sound like a drummer playing it without my writing a drum part.
+
+*(Added 2026-11-15 at the maintainer's request, T504: "when I pick a percussive pattern I have the option of hearing it in the existing percussive accents mode or I can use an auto-drum based pattern - the drum instrument choices will be based on the accent level. I am thinking strong accent is always kick and medium is snare and low is floor tom." The second of the pieces the Arrangements request was split into. Decisions the same day: the drums are the synthesised kit a Drums part already plays (US-19.13), so nothing is loaded and no Constitution amendment is needed; the choice is remembered beside each Pattern as its voice now is (AC-2.13.1/2), never on it; this story is Practice alone — a percussive layer of a Section still sounds its accent tones, and a Percussive Pattern exports to MIDI as it did, both left for the pieces that follow.)*
+
+**Independent Test**: Open a Percussive Pattern and assert the header shows Accents and Drum kit with Accents pressed and no voice switch; press Play and assert its notes sound as accent tones; choose Drum kit and assert the next notes are the Kick on Strong, the Snare on Medium and the Floor tom on Weak with nothing fetched and the run not restarted; reload and assert Drum kit is still pressed for this Pattern and Accents for another; switch the Pattern to Melodic and assert the percussion switch is gone.
+
+**Acceptance Scenarios**:
+
+- **AC-2.18.1** — A Percussive Pattern offers Accents or Drum kit
+  - **Given** a Percussive Pattern in Practice
+  - **When** the Learner looks at the Pattern header
+  - **Then** a percussion switch offers Accents and Drum kit, the choice is that Pattern's alone and is heard at once
+  - **Cases**:
+    - **AC-2.18.1/1** — While the Pattern is Percussive, the Pattern header shows a percussion switch, Accents and Drum kit, beside the Sound Mode switch, Accents pressed until Drum kit is chosen; while it is Melodic the switch is not shown
+    - **AC-2.18.1/2** — The choice is remembered for that Pattern alone across loads, and is never Pattern content: choosing never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
+    - **AC-2.18.1/3** — Choosing Accents or Drum kit while playing changes the sound from the next note, with no restart
+
+- **AC-2.18.2** — Drum kit plays a drum for each Accent Level
+  - **Given** a Percussive Pattern on Drum kit
+  - **When** one of its notes sounds
+  - **Then** the drum its Accent Level names is synthesised, and nothing else about the Pattern or the click changes
+  - **Cases**:
+    - **AC-2.18.2/1** — A Strong note is the Kick on MIDI note 36, a Medium note the Snare on 38 and a Weak note the Floor tom on 43
+    - **AC-2.18.2/2** — On Drum kit every note of a Percussive Pattern sounds its drum through the synthesised kit of AC-19.13.1 with no audio file requested, and on Accents every note sounds its accent tone as it always has
+    - **AC-2.18.2/3** — The metronome click is the same on Accents and on Drum kit
+    - **AC-2.18.2/4** — The offline render of a Percussive Pattern on Drum kit sounds the drums, and on Accents the accent tones
 
 ---
 

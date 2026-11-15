@@ -241,3 +241,33 @@ describe('storage/settings — My list across a re-spelled catalogue', () => {
     expect(settings.load().fillCycleList).toEqual(['i-bVII-bVI-i-bVI']);
   });
 });
+
+describe('storage/overlays — how a Pattern sounds in Practice (AC-2.13.1/2, AC-2.18.1/2)', () => {
+  it('AC-2.13.1/2 — Piano is the voice of a Pattern until another is chosen for it; the choice is remembered for that Pattern alone across loads, and is never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it: kept beside each Pattern, owned or shipped', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    expect(overlays.voiceFor('s_1')).toBeUndefined();
+    overlays.setVoice('s_1', 'guitar');
+    overlays.setVoice('p_4', 'sax');
+    expect(overlays.voiceFor('s_1')).toBe('guitar');
+    expect(overlays.voiceFor('p_4')).toBe('sax');
+    // That Pattern alone: another has none.
+    expect(overlays.voiceFor('s_2')).toBeUndefined();
+    // Beside what is already remembered for the Pattern, replacing none of it.
+    overlays.setRating('s_1', 4);
+    overlays.setTempo('s_1', 150);
+    expect(overlays.forPattern('s_1')).toMatchObject({ voice: 'guitar', rating: 4, tempo: 150 });
+    // Applied to a Pattern, the overlay puts no voice on it.
+    expect(overlays.applyPlaybackTo(overlays.applyTo({ id: 's_1', name: 'x', tempo: 100 })).voice).toBeUndefined();
+  });
+
+  it('AC-2.18.1/2 — The choice is remembered for that Pattern alone across loads, and is never Pattern content: choosing never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it: kept beside each Pattern', async () => {
+    const overlays = await import('../../../src/storage/overlays.js');
+    expect(overlays.percussionFor('s_1')).toBeUndefined();
+    overlays.setPercussion('s_1', 'drums');
+    expect(overlays.percussionFor('s_1')).toBe('drums');
+    expect(overlays.percussionFor('s_2')).toBeUndefined();
+    overlays.setPercussion('s_1', 'accents');
+    expect(overlays.percussionFor('s_1')).toBe('accents');
+    expect(overlays.applyPlaybackTo(overlays.applyTo({ id: 's_1', name: 'x', tempo: 100 })).percussion).toBeUndefined();
+  });
+});

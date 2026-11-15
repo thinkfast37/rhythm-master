@@ -15,6 +15,7 @@ import seed from '../../../data/seed-patterns.json';
 import { fakeContext } from './fakeAudio.js';
 import { layered } from '../../../src/core/section.js';
 import { volumeGain } from '../../../src/core/voice.js';
+import { autoDrumNote } from '../../../src/core/drums.js';
 
 const SAMPLE_RATE = 44100;
 /** Seconds of 16-bit mono audio that fit in the module's 60 MB ceiling. */
@@ -293,5 +294,55 @@ describe('audio/backgroundRender — layers under the composition (US-19.11)', (
       if (saved === undefined) delete globalThis.OfflineAudioContext;
       else globalThis.OfflineAudioContext = saved;
     }
+  });
+});
+
+describe('audio/backgroundRender — a Percussive Pattern on the kit (AC-2.18.2/4)', () => {
+  const percussive = seed.patterns.find((p) => p.soundMode !== 'melodic');
+
+  async function render(playUnpitched) {
+    const saved = globalThis.OfflineAudioContext;
+    const contexts = [];
+    globalThis.OfflineAudioContext = class {
+      constructor(channels, frames, rate) {
+        Object.assign(this, fakeContext());
+        this.frames = frames;
+        this.sampleRate = rate;
+        contexts.push(this);
+      }
+      startRendering() {
+        const samples = new Float32Array(this.frames);
+        return Promise.resolve({ sampleRate: this.sampleRate, getChannelData: () => samples });
+      }
+    };
+    try {
+      const result = await renderCycle({ patternAt: () => percussive, passes: 1, settings: {}, sampleRate: 8000, playUnpitched });
+      return { result, ctx: contexts[0] };
+    } finally {
+      if (saved === undefined) delete globalThis.OfflineAudioContext;
+      else globalThis.OfflineAudioContext = saved;
+    }
+  }
+
+  it('AC-2.18.2/4 — The offline render of a Percussive Pattern on Drum kit sounds the drums, and on Accents the accent tones', async () => {
+    const events = buildTimeline(percussive, 0);
+    expect(events.length).toBeGreaterThan(0);
+    expect(events.every((e) => !e.pitch)).toBe(true);
+
+    // On Accents: one accent tone, an oscillator, for every note.
+    const accents = await render(null);
+    expect(accents.ctx.nodes.filter((n) => n.kind === 'oscillator')).toHaveLength(events.length);
+    URL.revokeObjectURL(accents.result.url);
+
+    // On Drum kit: every note is handed to the kit on the render's own context,
+    // with its accent and its time, and no accent tone is built.
+    const drums = [];
+    const kit = await render((ctx, _destination, event, when, level) => drums.push({ ctx, midi: autoDrumNote(event.accent), when, level }));
+    expect(drums).toHaveLength(events.length);
+    expect(drums.every((d) => d.ctx === kit.ctx && d.level === 1)).toBe(true);
+    expect(drums.map((d) => d.midi)).toEqual(events.map((e) => ({ 3: 36, 2: 38, 1: 43 })[e.accent]));
+    expect(drums.map((d) => d.when)).toEqual(events.map((e) => e.timeSeconds));
+    expect(kit.ctx.nodes.filter((n) => n.kind === 'oscillator')).toHaveLength(0);
+    URL.revokeObjectURL(kit.result.url);
   });
 });

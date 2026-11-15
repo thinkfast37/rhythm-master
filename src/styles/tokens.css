@@ -1934,6 +1934,19 @@ body {
   border-radius: var(--radius);
   overflow: hidden;
 }
+/* What plays a Percussive Pattern, where the voice switch sits for a Melodic one (AC-2.18.1/1). */
+.percussion-sound {
+  display: inline-flex;
+  align-items: center;
+  margin: 6px 0 0 8px;
+  vertical-align: top;
+}
+.percussion-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
 .voice-status { font: 500 11px/1.3 var(--font-ui); color: var(--ink-dim); }
 .voice-status.error { color: #ff8a80; }
 .voice-retry {

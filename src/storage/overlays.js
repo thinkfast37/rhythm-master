@@ -67,6 +67,28 @@ export function setKeptFills(patternId, keptFills) {
   return update(patternId, { keptFills });
 }
 
+/**
+ * The instrument Practice plays a Pattern's melodic notes with (AC-2.13.1/2),
+ * kept here for owned and shipped Patterns alike so that it is never Pattern
+ * content. Undefined until one is chosen: the caller reads that as Piano.
+ */
+export function voiceFor(patternId) {
+  return forPattern(patternId).voice;
+}
+
+export function setVoice(patternId, voice) {
+  return update(patternId, { voice });
+}
+
+/** How a Percussive Pattern sounds in Practice, where chosen (AC-2.18.1/2). */
+export function percussionFor(patternId) {
+  return forPattern(patternId).percussion;
+}
+
+export function setPercussion(patternId, percussion) {
+  return update(patternId, { percussion });
+}
+
 /** Apply the rating overlay, returning a plain (unfrozen) copy the UI can read. */
 export function applyTo(pattern) {
   const overlay = forPattern(pattern.id);

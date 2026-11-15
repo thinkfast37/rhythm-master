@@ -648,3 +648,33 @@ describe('audio/scheduler — the click switched under a run (AC-19.6.3)', () =>
     expect(transport._eventTime(0, 0)).toBe(origin);
   });
 });
+
+describe('audio/scheduler — an unpitched note sounded another way (US-2.18)', () => {
+  /** One pass of the fixture with the click on, under the transport given. */
+  async function onePass(options) {
+    transport.stop();
+    resetContext();
+    resetNodes();
+    starts = [];
+    transport = createTransport(options);
+    await startTransport();
+    const origin = transport._eventTime(0, 0);
+    transport.setMetronome(true);
+    for (let t = 0.1; t < 1.95; t += 0.1) await tickAt(origin + t);
+    return { clicks: transport._snapshot().clicksScheduled, started: starts.length };
+  }
+
+  it('AC-2.18.2/3 — The metronome click is the same on Accents and on Drum kit: the transport', async () => {
+    const accents = await onePass({});
+    const heard = [];
+    const kit = await onePass({ playUnpitched: (_ctx, _destination, event, when, level) => heard.push({ accent: event.accent, when, level }) });
+    // Every note of the rhythm went to the kit instead of the accent tone …
+    expect(heard.length).toBeGreaterThan(0);
+    expect(heard.every((h) => [1, 2, 3].includes(h.accent) && h.level === 1 && Number.isFinite(h.when))).toBe(true);
+    // … and the click was scheduled exactly as it is without it.
+    expect(accents.clicks).toBeGreaterThan(0);
+    expect(kit.clicks).toBe(accents.clicks);
+    // What the transport itself started on the kit is the clicks alone: the accent tones are the difference.
+    expect(kit.started).toBe(accents.started - heard.length);
+  });
+});

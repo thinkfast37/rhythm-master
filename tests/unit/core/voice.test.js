@@ -28,11 +28,12 @@ import {
 import { DEFAULTS } from '../../../src/storage/settings.js';
 
 describe('core/voice — the choice', () => {
-  it('AC-2.13.1/2 — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it: the stored default and its reading', () => {
+  it('AC-2.13.1/2 — Piano is the voice of a Pattern until another is chosen for it; the choice is remembered for that Pattern alone across loads, and is never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it: a voice not yet chosen reads as Piano', () => {
     // Revised with AC-2.13.1 (2026-11-15): the switch offers all seven instruments.
     expect(VOICES).toEqual(['piano', 'synth', 'guitar', 'electric', 'bass', 'sax', 'trumpet', 'flute', 'drums']);
     expect(DEFAULT_VOICE).toBe('piano');
-    expect(DEFAULTS.melodicVoice).toBe('piano');
+    // Revised 2026-11-15 (T504): there is no app-wide voice any more, so no stored default to read.
+    expect('melodicVoice' in DEFAULTS).toBe(false);
     expect(normaliseVoice(undefined)).toBe('piano');
     expect(normaliseVoice('harpsichord')).toBe('piano');
     for (const v of VOICES) expect(normaliseVoice(v)).toBe(v);
