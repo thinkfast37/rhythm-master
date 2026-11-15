@@ -367,29 +367,37 @@ test("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
 });
 
-test('AC-19.12.4/2 — Changing an instrument or a volume in a loaded Arrangement shows it as having unsaved changes until Save arrangement is pressed again', async ({ page }) => {
+test('AC-19.12.4/2 — Changing an instrument or a volume in a saved Arrangement saves it in place at once, as every other change to its parts does', async ({ page }) => {
   await openApp(page);
   await band(page);
   await page.locator('.arrangement-save').click();
   await nameInDialog(page, 'Band');
-  await expect(page.locator('.layers-unsaved')).toHaveCount(0);
+  const stored = async () => (await page.evaluate(() => window.__rm.arrangementStore.loadAll()))[0];
+  await expect(page.locator('.layers-saved')).toBeVisible();
+  // A layer's volume: saved as it is set, with nothing pressed.
   await typeVolume(row(page, BOSSA), 45);
-  await expect(page.locator('.layers-unsaved[data-unsaved="changes"]')).toBeVisible();
-  await page.locator('.arrangement-save').click();
-  await expect(page.locator('.layers-unsaved')).toHaveCount(0);
+  await expect.poll(async () => (await stored()).layers[1].volume).toBe(45);
+  // A layer's instrument.
   await picker(row(page, DJEMBE)).selectOption('trumpet');
-  await expect(page.locator('.layers-unsaved[data-unsaved="changes"]')).toBeVisible();
-  await page.locator('.arrangement-save').click();
-  await expect(page.locator('.layers-unsaved')).toHaveCount(0);
-  // The part on screen's own, too.
+  await expect.poll(async () => (await stored()).layers[0].instrument).toBe('trumpet');
+  // The part on screen's own instrument and volume.
   await switchTo(page, 'bass').click();
-  await expect(page.locator('.layers-unsaved[data-unsaved="changes"]')).toBeVisible();
-  await page.locator('.arrangement-save').click();
+  await expect.poll(async () => (await stored()).instrument).toBe('bass');
+  await typeVolume(onScreen(page), 64);
+  await expect.poll(async () => (await stored()).volume).toBe(64);
+  // In place: still the one Arrangement, never shown as unsaved.
+  expect(await page.evaluate(() => window.__rm.arrangementStore.loadAll().length)).toBe(1);
+  expect((await stored()).id).toBe('arr_1');
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
-  const [stored] = await page.evaluate(() => window.__rm.arrangementStore.loadAll());
-  expect(stored).toMatchObject({ instrument: 'bass' });
-  expect(stored.layers[0]).toMatchObject({ instrument: 'trumpet' });
-  expect(stored.layers[1]).toMatchObject({ volume: 45 });
+  await expect(page.locator('.layers-saved')).toBeVisible();
+  // And it is what a reload brings back.
+  await page.reload();
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await reopenArrangement(page);
+  await expect(picker(onScreen(page))).toHaveValue('bass');
+  await expect(entry(onScreen(page))).toHaveValue('64');
+  await expect(picker(row(page, DJEMBE))).toHaveValue('trumpet');
+  await expect(entry(row(page, BOSSA))).toHaveValue('45');
 });
 
 test("AC-19.12.4/3 — An Arrangement saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80", async ({ page }) => {

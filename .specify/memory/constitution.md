@@ -29,7 +29,7 @@ Version change: 3.9.0 → 3.10.0
   Follow-up: spec.md US-19.12 added (AC-19.12.1–AC-19.12.5) and US-19.13 (AC-19.13.1–AC-19.13.4); AC-2.13.1, AC-2.13.3, AC-19.1.3,
   AC-19.6.1, AC-19.7.1/1, AC-19.11.2/2, AC-19.11.4/1 and AC-19.11.6/3 revised; AC-2.13.2/5
   added; research.md D-003 amended, D-028 added; data-model §6 and `rm.arrangements.v1`;
-  plan.md P-074 (T485–T487) and P-075 (T488–T489).
+  plan.md P-074 (T487–T489) and P-075 (T490–T491).
 
 Version change: 3.8.0 → 3.9.0
 

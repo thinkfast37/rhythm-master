@@ -4868,11 +4868,12 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **When** the Composer presses Save arrangement
   - **Then** a name is asked and an Arrangement — the composition and its layers in order, with which are muted — is stored apart from Patterns and Songs, listed in the Layers section, and loaded from there
   - *(Revised 2026-11-13 with AC-19.11.6: which part the Composer is working in joined what is stored, and "the composition is saved" became "every part is saved", since any part may now be an unsaved composition.)*
+  - *(Revised 2026-11-15, /4: a loaded Arrangement used to change only when Save arrangement was pressed again. The maintainer, on the live build: "although the piece says 'saved' at the top — if I actually reload the arrangement the third layer is missing." The top bar's Saved is the Pattern of the part being composed, and the Arrangement's small "unsaved changes" mark went unseen. Decision the same day: once named, an Arrangement saves every change on its own, as a composition does after its first save (US-19.9); the first save still asks the name.)*
   - **Cases**:
     - **AC-19.11.4/1** — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why
     - **AC-19.11.4/2** — A saved Arrangement survives a reload and is listed in the Layers section; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes
     - **AC-19.11.4/3** — An Arrangement can be renamed and deleted from the Layers section, deletion asking first
-    - **AC-19.11.4/4** — Edits to a loaded Arrangement's layers are not saved until Save arrangement is pressed again, which updates it in place; the section says when the loaded Arrangement has unsaved changes
+    - **AC-19.11.4/4** — Once an Arrangement is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Arrangement waits, the Layers section naming the part, and saves as soon as that part is saved
     - **AC-19.11.4/5** — Deleting a Pattern that an Arrangement uses, as its composition or as a layer, is refused with a message naming the Arrangement or Arrangements, until they are deleted
     - **AC-19.11.4/6** — An Arrangement is not Pattern content: saving one changes nothing on any Pattern, and the composition's JSON and MIDI exports and its submission carry nothing of it
     - **AC-19.11.4/7** — Arrangements are stored in `rm.arrangements.v1`, apart from Patterns, overlays, Songs, settings and Local Metadata, and the whole-library backup carries the store as it does every other
@@ -4985,9 +4986,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Given** parts with instruments and volumes chosen
   - **When** the Composer saves the Arrangement, opens it again, or exports a Pattern
   - **Then** the Arrangement carries each part's instrument and volume and restores them, and no Pattern is touched by either
+  - *(/2 revised 2026-11-15 before this landed: it had a changed instrument or volume wait for Save arrangement to be pressed again. The same day the maintainer had a saved Arrangement save every change on its own (AC-19.11.4/4, T485), and an instrument or a volume is a change to its parts like any other.)*
   - **Cases**:
     - **AC-19.12.4/1** — Save arrangement stores each part's instrument and volume, and opening the Arrangement restores them
-    - **AC-19.12.4/2** — Changing an instrument or a volume in a loaded Arrangement shows it as having unsaved changes until Save arrangement is pressed again
+    - **AC-19.12.4/2** — Changing an instrument or a volume in a saved Arrangement saves it in place at once, as every other change to its parts does
     - **AC-19.12.4/3** — An Arrangement saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80
     - **AC-19.12.4/4** — Choosing an instrument or a volume changes no Pattern, and no Pattern export carries either
 
