@@ -5,6 +5,7 @@ import {
   beamSegments,
   keySignature,
   staffStep,
+  chooseClef,
   writtenTicks,
   slotTick,
   itemAt,
@@ -240,7 +241,7 @@ describe('core/notation — the treble staff (AC-12.2.5)', () => {
     expect(keySignature('Bb', 'ionian').steps).toEqual([4, 7]);
   });
 
-  it('AC-12.2.5/2 — Every notehead sits at the staff position of its letter and octave, as the pitch strip names it: middle C — degree 1, Key C, octave 4 — on the first ledger line below the staff; E4 on the bottom line; B4 on the middle line; F5 on the top line; A5 on the first ledger line above; ledger lines drawn for every position outside the staff: the staff step arithmetic', () => {
+  it('AC-12.2.5/2 — On a treble staff, every notehead sits at the staff position of its letter and octave, as the pitch strip names it: middle C — degree 1, Key C, octave 4 — on the first ledger line below the staff; E4 on the bottom line; B4 on the middle line; F5 on the top line; A5 on the first ledger line above; ledger lines drawn for every position outside the staff: the staff step arithmetic', () => {
     expect(staffStep('C', 4)).toBe(-2);
     expect(staffStep('E', 4)).toBe(0);
     expect(staffStep('B', 4)).toBe(4);
@@ -262,10 +263,13 @@ describe('core/notation — the treble staff (AC-12.2.5)', () => {
     expect(notesOf(buildScore(p))[0].name).toMatchObject({ letter: 'C', octave: 4 });
 
     const bass = { ...p, register: -2 };
-    const written = notesOf(buildScore(bass))[0];
+    const bassScore = buildScore(bass);
+    const written = notesOf(bassScore)[0];
     expect(written.name).toMatchObject({ letter: 'C', octave: 2 });
-    // The staff position moves with it, and the head is the note playback sounds.
-    expect(written.step).toBe(staffStep('C', 2));
+    // The staff position moves with it — on the bass staff a note this low is
+    // written on (AC-12.2.5/8) — and the head is the note playback sounds.
+    expect(bassScore.staff).toBe('bass');
+    expect(written.step).toBe(staffStep('C', 2, 'bass'));
     expect(written.midiNote).toBe(buildTimeline(bass)[0].pitch.midiNote);
   });
 
@@ -356,6 +360,66 @@ describe('core/notation — the treble staff (AC-12.2.5)', () => {
     expect(stemDirection([2, 7])).toBe('down'); // 7 is farther from 4 than 2 is
     expect(stemDirection([0, 6])).toBe('up');
     expect(stemDirection([10], 'single')).toBe('up');
+  });
+
+  it('AC-12.2.5/8 — The clef is chosen from the notes the score writes: bass when more of them are written below middle C than on it or above, treble otherwise, so a tie or a Pattern with no note yet is treble; one clef holds for the whole score, every pass and every line', () => {
+    // The rule itself, by written letter and octave.
+    expect(chooseClef([])).toBe('treble');
+    expect(chooseClef([{ letter: 'C', octave: 4 }])).toBe('treble'); // middle C is not below it
+    expect(chooseClef([{ letter: 'B', octave: 3 }])).toBe('bass');
+    expect(chooseClef([{ letter: 'B', octave: 3 }, { letter: 'C', octave: 4 }])).toBe('treble'); // a tie
+    expect(chooseClef([{ letter: 'B', octave: 3 }, { letter: 'G', octave: 2 }, { letter: 'E', octave: 5 }])).toBe('bass');
+
+    // A Melodic Pattern with no note yet is treble; a Percussive one keeps its line.
+    expect(buildScore(pattern([], { melodic: true })).staff).toBe('treble');
+    expect(buildScore(pattern([[0, 0, 0]])).staff).toBe('single');
+
+    // Three of four notes below middle C: bass.
+    let p = pattern([[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0]], { melodic: true });
+    p = setPitch(p, 0, 0, 0, { degree: '1', octaveOffset: -1 }); // C3
+    p = setPitch(p, 0, 1, 0, { degree: '5', octaveOffset: -1 }); // G3
+    p = setPitch(p, 0, 2, 0, { degree: '3', octaveOffset: -1 }); // E3
+    p = setPitch(p, 0, 3, 0, { degree: '1', octaveOffset: 0 }); // C4
+    expect(buildScore(p).staff).toBe('bass');
+    // Two of four: a tie, so treble.
+    p = setPitch(p, 0, 2, 0, { degree: '3', octaveOffset: 0 });
+    const tie = buildScore(p);
+    expect(tie.staff).toBe('treble');
+    for (const n of notesOf(tie)) expect(n.step).toBe(staffStep(n.name.letter, n.name.octave));
+
+    // Under a progression, every pass is counted and every pass is written in the one clef.
+    let low = pattern([[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0]], { melodic: true });
+    for (let b = 0; b < 4; b++) low = setPitch(low, 0, b, 0, { degree: '1', octaveOffset: -1 });
+    low = setProgression(low, 'I-IV-V');
+    const score = buildScore(low);
+    expect(score.passes.length).toBeGreaterThan(1);
+    expect(score.staff).toBe('bass');
+    for (const n of notesOf(score)) expect(n.step).toBe(staffStep(n.name.letter, n.name.octave, 'bass'));
+  });
+
+  it("AC-12.2.5/9 — On a bass staff, every notehead sits at the staff position of its letter and octave: G2 on the bottom line; D3 on the middle line; A3 on the top line; middle C on the first ledger line above; E2 on the first ledger line below; and the key signature is written one line lower than the treble's, its F♯ on the fourth line and its B♭ on the second", () => {
+    expect(staffStep('G', 2, 'bass')).toBe(0); // bottom line
+    expect(staffStep('D', 3, 'bass')).toBe(4); // middle line
+    expect(staffStep('A', 3, 'bass')).toBe(8); // top line
+    expect(staffStep('C', 4, 'bass')).toBe(10); // first ledger line above
+    expect(staffStep('E', 2, 'bass')).toBe(-2); // first ledger line below
+    // The signature, one line lower: F♯ on the fourth line (step 6), B♭ on the second (step 2).
+    expect(keySignature('G', 'ionian', 'bass').steps).toEqual([6]);
+    expect(keySignature('F', 'ionian', 'bass').steps).toEqual([2]);
+    expect(keySignature('D', 'ionian', 'bass').steps).toEqual(keySignature('D', 'ionian').steps.map((s) => s - 2));
+    expect(keySignature('Eb', 'ionian', 'bass').steps).toEqual(keySignature('Eb', 'ionian').steps.map((s) => s - 2));
+
+    // A bass score in G carries the bass signature and writes its notes on the bass staff.
+    let p = pattern([[0, 0, 0], [0, 1, 0]], { melodic: true });
+    p = { ...p, key: 'G' };
+    p = setPitch(p, 0, 0, 0, { degree: '1', octaveOffset: -2 });
+    p = setPitch(p, 0, 1, 0, { degree: '5', octaveOffset: -2 });
+    const score = buildScore(p);
+    const [g, d] = notesOf(score);
+    expect([g.name.text, d.name.text]).toEqual(['G2', 'D3']);
+    expect(score.staff).toBe('bass');
+    expect(score.keySignature).toMatchObject({ count: 1, steps: [6] });
+    expect([g.step, d.step]).toEqual([0, 4]);
   });
 
   it("every written note's sounding pitch is the timeline's for the same Slot and pass", () => {

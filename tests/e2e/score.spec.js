@@ -186,7 +186,7 @@ test('AC-12.2.3 — A Percussive Pattern is written on a single-line rhythm staf
 
 /* --- AC-12.2.5 — the treble staff ----------------------------------------------- */
 
-test('AC-12.2.5/2 — Every notehead sits at the staff position of its letter and octave, as the pitch strip names it: middle C — degree 1, Key C, octave 4 — on the first ledger line below the staff; E4 on the bottom line; B4 on the middle line; F5 on the top line; A5 on the first ledger line above; ledger lines drawn for every position outside the staff', async ({ page }) => {
+test('AC-12.2.5/2 — On a treble staff, every notehead sits at the staff position of its letter and octave, as the pitch strip names it: middle C — degree 1, Key C, octave 4 — on the first ledger line below the staff; E4 on the bottom line; B4 on the middle line; F5 on the top line; A5 on the first ledger line above; ledger lines drawn for every position outside the staff', async ({ page }) => {
   await sheet(page, { melodic: true });
   await turnOn(page, [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0], [0, 3, 2]]);
   await stamp(page, 0, 0, 0, '1', 0); // C4
@@ -249,6 +249,103 @@ test('AC-12.2.5/7 — A note below the middle line has its stem up and a note on
   expect(await stem(0, 2, 0)).toBeGreaterThan(0); // down, with its group
   expect(await stem(0, 2, 1)).toBeGreaterThan(0);
   await expect(page.locator('.score-row').first().locator('.beam')).not.toHaveCount(0);
+});
+
+test('AC-12.2.5/8 — The clef is chosen from the notes the score writes: bass when more of them are written below middle C than on it or above, treble otherwise, so a tie or a Pattern with no note yet is treble; one clef holds for the whole score, every pass and every line', async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  const score = page.locator('.score');
+  const clefs = (kind) => page.locator(`.score-row [data-clef="${kind}"]`);
+
+  // No note yet: treble.
+  await expect(score).toHaveAttribute('data-staff', 'treble');
+  await expect(clefs('treble')).toHaveCount(1);
+
+  // Two notes below middle C and two on or above it: a tie, so treble.
+  await turnOn(page, [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0]]);
+  await stamp(page, 0, 0, 0, '1', -1); // C3
+  await stamp(page, 0, 1, 0, '5', -1); // G3
+  await stamp(page, 0, 2, 0, '1', 0); // C4, middle C — not below it
+  await stamp(page, 0, 3, 0, '3', 0); // E4
+  await expect(score).toHaveAttribute('data-staff', 'treble');
+  await expect(clefs('treble')).toHaveCount(1);
+  await expect(clefs('bass')).toHaveCount(0);
+
+  // A third note below: bass.
+  await stamp(page, 0, 2, 0, '3', -1); // E3
+  await expect(score).toHaveAttribute('data-staff', 'bass');
+  await expect(clefs('bass')).toHaveCount(1);
+  await expect(clefs('treble')).toHaveCount(0);
+
+  // Over several lines, every line carries the one clef.
+  await page.evaluate(async () => {
+    const h = window.__rm.handlers;
+    for (let i = 0; i < 5; i++) await h.onAddMeasure();
+    for (let m = 1; m < 6; m++) for (let b = 0; b < 4; b++) for (let s = 0; s < 4; s++) await h.onSlotTap(m, b, s);
+    await h.onArmOctave(-1);
+    await h.onArmDegree('5');
+    for (let m = 1; m < 6; m++) for (let b = 0; b < 4; b++) for (let s = 0; s < 4; s++) await h.onStampPitch(m, b, s);
+  });
+  const rows = page.locator('.score-row');
+  expect(await rows.count()).toBeGreaterThan(1);
+  await expect(clefs('bass')).toHaveCount(await rows.count());
+  await expect(clefs('treble')).toHaveCount(0);
+});
+
+test("AC-12.2.5/9 — On a bass staff, every notehead sits at the staff position of its letter and octave: G2 on the bottom line; D3 on the middle line; A3 on the top line; middle C on the first ledger line above; E2 on the first ledger line below; and the key signature is written one line lower than the treble's, its F♯ on the fourth line and its B♭ on the second", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await sheet(page, { melodic: true });
+  await turnOn(page, [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 3, 0], [0, 3, 2]]);
+  await stamp(page, 0, 0, 0, '5', -2); // G2
+  await stamp(page, 0, 1, 0, '2', -1); // D3
+  await stamp(page, 0, 2, 0, '6', -1); // A3
+  await stamp(page, 0, 3, 0, '1', 0); // C4
+  await stamp(page, 0, 3, 2, '3', -2); // E2
+  await expect(page.locator('.score')).toHaveAttribute('data-staff', 'bass');
+
+  const bottom = await lineY(page, 0);
+  const middle = await lineY(page, 2);
+  const top = await lineY(page, 4);
+  const space = (bottom - middle) / 2;
+  expect(space).toBeGreaterThan(0);
+
+  expect(await noteY(page, 0, 0, 0)).toBeCloseTo(bottom, 1);
+  expect(await noteY(page, 0, 1, 0)).toBeCloseTo(middle, 1);
+  expect(await noteY(page, 0, 2, 0)).toBeCloseTo(top, 1);
+  for (const [m, b, s] of [[0, 0, 0], [0, 1, 0], [0, 2, 0]]) await expect(noteItem(page, m, b, s).locator('.ledger')).toHaveCount(0);
+
+  // Middle C: one space above the top line, on its own ledger line.
+  const c4 = await noteY(page, 0, 3, 0);
+  expect(c4).toBeCloseTo(top - space, 1);
+  const c4Ledger = noteItem(page, 0, 3, 0).locator('.ledger');
+  await expect(c4Ledger).toHaveCount(1);
+  expect(Number(await c4Ledger.getAttribute('y1'))).toBeCloseTo(c4, 1);
+
+  // E2: one space below the bottom line, on its own ledger line.
+  const e2 = await noteY(page, 0, 3, 2);
+  expect(e2).toBeCloseTo(bottom + space, 1);
+  const e2Ledger = noteItem(page, 0, 3, 2).locator('.ledger');
+  await expect(e2Ledger).toHaveCount(1);
+  expect(Number(await e2Ledger.getAttribute('y1'))).toBeCloseTo(e2, 1);
+
+  // The signature, one line lower than the treble's. Each accidental's
+  // transform is translate(x y), with y its staff position.
+  const signatureY = () =>
+    page.locator('.score-row').first().locator('.key-signature .accidental').evaluateAll((els) =>
+      els.map((e) => Number(e.getAttribute('transform').match(/translate\(\S+ (\S+)\)/)[1]))
+    );
+  const fourthLine = await lineY(page, 3);
+  const secondLine = await lineY(page, 1);
+  await page.evaluate(() => window.__rm.handlers.onKey('G'));
+  await expect(page.locator('.score')).toHaveAttribute('data-staff', 'bass');
+  let ys = await signatureY();
+  expect(ys).toHaveLength(1);
+  expect(ys[0]).toBeCloseTo(fourthLine, 1); // F♯ on the fourth line
+  await page.evaluate(() => window.__rm.handlers.onKey('F'));
+  await expect(page.locator('.score')).toHaveAttribute('data-staff', 'bass');
+  ys = await signatureY();
+  expect(ys).toHaveLength(1);
+  expect(ys[0]).toBeCloseTo(secondLine, 1); // B♭ on the second line
 });
 
 /* --- AC-12.2.7 — the count ------------------------------------------------------- */
@@ -518,14 +615,18 @@ test('AC-2.9.3/2 — The score writes each note at the octave the Register sound
   const bottom = await lineY(page, 0);
   const middle = await lineY(page, 2);
   const space = (bottom - middle) / 2;
-  const atNormal = await noteY(page, 0, 0, 0);
+  // Middle C on the treble staff: the first ledger line below, y growing downward.
+  await expect(page.locator('.score')).toHaveAttribute('data-staff', 'treble');
+  expect(await noteY(page, 0, 0, 0)).toBeCloseTo(bottom + space, 1);
 
   await page.evaluate(async () => window.__rm.handlers.onRegister(-2));
   await expect(page.locator('.score')).toBeVisible();
-  const atBass = await noteY(page, 0, 0, 0);
 
-  // Two octaves is seven staff steps each, and y grows downward.
-  expect(atBass - atNormal).toBeCloseTo(7 * space, 1);
+  // Two octaves down it is written as C2, a note that low putting the score on
+  // the bass staff (AC-12.2.5/8): on the second ledger line below G2.
+  await expect(page.locator('.score')).toHaveAttribute('data-staff', 'bass');
+  expect(await noteY(page, 0, 0, 0)).toBeCloseTo(bottom + 2 * space, 1);
+  await expect(noteItem(page, 0, 0, 0).locator('.ledger')).toHaveCount(2);
 });
 
 /* --- US-12.3 — Note aids: names and degree colours ---------------------------------------- */

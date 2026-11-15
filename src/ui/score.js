@@ -57,7 +57,17 @@ const glyph = {
       `c -1.0 1.25 -2.5 2.2 -2.55 3.65 c -0.05 1.55 1.45 2.3 2.55 2.15`,
       `c 1.5 -0.2 1.9 -1.85 1.15 -2.6 c -0.9 -0.9 -2.35 -0.35 -2.2 0.75 c 0.1 0.65 0.7 0.9 1.1 0.85`,
     ].join(' ');
-    return `<path class="clef" d="${d}" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})" fill="none" stroke-width="0.42" stroke-linecap="round"/>`;
+    return `<path class="clef" data-clef="treble" d="${d}" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})" fill="none" stroke-width="0.42" stroke-linecap="round"/>`;
+  },
+
+  /** A bass clef: a dot on the F line, a curl over it and down, and two dots either side of the line; `y` is the F line. */
+  bass: (x, y, sp) => {
+    const d = `M -0.55 0 c -0.1 -1.15 0.9 -1.75 1.7 -1.55 c 1.05 0.25 1.25 1.45 0.75 2.4 c -0.55 1.05 -1.6 1.75 -2.75 2.25`;
+    return (
+      `<g class="clef" data-clef="bass" transform="translate(${fmt(x)} ${fmt(y)}) scale(${fmt(sp)})">` +
+      `<path d="${d}" fill="none" stroke-width="0.34" stroke-linecap="round"/>` +
+      `<circle cx="-0.45" cy="0" r="0.36"/><circle cx="2.45" cy="-0.5" r="0.17"/><circle cx="2.45" cy="0.5" r="0.17"/></g>`
+    );
   },
 
   /** A percussion clef: two thick bars centred on the line. */
@@ -186,6 +196,7 @@ function drawLine(score, measures, { sp, width, current, finalBar, aids = false 
     // --- header: clef, key signature, meter
     if (first) {
       if (single) out.push(glyph.percussion(x + 1.2 * sp, lineY, sp));
+      else if (score.staff === 'bass') out.push(glyph.bass(x + 1.3 * sp, y(6), sp));
       else out.push(glyph.treble(x + 1.5 * sp, y(2), sp));
       x += CLEF_WIDTH * sp;
       if (score.keySignature && score.keySignature.count !== 0) {
@@ -474,7 +485,10 @@ export function renderScore(root, score, { width, transportPosition = null, prin
   });
 
   root.innerHTML = `<div class="score-head">${head.join('')}</div><div class="score-body">${body.join('')}</div>`;
-  if (root.dataset) root.dataset.aids = String(aids && score.staff === 'treble');
+  if (root.dataset) {
+    root.dataset.aids = String(aids && score.staff !== 'single');
+    root.dataset.staff = score.staff;
+  }
   return root;
 }
 

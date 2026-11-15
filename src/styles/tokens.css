@@ -2082,9 +2082,10 @@ body {
 
 .score-line .staff-line, .score-line .ledger, .score-line .barline { stroke: #141414; stroke-width: 1; }
 .score-line .barline.final, .score-line .notehead, .score-line .rest, .score-line .beam, .score-line .flag,
-.score-line .clef rect, .score-line .accidental path, .score-line .dot { fill: #141414; }
+.score-line .clef rect, .score-line .clef circle, .score-line .accidental path, .score-line .dot { fill: #141414; }
 .score-line .stem, .score-line .tie, .score-line .accent, .score-line .tuplet-bracket,
 .score-line .clef, .score-line .accidental path[fill='none'], .score-line .rest path[fill='none'] { stroke: #141414; }
+.score-line .clef circle { stroke: none; }
 .score-line .accidental path[fill='none'], .score-line .rest path[fill='none'] { fill: none; }
 .score-line text { font-family: Georgia, 'Times New Roman', serif; fill: #141414; }
 .score-line .meter { font-weight: 700; }

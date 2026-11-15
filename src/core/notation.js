@@ -59,15 +59,36 @@ export function writtenTicks({ value, dots = 0, tuplet = null }) {
 
 const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
+/** The note on each clef's bottom line: E4 for treble, G2 for bass. */
+const BOTTOM_LINE = { treble: { letter: 'E', octave: 4 }, bass: { letter: 'G', octave: 2 } };
+
 /**
- * A note's position on the treble staff: 0 is the bottom line (E4), each step
- * one line or space up, so middle C is -2 (the first ledger line below), B4 the
- * middle line at 4, F5 the top line at 8, A5 the first ledger line above at 10
- * (AC-12.2.5/2). Pure letter-and-octave arithmetic — the accidental never moves
+ * A note's position on a staff: 0 is the bottom line, each step one line or
+ * space up. On the treble staff middle C is -2 (the first ledger line below),
+ * B4 the middle line at 4, F5 the top line at 8, A5 the first ledger line above
+ * at 10 (AC-12.2.5/2); on the bass staff G2 is 0, D3 the middle line at 4, A3
+ * the top line at 8 and middle C the first ledger line above at 10
+ * (AC-12.2.5/9). Pure letter-and-octave arithmetic — the accidental never moves
  * a note off its letter's position.
  */
-export function staffStep(letter, octave) {
-  return (octave - 4) * 7 + LETTERS.indexOf(letter) - LETTERS.indexOf('E');
+export function staffStep(letter, octave, clef = 'treble') {
+  const bottom = BOTTOM_LINE[clef];
+  return (octave - bottom.octave) * 7 + LETTERS.indexOf(letter) - LETTERS.indexOf(bottom.letter);
+}
+
+/**
+ * The clef a Melodic score is written in (AC-12.2.5/8): bass when more of its
+ * written notes sit below middle C than on it or above, treble otherwise — so
+ * a tie, or no note at all, is treble. Counted by written letter and octave,
+ * which is where a note sits on the page.
+ *
+ * @param {{letter: string, octave: number}[]} names
+ * @returns {'treble'|'bass'}
+ */
+export function chooseClef(names) {
+  let below = 0;
+  for (const { letter, octave } of names) if (staffStep(letter, octave) < staffStep('C', 4)) below++;
+  return below > names.length - below ? 'bass' : 'treble';
 }
 
 /** Ionian key signatures for each supported Key: sharps positive, flats negative. */
@@ -78,7 +99,7 @@ const MODE_OFFSET = { ionian: 0, dorian: -2, phrygian: -4, lydian: 1, mixolydian
 
 const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
 const FLAT_ORDER = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
-/** Where each accidental of a treble signature is written, as a staff step. */
+/** Where each accidental of a treble signature is written, as a staff step; a bass signature sits one line lower (AC-12.2.5/9). */
 const SHARP_STEP = { F: 8, C: 5, G: 9, D: 6, A: 3, E: 7, B: 4 };
 const FLAT_STEP = { B: 4, E: 7, A: 3, D: 6, G: 2, C: 5, F: 1 };
 
@@ -91,7 +112,7 @@ const FLAT_STEP = { B: 4, E: 7, A: 3, D: 6, G: 2, C: 5, F: 1 };
  *
  * @returns {{count: number, accidental: ''|'#'|'b', letters: string[], steps: number[]}}
  */
-export function keySignature(key, scaleId = DEFAULT_SCALE) {
+export function keySignature(key, scaleId = DEFAULT_SCALE, clef = 'treble') {
   const scale = SCALES.find((s) => s.id === scaleId) ?? SCALES.find((s) => s.id === DEFAULT_SCALE);
   let offset = MODE_OFFSET[scale.id];
   if (offset === undefined) {
@@ -101,11 +122,12 @@ export function keySignature(key, scaleId = DEFAULT_SCALE) {
   if (Math.abs(count) > 7) count = IONIAN_SIGNATURE[key];
   const letters = count > 0 ? SHARP_ORDER.slice(0, count) : FLAT_ORDER.slice(0, -count);
   const stepOf = count > 0 ? SHARP_STEP : FLAT_STEP;
+  const lower = clef === 'bass' ? 2 : 0;
   return {
     count,
     accidental: count > 0 ? '#' : count < 0 ? 'b' : '',
     letters,
-    steps: letters.map((l) => stepOf[l]),
+    steps: letters.map((l) => stepOf[l] - lower),
   };
 }
 
@@ -426,6 +448,22 @@ export function buildScore(pattern, { countingSystem = 'takadimi', fill = null, 
     });
 
     score.passes.push({ index: pass, label: passes > 1 ? `Pass ${pass + 1}` : null, measures });
+  }
+
+  // One clef for the whole score, from where its written notes sit
+  // (AC-12.2.5/8). Steps were counted on the treble staff; a bass score moves
+  // every named note onto its own staff and its signature one line lower.
+  if (melodic) {
+    const named = [];
+    for (const p of score.passes)
+      for (const m of p.measures)
+        for (const b of m.beats) for (const item of b.items) if (item.kind === 'note' && item.name) named.push(item);
+    const clef = chooseClef(named.filter((item) => !item.continuation).map((item) => item.name));
+    if (clef === 'bass') {
+      score.staff = 'bass';
+      score.keySignature = keySignature(pattern.key, pattern.scale ?? DEFAULT_SCALE, 'bass');
+      for (const item of named) item.step = staffStep(item.name.letter, item.name.octave, 'bass');
+    }
   }
 
   return score;
