@@ -209,7 +209,7 @@ test(`AC-19.11.1/5 — Without a composition the Layers section holds only the s
 
 // --- AC-19.11.2: layers sound together --------------------------------------------
 
-test(`AC-19.11.2/2 — The composition sounds with the instrument shown; a melodic layer sounds with the melodic voice Practice would use; a percussive layer, and an unpitched syllable in any layer, sounds percussively at its Accent Level`, async ({ page }) => {
+test(`AC-19.11.2/2 — Each part's pitched notes sound with that part's own instrument, on screen or not; a percussive layer, and an unpitched syllable in any part, sounds percussively at its Accent Level`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await setTempo(page, 240);
@@ -232,7 +232,7 @@ test(`AC-19.11.2/2 — The composition sounds with the instrument shown; a melod
   await expect.poll(async () => (await page.evaluate(() => window.__rm.voiceLog())).filter((v) => v.composition).length, { timeout: 8000 }).toBeGreaterThan(before + 1);
   await expect.poll(async () => (await page.evaluate(() => window.__rm.voiceLog())).filter((v) => !v.composition).length, { timeout: 8000 }).toBeGreaterThan(1);
   const log = (await page.evaluate(() => window.__rm.voiceLog())).slice(before);
-  // The composition's notes through the instrument shown (guitar); the layer's through Practice's voice (piano by default).
+  // The part on screen through its instrument (guitar); the layer through its own, which it took from Practice's voice when added (piano).
   expect(log.filter((v) => v.composition).every((v) => v.voice === 'guitar')).toBe(true);
   expect(log.filter((v) => !v.composition).every((v) => v.voice === 'piano' && v.layer === 1)).toBe(true);
   // The percussive layer sounds no melodic note at all: nothing logged for layer 2.
@@ -341,7 +341,7 @@ test(`AC-19.11.3/6 — The cursor runs through the composing grid once per pass 
 
 // --- AC-19.11.4: saving an Arrangement ----------------------------------------------
 
-test(`AC-19.11.4/1 — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order, which are muted and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why`, async ({ page }) => {
+test(`AC-19.11.4/1 — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await expect(page.locator('.arrangement-save')).toBeDisabled();
@@ -765,7 +765,7 @@ test("AC-19.11.6/2 — An owned melody opens directly; a shipped, percussive or 
   expect((await composerState(page)).savedId).toBeNull();
 });
 
-test('AC-19.11.6/3 — Switching while playing stops and restarts nothing: every part goes on sounding, the part now on screen sounds with the instrument shown and the one left with the Practice voice from the next pass, and the cursor follows the part on screen', async ({ page }) => {
+test('AC-19.11.6/3 — Switching while playing stops and restarts nothing: every part goes on sounding on its own instrument, the one left and the one now on screen included, and the cursor follows the part on screen', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   const mine = await saveComposition(page);
@@ -784,8 +784,10 @@ test('AC-19.11.6/3 — Switching while playing stops and restarts nothing: every
   // The set the transport is handed: My line on screen, Line two beneath, both sounding.
   const set = await page.evaluate(() => window.__rm.scheduled().layers.map((l) => ({ name: l.pattern.name, composition: l.composition, muted: l.muted })));
   expect(set).toEqual([{ name: 'My line', composition: true, muted: false }, { name: 'Line two', composition: false, muted: false }]);
-  // From the next pass My line's notes sound with the instrument (guitar), as the composition's.
-  await expect.poll(async () => (await page.evaluate(() => window.__rm.voiceLog())).slice(logBefore).some((v) => v.composition === true && v.voice === 'guitar'), { timeout: 8000 }).toBe(true);
+  // The part left keeps the instrument it had on screen (guitar), as AC-19.12.2/4 says, and so does the one now there.
+  await expect.poll(async () => (await page.evaluate(() => window.__rm.voiceLog())).slice(logBefore).some((v) => v.composition === false && v.voice === 'guitar'), { timeout: 8000 }).toBe(true);
+  // My line came as a layer on Practice's voice (piano) and keeps it on screen.
+  await expect.poll(async () => (await page.evaluate(() => window.__rm.voiceLog())).slice(logBefore).some((v) => v.composition === true && v.voice === 'piano'), { timeout: 8000 }).toBe(true);
   // The cursor follows the part on screen.
   await expect.poll(() => page.evaluate(() => window.__rm.getState().transportPosition?.composition), { timeout: 8000 }).toBe(true);
   await expect(page.locator('.composer-grid .slot.playing')).toHaveCount(1);

@@ -1,35 +1,100 @@
 /**
- * The melodic voice (US-2.13): which voice a melodic note sounds with, and,
- * for the piano, which recording plays it at what rate.
+ * The melodic voice (US-2.13, US-19.12): the instruments a note can sound
+ * with, which one a note does sound with, how loud a part is, and, for the
+ * piano, which recording plays it at what rate.
  *
  * Pure: the audio module asks, and plays what it is told.
  */
 
+/**
+ * Every instrument a note can sound with (AC-19.12.1/1), in the order the
+ * switches list them. `view` is where its notes are played in the Composer —
+ * the fretboard for the two guitars, the keyboard for the rest (AC-19.12.1/2).
+ * `soundfont` names the FluidR3_GM instrument a fetched voice plays
+ * (AC-19.7.1, AC-19.12.5/1); `held` says a note lasts until the part's next
+ * (AC-19.12.5/3).
+ */
+export const INSTRUMENTS = Object.freeze(
+  [
+    { id: 'piano', label: 'Piano', view: 'piano' },
+    { id: 'synth', label: 'Synth', view: 'piano' },
+    { id: 'guitar', label: 'Guitar', view: 'guitar', soundfont: 'acoustic_guitar_steel' },
+    { id: 'electric', label: 'Electric guitar', view: 'guitar', soundfont: 'overdriven_guitar', held: true },
+    { id: 'bass', label: 'Bass', view: 'piano', soundfont: 'electric_bass_finger', held: true },
+    { id: 'sax', label: 'Sax', view: 'piano', soundfont: 'alto_sax', held: true },
+    { id: 'trumpet', label: 'Trumpet', view: 'piano', soundfont: 'trumpet', held: true },
+  ].map(Object.freeze)
+);
+
 /** The voices a melodic note can sound with, in the switch's order (AC-2.13.1/1). */
-export const VOICES = Object.freeze(['piano', 'synth', 'guitar']);
+export const VOICES = Object.freeze(INSTRUMENTS.map((i) => i.id));
 
 /** Piano unless the musician has chosen otherwise (AC-2.13.1/2). */
 export const DEFAULT_VOICE = 'piano';
 
+/** The Composer's instrument on first use (AC-19.1.3/1). */
+export const DEFAULT_INSTRUMENT = 'guitar';
+
 /** A stored value, read safely: anything unrecognised is the default (data-model §6). */
-export function normaliseVoice(voice) {
-  return VOICES.includes(voice) ? voice : DEFAULT_VOICE;
+export function normaliseVoice(voice, fallback = DEFAULT_VOICE) {
+  return VOICES.includes(voice) ? voice : fallback;
 }
+
+/** An instrument's entry in the catalogue; an unrecognised id reads as the piano. */
+export function instrumentOf(id) {
+  return INSTRUMENTS.find((i) => i.id === id) ?? INSTRUMENTS[0];
+}
+
+/** Where an instrument's notes are played: `guitar` the fretboard, `piano` the keyboard (AC-19.12.1/2). */
+export function viewOf(id) {
+  return instrumentOf(id).view;
+}
+
+/** The instruments fetched as FluidR3_GM samples, by id. */
+export const FETCHED = Object.freeze(INSTRUMENTS.filter((i) => i.soundfont).map((i) => i.id));
 
 /**
  * The voice a melodic note sounds with. Practice plays the chosen voice
- * (AC-2.13.2). The Composer plays the instrument on screen: the Guitar view is
- * always the guitar, and the Piano view is the synth under Synth and the piano
- * otherwise, Guitar included (AC-2.13.3).
+ * (AC-2.13.2). The Composer plays the part's own instrument, and the voice
+ * Practice has chosen decides nothing there (AC-2.13.3).
  *
- * @param {{ composer: boolean, instrument?: 'guitar'|'piano', voice?: string }} where
- * @returns {'piano'|'synth'|'guitar'}
+ * @param {{ composer: boolean, instrument?: string, voice?: string }} where
+ * @returns {string} an instrument id
  */
 export function resolveVoice({ composer, instrument, voice }) {
-  const chosen = normaliseVoice(voice);
-  if (!composer) return chosen;
-  if (instrument === 'guitar') return 'guitar';
-  return chosen === 'synth' ? 'synth' : 'piano';
+  if (!composer) return normaliseVoice(voice);
+  return normaliseVoice(instrument, DEFAULT_INSTRUMENT);
+}
+
+/* --- a part's volume (AC-19.12.3) -------------------------------------------- */
+
+export const MIN_VOLUME = 1;
+export const MAX_VOLUME = 100;
+/**
+ * 8 dB under full. Parts that do not move together add by power — six of them
+ * about 8 dB — so up to six parts at the default land at about the level of
+ * one at full, with twenty steps left to bring a part forward (research.md D-028).
+ */
+export const DEFAULT_VOLUME = 80;
+/** Decibels a step: loudness is heard in ratios, so the taper is in dB (AC-19.12.3/3). */
+export const VOLUME_DB_PER_STEP = 0.4;
+
+/** A volume as stored or typed, read safely: a whole number held to 1–100, the default when it is no number (AC-19.12.3/2). */
+export function normaliseVolume(volume) {
+  if (volume === null || volume === undefined || volume === '') return DEFAULT_VOLUME;
+  const n = Number(volume);
+  if (!Number.isFinite(n)) return DEFAULT_VOLUME;
+  return Math.min(MAX_VOLUME, Math.max(MIN_VOLUME, Math.round(n)));
+}
+
+/** How far under the full level a volume sits, in dB: 0 at 100 (AC-19.12.3/3). */
+export function volumeDb(volume) {
+  return (normaliseVolume(volume) - MAX_VOLUME) * VOLUME_DB_PER_STEP;
+}
+
+/** The multiplier a volume puts on a note's level (AC-19.12.3/3). */
+export function volumeGain(volume) {
+  return 10 ** (volumeDb(volume) / 20);
 }
 
 /**

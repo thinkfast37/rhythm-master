@@ -266,7 +266,7 @@ test('AC-19.2.4/2 — A fret below the capo is inert: no sound, no note recorded
 
 // --- US-19.7: the sampled guitar ----------------------------------------------------
 
-test('AC-19.7.1/1 — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once', async ({ page }) => {
+test('AC-19.7.1/1 — No guitar sample is requested on page load, in the Composer while no part is on Guitar, or in Practice under another voice; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once', async ({ page }) => {
   const requests = [];
   await page.route('https://gleitz.github.io/**', (route) => {
     requests.push(route.request().url());

@@ -45,7 +45,7 @@ async function withSettings(page, partial) {
 
 // --- AC-2.13.1: the switch ------------------------------------------------------
 
-test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a three-way voice switch — Piano, Synth, Guitar — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown', async ({ page }) => {
+test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
   await page.locator('.grid .slot[data-beat="0"][data-slot="0"]').click();
@@ -55,7 +55,7 @@ test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a t
   await page.locator('.sound-mode [data-mode="melodic"]').click();
   const sw = page.locator('.pattern-header .voice-switch');
   await expect(sw).toBeVisible();
-  await expect(sw.locator('button')).toHaveText(['Piano', 'Synth', 'Guitar']);
+  await expect(sw.locator('button')).toHaveText(['Piano', 'Synth', 'Guitar', 'Electric guitar', 'Bass', 'Sax', 'Trumpet']);
   await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
   await expect(sw.locator('[aria-pressed="true"]')).toHaveCount(1);
   // Beside the Sound Mode switch: the next thing in the header, on the same row.
@@ -283,26 +283,33 @@ test('AC-2.13.2/4 — Percussive notes and the metronome click sound the same wh
 
 // --- AC-2.13.3: the Composer plays the instrument on screen -----------------------
 
-test('AC-2.13.3/1 — In the Guitar view every melodic note sounds through the guitar, whatever voice is chosen', async ({ page }) => {
+test("AC-2.13.3/1 — A part's melodic notes sound through the instrument chosen for that part, whatever voice Practice has chosen", async ({ page }) => {
   await openApp(page);
-  for (const voice of ['piano', 'synth', 'guitar']) {
+  for (const voice of ['piano', 'synth', 'guitar', 'sax']) {
     await withSettings(page, { melodicVoice: voice, composerInstrument: 'guitar' });
     await enterComposer(page);
     await expect(page.locator('.fretboard')).toBeVisible();
     await fret(page, 0, 0).click();
     const last = (await voiceLog(page)).at(-1);
     expect(last).toMatchObject({ instrument: 'guitar', voice: 'guitar', midi: 64 });
+    // And a keyboard instrument the same (revised 2026-11-15 with AC-2.13.3): the part's, not Practice's.
+    await page.locator('.instrument-switch [data-instrument="trumpet"]').click();
+    await key(page, 60).click();
+    expect((await voiceLog(page)).at(-1)).toMatchObject({ instrument: 'piano', voice: 'trumpet', midi: 60 });
   }
 });
 
-test('AC-2.13.3/2 — In the Piano view every melodic note sounds through the synth when Synth is the chosen voice, and through the sampled piano when Piano or Guitar is', async ({ page }) => {
+test('AC-2.13.3/2 — Synth is an instrument of its own: a part on Piano sounds the sampled piano and a part on Synth the synth, whatever voice Practice has chosen', async ({ page }) => {
   await openApp(page);
-  for (const [voice, heard] of [
-    ['synth', 'synth'],
-    ['piano', 'piano'],
-    ['guitar', 'piano'],
+  // Rewritten 2026-11-15 with AC-2.13.3/2's revision: the instrument is the
+  // part's own, so Practice being on Synth no longer turns the piano into it.
+  for (const [voice, instrument, heard] of [
+    ['synth', 'piano', 'piano'],
+    ['piano', 'synth', 'synth'],
+    ['guitar', 'piano', 'piano'],
+    ['guitar', 'synth', 'synth'],
   ]) {
-    await withSettings(page, { melodicVoice: voice, composerInstrument: 'piano' });
+    await withSettings(page, { melodicVoice: voice, composerInstrument: instrument });
     await enterComposer(page);
     await expect(page.locator('.piano')).toBeVisible();
     await key(page, 60).click();
@@ -315,6 +322,34 @@ test('AC-2.13.3/2 — In the Piano view every melodic note sounds through the sy
       await key(page, 62).click();
       expect((await voiceLog(page)).at(-1)).toMatchObject({ voice: 'piano', via: 'sampled', midi: 62 });
     }
+  }
+});
+
+test("AC-2.13.2/5 — Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says", async ({ page }) => {
+  const requests = [];
+  await page.route('https://gleitz.github.io/**', (route) => {
+    requests.push(route.request().url());
+    route.fulfill({ status: 200, contentType: 'application/javascript', body: fakeSoundfont() });
+  });
+  await page.goto('/');
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await melodicPattern(page);
+  const fonts = { electric: 'overdriven_guitar', bass: 'electric_bass_finger', sax: 'alto_sax', trumpet: 'trumpet' };
+  for (const [voice, font] of Object.entries(fonts)) {
+    const before = requests.length;
+    await voiceButton(page, voice).click();
+    await expect(voiceButton(page, voice)).toHaveAttribute('aria-pressed', 'true');
+    // Choosing it asks for nothing; the first melodic note does, once.
+    expect(requests).toHaveLength(before);
+    await play(page);
+    await expect.poll(() => requests.length).toBe(before + 1);
+    expect(requests.at(-1)).toBe(SAMPLE_URL.replace('acoustic_guitar_steel', font));
+    await expect.poll(() => page.evaluate((v) => window.__rm.instruments.statusOf(v).status, voice)).toBe('ready');
+    const at = (await voiceLog(page)).length;
+    await expect.poll(async () => (await voiceLog(page)).length).toBeGreaterThan(at + 2);
+    expect((await voiceLog(page)).slice(at).every((e) => e.voice === voice && e.via === 'sampled')).toBe(true);
+    await stop(page);
+    expect(requests).toHaveLength(before + 1);
   }
 });
 

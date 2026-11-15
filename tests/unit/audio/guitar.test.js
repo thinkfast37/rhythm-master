@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 describe('audio/guitar', () => {
-  it('AC-19.7.1/1 — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once: one load per context, nothing until asked', async () => {
+  it('AC-19.7.1/1 — No guitar sample is requested on page load, in the Composer while no part is on Guitar, or in Practice under another voice; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once: one load per context, nothing until asked', async () => {
     const { loader, calls } = deferredLoader();
     guitar.__setLoader(loader);
     expect(guitar.getStatus()).toEqual({ status: 'idle', error: null });

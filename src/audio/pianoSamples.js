@@ -184,7 +184,8 @@ export function playPiano(ctx, destination, event, when, fallback) {
   }
 
   const accent = ACCENT_AMPS[event.accent] ? event.accent : 2;
-  const peak = (VOLUME * ACCENT_AMPS[accent]) / ACCENT_AMPS[3];
+  // Scaled by the part's volume when it has one (AC-19.12.3/3).
+  const peak = ((VOLUME * ACCENT_AMPS[accent]) / ACCENT_AMPS[3]) * (event.gain ?? 1);
   const hold = PIANO_HOLD_SECONDS[accent];
   const end = when + hold + PIANO_RELEASE_SECONDS;
 

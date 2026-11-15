@@ -3913,13 +3913,14 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.1.2/4** — Re-entering the Composer while the composition is the open Pattern keeps it: no prompt, no reload
     - **AC-19.1.2/5** — Opening a library Pattern while in Composer loads it into the Composer, and the Pattern open in Practice is left alone until a composition is saved
 
-- **AC-19.1.3** — Guitar or piano, switched at any time
+- **AC-19.1.3** — An instrument for the part on screen, switched at any time
   - **Given** the Composer mode
   - **When** the Composer looks at the record bar
-  - **Then** a Guitar | Piano switch chooses which instrument view is shown and which voice sounds, Guitar on first use; switching never changes a note of the composition; and the choice is remembered across reloads
+  - **Then** an instrument switch chooses the instrument of the part on screen — its voice, and with it the instrument view: the fretboard for Guitar and Electric guitar, the keyboard for every other (AC-19.12.1) — Guitar on first use; switching never changes a note of the composition; and the choice is remembered across reloads
+  - *(Title, Then, /1 and /2 revised 2026-11-15 with US-19.12. It read "Guitar or piano, switched at any time": a two-way switch that chose a view and, by the view, a voice. The switch now chooses among seven instruments and the view follows the instrument.)*
   - **Cases**:
-    - **AC-19.1.3/1** — A Guitar | Piano switch sits in the record bar, Guitar in force on first use
-    - **AC-19.1.3/2** — Switching shows the other instrument view and leaves every recorded note exactly as it was
+    - **AC-19.1.3/1** — An instrument switch sits in the record bar offering Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, Guitar in force on first use
+    - **AC-19.1.3/2** — Switching between a fretboard instrument and a keyboard instrument shows the other instrument view, and no switch changes a recorded note
     - **AC-19.1.3/3** — The instrument chosen is remembered in `rm.settings.v1` and is in force after a reload
 
 - **AC-19.1.4** — Leaving the Composer with unsaved work asks first
@@ -4167,12 +4168,12 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.6.1** — Play sounds the notes recorded so far and the rest percussively
   - **Given** a composition in the Composer, some of its sounding Slots pitched
   - **When** the Composer presses Play in the pinned bar
-  - **Then** the composition loops from the top with the cursor running in the composing grid: a pitched Slot sounds with the instrument shown — guitar or piano — and an unpitched sounding Slot sounds as a percussive syllable at its Accent Level
+  - **Then** the composition loops from the top with the cursor running in the composing grid: a pitched Slot sounds with the part's instrument (US-19.12) and an unpitched sounding Slot sounds as a percussive syllable at its Accent Level
   - **Cases**:
     - **AC-19.6.1/1** — Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it
-    - **AC-19.6.1/2** — A pitched Slot sounds with the voice of the instrument shown, guitar or piano, and an unpitched sounding Slot sounds percussively at its Accent Level
-    - **AC-19.6.1/3** — Switching Guitar to Piano, or back, while playing changes the voice from the next event without a restart
-  - *(Cross-reference added 2026-10-24: the piano's voice is the sampled piano or the synth according to the global melodic voice, AC-2.13.3/2.)*
+    - **AC-19.6.1/2** — A pitched Slot sounds with the voice of the part's instrument, and an unpitched sounding Slot sounds percussively at its Accent Level
+    - **AC-19.6.1/3** — Switching the instrument while playing changes the voice from the next event without a restart
+  - *(/2 and /3 revised 2026-11-15 with US-19.12: they named "the instrument shown, guitar or piano" and a Guitar-to-Piano switch. The 2026-10-24 cross-reference, that the piano's voice followed the global melodic voice, is withdrawn with AC-2.13.3/2's old rule.)*
 
 - **AC-19.6.2** — Recording and editing carry on under playback
   - **Given** the composition playing
@@ -4202,9 +4203,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.7.1** — The guitar voice is the sampled steel-string guitar fret-navigator plays
   - **Given** the Composer
   - **When** the Guitar view is first shown
-  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then, or at the first melodic note in Practice with Guitar the chosen voice (AC-2.13.2/3), and never on page load, in the Piano view, or in Practice under Piano or Synth — and every guitar note, tapped or played back, sounds through them once they are ready
+  - **Then** the FluidR3_GM `acoustic_guitar_steel` samples are fetched through soundfont-player — then, or at the first melodic note in Practice with Guitar the chosen voice (AC-2.13.2/3), and never on page load, in the Composer while no part is on Guitar, or in Practice under another voice — and every guitar note, tapped or played back, sounds through them once they are ready
+  - *(/1 revised 2026-11-15 with US-19.12: it named "the Piano view" and "Practice under Piano or Synth", which no longer list every place the guitar is not wanted. The four other fetched instruments load by AC-19.12.5.)*
   - **Cases**:
-    - **AC-19.7.1/1** — No sample is requested on page load, in the Piano view, or in Practice under Piano or Synth; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once
+    - **AC-19.7.1/1** — No guitar sample is requested on page load, in the Composer while no part is on Guitar, or in Practice under another voice; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once
     - **AC-19.7.1/2** — Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note
     - **AC-19.7.1/3** — The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer
 
@@ -4367,12 +4369,13 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 **Acceptance Scenarios**:
 
-- **AC-2.13.1** — The voice switch offers Piano, Synth and Guitar beside the Sound Mode switch
+- **AC-2.13.1** — The voice switch offers every instrument beside the Sound Mode switch
   - **Given** a Melodic Pattern open in Practice
   - **When** the Practicing Musician looks at the Pattern header
-  - **Then** beside the Sound Mode switch a voice switch offers Piano, Synth and Guitar, with the voice in force pressed; the choice is an app preference, never Pattern content, and takes effect at once
+  - **Then** beside the Sound Mode switch a voice switch offers Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, with the voice in force pressed; the choice is an app preference, never Pattern content, and takes effect at once
+  - *(Title, Then and /1 revised 2026-11-15 with US-19.12: the switch offered three voices. The maintainer, asked whether Practice should gain the four new instruments or keep its three, chose to offer them all, told the header control grows wider.)*
   - **Cases**:
-    - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a three-way voice switch — Piano, Synth, Guitar — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
+    - **AC-2.13.1/1** — While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown
     - **AC-2.13.1/2** — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it
     - **AC-2.13.1/3** — Choosing a voice while playing changes it from the next melodic note, with no restart
 
@@ -4385,14 +4388,17 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.13.2/2** — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1
     - **AC-2.13.2/3** — Under Guitar, a melodic note sounds through the sampled guitar of US-19.7
     - **AC-2.13.2/4** — Percussive notes and the metronome click sound the same whatever the voice
+    - **AC-2.13.2/5** — Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says
+  - *(/5 added 2026-11-15 with US-19.12.)*
 
-- **AC-2.13.3** — The Composer plays the instrument on screen
+- **AC-2.13.3** — The Composer plays each part's own instrument
   - **Given** the Composer
   - **When** a melodic note sounds — tapped on the instrument, or played back
-  - **Then** the Guitar view sounds the guitar, and the Piano view sounds the piano unless Synth is the chosen voice
+  - **Then** it sounds through the instrument chosen for its part (US-19.12), and the voice Practice has chosen decides nothing here
+  - *(Revised 2026-11-15 with US-19.12, at the maintainer's request: "I have a synth as well but right now it's just a flavor of piano sound and it should actually be a selectable instrument." It read "The Composer plays the instrument on screen": the Guitar view sounded the guitar, and the Piano view the piano unless Synth was the voice chosen in Practice. That last rule is retired — Synth is an instrument a part is set to — and the instrument is now the part's, not the screen's. The maintainer approved the reversal before any work.)*
   - **Cases**:
-    - **AC-2.13.3/1** — In the Guitar view every melodic note sounds through the guitar, whatever voice is chosen
-    - **AC-2.13.3/2** — In the Piano view every melodic note sounds through the synth when Synth is the chosen voice, and through the sampled piano when Piano or Guitar is
+    - **AC-2.13.3/1** — A part's melodic notes sound through the instrument chosen for that part, whatever voice Practice has chosen
+    - **AC-2.13.3/2** — Synth is an instrument of its own: a part on Piano sounds the sampled piano and a part on Synth the synth, whatever voice Practice has chosen
 
 - **AC-2.13.4** — The piano ships with the app, and loading it never blocks or silences
   - **Given** the piano is the voice a note would sound with
@@ -4832,11 +4838,12 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.11.2** — Layers sound together
   - **Given** a composition with layers
   - **When** the Composer presses Play
-  - **Then** the composition and every unmuted layer sound together from one timeline, the composition on the instrument shown and each layer in its own voice, and the Composer carries on recording and editing under them
+  - **Then** the composition and every unmuted layer sound together from one timeline, each part on its own instrument (US-19.12), and the Composer carries on recording and editing under them
   - *(Revised 2026-11-15, /5: "heard from the next pass" was read as the next pass of the combined loop, so under an 8-bar layer an edit to a 1-bar part waited up to eight bars. The maintainer, on the live build: "once I added a second measure while it's still playing and added a syllable … I could not hear the added syllables when it cycles until I hit stop and restart the playback." The pass meant is the part's own, as it is with no layers (AC-19.6.2/1); /5 now says so. Adding, muting or removing a layer is unchanged, /4.)*
+  - *(/2 revised 2026-11-15 with US-19.12, at the maintainer's request: "I want to be able to choose which instrument each layer uses. So I could have one layer be guitar and another be piano." It read: the composition with the instrument shown, a melodic layer with the melodic voice Practice would use.)*
   - **Cases**:
     - **AC-19.11.2/1** — Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound
-    - **AC-19.11.2/2** — The composition sounds with the instrument shown; a melodic layer sounds with the melodic voice Practice would use; a percussive layer, and an unpitched syllable in any layer, sounds percussively at its Accent Level
+    - **AC-19.11.2/2** — Each part's pitched notes sound with that part's own instrument, on screen or not; a percussive layer, and an unpitched syllable in any part, sounds percussively at its Accent Level
     - **AC-19.11.2/3** — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key
     - **AC-19.11.2/4** — Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted
     - **AC-19.11.2/5** — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is
@@ -4860,7 +4867,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** a name is asked and an Arrangement — the composition and its layers in order, with which are muted — is stored apart from Patterns and Songs, listed in the Layers section, and loaded from there
   - *(Revised 2026-11-13 with AC-19.11.6: which part the Composer is working in joined what is stored, and "the composition is saved" became "every part is saved", since any part may now be an unsaved composition.)*
   - **Cases**:
-    - **AC-19.11.4/1** — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order, which are muted and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why
+    - **AC-19.11.4/1** — Save arrangement asks a name, pre-filled with the composition's name and "arrangement", unique among Arrangements, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why
     - **AC-19.11.4/2** — A saved Arrangement survives a reload and is listed in the Layers section; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes
     - **AC-19.11.4/3** — An Arrangement can be renamed and deleted from the Layers section, deletion asking first
     - **AC-19.11.4/4** — Edits to a loaded Arrangement's layers are not saved until Save arrangement is pressed again, which updates it in place; the section says when the loaded Arrangement has unsaved changes
@@ -4884,10 +4891,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **When** the Composer chooses a part in the Layers section
   - **Then** that part is the one in the composing grid — its notes shown, Record and the instrument writing onto it, the cursor following it — while every other part, the one just left included, keeps sounding beneath
   - *(Added 2026-11-13 at the maintainer's request, after using the first build: "I can see the name of the additional layer but I don't see the notes for it. If I click on the layer name it doesn't show me that layer … I need to be able to edit just the notes of the new layer and see them while the whole composition of layers is playing back." And: "The tempo and swing are constant for the composition." Decisions taken without asking: the part on screen carries the arrangement's tempo, tempo unit, swing and Key, and a part made the one on screen takes them from the part it replaces, so switching changes nothing heard; a part left keeps its notes in memory, saved or not, and comes back as it was; a shipped or percussive part opens through US-19.8's rules, as a new composition under a name, which then takes that part's place.)*
+  - *(/3 revised 2026-11-15 with US-19.12: it had the part now on screen take the instrument shown and the one left take the Practice voice. A part now keeps its instrument wherever it is, AC-19.12.2/4.)*
   - **Cases**:
     - **AC-19.11.6/1** — Choosing a part in the Layers section puts it in the composing grid: its notes in the Slots, its name in the record bar, the record target and the selection its own, Record and a tap on the instrument writing onto it; the part left keeps its notes, saved or not, and is listed as a layer
     - **AC-19.11.6/2** — An owned melody opens directly; a shipped, percussive or progression-carrying part opens through US-19.8's rules — a name asked, pre-filled — and the new composition takes that part's place in the list; cancelling the prompt changes nothing
-    - **AC-19.11.6/3** — Switching while playing stops and restarts nothing: every part goes on sounding, the part now on screen sounds with the instrument shown and the one left with the Practice voice from the next pass, and the cursor follows the part on screen
+    - **AC-19.11.6/3** — Switching while playing stops and restarts nothing: every part goes on sounding on its own instrument, the one left and the one now on screen included, and the cursor follows the part on screen
     - **AC-19.11.6/4** — Tempo, tempo unit, swing and Key are the arrangement's, carried by the part on screen: the Composer's controls show and set them whichever part that is, a part made the one on screen takes them from the part it replaces, and nothing heard changes at the switch
     - **AC-19.11.6/5** — The part on screen is marked in the Layers section and cannot be muted or removed there; each part's repeats in the loop are unchanged by which part is on screen, the loop readout counting in passes of that part
     - **AC-19.11.6/6** — Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Arrangement remembers which part was on screen and opens on it
@@ -4922,6 +4930,70 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.9/2** — Choosing an Arrangement in the library pane, from Practice or from the Composer, opens the Composer on it — the part it was saved on in the composing grid, its layers beneath — asking first when unsaved work would be lost, and closes the pane as opening a Pattern does
     - **AC-19.11.9/3** — In Practice, under a making goal, a Pattern that is a part of any Arrangement shows In arrangements naming each, and a tap on a name opens the Composer on that Arrangement; the line is absent on a Pattern in none, and under a practice goal
     - **AC-19.11.9/4** — A Pattern may be a part of any number of Arrangements and is never copied into one: an edit to the Pattern is heard in every Arrangement it is in, and every Arrangement it is in refuses its deletion
+
+---
+
+### User Story 69 - An instrument and a volume for each part
+
+*Traceability: `US-19.12` — An instrument and a volume for each part*
+
+**As** the Composer, **I want** to choose the instrument each part of an arrangement plays — a piano under a guitar, a bass under both, a sax or a trumpet on the line — and to set how loud each part is, **so that** an arrangement sounds like a band rather than one instrument stacked on itself, and the part I am writing sits where I want it against the rest.
+
+*(Added 2026-11-15 at the maintainer's request: "When I am in the Composer, I want to be able to choose which instrument each layer uses. So I could have one layer be guitar and another be piano. I also want to add a few other instruments … a brass instrument like a sax or a trumpet (or both if it's easy). I want a bass guitar. I want an electric guitar that has some sustain on the sound. I also want the synth selectable. The electric guitar will use the guitar fretboard for input. Everything else will use piano." And, while it was being read: "I have a synth as well but right now it's just a flavor of piano sound and it should actually be a selectable instrument", and "each layer needs its own relative volume control. It should have a slider knob and a text setting. 1 to 100. Pick a reasonable default based on what the total output decibals would be." Before any work the maintainer was told what else this changes and approved it: a layer stops playing the Practice voice and the part on screen stops playing "the instrument shown" (AC-19.11.2/2, AC-19.11.6/3); the Guitar | Piano switch becomes an instrument switch whose view follows the instrument (AC-19.1.3); the rule that the Piano view plays the synth when Practice is set to Synth is retired (AC-2.13.3/2); Arrangements store an instrument and a volume per part (AC-19.11.4/1); and Constitution Principle V's "no third sampled voice" needs amending. They then chose: the four new instruments are **sampled**, from the FluidR3_GM set the guitar already comes from, fetched on first need (Constitution 3.10.0); Practice's voice switch offers all seven too (AC-2.13.1); Auto landing. Decisions taken without asking, each the smallest that keeps the request whole: both sax and trumpet, since sampled they cost the same; the electric guitar is FluidR3's overdriven guitar, the one in the set that sustains; the existing steel-string guitar keeps the fretboard, as the electric takes it; an instrument and a volume belong to the Arrangement and never to a Pattern, as the melodic voice never has (AC-2.13.1/2); a note sounds at the pitch written on every instrument, the bass included; the volume is a taper in decibels, 0.4 dB a step with 100 the full level, and its default is 80 — 8 dB under full — because parts that do not move together add by power, six of them adding about 8 dB, so an arrangement of up to six parts at the default lands at about the level of one part at full instead of leaning on the compressor, and there are twenty steps left to bring a part forward (research.md D-028). The per-part MIDI export (AC-19.11.5) is unchanged: it carries notes, not instruments or volumes.)*
+
+**Independent Test**: Record a line in the Composer and assert the record bar's instrument switch offers the seven instruments, that choosing Sax shows the keyboard and choosing Electric guitar the fretboard with no note changed; add a melody layer and a percussive layer and assert the melody's row carries an instrument picker on the voice Practice has chosen, the percussive row none, and every row a volume slider and number box at 80; set the layer to Bass and its volume to 50, press Play and assert the layer's notes are sounded as Bass at −20 dB while the part on screen sounds on its own instrument at 80; put the layer on screen and assert both parts sound as they did; save the Arrangement, reload, open it and assert the instruments and volumes return; assert no Pattern export carries either.
+
+**Acceptance Scenarios**:
+
+- **AC-19.12.1** — Seven instruments, each played on the fretboard or the keyboard
+  - **Given** the instruments a part may be set to
+  - **When** the Composer chooses one
+  - **Then** it is one of Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, and the instrument decides where its notes are played: the fretboard for the two guitars, the keyboard for the rest
+  - **Cases**:
+    - **AC-19.12.1/1** — The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax and Trumpet, in that order
+    - **AC-19.12.1/2** — Guitar and Electric guitar are played on the fretboard, and every other instrument on the keyboard
+
+- **AC-19.12.2** — Each part has its own instrument
+  - **Given** a composition in the Composer, with or without layers
+  - **When** the Composer looks at the Layers section
+  - **Then** every part that can sound a pitched note carries an instrument picker, the choice is that part's alone and is heard at once, and a part keeps its instrument whether or not it is the one on screen
+  - **Cases**:
+    - **AC-19.12.2/1** — In the Layers section every part that can sound a pitched note carries an instrument picker showing its instrument, and a percussive layer carries none
+    - **AC-19.12.2/2** — Choosing an instrument for a part changes that part alone, and is heard from its next note with nothing stopped or restarted
+    - **AC-19.12.2/3** — The picker of the part on screen and the record bar's instrument switch are one choice: setting either shows in the other, and the instrument view follows it
+    - **AC-19.12.2/4** — A part keeps its instrument when it is put on screen and when it leaves: the part left sounds as it did, and the instrument view becomes the one the part now on screen is played on
+    - **AC-19.12.2/5** — A layer newly added starts on the voice Practice has chosen
+    - **AC-19.12.2/6** — A percussive layer has no instrument of its own, and put on screen it takes the instrument of the part it replaces
+
+- **AC-19.12.3** — Each part has its own volume
+  - **Given** a composition in the Composer, with or without layers
+  - **When** the Composer looks at the Layers section
+  - **Then** every part carries a volume from 1 to 100, set by a slider or typed as a number, 80 until it is changed, which scales that part's loudness and no other's
+  - **Cases**:
+    - **AC-19.12.3/1** — In the Layers section every part, a percussive layer included, carries a volume slider and a number box showing the same value, from 1 to 100, 80 until it is changed
+    - **AC-19.12.3/2** — Moving the slider or typing a number sets both, and a typed number outside 1 to 100 is held to the nearest end
+    - **AC-19.12.3/3** — A volume scales the loudness of every note of its part by 0.4 dB a step: 100 is the full level, 80 is 8 dB under it and 1 is 39.6 dB under it
+    - **AC-19.12.3/4** — A volume changed while playing is heard from that part's next note with nothing stopped or restarted, on that part alone, and Mute silences a part whatever its volume
+
+- **AC-19.12.4** — Instruments and volumes are the Arrangement's, never a Pattern's
+  - **Given** parts with instruments and volumes chosen
+  - **When** the Composer saves the Arrangement, opens it again, or exports a Pattern
+  - **Then** the Arrangement carries each part's instrument and volume and restores them, and no Pattern is touched by either
+  - **Cases**:
+    - **AC-19.12.4/1** — Save arrangement stores each part's instrument and volume, and opening the Arrangement restores them
+    - **AC-19.12.4/2** — Changing an instrument or a volume in a loaded Arrangement shows it as having unsaved changes until Save arrangement is pressed again
+    - **AC-19.12.4/3** — An Arrangement saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80
+    - **AC-19.12.4/4** — Choosing an instrument or a volume changes no Pattern, and no Pattern export carries either
+
+- **AC-19.12.5** — The fetched instruments load on first need, never block and never silence
+  - **Given** a part in the Composer, or the chosen voice in Practice, on Electric guitar, Bass, Sax or Trumpet
+  - **When** that instrument is first wanted, and whenever one of its notes sounds
+  - **Then** its FluidR3_GM samples are fetched through soundfont-player once, and never on page load; its notes sound through the synth while the samples load or when they cannot, with the loading and the failure shown; and a held instrument's note lasts until the next
+  - **Cases**:
+    - **AC-19.12.5/1** — Electric guitar, Bass, Sax and Trumpet are the FluidR3_GM `overdriven_guitar`, `electric_bass_finger`, `alto_sax` and `trumpet` samples, each requested once, when a part in the Composer is first set to it or at the first melodic note in Practice under it, and never on page load
+    - **AC-19.12.5/2** — While an instrument's samples load, or when they cannot, its notes sound through the synth; the record bar in the Composer and the voice switch in Practice say which instrument is loading, and a failure shows a non-blocking notice with Retry, which requests the samples again
+    - **AC-19.12.5/3** — On Electric guitar, Bass, Sax and Trumpet a note is held until that part's next note begins or its recording ends; Piano, Synth and Guitar ring as they did
+    - **AC-19.12.5/4** — The screen-off render sounds every part through its own instrument at its own volume, and through the synth where an instrument's samples are not ready
 
 ---
 

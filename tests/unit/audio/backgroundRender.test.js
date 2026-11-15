@@ -13,6 +13,8 @@ import { create } from '../../../src/core/pattern.js';
 import { loopDurationSeconds, buildTimeline } from '../../../src/core/timeline.js';
 import seed from '../../../data/seed-patterns.json';
 import { fakeContext } from './fakeAudio.js';
+import { layered } from '../../../src/core/arrangement.js';
+import { volumeGain } from '../../../src/core/voice.js';
 
 const SAMPLE_RATE = 44100;
 /** Seconds of 16-bit mono audio that fit in the module's 60 MB ceiling. */
@@ -148,7 +150,7 @@ describe('audio/backgroundRender — the melodic voice (AC-2.13.5)', () => {
   /** A melodic Pattern from the shipped library, so every sounding Slot is pitched. */
   const melodic = seed.patterns.find((p) => p.soundMode === 'melodic');
 
-  async function renderWith(prepareMelodic) {
+  async function renderWith(prepareMelodic, { pattern = melodic, gainOf = null } = {}) {
     const saved = globalThis.OfflineAudioContext;
     const contexts = [];
     globalThis.OfflineAudioContext = class {
@@ -164,7 +166,7 @@ describe('audio/backgroundRender — the melodic voice (AC-2.13.5)', () => {
       }
     };
     try {
-      const result = await renderCycle({ patternAt: () => melodic, passes: 1, settings: {}, sampleRate: 8000, prepareMelodic });
+      const result = await renderCycle({ patternAt: () => pattern, passes: 1, settings: {}, sampleRate: 8000, prepareMelodic, gainOf });
       return { result, ctx: contexts[0] };
     } finally {
       if (saved === undefined) delete globalThis.OfflineAudioContext;
@@ -187,6 +189,37 @@ describe('audio/backgroundRender — the melodic voice (AC-2.13.5)', () => {
     const { result, ctx } = await renderWith(async () => null);
     expect(result.voice).toBe('synth');
     expect(ctx.nodes.filter((n) => n.kind === 'oscillator').length).toBeGreaterThan(0);
+    URL.revokeObjectURL(result.url);
+  });
+
+  it("AC-19.12.5/4 — The screen-off render sounds every part through its own instrument at its own volume, and through the synth where an instrument's samples are not ready", async () => {
+    // A layered set: the part on screen and one melodic layer on its own instrument and volume.
+    const set = layered(melodic, [{ pattern: { ...melodic, name: 'Under' }, instrument: 'sax', volume: 50 }]);
+    const played = [];
+    const players = {
+      sax: (_c, _d, e) => played.push({ via: 'sax', layer: e.layer, gain: e.gain }),
+      // The part on screen's instrument is not ready: the synth sounds it.
+    };
+    const instrumentFor = (e) => (e.composition === false ? e.instrument : 'trumpet');
+    const gainOf = (e) => volumeGain(e.composition === false ? e.volume : 80);
+    const { result, ctx } = await renderWith(
+      async () => ({
+        voice: 'synth',
+        voices: ['sax'],
+        play: (c, d, e, w) => (players[instrumentFor(e)] ?? ((cc, dd, ee) => played.push({ via: 'synth', layer: ee.layer, gain: ee.gain })))(c, d, e, w),
+      }),
+      { pattern: set, gainOf }
+    );
+    expect(result.voices).toEqual(['sax']);
+    const pitched = buildTimeline(melodic, 0).filter((e) => e.pitch).length;
+    // Every layer note through the sax at −20 dB; every note of the part on screen through the synth at −8 dB.
+    const under = played.filter((p) => p.layer === 1);
+    const own = played.filter((p) => p.layer === 0);
+    expect(under).toHaveLength(pitched);
+    expect(under.every((p) => p.via === 'sax' && Math.abs(20 * Math.log10(p.gain) + 20) < 1e-9)).toBe(true);
+    expect(own).toHaveLength(pitched);
+    expect(own.every((p) => p.via === 'synth' && Math.abs(20 * Math.log10(p.gain) + 8) < 1e-9)).toBe(true);
+    expect(ctx).toBeDefined();
     URL.revokeObjectURL(result.url);
   });
 

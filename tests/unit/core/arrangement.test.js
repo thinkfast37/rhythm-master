@@ -25,6 +25,8 @@ import {
   setLayerMuted,
   validateArrangement,
   usesPattern,
+  setLayerSound,
+  soundOf,
   MAX_LAYERS,
   MAX_REPEATS,
 } from '../../../src/core/arrangement.js';
@@ -167,7 +169,7 @@ describe('core/arrangement — layers sound together (AC-19.11.2)', () => {
     expect(layeredHasHarmony(layered(fourBeats(), [{ pattern: chords() }]))).toBe(true);
   });
 
-  it('AC-19.11.2/2 — The composition sounds with the instrument shown; a melodic layer sounds with the melodic voice Practice would use; a percussive layer, and an unpitched syllable in any layer, sounds percussively at its Accent Level', () => {
+  it("AC-19.11.2/2 — Each part's pitched notes sound with that part's own instrument, on screen or not; a percussive layer, and an unpitched syllable in any part, sounds percussively at its Accent Level", () => {
     // What the timeline carries for the voice decision: which events are the
     // composition's, and which have a pitch at all. A percussive layer's events
     // have no pitch, so the transport plays them percussively as it always has.
@@ -183,6 +185,11 @@ describe('core/arrangement — layers sound together (AC-19.11.2)', () => {
     const partial = { ...melody('Half'), measures: melody('Half').measures.map((m) => ({ ...m, beats: m.beats.map((b, i) => (i < 2 ? b : { ...b, slots: b.slots.map((s) => ({ ...s, pitch: null })) })) })) };
     const half = layeredTimeline(layered(fourBeats(), [{ pattern: partial }])).filter((e) => e.layer === 1);
     expect(half.map((e) => e.pitch === null)).toEqual([false, false, true, true]);
+    // Each layer's instrument and volume ride on its events, so the transport can sound a part its own way (US-19.12).
+    const sounded = layeredTimeline(layered(melody('Line'), [{ pattern: melody('Tune'), instrument: 'bass', volume: 55 }, { pattern: fourBeats('Bed'), volume: 30 }]));
+    expect(sounded.filter((e) => e.layer === 1).every((e) => e.instrument === 'bass' && e.volume === 55)).toBe(true);
+    expect(sounded.filter((e) => e.layer === 2).every((e) => e.instrument === undefined && e.volume === 30)).toBe(true);
+    expect(sounded.filter((e) => e.composition).every((e) => e.instrument === undefined)).toBe(true);
   });
 
   it("AC-19.11.2/3 — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key", () => {
@@ -251,6 +258,44 @@ describe('core/arrangement — the Arrangement (AC-19.11.1, AC-19.11.4)', () => 
     expect(validateArrangement({ ...a, name: '' })).toContain('An Arrangement needs a name');
     expect(validateArrangement({ ...a, layers: [] })).toContain('An Arrangement needs at least one layer');
     expect(validateArrangement({ ...a, layers: [{ patternId: 's_1' }, { patternId: 's_1' }] })).toContain('"s_1" is layered twice');
+  });
+
+  it("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume, and opening the Arrangement restores them: the Arrangement's shape carries them, and refuses what is neither an instrument nor a volume", () => {
+    const a = createArrangement('Band', 'p_1', [{ patternId: 's_1', volume: 60 }, { patternId: 'p_2', muted: true, instrument: 'bass', volume: 90 }], 1, { instrument: 'sax', volume: 70 });
+    expect(a).toEqual({
+      id: null,
+      name: 'Band',
+      compositionId: 'p_1',
+      instrument: 'sax',
+      volume: 70,
+      layers: [
+        { patternId: 's_1', muted: false, volume: 60 },
+        { patternId: 'p_2', muted: true, instrument: 'bass', volume: 90 },
+      ],
+      active: 1,
+    });
+    expect(validateArrangement(a)).toEqual([]);
+    // A layer added on an instrument, and a layer's sound set afterwards.
+    const b = addLayer(a, 'p_3', { instrument: 'trumpet' });
+    expect(b.layers[2]).toEqual({ patternId: 'p_3', muted: false, instrument: 'trumpet' });
+    expect(setLayerSound(b, 2, { volume: 40 }).layers[2]).toEqual({ patternId: 'p_3', muted: false, instrument: 'trumpet', volume: 40 });
+    expect(setLayerSound(b, 0, { instrument: 'electric' }).layers[0]).toEqual({ patternId: 's_1', muted: false, volume: 60, instrument: 'electric' });
+    expect(() => setLayerSound(b, 9, { volume: 40 })).toThrow();
+    // Mute and removal leave a part's sound alone.
+    expect(setLayerMuted(a, 1, false).layers[1]).toEqual({ patternId: 'p_2', muted: false, instrument: 'bass', volume: 90 });
+    expect(validateArrangement({ ...a, instrument: 'harpsichord' })).toContain('"harpsichord" is not an instrument');
+    expect(validateArrangement({ ...a, layers: [{ patternId: 's_1', muted: false, volume: 0 }] })).toContain('A volume must be a whole number from 1 to 100');
+    expect(validateArrangement({ ...a, volume: 101 })).toContain('A volume must be a whole number from 1 to 100');
+    expect(validateArrangement({ ...a, volume: 50.5 })).toContain('A volume must be a whole number from 1 to 100');
+  });
+
+  it("AC-19.12.4/3 — An Arrangement saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80: such an Arrangement is still sound, and reads back with nothing added", () => {
+    const old = { id: 'arr_1', name: 'Bed', compositionId: 'p_1', layers: [{ patternId: 's_1', muted: false }], active: 0 };
+    expect(validateArrangement(old)).toEqual([]);
+    expect(soundOf(old)).toEqual({});
+    expect(soundOf(old.layers[0])).toEqual({});
+    // Made again from its own parts, it is the same record: nothing is stamped on it.
+    expect({ ...createArrangement(old.name, old.compositionId, old.layers, old.active, old), id: old.id }).toEqual(old);
   });
 
   it('AC-19.11.6/6 — Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Arrangement remembers which part was on screen and opens on it: the part on screen is stored as a position among the parts', () => {

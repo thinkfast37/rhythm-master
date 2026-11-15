@@ -58,7 +58,8 @@ export function playMelodic(ctx, _destination, event, when) {
   const reverb = ensureReverb(ctx);
   const env = ENVELOPES[event.accent] ?? ENVELOPES[1];
   const frequency = event.pitch.frequency;
-  const voices = CHORUS_DETUNE.length;
+  // The part's volume scales the whole envelope (AC-19.12.3/3); the chorus divides it.
+  const voices = CHORUS_DETUNE.length / (event.gain ?? 1);
 
   const gainNode = ctx.createGain();
   gainNode.gain.setValueAtTime(0.001, when);

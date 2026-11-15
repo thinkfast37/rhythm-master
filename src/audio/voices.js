@@ -30,10 +30,14 @@ export function accentVoice(accent) {
  * makes it read as a struck drum rather than a beep, and it is the single
  * biggest difference from a plain oscillator tone. Routed through the shared
  * compressor only: no chorus, filter, or reverb (AC-2.4.5).
+ *
+ * @param {number} [level]  the part's volume as a gain multiplier
  */
-export function playPercussive(ctx, _destination, accent, when) {
+export function playPercussive(ctx, _destination, accent, when, level = 1) {
   const compressor = ensureCompressor(ctx);
-  const { frequency, gain: amp } = accentVoice(accent);
+  const { frequency, gain } = accentVoice(accent);
+  // `level` is the part's volume as a multiplier (AC-19.12.3/3); 1 outside the Composer.
+  const amp = gain * level;
 
   const osc = ctx.createOscillator();
   osc.type = 'sine';

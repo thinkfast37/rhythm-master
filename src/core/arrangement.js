@@ -15,6 +15,7 @@
 import { buildTimeline, loopDurationSeconds, buildBeatGrid } from './timeline.js';
 import { cyclePasses, hasHarmony } from './harmony.js';
 import { beatCount, beatNoteValue, tempoUnitOf } from './meter.js';
+import { VOICES, MIN_VOLUME, MAX_VOLUME } from './voice.js';
 
 /** How many layers may sit under a composition (AC-19.11.1/3). */
 export const MAX_LAYERS = 8;
@@ -103,7 +104,7 @@ export function underComposition(layer, composition) {
  * the composition first, each with its Pattern as it plays and its repeats.
  *
  * @param {object} composition  the draft
- * @param {Array<{pattern: object, muted?: boolean}>} layers
+ * @param {Array<{pattern: object, muted?: boolean, instrument?: string, volume?: number}>} layers
  */
 export function layered(composition, layers) {
   const under = layers.map((l) => underComposition(l.pattern, composition));
@@ -118,7 +119,16 @@ export function layered(composition, layers) {
     loopEighths: eighths,
     layers: [
       { pattern: composition, repeats: repeats[0], muted: false, composition: true },
-      ...under.map((pattern, i) => ({ pattern, repeats: repeats[i + 1], muted: Boolean(layers[i].muted), composition: false })),
+      // Each layer's instrument and volume travel with it (US-19.12), so every
+      // event can say how its part sounds.
+      ...under.map((pattern, i) => ({
+        pattern,
+        repeats: repeats[i + 1],
+        muted: Boolean(layers[i].muted),
+        composition: false,
+        instrument: layers[i].instrument,
+        volume: layers[i].volume,
+      })),
     ],
   };
 }
@@ -148,6 +158,8 @@ export function layeredTimeline(set, pass = 0) {
           repeat: k,
           layer: index,
           composition: layer.composition,
+          instrument: layer.instrument,
+          volume: layer.volume,
         });
       }
     }
@@ -196,8 +208,26 @@ export const anyHarmony = (p) => (isLayered(p) ? layeredHasHarmony(p) : hasHarmo
 /* --- the Arrangement: what is saved (AC-19.11.4) ---------------------------- */
 
 /** A new, unsaved Arrangement over a composition. `id` is null until the store assigns one. */
-export function createArrangement(name, compositionId, layers = [], active = 0) {
-  return { id: null, name, compositionId, layers: layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted) })), active };
+export function createArrangement(name, compositionId, layers = [], active = 0, sound = {}) {
+  return { id: null, name, compositionId, ...soundOf(sound), layers: layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted), ...soundOf(l) })), active };
+}
+
+/**
+ * A part's instrument and volume, where it has them (US-19.12). Left out when
+ * unset, so an Arrangement saved before parts had either reads back exactly
+ * as it was written (AC-19.12.4/3).
+ */
+export function soundOf(part) {
+  const sound = {};
+  if (part?.instrument) sound.instrument = part.instrument;
+  if (part?.volume !== undefined && part?.volume !== null) sound.volume = part.volume;
+  return sound;
+}
+
+/** Set a layer's instrument or volume (AC-19.12.2/2, AC-19.12.3/2). */
+export function setLayerSound(arrangement, index, sound) {
+  if (!arrangement.layers[index]) throw new Error(`No layer at index ${index}`);
+  return { ...arrangement, layers: arrangement.layers.map((l, i) => (i === index ? { ...l, ...sound } : l)) };
 }
 
 /**
@@ -206,11 +236,11 @@ export function createArrangement(name, compositionId, layers = [], active = 0) 
  * (AC-19.11.1/3). Whether it FITS is the caller's check, since that needs the
  * Patterns themselves (`refusal`).
  */
-export function addLayer(arrangement, patternId) {
+export function addLayer(arrangement, patternId, sound = {}) {
   if (patternId === arrangement.compositionId) throw new Error('The composition cannot be a layer under itself');
   if (arrangement.layers.some((l) => l.patternId === patternId)) throw new Error('That Pattern is already a layer');
   if (arrangement.layers.length >= MAX_LAYERS) throw new Error(`At most ${MAX_LAYERS} layers`);
-  return { ...arrangement, layers: [...arrangement.layers, { patternId, muted: false }] };
+  return { ...arrangement, layers: [...arrangement.layers, { patternId, muted: false, ...soundOf(sound) }] };
 }
 
 export function removeLayer(arrangement, index) {
@@ -241,7 +271,19 @@ export function validateArrangement(arrangement) {
       else if (seen.has(layer.patternId)) problems.push(`"${layer.patternId}" is layered twice`);
       else if (layer.patternId === arrangement.compositionId) problems.push('The composition cannot be a layer under itself');
       seen.add(layer?.patternId);
+      problems.push(...soundProblems(layer));
     }
+    problems.push(...soundProblems(arrangement));
+  }
+  return problems;
+}
+
+/** A part's instrument must be one of the catalogue's and its volume a whole number from 1 to 100 (AC-19.12.4/1). */
+function soundProblems(part) {
+  const problems = [];
+  if (part?.instrument !== undefined && !VOICES.includes(part.instrument)) problems.push(`"${part.instrument}" is not an instrument`);
+  if (part?.volume !== undefined && (!Number.isInteger(part.volume) || part.volume < MIN_VOLUME || part.volume > MAX_VOLUME)) {
+    problems.push(`A volume must be a whole number from ${MIN_VOLUME} to ${MAX_VOLUME}`);
   }
   return problems;
 }

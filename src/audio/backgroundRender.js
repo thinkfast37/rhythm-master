@@ -103,6 +103,10 @@ export function encodeWav(buffer) {
 /**
  * Render `patternAt(pass)` for each pass of the cycle into a WAV Blob.
  *
+ * `prepareMelodic(ctx)` resolves `{ voice, play }` — `play` sounding each
+ * event through its own part's instrument (AC-19.12.5/4) — and `gainOf(event)`
+ * gives a part's volume as a multiplier.
+ *
  * Returns `{ url, seconds, passes, whole, voice }` — `voice` the melodic voice
  * the render used — or null when this browser has no
  * OfflineAudioContext or the render fails — in which case the run simply does
@@ -110,7 +114,7 @@ export function encodeWav(buffer) {
  *
  * The caller revokes `url` when it is done with it.
  */
-export async function renderCycle({ patternAt, passes, settings, sampleRate, prepareMelodic = null }) {
+export async function renderCycle({ patternAt, passes, settings, sampleRate, prepareMelodic = null, gainOf = null }) {
   const Offline = globalThis.OfflineAudioContext ?? globalThis.webkitOfflineAudioContext;
   if (typeof Offline !== 'function' || passes < 1) return null;
 
@@ -140,6 +144,8 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate, pre
 
   let buffer;
   let voice = 'synth';
+  /** Every sampled instrument the render sounded through (AC-19.12.5/4). */
+  let voices = [];
   try {
     const ctx = new Offline(1, frames, sampleRate);
     // The melodic voice the live transport is using, loaded on this context,
@@ -147,13 +153,16 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate, pre
     const sampled = prepareMelodic ? await prepareMelodic(ctx) : null;
     const melodicVoice = sampled?.play ?? playMelodic;
     voice = sampled?.voice ?? 'synth';
+    voices = sampled?.voices ?? [];
     let at = 0;
     for (let pass = 0; pass < plan.passes; pass++) {
       const pattern = patterns[pass];
       for (const event of buildTimeline(pattern, pass)) {
         const when = at + event.timeSeconds;
-        if (event.pitch) melodicVoice(ctx, null, event, when);
-        else playPercussive(ctx, null, event.accent, when);
+        // A part's volume, where it has one (AC-19.12.5/4).
+        const level = gainOf ? gainOf(event) : 1;
+        if (event.pitch) melodicVoice(ctx, null, level === 1 ? event : { ...event, gain: level }, when);
+        else playPercussive(ctx, null, event.accent, when, level);
       }
       if (settings.metronomeEnabled) {
         for (const beat of buildBeatGrid(pattern)) {
@@ -170,5 +179,5 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate, pre
   }
 
   const url = URL.createObjectURL(new Blob([encodeWav(buffer)], { type: 'audio/wav' }));
-  return { url, seconds: plan.seconds, passes: plan.passes, whole: plan.whole, voice };
+  return { url, seconds: plan.seconds, passes: plan.passes, whole: plan.whole, voice, voices };
 }

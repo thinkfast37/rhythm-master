@@ -40,7 +40,7 @@ import {
 import { placeHelp } from './help.js';
 import { surfaceFor } from '../core/goals.js';
 import { phraseLengthOf, canAddVariation } from '../core/variations.js';
-import { VOICES, normaliseVoice } from '../core/voice.js';
+import { VOICES, normaliseVoice, instrumentOf, FETCHED } from '../core/voice.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
@@ -500,15 +500,18 @@ function renderSoundModeSwitch(pattern, handlers) {
   return group;
 }
 
-const VOICE_LABELS = { piano: 'Piano', synth: 'Synth', guitar: 'Guitar' };
 const VOICE_TITLES = {
   piano: `A real grand piano. ${PIANO_ATTRIBUTION.text}`,
   synth: 'The synthesised voice: three detuned sines through a filter and reverb.',
   guitar: 'The sampled steel-string guitar the Composer plays.',
+  electric: 'A sampled overdriven electric guitar; each note sustains until the next.',
+  bass: 'A sampled fingered electric bass.',
+  sax: 'A sampled alto saxophone.',
+  trumpet: 'A sampled trumpet.',
 };
 
 /**
- * Piano | Synth | Guitar (AC-2.13.1): the voice melodic notes sound with. An
+ * Every instrument (AC-2.13.1): the voice melodic notes sound with. An
  * app preference, so tapping one never touches the Pattern (/2). The piano's
  * loading state and its failure, with Retry, sit beside it (AC-2.13.4/2, /3).
  */
@@ -519,7 +522,7 @@ function renderVoiceSwitch(state, handlers) {
   group.setAttribute('aria-label', 'Melodic voice');
   group.dataset.voice = voice;
   for (const id of VOICES) {
-    const b = el('button', 'mode-option', { type: 'button', textContent: VOICE_LABELS[id], title: VOICE_TITLES[id] });
+    const b = el('button', 'mode-option', { type: 'button', textContent: instrumentOf(id).label, title: VOICE_TITLES[id] });
     b.dataset.action = 'set-melodic-voice';
     b.dataset.voice = id;
     b.setAttribute('aria-pressed', String(voice === id));
@@ -542,6 +545,26 @@ function renderVoiceSwitch(state, handlers) {
       const retry = el('button', 'voice-retry', { type: 'button', textContent: 'Retry' });
       retry.dataset.action = 'piano-retry';
       retry.addEventListener('click', () => handlers.onPianoRetry?.());
+      wrap.appendChild(retry);
+    }
+  }
+  // A fetched voice's samples, on their way or not coming (AC-19.12.5/2); the
+  // guitar's fall back in silence here, as they always have (US-19.7).
+  const fetching = FETCHED.includes(voice) && voice !== 'guitar' ? (state.samples?.[voice]?.status ?? 'idle') : 'idle';
+  if (fetching === 'loading' || fetching === 'error') {
+    const { label } = instrumentOf(voice);
+    const note = el('span', `voice-status ${fetching}`, {
+      textContent: fetching === 'loading' ? `Loading ${label} samples… the synth plays meanwhile.` : `The ${label} samples could not load; the synth is playing instead.`,
+    });
+    note.dataset.status = fetching;
+    note.dataset.sample = voice;
+    note.setAttribute('role', 'status');
+    wrap.appendChild(note);
+    if (fetching === 'error') {
+      const retry = el('button', 'voice-retry', { type: 'button', textContent: 'Retry' });
+      retry.dataset.action = 'sample-retry';
+      retry.dataset.sample = voice;
+      retry.addEventListener('click', (e) => handlers.onSampleRetry?.(e.currentTarget.dataset.sample));
       wrap.appendChild(retry);
     }
   }

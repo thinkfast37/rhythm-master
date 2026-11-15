@@ -88,6 +88,12 @@ core feature); a vendored soundfont (built, then removed — several MB in the r
 maintainer liked less); a small pitch-shifted sample set (rejected earlier on stretch artefacts, and
 moot now).
 
+**Amended 2026-11-15 (US-19.12, Constitution 3.10.0, D-028).** Four more fetched voices join the
+guitar, from the same FluidR3_GM set and through the same loader: `overdriven_guitar`,
+`electric_bass_finger`, `alto_sax` and `trumpet`. The maintainer was offered synthesised imitations,
+which need no amendment and work offline, and chose samples. The objection to a CDN is answered as
+it was for the guitar: the synth sounds every note until the samples arrive, and whenever they cannot.
+
 **Amended 2026-10-18 (US-19.7, Constitution 3.7.0).** One sampled voice returns, narrowly: the
 Composer's guitar is the FluidR3_GM `acoustic_guitar_steel` that fret-navigator plays, fetched from
 gleitz/midi-js-soundfonts through soundfont-player on first use of the Composer's Guitar view. Both
@@ -1287,3 +1293,58 @@ against a combined loop; the maintainer chose Patterns only for this version); s
 Arrangement's tempo and Key on it (rejected: the composition carries them, and a second copy would
 drift); a per-layer voice picker (not asked for; the composition-on-the-instrument, layers-as-
 Practice split tells the two apart without a setting); solo as well as mute (not asked for).
+
+---
+
+## D-028 — An instrument and a volume for each part: one loader for every fetched voice, held notes, and a decibel taper
+
+**Decision (2026-11-15, US-19.12)**: every part of an arrangement carries an instrument and a volume.
+Both belong to the Arrangement — the Composer's state while it is open, `rm.arrangements.v1` once
+saved — and never to a Pattern.
+
+**The catalogue** lives in `core/voice.js` (`INSTRUMENTS`): Piano, Synth, Guitar, Electric guitar,
+Bass, Sax, Trumpet. Each names the view its notes are played on — `guitar` for the two guitars,
+`piano` for the rest — and, when it is fetched, its FluidR3_GM name. Practice's voice switch and the
+Composer's instrument switch both read it, so the two cannot list different instruments.
+
+**One loader.** `audio/guitar.js` was a module holding one soundfont instrument. It is now
+`audio/soundfont.js`, a factory — `createSoundfontVoice(name, { held })` — and `audio/guitar.js` is
+the steel-string guitar made from it, with the exports it always had, so US-19.7's behaviour and tests
+stand. `audio/instruments.js` makes the other four and maps every instrument id to its player. Each
+voice keeps its own per-context load state, so one instrument failing to load silences nothing else.
+
+**Held notes.** A sampled sax note is three seconds long. Played on every eighth note it piles up
+into a cluster no saxophone can make, and the same is true of a trumpet, a bass line and an
+overdriven guitar. So those four are *held*: a note is stopped, with a short release, when the same
+part's next note begins — which is also what gives the electric guitar the sustain asked for, since
+nothing cuts a note short but the next one. Piano, Synth and Guitar ring as before. The timeline is
+untouched: it still says only when a note starts (D-002), and the hold is the voice's business.
+*Rejected*: a fixed note length (too short for a long note, too long for a fast line); a duration on
+every timeline event (a change to the one timeline for the sake of four voices).
+
+**Where the instrument comes from.** The part on screen: the Composer's own choice
+(`composer.instrument`), falling back to the remembered `composerInstrument` setting. A layer: its
+`instrument`, stamped with Practice's chosen voice when the layer is added, and falling back to that
+voice when an Arrangement saved before this change names none — which is exactly how such an
+Arrangement sounded before, so nothing is migrated and an old Arrangement does not open as "unsaved".
+`core/arrangement.layered` passes each layer's instrument and volume into the set, and
+`layeredTimeline` stamps them on every event, so the transport and the screen-off render read the
+part's sound off the event itself.
+
+**The volume.** 1 to 100, in decibels: `gain = 10^((v − 100) × 0.4 / 20)`. 100 is the level a
+note has always had; each step is 0.4 dB; 1 is −39.6 dB, quiet but present, with Mute for silence.
+A linear slider was rejected because loudness is heard in ratios — the bottom half of a linear
+slider is nearly all of the audible change.
+
+**The default is 80, which is −8 dB.** Parts that do not move together add by power: N parts at one
+level sum to 10·log10(N) dB above it, +3 dB for two, +6 dB for four, +7.8 dB for six. Every voice
+here peaks near full scale on a Strong note (0.88), so before this change two parts already drove the
+shared compressor on every coincident accent. At −8 dB each, six parts sum to about the level of one
+part at full, the compressor is left to catch peaks rather than to mix, and there are twenty steps of
+headroom to bring one part forward. The cost, accepted: a composition with no layers is 8 dB quieter
+in the Composer than the same Pattern in Practice. A default of 100 was rejected because it leaves no
+way to raise a part above the others, which is half of what a relative control is for.
+
+The gain is applied in each voice, as a multiplier on the envelope it already builds
+(`event.gain`), rather than through a bus per part: the voices route themselves to the shared
+compressor, and a bus per part would mean re-plumbing every one for a number each can simply multiply by.
