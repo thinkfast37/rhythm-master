@@ -16,13 +16,13 @@
 **Feature**: specs/001-rhythm-master-mvp/spec.md
 **Criteria**: 1144 across 69 User Stories
 
-**Coverage**: 1017 of 1144 criteria proven (88.9%)
+**Coverage**: 1018 of 1144 criteria proven (89.0%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1017 | 88.9% |
+| 🟢 Proven | 1018 | 89.0% |
 | 🟠 Gap — MEDIUM | 50 | 4.4% |
-| 🟡 Gap — LOW | 77 | 6.7% |
+| 🟡 Gap — LOW | 76 | 6.6% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -50,7 +50,7 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (127 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (126 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
@@ -64,7 +64,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟡 US-2.1 | 13 | 10 | · | · | · | · | 3 |
 | 🟠 US-2.2 | 36 | 24 | · | · | · | 7 | 5 |
 | 🟡 US-2.3 | 3 | 0 | · | · | · | · | 3 |
-| 🟡 US-2.4 | 5 | 2 | · | · | · | · | 3 |
+| 🟡 US-2.4 | 5 | 3 | · | · | · | · | 2 |
 | 🟠 US-3.1 | 24 | 10 | · | · | · | 2 | 12 |
 | 🟡 US-4.1 | 43 | 41 | · | · | · | · | 2 |
 | 🟠 US-4.2 | 20 | 19 | · | · | · | 1 | · |
@@ -225,7 +225,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.3 | `AC-2.3.1` | Default Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.2` | Changing Key re-transposes without altering stored data | P-015 | T067 (1/1 done) | T068 (1/1 done) | `pitch.test.js`, `timeline.test.js`, `melodic.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.3 | `AC-2.3.3` 🖵 | Percussive Patterns have no Key | P-015 | T067 (1/1 done) | T068 (1/1 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-2.4 | `AC-2.4.1` | The Synth voice uses the ported synthesis chain | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `voice.test.js`, `melodic.spec.js`, `voice.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-2.4 | `AC-2.4.1` | The Synth voice uses the ported synthesis chain | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `voice.spec.js` | 🟢 OK |
 | US-2.4 | `AC-2.4.2` | Percussive and Synth fetch no audio asset | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
 | US-2.4 | `AC-2.4.3` | Neither Sound Mode waits on anything to load | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `trace-playback.spec.js` | 🟢 OK |
 | US-2.4 | `AC-2.4.4` | Synth notes share one reverb and one compressor | P-017 | T071, T072, T423 (3/3 done) | T073, T424 (2/2 done) | `melodic.spec.js`, `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
@@ -1051,7 +1051,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.13 | `AC-2.13.1/2` 🖵 | Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.1/3` 🖵 | Choosing a voice while playing changes it from the next melodic note, with no restart | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/1` | Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.test.js`, `voice.spec.js` | 🟢 OK |
-| US-2.13 | `AC-2.13.2/2` | Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1 | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.2/2` | Under Synth, a melodic note sounds through the ported synthesis chain | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/3` | Under Guitar, a melodic note sounds through the sampled guitar of US-19.7 | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/4` 🖵 | Percussive notes and the metronome click sound the same whatever the voice | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/5` | Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |

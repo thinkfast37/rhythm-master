@@ -38,7 +38,7 @@ describe('core/voice — the choice', () => {
     for (const v of VOICES) expect(normaliseVoice(v)).toBe(v);
   });
 
-  it('AC-2.13.2/2 — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1: Practice plays the chosen voice', () => {
+  it('AC-2.13.2/2 — Under Synth, a melodic note sounds through the ported synthesis chain: Practice plays the chosen voice', () => {
     for (const voice of VOICES) expect(resolveVoice({ composer: false, instrument: 'guitar', voice })).toBe(voice);
     expect(resolveVoice({ composer: false, instrument: 'piano', voice: undefined })).toBe('piano');
   });

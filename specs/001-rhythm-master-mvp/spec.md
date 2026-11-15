@@ -4385,12 +4385,12 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** it sounds through the chosen voice, and nothing else about playback changes with it
   - **Cases**:
     - **AC-2.13.2/1** — Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level
-    - **AC-2.13.2/2** — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1
+    - **AC-2.13.2/2** — Under Synth, a melodic note sounds through the ported synthesis chain
     - **AC-2.13.2/3** — Under Guitar, a melodic note sounds through the sampled guitar of US-19.7
     - **AC-2.13.2/4** — Percussive notes and the metronome click sound the same whatever the voice
     - **AC-2.13.2/5** — Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says
     - **AC-2.13.2/6** — Under Flute, a melodic note sounds through the flute's samples, and under Drums it sounds the synthesised drum its MIDI note names (AC-19.13.1)
-  - *(/5 added 2026-11-15 with US-19.12, and /6 the same day with US-19.13.)*
+  - *(/5 added 2026-11-15 with US-19.12, and /6 the same day with US-19.13 /2's title lost its closing "of AC-2.4.1" the same day: a criterion's number inside another's title made every test named for /2 count as a misnamed test of AC-2.4.1. The chain /2 means is still AC-2.4.1's.)*
 
 - **AC-2.13.3** — The Composer plays each part's own instrument
   - **Given** the Composer

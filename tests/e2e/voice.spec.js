@@ -181,7 +181,7 @@ test('AC-2.13.2/1 — Under Piano, a melodic note sounds through the Salamander 
   expect(shape.peaks[1]).toBeLessThan(shape.peaks[2]);
 });
 
-test('AC-2.13.2/2 — Under Synth, a melodic note sounds through the ported synthesis chain of AC-2.4.1', async ({ page }) => {
+test('AC-2.13.2/2 — Under Synth, a melodic note sounds through the ported synthesis chain', async ({ page }) => {
   const piano = watchPiano(page);
   await openApp(page);
   await melodicPattern(page);
@@ -323,6 +323,56 @@ test('AC-2.13.3/2 — Synth is an instrument of its own: a part on Piano sounds 
       expect((await voiceLog(page)).at(-1)).toMatchObject({ voice: 'piano', via: 'sampled', midi: 62 });
     }
   }
+});
+
+test('AC-2.4.1 — The Synth voice uses the ported synthesis chain: the Synth instrument builds three detuned sines, the low-pass sweep and the reverb send', async ({ page }) => {
+  await openApp(page);
+  const chain = await page.evaluate(() => {
+    // The player the dispatcher hands every Synth note to, in Practice and in the Composer alike.
+    const synth = window.__rm.instruments.PLAYERS.synth;
+    const ctx = new OfflineAudioContext(2, 44100, 44100);
+    const made = { oscillators: [], filters: [], convolvers: 0, sweep: [] };
+    const osc = ctx.createOscillator.bind(ctx);
+    ctx.createOscillator = () => {
+      const o = osc();
+      made.oscillators.push(o);
+      return o;
+    };
+    const filter = ctx.createBiquadFilter.bind(ctx);
+    ctx.createBiquadFilter = () => {
+      const f = filter();
+      const set = f.frequency.setValueAtTime.bind(f.frequency);
+      const ramp = f.frequency.exponentialRampToValueAtTime.bind(f.frequency);
+      f.frequency.setValueAtTime = (v, t) => (made.sweep.push(['from', v]), set(v, t));
+      f.frequency.exponentialRampToValueAtTime = (v, t) => (made.sweep.push(['to', v]), ramp(v, t));
+      made.filters.push(f);
+      return f;
+    };
+    const conv = ctx.createConvolver.bind(ctx);
+    ctx.createConvolver = () => {
+      made.convolvers += 1;
+      return conv();
+    };
+    synth(ctx, ctx.destination, { accent: 3, pitch: { frequency: 440, midiNote: 69 } }, 0);
+    return {
+      same: synth === window.__rm.melodic.playMelodic,
+      types: made.oscillators.map((o) => o.type),
+      detunes: made.oscillators.map((o) => o.detune.value).sort((a, b) => a - b),
+      filterTypes: made.filters.map((f) => f.type),
+      sweep: made.sweep,
+      convolvers: made.convolvers,
+    };
+  });
+  // The predecessor's chain, unchanged: three detuned sines, a low-pass sweeping 2000 Hz down to 600 Hz, a reverb send.
+  expect(chain.same).toBe(true);
+  expect(chain.types).toEqual(['sine', 'sine', 'sine']);
+  expect(chain.detunes).toEqual([-5, 0, 5]);
+  expect(chain.filterTypes).toEqual(['lowpass']);
+  expect(chain.sweep).toEqual([
+    ['from', 2000],
+    ['to', 600],
+  ]);
+  expect(chain.convolvers).toBe(1);
 });
 
 test("AC-2.13.2/5 — Under Electric guitar, Bass, Sax or Trumpet, a melodic note sounds through that instrument's samples, loaded as AC-19.12.5 says", async ({ page }) => {
