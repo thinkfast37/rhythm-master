@@ -59,9 +59,20 @@ export function renderLayers(state, handlers) {
     name.dataset.arrangementName = arrangement.name;
     head.appendChild(name);
   }
-  if (arrangementUnsaved(composer)) {
-    const u = el('span', 'layers-unsaved', { textContent: arrangement?.id ? 'unsaved changes' : 'not yet saved' });
-    u.dataset.unsaved = arrangement?.id ? 'changes' : 'new';
+  // A named Arrangement saves on its own (AC-19.11.4/4): it is either saved, or
+  // waiting on a part that is not yet in the library, named here.
+  const waitingOn = arrangement?.id ? (handlers.parts?.() ?? []).filter((p) => !p.id && p.pattern) : [];
+  if (arrangement?.id && waitingOn.length > 0) {
+    const u = el('span', 'layers-unsaved', { textContent: `saves once ${waitingOn.map((p) => `"${p.pattern.name}"`).join(', ')} ${waitingOn.length === 1 ? 'is' : 'are'} saved` });
+    u.dataset.unsaved = 'waiting';
+    head.appendChild(u);
+  } else if (arrangement?.id) {
+    const ok = el('span', 'layers-saved', { textContent: 'saved' });
+    ok.dataset.saved = 'true';
+    head.appendChild(ok);
+  } else if (arrangementUnsaved(composer)) {
+    const u = el('span', 'layers-unsaved', { textContent: 'not yet saved' });
+    u.dataset.unsaved = 'new';
     head.appendChild(u);
   }
   wrap.appendChild(head);
@@ -170,9 +181,13 @@ export function renderLayers(state, handlers) {
   const unsavedParts = all.filter((p) => !p.id || (p.draft && (!p.savedId || !isComplete(p.draft))));
   const saved = unsavedParts.length === 0;
   const hasLayers = (composer.layers?.length ?? 0) > 0;
-  const save = button('arrangement-save', arrangement?.id ? 'Save arrangement' : 'Save arrangement…', 'arrangement-save', {
-    disabled: !saved || !hasLayers,
-    title: !saved
+  // The first save names it; after that every change saves on its own (AC-19.11.4/4).
+  const named = Boolean(arrangement?.id);
+  const save = button('arrangement-save', named ? 'Arrangement saved' : 'Save arrangement…', 'arrangement-save', {
+    disabled: named || !saved || !hasLayers,
+    title: named
+      ? 'Every change to this Arrangement saves on its own'
+      : !saved
       ? `Save every part to the library first — an Arrangement names them by id. Not saved: ${unsavedParts.map((p) => p.pattern?.name ?? '?').join(', ')}`
       : !hasLayers
         ? 'Add a layer first'

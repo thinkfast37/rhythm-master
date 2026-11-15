@@ -915,6 +915,7 @@ function addLayerById(id) {
   }
   const next = addLayer({ ...createArrangement('', c.savedId ?? ''), layers: c.layers }, id);
   state.composer = { ...c, layers: next.layers, notice: null, pickingLayer: false };
+  autosaveArrangement();
   ui?.hideLibrary();
   syncTransport();
   render();
@@ -933,6 +934,23 @@ function adoptOpenPattern(draft) {
   state.compose = { song: null, saved: null, on: false, baseLoop: 0 };
   refreshComposeRecords();
   state.view = { ...state.view, currentId: draft.id ?? null };
+}
+
+/**
+ * A saved Arrangement keeps up with its parts (AC-19.11.4/4): called after every
+ * change to them, it writes the Arrangement in place — unless it has never been
+ * named, nothing changed, or a part is not yet in the library, in which case it
+ * waits and the Layers section says which part it waits on.
+ */
+function autosaveArrangement() {
+  const c = state.composer;
+  if (!c.arrangement?.id || !c.draft || c.layers.length === 0) return false;
+  if (parts().some((p) => !p.id)) return false;
+  if (!arrangementUnsaved(c)) return false;
+  const saved = arrangementStore.upsert({ ...arrangementNow(c.arrangement.name), id: c.arrangement.id });
+  state.composer = { ...state.composer, arrangement: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
+  refreshArrangements();
+  return true;
 }
 
 /** The Arrangement the parts would save as now: ids, mutes and the part on screen (AC-19.11.4/1). */
@@ -978,6 +996,7 @@ async function activatePart(index) {
   const layers = next.filter(Boolean);
   state.composer = { ...state.composer, draft, savedId, layers, activeIndex: index, recording: false, target: null, selected: null, notice };
   if (savedId && isComplete(draft)) adoptOpenPattern(draft);
+  autosaveArrangement();
   syncTransport();
   render();
   return true;
@@ -2792,6 +2811,8 @@ const handlers = {
     patternStore.upsert(saved);
     loadPattern(saved, { owned: true });
     state.composer = { ...state.composer, draft: state.pattern, savedId: saved.id };
+    // An Arrangement waiting on this part saves now (AC-19.11.4/4).
+    autosaveArrangement();
     render();
   },
 
@@ -2864,6 +2885,7 @@ const handlers = {
     const layers = all.map((p) => (p.active ? left : { patternId: p.patternId ?? null, muted: p.muted, draft: p.draft, savedId: p.savedId }));
     state.composer = { ...state.composer, draft: fresh, savedId: fresh.id, layers, activeIndex: layers.length, recording: false, target: null, selected: null, notice: null, pickingLayer: false };
     adoptOpenPattern(fresh);
+    autosaveArrangement();
     syncTransport();
     render();
   },
@@ -2914,6 +2936,7 @@ const handlers = {
     const next = removeLayer({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex);
     const activeIndex = index < state.composer.activeIndex ? state.composer.activeIndex - 1 : state.composer.activeIndex;
     state.composer = { ...state.composer, layers: next.layers, activeIndex };
+    autosaveArrangement();
     syncTransport();
     render();
   },
@@ -2925,6 +2948,7 @@ const handlers = {
     const layerIndex = index < state.composer.activeIndex ? index : index - 1;
     const next = setLayerMuted({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex, muted);
     state.composer = { ...state.composer, layers: next.layers };
+    autosaveArrangement();
     syncTransport();
     render();
   },
