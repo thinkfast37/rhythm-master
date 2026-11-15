@@ -78,6 +78,10 @@ test('AC-19.9.2/1 — Replacing a note, clearing and re-recording one, changing 
   await page.locator('.composer-swing-entry').press('Enter');
   expect((await stored(page, 'My line')).swingAmount).toBe(25);
   await page.locator('.composer-key').selectOption('G');
+  // Over written notes the Key change asks first (US-19.15); transposing up is what the
+  // picker did before, and the composition is saved once the question is answered.
+  await page.locator('.dialog .dialog-button', { hasText: /^Transpose up to G$/ }).click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
   expect((await stored(page, 'My line')).key).toBe('G');
   await page.locator('.composer-scale').selectOption('dorian');
   expect((await stored(page, 'My line')).scale).toBe('dorian');

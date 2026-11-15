@@ -414,6 +414,10 @@ test('AC-19.11.5/5 — A part on Drums is written on the General MIDI drum chann
     await key(page, 60).click();
   }
   await page.locator('.composer-key').selectOption('G');
+  // Over written notes the Key change asks first (US-19.15); transposing up is what the
+  // picker did before.
+  await page.locator('.dialog .dialog-button', { hasText: /^Transpose up to G$/ }).click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
   await addLayer(page, drums);
   await picker(row(page, drums)).selectOption('drums');
   await addLayer(page, DJEMBE);

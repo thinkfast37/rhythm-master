@@ -159,6 +159,47 @@ export function retune(pattern, key) {
   return next;
 }
 
+/**
+ * How many octaves the stored notes must move for a change of Key to carry them
+ * `direction` (1 up, -1 down) to the new root. Setting the Key alone moves every
+ * note by the difference of the two roots within the octave, which is upward
+ * for a root later in the octave and downward for an earlier one; the other
+ * direction is that and one octave.
+ */
+function keyChangeOctaves(from, to, direction) {
+  const natural = keySemitones(to) - keySemitones(from);
+  if (natural === 0) return 0;
+  if (direction > 0) return natural > 0 ? 0 : 1;
+  return natural < 0 ? 0 : -1;
+}
+
+/**
+ * Why a part cannot be transposed to `key` the way asked, or null when it can
+ * (AC-19.15.3/3): the move would carry a note past the last octave a note can
+ * be stored in. Refused rather than squashed, as an octave shift is.
+ */
+export function keyChangeRefusal(pattern, key, direction) {
+  if (!isSupportedKey(key)) throw new Error(`Unsupported Key: ${key}`);
+  if (!isSupportedKey(pattern.key) || !hasAnyNote(pattern)) return null;
+  const octaves = keyChangeOctaves(pattern.key, key, direction);
+  return octaves === 0 ? null : octaveShiftRefusal(pattern, octaves);
+}
+
+/**
+ * The same line in another Key, every note moved by one interval: up to the
+ * new root (`direction` 1) or down to it (-1). Every Pitch keeps its degree,
+ * chromatic ones included, and each Slot its accent (AC-19.15.3/1, /2). The
+ * Pattern handed in is returned when the move is refused (/3).
+ */
+export function transposeToKey(pattern, key, direction) {
+  if (keyChangeRefusal(pattern, key, direction)) return pattern;
+  const from = pattern.key;
+  if (!isSupportedKey(from)) return { ...pattern, key };
+  const octaves = keyChangeOctaves(from, key, direction);
+  const moved = octaves === 0 ? pattern : shiftOctave(pattern, octaves);
+  return { ...moved, key };
+}
+
 /** Give a sounding Slot the note a MIDI number names in this draft's Key (AC-19.4.2/1). */
 export function recordNote(pattern, at, midi) {
   const next = clone(pattern);

@@ -283,6 +283,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-074** | US-19.12 — An instrument and a volume for each part | AC-19.12.1–AC-19.12.5 | T487, T488, T493 | T489, T494 |
 | **P-075** | US-19.13 — A drum part, played on the keyboard | AC-19.13.1–AC-19.13.4 | T490, T493 | T491, T494 |
 | **P-076** | US-19.14 — Shift a part by an octave | AC-19.14.1–AC-19.14.4 | T499 | T500 |
+| **P-077** | US-19.15 — Choose what a Key change does to the notes | AC-19.15.1–AC-19.15.3 | T501 | T502 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of
