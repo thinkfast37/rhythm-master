@@ -263,7 +263,7 @@ test(`AC-19.11.2/4 — Adding, removing, muting or unmuting a layer while playin
   await play(page);
 });
 
-test(`AC-19.11.2/5 — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the composition's, and a note recorded is heard from the next pass`, async ({ page }) => {
+test(`AC-19.11.2/5 — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await setTempo(page, 240);
@@ -1156,4 +1156,35 @@ test('AC-19.11.9/4 — A Pattern may be a part of any number of Arrangements and
   await expect(page.locator('.dialog')).toContainText('"Evening bed", "Morning bed"');
   await page.locator('.dialog-button', { hasText: 'OK' }).click();
   expect(await page.evaluate((i) => Boolean(window.__rm.patternStore.findById(i)), id)).toBe(true);
+});
+
+test(`AC-19.11.2/5 — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is: a Measure and a syllable added under an eight-bar layer are heard within the part's next pass`, async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  // My line: eight bars, so the combined loop is eight bars long.
+  for (let i = 0; i < 3; i++) {
+    await page.locator('.composer-duplicate').click();
+    if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Start percussive' }).click();
+  }
+  await page.locator('.layer-new').click();
+  await nameInDialog(page, 'Third part');
+  await setTempo(page, 120);
+  await play(page);
+  await page.evaluate(() => {
+    window.__heard = [];
+    window.__timer = setInterval(() => {
+      const p = window.__rm.getState().transportPosition;
+      if (p && p.composition !== false) window.__heard.push({ m: p.measureIndex, b: p.beatIndex, at: performance.now() });
+    }, 10);
+  });
+  // A second Measure, and a syllable on its second Beat, while playing.
+  await page.locator('.composer-add-measure').click();
+  await page.locator('.composer-grid .measure[data-measure="1"] .cslot-syllable').nth(4).click();
+  const editedAt = await page.evaluate(() => performance.now());
+  // Heard well inside one eight-bar loop (16 s at 120): the part's next pass is at most two bars away.
+  await expect.poll(() => page.evaluate((t) => window.__heard.some((h) => h.m === 1 && h.at > t), editedAt), { timeout: 9000 }).toBe(true);
+  const waited = await page.evaluate((t) => window.__heard.find((h) => h.m === 1 && h.at > t).at - t, editedAt);
+  expect(waited).toBeLessThan(8000);
+  expect((await state(page)).isPlaying).toBe(true);
+  await play(page);
 });

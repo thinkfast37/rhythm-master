@@ -4833,12 +4833,13 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Given** a composition with layers
   - **When** the Composer presses Play
   - **Then** the composition and every unmuted layer sound together from one timeline, the composition on the instrument shown and each layer in its own voice, and the Composer carries on recording and editing under them
+  - *(Revised 2026-11-15, /5: "heard from the next pass" was read as the next pass of the combined loop, so under an 8-bar layer an edit to a 1-bar part waited up to eight bars. The maintainer, on the live build: "once I added a second measure while it's still playing and added a syllable … I could not hear the added syllables when it cycles until I hit stop and restart the playback." The pass meant is the part's own, as it is with no layers (AC-19.6.2/1); /5 now says so. Adding, muting or removing a layer is unchanged, /4.)*
   - **Cases**:
     - **AC-19.11.2/1** — Play sounds the composition and every unmuted layer at once, from one timeline: two notes falling on the same instant both sound
     - **AC-19.11.2/2** — The composition sounds with the instrument shown; a melodic layer sounds with the melodic voice Practice would use; a percussive layer, and an unpitched syllable in any layer, sounds percussively at its Accent Level
     - **AC-19.11.2/3** — Every layer plays at the composition's tempo, tempo unit, swing and Key, whatever its own; a percussive layer takes no Key
     - **AC-19.11.2/4** — Adding, removing, muting or unmuting a layer while playing is heard from the next pass of the combined loop, with nothing stopped or restarted
-    - **AC-19.11.2/5** — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the composition's, and a note recorded is heard from the next pass
+    - **AC-19.11.2/5** — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is
     - **AC-19.11.2/6** — The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it
 
 - **AC-19.11.3** — The combined loop

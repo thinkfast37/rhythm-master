@@ -544,3 +544,67 @@ describe('audio/scheduler under layers (US-19.11)', () => {
     expect(fourthPass).toHaveLength(4);
   });
 });
+
+describe('audio/scheduler — an edit to the part on screen under layers (AC-19.11.2/5)', () => {
+  function bars(n, hits) {
+    let p = { ...create('P' + n), tempo: 120 };
+    for (let i = 1; i < n; i++) p = addMeasure(p);
+    for (const [m, b] of hits) p = cycleAccent(p, m, b, 0);
+    return p;
+  }
+  async function runUntil(until) {
+    for (let t = ctx.currentTime + 0.1; t <= until + 1e-9; t += 0.1) await tickAt(Math.round(t * 10) / 10);
+  }
+
+  it("AC-19.11.2/5 — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is: spliced at the part's next boundary", async () => {
+    // A four-bar bed with a hit on each downbeat (2 s a bar at 120): an 8 s combined loop.
+    const bed = bars(4, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+    const part = bars(1, [[0, 0]]);
+    const startP = transport.start(layered(part, [{ pattern: bed }]), { metronomeEnabled: false, countInEnabled: false });
+    await vi.runOnlyPendingTimersAsync?.() ?? Promise.resolve();
+    await startP;
+    ctx = (await import('../../../src/audio/context.js')).getContext();
+    const origin = transport._eventTime(0, 0);
+    await runUntil(0.5);
+    // Mid-bar 1: a syllable on beat 2 of the one-bar part. Heard from bar 2 (2 s), not after the 8 s loop.
+    transport.update(layered(cycleAccent(part, 0, 1, 0), [{ pattern: bed }]), { metronomeEnabled: false, countInEnabled: false }, { boundary: 2 });
+    await runUntil(7.9);
+    const rel = () => starts.map((s) => Math.round((s.when - origin) * 1000) / 1000).sort((a, b) => a - b);
+    const first = rel();
+    expect(first.filter((t) => t === 0.5)).toHaveLength(0); // bar 1 played as it was
+    expect(first.filter((t) => t === 2.5 || t === 4.5 || t === 6.5)).toHaveLength(3); // the edit from bar 2 on
+    // The bed carried on in place: one hit on every downbeat, two per downbeat with the part's own, no restart.
+    for (const t of [0, 2, 4, 6]) expect(first.filter((x) => x === t)).toHaveLength(2);
+    expect(transport.isRunning).toBe(true);
+
+    // A Measure added mid-loop, its second bar given a syllable: the part is two bars now, the bed still four.
+    const before = starts.length;
+    const two = cycleAccent(addMeasure(cycleAccent(part, 0, 1, 0)), 1, 2, 0);
+    await runUntil(9.2);
+    transport.update(layered(two, [{ pattern: bed }]), { metronomeEnabled: false, countInEnabled: false }, { boundary: 2 });
+    await runUntil(15.9);
+    const later = rel().filter((t) => t >= 8 - 1e-9);
+    // The cut is the part's next boundary, 10 s; from there the new part plays its second bar (beat 3 at +1 s).
+    expect(later.filter((t) => t === 11)).toHaveLength(1);
+    expect(later.filter((t) => t === 15)).toHaveLength(1);
+    // The bed's downbeats every 2 s, unbroken across the cut.
+    for (const t of [8, 10, 12, 14]) expect(later.filter((x) => x === t).length).toBeGreaterThanOrEqual(1);
+    expect(starts.length).toBeGreaterThan(before);
+  });
+
+  it("AC-19.11.2/5 — Recording and editing carry on under layers as they do without: the target, the selection and the cursor in the composing grid are the part on screen's, and a note recorded, a syllable turned on or off, or a Measure added or removed on that part is heard from its own next pass, not the combined loop's, every layer carrying on where it is: with no boundary the swap waits for the pass's end, as before", async () => {
+    const bed = bars(4, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+    const part = bars(1, [[0, 0]]);
+    const startP = transport.start(layered(part, [{ pattern: bed }]), { metronomeEnabled: false, countInEnabled: false });
+    await vi.runOnlyPendingTimersAsync?.() ?? Promise.resolve();
+    await startP;
+    ctx = (await import('../../../src/audio/context.js')).getContext();
+    const origin = transport._eventTime(0, 0);
+    await runUntil(0.5);
+    transport.update(layered(cycleAccent(part, 0, 1, 0), [{ pattern: bed }]), { metronomeEnabled: false, countInEnabled: false });
+    await runUntil(9.9);
+    const rel = starts.map((s) => Math.round((s.when - origin) * 1000) / 1000);
+    expect(rel.filter((t) => t === 2.5 || t === 4.5 || t === 6.5)).toHaveLength(0);
+    expect(rel.filter((t) => t === 8.5)).toHaveLength(1);
+  });
+});

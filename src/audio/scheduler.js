@@ -37,6 +37,9 @@ const LOOKAHEAD_SECONDS = 0.2;
 const MAX_LOOKAHEAD_SECONDS = 1.5;
 const STALL_MARGIN = 2.5;
 
+/** Seconds within which two offsets are the same instant, for a splice's cut. */
+const CUT_EPSILON = 1e-6;
+
 /** The same safety offset start() uses, reused when a stall re-anchors. */
 const START_OFFSET_SECONDS = 0.06;
 
@@ -96,10 +99,14 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
   function scheduleUntil(horizon) {
     for (;;) {
       let blocked = false;
+      // An edit to the part on screen under layers takes over at a cut inside
+      // this pass (AC-19.11.2/5): neither cursor runs past it until it does.
+      const cut = pending?.cut ?? Infinity;
 
       // Pattern events of the current pass
       while (nextIndex < timeline.length) {
         const event = timeline[nextIndex];
+        if (event.timeSeconds >= cut - CUT_EPSILON) break;
         const when = eventTime(nextLoop, event.timeSeconds);
         if (when > horizon) {
           blocked = true;
@@ -117,6 +124,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       if (settings.metronomeEnabled) {
         while (nextBeatIndex < beatGrid.length) {
           const beat = beatGrid[nextBeatIndex];
+          if (beat.timeSeconds >= cut - CUT_EPSILON) break;
           const when = eventTime(nextLoop, beat.timeSeconds);
           if (when > horizon) {
             blocked = true;
@@ -128,6 +136,13 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       }
 
       if (blocked) return;
+
+      if (cut < loopDuration) {
+        // Both cursors are at the cut: splice once its time is within the horizon.
+        if (eventTime(nextLoop, cut) > horizon) return;
+        splice(cut);
+        continue;
+      }
 
       // The pass is fully scheduled. Cross into the next one only once its
       // start is within the horizon, so an eventless pass cannot spin here.
@@ -159,6 +174,45 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
         loopDuration = loopDurationSeconds(pattern);
       }
     }
+  }
+
+  /**
+   * Swap in the pending set at `cut` seconds into this pass (AC-19.11.2/5).
+   * Every pass of a layered set is one whole combined loop, so the moment the
+   * cut falls at has a phase in the new loop too — `cut` modulo its length —
+   * and the new set starts there: each layer, whose length divides both loops,
+   * carries on exactly where it was, and the part on screen plays its edit from
+   * its own next pass. Re-anchored from the old origin, never accumulated
+   * (FR-009); the pass counter carries on (AC-4.1.9/4).
+   */
+  function splice(cut) {
+    const at = eventTime(nextLoop, cut);
+    pattern = pending.pattern;
+    settings = pending.settings ?? settings;
+    pending = null;
+    loopDuration = loopDurationSeconds(pattern);
+    const phase = loopDuration > 0 ? cut % loopDuration : 0;
+    origin = at - phase;
+    countInSeconds = 0;
+    loopOffset += nextLoop;
+    nextLoop = 0;
+    timeline = buildTimeline(pattern, currentPass());
+    beatGrid = buildBeatGrid(pattern);
+    nextIndex = firstAtOrAfter(timeline, phase);
+    nextBeatIndex = firstAtOrAfter(beatGrid, phase);
+  }
+
+  function firstAtOrAfter(list, offset) {
+    const i = list.findIndex((item) => item.timeSeconds >= offset - CUT_EPSILON);
+    return i === -1 ? list.length : i;
+  }
+
+  /** The offset into this pass of the next item not yet handed to Web Audio. */
+  function nextUnscheduledOffset() {
+    let next = loopDuration;
+    if (nextIndex < timeline.length) next = Math.min(next, timeline[nextIndex].timeSeconds);
+    if (settings.metronomeEnabled && nextBeatIndex < beatGrid.length) next = Math.min(next, beatGrid[nextBeatIndex].timeSeconds);
+    return next;
   }
 
   /**
@@ -458,9 +512,16 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
      * Only the latest edit matters — a newer one simply replaces the pending
      * one. A stopped transport ignores this; the next start() reads state.
      */
-    update(nextPattern, nextSettings) {
+    update(nextPattern, nextSettings, { boundary = null } = {}) {
       if (!running) return;
       pending = { pattern: nextPattern, settings: nextSettings };
+      // An edit to the part on screen under layers (AC-19.11.2/5): cut at the
+      // first multiple of the part's pass not yet scheduled, rather than wait
+      // out the whole combined loop. A cut at the pass's end is the boundary.
+      if (boundary > 0) {
+        const cut = Math.ceil((nextUnscheduledOffset() - CUT_EPSILON) / boundary) * boundary;
+        if (cut < loopDuration - CUT_EPSILON) pending.cut = cut;
+      }
     },
 
     /** Test seam: the absolute time an event would sound at. */
