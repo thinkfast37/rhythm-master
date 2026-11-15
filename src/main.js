@@ -55,8 +55,8 @@ import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import * as songStore from './storage/songs.js';
-import * as arrangementStore from './storage/arrangements.js';
-import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createArrangement, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateArrangement, MAX_LAYERS } from './core/arrangement.js';
+import * as sectionStore from './storage/sections.js';
+import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createSection, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateSection, MAX_LAYERS } from './core/section.js';
 import {
   createSong,
   addEntry,
@@ -67,7 +67,7 @@ import {
   entryAt,
   validateSong,
 } from './core/song.js';
-import { downloadSongMidi, songMidiFilename, downloadArrangementMidi, arrangementZipFilename } from './export/midi.js';
+import { downloadSongMidi, songMidiFilename, downloadSectionMidi, sectionZipFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
 import {
   phraseLengthOf,
@@ -161,10 +161,13 @@ import {
   foldRegister,
   copyMelody,
   retune,
+  octaveShiftRefusal,
+  shiftOctave,
+  octaveCopy,
 } from './core/composer.js';
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
 import { composerUnsaved } from './ui/composer.js';
-import { arrangementUnsaved } from './ui/layers.js';
+import { sectionUnsaved } from './ui/layers.js';
 import { placeFor, acceptsFrom, ALL_DEVICES } from './core/midi.js';
 import { createMidiInput } from './midi/input.js';
 import { mountShell } from './ui/shell.js';
@@ -218,7 +221,7 @@ const state = {
   variation: null,
   phraseLength: null,
   /**
-   * The Compose group (US-18.1): the Section being built over the open
+   * The Compose group (US-18.1): the Chain being built over the open
    * Pattern, the saved Song it came from (for the unsaved mark), and whether
    * Play song is driving the fill in force — through the same pass-boundary
    * seam as cycle mode, counting from `baseLoop`. Never Pattern data.
@@ -295,13 +298,13 @@ const state = {
     activeIndex: 0,
     /** Add layer is waiting on the library for a Pattern (AC-19.11.1/2). */
     pickingLayer: false,
-    /** The Arrangement the layers were loaded from or saved as, with the parts as saved (AC-19.11.4/4). */
-    arrangement: { id: null, name: '', saved: null },
+    /** The Section the layers were loaded from or saved as, with the parts as saved (AC-19.11.4/4). */
+    section: { id: null, name: '', saved: null },
   },
-  /** Every saved Arrangement, read from its store only when it changes (US-19.11). */
-  arrangements: [],
-  /** The Arrangements the open Pattern is a part of (AC-19.11.9/3). */
-  inArrangements: [],
+  /** Every saved Section, read from its store only when it changes (US-19.11). */
+  sections: [],
+  /** The Sections the open Pattern is a part of (AC-19.11.9/3). */
+  inSections: [],
   /**
    * MIDI input (US-19.10): whether the browser allowed it, and the devices
    * connected. Never stored; the device chosen is a setting (AC-19.10.4/3).
@@ -484,7 +487,7 @@ function cyclePasses() {
     passes = lcm(passes, order.length * repeats * own);
     for (const i of order) passes = lcm(passes, harmonic(withProgression(state.pattern, PROGRESSIONS[i].id)));
   }
-  // A Song plays its Section through once per cycle rather than repeating a
+  // A Song plays its Chain through once per cycle rather than repeating a
   // catalogue, so its own length is its period.
   if (songPlaying()) {
     const entries = state.compose.song?.sections[0]?.entries ?? [];
@@ -582,7 +585,7 @@ async function refreshBackgroundAudio() {
  * Render runs on every position tick and must not parse a store each time.
  */
 function refreshComposeRecords() {
-  refreshArrangements();
+  refreshSections();
   const id = state.pattern.id;
   state.keptFills = id ? overlayStore.keptFillsFor(id) : [];
   state.songs = id ? songStore.forPattern(id) : [];
@@ -696,22 +699,22 @@ function partUnsaved(part) {
   return !part.savedId || !isComplete(draft);
 }
 
-function refreshArrangements() {
-  state.arrangements = arrangementStore.loadAll();
+function refreshSections() {
+  state.sections = sectionStore.loadAll();
   const id = state.pattern?.id;
-  state.inArrangements = id ? state.arrangements.filter((a) => usesPattern(a, id)).map((a) => ({ id: a.id, name: a.name })) : [];
+  state.inSections = id ? state.sections.filter((a) => usesPattern(a, id)).map((a) => ({ id: a.id, name: a.name })) : [];
 }
 
-/** Every Arrangement with its parts' names in order, for the library pane (AC-19.11.9/1). */
-function arrangementList() {
-  return (state.arrangements ?? []).map((a) => ({
+/** Every Section with its parts' names in order, for the library pane (AC-19.11.9/1). */
+function sectionList() {
+  return (state.sections ?? []).map((a) => ({
     id: a.id,
     name: a.name,
     parts: [a.compositionId, ...a.layers.map((l) => l.patternId)].map((id) => libraryPattern(id)?.name ?? 'Missing Pattern'),
   }));
 }
 
-/** The Section under construction for the open Pattern, created on first touch. */
+/** The Chain under construction for the open Pattern, created on first touch. */
 function composeSong() {
   if (!state.compose.song || state.compose.song.sections[0]?.patternId !== state.pattern.id) {
     state.compose.song = createSong('', state.pattern.id);
@@ -783,7 +786,7 @@ function withCandidate(pattern) {
 }
 
 /**
- * Count the Section afresh so the entry in force keeps its place after an
+ * Count the Chain afresh so the entry in force keeps its place after an
  * edit (AC-18.1.3/7): the pass it is on becomes that entry's same pass, or its
  * last where the new count is shorter; an entry that is gone hands over to the
  * one now at its index.
@@ -941,32 +944,32 @@ function discardDraft() {
   state.composer = { ...state.composer, draft: null, savedId: null, recording: false, target: null, selected: null, notice: null, ...noLayers() };
 }
 
-/** The layers and their Arrangement cleared: another rhythm opened, or New (AC-19.11.1/5). */
+/** The layers and their Section cleared: another rhythm opened, or New (AC-19.11.1/5). */
 function noLayers() {
-  return { layers: [], activeIndex: 0, pickingLayer: false, instrument: null, volume: null, arrangement: { id: null, name: '', saved: null } };
+  return { layers: [], activeIndex: 0, pickingLayer: false, instrument: null, volume: null, section: { id: null, name: '', saved: null } };
 }
 
 /**
- * The Composer's layer state for a saved Arrangement being opened (AC-19.11.4/2,
+ * The Composer's layer state for a saved Section being opened (AC-19.11.4/2,
  * AC-19.11.6/6): every part but the one on screen, in order, and where that one sits.
  */
-function partsOf(arrangement) {
-  const all = [{ patternId: arrangement.compositionId, muted: false, ...soundOf(arrangement) }, ...arrangement.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted), ...soundOf(l) }))];
-  const active = Math.min(Math.max(0, arrangement.active ?? 0), all.length - 1);
+function partsOf(section) {
+  const all = [{ patternId: section.compositionId, muted: false, ...soundOf(section) }, ...section.layers.map((l) => ({ patternId: l.patternId, muted: Boolean(l.muted), ...soundOf(l) }))];
+  const active = Math.min(Math.max(0, section.active ?? 0), all.length - 1);
   return {
     layers: all.filter((_, i) => i !== active),
     activeIndex: active,
     // The part on screen's own instrument and volume, as saved (AC-19.12.4/1).
     instrument: all[active].instrument ?? null,
     volume: all[active].volume ?? null,
-    arrangement: { id: arrangement.id, name: arrangement.name, saved: savedShape(arrangement) },
+    section: { id: section.id, name: section.name, saved: savedShape(section) },
   };
 }
 
-/** What an Arrangement's saved state is compared by: parts, mutes and the part on screen. */
-function savedShape(arrangement) {
+/** What a Section's saved state is compared by: parts, mutes and the part on screen. */
+function savedShape(section) {
   const shape = (patternId, muted, part) => ({ patternId, muted, instrument: part.instrument ?? null, volume: part.volume ?? null });
-  return { parts: [shape(arrangement.compositionId, false, arrangement), ...arrangement.layers.map((l) => shape(l.patternId, Boolean(l.muted), l))], active: arrangement.active ?? 0 };
+  return { parts: [shape(section.compositionId, false, section), ...section.layers.map((l) => shape(l.patternId, Boolean(l.muted), l))], active: section.active ?? 0 };
 }
 
 /**
@@ -980,7 +983,7 @@ function addLayerById(id) {
   const all = parts();
   let notice = null;
   if (!pattern) notice = 'That Pattern could not be opened.';
-  else if (all.some((p) => p.id === id)) notice = `"${pattern.name}" is already a part of this arrangement.`;
+  else if (all.some((p) => p.id === id)) notice = `"${pattern.name}" is already a part of this section.`;
   else if (c.layers.length >= MAX_LAYERS) notice = `At most ${MAX_LAYERS} layers.`;
   else notice = layerRefusal(all.map((p) => p.pattern).filter(Boolean), pattern);
   if (notice) {
@@ -991,10 +994,10 @@ function addLayerById(id) {
   // A new layer that can sound a pitched note starts on the voice Practice has
   // chosen (AC-19.12.2/5); a percussive one has no instrument to start on.
   const sound = layerKind(pattern) === 'rhythm' ? {} : { instrument: normaliseVoice(state.settings.melodicVoice) };
-  const next = addLayer({ ...createArrangement('', c.savedId ?? ''), layers: c.layers }, id, sound);
+  const next = addLayer({ ...createSection('', c.savedId ?? ''), layers: c.layers }, id, sound);
   state.composer = { ...c, layers: next.layers, notice: null, pickingLayer: false };
   ensureSamplesLoaded();
-  autosaveArrangement();
+  autosaveSection();
   ui?.hideLibrary();
   syncTransport();
   render();
@@ -1008,11 +1011,11 @@ function addLayerById(id) {
  */
 function setPartSound(index, sound) {
   const layerIndex = index < state.composer.activeIndex ? index : index - 1;
-  const next = setLayerSound({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex, sound);
+  const next = setLayerSound({ ...createSection('', 'x'), layers: state.composer.layers }, layerIndex, sound);
   state.composer = { ...state.composer, layers: next.layers };
   ensureSamplesLoaded();
-  // A saved Arrangement saves the change on its own (AC-19.12.4/2).
-  autosaveArrangement();
+  // A saved Section saves the change on its own (AC-19.12.4/2).
+  autosaveSection();
   if (state.isPlaying) refreshBackgroundAudio();
   render();
 }
@@ -1020,7 +1023,7 @@ function setPartSound(index, sound) {
 /**
  * A saved part put on screen is the open Pattern in Practice too (AC-19.11.7/3),
  * taken over without the restart a library load makes (AC-4.1.8): the run is
- * the arrangement's and switching parts stops nothing (AC-19.11.6/3).
+ * the section's and switching parts stops nothing (AC-19.11.6/3).
  */
 function adoptOpenPattern(draft) {
   history.length = 0;
@@ -1032,32 +1035,32 @@ function adoptOpenPattern(draft) {
 }
 
 /**
- * A saved Arrangement keeps up with its parts (AC-19.11.4/4): called after every
- * change to them, it writes the Arrangement in place — unless it has never been
+ * A saved Section keeps up with its parts (AC-19.11.4/4): called after every
+ * change to them, it writes the Section in place — unless it has never been
  * named, nothing changed, or a part is not yet in the library, in which case it
  * waits and the Layers section says which part it waits on.
  */
-function autosaveArrangement() {
+function autosaveSection() {
   const c = state.composer;
-  if (!c.arrangement?.id || !c.draft || c.layers.length === 0) return false;
+  if (!c.section?.id || !c.draft || c.layers.length === 0) return false;
   if (parts().some((p) => !p.id)) return false;
-  if (!arrangementUnsaved(c)) return false;
-  const saved = arrangementStore.upsert({ ...arrangementNow(c.arrangement.name), id: c.arrangement.id });
-  state.composer = { ...state.composer, arrangement: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
-  refreshArrangements();
+  if (!sectionUnsaved(c)) return false;
+  const saved = sectionStore.upsert({ ...sectionNow(c.section.name), id: c.section.id });
+  state.composer = { ...state.composer, section: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
+  refreshSections();
   return true;
 }
 
-/** The Arrangement the parts would save as now: ids, mutes and the part on screen (AC-19.11.4/1). */
-function arrangementNow(name) {
+/** The Section the parts would save as now: ids, mutes and the part on screen (AC-19.11.4/1). */
+function sectionNow(name) {
   const all = parts();
-  return createArrangement(name, all[0].id ?? '', all.slice(1), state.composer.activeIndex ?? 0, all[0]);
+  return createSection(name, all[0].id ?? '', all.slice(1), state.composer.activeIndex ?? 0, all[0]);
 }
 
 /**
  * Put a part on screen (AC-19.11.6): the part there goes back among the layers
  * with its notes, saved or not; the chosen part opens from the draft it kept,
- * or from the library through US-19.8's rules; and it takes the arrangement's
+ * or from the library through US-19.8's rules; and it takes the section's
  * tempo, tempo unit, swing and Key from the part it replaces (/4).
  */
 async function activatePart(index) {
@@ -1083,10 +1086,10 @@ async function activatePart(index) {
   // A percussive layer has no instrument of its own: on screen it takes the one
   // the Composer was on, so the hands stay where they are (AC-19.12.2/6).
   const arriving = target.instrument ?? (target.pattern && layerKind(target.pattern) === 'rhythm' ? activeInstrument() : target.sounds);
-  // A part on Drums comes into the arrangement's Key with its notes where they
+  // A part on Drums comes into the section's Key with its notes where they
   // were, re-spelled rather than transposed (AC-19.13.3/3).
   if (hasFixedNotes(arriving) && draft.soundMode === 'melodic' && draft.key && leaving.key) draft = retune(draft, leaving.key);
-  // The arrangement's settings travel with the part on screen (AC-19.11.6/4).
+  // The section's settings travel with the part on screen (AC-19.11.6/4).
   draft = underComposition(draft, leaving);
   if (draft.soundMode === 'melodic' && leaving.scale) draft = { ...draft, scale: leaving.scale };
   if (savedId && isComplete(draft)) patternStore.upsert(draft);
@@ -1099,7 +1102,7 @@ async function activatePart(index) {
   state.composer = { ...state.composer, draft, savedId, layers, activeIndex: index, instrument: arriving, volume: target.volume ?? null, recording: false, target: null, selected: null, notice };
   ensureSamplesLoaded();
   if (savedId && isComplete(draft)) adoptOpenPattern(draft);
-  autosaveArrangement();
+  autosaveSection();
   syncTransport();
   render();
   return true;
@@ -1337,7 +1340,7 @@ async function draftFrom(pattern, owned, { editOwned = false, adopt = false } = 
   return { draft, savedId, notice };
 }
 
-async function openInComposer(pattern, owned, { editOwned = false, arrangement = null } = {}) {
+async function openInComposer(pattern, owned, { editOwned = false, section = null } = {}) {
   if (composerUnsaved(state.composer)) {
     const ok = await confirm(discardMessage(), { confirmLabel: 'Discard and open', cancelLabel: 'Keep composing' });
     if (!ok) {
@@ -1354,8 +1357,8 @@ async function openInComposer(pattern, owned, { editOwned = false, arrangement =
 
   if (state.isPlaying) transport.stop();
   // The layers go with the rhythm they were under (AC-19.11.1/5), unless an
-  // Arrangement is being opened, whose layers these are (AC-19.11.4/2).
-  const layerState = arrangement ? partsOf(arrangement) : noLayers();
+  // Section is being opened, whose layers these are (AC-19.11.4/2).
+  const layerState = section ? partsOf(section) : noLayers();
   state.composer = { ...state.composer, draft, savedId, recording: false, target: null, selected: null, notice, ...layerState };
   ensureSamplesLoaded();
   ui?.hideLibrary();
@@ -1782,7 +1785,7 @@ export function loadPattern(pattern, { owned }) {
   state.isOwned = owned;
   state.transportPosition = null;
   state.workbenchTab = null;
-  // The Section belongs to the Pattern it was built over (AC-18.1.4/2).
+  // The Chain belongs to the Pattern it was built over (AC-18.1.4/2).
   state.compose = { song: null, saved: null, on: false, baseLoop: 0 };
   refreshComposeRecords();
   state.view = { ...state.view, currentId: pattern.id ?? null };
@@ -2242,7 +2245,7 @@ const handlers = {
     });
   },
 
-  // --- compose (US-18.1) — the Section is the Composer's, never Pattern data ---
+  // --- compose (US-18.1) — the Chain is the Composer's, never Pattern data ---
 
   /** Append a kept fill at the cycle Repeats setting (AC-18.1.2/1). */
   onComposeAdd(fill) {
@@ -2279,7 +2282,7 @@ const handlers = {
     render();
   },
 
-  /** Play the Section from its first entry, looping (AC-18.1.3); cycle mode stands down. */
+  /** Play the Chain from its first entry, looping (AC-18.1.3); cycle mode stands down. */
   async onPlaySong() {
     composeSong();
     if (state.compose.song.sections[0].entries.length === 0) return;
@@ -2301,7 +2304,7 @@ const handlers = {
     await transport.start(scheduled(), state.settings);
   },
 
-  /** Save the Section as a Song (AC-18.1.4/1), or update the one it was loaded from (/4). */
+  /** Save the Chain as a Song (AC-18.1.4/1), or update the one it was loaded from (/4). */
   async onSongSave() {
     const song = composeSong();
     if (song.sections[0].entries.length === 0) return;
@@ -2335,7 +2338,7 @@ const handlers = {
     render();
   },
 
-  /** Start a fresh, unsaved Section on this Pattern. */
+  /** Start a fresh, unsaved Chain on this Pattern. */
   onSongNew() {
     state.compose.song = createSong('', state.pattern.id);
     state.compose.saved = null;
@@ -2380,7 +2383,7 @@ const handlers = {
     render();
   },
 
-  /** One MIDI file of the Section once through (AC-18.1.5). */
+  /** One MIDI file of the Chain once through (AC-18.1.5). */
   onSongExport() {
     const song = composeSong();
     if (song.sections[0].entries.length === 0) return;
@@ -2548,7 +2551,7 @@ const handlers = {
     // with their repeats counted afresh (AC-2.7.2/6, AC-2.10.2/6): `start` is
     // whatever the last Stop held, or the Pattern's own when the cycle was
     // turned on since. Only the counting is reset. The ordinary Play loops the
-    // Pattern, never the Section (AC-18.1.3/4).
+    // Pattern, never the Chain (AC-18.1.3/4).
     state.fillCycle = { ...fresh(state.fillCycle), baseLoop: 0 };
     state.progressionCycle = { ...fresh(state.progressionCycle), baseLoop: 0 };
     state.compose.on = false;
@@ -2639,8 +2642,8 @@ const handlers = {
     state.composer = { ...state.composer, mode, recording: false, target: null, selected: null };
     if (mode === 'composer') {
       ensureSamplesLoaded();
-      // The saved Arrangements, as they are now (AC-19.11.4/2).
-      refreshArrangements();
+      // The saved Sections, as they are now (AC-19.11.4/2).
+      refreshSections();
       // Asked for here, once a page load (AC-19.10.5/1).
       void midiInput.request();
       // The Pattern open in Practice is the composition, unless it already is
@@ -2669,8 +2672,8 @@ const handlers = {
     // The fetched instruments are asked for now; the piano's recordings at its
     // first note, as they always were (AC-2.13.4/1).
     ensureSamplesLoaded();
-    // A saved Arrangement saves the change on its own (AC-19.12.4/2).
-    autosaveArrangement();
+    // A saved Section saves the change on its own (AC-19.12.4/2).
+    autosaveSection();
     if (state.isPlaying) refreshBackgroundAudio();
     render();
   },
@@ -2690,7 +2693,7 @@ const handlers = {
     const level = normaliseVolume(volume);
     if (all[index].active) {
       state.composer = { ...state.composer, volume: level };
-      autosaveArrangement();
+      autosaveSection();
       if (state.isPlaying) refreshBackgroundAudio();
       render();
       return;
@@ -2971,8 +2974,8 @@ const handlers = {
     patternStore.upsert(saved);
     loadPattern(saved, { owned: true });
     state.composer = { ...state.composer, draft: state.pattern, savedId: saved.id };
-    // An Arrangement waiting on this part saves now (AC-19.11.4/4).
-    autosaveArrangement();
+    // A Section waiting on this part saves now (AC-19.11.4/4).
+    autosaveSection();
     render();
   },
 
@@ -3021,7 +3024,7 @@ const handlers = {
    * under a name asked for — pre-filled, as every Composer name is — and put on
    * screen as a part at once, the part it replaces going among the layers. It
    * starts percussive and silent, as a new Pattern in Practice does, in the
-   * arrangement's meter, tempo, swing and Key.
+   * section's meter, tempo, swing and Key.
    */
   async onLayerNew() {
     const c = state.composer;
@@ -3046,7 +3049,7 @@ const handlers = {
     // The new part starts on the instrument the Composer was on, at the default volume.
     state.composer = { ...state.composer, draft: fresh, savedId: fresh.id, layers, activeIndex: layers.length, instrument: activeInstrument(), volume: null, recording: false, target: null, selected: null, notice: null, pickingLayer: false };
     adoptOpenPattern(fresh);
-    autosaveArrangement();
+    autosaveSection();
     syncTransport();
     render();
   },
@@ -3089,15 +3092,125 @@ const handlers = {
     applyDraft(setTimeSignature, measureIndex, chosen);
   },
 
+  /**
+   * The Composer's metronome toggle (AC-19.6.3): the app's one click setting,
+   * switched under the run without the restart Practice's switch makes, so a
+   * recording keeps its place (/3).
+   */
+  onComposerMetronome() {
+    state.settings = settingsStore.save({ metronomeEnabled: !state.settings.metronomeEnabled });
+    transport.setMetronome(state.settings.metronomeEnabled);
+    // What the screen-off handover would play has changed with it (AC-4.1.15/5).
+    if (state.isPlaying) refreshBackgroundAudio();
+    render();
+  },
+
+  /**
+   * Octave down or up on the part at `index` of the parts' order (US-19.14).
+   * Nothing moves until the question is answered (AC-19.14.2): shift the
+   * Pattern itself, which every Section using it then hears, or make a copy
+   * that takes the part's place here and leaves the Pattern as it was.
+   */
+  async onPartOctave(index, direction) {
+    const step = direction > 0 ? 1 : -1;
+    const way = step > 0 ? 'up' : 'down';
+    const before = parts()[index];
+    if (!before?.pattern || hasFixedNotes(before.sounds) || octaveShiftRefusal(before.pattern, step)) return;
+    const name = before.pattern.name;
+    const inLibrary = Boolean(before.id);
+    const shipped = inLibrary && !patternStore.findById(before.id);
+    const options = [];
+    // A shipped Pattern cannot be edited (AC-19.14.2/2); one never saved has no
+    // Pattern to keep apart (/3).
+    if (!shipped) options.push({ label: inLibrary ? 'Shift this Pattern' : 'Shift', value: 'shift', primary: true });
+    if (inLibrary) options.push({ label: 'Make a copy', value: 'copy', primary: shipped });
+    options.push({ label: 'Cancel', value: 'cancel' });
+    const message = shipped
+      ? `Move "${name}" ${way} an octave? It is built in, so the shifted notes need a copy of their own; "${name}" stays as it is.`
+      : inLibrary
+        ? `Move every note of "${name}" ${way} an octave? Shift this Pattern, which changes it everywhere it is used, or make a copy and keep both.`
+        : `Move every note of "${name}" ${way} an octave?`;
+    const choice = await ask({ message, options });
+    if (choice !== 'shift' && choice !== 'copy') {
+      render();
+      return;
+    }
+    let copyName = null;
+    if (choice === 'copy') {
+      copyName = await askNewPatternName(freeName(`${name} octave ${way}`), uniqueNameValidator(), {
+        message: `Name the copy of "${name}" an octave ${way}.`,
+        confirmLabel: 'Make a copy',
+      });
+      if (copyName === null) {
+        render();
+        return;
+      }
+    }
+    // The prompts were awaited: read the part again, as it is now.
+    const part = parts()[index];
+    if (!part?.pattern || part.id !== before.id || octaveShiftRefusal(part.pattern, step)) {
+      render();
+      return;
+    }
+    const layerIndex = index < state.composer.activeIndex ? index : index - 1;
+    const withLayer = (layer) => state.composer.layers.map((l, i) => (i === layerIndex ? layer : l));
+
+    if (choice === 'shift') {
+      if (part.active) {
+        // Saved with the part when it is complete, as every edit is (AC-19.14.3/2).
+        applyDraft(shiftOctave, step);
+        return;
+      }
+      const shifted = shiftOctave(part.pattern, step);
+      const layer = state.composer.layers[layerIndex];
+      if (layer.draft) {
+        if (layer.savedId && isComplete(shifted)) patternStore.upsert(shifted);
+        state.composer = { ...state.composer, layers: withLayer({ ...layer, draft: shifted }) };
+      } else {
+        // The library's own Pattern, as stored rather than as it plays here.
+        patternStore.upsert(shiftOctave(patternStore.findById(part.id), step));
+        state.composer = { ...state.composer, layers: withLayer({ ...layer }) };
+      }
+      if (state.pattern?.id && state.pattern.id === part.id) state.pattern = patternStore.findById(part.id) ?? state.pattern;
+      syncTransport();
+      render();
+      return;
+    }
+
+    // Make a copy (AC-19.14.4): a Pattern of its own when every syllable has a
+    // note, an unsaved composition otherwise (/3); the original is untouched.
+    const source = part.active || state.composer.layers[layerIndex].draft ? part.pattern : libraryPattern(part.id);
+    const copy = octaveCopy(source, step, copyName);
+    const complete = isComplete(copy);
+    if (complete) {
+      copy.id = patternStore.nextId();
+      patternStore.upsert(copy);
+    }
+    const savedId = complete ? copy.id : null;
+    if (part.active) {
+      state.composer = { ...state.composer, draft: copy, savedId, recording: false, target: null, selected: null, notice: null };
+      if (complete) adoptOpenPattern(copy);
+    } else {
+      const layer = state.composer.layers[layerIndex];
+      // A part that has been on screen keeps a draft; a library layer names its Pattern alone.
+      const next = { patternId: savedId, muted: Boolean(layer.muted), savedId, ...soundOf(layer) };
+      if (layer.draft || !complete) next.draft = copy;
+      state.composer = { ...state.composer, layers: withLayer(next) };
+    }
+    autosaveSection();
+    syncTransport();
+    render();
+  },
+
   /** Remove the part at `index` of the parts' order; never the one on screen (AC-19.11.6/5). */
   onLayerRemove(index) {
     const all = parts();
     if (!all[index] || all[index].active) return;
     const layerIndex = index < state.composer.activeIndex ? index : index - 1;
-    const next = removeLayer({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex);
+    const next = removeLayer({ ...createSection('', 'x'), layers: state.composer.layers }, layerIndex);
     const activeIndex = index < state.composer.activeIndex ? state.composer.activeIndex - 1 : state.composer.activeIndex;
     state.composer = { ...state.composer, layers: next.layers, activeIndex };
-    autosaveArrangement();
+    autosaveSection();
     syncTransport();
     render();
   },
@@ -3107,41 +3220,41 @@ const handlers = {
     const all = parts();
     if (!all[index] || all[index].active) return;
     const layerIndex = index < state.composer.activeIndex ? index : index - 1;
-    const next = setLayerMuted({ ...createArrangement('', 'x'), layers: state.composer.layers }, layerIndex, muted);
+    const next = setLayerMuted({ ...createSection('', 'x'), layers: state.composer.layers }, layerIndex, muted);
     state.composer = { ...state.composer, layers: next.layers };
-    autosaveArrangement();
+    autosaveSection();
     syncTransport();
     render();
   },
 
-  /** Save the layers as an Arrangement (AC-19.11.4/1), or update the one loaded (/4). */
-  async onArrangementSave() {
+  /** Save the layers as a Section (AC-19.11.4/1), or update the one loaded (/4). */
+  async onSectionSave() {
     const c = state.composer;
     if (!c.draft || c.layers.length === 0 || parts().some((p) => !p.id || partUnsaved(p))) return;
-    let arrangement = arrangementNow(c.arrangement.name);
-    if (c.arrangement.id) arrangement = { ...arrangement, id: c.arrangement.id };
+    let section = sectionNow(c.section.name);
+    if (c.section.id) section = { ...section, id: c.section.id };
     else {
       const taken = (name) =>
-        arrangementStore.loadAll().some((a) => a.name === name) ? `An Arrangement called "${name}" already exists. Choose another name.` : null;
-      const base = `${c.draft.name} arrangement`;
+        sectionStore.loadAll().some((a) => a.name === name) ? `A Section called "${name}" already exists. Choose another name.` : null;
+      const base = `${c.draft.name} section`;
       let suggestion = base;
       for (let n = 2; taken(suggestion); n++) suggestion = `${base} ${n}`;
-      const name = await askNewPatternName(suggestion, taken, { message: 'Name the Arrangement.', confirmLabel: 'Save' });
+      const name = await askNewPatternName(suggestion, taken, { message: 'Name the Section.', confirmLabel: 'Save' });
       if (name === null) {
         render();
         return;
       }
-      arrangement = { ...arrangement, name };
+      section = { ...section, name };
     }
-    if (validateArrangement(arrangement).length > 0) return;
-    const saved = arrangementStore.upsert(arrangement);
-    state.composer = { ...state.composer, arrangement: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
-    refreshArrangements();
+    if (validateSection(section).length > 0) return;
+    const saved = sectionStore.upsert(section);
+    state.composer = { ...state.composer, section: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
+    refreshSections();
     render();
   },
 
   /** One ZIP, one .mid per layer, each one combined loop long (AC-19.11.5). */
-  onArrangementExport() {
+  onSectionExport() {
     const c = state.composer;
     if (!c.draft || c.layers.length === 0) return;
     // The files in the parts' order, whichever is on screen (AC-19.11.5/1).
@@ -3151,91 +3264,104 @@ const handlers = {
       .filter((p) => p.pattern)
       .map((p) => ({ ...p, instrument: p.sounds }));
     const set = layered(all[0].pattern, all.slice(1), { instrument: all[0].sounds });
-    downloadArrangementMidi(set, arrangementZipFilename(c.arrangement, all[0].pattern));
+    downloadSectionMidi(set, sectionZipFilename(c.section, all[0].pattern));
   },
 
-  /** Clear the layers: a new, unsaved Arrangement over the same composition. */
-  onArrangementNew() {
+  /** Clear the layers: a new, unsaved Section over the same composition. */
+  onSectionNew() {
     state.composer = { ...state.composer, ...noLayers() };
     syncTransport();
     render();
   },
 
-  /** Open an Arrangement: its composition into the Composer, then its layers (AC-19.11.4/2). */
-  async onArrangementLoad(id) {
-    const arrangement = arrangementStore.findById(id);
-    if (!arrangement) return;
+  /** Open a Section: its composition into the Composer, then its layers (AC-19.11.4/2). */
+  async onSectionLoad(id) {
+    const section = sectionStore.findById(id);
+    if (!section) return;
     // The part that was on screen opens on screen again (AC-19.11.6/6).
-    const ids = [arrangement.compositionId, ...arrangement.layers.map((l) => l.patternId)];
-    const active = Math.min(Math.max(0, arrangement.active ?? 0), ids.length - 1);
+    const ids = [section.compositionId, ...section.layers.map((l) => l.patternId)];
+    const active = Math.min(Math.max(0, section.active ?? 0), ids.length - 1);
     const composition = patternStore.findById(ids[active]);
     if (!composition) {
-      state.composer = { ...state.composer, notice: `"${arrangement.name}" can't be opened: the part it was open on is no longer in the library.` };
+      state.composer = { ...state.composer, notice: `"${section.name}" can't be opened: the part it was open on is no longer in the library.` };
       render();
       return;
     }
     if (state.composer.savedId === composition.id && state.composer.draft) {
-      state.composer = { ...state.composer, ...partsOf(arrangement) };
+      state.composer = { ...state.composer, ...partsOf(section) };
       syncTransport();
       render();
       return;
     }
-    await openInComposer(composition, true, { editOwned: true, arrangement });
+    await openInComposer(composition, true, { editOwned: true, section });
   },
 
-  /** The saved Arrangements with their parts' names, for the library pane (AC-19.11.9/1). */
-  arrangementList() {
-    return arrangementList();
+  /** The saved Sections with their parts' names, for the library pane (AC-19.11.9/1). */
+  sectionList() {
+    return sectionList();
+  },
+
+  /** The library groups folded away (AC-5.1.8/3). */
+  libraryFolded() {
+    return state.settings.libraryFolded ?? [];
+  },
+
+  /** Fold a library group away, or open it again; remembered (AC-5.1.8/2, /3). */
+  onLibraryFold(group) {
+    const folded = state.settings.libraryFolded ?? [];
+    const next = folded.includes(group) ? folded.filter((g) => g !== group) : [...folded, group];
+    state.settings = settingsStore.save({ libraryFolded: next });
+    render();
   },
 
   /**
-   * Open the Composer on an Arrangement from anywhere (AC-19.11.9/2, /3): the
-   * mode switched without the entry prompt, then the Arrangement loaded, which
+   * Open the Composer on a Section from anywhere (AC-19.11.9/2, /3): the
+   * mode switched without the entry prompt, then the Section loaded, which
    * asks first when unsaved work would be lost.
    */
-  async onOpenArrangement(id) {
+  async onOpenSection(id) {
     if (isPracticeGoal(state.settings.goal)) return;
-    if (!arrangementStore.findById(id)) return;
+    if (!sectionStore.findById(id)) return;
     if (state.composer.mode !== 'composer') {
       if (state.isPlaying) transport.stop();
       state.composer = { ...state.composer, mode: 'composer', recording: false, target: null, selected: null };
       ensureSamplesLoaded();
-      refreshArrangements();
+      refreshSections();
       void midiInput.request();
       render();
     }
-    await handlers.onArrangementLoad(id);
+    await handlers.onSectionLoad(id);
     ui?.hideLibrary();
     render();
   },
 
-  async onArrangementRename(id) {
-    const arrangement = arrangementStore.findById(id);
-    if (!arrangement) return;
-    const name = await askNewPatternName(arrangement.name, (n) =>
-      arrangementStore.loadAll().some((a) => a.name === n && a.id !== id) ? `An Arrangement called "${n}" already exists. Choose another name.` : null
+  async onSectionRename(id) {
+    const section = sectionStore.findById(id);
+    if (!section) return;
+    const name = await askNewPatternName(section.name, (n) =>
+      sectionStore.loadAll().some((a) => a.name === n && a.id !== id) ? `A Section called "${n}" already exists. Choose another name.` : null
     );
     if (name === null) {
       render();
       return;
     }
-    arrangementStore.rename(id, name);
-    if (state.composer.arrangement.id === id) state.composer = { ...state.composer, arrangement: { ...state.composer.arrangement, name } };
-    refreshArrangements();
+    sectionStore.rename(id, name);
+    if (state.composer.section.id === id) state.composer = { ...state.composer, section: { ...state.composer.section, name } };
+    refreshSections();
     render();
   },
 
-  async onArrangementDelete(id) {
-    const arrangement = arrangementStore.findById(id);
-    if (!arrangement) return;
-    const proceed = await confirm(`Delete the Arrangement "${arrangement.name}" permanently?`, { confirmLabel: 'Delete' });
+  async onSectionDelete(id) {
+    const section = sectionStore.findById(id);
+    if (!section) return;
+    const proceed = await confirm(`Delete the Section "${section.name}" permanently?`, { confirmLabel: 'Delete' });
     if (!proceed) {
       render();
       return;
     }
-    arrangementStore.remove(id);
-    if (state.composer.arrangement.id === id) state.composer = { ...state.composer, arrangement: { id: null, name: '', saved: null } };
-    refreshArrangements();
+    sectionStore.remove(id);
+    if (state.composer.section.id === id) state.composer = { ...state.composer, section: { id: null, name: '', saved: null } };
+    refreshSections();
     render();
   },
 
@@ -3514,13 +3640,13 @@ const handlers = {
       );
       return;
     }
-    // A Pattern an Arrangement uses, as composition or layer, stays too (AC-19.11.4/5).
-    const arrangements = arrangementStore.referencingPattern(state.pattern.id);
-    if (arrangements.length > 0) {
+    // A Pattern a Section uses, as composition or layer, stays too (AC-19.11.4/5).
+    const sections = sectionStore.referencingPattern(state.pattern.id);
+    if (sections.length > 0) {
       await confirm(
-        `"${state.pattern.name}" can't be deleted: the Arrangement${arrangements.length > 1 ? 's' : ''} ${arrangements
+        `"${state.pattern.name}" can't be deleted: the Section${sections.length > 1 ? 's' : ''} ${sections
           .map((n) => `"${n}"`)
-          .join(', ')} use${arrangements.length > 1 ? '' : 's'} it. Delete the Arrangement first, in the Composer's Layers.`,
+          .join(', ')} use${sections.length > 1 ? '' : 's'} it. Delete the Section first, in the Composer's Layers.`,
         { confirmLabel: 'OK', cancelLabel: 'Close' }
       );
       return;
@@ -3921,7 +4047,7 @@ export function mount(root) {
     familyMembers,
     canUndo,
     fillLabel,
-    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), arrangements: rawOf(arrangementStore.KEY) }),
+    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), sections: rawOf(sectionStore.KEY) }),
   });
 }
 
@@ -4178,9 +4304,9 @@ if (typeof window !== 'undefined') {
     /** Test seam: the fill and progression catalogues in order, by id (US-2.14). */
     catalogues: () => ({ fills: ARPEGGIOS.map((a) => a.id), progressions: PROGRESSIONS.map((p) => p.id) }),
     songStore,
-    arrangementStore,
-    /** Test seam: whether the layers differ from the Arrangement they came from (AC-19.11.4/4). */
-    arrangementUnsaved: () => arrangementUnsaved(state.composer),
+    sectionStore,
+    /** Test seam: whether the layers differ from the Section they came from (AC-19.11.4/4). */
+    sectionUnsaved: () => sectionUnsaved(state.composer),
     /** Test seam: the set the transport is handed now — a Pattern, or the layered set (US-19.11). */
     scheduled: () => scheduled(),
     /** The Composer's state (US-19.x): mode, draft, target, selection, saved id. */
@@ -4201,7 +4327,7 @@ if (typeof window !== 'undefined') {
     currentVoice,
     /** The Song entry in force on the pass on screen, or null (US-18.1). */
     songEntryInForce: () => songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
-    /** The name the Section would export under (AC-18.1.5/2). */
+    /** The name the Chain would export under (AC-18.1.5/2). */
     songMidiFilename: () => songMidiFilename(composeSong(), state.pattern),
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {

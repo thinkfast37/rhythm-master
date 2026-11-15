@@ -2,13 +2,13 @@
  * The Layers section of the Composer (US-19.11): the composition first, then
  * each library Pattern layered under it with its kind, its repeats in the
  * combined loop, Mute and Remove; the loop readout; Add layer; and the saved
- * Arrangements with Save, New, Load, Rename and Delete. A pure function of
+ * Sections with Save, New, Load, Rename and Delete. A pure function of
  * `state.composer`, the stores' lists and the Patterns the handlers resolve.
  */
 import { el, valueEntry } from './controls.js';
-import { INSTRUMENTS, MIN_VOLUME, MAX_VOLUME, DEFAULT_VOLUME, normaliseVolume, volumeDb } from '../core/voice.js';
-import { layered, layerKind, MAX_LAYERS } from '../core/arrangement.js';
-import { isComplete } from '../core/composer.js';
+import { INSTRUMENTS, MIN_VOLUME, MAX_VOLUME, DEFAULT_VOLUME, normaliseVolume, volumeDb, hasFixedNotes } from '../core/voice.js';
+import { layered, layerKind, MAX_LAYERS } from '../core/section.js';
+import { isComplete, octaveShiftRefusal } from '../core/composer.js';
 
 const KIND_LABELS = { rhythm: 'rhythm', melody: 'melody', chords: 'chords' };
 
@@ -18,11 +18,11 @@ function button(className, text, action, props = {}) {
   return b;
 }
 
-/** Whether the parts differ from the Arrangement they were loaded from, or are new (AC-19.11.4/4). */
-export function arrangementUnsaved(composer) {
+/** Whether the parts differ from the Section they were loaded from, or are new (AC-19.11.4/4). */
+export function sectionUnsaved(composer) {
   const layers = composer?.layers ?? [];
-  const arrangement = composer?.arrangement;
-  if (!arrangement?.id) return layers.length > 0;
+  const section = composer?.section;
+  if (!section?.id) return layers.length > 0;
   const own = { patternId: composer.savedId ?? null, muted: false, instrument: composer.instrument, volume: composer.volume };
   const at = Math.min(Math.max(0, composer.activeIndex ?? 0), layers.length);
   const now = {
@@ -35,7 +35,7 @@ export function arrangementUnsaved(composer) {
     })),
     active: at,
   };
-  return JSON.stringify(now) !== JSON.stringify(arrangement.saved ?? null);
+  return JSON.stringify(now) !== JSON.stringify(section.saved ?? null);
 }
 
 /**
@@ -83,6 +83,35 @@ function renderSound(item, part, index, handlers) {
 }
 
 /**
+ * Octave down and Octave up (US-19.14): on every part that can sound a pitched
+ * note, and on none on Drums, where a note an octave away is another drum
+ * (AC-19.14.1/1). Each is disabled, saying why, when the shift has nowhere to
+ * go (/2); pressing one asks before anything moves (AC-19.14.2).
+ */
+function renderOctave(item, part, index, handlers) {
+  const pitched = part.active || layerKind(part.pattern) !== 'rhythm';
+  if (!pitched || hasFixedNotes(part.sounds)) return;
+  const wrap = el('span', 'layer-octave', { role: 'group' });
+  wrap.setAttribute('aria-label', `Octave for ${part.pattern.name}`);
+  for (const [direction, text, word] of [
+    [-1, 'Oct ▼', 'down'],
+    [1, 'Oct ▲', 'up'],
+  ]) {
+    const refusal = octaveShiftRefusal(part.pattern, direction);
+    const b = button(`layer-octave-${word}`, text, `layer-octave-${word}`, {
+      disabled: Boolean(refusal),
+      title: refusal ?? `Move every note of this part ${word} an octave`,
+    });
+    b.dataset.layer = String(index);
+    b.dataset.refusal = refusal ?? '';
+    b.setAttribute('aria-label', `Octave ${word} for ${part.pattern.name}`);
+    b.addEventListener('click', (e) => handlers.onPartOctave?.(Number(e.currentTarget.dataset.layer), direction));
+    wrap.appendChild(b);
+  }
+  item.appendChild(wrap);
+}
+
+/**
  * @param {object} state
  * @param {object} handlers  `patternById(id)` resolves a layer; the rest act
  */
@@ -93,7 +122,7 @@ export function renderLayers(state, handlers) {
   wrap.dataset.layers = String(composer.layers?.length ?? 0);
   wrap.dataset.composition = String(Boolean(draft));
   wrap.setAttribute('aria-label', 'Layers');
-  // No composition: nothing to layer under, only saved Arrangements to open (AC-19.11.1/5).
+  // No composition: nothing to layer under, only saved Sections to open (AC-19.11.1/5).
   if (!draft) {
     const head = el('div', 'layers-head');
     head.appendChild(el('h3', 'layers-title', { textContent: 'Layers' }));
@@ -104,24 +133,24 @@ export function renderLayers(state, handlers) {
 
   const head = el('div', 'layers-head');
   head.appendChild(el('h3', 'layers-title', { textContent: 'Layers' }));
-  const arrangement = composer.arrangement;
-  if (arrangement?.id) {
-    const name = el('span', 'layers-arrangement-name', { textContent: arrangement.name });
-    name.dataset.arrangementName = arrangement.name;
+  const section = composer.section;
+  if (section?.id) {
+    const name = el('span', 'layers-section-name', { textContent: section.name });
+    name.dataset.sectionName = section.name;
     head.appendChild(name);
   }
-  // A named Arrangement saves on its own (AC-19.11.4/4): it is either saved, or
+  // A named Section saves on its own (AC-19.11.4/4): it is either saved, or
   // waiting on a part that is not yet in the library, named here.
-  const waitingOn = arrangement?.id ? (handlers.parts?.() ?? []).filter((p) => !p.id && p.pattern) : [];
-  if (arrangement?.id && waitingOn.length > 0) {
+  const waitingOn = section?.id ? (handlers.parts?.() ?? []).filter((p) => !p.id && p.pattern) : [];
+  if (section?.id && waitingOn.length > 0) {
     const u = el('span', 'layers-unsaved', { textContent: `saves once ${waitingOn.map((p) => `"${p.pattern.name}"`).join(', ')} ${waitingOn.length === 1 ? 'is' : 'are'} saved` });
     u.dataset.unsaved = 'waiting';
     head.appendChild(u);
-  } else if (arrangement?.id) {
+  } else if (section?.id) {
     const ok = el('span', 'layers-saved', { textContent: 'saved' });
     ok.dataset.saved = 'true';
     head.appendChild(ok);
-  } else if (arrangementUnsaved(composer)) {
+  } else if (sectionUnsaved(composer)) {
     const u = el('span', 'layers-unsaved', { textContent: 'not yet saved' });
     u.dataset.unsaved = 'new';
     head.appendChild(u);
@@ -169,6 +198,7 @@ export function renderLayers(state, handlers) {
       item.appendChild(r);
     }
     if (part.pattern) renderSound(item, part, index, handlers);
+    if (part.pattern) renderOctave(item, part, index, handlers);
     if (!part.active) {
       const mute = button(`layer-mute${part.muted ? ' on' : ''}`, part.muted ? 'Unmute' : 'Mute', 'layer-mute', {
         title: part.muted ? 'Hear this part again' : 'Silence this part; it still counts in the loop',
@@ -234,32 +264,32 @@ export function renderLayers(state, handlers) {
   const saved = unsavedParts.length === 0;
   const hasLayers = (composer.layers?.length ?? 0) > 0;
   // The first save names it; after that every change saves on its own (AC-19.11.4/4).
-  const named = Boolean(arrangement?.id);
-  const save = button('arrangement-save', named ? 'Arrangement saved' : 'Save arrangement…', 'arrangement-save', {
+  const named = Boolean(section?.id);
+  const save = button('section-save', named ? 'Section saved' : 'Save section…', 'section-save', {
     disabled: named || !saved || !hasLayers,
     title: named
-      ? 'Every change to this Arrangement saves on its own'
+      ? 'Every change to this Section saves on its own'
       : !saved
-      ? `Save every part to the library first — an Arrangement names them by id. Not saved: ${unsavedParts.map((p) => p.pattern?.name ?? '?').join(', ')}`
+      ? `Save every part to the library first — a Section names them by id. Not saved: ${unsavedParts.map((p) => p.pattern?.name ?? '?').join(', ')}`
       : !hasLayers
         ? 'Add a layer first'
-        : arrangement?.id
-          ? 'Update this Arrangement'
+        : section?.id
+          ? 'Update this Section'
           : 'Save the composition and its layers under a name',
   });
-  save.addEventListener('click', () => handlers.onArrangementSave?.());
+  save.addEventListener('click', () => handlers.onSectionSave?.());
   actions.appendChild(save);
-  if (arrangement?.id || hasLayers) {
-    const clear = button('arrangement-new', 'Clear layers', 'arrangement-new', { title: 'Take every layer out and start a new Arrangement' });
-    clear.addEventListener('click', () => handlers.onArrangementNew?.());
+  if (section?.id || hasLayers) {
+    const clear = button('section-new', 'Clear layers', 'section-new', { title: 'Take every layer out and start a new Section' });
+    clear.addEventListener('click', () => handlers.onSectionNew?.());
     actions.appendChild(clear);
   }
   // One ZIP, one MIDI file per layer, each one combined loop long (AC-19.11.5).
-  const exportBtn = button('arrangement-export', 'Export arrangement MIDI', 'arrangement-export', {
+  const exportBtn = button('section-export', 'Export section MIDI', 'section-export', {
     disabled: !hasLayers,
     title: hasLayers ? 'Download a ZIP with one MIDI file per layer, each one loop long' : 'Add a layer first',
   });
-  exportBtn.addEventListener('click', () => handlers.onArrangementExport?.());
+  exportBtn.addEventListener('click', () => handlers.onSectionExport?.());
   actions.appendChild(exportBtn);
   wrap.appendChild(actions);
 
@@ -267,28 +297,28 @@ export function renderLayers(state, handlers) {
   return wrap;
 }
 
-/** The saved Arrangements: Load, Rename, Delete (AC-19.11.4/2, /3). Empty when there are none. */
+/** The saved Sections: Load, Rename, Delete (AC-19.11.4/2, /3). Empty when there are none. */
 function renderSaved(state, handlers) {
-  const arrangement = state.composer.arrangement;
-  const all = state.arrangements ?? [];
-  const savedWrap = el('div', 'arrangements');
+  const section = state.composer.section;
+  const all = state.sections ?? [];
+  const savedWrap = el('div', 'sections');
   if (all.length > 0) {
-    savedWrap.appendChild(el('span', 'layers-label', { textContent: 'Saved Arrangements' }));
-    const ul = el('ul', 'arrangement-list');
+    savedWrap.appendChild(el('span', 'layers-label', { textContent: 'Saved Sections' }));
+    const ul = el('ul', 'section-list');
     for (const a of all) {
-      const item = el('li', `arrangement-item${arrangement?.id === a.id ? ' current' : ''}`);
-      item.dataset.arrangementId = a.id;
-      const load = button('arrangement-load', a.name, 'arrangement-load', { title: 'Open this Arrangement: its composition and its layers' });
-      load.dataset.arrangementId = a.id;
-      load.addEventListener('click', () => handlers.onArrangementLoad?.(a.id));
+      const item = el('li', `section-item${section?.id === a.id ? ' current' : ''}`);
+      item.dataset.sectionId = a.id;
+      const load = button('section-load', a.name, 'section-load', { title: 'Open this Section: its composition and its layers' });
+      load.dataset.sectionId = a.id;
+      load.addEventListener('click', () => handlers.onSectionLoad?.(a.id));
       item.appendChild(load);
-      const rename = button('arrangement-rename', 'Rename', 'arrangement-rename');
-      rename.dataset.arrangementId = a.id;
-      rename.addEventListener('click', () => handlers.onArrangementRename?.(a.id));
+      const rename = button('section-rename', 'Rename', 'section-rename');
+      rename.dataset.sectionId = a.id;
+      rename.addEventListener('click', () => handlers.onSectionRename?.(a.id));
       item.appendChild(rename);
-      const del = button('arrangement-delete', 'Delete', 'arrangement-delete');
-      del.dataset.arrangementId = a.id;
-      del.addEventListener('click', () => handlers.onArrangementDelete?.(a.id));
+      const del = button('section-delete', 'Delete', 'section-delete');
+      del.dataset.sectionId = a.id;
+      del.addEventListener('click', () => handlers.onSectionDelete?.(a.id));
       item.appendChild(del);
       ul.appendChild(item);
     }

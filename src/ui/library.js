@@ -190,32 +190,39 @@ export function renderLibrary(root, entries, viewState, handlers) {
   backupRow.append(backupButton, restoreButton, restoreFile);
   root.appendChild(backupRow);
 
-  // Saved Arrangements, ahead of the Patterns, searched with them (AC-19.11.9/1).
-  const arrangements = (handlers.arrangementList?.() ?? []).filter((a) => {
+  // Saved Sections, ahead of the Patterns, searched with them (AC-19.11.9/1),
+  // as the first of the library's groups (AC-5.1.8/1).
+  const folded = new Set(handlers.libraryFolded?.() ?? []);
+  const sections = (handlers.sectionList?.() ?? []).filter((a) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return a.name.toLowerCase().includes(q) || a.parts.some((n) => n.toLowerCase().includes(q));
   });
-  if ((handlers.arrangementList?.() ?? []).length > 0) {
-    const section = el('div', 'library-arrangements');
-    section.appendChild(el('h2', 'library-arrangements-title', { textContent: 'Arrangements' }));
-    if (arrangements.length === 0) {
-      section.appendChild(el('p', 'library-arrangements-empty', { textContent: 'No Arrangement matches.' }));
+  if ((handlers.sectionList?.() ?? []).length > 0) {
+    const sectionsFolded = folded.has('sections');
+    const group = el('div', 'library-sections library-group');
+    group.dataset.group = 'sections';
+    group.dataset.folded = String(sectionsFolded);
+    group.appendChild(groupHeading('sections', 'Sections', sections.length, sectionsFolded, 'library-sections-title', handlers));
+    if (sectionsFolded) {
+      // Folded: the heading alone (AC-5.1.8/2).
+    } else if (sections.length === 0) {
+      group.appendChild(el('p', 'library-sections-empty', { textContent: 'No Section matches.' }));
     } else {
-      const list = el('ul', 'arrangement-entries');
-      for (const a of arrangements) {
-        const item = el('li', 'arrangement-entry');
-        item.dataset.arrangementId = a.id;
-        const open = el('button', 'arrangement-entry-name', { type: 'button', textContent: a.name });
-        open.dataset.action = 'open-arrangement';
-        open.addEventListener('click', () => handlers.onOpenArrangement?.(a.id));
+      const list = el('ul', 'section-entries');
+      for (const a of sections) {
+        const item = el('li', 'section-entry');
+        item.dataset.sectionId = a.id;
+        const open = el('button', 'section-entry-name', { type: 'button', textContent: a.name });
+        open.dataset.action = 'open-section';
+        open.addEventListener('click', () => handlers.onOpenSection?.(a.id));
         item.appendChild(open);
-        item.appendChild(el('span', 'arrangement-entry-parts', { textContent: a.parts.join(' · ') }));
+        item.appendChild(el('span', 'section-entry-parts', { textContent: a.parts.join(' · ') }));
         list.appendChild(item);
       }
-      section.appendChild(list);
+      group.appendChild(list);
     }
-    root.appendChild(section);
+    root.appendChild(group);
   }
 
   const ratingFilter = el('div', 'rating-filter');
@@ -269,18 +276,51 @@ export function renderLibrary(root, entries, viewState, handlers) {
 
   const visible = sortEntries(filterEntries(entries, viewState));
 
+  // The Patterns' own group (AC-5.1.8/1): its heading folds the list away and
+  // nothing else — the filters above still narrow it, and its count says so (/4).
+  const patternsFolded = folded.has('patterns');
+  root.appendChild(groupHeading('patterns', 'Patterns', visible.length, patternsFolded, 'library-patterns-title', handlers));
+
   const count = el('p', 'library-count', {
     textContent: `${visible.length} pattern${visible.length === 1 ? '' : 's'}`,
   });
   root.appendChild(count);
 
   const list = el('ul', 'pattern-list');
-  for (const entry of visible) {
-    list.appendChild(renderEntry(entry, viewState, handlers));
+  list.dataset.folded = String(patternsFolded);
+  list.hidden = patternsFolded;
+  if (!patternsFolded) {
+    for (const entry of visible) {
+      list.appendChild(renderEntry(entry, viewState, handlers));
+    }
   }
   root.appendChild(list);
 
   return root;
+}
+
+/**
+ * A library group's heading (AC-5.1.8): the group's name and how many entries
+ * it shows, on a button that folds the group away or opens it again and says
+ * which it is, in words as well as by its mark.
+ */
+function groupHeading(id, label, count, folded, className, handlers) {
+  const heading = el('h2', `library-group-heading ${className}`);
+  const toggle = el('button', 'library-group-toggle', { type: 'button' });
+  toggle.dataset.action = 'fold-library-group';
+  toggle.dataset.group = id;
+  toggle.dataset.count = String(count);
+  toggle.setAttribute('aria-expanded', String(!folded));
+  toggle.title = folded ? `Show ${label}` : `Hide ${label}`;
+  toggle.append(
+    el('span', 'library-group-mark', { textContent: folded ? '▸' : '▾' }),
+    el('span', 'library-group-name', { textContent: label }),
+    el('span', 'library-group-count', { textContent: String(count) }),
+    el('span', 'library-group-state', { textContent: folded ? 'hidden' : '' })
+  );
+  toggle.addEventListener('click', () => handlers.onLibraryFold?.(id));
+  heading.appendChild(toggle);
+  return heading;
 }
 
 function renderEntry(entry, viewState, handlers) {

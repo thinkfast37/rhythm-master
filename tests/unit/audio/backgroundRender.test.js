@@ -13,7 +13,7 @@ import { create } from '../../../src/core/pattern.js';
 import { loopDurationSeconds, buildTimeline } from '../../../src/core/timeline.js';
 import seed from '../../../data/seed-patterns.json';
 import { fakeContext } from './fakeAudio.js';
-import { layered } from '../../../src/core/arrangement.js';
+import { layered } from '../../../src/core/section.js';
 import { volumeGain } from '../../../src/core/voice.js';
 
 const SAMPLE_RATE = 44100;
@@ -237,7 +237,7 @@ describe('audio/backgroundRender — the melodic voice (AC-2.13.5)', () => {
 
 describe('audio/backgroundRender — layers under the composition (US-19.11)', () => {
   it('AC-19.11.2/6 — The screen-off handover renders the combined loop with every unmuted layer, as the transport plays it', async () => {
-    const { layered, layeredTimeline, layeredLoopDuration } = await import('../../../src/core/arrangement.js');
+    const { layered, layeredTimeline, layeredLoopDuration } = await import('../../../src/core/section.js');
     const { cycleAccent, addMeasure } = await import('../../../src/core/pattern.js');
     let composition = { ...create('Line'), tempo: 120 };
     for (let b = 0; b < 4; b++) composition = cycleAccent(composition, 0, b, 0);

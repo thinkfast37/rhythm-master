@@ -1,7 +1,7 @@
 /**
  * Songs, in `rm.songs.v1` (US-18.1). Its own store, separate from Patterns,
  * ratings, added Tags and Keeps, so nothing that happens to those can lose a
- * Song (AC-18.1.4/7). A Song references the Pattern each Section is composed
+ * Song (AC-18.1.4/7). A Song references the Pattern each Chain is composed
  * over by id; it never carries the Pattern itself.
  */
 import { readStore, writeStore } from './keyValue.js';
@@ -24,7 +24,7 @@ export function findById(id) {
 
 const references = (song, patternId) => (song.sections ?? []).some((s) => s.patternId === patternId);
 
-/** The Songs any of whose Sections are composed over `patternId` (AC-18.1.4/2). */
+/** The Songs any of whose Chains are composed over `patternId` (AC-18.1.4/2). */
 export function forPattern(patternId) {
   return loadAll().filter((s) => references(s, patternId));
 }

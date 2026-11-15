@@ -374,6 +374,7 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "labHelp": false,               // AC-14.1.3/3 — whether Lab’s Help toggle (the ?s beside each control) is on
   "sheetAids": false,             // AC-12.3.1/2 — whether the melodic score's Note aids (note names and degree colours) are on
   "composerInstrument": "guitar", // AC-19.1.3/3 — an instrument id (AC-19.12.1/1), the instrument of the part on screen
+  "libraryFolded": [],            // AC-5.1.8/3 — the library groups folded away, by id: "sections", "patterns"
   "composerView": "grid",         // AC-19.11.8/3 — "grid" | "score", the composing grid or every part as a staff
   "composerLabelMode": "notes",   // AC-19.2.2/5 — "notes" | "degrees" | "intervals", how in-scale notes are labelled
   "composerCapo": 0,              // AC-19.2.2/5 — 0–12, the fretboard's capo
@@ -445,7 +446,7 @@ store, so nothing that happens to Patterns, ratings, added Tags or keeps can los
       "name": "Bossa bed",
       "sections": [
         {
-          "patternId": "s_12",           // the Pattern this Section plays over
+          "patternId": "s_12",           // the Pattern this Chain plays over
           "entries": [
             { "fill": "root-fifth", "repeats": 4 },   // an ARPEGGIOS id; harmonic cycles in force, 1–16
             { "fill": "alberti", "repeats": 2 }
@@ -457,16 +458,23 @@ store, so nothing that happens to Patterns, ratings, added Tags or keeps can los
 }
 ```
 
-`patternId` is stored per Section from the first version even though this version's Compose group
-keeps every Section of a Song on the one Pattern that is open: a later Section on a different
+`patternId` is stored per Chain from the first version even though this version's Compose group
+keeps every Chain of a Song on the one Pattern that is open: a later Chain on a different
 progression — verse to chorus — is then a change to what the group offers, not to what a Song is.
 A repeat is one harmonic cycle, the unit cycle mode counts in (AC-2.7.2/1). A Pattern that any Song
 references cannot be deleted while the Song exists (AC-18.1.4/5). A Song is barred from every
 Pattern export and submission (AC-18.1.4/6); its own export is the Song MIDI file (AC-18.1.5).
 
-### `rm.arrangements.v1` — Arrangements (US-19.11)
+### `rm.sections.v1` — Sections (US-19.11)
 
-An Arrangement is the Composer's composition with library Patterns layered under it. It references
+*(Renamed 2026-11-15, T493: this store was `rm.arrangements.v1` and its list `arrangements`, while a Section was
+called an Arrangement. On load, `storage/sections.js` moves whatever the old key holds into this one — every
+entry as it was, an entry whose id is already taken here given the next free id rather than dropped — and clears
+the old key only once this one is written (AC-19.11.4/8). A backup file that holds the old store is read as this
+one (`core/backup.js`, `renamed`). The schema version is unchanged: only the key and the list's name moved. Ids
+keep their `arr_` prefix, so nothing that references one changes.)*
+
+A Section is the Composer's composition with library Patterns layered under it. It references
 every Pattern by id — the composition's and each layer's — and carries nothing else of them: tempo,
 swing and Key are the composition's own, read from the library at play time (AC-19.11.2/3). It is
 stored apart from every other store, as a Song is (AC-19.11.4/7).
@@ -474,10 +482,10 @@ stored apart from every other store, as a Song is (AC-19.11.4/7).
 ```jsonc
 {
   "schemaVersion": 1,
-  "arrangements": [
+  "sections": [
     {
       "id": "arr_1",
-      "name": "Bossa line arrangement",
+      "name": "Bossa line section",
       "compositionId": "p_7",              // an owned Melodic Pattern: the composition
       "instrument": "sax",                 // the composition's instrument and volume (US-19.12); see below
       "volume": 80,
@@ -491,17 +499,17 @@ stored apart from every other store, as a Song is (AC-19.11.4/7).
 }
 ```
 
-`instrument` and `volume` were added 2026-11-15 with US-19.12, on the Arrangement for its composition
+`instrument` and `volume` were added 2026-11-15 with US-19.12, on the Section for its composition
 and on each layer. `instrument` is one of `piano`, `synth`, `guitar`, `electric`, `bass`, `sax`,
 `trumpet`, `flute`, `drums` (AC-19.12.1/1); `volume` is an integer from 1 to 100 (AC-19.12.3). Both are optional, and
-the schema version is unchanged: an Arrangement that names neither — every one saved before — opens
+the schema version is unchanged: a Section that names neither — every one saved before — opens
 with its part on screen on the `composerInstrument` setting, every other part on `melodicVoice`, and
 every volume at 80 (AC-19.12.4/3). Neither is ever written to a Pattern (AC-19.12.4/4).
 
 Layers are in the order added, at most 8, no Pattern twice (AC-19.11.1/3). How long the combined
 loop is, and how many times each layer repeats in it, is derived from the Patterns at play time
-(`core/arrangement.js`, AC-19.11.3) and never stored. A Pattern that any Arrangement uses cannot be
-deleted while the Arrangement exists (AC-19.11.4/5). An Arrangement is barred from every Pattern
+(`core/section.js`, AC-19.11.3) and never stored. A Pattern that any Section uses cannot be
+deleted while the Section exists (AC-19.11.4/5). A Section is barred from every Pattern
 export and submission (AC-19.11.4/6).
 
 ### Seed file — `data/seed-patterns.json`
@@ -525,7 +533,7 @@ tempo, tags, and measures, nothing bookkeeping-shaped.
     "rm.patterns.v1":  { "schemaVersion": 1, "patterns": [ /* … */ ] },
     "rm.overlays.v1":  { "schemaVersion": 1, "byPatternId": { /* … */ } },
     "rm.songs.v1":     { "schemaVersion": 1, "songs": [ /* … */ ] },
-    "rm.arrangements.v1": { "schemaVersion": 1, "arrangements": [ /* … */ ] },
+    "rm.sections.v1": { "schemaVersion": 1, "sections": [ /* … */ ] },
     "rm.settings.v1":  { "schemaVersion": 1, /* … */ },
     "rm.localMeta.v1": { "schemaVersion": 1, "byPatternId": { /* … */ } }
   }
@@ -574,7 +582,7 @@ Enforced in `core/pattern.js` on every mutation, and on load for both stores:
 16. A Pitch with `tone` only on a Pattern that has `harmony`.
 17. An overlay's `keptFills`, where present, is an array of ids from `core/harmony.js`'s `ARPEGGIOS`;
     an id the catalogue no longer carries is skipped on read.
-18. A Song has a non-empty `name`, at least one Section, and each Section a `patternId` string and an
+18. A Song has a non-empty `name`, at least one Chain, and each Chain a `patternId` string and an
     `entries` array whose every entry has a `fill` from `ARPEGGIOS` and an integer `repeats` 1–16.
 19. `register`, where present, is an integer within −2 to +2. Used only when `soundMode` is `melodic`; on a Percussive Pattern it may remain, unused (AC-2.1.4).
 

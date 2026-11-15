@@ -271,7 +271,7 @@ test('AC-19.13.3/1 — Changing the Key with a Drums part on screen leaves each 
   await expect(page.locator('.composer-grid .slot.has-note')).toHaveCount(4);
 });
 
-test("AC-19.13.3/2 — A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the arrangement's Key", async ({ page }) => {
+test("AC-19.13.3/2 — A Drums part that is not on screen sounds the MIDI notes it was written with, whatever the Section's Key", async ({ page }) => {
   await openApp(page);
   const drums = await kit(page);
   // A second composition over it, in another Key, with the kit beneath on Drums.
@@ -314,7 +314,7 @@ test('AC-19.13.3/3 — Putting a Drums part on screen, and taking it off again, 
   await addLayer(page, drums);
   await picker(row(page, drums)).selectOption('drums');
   expect((await setNotes(page))[1]).toEqual([36, 42, 38, 46]);
-  // On screen: it takes the arrangement's Key, and its notes are where they were.
+  // On screen: it takes the section's Key, and its notes are where they were.
   await partRow(page, 'Kit').locator('.layer-pick').click();
   await expect(switchTo(page, 'drums')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.piano')).toHaveAttribute('data-drums', 'true');
@@ -417,7 +417,7 @@ test('AC-19.11.5/5 — A part on Drums is written on the General MIDI drum chann
   await addLayer(page, drums);
   await picker(row(page, drums)).selectOption('drums');
   await addLayer(page, DJEMBE);
-  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.arrangement-export').click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.section-export').click()]);
   const { readZip } = await import('../zip-reader.js');
   const fs = await import('node:fs/promises');
   const entries = readZip(new Uint8Array(await fs.readFile(await download.path())));

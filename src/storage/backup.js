@@ -13,7 +13,7 @@ import { migrate, CURRENT_VERSION } from './migrate.js';
 import * as patterns from './patterns.js';
 import * as overlays from './overlays.js';
 import * as songs from './songs.js';
-import * as arrangements from './arrangements.js';
+import * as sections from './sections.js';
 import * as settings from './settings.js';
 import * as localMeta from './localMeta.js';
 
@@ -22,7 +22,7 @@ const SHAPES = {
   [patterns.KEY]: { list: 'patterns' },
   [overlays.KEY]: { map: 'byPatternId' },
   [songs.KEY]: { list: 'songs' },
-  [arrangements.KEY]: { list: 'arrangements' },
+  [sections.KEY]: { list: 'sections' },
   [settings.KEY]: {},
   [localMeta.KEY]: { map: 'byPatternId' },
 };
@@ -49,7 +49,12 @@ export function backupText(createdAt) {
  * store migrated to this build's schema, or `{ ok: false, error }`.
  */
 export function checkBackup(text) {
-  const read = readBackup(text, { shapes: SHAPES, storeVersion: CURRENT_VERSION });
+  const read = readBackup(text, {
+    shapes: SHAPES,
+    storeVersion: CURRENT_VERSION,
+    // A backup made while Sections were called Arrangements (AC-19.11.4/8).
+    renamed: { [sections.LEGACY_KEY]: { key: sections.KEY, from: sections.LEGACY_LIST, to: 'sections' } },
+  });
   if (!read.ok) return read;
   const stores = {};
   try {

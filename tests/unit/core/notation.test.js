@@ -498,7 +498,7 @@ describe('core/notation — the item at the transport position (AC-12.2.9)', () 
   });
 });
 
-// --- the arrangement as sheet music (AC-19.11.8) ---------------------------------
+// --- the section as sheet music (AC-19.11.8) ---------------------------------
 
 import { create as arrCreate, cycleAccent as arrAccent, setPitch as arrPitch } from '../../../src/core/pattern.js';
 import { setProgression as arrProgression, setChange as arrChange, setArpeggio as arrArpeggio, cyclePasses as arrCycle } from '../../../src/core/harmony.js';

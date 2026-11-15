@@ -1,9 +1,9 @@
 /**
  * The Compose group (US-18.1): the fills the Composer kept, sequenced into a
- * Section over the Pattern's progression. Present only on a Melodic Pattern
+ * Chain over the Pattern's progression. Present only on a Melodic Pattern
  * with a progression (AC-18.1.1/1); absent, not empty, otherwise.
  *
- * Nothing here is Pattern data. The Section lives in `state.compose`, the
+ * Nothing here is Pattern data. The Chain lives in `state.compose`, the
  * shortlist in the Composer's overlay, and saved Songs in their own store.
  */
 import { ARPEGGIOS, hasHarmony, chordNumeral } from '../core/harmony.js';
@@ -57,7 +57,7 @@ function renderSongs(state, handlers) {
   for (const song of songs) {
     const item = el('li', `song-item${current?.id === song.id ? ' current' : ''}`);
     item.dataset.songId = song.id;
-    const load = button('song-load', song.name, 'song-load', { title: 'Load this Song into the Section' });
+    const load = button('song-load', song.name, 'song-load', { title: 'Load this Song into the Chain' });
     load.dataset.songId = song.id;
     load.addEventListener('click', () => handlers.onSongLoad(song.id));
     item.appendChild(load);
@@ -92,7 +92,7 @@ function renderPalette(state, handlers) {
   const row = el('div', 'palette-row');
   for (const fill of fills) {
     const b = button('palette-fill', `+ ${fill.label}`, 'compose-add', {
-      title: 'Add this fill to the end of the Section',
+      title: 'Add this fill to the end of the Chain',
     });
     b.dataset.fill = fill.id;
     b.addEventListener('click', () => handlers.onComposeAdd(fill.id));
@@ -102,19 +102,19 @@ function renderPalette(state, handlers) {
   return wrap;
 }
 
-/** The Section: entries in order, each with its repeats; play, save, export (AC-18.1.2–AC-18.1.5). */
+/** The Chain: entries in order, each with its repeats; play, save, export (AC-18.1.2–AC-18.1.5). */
 function renderSection(pattern, state, handlers) {
   const wrap = el('div', 'compose-section');
   const song = state.compose?.song;
   const entries = song?.sections[0]?.entries ?? [];
   const inForce = state.songEntryInForce;
   const head = el('div', 'compose-section-head');
-  head.appendChild(el('span', 'compose-label', { textContent: song?.name ? `Section — ${song.name}` : 'Section' }));
+  head.appendChild(el('span', 'compose-label', { textContent: song?.name ? `Chain — ${song.name}` : 'Chain' }));
   if (unsaved(state)) head.appendChild(el('span', 'compose-unsaved', { textContent: 'unsaved changes' }));
   wrap.appendChild(head);
 
   if (entries.length === 0) {
-    wrap.appendChild(el('p', 'compose-empty', { textContent: 'The Section is empty. Tap a kept fill to add it.' }));
+    wrap.appendChild(el('p', 'compose-empty', { textContent: 'The Chain is empty. Tap a kept fill to add it.' }));
   } else {
     const list = el('ol', 'compose-entries');
     entries.forEach((entry, index) => {
@@ -164,7 +164,7 @@ function renderSection(pattern, state, handlers) {
   const playingSong = Boolean(state.compose?.on && state.isPlaying);
   const play = button(`play-song${playingSong ? ' on' : ''}`, playingSong ? 'Playing song' : 'Play song', 'play-song', {
     disabled: empty,
-    title: empty ? 'Add an entry first' : 'Play the Section in order, looping',
+    title: empty ? 'Add an entry first' : 'Play the Chain in order, looping',
   });
   play.setAttribute('aria-pressed', String(playingSong));
   play.addEventListener('click', () => handlers.onPlaySong());
@@ -173,7 +173,7 @@ function renderSection(pattern, state, handlers) {
   save.addEventListener('click', () => handlers.onSongSave());
   actions.appendChild(save);
   if (song?.id || !empty) {
-    const fresh = button('song-new', 'New Section', 'song-new');
+    const fresh = button('song-new', 'New Chain', 'song-new');
     fresh.addEventListener('click', () => handlers.onSongNew());
     actions.appendChild(fresh);
   }
@@ -184,7 +184,7 @@ function renderSection(pattern, state, handlers) {
   return wrap;
 }
 
-/** Whether the Section differs from the Song it was loaded from, or is new with entries (AC-18.1.4/4). */
+/** Whether the Chain differs from the Song it was loaded from, or is new with entries (AC-18.1.4/4). */
 function unsaved(state) {
   const song = state.compose?.song;
   if (!song) return false;

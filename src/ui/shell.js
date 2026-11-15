@@ -54,8 +54,9 @@ function sameLibrarySignature(a, b) {
     a !== null &&
     a.patterns === b.patterns &&
     a.overlays === b.overlays &&
-    // The Arrangements section at the pane's head follows its store (AC-19.11.9/1).
-    a.arrangements === b.arrangements &&
+    // The Sections section at the pane's head follows its store (AC-19.11.9/1).
+    a.sections === b.sections &&
+    a.folded === b.folded &&
     a.query === b.query &&
     a.minRating === b.minRating &&
     a.tags === b.tags &&
@@ -777,6 +778,8 @@ export function mountShell(root, ctx) {
       minRating: s.view.minRating,
       tags: s.view.tags.join('\u0000'),
       currentId: s.view.currentId,
+      // Which groups are folded (AC-5.1.8/3).
+      folded: (s.settings.libraryFolded ?? []).join(' '),
     };
     if (!sameLibrarySignature(lastLibrarySignature, librarySignature)) {
       lastLibrarySignature = librarySignature;

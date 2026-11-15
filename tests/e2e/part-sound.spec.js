@@ -1,7 +1,7 @@
 /**
  * An instrument and a volume for each part (US-19.12): the pickers and the
  * volume controls in the Layers section, what a part then sounds with, what
- * an Arrangement keeps of it, and how the fetched instruments load — proven
+ * a Section keeps of it, and how the fetched instruments load — proven
  * in the DOM.
  *
  * Fixtures from the shipped library: Bossa Nova (s_21, percussive) and
@@ -67,13 +67,13 @@ async function withSettings(page, partial) {
   await expect(page.locator('.mode-switch')).toBeVisible();
 }
 
-/** Reopen the Composer after a reload, declining any prompt, and open the first saved Arrangement. */
-async function reopenArrangement(page) {
+/** Reopen the Composer after a reload, declining any prompt, and open the first saved Section. */
+async function reopenSection(page) {
   await page.locator('.mode-switch [data-mode="composer"]').click();
   await expect(page.locator('.composer-panel')).toBeVisible();
   await page.waitForTimeout(300);
   if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  await page.locator('.arrangement-item[data-arrangement-id="arr_1"] .arrangement-load').click();
+  await page.locator('.section-item[data-section-id="arr_1"] .section-load').click();
   await expect(page.locator('.composer-layers .layer-item')).toHaveCount(3);
 }
 
@@ -336,9 +336,9 @@ test("AC-19.12.3/4 — A volume changed while playing is heard from that part's 
   await play(page);
 });
 
-// --- AC-19.12.4: the Arrangement's, never a Pattern's -------------------------------
+// --- AC-19.12.4: the Section's, never a Pattern's -------------------------------
 
-test("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume, and opening the Arrangement restores them", async ({ page }) => {
+test("AC-19.12.4/1 — Save section stores each part's instrument and volume, and opening the Section restores them", async ({ page }) => {
   await openApp(page);
   const mine = await band(page);
   await switchTo(page, 'sax').click();
@@ -346,17 +346,17 @@ test("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume
   await picker(row(page, DJEMBE)).selectOption('bass');
   await typeVolume(row(page, DJEMBE), 55);
   await typeVolume(row(page, BOSSA), 30);
-  await page.locator('.arrangement-save').click();
+  await page.locator('.section-save').click();
   await nameInDialog(page, 'Band');
-  const [stored] = await page.evaluate(() => window.__rm.arrangementStore.loadAll());
+  const [stored] = await page.evaluate(() => window.__rm.sectionStore.loadAll());
   expect(stored).toMatchObject({ name: 'Band', compositionId: mine, instrument: 'sax', volume: 70 });
   expect(stored.layers[0]).toMatchObject({ patternId: DJEMBE, muted: false, instrument: 'bass', volume: 55 });
   expect(stored.layers[1]).toMatchObject({ patternId: BOSSA, muted: false, volume: 30 });
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
 
-  // Another instrument is remembered meanwhile, so what returns is the Arrangement's and not the setting.
+  // Another instrument is remembered meanwhile, so what returns is the Section's and not the setting.
   await withSettings(page, { composerInstrument: 'guitar', melodicVoice: 'trumpet' });
-  await reopenArrangement(page);
+  await reopenSection(page);
   await expect(picker(onScreen(page))).toHaveValue('sax');
   await expect(switchTo(page, 'sax')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.composer-instrument .piano')).toBeVisible();
@@ -367,12 +367,12 @@ test("AC-19.12.4/1 — Save arrangement stores each part's instrument and volume
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
 });
 
-test('AC-19.12.4/2 — Changing an instrument or a volume in a saved Arrangement saves it in place at once, as every other change to its parts does', async ({ page }) => {
+test('AC-19.12.4/2 — Changing an instrument or a volume in a saved Section saves it in place at once, as every other change to its parts does', async ({ page }) => {
   await openApp(page);
   await band(page);
-  await page.locator('.arrangement-save').click();
+  await page.locator('.section-save').click();
   await nameInDialog(page, 'Band');
-  const stored = async () => (await page.evaluate(() => window.__rm.arrangementStore.loadAll()))[0];
+  const stored = async () => (await page.evaluate(() => window.__rm.sectionStore.loadAll()))[0];
   await expect(page.locator('.layers-saved')).toBeVisible();
   // A layer's volume: saved as it is set, with nothing pressed.
   await typeVolume(row(page, BOSSA), 45);
@@ -385,41 +385,41 @@ test('AC-19.12.4/2 — Changing an instrument or a volume in a saved Arrangement
   await expect.poll(async () => (await stored()).instrument).toBe('bass');
   await typeVolume(onScreen(page), 64);
   await expect.poll(async () => (await stored()).volume).toBe(64);
-  // In place: still the one Arrangement, never shown as unsaved.
-  expect(await page.evaluate(() => window.__rm.arrangementStore.loadAll().length)).toBe(1);
+  // In place: still the one Section, never shown as unsaved.
+  expect(await page.evaluate(() => window.__rm.sectionStore.loadAll().length)).toBe(1);
   expect((await stored()).id).toBe('arr_1');
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
   await expect(page.locator('.layers-saved')).toBeVisible();
   // And it is what a reload brings back.
   await page.reload();
   await expect(page.locator('.mode-switch')).toBeVisible();
-  await reopenArrangement(page);
+  await reopenSection(page);
   await expect(picker(onScreen(page))).toHaveValue('bass');
   await expect(entry(onScreen(page))).toHaveValue('64');
   await expect(picker(row(page, DJEMBE))).toHaveValue('trumpet');
   await expect(entry(row(page, BOSSA))).toHaveValue('45');
 });
 
-test("AC-19.12.4/3 — An Arrangement saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80", async ({ page }) => {
+test("AC-19.12.4/3 — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80", async ({ page }) => {
   await openApp(page);
   const mine = await band(page);
-  await page.locator('.arrangement-save').click();
+  await page.locator('.section-save').click();
   await nameInDialog(page, 'Bed');
   // The record as it was written before US-19.12: ids, mutes and the part on screen, nothing else.
   await page.evaluate(([id, djembe, bossa]) => {
-    const store = JSON.parse(localStorage.getItem('rm.arrangements.v1'));
-    store.arrangements = [{ id: 'arr_1', name: 'Bed', compositionId: id, layers: [{ patternId: djembe, muted: false }, { patternId: bossa, muted: false }], active: 0 }];
-    localStorage.setItem('rm.arrangements.v1', JSON.stringify(store));
+    const store = JSON.parse(localStorage.getItem('rm.sections.v1'));
+    store.sections = [{ id: 'arr_1', name: 'Bed', compositionId: id, layers: [{ patternId: djembe, muted: false }, { patternId: bossa, muted: false }], active: 0 }];
+    localStorage.setItem('rm.sections.v1', JSON.stringify(store));
   }, [mine, DJEMBE, BOSSA]);
   await withSettings(page, { composerInstrument: 'piano', melodicVoice: 'synth' });
-  await reopenArrangement(page);
+  await reopenSection(page);
   await expect(picker(onScreen(page))).toHaveValue('piano');
   await expect(page.locator('.composer-instrument .piano')).toBeVisible();
   await expect(picker(row(page, DJEMBE))).toHaveValue('synth');
   for (const item of [onScreen(page), row(page, DJEMBE), row(page, BOSSA)]) await expect(entry(item)).toHaveValue('80');
   // Opened, it is not "changed": nothing was stamped on it.
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
-  expect(await page.evaluate(() => window.__rm.arrangementStore.loadAll()[0])).toEqual({ id: 'arr_1', name: 'Bed', compositionId: mine, layers: [{ patternId: DJEMBE, muted: false }, { patternId: BOSSA, muted: false }], active: 0 });
+  expect(await page.evaluate(() => window.__rm.sectionStore.loadAll()[0])).toEqual({ id: 'arr_1', name: 'Bed', compositionId: mine, layers: [{ patternId: DJEMBE, muted: false }, { patternId: BOSSA, muted: false }], active: 0 });
 });
 
 test('AC-19.12.4/4 — Choosing an instrument or a volume changes no Pattern, and no Pattern export carries either', async ({ page }) => {
@@ -433,12 +433,12 @@ test('AC-19.12.4/4 — Choosing an instrument or a volume changes no Pattern, an
   await picker(row(page, DJEMBE)).selectOption('bass');
   await typeVolume(row(page, DJEMBE), 12);
   await typeVolume(row(page, BOSSA), 91);
-  await page.locator('.arrangement-save').click();
+  await page.locator('.section-save').click();
   await nameInDialog(page, 'Band');
   expect(await patterns()).toBe(before);
   expect(await page.evaluate(() => JSON.stringify(window.__rm.composer().draft))).toBe(draftBefore);
-  // Nothing outside the Arrangement and the settings holds either, and the Pattern as exported has neither.
-  const elsewhere = await page.evaluate(() => Object.keys(localStorage).filter((k) => k !== 'rm.settings.v1' && k !== 'rm.arrangements.v1').map((k) => localStorage.getItem(k)).join('\n'));
+  // Nothing outside the Section and the settings holds either, and the Pattern as exported has neither.
+  const elsewhere = await page.evaluate(() => Object.keys(localStorage).filter((k) => k !== 'rm.settings.v1' && k !== 'rm.sections.v1').map((k) => localStorage.getItem(k)).join('\n'));
   expect(elsewhere).not.toMatch(/"instrument"|"volume"/);
   const exported = await page.evaluate((id) => JSON.stringify(window.__rm.getState().pattern.id === id ? window.__rm.getState().pattern : null), mine);
   expect(exported).not.toBe('null');

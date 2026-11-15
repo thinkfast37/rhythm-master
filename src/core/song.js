@@ -1,7 +1,7 @@
 /**
- * Songs: an ordered list of Sections, each Section a Pattern and an ordered
+ * Songs: an ordered list of Chains, each Chain a Pattern and an ordered
  * list of entries `{ fill, repeats }` (US-18.1). One repeat is one harmonic
- * cycle of the Section's Pattern — the passes its progression needs to return
+ * cycle of the Chain's Pattern — the passes its progression needs to return
  * to its first chord (AC-2.7.2/1) — so an entry is in force for
  * `repeats × cyclePasses(pattern)` passes, and the next takes over from the
  * very next pass with nothing stopped or restarted (AC-18.1.3/1). After the
@@ -27,13 +27,13 @@ const clone = (song) => JSON.parse(JSON.stringify(song));
 
 function section(song, sectionIndex) {
   const s = song.sections[sectionIndex];
-  if (!s) throw new Error(`No Section at index ${sectionIndex}`);
+  if (!s) throw new Error(`No Chain at index ${sectionIndex}`);
   return s;
 }
 
 function entry(song, sectionIndex, entryIndex) {
   const e = section(song, sectionIndex).entries[entryIndex];
-  if (!e) throw new Error(`No entry at index ${entryIndex} in Section ${sectionIndex}`);
+  if (!e) throw new Error(`No entry at index ${entryIndex} in Chain ${sectionIndex}`);
   return e;
 }
 
@@ -88,7 +88,7 @@ const sectionPasses = (s, patternById) => {
   return s.entries.reduce((sum, e) => sum + entryPasses(pattern, e), 0);
 };
 
-/** Passes the whole Song plays once through: the sum over every Section's entries. */
+/** Passes the whole Song plays once through: the sum over every Chain's entries. */
 export function totalPasses(song, patternById) {
   return (song?.sections ?? []).reduce((sum, s) => sum + sectionPasses(s, patternById), 0);
 }
@@ -119,7 +119,7 @@ export function entryAt(song, patternById, loop) {
 }
 
 /**
- * The Pattern sounding on pass `loop`: the Section's Pattern with the entry's
+ * The Pattern sounding on pass `loop`: the Chain's Pattern with the entry's
  * fill in force — a playback overlay, never stored (AC-2.7.1/4). Null when the
  * Song is empty.
  */
@@ -135,19 +135,19 @@ export function validateSong(song) {
   if (!song || typeof song !== 'object') return ['Song must be an object'];
   if (typeof song.name !== 'string' || song.name.trim() === '') problems.push('Song name must be a non-empty string');
   if (!Array.isArray(song.sections) || song.sections.length < 1) {
-    problems.push('Song must have at least one Section');
+    problems.push('Song must have at least one Chain');
     return problems;
   }
   song.sections.forEach((s, i) => {
-    if (!s || typeof s.patternId !== 'string' || s.patternId === '') problems.push(`Section ${i} must name a Pattern`);
+    if (!s || typeof s.patternId !== 'string' || s.patternId === '') problems.push(`Chain ${i} must name a Pattern`);
     if (!s || !Array.isArray(s.entries)) {
-      problems.push(`Section ${i} must have an entries array`);
+      problems.push(`Chain ${i} must have an entries array`);
       return;
     }
     s.entries.forEach((e, j) => {
-      if (!e || !isFill(e.fill)) problems.push(`Section ${i} entry ${j} has an unknown fill: ${e?.fill}`);
+      if (!e || !isFill(e.fill)) problems.push(`Chain ${i} entry ${j} has an unknown fill: ${e?.fill}`);
       if (!e || !isRepeats(e.repeats)) {
-        problems.push(`Section ${i} entry ${j} repeats must be a whole number from ${MIN_REPEATS} to ${MAX_REPEATS}`);
+        problems.push(`Chain ${i} entry ${j} repeats must be a whole number from ${MIN_REPEATS} to ${MAX_REPEATS}`);
       }
     });
   });

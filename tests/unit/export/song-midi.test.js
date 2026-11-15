@@ -63,7 +63,7 @@ function harmonicPattern() {
 const library = (...patterns) => (id) => patterns.find((p) => p.id === id) ?? null;
 
 describe('export/midi for a Song (US-18.1)', () => {
-  it("AC-18.1.5/1 — The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Section once through, not looped", () => {
+  it("AC-18.1.5/1 — The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Chain once through, not looped", () => {
     const p = harmonicPattern();
     expect(cyclePasses(p)).toBe(3);
     const byId = library(p);
@@ -103,13 +103,13 @@ describe('export/midi for a Song (US-18.1)', () => {
     const tempo = trackEvents(bytes).find((e) => e.status === 0xff && e.type === 0x51);
     expect((tempo.data[0] << 16) | (tempo.data[1] << 8) | tempo.data[2]).toBe(500000);
 
-    // An empty Section is an empty file: no notes, ending at the start.
+    // An empty Chain is an empty file: no notes, ending at the start.
     const empty = buildSongMidi(createSong('Empty', 'p_1'), byId);
     expect(noteOns(empty)).toHaveLength(0);
     expect(endOfTrack(empty).tick).toBe(0);
   });
 
-  it("AC-18.1.5/3 — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Section", () => {
+  it("AC-18.1.5/3 — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Chain", () => {
     const p = harmonicPattern();
     const before = [...buildMidi(p)];
     const byId = library(p);
@@ -119,11 +119,11 @@ describe('export/midi for a Song (US-18.1)', () => {
     const songBytes = buildSongMidi(song, byId);
     expect([...buildMidi(p)]).toEqual(before);
     expect(p.harmony.arpeggio).toBe('up');
-    // The Pattern's file spans its own cycle, not the Section's fifteen passes.
+    // The Pattern's file spans its own cycle, not the Chain's fifteen passes.
     expect(noteOns(buildMidi(p))).toHaveLength(2 * cyclePasses(p));
     expect(noteOns(songBytes)).toHaveLength(2 * 15);
     expect(endOfTrack(buildMidi(p)).tick).toBe(3 * 4 * TICKS_PER_QUARTER);
-    // Its notes are the Pattern's own arpeggio, not the Section's first entry.
+    // Its notes are the Pattern's own arpeggio, not the Chain's first entry.
     const own = buildTimeline(p, 0).map((e) => e.pitch.midiNote);
     expect(noteOns(buildMidi(p)).slice(0, 2).map((e) => e.data[0])).toEqual(own);
   });
