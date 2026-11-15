@@ -28,7 +28,7 @@ import { TIME_SIGNATURES } from './core/meter.js';
 import { DEFAULT_SCALE } from './core/scales.js';
 import { MAX_MEASURES } from './core/pattern.js';
 import { canCondense, canHalve, condense, condenseTargets } from './core/condense.js';
-import { buildTimeline, buildBeatGrid } from './core/timeline.js';
+import { buildTimeline, buildBeatGrid, loopDurationSeconds } from './core/timeline.js';
 import {
   hasHarmony,
   setProgression,
@@ -824,9 +824,14 @@ function progressionChecklist() {
   }));
 }
 
-function syncTransport() {
+function syncTransport({ partBefore = null } = {}) {
   if (!state.isPlaying) return;
-  transport.update(scheduled(), state.settings);
+  const next = scheduled();
+  // An edit to the part on screen under layers is heard from that part's own
+  // next pass, every layer carrying on in place (AC-19.11.2/5): the cut falls
+  // on a pass boundary of the part as it sounded before the edit.
+  const boundary = partBefore && next?.layered ? loopDurationSeconds(partBefore) : null;
+  transport.update(next, state.settings, { boundary });
   // What the screen-off handover would play has changed with it (AC-4.1.15/5).
   refreshBackgroundAudio();
 }
@@ -1031,7 +1036,7 @@ function applyDraft(mutator, ...args) {
   state.composer.draft = next;
   persistDraft();
   rebuildVariation();
-  syncTransport();
+  syncTransport({ partBefore: draft });
   render();
   return next;
 }
