@@ -191,16 +191,26 @@ test('AC-19.12.2/4 — A part keeps its instrument when it is put on screen and 
   await play(page);
 });
 
-test('AC-19.12.2/5 — A layer newly added starts on the voice Practice has chosen', async ({ page }) => {
+test('AC-19.12.2/5 — A layer newly added starts on the voice Practice remembers for its Pattern, and on Piano when there is none', async ({ page }) => {
+  // Rewritten 2026-11-15 with the criterion (T504): Practice has no one voice to give any more.
   await openApp(page);
-  await withSettings(page, { melodicVoice: 'synth' });
   await loadFourBeats(page);
+  // Nothing remembered for Djembe 2: the layer starts on Piano.
+  await addLayer(page, DJEMBE);
+  await expect(picker(row(page, DJEMBE))).toHaveValue('piano');
+  expect((await composerState(page)).layers[0].instrument).toBe('piano');
+  await row(page, DJEMBE).locator('.layer-remove').click();
+  await expect(row(page, DJEMBE)).toHaveCount(0);
+  // Practice remembers Synth for it: added again, it starts there.
+  await page.evaluate((id) => window.__rm.overlayStore.setVoice(id, 'synth'), DJEMBE);
   await addLayer(page, DJEMBE);
   await expect(picker(row(page, DJEMBE))).toHaveValue('synth');
   expect((await composerState(page)).layers[0].instrument).toBe('synth');
-  // It is the layer's own from then on: Practice choosing another voice moves nothing.
-  await page.evaluate(() => window.__rm.handlers.onMelodicVoice('trumpet'));
+  // It is the layer's own from then on: Practice remembering another voice for the Pattern moves nothing.
+  await page.evaluate((id) => window.__rm.overlayStore.setVoice(id, 'trumpet'), DJEMBE);
+  await typeVolume(row(page, DJEMBE), 70);
   await expect(picker(row(page, DJEMBE))).toHaveValue('synth');
+  expect((await composerState(page)).layers[0].instrument).toBe('synth');
 });
 
 test('AC-19.12.2/6 — A percussive layer has no instrument of its own, and put on screen it takes the instrument of the part it replaces', async ({ page }) => {
@@ -355,7 +365,8 @@ test("AC-19.12.4/1 — Save section stores each part's instrument and volume, an
   await expect(page.locator('.layers-unsaved')).toHaveCount(0);
 
   // Another instrument is remembered meanwhile, so what returns is the Section's and not the setting.
-  await withSettings(page, { composerInstrument: 'guitar', melodicVoice: 'trumpet' });
+  await page.evaluate((id) => window.__rm.overlayStore.setVoice(id, 'trumpet'), DJEMBE);
+  await withSettings(page, { composerInstrument: 'guitar' });
   await reopenSection(page);
   await expect(picker(onScreen(page))).toHaveValue('sax');
   await expect(switchTo(page, 'sax')).toHaveAttribute('aria-pressed', 'true');
@@ -400,7 +411,7 @@ test('AC-19.12.4/2 — Changing an instrument or a volume in a saved Section sav
   await expect(entry(row(page, BOSSA))).toHaveValue('45');
 });
 
-test("AC-19.12.4/3 — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80", async ({ page }) => {
+test("AC-19.12.4/3 — A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice remembers for its Pattern or on Piano when there is none, and every volume at 80", async ({ page }) => {
   await openApp(page);
   const mine = await band(page);
   await page.locator('.section-save').click();
@@ -411,7 +422,9 @@ test("AC-19.12.4/3 — A Section saved before parts had instruments or volumes o
     store.sections = [{ id: 'arr_1', name: 'Bed', compositionId: id, layers: [{ patternId: djembe, muted: false }, { patternId: bossa, muted: false }], active: 0 }];
     localStorage.setItem('rm.sections.v1', JSON.stringify(store));
   }, [mine, DJEMBE, BOSSA]);
-  await withSettings(page, { composerInstrument: 'piano', melodicVoice: 'synth' });
+  // Practice remembers Synth for the melodic layer's Pattern (revised 2026-11-15, T504).
+  await page.evaluate((id) => window.__rm.overlayStore.setVoice(id, 'synth'), DJEMBE);
+  await withSettings(page, { composerInstrument: 'piano' });
   await reopenSection(page);
   await expect(picker(onScreen(page))).toHaveValue('piano');
   await expect(page.locator('.composer-instrument .piano')).toBeVisible();

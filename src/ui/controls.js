@@ -41,6 +41,7 @@ import { placeHelp } from './help.js';
 import { surfaceFor } from '../core/goals.js';
 import { phraseLengthOf, canAddVariation } from '../core/variations.js';
 import { VOICES, normaliseVoice, instrumentOf, FETCHED } from '../core/voice.js';
+import { PERCUSSION_MODES, normalisePercussion } from '../core/drums.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
@@ -416,6 +417,8 @@ function renderHeaderInto(root, pattern, state, handlers) {
     root.appendChild(renderSoundModeSwitch(pattern, handlers));
     // The melodic voice beside it, while there is a melody to voice (AC-2.13.1/1).
     if (pattern.soundMode === 'melodic') root.appendChild(renderVoiceSwitch(state, handlers));
+    // And for a rhythm, what plays it: its accent tones or the drum kit (AC-2.18.1/1).
+    else root.appendChild(renderPercussionSwitch(state, handlers));
   }
 
   // The Rating lives here as well as on the library row (AC-6.1.7): rating is
@@ -512,13 +515,42 @@ const VOICE_TITLES = {
   drums: 'A synthesised drum kit: each note is the drum General MIDI gives it, Kick on 36, Snare on 38.',
 };
 
+const PERCUSSION_TITLES = {
+  accents: 'A tone for each Accent Level, as a Percussive Pattern has always sounded',
+  drums: 'A drum for each Accent Level: Kick on Strong, Snare on Medium, Floor tom on Weak',
+};
+
+/**
+ * Accents | Drum kit (AC-2.18.1): what plays a Percussive Pattern's notes.
+ * Remembered beside the Pattern, so tapping one never touches it (/2).
+ */
+function renderPercussionSwitch(state, handlers) {
+  const mode = normalisePercussion(state.percussion);
+  const wrap = el('div', 'percussion-sound');
+  const group = el('div', 'percussion-switch', { role: 'group' });
+  group.setAttribute('aria-label', 'Percussion sound');
+  group.dataset.percussion = mode;
+  for (const { id, label } of PERCUSSION_MODES) {
+    const b = el('button', 'mode-option', { type: 'button', textContent: label, title: PERCUSSION_TITLES[id] });
+    b.dataset.action = 'set-percussion';
+    b.dataset.percussion = id;
+    b.setAttribute('aria-pressed', String(mode === id));
+    b.addEventListener('click', () => {
+      if (mode !== id) handlers.onPercussion?.(id);
+    });
+    group.appendChild(b);
+  }
+  wrap.appendChild(group);
+  return wrap;
+}
+
 /**
  * Every instrument (AC-2.13.1): the voice melodic notes sound with. An
  * app preference, so tapping one never touches the Pattern (/2). The piano's
  * loading state and its failure, with Retry, sit beside it (AC-2.13.4/2, /3).
  */
 function renderVoiceSwitch(state, handlers) {
-  const voice = normaliseVoice(state.settings?.melodicVoice);
+  const voice = normaliseVoice(state.voice);
   const wrap = el('div', 'melodic-voice');
   const group = el('div', 'voice-switch', { role: 'group' });
   group.setAttribute('aria-label', 'Melodic voice');

@@ -139,6 +139,8 @@ import * as guitar from './audio/guitar.js';
 import * as piano from './audio/pianoSamples.js';
 import { resolveVoice, normaliseVoice, viewOf, FETCHED, DEFAULT_INSTRUMENT, normaliseVolume, volumeGain, hasFixedNotes } from './core/voice.js';
 import * as instruments from './audio/instruments.js';
+import { playDrum } from './audio/drums.js';
+import { autoDrumNote, normalisePercussion } from './core/drums.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
@@ -324,6 +326,14 @@ const state = {
    */
   store: { hasStore: false, entitlement: { level: 'lifetime', until: null } },
 };
+
+// What the Pattern header's two sound switches show. Derived from the open
+// Pattern at every read rather than stored, so no path that opens a Pattern
+// can leave them behind (AC-2.13.1/2, AC-2.18.1/2).
+Object.defineProperties(state, {
+  voice: { enumerable: true, get: () => practiceVoice() },
+  percussion: { enumerable: true, get: () => practicePercussion() },
+});
 
 const listeners = new Set();
 
@@ -569,6 +579,7 @@ async function refreshBackgroundAudio() {
     settings: state.settings,
     sampleRate: 44100,
     prepareMelodic: renderVoice(),
+    playUnpitched: (ctx, destination, event, when, level) => soundUnpitched(ctx, destination, event, when, level, 'render'),
     gainOf,
   });
   // A later render started while this one ran: that one owns the element.
@@ -635,7 +646,22 @@ function activeInstrument() {
  * saved before US-19.12 — the voice Practice has chosen (AC-19.12.4/3).
  */
 function layerInstrument(layer) {
-  return normaliseVoice(layer.instrument ?? state.settings.melodicVoice);
+  return normaliseVoice(layer.instrument ?? (layer.patternId ? overlayStore.voiceFor(layer.patternId) : undefined));
+}
+
+/**
+ * The voice Practice plays the open Pattern's melodic notes with: the one
+ * chosen for this Pattern, and Piano until one is (AC-2.13.1/2).
+ */
+function practiceVoice() {
+  const id = state.pattern?.id;
+  return normaliseVoice(id ? overlayStore.voiceFor(id) : undefined);
+}
+
+/** How the open Percussive Pattern sounds in Practice: Accents until Drum kit is chosen (AC-2.18.1). */
+function practicePercussion() {
+  const id = state.pattern?.id;
+  return normalisePercussion(id ? overlayStore.percussionFor(id) : undefined);
 }
 
 /**
@@ -644,12 +670,14 @@ function layerInstrument(layer) {
  * next note rather than its next pass (AC-19.12.2/2, AC-19.12.3/4). Kept
  * until the layers or the Practice voice change: this is read at every note.
  */
-let soundsMemo = { layers: null, voice: null, sounds: [] };
+let soundsMemo = { layers: null, voices: null, sounds: [] };
 function layerSounds() {
   const layers = state.composer.layers ?? [];
-  const voice = state.settings.melodicVoice;
-  if (soundsMemo.layers !== layers || soundsMemo.voice !== voice) {
-    soundsMemo = { layers, voice, sounds: resolvedLayers().map((l) => ({ instrument: l.instrument, volume: l.volume })) };
+  // A layer that names no instrument takes the voice remembered for its Pattern,
+  // so the memo is as old as that store too.
+  const voices = overlayStore.loadAll();
+  if (soundsMemo.layers !== layers || soundsMemo.voices !== voices) {
+    soundsMemo = { layers, voices, sounds: resolvedLayers().map((l) => ({ instrument: l.instrument, volume: l.volume })) };
   }
   return soundsMemo.sounds;
 }
@@ -658,7 +686,7 @@ function layerSounds() {
 function instrumentFor(event) {
   if (event.composition !== false) return currentVoice();
   const live = layerSounds()[event.layer - 1];
-  return normaliseVoice(live?.instrument ?? event.instrument ?? state.settings.melodicVoice);
+  return normaliseVoice(live?.instrument ?? event.instrument);
 }
 
 /** The multiplier an event's part puts on its level: 1 in Practice, the part's volume in the Composer (AC-19.12.3/3). */
@@ -993,9 +1021,10 @@ function addLayerById(id) {
     render();
     return false;
   }
-  // A new layer that can sound a pitched note starts on the voice Practice has
-  // chosen (AC-19.12.2/5); a percussive one has no instrument to start on.
-  const sound = layerKind(pattern) === 'rhythm' ? {} : { instrument: normaliseVoice(state.settings.melodicVoice) };
+  // A new layer that can sound a pitched note starts on the voice Practice
+  // remembers for its Pattern, Piano when there is none (AC-19.12.2/5); a
+  // percussive one has no instrument to start on.
+  const sound = layerKind(pattern) === 'rhythm' ? {} : { instrument: normaliseVoice(overlayStore.voiceFor(id)) };
   const next = addLayer({ ...createSection('', c.savedId ?? ''), layers: c.layers }, id, sound);
   state.composer = { ...c, layers: next.layers, notice: null, pickingLayer: false };
   ensureSamplesLoaded();
@@ -1118,7 +1147,7 @@ function currentVoice() {
   return resolveVoice({
     composer: state.composer.mode === 'composer',
     instrument: activeInstrument(),
-    voice: state.settings.melodicVoice,
+    voice: practiceVoice(),
   });
 }
 
@@ -1136,6 +1165,25 @@ function soundMelodic(ctx, destination, event, when) {
 }
 
 /** Test seam: which voice sounded each melodic event, newest last (AC-19.6.1/2, AC-2.13.2). */
+/** Test seam: each unpitched note Practice sounded, as an accent tone or as the drum its accent names (US-2.18). */
+const percussionLog = [];
+
+/**
+ * Sound one unpitched note. In Practice a Percussive Pattern on Drum kit plays
+ * the drum its Accent Level names, through the synthesised kit (AC-2.18.2);
+ * everything else — Accents, and every percussive layer in the Composer —
+ * plays the accent tone it always has.
+ */
+function soundUnpitched(ctx, destination, event, when, level = 1, via = 'live') {
+  const kit = state.composer.mode !== 'composer' && practicePercussion() === 'drums';
+  const midiNote = kit ? autoDrumNote(event.accent) : null;
+  // `via` tells the live transport's notes from the screen-off render's (AC-2.18.2/4).
+  percussionLog.push({ via, mode: midiNote === null ? 'accents' : 'drums', accent: event.accent, midi: midiNote });
+  if (percussionLog.length > 500) percussionLog.shift();
+  if (midiNote === null) return playPercussive(ctx, destination, event.accent, when, level);
+  return playDrum(ctx, destination, { ...event, gain: level, pitch: { midiNote } }, when);
+}
+
 const voiceLog = [];
 /** Test seam: each melodic event as `voiceLog` has it, with the gain its part's volume put on it (AC-19.12.3). */
 const levelLog = [];
@@ -2724,8 +2772,22 @@ const handlers = {
    * locked screen hears the new voice too (AC-2.13.5).
    */
   onMelodicVoice(voice) {
-    state.settings = settingsStore.save({ melodicVoice: normaliseVoice(voice) });
+    // Remembered for the open Pattern alone, beside it rather than on it (AC-2.13.1/2).
+    if (!state.pattern?.id) return;
+    overlayStore.setVoice(state.pattern.id, normaliseVoice(voice));
     ensurePianoLoaded();
+    if (state.isPlaying) refreshBackgroundAudio();
+    render();
+  },
+
+  /**
+   * Accents | Drum kit (AC-2.18.1): how the open Percussive Pattern sounds,
+   * remembered for it alone and never Pattern content (/2). Heard from the
+   * next note (/3), and the screen-off render is redone to match (AC-2.18.2/4).
+   */
+  onPercussion(mode) {
+    if (!state.pattern?.id) return;
+    overlayStore.setPercussion(state.pattern.id, normalisePercussion(mode));
     if (state.isPlaying) refreshBackgroundAudio();
     render();
   },
@@ -3952,6 +4014,7 @@ const transport = createTransport({
     // Every part sounds with its own instrument, at its own volume (AC-19.11.2/2).
     soundMelodic(ctx, destination, event, when);
   },
+  playUnpitched: soundUnpitched,
   gainOf,
   onPosition(position) {
     // Under layers the cursor is the composition's (AC-19.11.2/5): a layer's
@@ -4356,6 +4419,7 @@ if (typeof window !== 'undefined') {
     composerUnsaved: () => composerUnsaved(state.composer),
     /** Which voice sounded each melodic event (AC-19.6.1/2, AC-19.7.1/2). */
     voiceLog: () => voiceLog.slice(),
+    percussionLog: () => percussionLog.slice(),
     /** Each melodic event with the gain its part's volume gave it (AC-19.12.3). */
     levelLog: () => levelLog.slice(),
     /** The notes tapped on the instrument, apart from anything the transport played (AC-19.3.4). */

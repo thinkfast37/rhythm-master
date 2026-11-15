@@ -43,7 +43,7 @@ const CUT_EPSILON = 1e-6;
 /** The same safety offset start() uses, reused when a stall re-anchors. */
 const START_OFFSET_SECONDS = 0.06;
 
-export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null, gainOf = null } = {}) {
+export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null, playUnpitched = null, gainOf = null } = {}) {
   let ctx = null;
   let master = null;
   /** The polling cadence in force, or null when nothing is running
@@ -116,6 +116,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
         }
 
         if (event.pitch && playMelodic) playMelodic(ctx, master, event, when);
+        // An unpitched note is an accent tone, unless the caller sounds it another way (AC-2.18.2/2).
+        else if (playUnpitched) playUnpitched(ctx, master, event, when, gainOf ? gainOf(event) : 1);
         else playPercussive(ctx, master, event.accent, when, gainOf ? gainOf(event) : 1);
 
         pendingVisuals.push({ when, position: { ...event, loop: loopOffset + nextLoop } });

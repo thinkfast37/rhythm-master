@@ -74,36 +74,53 @@ test('AC-2.13.1/1 — While the Pattern is Melodic, the Pattern header shows a v
   await expect(page.locator('.voice-switch')).toHaveCount(0);
 });
 
-test('AC-2.13.1/2 — Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it', async ({ page }) => {
+test('AC-2.13.1/2 — Piano is the voice of a Pattern until another is chosen for it; the choice is remembered for that Pattern alone across loads, and is never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it', async ({ page }) => {
+  // Rewritten 2026-11-15 with the criterion (T504): it proved one app-wide voice,
+  // the same on every Pattern, which the revision retires.
   await openApp(page);
-  // A shipped Melodic Pattern: choosing a voice is not an edit to it.
-  const shipped = await page.evaluate(() => window.__rm.seedStore.loadAll().find((p) => p.soundMode === 'melodic').id);
+  // A shipped Melodic Pattern: on Piano until a voice is chosen, and choosing one is not an edit to it.
+  const [shipped, other] = await page.evaluate(() => window.__rm.seedStore.loadAll().filter((p) => p.soundMode === 'melodic').slice(0, 2).map((p) => p.id));
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), shipped);
   await expect(page.locator('.voice-switch')).toBeVisible();
-  expect(await page.evaluate(() => window.__rm.getState().settings.melodicVoice)).toBe('piano');
   await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => window.__rm.currentVoice())).toBe('piano');
   const before = await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern));
 
   await voiceButton(page, 'guitar').click();
   await expect(page.locator('.dialog')).toHaveCount(0);
   await expect(voiceButton(page, 'guitar')).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => window.__rm.currentVoice())).toBe('guitar');
   expect(await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern))).toBe(before);
   expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(false);
   expect(await page.evaluate(() => window.__rm.getState().canUndo ?? window.__rm.canUndo())).toBe(false);
 
-  // The same on another Pattern, and remembered across a reload.
+  // That Pattern alone: another shipped Pattern, and a new one of the musician's own, are on Piano.
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), other);
+  await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
   await melodicPattern(page);
-  await expect(voiceButton(page, 'guitar')).toHaveAttribute('aria-pressed', 'true');
+  await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
+  // An owned Pattern remembers its own as a shipped one does.
+  const owned = await page.evaluate(() => window.__rm.getState().pattern.id);
+  await voiceButton(page, 'sax').click();
+  const ownedBefore = await page.evaluate((id) => JSON.stringify(window.__rm.patternStore.findById(id)), owned);
+
+  // Remembered across a reload, each for its own Pattern.
   await page.reload();
   await expect(page.locator('.mode-switch')).toBeVisible();
   await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), shipped);
   await expect(voiceButton(page, 'guitar')).toHaveAttribute('aria-pressed', 'true');
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, false), other);
+  await expect(voiceButton(page, 'piano')).toHaveAttribute('aria-pressed', 'true');
+  await page.evaluate((id) => window.__rm.handlers.onOpen(id, true), owned);
+  await expect(voiceButton(page, 'sax')).toHaveAttribute('aria-pressed', 'true');
 
-  // Never Pattern content: no stored Pattern and no export carries it.
-  const stores = await page.evaluate(() => Object.keys(localStorage).filter((k) => k !== 'rm.settings.v1').map((k) => localStorage.getItem(k)).join('\n'));
-  expect(stores).not.toMatch(/melodicVoice|"voice"/);
+  // Never Pattern content: it is kept beside the Patterns, and no stored Pattern or export carries it.
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('rm.overlays.v1')).byPatternId)).toMatchObject({ [shipped]: { voice: 'guitar' }, [owned]: { voice: 'sax' } });
+  expect(await page.evaluate((id) => JSON.stringify(window.__rm.patternStore.findById(id)), owned)).toBe(ownedBefore);
+  expect(await page.evaluate(() => localStorage.getItem('rm.patterns.v1'))).not.toMatch(/"voice"|melodicVoice/);
+  expect(await page.evaluate(() => localStorage.getItem('rm.settings.v1') ?? '')).not.toMatch(/melodicVoice/);
   const exported = await page.evaluate(() => JSON.stringify(window.__rm.getState().pattern));
-  expect(exported).not.toMatch(/melodicVoice/);
+  expect(exported).not.toMatch(/"voice"|melodicVoice/);
 });
 
 test('AC-2.13.1/3 — Choosing a voice while playing changes it from the next melodic note, with no restart', async ({ page }) => {
@@ -286,7 +303,8 @@ test('AC-2.13.2/4 — Percussive notes and the metronome click sound the same wh
 test("AC-2.13.3/1 — A part's melodic notes sound through the instrument chosen for that part, whatever voice Practice has chosen", async ({ page }) => {
   await openApp(page);
   for (const voice of ['piano', 'synth', 'guitar', 'sax']) {
-    await withSettings(page, { melodicVoice: voice, composerInstrument: 'guitar' });
+    await page.evaluate((v) => window.__rm.handlers.onMelodicVoice(v), voice);
+    await withSettings(page, { composerInstrument: 'guitar' });
     await enterComposer(page);
     await expect(page.locator('.fretboard')).toBeVisible();
     await fret(page, 0, 0).click();
@@ -309,7 +327,8 @@ test('AC-2.13.3/2 — Synth is an instrument of its own: a part on Piano sounds 
     ['guitar', 'piano', 'piano'],
     ['guitar', 'synth', 'synth'],
   ]) {
-    await withSettings(page, { melodicVoice: voice, composerInstrument: instrument });
+    await page.evaluate((v) => window.__rm.handlers.onMelodicVoice(v), voice);
+    await withSettings(page, { composerInstrument: instrument });
     await enterComposer(page);
     await expect(page.locator('.piano')).toBeVisible();
     await key(page, 60).click();
@@ -458,8 +477,9 @@ test("AC-2.13.4/1 — The recordings are served from the app's own origin, and n
   const fresh = await page.context().newPage();
   const freshUrls = watchPiano(fresh);
   await openApp(fresh);
-  await withSettings(fresh, { melodicVoice: 'synth' });
   await melodicPattern(fresh);
+  // On another voice first (a Pattern's voice is its own since AC-2.13.1/2's revision), so that choosing Piano is the moment.
+  await voiceButton(fresh, 'synth').click();
   expect(freshUrls).toHaveLength(0);
   await voiceButton(fresh, 'piano').click();
   await expect.poll(() => freshUrls.length, { timeout: 15000 }).toBe(RECORDINGS);

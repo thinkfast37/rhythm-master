@@ -82,3 +82,25 @@ export function drumName(midi) {
 export function closesHat(midi) {
   return HAT_CLOSERS.includes(midi);
 }
+
+/* --- a Percussive Pattern on the kit (US-2.18) ------------------------------- */
+
+/** How a Percussive Pattern sounds in Practice: its accent tones, or the kit (AC-2.18.1/1). */
+export const PERCUSSION_MODES = Object.freeze([
+  Object.freeze({ id: 'accents', label: 'Accents' }),
+  Object.freeze({ id: 'drums', label: 'Drum kit' }),
+]);
+export const DEFAULT_PERCUSSION = 'accents';
+
+/** A stored choice as one of the two, Accents for anything else. */
+export function normalisePercussion(mode) {
+  return mode === 'drums' ? 'drums' : DEFAULT_PERCUSSION;
+}
+
+/** The drum each Accent Level plays: Strong the Kick, Medium the Snare, Weak the Floor tom (AC-2.18.2/1). */
+const AUTO_DRUMS = Object.freeze({ 3: 36, 2: 38, 1: 43 });
+
+/** The MIDI note of the drum an Accent Level plays on Drum kit, or null for a Slot that is off. */
+export function autoDrumNote(accent) {
+  return AUTO_DRUMS[accent] ?? null;
+}

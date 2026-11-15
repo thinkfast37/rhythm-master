@@ -54,3 +54,23 @@ describe('core/drums — the map', () => {
     expect(Object.keys(DRUMS).map(Number).filter(closesHat)).toEqual([42, 44]);
   });
 });
+
+describe('core/drums — a Percussive Pattern on the kit (US-2.18)', () => {
+  it('AC-2.18.2/1 — A Strong note is the Kick on MIDI note 36, a Medium note the Snare on 38 and a Weak note the Floor tom on 43', async () => {
+    const { autoDrumNote, drumName, normalisePercussion, PERCUSSION_MODES, DEFAULT_PERCUSSION } = await import('../../../src/core/drums.js');
+    const { STRONG, MEDIUM, WEAK, OFF } = await import('../../../src/core/accents.js');
+    expect(autoDrumNote(STRONG)).toBe(36);
+    expect(autoDrumNote(MEDIUM)).toBe(38);
+    expect(autoDrumNote(WEAK)).toBe(43);
+    expect([STRONG, MEDIUM, WEAK].map((a) => drumName(autoDrumNote(a)))).toEqual(['Kick', 'Snare', 'Floor tom']);
+    // A Slot that is off has no drum.
+    expect(autoDrumNote(OFF)).toBeNull();
+    expect(autoDrumNote(undefined)).toBeNull();
+    // The two ways a rhythm sounds, Accents until the kit is chosen.
+    expect(PERCUSSION_MODES.map((m) => [m.id, m.label])).toEqual([['accents', 'Accents'], ['drums', 'Drum kit']]);
+    expect(DEFAULT_PERCUSSION).toBe('accents');
+    expect(normalisePercussion(undefined)).toBe('accents');
+    expect(normalisePercussion('timpani')).toBe('accents');
+    expect(normalisePercussion('drums')).toBe('drums');
+  });
+});

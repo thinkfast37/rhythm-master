@@ -319,8 +319,12 @@ cannot live on the Pattern, so they live here, keyed by Pattern id:
                                     // still applied on load, as overrides
       "swingAmount": 30,            // remembered Pattern-wide playback swing (AC-4.4.12), 0–100
       "swingFeel": "sixteenth",     // remembered playback swing feel (AC-4.4.10)
-      "keptFills": ["root-fifth", "alberti"]  // fills the Composer kept for this Pattern (AC-2.8.1),
+      "keptFills": ["root-fifth", "alberti"], // fills the Composer kept for this Pattern (AC-2.8.1),
                                               // arpeggio ids from the catalogue, in the order kept
+      "voice": "guitar",            // the instrument Practice plays this Pattern's melodic notes with
+                                    // (AC-2.13.1/2), an instrument id; absent means Piano
+      "percussion": "drums"         // "drums" when a Percussive Pattern is on Drum kit (AC-2.18.1/2);
+                                    // absent means Accents
     }
   }
 }
@@ -400,7 +404,7 @@ as the defaults shown, so no migration runs. The Composer's *draft* — a compos
 that have no note yet — is held in memory only and is never written to any store (research.md
 D-016); the stores hold what was last complete.
 
-`melodicVoice` was added 2026-10-24 with US-2.13. It is a preference about how melodic notes
+*(2026-11-15, T504: `melodicVoice` is no longer read. Practice's voice is each Pattern's own, kept in `rm.overlays.v1` as `voice` — for owned Patterns too, keyed by their id — and Piano where there is none (AC-2.13.1/2). The setting is left where it lies in stored data and is never written again.)* `melodicVoice` was added 2026-10-24 with US-2.13. It is a preference about how melodic notes
 sound, never about a Pattern: no Pattern records it, and no Pattern export carries it (AC-2.13.1/2).
 The Composer reads it only in the Piano view (AC-2.13.3). An absent value, which is every store
 written before that date, reads as `"piano"`, so no migration runs. An unrecognised value also reads

@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1173 across 71 User Stories
+**Criteria**: 1180 across 72 User Stories
 
-**Coverage**: 1047 of 1173 criteria proven (89.3%)
+**Coverage**: 1054 of 1180 criteria proven (89.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1047 | 89.3% |
-| 🟠 Gap — MEDIUM | 50 | 4.3% |
-| 🟡 Gap — LOW | 76 | 6.5% |
+| 🟢 Proven | 1054 | 89.3% |
+| 🟠 Gap — MEDIUM | 50 | 4.2% |
+| 🟡 Gap — LOW | 76 | 6.4% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -128,6 +128,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.13 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-19.14 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-19.15 | 10 | **10** | · | · | · | · | · |
+| 🟢 US-2.18 | 7 | **7** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1057,7 +1058,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.12 | `AC-2.12.3/4` | Changing the list, or switching between All and My list, while playing applies without a restart: the entry in force keeps its place and plays its repeats from the pass it is on before the cycle moves on through what it now steps through | P-063 | T394, T428, T434, T475 (4/4 done) | T395, T429, T435, T476 (4/4 done) | `harmony.test.js`, `cycle-list.spec.js` | 🟢 OK |
 | US-2.12 | `AC-2.12.3/5` 🖵 | What is rendered for the screen off is the whole cycle of the list: a cycle on My list repeats after as many entries as the list holds | P-063 | T394, T428, T434, T475 (4/4 done) | T395, T429, T435, T476 (4/4 done) | `cycle-list.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.1/1` 🖵 | While the Pattern is Melodic, the Pattern header shows a voice switch — Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute, Drums — beside the Sound Mode switch, the voice in force pressed; while it is Percussive the switch is not shown | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
-| US-2.13 | `AC-2.13.1/2` 🖵 | Piano is the default; the choice is one app preference, the same on every Pattern and remembered across loads, and never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
+| US-2.13 | `AC-2.13.1/2` 🖵 | Piano is the voice of a Pattern until another is chosen for it; the choice is remembered for that Pattern alone across loads, and is never Pattern content — choosing a voice never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `storage.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.1/3` 🖵 | Choosing a voice while playing changes it from the next melodic note, with no restart | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/1` | Under Piano, a melodic note sounds through the Salamander Grand recording nearest its MIDI note, re-pitched to that note, louder at each stronger Accent Level | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `pianoSamples.test.js`, `voice.test.js`, `voice.spec.js` | 🟢 OK |
 | US-2.13 | `AC-2.13.2/2` | Under Synth, a melodic note sounds through the ported synthesis chain | P-064 | T422, T423 (2/2 done) | T424 (1/1 done) | `voice.test.js`, `voice.spec.js` | 🟢 OK |
@@ -1259,7 +1260,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.12 | `AC-19.12.2/2` 🖵 | Choosing an instrument for a part changes that part alone, and is heard from its next note with nothing stopped or restarted | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.2/3` 🖵 | The picker of the part on screen and the record bar's instrument switch are one choice: setting either shows in the other, and the instrument view follows it | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.2/4` 🖵 | A part keeps its instrument when it is put on screen and when it leaves: the part left sounds as it did, and the instrument view becomes the one the part now on screen is played on | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
-| US-19.12 | `AC-19.12.2/5` 🖵 | A layer newly added starts on the voice Practice has chosen | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
+| US-19.12 | `AC-19.12.2/5` 🖵 | A layer newly added starts on the voice Practice remembers for its Pattern, and on Piano when there is none | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.2/6` 🖵 | A percussive layer has no instrument of its own, and put on screen it takes the instrument of the part it replaces | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.3/1` 🖵 | In the Layers section every part, a percussive layer included, carries a volume slider and a number box showing the same value, from 1 to 100, 80 until it is changed | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.3/2` 🖵 | Moving the slider or typing a number sets both, and a typed number outside 1 to 100 is held to the nearest end | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `voice.test.js`, `part-sound.spec.js` | 🟢 OK |
@@ -1267,7 +1268,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.12 | `AC-19.12.3/4` 🖵 | A volume changed while playing is heard from that part's next note with nothing stopped or restarted, on that part alone, and Mute silences a part whatever its volume | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.4/1` | Save section stores each part's instrument and volume, and opening the Section restores them | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `section.test.js`, `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.4/2` | Changing an instrument or a volume in a saved Section saves it in place at once, as every other change to its parts does | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
-| US-19.12 | `AC-19.12.4/3` 🖵 | A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice has chosen, and every volume at 80 | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `section.test.js`, `part-sound.spec.js` | 🟢 OK |
+| US-19.12 | `AC-19.12.4/3` 🖵 | A Section saved before parts had instruments or volumes opens with the part on screen on the Composer's remembered instrument, every other part on the voice Practice remembers for its Pattern or on Piano when there is none, and every volume at 80 | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `section.test.js`, `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.4/4` | Choosing an instrument or a volume changes no Pattern, and no Pattern export carries either | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.5/1` 🖵 | Electric guitar, Bass, Sax and Trumpet are the FluidR3_GM `overdriven_guitar`, `electric_bass_finger`, `alto_sax` and `trumpet` samples, each requested once, when a part in the Composer is first set to it or at the first melodic note in Practice under it, and never on page load | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `soundfont.test.js`, `voice.test.js`, `part-sound.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.5/2` 🖵 | While an instrument's samples load, or when they cannot, its notes sound through the synth; the record bar in the Composer and the voice switch in Practice say which instrument is loading, and a failure shows a non-blocking notice with Retry, which requests the samples again | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `soundfont.test.js`, `part-sound.spec.js` | 🟢 OK |
@@ -1306,3 +1307,10 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.15 | `AC-19.15.3/2` | After a transposition every degree, chromatic ones included, every syllable and every Accent Level is as it was | P-077 | T501 (1/1 done) | T502 (1/1 done) | `composer.test.js` | 🟢 OK |
 | US-19.15 | `AC-19.15.3/3` | A direction that would carry a note past the lowest or highest octave a note can be stored in is refused with the reason, and nothing is squashed to fit | P-077 | T501 (1/1 done) | T502 (1/1 done) | `composer.test.js` | 🟢 OK |
 | US-19.15 | `AC-19.15.3/4` 🖵 | Choosing Transpose up or Transpose down sets the Key and moves the notes on screen, a saved composition is saved as it now is, and a direction that is refused is not offered, the question saying why | P-077 | T501 (1/1 done) | T502 (1/1 done) | `key-change.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.1/1` 🖵 | While the Pattern is Percussive, the Pattern header shows a percussion switch, Accents and Drum kit, beside the Sound Mode switch, Accents pressed until Drum kit is chosen; while it is Melodic the switch is not shown | P-078 | T504 (1/1 done) | T505 (1/1 done) | `percussion.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.1/2` 🖵 | The choice is remembered for that Pattern alone across loads, and is never Pattern content: choosing never prompts on a shipped Pattern, never changes the Pattern, and no Pattern export carries it | P-078 | T504 (1/1 done) | T505 (1/1 done) | `storage.test.js`, `percussion.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.1/3` 🖵 | Choosing Accents or Drum kit while playing changes the sound from the next note, with no restart | P-078 | T504 (1/1 done) | T505 (1/1 done) | `percussion.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.2/1` 🖵 | A Strong note is the Kick on MIDI note 36, a Medium note the Snare on 38 and a Weak note the Floor tom on 43 | P-078 | T504 (1/1 done) | T505 (1/1 done) | `drums.test.js`, `percussion.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.2/2` 🖵 | On Drum kit every note of a Percussive Pattern sounds its drum through the synthesised kit of AC-19.13.1 with no audio file requested, and on Accents every note sounds its accent tone as it always has | P-078 | T504 (1/1 done) | T505 (1/1 done) | `percussion.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.2/3` 🖵 | The metronome click is the same on Accents and on Drum kit | P-078 | T504 (1/1 done) | T505 (1/1 done) | `scheduler.test.js`, `percussion.spec.js` | 🟢 OK |
+| US-2.18 | `AC-2.18.2/4` 🖵 | The offline render of a Percussive Pattern on Drum kit sounds the drums, and on Accents the accent tones | P-078 | T504 (1/1 done) | T505 (1/1 done) | `backgroundRender.test.js`, `percussion.spec.js` | 🟢 OK |

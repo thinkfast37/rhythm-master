@@ -114,7 +114,7 @@ export function encodeWav(buffer) {
  *
  * The caller revokes `url` when it is done with it.
  */
-export async function renderCycle({ patternAt, passes, settings, sampleRate, prepareMelodic = null, gainOf = null }) {
+export async function renderCycle({ patternAt, passes, settings, sampleRate, prepareMelodic = null, playUnpitched = null, gainOf = null }) {
   const Offline = globalThis.OfflineAudioContext ?? globalThis.webkitOfflineAudioContext;
   if (typeof Offline !== 'function' || passes < 1) return null;
 
@@ -162,6 +162,7 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate, pre
         // A part's volume, where it has one (AC-19.12.5/4).
         const level = gainOf ? gainOf(event) : 1;
         if (event.pitch) melodicVoice(ctx, null, level === 1 ? event : { ...event, gain: level }, when);
+        else if (playUnpitched) playUnpitched(ctx, null, event, when, level);
         else playPercussive(ctx, null, event.accent, when, level);
       }
       if (settings.metronomeEnabled) {
