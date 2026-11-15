@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildMidi, buildSongMidi, midiFilename, songMidiFilename, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
+import { buildMidi, buildChainMidi, midiFilename, chainMidiFilename, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
 import { create, cycleAccent, setPitch, setSwingAmount } from '../../../src/core/pattern.js';
 import { buildTimeline, loopDurationSeconds } from '../../../src/core/timeline.js';
 import { setProgression, setChange, cyclePasses, withArpeggio, setArpeggio } from '../../../src/core/harmony.js';
-import { createSong, addEntry, totalPasses } from '../../../src/core/song.js';
+import { createChain, addEntry, totalPasses } from '../../../src/core/chain.js';
 
 /** Read a big-endian chunk length and the bytes of the named chunk. */
 function findChunk(bytes, id) {
@@ -62,18 +62,18 @@ function harmonicPattern() {
 
 const library = (...patterns) => (id) => patterns.find((p) => p.id === id) ?? null;
 
-describe('export/midi for a Song (US-18.1)', () => {
+describe('export/midi for a Chain (US-18.1)', () => {
   it("AC-18.1.5/1 — The file holds every entry's passes in order — each entry for its repeats, at the tempo, swing and Key in effect — and nothing more: the Chain once through, not looped", () => {
     const p = harmonicPattern();
     expect(cyclePasses(p)).toBe(3);
     const byId = library(p);
-    let song = createSong('Study', 'p_1');
-    song = addEntry(song, 0, 'up', 2);
-    song = addEntry(song, 0, 'down', 1);
-    const passes = totalPasses(song, byId);
+    let chain = createChain('Study', 'p_1');
+    chain = addEntry(chain, 0, 'up', 2);
+    chain = addEntry(chain, 0, 'down', 1);
+    const passes = totalPasses(chain, byId);
     expect(passes).toBe(9);
 
-    const bytes = buildSongMidi(song, byId);
+    const bytes = buildChainMidi(chain, byId);
     const ons = noteOns(bytes);
     const notesPerPass = buildTimeline(p, 0).length;
     expect(notesPerPass).toBe(2);
@@ -104,7 +104,7 @@ describe('export/midi for a Song (US-18.1)', () => {
     expect((tempo.data[0] << 16) | (tempo.data[1] << 8) | tempo.data[2]).toBe(500000);
 
     // An empty Chain is an empty file: no notes, ending at the start.
-    const empty = buildSongMidi(createSong('Empty', 'p_1'), byId);
+    const empty = buildChainMidi(createChain('Empty', 'p_1'), byId);
     expect(noteOns(empty)).toHaveLength(0);
     expect(endOfTrack(empty).tick).toBe(0);
   });
@@ -113,28 +113,28 @@ describe('export/midi for a Song (US-18.1)', () => {
     const p = harmonicPattern();
     const before = [...buildMidi(p)];
     const byId = library(p);
-    let song = createSong('Study', 'p_1');
-    song = addEntry(song, 0, 'alberti', 3);
-    song = addEntry(song, 0, 'down', 2);
-    const songBytes = buildSongMidi(song, byId);
+    let chain = createChain('Study', 'p_1');
+    chain = addEntry(chain, 0, 'alberti', 3);
+    chain = addEntry(chain, 0, 'down', 2);
+    const chainBytes = buildChainMidi(chain, byId);
     expect([...buildMidi(p)]).toEqual(before);
     expect(p.harmony.arpeggio).toBe('up');
     // The Pattern's file spans its own cycle, not the Chain's fifteen passes.
     expect(noteOns(buildMidi(p))).toHaveLength(2 * cyclePasses(p));
-    expect(noteOns(songBytes)).toHaveLength(2 * 15);
+    expect(noteOns(chainBytes)).toHaveLength(2 * 15);
     expect(endOfTrack(buildMidi(p)).tick).toBe(3 * 4 * TICKS_PER_QUARTER);
     // Its notes are the Pattern's own arpeggio, not the Chain's first entry.
     const own = buildTimeline(p, 0).map((e) => e.pitch.midiNote);
     expect(noteOns(buildMidi(p)).slice(0, 2).map((e) => e.data[0])).toEqual(own);
   });
 
-  it('AC-18.1.5/2 — The file is named after the Song when it has been saved, and after the Pattern otherwise', () => {
+  it('AC-18.1.5/2 — The file is named after the Chain when it has been saved, and after the Pattern otherwise', () => {
     const p = harmonicPattern();
-    const unsaved = createSong('Morning Study!', 'p_1');
-    expect(songMidiFilename(unsaved, p)).toBe(midiFilename(p));
-    expect(songMidiFilename(unsaved, p)).toBe('harmonic-groove.mid');
+    const unsaved = createChain('Morning Study!', 'p_1');
+    expect(chainMidiFilename(unsaved, p)).toBe(midiFilename(p));
+    expect(chainMidiFilename(unsaved, p)).toBe('harmonic-groove.mid');
     const saved = { ...unsaved, id: 'song_1' };
-    expect(songMidiFilename(saved, p)).toBe('morning-study.mid');
-    expect(songMidiFilename({ ...saved, name: '   ' }, p)).toBe('harmonic-groove.mid');
+    expect(chainMidiFilename(saved, p)).toBe('morning-study.mid');
+    expect(chainMidiFilename({ ...saved, name: '   ' }, p)).toBe('harmonic-groove.mid');
   });
 });

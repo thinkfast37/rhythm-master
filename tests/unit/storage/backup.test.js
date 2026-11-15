@@ -8,14 +8,14 @@ import { backupText, checkBackup, restoreBackup } from '../../../src/storage/bac
 import { BACKUP_FORMAT, BACKUP_VERSION, backupFilename, buildBackup } from '../../../src/core/backup.js';
 import * as patternStore from '../../../src/storage/patterns.js';
 import * as overlayStore from '../../../src/storage/overlays.js';
-import * as songStore from '../../../src/storage/songs.js';
+import * as chainStore from '../../../src/storage/chains.js';
 import * as sectionStore from '../../../src/storage/sections.js';
 import * as settingsStore from '../../../src/storage/settings.js';
 import * as localMetaStore from '../../../src/storage/localMeta.js';
 import * as seedStore from '../../../src/storage/seed.js';
 import { create, cycleAccent } from '../../../src/core/pattern.js';
 
-const KEYS = [patternStore.KEY, overlayStore.KEY, songStore.KEY, sectionStore.KEY, settingsStore.KEY, localMetaStore.KEY];
+const KEYS = [patternStore.KEY, overlayStore.KEY, chainStore.KEY, sectionStore.KEY, settingsStore.KEY, localMetaStore.KEY];
 const CREATED = '2026-10-03T14:05:09.000Z';
 
 let backing;
@@ -33,7 +33,7 @@ function fillLibrary() {
   overlayStore.setRating(shipped().id, 4);
   overlayStore.setAddedTags(shipped().id, ['warmup']);
   overlayStore.setKeptFills(shipped().id, ['up']);
-  songStore.upsert({ id: 'song_1', name: 'Verse', sections: [{ patternId: 'p_1', entries: [] }] });
+  chainStore.upsert({ id: 'song_1', name: 'Verse', sections: [{ patternId: 'p_1', entries: [] }] });
   sectionStore.upsert({ id: 'arr_1', name: 'Bed', compositionId: 'p_1', layers: [{ patternId: shipped().id, muted: false }] });
   settingsStore.save({ countingSystem: 'numbered', goal: 'lab' });
   localMetaStore.update('p_1', { submittedAt: '2026-10-01T00:00:00Z', duplicateResolved: true });
@@ -47,7 +47,7 @@ const backupOf = (stores, extra = {}) =>
   JSON.stringify({ format: BACKUP_FORMAT, schemaVersion: BACKUP_VERSION, createdAt: CREATED, stores, ...extra });
 
 describe('US-7.6 — backing up the whole library (AC-7.6.1)', () => {
-  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Songs, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent', () => {
+  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Chains, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent', () => {
     fillLibrary();
     const file = JSON.parse(backupText(CREATED));
     expect(Object.keys(file.stores).sort()).toEqual([...KEYS].sort());
@@ -55,7 +55,7 @@ describe('US-7.6 — backing up the whole library (AC-7.6.1)', () => {
     expect(file.stores[localMetaStore.KEY].byPatternId.p_1.submittedAt).toBe('2026-10-01T00:00:00Z');
   });
 
-  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Songs, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent: an untouched store is left out', () => {
+  it('AC-7.6.1/2 — The file holds every store the app keeps — Patterns, overlays, Chains, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent: an untouched store is left out', () => {
     overlayStore.setRating(shipped().id, 3);
     const file = JSON.parse(backupText(CREATED));
     expect(Object.keys(file.stores)).toEqual([overlayStore.KEY]);
@@ -95,7 +95,7 @@ describe('US-7.6 — restoring the whole library (AC-7.6.2)', () => {
     expect(patternStore.loadAll().map((p) => p.name)).toEqual(['Other']);
     expect(settingsStore.load().goal).toBe('play');
     expect(rawOf(overlayStore.KEY)).toBeNull();
-    expect(rawOf(songStore.KEY)).toBeNull();
+    expect(rawOf(chainStore.KEY)).toBeNull();
     expect(rawOf(localMetaStore.KEY)).toBeNull();
     expect(overlayStore.forPattern(shipped().id).rating).toBeUndefined();
   });
@@ -138,12 +138,12 @@ describe('US-7.6 — files that cannot be restored (AC-7.6.3)', () => {
     expectRefused(backupOf({ [settingsStore.KEY]: { schemaVersion: 99, countingSystem: 'numbered' } }), /newer version/);
   });
 
-  it('AC-7.6.3/3 — A backup with a malformed store — Patterns or Songs not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written', () => {
+  it('AC-7.6.3/3 — A backup with a malformed store — Patterns or Chains not a list, an entry without an id, two entries sharing one, an unknown store — is refused and nothing is written', () => {
     const p = { ...structuredClone(shipped()), id: 'p_1' };
     expectRefused(backupOf({ [patternStore.KEY]: { schemaVersion: 1, patterns: {} } }), /damaged/);
-    expectRefused(backupOf({ [songStore.KEY]: { schemaVersion: 1, songs: 'x' } }), /damaged/);
+    expectRefused(backupOf({ [chainStore.KEY]: { schemaVersion: 1, songs: 'x' } }), /damaged/);
     expectRefused(backupOf({ [patternStore.KEY]: { schemaVersion: 1, patterns: [{ ...p, id: '' }] } }), /no id/);
-    expectRefused(backupOf({ [songStore.KEY]: { schemaVersion: 1, songs: [{ name: 'x', sections: [] }] } }), /no id/);
+    expectRefused(backupOf({ [chainStore.KEY]: { schemaVersion: 1, songs: [{ name: 'x', sections: [] }] } }), /no id/);
     expectRefused(backupOf({ [patternStore.KEY]: { schemaVersion: 1, patterns: [p, p] } }), /share the id/);
     expectRefused(backupOf({ 'rm.somethingElse.v1': { schemaVersion: 1 } }), /unknown store/);
     expectRefused(backupOf({ [overlayStore.KEY]: { schemaVersion: 1, byPatternId: [] } }), /damaged/);
@@ -158,7 +158,7 @@ describe('US-7.6 — files that cannot be restored (AC-7.6.3)', () => {
       [settingsStore.KEY]: { schemaVersion: 1, goal: 'play' },
     });
     // Writes that fail on the second, as a full quota would: Patterns is
-    // written, overlays and Songs cleared, and settings throws.
+    // written, overlays and Chains cleared, and settings throws.
     let writes = 0;
     const set = backing.set.bind(backing);
     backing.set = (k, v) => {

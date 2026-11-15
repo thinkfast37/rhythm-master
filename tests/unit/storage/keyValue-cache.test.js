@@ -15,7 +15,7 @@ import { readStore, writeStore, clearStore, rawOf, useBackingStore } from '../..
 import * as patternStore from '../../../src/storage/patterns.js';
 import * as overlayStore from '../../../src/storage/overlays.js';
 import * as localMetaStore from '../../../src/storage/localMeta.js';
-import * as songStore from '../../../src/storage/songs.js';
+import * as chainStore from '../../../src/storage/chains.js';
 
 beforeEach(() => {
   useBackingStore(new Map());
@@ -100,11 +100,11 @@ describe('storage — a write never edits the cached read in place', () => {
     expect(Object.keys(localMetaStore.loadAll())).toEqual(['p_2']);
   });
 
-  it('songs.upsert', () => {
-    songStore.upsert({ name: 'One', entries: [] });
-    const afterFirst = songStore.loadAll();
-    songStore.upsert({ name: 'Two', entries: [] });
+  it('chains.upsert', () => {
+    chainStore.upsert({ name: 'One', entries: [] });
+    const afterFirst = chainStore.loadAll();
+    chainStore.upsert({ name: 'Two', entries: [] });
     expect(afterFirst).toHaveLength(1);
-    expect(songStore.loadAll()).toHaveLength(2);
+    expect(chainStore.loadAll()).toHaveLength(2);
   });
 });

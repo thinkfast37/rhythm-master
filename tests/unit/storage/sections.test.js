@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useBackingStore } from '../../../src/storage/keyValue.js';
 import * as sections from '../../../src/storage/sections.js';
-import * as songs from '../../../src/storage/songs.js';
+import * as chains from '../../../src/storage/chains.js';
 import * as patterns from '../../../src/storage/patterns.js';
 import * as overlays from '../../../src/storage/overlays.js';
 import { createSection, addLayer } from '../../../src/core/section.js';
@@ -16,7 +16,7 @@ beforeEach(() => {
 const bed = (name, compositionId, layerIds) => layerIds.reduce((a, id) => addLayer(a, id), createSection(name, compositionId));
 
 describe('storage/sections', () => {
-  it('AC-19.11.4/7 — Sections are stored in `rm.sections.v1`, apart from Patterns, overlays, Songs, settings and Local Metadata, and the whole-library backup carries the store as it does every other', () => {
+  it('AC-19.11.4/7 — Sections are stored in `rm.sections.v1`, apart from Patterns, overlays, Chains, settings and Local Metadata, and the whole-library backup carries the store as it does every other', () => {
     expect(sections.KEY).toBe('rm.sections.v1');
     const saved = sections.upsert(bed('Morning bed', 'p_1', ['s_1', 'p_2']));
     expect(saved.id).toBe('arr_1');
@@ -28,14 +28,14 @@ describe('storage/sections', () => {
     expect([...backing.keys()]).toEqual([sections.KEY]);
     patterns.upsert({ ...create('Mine'), id: 'p_1' });
     overlays.setRating('s_1', 4);
-    songs.upsert({ name: 'Verse', sections: [{ patternId: 'p_1', entries: [] }] });
+    chains.upsert({ name: 'Verse', sections: [{ patternId: 'p_1', entries: [] }] });
     expect(JSON.parse(backing.get(sections.KEY)).sections).toHaveLength(1);
     // A reload is a fresh read of the same backing store.
     useBackingStore(backing);
     expect(sections.findById('arr_1')).toEqual(saved);
-    // Removing a Pattern or a Song touches no Section.
+    // Removing a Pattern or a Chain touches no Section.
     patterns.remove('p_1');
-    songs.remove('song_1');
+    chains.remove('song_1');
     expect(sections.loadAll()).toHaveLength(1);
     // upsert replaces in place; ids are never reused; rename keeps the id.
     sections.upsert({ ...saved, name: 'Evening bed' });

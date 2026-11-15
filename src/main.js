@@ -54,20 +54,20 @@ import { rawOf } from './storage/keyValue.js';
 import * as settingsStore from './storage/settings.js';
 import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
-import * as songStore from './storage/songs.js';
+import * as chainStore from './storage/chains.js';
 import * as sectionStore from './storage/sections.js';
 import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createSection, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateSection, MAX_LAYERS } from './core/section.js';
 import {
-  createSong,
+  createChain,
   addEntry,
   removeEntry,
   moveEntry,
   setEntryRepeats,
   entryPasses,
   entryAt,
-  validateSong,
-} from './core/song.js';
-import { downloadSongMidi, songMidiFilename, downloadSectionMidi, sectionZipFilename } from './export/midi.js';
+  validateChain,
+} from './core/chain.js';
+import { downloadChainMidi, chainMidiFilename, downloadSectionMidi, sectionZipFilename } from './export/midi.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
 import {
   phraseLengthOf,
@@ -160,6 +160,8 @@ import {
   loadKind,
   fromPercussive,
   bakeHarmony,
+  chainWriteOutRefusal,
+  chainAsPattern,
   foldRegister,
   copyMelody,
   retune,
@@ -226,15 +228,15 @@ const state = {
   phraseLength: null,
   /**
    * The Compose group (US-18.1): the Chain being built over the open
-   * Pattern, the saved Song it came from (for the unsaved mark), and whether
-   * Play song is driving the fill in force — through the same pass-boundary
+   * Pattern, the saved Chain it came from (for the unsaved mark), and whether
+   * Play chain is driving the fill in force — through the same pass-boundary
    * seam as cycle mode, counting from `baseLoop`. Never Pattern data.
    */
-  compose: { song: null, saved: null, on: false, baseLoop: 0 },
+  compose: { chain: null, saved: null, on: false, baseLoop: 0 },
   /** The Composer's records for the open Pattern, refreshed when they change, never per render. */
   keptFills: [],
-  songs: [],
-  songEntryInForce: null,
+  chains: [],
+  chainEntryInForce: null,
   /**
    * The pitch strip's armed value, stamped onto a Slot by tapping its note band
    * (US-2.2). Strip state, not Pattern data: it outlives a stamp and a Pattern
@@ -477,7 +479,7 @@ function progressionIdAt(loop) {
  *
  * Counted in passes. The Pattern itself repeats after one harmonic cycle of
  * its own progression — I, IV, V changing every pass is three — and a cycle's
- * Repeats and a Song entry's repeats are harmonic cycles (AC-2.7.2/1,
+ * Repeats and a Chain entry's repeats are harmonic cycles (AC-2.7.2/1,
  * AC-18.1.3/1), so each counts that many passes per repeat (T396). Each
  * overlay cycles independently over its own catalogue at the shared Repeats
  * setting, and a progression in force turns its own chords over by the pass,
@@ -499,12 +501,12 @@ function cyclePasses() {
     passes = lcm(passes, order.length * repeats * own);
     for (const i of order) passes = lcm(passes, harmonic(withProgression(state.pattern, PROGRESSIONS[i].id)));
   }
-  // A Song plays its Chain through once per cycle rather than repeating a
+  // A Chain plays through once per cycle rather than repeating a
   // catalogue, so its own length is its period.
-  if (songPlaying()) {
-    const entries = state.compose.song?.sections[0]?.entries ?? [];
-    const songPasses = entries.reduce((n, e) => n + Math.max(1, e.repeats ?? 1) * own, 0);
-    if (songPasses > 0) passes = lcm(passes, songPasses);
+  if (chainPlaying()) {
+    const entries = state.compose.chain?.sections[0]?.entries ?? [];
+    const chainPasses = entries.reduce((n, e) => n + Math.max(1, e.repeats ?? 1) * own, 0);
+    if (chainPasses > 0) passes = lcm(passes, chainPasses);
   }
   return passes;
 }
@@ -594,17 +596,17 @@ async function refreshBackgroundAudio() {
 
 /**
  * The Composer's records for the open Pattern — kept fills (AC-2.8.1) and
- * Songs (AC-18.1.4) — read from their stores only when one of them changes.
+ * Chains (AC-18.1.4) — read from their stores only when one of them changes.
  * Render runs on every position tick and must not parse a store each time.
  */
 function refreshComposeRecords() {
   refreshSections();
   const id = state.pattern.id;
   state.keptFills = id ? overlayStore.keptFillsFor(id) : [];
-  state.songs = id ? songStore.forPattern(id) : [];
+  state.chains = id ? chainStore.forPattern(id) : [];
 }
 
-/** A Pattern by id, the open one first so an unsaved edit is what a Song plays over. */
+/** A Pattern by id, the open one first so an unsaved edit is what a Chain plays over. */
 function patternById(id) {
   if (id === state.pattern.id) return state.pattern;
   return patternStore.findById(id) ?? seedStore.findById(id) ?? null;
@@ -745,34 +747,34 @@ function sectionList() {
 }
 
 /** The Chain under construction for the open Pattern, created on first touch. */
-function composeSong() {
-  if (!state.compose.song || state.compose.song.sections[0]?.patternId !== state.pattern.id) {
-    state.compose.song = createSong('', state.pattern.id);
+function composeChain() {
+  if (!state.compose.chain || state.compose.chain.sections[0]?.patternId !== state.pattern.id) {
+    state.compose.chain = createChain('', state.pattern.id);
     state.compose.saved = null;
   }
-  return state.compose.song;
+  return state.compose.chain;
 }
 
-/** Whether Play song has a fill in force: on, with entries to play (AC-18.1.3). */
-function songPlaying() {
+/** Whether Play chain has a fill in force: on, with entries to play (AC-18.1.3). */
+function chainPlaying() {
   if (composerActive()) return false;
   return (
     state.compose.on &&
     state.pattern.soundMode === 'melodic' &&
     hasHarmony(state.pattern) &&
-    (state.compose.song?.sections[0]?.entries.length ?? 0) > 0
+    (state.compose.chain?.sections[0]?.entries.length ?? 0) > 0
   );
 }
 
-/** The Song entry in force for a pass, or null outside Play song. */
-function songEntryAt(loop) {
-  if (!songPlaying()) return null;
-  return entryAt(state.compose.song, patternById, Math.max(0, loop - state.compose.baseLoop));
+/** The Chain entry in force for a pass, or null outside Play chain. */
+function chainEntryAt(loop) {
+  if (!chainPlaying()) return null;
+  return entryAt(state.compose.chain, patternById, Math.max(0, loop - state.compose.baseLoop));
 }
 
 /** The fill in force for a pass, as its catalogue id, or null when the Pattern's own sounds. */
 function fillIdAt(loop) {
-  const entry = songEntryAt(loop);
+  const entry = chainEntryAt(loop);
   if (entry) return entry.fill;
   const index = fillIndexAt(loop);
   return index === null ? null : ARPEGGIOS[index].id;
@@ -821,10 +823,10 @@ function withCandidate(pattern) {
  * last where the new count is shorter; an entry that is gone hands over to the
  * one now at its index.
  */
-function rebaseSong(before) {
+function rebaseChain(before) {
   if (!before || !state.isPlaying) return;
-  const song = state.compose.song;
-  const entries = song.sections[0].entries;
+  const chain = state.compose.chain;
+  const entries = chain.sections[0].entries;
   const index = Math.min(before.entryIndex, entries.length - 1);
   if (index < 0) return;
   let passes = 0;
@@ -1060,7 +1062,7 @@ function adoptOpenPattern(draft) {
   history.length = 0;
   state.pattern = draft;
   state.isOwned = true;
-  state.compose = { song: null, saved: null, on: false, baseLoop: 0 };
+  state.compose = { chain: null, saved: null, on: false, baseLoop: 0 };
   refreshComposeRecords();
   state.view = { ...state.view, currentId: draft.id ?? null };
 }
@@ -1439,7 +1441,7 @@ export function subscribe(fn) {
  * seconds of blocked main thread inside a 4-second window.
  *
  * Anything that changes only at a pass boundary — the chord in force, the
- * arpeggio deal, the Song entry, the loop counter — is NOT on this path. The
+ * arpeggio deal, the Chain entry, the loop counter — is NOT on this path. The
  * boundary fires `onLoop`, which renders in full.
  */
 /* --- Vary a loop (US-10.4, research.md D-025) ------------------------------ */
@@ -1669,8 +1671,8 @@ function render(kind = 'full') {
   // In the Composer the Practice views keep the open Pattern; the Composer's
   // own renderer reads the draft from state (US-19.1).
   const shown = composerActive() ? state.pattern : playing();
-  // The Song entry sounding, for the Compose group to mark (AC-18.1.3/3).
-  state.songEntryInForce = songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
+  // The Chain entry sounding, for the Compose group to mark (AC-18.1.3/3).
+  state.chainEntryInForce = chainEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0);
   for (const fn of listeners) fn(shown, state.transportPosition, state, kind);
   // The Add variation dialog's Play/Stop line follows the transport, which starts
   // and stops outside the dialog too (AC-10.4.4/4, AC-10.4.8/2); only the line,
@@ -1780,8 +1782,8 @@ async function guardShipped() {
     patternStore.upsert(owned);
     state.pattern = owned;
     state.isOwned = true;
-    // A fresh id: its own keeps and Songs, which is none of either yet.
-    state.compose = { song: null, saved: null, on: false, baseLoop: 0 };
+    // A fresh id: its own keeps and Chains, which is none of either yet.
+    state.compose = { chain: null, saved: null, on: false, baseLoop: 0 };
     refreshComposeRecords();
     return true;
   }
@@ -1836,7 +1838,7 @@ export function loadPattern(pattern, { owned }) {
   state.transportPosition = null;
   state.workbenchTab = null;
   // The Chain belongs to the Pattern it was built over (AC-18.1.4/2).
-  state.compose = { song: null, saved: null, on: false, baseLoop: 0 };
+  state.compose = { chain: null, saved: null, on: false, baseLoop: 0 };
   refreshComposeRecords();
   state.view = { ...state.view, currentId: pattern.id ?? null };
   // Loading while playing switches the running transport to the new Pattern,
@@ -2231,7 +2233,7 @@ const handlers = {
     state.fillCycle = on
       ? { on: true, start: cycleStart(fillIndexOf(state.pattern), fillOrder()), baseLoop: state.isPlaying ? state.loop : 0 }
       : { on: false, start: 0, baseLoop: 0 };
-    // Cycle mode and Play song are exclusive (AC-18.1.3/6).
+    // Cycle mode and Play chain are exclusive (AC-18.1.3/6).
     if (on) state.compose.on = false;
     syncTransport();
     render();
@@ -2250,7 +2252,7 @@ const handlers = {
           baseLoop: state.isPlaying ? state.loop : 0,
         }
       : { on: false, start: 0, baseLoop: 0 };
-    // Progression cycling and Play song are exclusive, the same as Cycle fills (AC-18.1.3/6).
+    // Progression cycling and Play chain are exclusive, the same as Cycle fills (AC-18.1.3/6).
     if (on) state.compose.on = false;
     syncTransport();
     render();
@@ -2299,43 +2301,43 @@ const handlers = {
 
   /** Append a kept fill at the cycle Repeats setting (AC-18.1.2/1). */
   onComposeAdd(fill) {
-    const before = songEntryAt(state.loop);
-    state.compose.song = addEntry(composeSong(), 0, fill, state.settings.fillCycleRepeats ?? 4);
-    rebaseSong(before);
+    const before = chainEntryAt(state.loop);
+    state.compose.chain = addEntry(composeChain(), 0, fill, state.settings.fillCycleRepeats ?? 4);
+    rebaseChain(before);
     syncTransport();
     render();
   },
 
   onComposeRepeats(entryIndex, repeats) {
-    const before = songEntryAt(state.loop);
+    const before = chainEntryAt(state.loop);
     const count = Math.min(16, Math.max(1, Math.round(Number(repeats) || 1)));
-    state.compose.song = setEntryRepeats(composeSong(), 0, entryIndex, count);
-    rebaseSong(before);
+    state.compose.chain = setEntryRepeats(composeChain(), 0, entryIndex, count);
+    rebaseChain(before);
     syncTransport();
     render();
   },
 
   onComposeMove(entryIndex, direction) {
-    const before = songEntryAt(state.loop);
-    state.compose.song = moveEntry(composeSong(), 0, entryIndex, direction);
-    if (before) rebaseSong({ ...before, entryIndex: entryIndex + direction });
+    const before = chainEntryAt(state.loop);
+    state.compose.chain = moveEntry(composeChain(), 0, entryIndex, direction);
+    if (before) rebaseChain({ ...before, entryIndex: entryIndex + direction });
     syncTransport();
     render();
   },
 
   onComposeRemove(entryIndex) {
-    const before = songEntryAt(state.loop);
-    state.compose.song = removeEntry(composeSong(), 0, entryIndex);
-    rebaseSong(before);
-    if (!songPlaying()) state.compose.on = false;
+    const before = chainEntryAt(state.loop);
+    state.compose.chain = removeEntry(composeChain(), 0, entryIndex);
+    rebaseChain(before);
+    if (!chainPlaying()) state.compose.on = false;
     syncTransport();
     render();
   },
 
   /** Play the Chain from its first entry, looping (AC-18.1.3); cycle mode stands down. */
-  async onPlaySong() {
-    composeSong();
-    if (state.compose.song.sections[0].entries.length === 0) return;
+  async onPlayChain() {
+    composeChain();
+    if (state.compose.chain.sections[0].entries.length === 0) return;
     state.compose.on = true;
     state.compose.baseLoop = 0;
     state.fillCycle = { on: false, start: 0, baseLoop: 0 };
@@ -2354,77 +2356,77 @@ const handlers = {
     await transport.start(scheduled(), state.settings);
   },
 
-  /** Save the Chain as a Song (AC-18.1.4/1), or update the one it was loaded from (/4). */
-  async onSongSave() {
-    const song = composeSong();
-    if (song.sections[0].entries.length === 0) return;
-    let named = song;
-    if (!song.id) {
+  /** Save the Chain under a name (AC-18.1.4/1), or update the one it was loaded from (/4). */
+  async onChainSave() {
+    const chain = composeChain();
+    if (chain.sections[0].entries.length === 0) return;
+    let named = chain;
+    if (!chain.id) {
       const taken = (name) =>
-        songStore.forPattern(state.pattern.id).some((s) => s.name === name)
-          ? `A Song called "${name}" already exists on this Pattern. Choose another name.`
+        chainStore.forPattern(state.pattern.id).some((s) => s.name === name)
+          ? `A Chain called "${name}" already exists on this Pattern. Choose another name.`
           : null;
-      const name = await askNewPatternName(`${state.pattern.name} song`, taken);
+      const name = await askNewPatternName(`${state.pattern.name} chain`, taken);
       if (name === null) return;
-      named = { ...song, name };
+      named = { ...chain, name };
     }
-    if (validateSong(named).length > 0) return;
-    const saved = songStore.upsert(named);
-    state.compose.song = saved;
+    if (validateChain(named).length > 0) return;
+    const saved = chainStore.upsert(named);
+    state.compose.chain = saved;
     state.compose.saved = structuredClone(saved);
     refreshComposeRecords();
     render();
   },
 
-  onSongLoad(id) {
-    const song = songStore.findById(id);
-    if (!song) return;
-    const before = songEntryAt(state.loop);
-    state.compose.song = structuredClone(song);
-    state.compose.saved = structuredClone(song);
-    rebaseSong(before);
-    if (!songPlaying()) state.compose.on = false;
+  onChainLoad(id) {
+    const chain = chainStore.findById(id);
+    if (!chain) return;
+    const before = chainEntryAt(state.loop);
+    state.compose.chain = structuredClone(chain);
+    state.compose.saved = structuredClone(chain);
+    rebaseChain(before);
+    if (!chainPlaying()) state.compose.on = false;
     syncTransport();
     render();
   },
 
   /** Start a fresh, unsaved Chain on this Pattern. */
-  onSongNew() {
-    state.compose.song = createSong('', state.pattern.id);
+  onChainNew() {
+    state.compose.chain = createChain('', state.pattern.id);
     state.compose.saved = null;
     state.compose.on = false;
     syncTransport();
     render();
   },
 
-  async onSongRename(id) {
-    const song = songStore.findById(id);
-    if (!song) return;
-    const name = await askNewPatternName(song.name, (n) =>
-      songStore.forPattern(state.pattern.id).some((s) => s.name === n && s.id !== id)
-        ? `A Song called "${n}" already exists on this Pattern. Choose another name.`
+  async onChainRename(id) {
+    const chain = chainStore.findById(id);
+    if (!chain) return;
+    const name = await askNewPatternName(chain.name, (n) =>
+      chainStore.forPattern(state.pattern.id).some((s) => s.name === n && s.id !== id)
+        ? `A Chain called "${n}" already exists on this Pattern. Choose another name.`
         : null
     );
     if (name === null) return;
-    const renamed = songStore.rename(id, name);
-    if (state.compose.song?.id === id) {
-      state.compose.song = { ...state.compose.song, name };
+    const renamed = chainStore.rename(id, name);
+    if (state.compose.chain?.id === id) {
+      state.compose.chain = { ...state.compose.chain, name };
       state.compose.saved = structuredClone(renamed);
     }
     refreshComposeRecords();
     render();
   },
 
-  async onSongDelete(id) {
-    const song = songStore.findById(id);
-    if (!song) return;
-    const proceed = await confirm(`Delete the Song "${song.name}" permanently?`, {
+  async onChainDelete(id) {
+    const chain = chainStore.findById(id);
+    if (!chain) return;
+    const proceed = await confirm(`Delete the Chain "${chain.name}" permanently?`, {
       confirmLabel: 'Delete',
     });
     if (!proceed) return;
-    songStore.remove(id);
-    if (state.compose.song?.id === id) {
-      state.compose.song = createSong('', state.pattern.id);
+    chainStore.remove(id);
+    if (state.compose.chain?.id === id) {
+      state.compose.chain = createChain('', state.pattern.id);
       state.compose.saved = null;
       state.compose.on = false;
       syncTransport();
@@ -2434,10 +2436,58 @@ const handlers = {
   },
 
   /** One MIDI file of the Chain once through (AC-18.1.5). */
-  onSongExport() {
-    const song = composeSong();
-    if (song.sections[0].entries.length === 0) return;
-    downloadSongMidi(song, patternById, state.pattern);
+  onChainExport() {
+    const chain = composeChain();
+    if (chain.sections[0].entries.length === 0) return;
+    downloadChainMidi(chain, patternById, state.pattern);
+  },
+
+  /**
+   * Write the Chain out as a Pattern (AC-18.1.6): its notes, once through, as
+   * a new Melodic Pattern of the Composer's own, saved and opened in the
+   * Composer. Always a new Pattern: the Chain and the Pattern it plays over
+   * stay as they are, so what is changed there is no longer the Chain.
+   */
+  async onChainWriteOut() {
+    const chain = composeChain();
+    if (chain.sections[0].entries.length === 0) return;
+    const refusal = chainWriteOutRefusal(chain, patternById);
+    if (refusal) {
+      await ask({ message: `${refusal}. Shorten the Chain, or lower an entry's repeats, to write it out.`, options: [{ label: 'OK', value: true, primary: true }] });
+      render();
+      return;
+    }
+    const named = typeof chain.name === 'string' && chain.name.trim() !== '';
+    const name = await askNewPatternName(freeName(named ? chain.name : `${state.pattern.name} chain`), uniqueNameValidator(), {
+      message: 'Name the Pattern this Chain is written out as. The Chain itself stays as it is.',
+      confirmLabel: 'Write out',
+    });
+    if (name === null) {
+      render();
+      return;
+    }
+    // The prompt was awaited: write out the Chain as it is now.
+    const written = chainAsPattern(composeChain(), patternById, name);
+    if (!written) {
+      render();
+      return;
+    }
+    const saved = { ...written, id: patternStore.nextId() };
+    patternStore.upsert(saved);
+    if (state.isPlaying) transport.stop();
+    // Under a practice goal there is no Composer to open it in: it is in the library.
+    if (isPracticeGoal(state.settings.goal)) {
+      render();
+      return;
+    }
+    if (state.composer.mode !== 'composer') {
+      state.composer = { ...state.composer, mode: 'composer', recording: false, target: null, selected: null };
+      ensureSamplesLoaded();
+      refreshSections();
+      void midiInput.request();
+    }
+    await openInComposer(patternStore.findById(saved.id), true, { editOwned: true });
+    render();
   },
 
   /**
@@ -3732,13 +3782,13 @@ const handlers = {
 
   async onDelete() {
     if (!state.isOwned) return; // built-in Patterns are never deletable
-    // A Pattern a Song plays over stays until the Song is gone (AC-18.1.4/5).
-    const songs = songStore.referencingPattern(state.pattern.id);
-    if (songs.length > 0) {
+    // A Pattern a Chain plays over stays until the Chain is gone (AC-18.1.4/5).
+    const chains = chainStore.referencingPattern(state.pattern.id);
+    if (chains.length > 0) {
       await confirm(
-        `"${state.pattern.name}" can't be deleted: the Song${songs.length > 1 ? 's' : ''} ${songs
+        `"${state.pattern.name}" can't be deleted: the Chain${chains.length > 1 ? 's' : ''} ${chains
           .map((n) => `"${n}"`)
-          .join(', ')} play${songs.length > 1 ? '' : 's'} over it. Delete the Song first, in Compose.`,
+          .join(', ')} play${chains.length > 1 ? '' : 's'} over it. Delete the Chain first, in Compose.`,
         { confirmLabel: 'OK', cancelLabel: 'Close' }
       );
       return;
@@ -3930,7 +3980,7 @@ const handlers = {
       return;
     }
     const replace = await confirm(
-      'Restore this backup? It replaces everything in the app — your Patterns, Songs, ratings, Tags, Keeps and settings — with what the file holds. What is here now and not in the file will be lost.',
+      'Restore this backup? It replaces everything in the app — your Patterns, Chains, ratings, Tags, Keeps and settings — with what the file holds. What is here now and not in the file will be lost.',
       { confirmLabel: 'Replace library' }
     );
     if (!replace) return;
@@ -4087,7 +4137,7 @@ const transport = createTransport({
     state.transportPosition = null;
     state.loop = 0;
     // `baseLoop: 0` against a cleared counter means the next Play carries on
-    // from what is held, with its repeats counted afresh. A Song still ends on
+    // from what is held, with its repeats counted afresh. A Chain still ends on
     // the Pattern's own, since its entries are not these cycles (AC-18.1.3/5).
     state.fillCycle = { ...fresh(state.fillCycle), start: heldFill, baseLoop: 0 };
     state.progressionCycle = { ...fresh(state.progressionCycle), start: heldProgression, baseLoop: 0 };
@@ -4407,7 +4457,7 @@ if (typeof window !== 'undefined') {
     progressionInForce: () => matchProgression(playing()),
     /** Test seam: the fill and progression catalogues in order, by id (US-2.14). */
     catalogues: () => ({ fills: ARPEGGIOS.map((a) => a.id), progressions: PROGRESSIONS.map((p) => p.id) }),
-    songStore,
+    chainStore,
     sectionStore,
     /** Test seam: whether the layers differ from the Section they came from (AC-19.11.4/4). */
     sectionUnsaved: () => sectionUnsaved(state.composer),
@@ -4430,10 +4480,10 @@ if (typeof window !== 'undefined') {
     instruments,
     /** The voice a melodic note would sound with now (US-2.13). */
     currentVoice,
-    /** The Song entry in force on the pass on screen, or null (US-18.1). */
-    songEntryInForce: () => songEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
+    /** The Chain entry in force on the pass on screen, or null (US-18.1). */
+    chainEntryInForce: () => chainEntryAt(state.isPlaying ? (state.transportPosition?.loop ?? state.loop) : 0),
     /** The name the Chain would export under (AC-18.1.5/2). */
-    songMidiFilename: () => songMidiFilename(composeSong(), state.pattern),
+    chainMidiFilename: () => chainMidiFilename(composeChain(), state.pattern),
     /** A blank owned Pattern at a chosen meter, for tests that need a known shape. */
     loadBlank(timeSignature = '4/4', name = 'Test Pattern') {
       let p = create(name);

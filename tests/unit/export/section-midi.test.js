@@ -3,7 +3,7 @@
  * combined loop long, in one archive.
  */
 import { describe, it, expect } from 'vitest';
-import { buildMidi, buildSongMidi, buildSectionMidi, sectionZipFilename, midiFilename, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
+import { buildMidi, buildChainMidi, buildSectionMidi, sectionZipFilename, midiFilename, TICKS_PER_QUARTER } from '../../../src/export/midi.js';
 import { buildZip } from '../../../src/core/zip.js';
 import { readZip } from '../../zip-reader.js';
 import { layered, layeredLoopDuration } from '../../../src/core/section.js';
@@ -11,7 +11,7 @@ import { create, cycleAccent, setPitch, addMeasure, setTimeSignatureAll } from '
 import { setProgression, setArpeggio, setChange, cyclePasses } from '../../../src/core/harmony.js';
 import { buildTimeline } from '../../../src/core/timeline.js';
 import { recordNote } from '../../../src/core/composer.js';
-import { createSong, addEntry } from '../../../src/core/song.js';
+import { createChain, addEntry } from '../../../src/core/chain.js';
 
 function findChunk(bytes, id) {
   for (let i = 0; i < bytes.length - 8; i++) {
@@ -148,7 +148,7 @@ describe('export/midi for a Section (AC-19.11.5)', () => {
     expect(sectionZipFilename({ id: 'arr_2', name: '   ' }, composition)).toBe('my-line.zip');
   });
 
-  it("AC-19.11.5/4 — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Song's are unchanged", () => {
+  it("AC-19.11.5/4 — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Chain's are unchanged", () => {
     // The Pattern's own file: one harmonic cycle, as before, however it is layered.
     const changes = chords('Changes');
     const alone = buildMidi(changes);
@@ -157,11 +157,11 @@ describe('export/midi for a Section (AC-19.11.5)', () => {
     layered(melody('Line'), [{ pattern: changes }]);
     expect([...buildMidi(changes)]).toEqual([...alone]);
     expect(midiFilename(changes)).toBe('changes.mid');
-    // A Song's file: its entries' passes, untouched by the pass-count parameter.
-    const song = addEntry(createSong('Bed', changes.id), 0, 'down', 2);
-    const songFile = buildSongMidi(song, (id) => (id === changes.id ? changes : null));
-    expect(endTick(songFile)).toBe(6 * 4 * TICKS_PER_QUARTER);
-    expect(noteOns(songFile)).toHaveLength(24);
+    // A Chain's file: its entries' passes, untouched by the pass-count parameter.
+    const chain = addEntry(createChain('Bed', changes.id), 0, 'down', 2);
+    const chainFile = buildChainMidi(chain, (id) => (id === changes.id ? changes : null));
+    expect(endTick(chainFile)).toBe(6 * 4 * TICKS_PER_QUARTER);
+    expect(noteOns(chainFile)).toHaveLength(24);
     // 7/8 under 4/4 exports eight bars against seven, both the same length.
     let seven = setTimeSignatureAll({ ...create('Seven'), id: 'seven', tempo: 120 }, '7/8');
     for (let b = 0; b < 7; b++) seven = cycleAccent(seven, 0, b, 0);
