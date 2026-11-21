@@ -2168,6 +2168,7 @@ field survives showing it.)*
   - **When** each is exported
   - **Then** "Samba Break" maps to a fixed drum-channel note mapping, and "Samba Break (Melodic)" exports pitched notes exactly matching each Slot's authored degree+octave, resolved through Key C, on a melodic channel
   - *(Clarified 2026-09-12 with US-2.6: a Pattern carrying a progression exports every pass of its harmonic cycle, each chord tone resolved through the chord in force for that pass — AC-2.6.10. A Pattern with no progression still exports one pass.)*
+  - *(Note 2026-11-20 with US-12.5, T527: how long an exported note lasts is now a choice, Staccato or Legato. Staccato is the file this story has always written, and is what is exported until Legato is chosen (AC-12.5.1/3). The criterion stands as written.)*
 
 - **AC-12.1.3** — Accent Level maps to a fixed MIDI velocity table
   - **Given** a Slot at Accent Level 1 (Weak), a Slot at Accent Level 2 (Medium), a Slot at Accent Level 3 (Strong), and an off Slot (Accent Level 0)
@@ -3544,6 +3545,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-18.1.5/2** — The file is named after the Chain when it has been saved, and after the Pattern otherwise
     - **AC-18.1.5/3** — The Pattern's own MIDI export is unchanged: it carries the Pattern's own arpeggio and never the Chain
     - **AC-18.1.5/4** — Export Chain MIDI is unavailable while the Chain is empty
+  - *(Note 2026-11-20 with US-12.5, T527: a Chain's file follows the note-length choice as every MIDI export does; on Staccato it is the file it always was.)*
 
 - **AC-18.1.6** — Writing a Chain out as a Pattern
   - **Given** a Chain with at least one entry
@@ -4958,6 +4960,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.5/3** — The archive is named after the Section once it has been saved, and after the composition otherwise
     - **AC-19.11.5/4** — Export section MIDI is unavailable without a layer, and the Pattern's own MIDI export and a Chain's are unchanged
     - **AC-19.11.5/5** — A part on Drums is written on the General MIDI drum channel, at the note numbers its keys name, so a DAW opens it as a drum kit; every other pitched part stays on channel 1
+  - *(Note 2026-11-20 with US-12.5, T527: each file of the archive follows the note-length choice, a part lengthened by its own instrument; on Staccato the archive is what it always was.)*
   - *(/5 added 2026-11-15 with US-19.13. The maintainer, told that a drum part on channel 1 opens in Logic as low piano notes, chose the drum channel. This is the one thing of a part's instrument the export carries; volumes and the other instruments are still not in it.)*
 
 - **AC-19.11.6** — Any part can be the one on screen
@@ -5394,6 +5397,67 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-20.2.3/2** — In Arrange the tempo entry beside Play shows and sets the tempo of the Arrangement, from 18 to 300, and not the tempo of the Pattern open in Practice
     - **AC-20.2.3/3** — Every entry plays at the tempo of the Arrangement whatever its own, and no Pattern, Section or Chain is changed by it
     - **AC-20.2.3/4** — The tempo is stored with the Arrangement and is in force when it is opened again, and changing it while playing restarts the sequence from its first entry at the new tempo
+
+---
+
+### User Story 77 - Choose how long exported notes last
+
+*Traceability: `US-12.5` — Choose how long exported notes last*
+
+**As** the Composer, **I want** to choose, when I export MIDI, between the short notes the file has always had and notes lengthened to ring into one another as they do in the app, **so that** what I open in my DAW feels like what I heard while writing it.
+
+*(Added 2026-11-15 at the maintainer's request, T527: "the instruments I have (at least guitar and piano) have a lot of reverb so even though when I export a midi right now it creates a 32 note sound - but in the app it plays much longer because of the instrument choices in the app. The instrument choices in the app give a much more legato feel with a lot of resonance overlap between notes … when I export I would like to be able to choose if it's a legato feel or more of the staccato that the midi export currently generates. If it is legato then you need to lengthen all the notes. You need to come up with a good formula for lengthening them. Ideally it sounds as close to what is in the app already and you have to consider the tempo." Rulings: the choice is on every MIDI export, Staccato the default (2026-11-15); the formula, proposed to the maintainer and accepted on 2026-11-20 — "go ahead with that legato formula" — is that each note lasts until its part's next note and then for its instrument's ring, the ring turned from seconds into ticks at the file's tempo, cut short only where the same pitch is struck again. Decided without asking: the choice is one remembered setting shown beside each export, so a file is one press as before; nothing in the app sounds any different; research.md D-030 records the formula and the ring each instrument is given.)*
+
+**Independent Test**: Export a Melodic Pattern on Staccato and assert every note is sixty ticks long, as it always was; choose Legato beside the export and assert that each note now ends its instrument's ring after the next note begins, that a note whose pitch is struck again ends a tick before it, that no note runs past the end of the file, that every note's start, pitch and velocity are unchanged, and that a Percussive Pattern's file is the same either way; reload and assert Legato is still chosen, beside the Chain's, the Section's and the Arrangement's export too.
+
+**Acceptance Scenarios**:
+
+- **AC-12.5.1** — Every MIDI export offers Staccato or Legato
+  - **Given** any MIDI export — a Pattern's, a Chain's, a Section's or an Arrangement's
+  - **When** the Composer looks beside it
+  - **Then** a note-length choice offers Staccato and Legato, one setting for all of them, and Staccato writes the file as it has always been written
+  - **Cases**:
+    - **AC-12.5.1/1** — Beside each MIDI export — of a Pattern, a Chain, a Section and an Arrangement — a note-length choice offers Staccato and Legato, with Staccato chosen until Legato is
+    - **AC-12.5.1/2** — The note-length choice is one setting for every export, remembered in `rm.settings.v1` and in force after a reload
+    - **AC-12.5.1/3** — On Staccato every exported note is a thirty-second note long, sixty ticks, and the file is byte for byte what it was before the choice existed
+
+- **AC-12.5.2** — Legato lengthens each pitched note by its instrument
+  - **Given** Legato chosen
+  - **When** a file is exported
+  - **Then** every pitched note lasts until the next note of its part and then for its instrument's ring, and nothing else about the file changes
+  - **Cases**:
+    - **AC-12.5.2/1** — On Legato a pitched note lasts until the next note of its part begins and then for the ring of its instrument, the ring turned from seconds into ticks at the tempo of the file
+    - **AC-12.5.2/2** — A note ends one tick before the same pitch is struck again in its part, the last note of a part lasts to the end of the file and then its ring, and no note runs past the end of the file
+    - **AC-12.5.2/3** — The ring is the instrument's own by Accent Level — the piano's hold, the guitar's and the synth's decay — and nothing for an instrument the app holds until its next note: electric guitar, bass, sax, trumpet and flute
+    - **AC-12.5.2/4** — Percussive notes and parts on Drums are the same length on Legato as on Staccato
+    - **AC-12.5.2/5** — Legato changes no note's start, pitch, velocity or channel
+    - **AC-12.5.2/6** — A Pattern and a Chain are lengthened by the voice Practice remembers for the Pattern, Piano when there is none, and each part of a Section or an Arrangement by its own instrument
+
+---
+
+### User Story 78 - Export an Arrangement as one multi-track MIDI file
+
+*Traceability: `US-20.3` — Export an Arrangement as one multi-track MIDI file*
+
+**As** the Composer, **I want** to export an Arrangement as a single MIDI file with a track for each part, **so that** I can open the whole piece in my DAW with every part on its own track, ready to give an instrument.
+
+*(Added 2026-11-15 at the maintainer's request, T527: "I also want to be able to export an arrangement when I export I want it to create a multi-part midi file which I can import directly into my DAW." Decided without asking, each the reading a DAW makes most useful: a Format 1 file, tempo and time signatures in a first track; one track for each thing that sounds — a Pattern laid in the sequence, each part of a Section, a Chain — carrying its notes wherever in the sequence they fall, so a verse used three times is one track with three regions of notes rather than three tracks; each pitched track on its own channel with the General MIDI program nearest its instrument, so the file plays recognisably before any instrument is chosen; rhythms on the drum channel as the drums the Arrangement plays; a muted part left out, since the file is what Play sounds. The file is built from the very passes the transport is handed, so it cannot disagree with what is heard (Constitution Principle III).)*
+
+**Independent Test**: With an Arrangement of a Percussive Pattern twice, a Section of two parts once and the Percussive Pattern once more, press Export MIDI and assert one `.mid` named after the Arrangement downloads; that it is Format 1 with four tracks — the tempo track, the rhythm, and the Section's two parts; that the rhythm's track holds its notes in the first two passes and the fourth and none in the third, as Kick, Snare and Floor tom on the drum channel; that each Section part is on its own channel with its instrument's program; and that the file is as long as the sequence once through at the Arrangement's tempo.
+
+**Acceptance Scenarios**:
+
+- **AC-20.3.1** — One file, with a track for each part
+  - **Given** an Arrangement with something in its sequence that can play
+  - **When** the Composer presses Export MIDI in Arrange
+  - **Then** one multi-track MIDI file downloads holding the sequence once through, each part on a track of its own
+  - **Cases**:
+    - **AC-20.3.1/1** — Export MIDI in Arrange downloads one MIDI file named after the Arrangement, and is unavailable while nothing in the sequence can play
+    - **AC-20.3.1/2** — The file is a Format 1 file holding the sequence once through, every entry for its repeats, at the tempo of the Arrangement, with the tempo and the time signature of every Measure in a first track of their own
+    - **AC-20.3.1/3** — Each Pattern laid in the sequence, each part of each Section and each Chain has one track named for it, carrying its notes wherever in the sequence it sounds, so a Pattern laid twice is one track
+    - **AC-20.3.1/4** — Each pitched track is on a channel of its own with the General MIDI program of its instrument, and a rhythm, a percussive part and a part on Drums are on the drum channel
+    - **AC-20.3.1/5** — A Percussive Pattern laid in the sequence is written as the drums it plays — Kick, Snare and Floor tom by Accent Level — and a muted part of a Section is left out
+    - **AC-20.3.1/6** — The notes of the file are the notes Play sounds, pass for pass, and the file follows the note-length choice as every MIDI export does
 
 ---
 

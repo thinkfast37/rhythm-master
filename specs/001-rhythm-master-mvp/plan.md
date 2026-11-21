@@ -288,6 +288,8 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-079** | US-5.7 — Filter the library by type | AC-5.7.1–AC-5.7.2 | T516 | T517 |
 | **P-080** | US-20.1 — Lay Sections and Patterns out as an Arrangement | AC-20.1.1–AC-20.1.5 | T519, T521 | T520, T522 |
 | **P-081** | US-20.2 — Hear an Arrangement while it is built | AC-20.2.1–AC-20.2.3 | T521 | T522 |
+| **P-082** | US-12.5 — Choose how long exported notes last | AC-12.5.1–AC-12.5.2 | T527 | T528 |
+| **P-083** | US-20.3 — Export an Arrangement as one multi-track MIDI file | AC-20.3.1 | T527 | T528 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

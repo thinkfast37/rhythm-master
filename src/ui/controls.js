@@ -42,6 +42,7 @@ import { surfaceFor } from '../core/goals.js';
 import { phraseLengthOf, canAddVariation } from '../core/variations.js';
 import { VOICES, normaliseVoice, instrumentOf, FETCHED } from '../core/voice.js';
 import { PERCUSSION_MODES, normalisePercussion } from '../core/drums.js';
+import { renderArticulation } from './articulation.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
 import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
@@ -783,6 +784,8 @@ function renderActions(pattern, state, handlers) {
   // forced-naming flow, which is a different action (AC-7.4.6, US-7.5).
   if (state.isOwned) button('make-copy', 'Make Copy', () => handlers.onMakeCopy());
   button('export-midi', 'Export MIDI', () => handlers.onExportMidi());
+  // Staccato or Legato, beside the export it governs (AC-12.5.1/1).
+  group.appendChild(renderArticulation(state, handlers));
   // The standing possible-duplicates view (AC-11.1.4). It is library-wide, not about the
   // current Pattern, but it lives here because this is where whole-Pattern operations
   // are — and AC-15.1.8 already accounts for the actions area holding them.
