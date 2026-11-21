@@ -16,6 +16,10 @@ import {
   usesItem,
   isEmpty,
   validateArrangement,
+  normaliseTempo,
+  setTempo,
+  sequencePasses,
+  entryAtPass,
 } from '../../../src/core/arrangement.js';
 
 /** A palette of a Section, a Pattern and a Chain, with nothing laid out yet. */
@@ -120,5 +124,76 @@ describe('core/arrangement', () => {
     expect(validateArrangement({ ...a, entries: [{ kind: 'opera', id: 's_21', name: 'x', repeats: 1 }] })).toContain('Entry 1 needs a kind and an id');
     expect(validateArrangement({ ...a, entries: [{ kind: 'pattern', id: 's_21', name: '', repeats: 1 }] })).toContain('Entry 1 needs a name');
     expect(validateArrangement(null)).toEqual(['An Arrangement must be an object']);
+  });
+});
+
+describe('core/arrangement — the sequence as it plays (US-20.2)', () => {
+  /** Intro twice, Verse three times, Outro once; once through each is 1, 3 and 2 passes. */
+  const entries = [
+    { kind: 'pattern', id: 'a', name: 'Intro', repeats: 2 },
+    { kind: 'pattern', id: 'b', name: 'Verse', repeats: 3 },
+    { kind: 'section', id: 'c', name: 'Outro', repeats: 1 },
+  ];
+  const once = { a: 1, b: 3, c: 2 };
+  const passesOf = (e) => once[e.id];
+
+  it('AC-20.2.1/1 — Play sounds every sequence entry in order, each for its repeats, the next taking over at a pass boundary with nothing stopped, and after the last entry the first sounds again: which entry a pass belongs to', () => {
+    // 2×1, 3×3 and 1×2 passes: thirteen in all.
+    expect(sequencePasses(entries, passesOf)).toEqual([2, 9, 2]);
+    const order = Array.from({ length: 13 }, (_, loop) => entryAtPass(entries, passesOf, loop).index);
+    expect(order).toEqual([0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2]);
+    // Past the end it is the first again, and so on round.
+    expect(entryAtPass(entries, passesOf, 13)).toEqual({ index: 0, passInEntry: 0, repeat: 0 });
+    expect(entryAtPass(entries, passesOf, 13 * 4 + 11).index).toBe(2);
+    // Nothing laid, nothing sounds.
+    expect(entryAtPass([], passesOf, 0)).toBeNull();
+  });
+
+  it('AC-20.2.1/2 — One repeat is once through what the entry plays: a Pattern once, or one harmonic cycle when it carries a progression; a Section once through its combined loop; a Chain once through its entries: repeats count whole times through', () => {
+    // The Verse is three passes once through, played three times: the repeat turns over every third pass.
+    const verse = Array.from({ length: 9 }, (_, k) => entryAtPass(entries, passesOf, 2 + k));
+    expect(verse.map((v) => v.repeat)).toEqual([0, 0, 0, 1, 1, 1, 2, 2, 2]);
+    expect(verse.every((v) => v.index === 1)).toBe(true);
+    // Changing an entry's repeats changes only how long it lasts.
+    const longer = entries.map((e) => (e.id === 'a' ? { ...e, repeats: 4 } : e));
+    expect(sequencePasses(longer, passesOf)).toEqual([4, 9, 2]);
+  });
+
+  it('AC-20.2.1/3 — A progression starts from its first chord each time an entry begins, whatever was sounding before it: the pass counted from where the entry began', () => {
+    // The Verse begins on the third pass of the run and is counted from nought there.
+    expect(entryAtPass(entries, passesOf, 2)).toEqual({ index: 1, passInEntry: 0, repeat: 0 });
+    expect(entryAtPass(entries, passesOf, 4).passInEntry).toBe(2);
+    expect(entryAtPass(entries, passesOf, 10).passInEntry).toBe(8);
+    // And from nought again the next time round the sequence.
+    expect(entryAtPass(entries, passesOf, 13 + 2)).toEqual({ index: 1, passInEntry: 0, repeat: 0 });
+    expect(entryAtPass(entries, passesOf, 11)).toEqual({ index: 2, passInEntry: 0, repeat: 0 });
+  });
+
+  it('AC-20.2.1/6 — An entry whose Pattern, Section or Chain is no longer in the library is passed over, and the rest of the sequence plays: an entry with nothing to play lasts no passes', () => {
+    const gone = (e) => (e.id === 'b' ? 0 : once[e.id]);
+    expect(sequencePasses(entries, gone)).toEqual([2, 0, 2]);
+    expect(Array.from({ length: 5 }, (_, loop) => entryAtPass(entries, gone, loop).index)).toEqual([0, 0, 2, 2, 0]);
+    // Everything gone: nothing sounds at all.
+    expect(entryAtPass(entries, () => 0, 0)).toBeNull();
+    expect(entryAtPass(entries, () => undefined, 3)).toBeNull();
+  });
+
+  it('AC-20.2.3/1 — An Arrangement takes its tempo, in quarter notes a minute, from the first entry laid in its sequence, and from then on the tempo is its own: the tempo is a whole number held to 18–300', () => {
+    const a = createArrangement('Sunday song');
+    expect(a.tempo).toBeUndefined();
+    expect(setTempo(a, 96).tempo).toBe(96);
+    expect(setTempo(a, 95.6).tempo).toBe(96);
+    expect(setTempo(a, 5).tempo).toBe(18);
+    expect(setTempo(a, 999).tempo).toBe(300);
+    expect(normaliseTempo('fast')).toBe(18);
+    // Nothing else of the Arrangement is touched, and the one handed in is not changed.
+    expect(setTempo(addEntry(a, 'pattern', 's_21', 'Intro'), 120).entries).toHaveLength(1);
+    expect(a.tempo).toBeUndefined();
+    // Stored, it must be a whole number in range; absent is sound.
+    const laid = addEntry(a, 'pattern', 's_21', 'Intro');
+    expect(validateArrangement(laid)).toEqual([]);
+    expect(validateArrangement({ ...laid, tempo: 96 })).toEqual([]);
+    expect(validateArrangement({ ...laid, tempo: 400 })).toContain('A tempo must be a whole number from 18 to 300');
+    expect(validateArrangement({ ...laid, tempo: 96.5 })).toContain('A tempo must be a whole number from 18 to 300');
   });
 });

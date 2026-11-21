@@ -130,17 +130,25 @@ test('AC-20.1.1/3 — The mode is a within-session position, not a stored prefer
   expect(JSON.stringify(await page.evaluate(() => JSON.parse(localStorage.getItem('rm.settings.v1') ?? '{}')))).not.toMatch(/arrange/);
 });
 
-test('AC-20.1.1/4 — Play is unavailable in Arrange, and says that an Arrangement cannot be played yet', async ({ page }) => {
+test('AC-20.1.1/4 — Play is unavailable in Arrange while the sequence is empty, and says that there is nothing to play yet', async ({ page }) => {
+  // Rewritten 2026-11-20 with the criterion (US-20.2): Play was unavailable in Arrange altogether.
   await openApp(page);
   const play = page.locator('[data-action="play"]').first();
   await expect(play).toBeEnabled();
   await toArrange(page);
   await expect(play).toBeDisabled();
-  await expect(play).toHaveAttribute('title', /cannot be played yet/);
-  await expect(panel(page).locator('.arrange-play-note')).toContainText('cannot be played yet');
-  // And nothing starts if it is asked for another way.
+  await expect(play).toHaveAttribute('title', /Nothing to play yet/);
+  // Nothing starts if it is asked for another way.
   await page.evaluate(() => window.__rm.handlers.onPlay());
   expect(await page.evaluate(() => window.__rm.getState().isPlaying)).toBe(false);
+  // A palette alone is still nothing to play; an entry laid, there is.
+  await addPattern(page, BOSSA);
+  await expect(play).toBeDisabled();
+  await palette(page).first().locator('[data-action="arrange-lay"]').click();
+  await expect(play).toBeEnabled();
+  // The entry taken out again, there is not.
+  await entries(page).first().locator('[data-action="arrange-entry-remove"]').click();
+  await expect(play).toBeDisabled();
   // Back in Practice it plays as it did.
   await mode(page, 'practice').click();
   await expect(play).toBeEnabled();
@@ -376,6 +384,8 @@ test('AC-20.1.4/1 — Save asks a name, unique among Arrangements, and stores th
     {
       id: 'arrg_1',
       name: 'Sunday song',
+      // The tempo the first entry laid brought with it (AC-20.2.3/1).
+      tempo: 80,
       palette: [
         { kind: 'pattern', id: BOSSA },
         { kind: 'pattern', id: DJEMBE },

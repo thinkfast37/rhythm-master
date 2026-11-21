@@ -14,14 +14,14 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1221 across 74 User Stories
+**Criteria**: 1235 across 75 User Stories
 
-**Coverage**: 1095 of 1221 criteria proven (89.7%)
+**Coverage**: 1109 of 1235 criteria proven (89.8%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1095 | 89.7% |
-| 🟠 Gap — MEDIUM | 50 | 4.1% |
+| 🟢 Proven | 1109 | 89.8% |
+| 🟠 Gap — MEDIUM | 50 | 4.0% |
 | 🟡 Gap — LOW | 76 | 6.2% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
@@ -131,6 +131,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.18 | 7 | **7** | · | · | · | · | · |
 | 🟢 US-5.7 | 7 | **7** | · | · | · | · | · |
 | 🟢 US-20.1 | 21 | **21** | · | · | · | · | · |
+| 🟢 US-20.2 | 14 | **14** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1336,24 +1337,38 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.7 | `AC-5.7.2/1` 🖵 | Saved Chains are a group of the library between Sections and Patterns, under a heading with its count that folds as the other groups do, and the group is not shown in the Composer | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
 | US-5.7 | `AC-5.7.2/2` | A Chain is listed by its name with the name of the Pattern it plays over, and the search matches either | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
 | US-5.7 | `AC-5.7.2/3` | Choosing a Chain opens the Pattern it plays over with the Chain loaded in the Compose group | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.1/1` 🖵 | Choosing Arrange shows the Arrangement panel — its name, the palette and the sequence — in place of the rhythm band and the work surface, while the library sidebar and its toggle stay | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.1/2` 🖵 | Choosing Practice or Composer puts that mode back as it was, and the Arrangement being built is kept for the session | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.1/3` 🖵 | The mode is a within-session position, not a stored preference: a reload opens in Practice | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.1/4` 🖵 | Play is unavailable in Arrange, and says that an Arrangement cannot be played yet | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.2/1` 🖵 | Add from library opens the library to choose from, and choosing a Pattern, a Section or a Chain puts it in the palette and ends the choosing | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.2/2` 🖵 | A palette entry shows its name and its type, a Percussive Pattern saying that it plays on the drum kit, and nothing is in the palette twice | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.2/3` 🖵 | Remove takes an entry out of the palette and leaves every sequence entry made from it | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.2/4` 🖵 | Edit on a Pattern or a Section in the palette opens it in the Composer, and a Chain has no Edit, saying it is written out as a Pattern first | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.3/1` 🖵 | Tapping a palette entry appends it to the sequence as an entry named after it, played once | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.3/2` 🖵 | The name of a sequence entry can be changed in place, and its repeats set from 1 to 16 | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.3/3` 🖵 | A sequence entry can be moved up, moved down and removed, and the same palette entry may be in the sequence more than once | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.3/4` 🖵 | The sequence is an ordered, numbered list showing each entry by its name, what it plays and its repeats, and says when it is empty | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.4/1` | Save asks a name, unique among Arrangements, and stores the name, the palette and the sequence in order; it is unavailable while the sequence is empty | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.4/2` | Once an Arrangement is saved, every change to its palette or its sequence saves it in place at once | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.4/3` | A saved Arrangement survives a reload, and can be renamed and deleted, deletion asking first | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangements.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.4/4` 🖵 | New starts an empty Arrangement, asking first when the one on screen has never been saved and is not empty | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.4/5` | Deleting a Pattern, a Section or a Chain that an Arrangement uses is refused with a message naming the Arrangement or Arrangements, until they no longer use it | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangement.test.js`, `arrangements.test.js`, `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.4/6` | Arrangements are stored in `rm.arrangements.v2`, apart from every other store, and an Arrangement holds the ids of what it is made of and never a copy | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrangements.test.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.5/1` | Saved Arrangements are the first group of the library, ahead of Sections, under a heading with its count that folds as the other groups do, each listed with how many entries its sequence has | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.5/2` 🖵 | Arrangement is the last of the type pills, and choosing it shows the Arrangements and hides the entries of every type not chosen | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
-| US-20.1 | `AC-20.1.5/3` | Choosing an Arrangement in the library opens it in Arrange as it was saved, asking first when an Arrangement never saved would be lost | P-080 | T519 (1/1 done) | T520 (1/1 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.1/1` 🖵 | Choosing Arrange shows the Arrangement panel — its name, the palette and the sequence — in place of the rhythm band and the work surface, while the library sidebar and its toggle stay | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.1/2` 🖵 | Choosing Practice or Composer puts that mode back as it was, and the Arrangement being built is kept for the session | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.1/3` 🖵 | The mode is a within-session position, not a stored preference: a reload opens in Practice | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.1/4` 🖵 | Play is unavailable in Arrange while the sequence is empty, and says that there is nothing to play yet | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.2/1` 🖵 | Add from library opens the library to choose from, and choosing a Pattern, a Section or a Chain puts it in the palette and ends the choosing | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.2/2` 🖵 | A palette entry shows its name and its type, a Percussive Pattern saying that it plays on the drum kit, and nothing is in the palette twice | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.2/3` 🖵 | Remove takes an entry out of the palette and leaves every sequence entry made from it | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.2/4` 🖵 | Edit on a Pattern or a Section in the palette opens it in the Composer, and a Chain has no Edit, saying it is written out as a Pattern first | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.3/1` 🖵 | Tapping a palette entry appends it to the sequence as an entry named after it, played once | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.3/2` 🖵 | The name of a sequence entry can be changed in place, and its repeats set from 1 to 16 | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.3/3` 🖵 | A sequence entry can be moved up, moved down and removed, and the same palette entry may be in the sequence more than once | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.3/4` 🖵 | The sequence is an ordered, numbered list showing each entry by its name, what it plays and its repeats, and says when it is empty | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.4/1` | Save asks a name, unique among Arrangements, and stores the name, the palette and the sequence in order; it is unavailable while the sequence is empty | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.4/2` | Once an Arrangement is saved, every change to its palette or its sequence saves it in place at once | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.4/3` | A saved Arrangement survives a reload, and can be renamed and deleted, deletion asking first | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangements.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.4/4` 🖵 | New starts an empty Arrangement, asking first when the one on screen has never been saved and is not empty | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.4/5` | Deleting a Pattern, a Section or a Chain that an Arrangement uses is refused with a message naming the Arrangement or Arrangements, until they no longer use it | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangement.test.js`, `arrangements.test.js`, `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.4/6` | Arrangements are stored in `rm.arrangements.v2`, apart from every other store, and an Arrangement holds the ids of what it is made of and never a copy | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrangements.test.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.5/1` | Saved Arrangements are the first group of the library, ahead of Sections, under a heading with its count that folds as the other groups do, each listed with how many entries its sequence has | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.5/2` 🖵 | Arrangement is the last of the type pills, and choosing it shows the Arrangements and hides the entries of every type not chosen | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.1 | `AC-20.1.5/3` | Choosing an Arrangement in the library opens it in Arrange as it was saved, asking first when an Arrangement never saved would be lost | P-080 | T519, T521 (2/2 done) | T520, T522 (2/2 done) | `arrange.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.1/1` | Play sounds every sequence entry in order, each for its repeats, the next taking over at a pass boundary with nothing stopped, and after the last entry the first sounds again | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrangement.test.js`, `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.1/2` | One repeat is once through what the entry plays: a Pattern once, or one harmonic cycle when it carries a progression; a Section once through its combined loop; a Chain once through its entries | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrangement.test.js`, `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.1/3` | A progression starts from its first chord each time an entry begins, whatever was sounding before it | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrangement.test.js`, `section.test.js`, `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.1/4` | The sequence entry sounding is marked in the sequence, and the mark is gone when it stops | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.1/5` | Changing the sequence while it plays — an entry added, removed, moved or its repeats — is heard from the next pass with nothing stopped or restarted | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.1/6` | An entry whose Pattern, Section or Chain is no longer in the library is passed over, and the rest of the sequence plays | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrangement.test.js`, `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.2/1` | A Section sounds every unmuted part together, each on the instrument and at the volume the Section holds for it, and a muted part is silent | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.2/2` | A Melodic Pattern sounds on the voice Practice remembers for it, and on Piano when there is none | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.2/3` | A Percussive Pattern laid in the sequence sounds on the drum kit, the drum chosen by each Accent Level as Drum kit chooses it in Practice, whatever Practice remembers for the Pattern | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.2/4` | A Chain sounds its fills in order over its Pattern, on the voice Practice remembers for that Pattern | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.3/1` | An Arrangement takes its tempo, in quarter notes a minute, from the first entry laid in its sequence, and from then on the tempo is its own | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrangement.test.js`, `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.3/2` 🖵 | In Arrange the tempo entry beside Play shows and sets the tempo of the Arrangement, from 18 to 300, and not the tempo of the Pattern open in Practice | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.3/3` | Every entry plays at the tempo of the Arrangement whatever its own, and no Pattern, Section or Chain is changed by it | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-20.2 | `AC-20.2.3/4` | The tempo is stored with the Arrangement and is in force when it is opened again, and changing it while playing restarts the sequence from its first entry at the new tempo | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |

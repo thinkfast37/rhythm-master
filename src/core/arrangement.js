@@ -8,6 +8,8 @@
  * argument alone; the id is assigned by the store, never here.
  */
 
+import { MIN_TEMPO, MAX_TEMPO } from './pattern.js';
+
 /** What an Arrangement can be made of. */
 export const ITEM_KINDS = Object.freeze(['pattern', 'section', 'chain']);
 
@@ -89,6 +91,56 @@ export function setEntryName(arrangement, index, name) {
   return { ...arrangement, entries: arrangement.entries.map((e, i) => (i === index ? { ...e, name: trimmed } : e)) };
 }
 
+/* --- its tempo, and where a pass falls in the sequence (US-20.2) ------------- */
+
+/** A tempo as a whole number of quarter notes a minute, held to 18–300 (AC-20.2.3/2). */
+export function normaliseTempo(bpm) {
+  const n = Math.round(Number(bpm));
+  if (!Number.isFinite(n)) return MIN_TEMPO;
+  return Math.min(MAX_TEMPO, Math.max(MIN_TEMPO, n));
+}
+
+/** The Arrangement's own tempo; nothing it is made of is touched (AC-20.2.3/3). */
+export function setTempo(arrangement, bpm) {
+  return { ...arrangement, tempo: normaliseTempo(bpm) };
+}
+
+/**
+ * How many passes each sequence entry lasts: its repeats, each one once
+ * through what it plays (AC-20.2.1/2). `passesOf(entry, index)` says how many
+ * passes that is — 0 for an entry with nothing left to play, which is then
+ * passed over (AC-20.2.1/6).
+ */
+export function sequencePasses(entries, passesOf) {
+  return (entries ?? []).map((entry, index) => {
+    const once = Math.max(0, Math.floor(passesOf(entry, index) || 0));
+    return once * entry.repeats;
+  });
+}
+
+/**
+ * The sequence entry sounding on absolute pass `loop`, the sequence looping
+ * once past its end (AC-20.2.1/1): which entry, which of its repeats, and the
+ * pass counted from where the entry began — so a progression starts from its
+ * first chord each time (AC-20.2.1/3). Null when nothing in it can play.
+ *
+ * @returns {{ index: number, passInEntry: number, repeat: number }|null}
+ */
+export function entryAtPass(entries, passesOf, loop) {
+  const spans = sequencePasses(entries, passesOf);
+  const total = spans.reduce((sum, n) => sum + n, 0);
+  if (total <= 0) return null;
+  let remaining = ((Math.floor(loop) % total) + total) % total;
+  for (let index = 0; index < spans.length; index++) {
+    if (remaining < spans[index]) {
+      const once = spans[index] / entries[index].repeats;
+      return { index, passInEntry: remaining, repeat: Math.floor(remaining / once) };
+    }
+    remaining -= spans[index];
+  }
+  return null;
+}
+
 /** Whether the Arrangement names this item, in its palette or its sequence (AC-20.1.4/5). */
 export function usesItem(arrangement, kind, id) {
   return [...(arrangement.palette ?? []), ...(arrangement.entries ?? [])].some((x) => same(x, kind, id));
@@ -104,6 +156,9 @@ export function validateArrangement(arrangement) {
   if (!arrangement || typeof arrangement !== 'object') return ['An Arrangement must be an object'];
   const problems = [];
   if (typeof arrangement.name !== 'string' || arrangement.name.trim() === '') problems.push('An Arrangement needs a name');
+  if (arrangement.tempo !== undefined && (!Number.isInteger(arrangement.tempo) || arrangement.tempo < MIN_TEMPO || arrangement.tempo > MAX_TEMPO)) {
+    problems.push(`A tempo must be a whole number from ${MIN_TEMPO} to ${MAX_TEMPO}`);
+  }
   if (!Array.isArray(arrangement.palette)) problems.push('An Arrangement needs a palette');
   else {
     const seen = new Set();

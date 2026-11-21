@@ -665,7 +665,8 @@ export function renderPlayControls(root, pattern, state, handlers) {
   root.className = 'controls play-controls';
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderTransport(state, handlers));
-    fresh.appendChild(renderTempoEntry(pattern, handlers));
+    // In Arrange the tempo beside Play is the Arrangement's own (AC-20.2.3/2).
+    fresh.appendChild(state.composer?.mode === 'arrange' ? renderArrangeTempo(handlers) : renderTempoEntry(pattern, handlers));
     placeHelp(fresh, 'bar', state);
   });
 }
@@ -1449,10 +1450,10 @@ function renderTransport(state, handlers) {
   play.dataset.action = state.isPlaying ? 'stop' : 'play';
   // Audio starts ONLY from this handler — a user gesture (FR-010, FR-011).
   play.addEventListener('click', () => (state.isPlaying ? handlers.onStop() : handlers.onPlay()));
-  // An Arrangement cannot be played yet, and the button says so (AC-20.1.1/4).
-  if (state.composer?.mode === 'arrange') {
+  // In Arrange, Play plays the sequence, and there must be one (AC-20.1.1/4).
+  if (state.composer?.mode === 'arrange' && !state.isPlaying && !handlers.arrangeView?.().canPlay) {
     play.disabled = true;
-    play.title = 'An Arrangement cannot be played yet';
+    play.title = 'Nothing to play yet: lay an entry in the sequence first';
   }
   group.appendChild(play);
 
@@ -1534,6 +1535,28 @@ export function renderClickControls(state, handlers) {
  * the preset row below share the one `onTempo` path, so the three never
  * disagree (AC-4.2.5/3).
  */
+/**
+ * The Arrangement's tempo (AC-20.2.3/2), where the Pattern's sits in the other
+ * modes: quarter notes a minute, with no unit to switch.
+ */
+function renderArrangeTempo(handlers) {
+  const group = el('div', 'control-group tempo-pinned arrange-tempo');
+  group.appendChild(
+    valueEntry('tempo-entry', {
+      min: MIN_TEMPO,
+      max: MAX_TEMPO,
+      value: handlers.arrangeView().tempo,
+      label: 'Tempo of the Arrangement in BPM',
+      action: 'set-arrange-tempo',
+      onCommit: (bpm) => handlers.onArrangeTempo(bpm),
+    })
+  );
+  const unit = el('span', 'tempo-unit', { textContent: '♩ BPM' });
+  unit.title = 'The tempo of the Arrangement counts quarter notes';
+  group.appendChild(unit);
+  return group;
+}
+
 function renderTempoEntry(pattern, handlers) {
   const group = el('div', 'control-group tempo-pinned');
   group.appendChild(

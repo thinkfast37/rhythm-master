@@ -275,7 +275,7 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
-**Amended 2026-11-20** (T521) — **the deploy no longer waits for a second run of the suite, and
+**Amended 2026-11-20** (T527) — **the deploy no longer waits for a second run of the suite, and
 the full browser suite is the pull request's to run.** This reverses the "verify → build → deploy"
 contract stated below, and was approved by the maintainer before the work ("Yes, go ahead", to a
 plan that named this as its one trade-off). What still holds: a failing AC cannot be *merged*,

@@ -333,3 +333,33 @@ describe('core/section — the Section (AC-19.11.1, AC-19.11.4)', () => {
     expect(validateSection(old)).toEqual([]);
   });
 });
+
+describe('core/section — one pass of an Arrangement, as the transport is handed it (US-20.2)', () => {
+  it('AC-20.2.1/3 — A progression starts from its first chord each time an entry begins, whatever was sounding before it: the pass is fixed by the entry, not by the transport', async () => {
+    const { arranged, isArranged, timelineOf: tl, loopDurationOf: dur, beatGridOf: grid, anyHarmony: harm } = await import('../../../src/core/section.js');
+    const { setProgression, setChange, setArpeggio } = await import('../../../src/core/harmony.js');
+    const { create, cycleAccent, setPitch } = await import('../../../src/core/pattern.js');
+    let p = { ...create('Changes'), id: 'p_1', soundMode: 'melodic', key: 'C', tempo: 120 };
+    p = setChange(setProgression(p, 'I-IV-V'), 'pass');
+    p = setArpeggio(setPitch(cycleAccent(p, 0, 0, 0), 0, 0, 0, { tone: 1, octaveOffset: 0 }), 'up');
+    const notes = (events) => events.filter((e) => e.pitch).map((e) => e.pitch.midiNote);
+    // Alone, the chord walks with the pass.
+    expect(new Set([0, 1, 2].map((k) => notes(tl(p, k)).join())).size).toBeGreaterThan(1);
+
+    // Arranged on its first pass, it sounds the first chord whatever pass the transport is on.
+    const first = arranged(p, 0, { voice: 'guitar', kit: false });
+    expect(isArranged(first)).toBe(true);
+    for (const transportPass of [0, 1, 7, 40]) expect(notes(tl(first, transportPass))).toEqual(notes(tl(p, 0)));
+    for (const k of [1, 2]) for (const transportPass of [0, 5]) expect(notes(tl(arranged(p, k), transportPass))).toEqual(notes(tl(p, k)));
+    // Every event says it is arranged and carries how it sounds.
+    expect(tl(first, 3).every((e) => e.arranged === true && e.voice === 'guitar' && e.kit === false)).toBe(true);
+    // The length and the Beats are the Pattern's own, and it is never taken for the pass before it.
+    expect(dur(first)).toBe(dur(p));
+    expect(grid(first)).toEqual(grid(p));
+    expect(harm(first)).toBe(true);
+    expect(harm(arranged({ ...create('Plain'), tempo: 100 }, 0))).toBe(true);
+    // What the transport reads off a Pattern is there.
+    expect(first).toMatchObject({ name: 'Changes', tempo: 120, soundMode: 'melodic' });
+    expect(first.measures).toBe(p.measures);
+  });
+});
