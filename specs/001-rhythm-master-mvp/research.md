@@ -275,6 +275,29 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
+**Amended 2026-11-20** (T521) — **the deploy no longer waits for a second run of the suite, and
+the full browser suite is the pull request's to run.** This reverses the "verify → build → deploy"
+contract stated below, and was approved by the maintainer before the work ("Yes, go ahead", to a
+plan that named this as its one trade-off). What still holds: a failing AC cannot be *merged*,
+because `main` requires the PR's **All gates passed** check, which runs every gate and all of the
+browser suite on the branch merged with `main`. What changes:
+
+- **Publishing.** `deploy.yml` builds and publishes on push to `main` without `needs: verify`. The
+  same suite had already passed minutes earlier on the PR, and the wait was a second eight to ten
+  minutes (five after T518) between a merge and the musician seeing it. `verify` still runs on
+  `main` alongside and turns the run red. *The gap this opens*: branch protection does not require
+  a PR to be up to date with `main`, so two PRs merged minutes apart are first tested together
+  after they are live; a break of that kind is up for about five minutes before it is flagged, and
+  is then fixed forward at once. *Rejected*: requiring every PR to be up to date before merging —
+  with several sessions landing work it would re-run the suite on each PR every time another
+  merged.
+- **Local runs.** A change runs the fast gates locally, and the browser tests it adds, edits or
+  works beside; the full browser suite runs once, on the PR. Before, it ran three times per change
+  (locally, on the PR, on the deploy). This is not the "tests near the changed files" selection
+  rejected on 2026-10-31: that was about what CI asks, and CI still asks for everything, on every
+  PR. The cost is that a break in an unrelated browser test is reported by the PR check about five
+  minutes later than a local run would have reported it.
+
 **Amended 2026-11-20** (T518): a shard is a share of the *tests*, not of the files, and there are
 six. Split by file, the four shards of one green run took 3.1, 8.0, 2.0 and 4.6 minutes — one drew
 `harmony`, `layers`, `voice` and `cycle-list` together — and a run is as long as its slowest shard.

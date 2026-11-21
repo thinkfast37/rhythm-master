@@ -181,7 +181,7 @@ tools/
 .github/workflows/
 ├── verify.yml              # The gates, reusable: lint/unit/spec gates + 6 Playwright shards (T460, T518)
 ├── pull-request.yml        # Runs verify on every PR; its `gates` job is required on main
-└── deploy.yml              # verify → build → publish to GitHub Pages
+└── deploy.yml              # build → publish to GitHub Pages; verify runs alongside and reports (T521)
 ```
 
 **Structure Decision**: Single project, no frontend/backend split, because there is no backend and
