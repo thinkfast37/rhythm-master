@@ -5,7 +5,7 @@
  * (Principle II). None of them computes musical values — Slot counts, accents,
  * and Recipe menus all come from core/.
  */
-import { TIME_SIGNATURES, beatNoteValue, tempoUnitOf } from '../core/meter.js';
+import { TIME_SIGNATURES, beatNoteValue, isValidClickValue, tempoUnitOf } from '../core/meter.js';
 import { recipesFor, isOffered } from '../core/recipes.js';
 import { canCondense } from '../core/condense.js';
 import { DICE_CONTROLS, canRoll } from '../core/dice.js';
@@ -671,7 +671,7 @@ export function renderPlayControls(root, pattern, state, handlers) {
     // In the Composer the tempo beside Play is the composition's own, as its
     // unit is (AC-19.5.5/1, AC-19.11.6/4) — not the Pattern left open in Practice.
     else if (state.composer?.mode === 'composer' && state.composer.draft) {
-      fresh.appendChild(renderTempoEntry(state.composer.draft, { onTempo: (bpm) => handlers.onComposerTempo(bpm), onTempoUnit: (unit) => handlers.onComposerTempoUnit(unit) }, 'composition'));
+      fresh.appendChild(renderTempoEntry(state.composer.draft, { onTempo: (bpm) => handlers.onComposerTempo(bpm) }, 'composition'));
     } else fresh.appendChild(renderTempoEntry(pattern, handlers));
     placeHelp(fresh, 'bar', state);
   });
@@ -1465,20 +1465,23 @@ function renderTransport(state, handlers) {
   }
   group.appendChild(play);
 
-  // The Composer's metronome (AC-19.6.3/1): beside Play while it plays, recording
-  // or not, and nowhere else — Practice has the click in its own group. It is
-  // the app's one click setting (/2), and not a transport button (AC-15.1.17/4).
-  if (state.isPlaying && state.composer?.mode === 'composer' && state.composer?.draft) {
+  // The Composer's metronome (AC-19.6.3/1): beside Play, stopped or playing,
+  // recording or not, and nowhere else — Practice has the click in its own
+  // group. Switched on while stopped it waits for Play. It is the app's one
+  // click setting (/2), and not a transport button (AC-15.1.17/4); what it
+  // counts sits beside it (AC-4.3.7/1).
+  if (state.composer?.mode === 'composer' && state.composer?.draft) {
     const on = Boolean(state.settings.metronomeEnabled);
     const metronome = el('button', `toggle composer-metronome${on ? ' on' : ''}`, {
       type: 'button',
       textContent: 'Metronome',
-      title: on ? 'Metronome on: a click on every Beat. Tap to turn it off.' : 'Metronome off. Tap for a click on every Beat.',
+      title: on ? 'Metronome on: it clicks while playing. Tap to turn it off.' : 'Metronome off. Tap for a click while playing.',
     });
     metronome.dataset.action = 'composer-metronome';
     metronome.setAttribute('aria-pressed', String(on));
     metronome.addEventListener('click', () => handlers.onComposerMetronome?.());
     group.appendChild(metronome);
+    group.appendChild(renderClickValue(state, handlers));
   }
 
   // Stopped under a cycle, Stop stays beside Play: the second press begins the
@@ -1523,6 +1526,7 @@ export function renderClickControls(state, handlers) {
     handlers.onSetting({ metronomeEnabled: !state.settings.metronomeEnabled })
   );
   group.appendChild(metronome);
+  group.appendChild(renderClickValue(state, handlers));
 
   const countIn = el('button', `toggle${state.settings.countInEnabled ? ' on' : ''}`, {
     type: 'button',
@@ -1535,6 +1539,28 @@ export function renderClickControls(state, handlers) {
   group.appendChild(countIn);
 
   return group;
+}
+
+/** What the metronome click counts (AC-4.3.7/1), beside every click toggle. */
+export const CLICK_VALUE_LABELS = [
+  ['beat', 'Beat'],
+  ['sixteenth', '16ths'],
+  ['eighth', '8ths'],
+  ['quarter', 'Quarters'],
+  ['half', 'Halves'],
+  ['whole', 'Wholes'],
+  ['measure', 'Measure'],
+];
+
+function renderClickValue(state, handlers) {
+  const picker = el('select', 'click-value');
+  picker.dataset.action = 'set-click-value';
+  picker.setAttribute('aria-label', 'What the metronome click counts');
+  picker.title = 'What the metronome click counts';
+  for (const [value, label] of CLICK_VALUE_LABELS) picker.appendChild(el('option', null, { value, textContent: label }));
+  picker.value = isValidClickValue(state.settings.clickValue) ? state.settings.clickValue : 'beat';
+  picker.addEventListener('change', (e) => handlers.onClickValue(e.target.value));
+  return picker;
 }
 
 /**
@@ -1582,20 +1608,16 @@ function renderTempoEntry(pattern, handlers, of = 'pattern') {
       onCommit: (bpm) => handlers.onTempo(bpm),
     })
   );
-  // What the tempo counts per minute (AC-4.2.7/1): one press switches ♩ ↔ ♪.
+  // What the tempo counts per minute (AC-4.2.7/1): the first Measure's Beat,
+  // shown and never switched — what the click counts is its own setting (AC-4.3.7).
   const unit = tempoUnitOf(pattern);
-  const glyph = unit === 'eighth' ? '♪' : '♩';
-  const other = unit === 'eighth' ? 'quarter' : 'eighth';
-  const toggle = el('button', 'tempo-unit-toggle', {
-    type: 'button',
-    textContent: glyph,
-    title: `The tempo counts ${unit} notes; press to count ${other} notes`,
+  const mark = el('span', 'tempo-unit-mark', {
+    textContent: unit === 'eighth' ? '♪' : '♩',
+    title: `The tempo counts ${unit} notes, the Beat of the first Measure`,
   });
-  toggle.dataset.action = 'toggle-tempo-unit';
-  toggle.dataset.unit = unit;
-  toggle.setAttribute('aria-label', `Tempo counts ${unit} notes`);
-  toggle.addEventListener('click', () => handlers.onTempoUnit(other));
-  group.appendChild(toggle);
+  mark.dataset.unit = unit;
+  mark.setAttribute('aria-label', `Tempo counts ${unit} notes`);
+  group.appendChild(mark);
   group.appendChild(el('span', 'tempo-unit', { textContent: 'BPM' }));
   return group;
 }

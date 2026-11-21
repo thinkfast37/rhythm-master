@@ -39,7 +39,7 @@ async function loadBars(page, count = 8) {
   await expect(page.locator('.measure')).toHaveCount(count);
 }
 
-test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; while the Composer plays, a Metronome toggle joins Play/Stop; Related is a placeholder, disabled and saying so, until Share and tidy up lands', async ({ page }) => {
+test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; in the Composer, a Metronome toggle and its click value join Play/Stop; Related is a placeholder, disabled and saying so, until Share and tidy up lands', async ({ page }) => {
   await page.goto('/');
   const barOrder = () =>
     page.locator('.main-top-bar > *:not(.goal-strip)').evaluateAll((els) => els.map((e) => e.className.split(' ')[0]));
@@ -55,7 +55,7 @@ test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, 
       await expect(bar.locator('> .related-button'), tag).toBeVisible();
       await expect(bar.locator('.play-controls .transport'), tag).toBeVisible();
       await expect(bar.locator('.play-controls .tempo-entry'), tag).toBeVisible();
-      await expect(bar.locator('.play-controls [data-action="toggle-tempo-unit"]'), tag).toBeVisible();
+      await expect(bar.locator('.play-controls .tempo-unit-mark'), tag).toBeVisible();
       await expect(bar.locator('.pattern-nav [data-action="prev-pattern"]'), tag).toBeVisible();
       await expect(bar.locator('.pattern-nav [data-action="next-pattern"]'), tag).toBeVisible();
       // Left to right: each control starts no further left than the one before it
@@ -70,8 +70,10 @@ test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, 
       // No Practice | Composer switch in the bar's own row (AC-15.1.20): the
       // strip carries it where a goal has one.
       await expect(bar.locator('> .mode-switch'), tag).toHaveCount(0);
-      // The Metronome toggle is the Composer's, while it plays: never here (AC-19.6.3/1).
+      // The Metronome toggle and its click value are the Composer's: never here (AC-19.6.3/1).
       await expect(bar.locator('.composer-metronome'), tag).toHaveCount(0);
+      // Nor its click value beside Play (Practise a rhythm's goal strip has its own, by Click: AC-4.3.7/1).
+      await expect(bar.locator('.play-controls [data-action="set-click-value"]'), tag).toHaveCount(0);
     }
   }
   // Related: there, disabled, and saying what it waits for.

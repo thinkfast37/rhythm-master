@@ -1881,12 +1881,11 @@ body {
 .main-top-bar .transport { padding: 10px 16px; }
 .tempo-pinned { display: flex; align-items: center; gap: 4px; }
 .tempo-pinned .tempo-entry { width: 64px; }
-/* What the tempo counts, ♩ or ♪ (AC-4.2.7/1): a glyph-sized press beside the entry. */
-.tempo-unit-toggle {
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 6px;
+/* What the tempo counts, ♩ or ♪ (AC-4.2.7/1): a glyph beside the entry, read-only. */
+.tempo-unit-mark {
+  padding: 0 2px;
   font: 400 18px/1 var(--font-ui);
+  color: var(--ink);
 }
 .tempo-unit {
   font: 600 11px/1 var(--font-ui);
@@ -2269,6 +2268,7 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
 
 /* The Composer's metronome toggle, beside Play while it plays (AC-19.6.3). */
 .composer-metronome { white-space: nowrap; }
+.click-value { max-width: 7.5em; }
 
 /* The library's groups (AC-5.1.8): a heading that folds its list away. */
 .library-group-heading { margin: 0 0 6px; }

@@ -10,7 +10,7 @@
  * Times are relative to the start of a loop pass. The scheduler adds its own
  * absolute audio-clock origin (FR-009).
  */
-import { beatCount, beatDurationSeconds, beatNoteValue, tempoUnitOf } from './meter.js';
+import { beatCount, beatDurationSeconds, beatNoteValue, clickIntervalSeconds, tempoUnitOf } from './meter.js';
 import { slotCount, subdivisionGroups } from './recipes.js';
 import { effectiveAccent } from './accents.js';
 import { resolve, inRegister, registerOf, soundingOctaveOffset } from './pitch.js';
@@ -168,21 +168,33 @@ export function loopDurationSeconds(pattern) {
   );
 }
 
-/** Beat onsets in one loop pass — what the metronome clicks on. US-4.3 */
-export function buildBeatGrid(pattern) {
+/**
+ * Click onsets in one loop pass — what the metronome clicks on. US-4.3
+ *
+ * By default a click on every Beat. `clickValue` counts another note value or
+ * the Measure instead (AC-4.3.7), starting again on every Measure's downbeat:
+ * a value that does not fill the Measure evenly stops at the bar line (/5), so
+ * no click ever falls across one. `beatIndex` is the click's place in its
+ * Measure.
+ */
+export function buildBeatGrid(pattern, clickValue = 'beat') {
   const beats = [];
+  const unit = tempoUnitOf(pattern);
   let measureStart = 0;
   pattern.measures.forEach((measure, measureIndex) => {
-    const beatDuration = beatDurationSeconds(measure.timeSignature, pattern.tempo, tempoUnitOf(pattern));
-    for (let beatIndex = 0; beatIndex < measure.beats.length; beatIndex++) {
+    const length = measure.beats.length * beatDurationSeconds(measure.timeSignature, pattern.tempo, unit);
+    const interval = clickIntervalSeconds(measure.timeSignature, pattern.tempo, unit, clickValue);
+    // Index arithmetic, not accumulation, and a margin so a click that lands
+    // on the bar line by rounding is the next Measure's downbeat, not this one's.
+    for (let beatIndex = 0; beatIndex * interval < length - 1e-9; beatIndex++) {
       beats.push({
-        timeSeconds: measureStart + beatIndex * beatDuration,
+        timeSeconds: measureStart + beatIndex * interval,
         measureIndex,
         beatIndex,
         isDownbeat: beatIndex === 0,
       });
     }
-    measureStart += measure.beats.length * beatDuration;
+    measureStart += length;
   });
   return beats;
 }

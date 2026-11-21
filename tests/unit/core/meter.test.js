@@ -68,10 +68,13 @@ describe('core/meter', () => {
     }
   });
 
-  it("AC-4.2.7/5 — A Pattern that does not state a unit counts the note value of its first Measure's Beat, so one saved before the unit existed plays as it did whenever its Measures share a note value; opening it in the editor states that unit, so changing the first Measure's meter later does not retime it: the default", () => {
+  it("AC-4.2.7 — The tempo counts the first Measure's Beat, and every note lasts its written length: the unit from the meter", () => {
     const of = (...tss) => ({ measures: tss.map((timeSignature) => ({ timeSignature })) });
     expect(tempoUnitOf(of('4/4'))).toBe('quarter');
     expect(tempoUnitOf(of('6/8', '7/8'))).toBe('eighth');
+    expect(tempoUnitOf(of('4/4', '6/8'))).toBe('quarter');
+    // Stated only by core/ on the copy of a layer under a composition
+    // (AC-19.11.2/3); a stored one never reaches here (AC-4.2.7/5).
     expect(tempoUnitOf({ ...of('6/8'), tempoUnit: 'quarter' })).toBe('quarter');
     // A saved 6/8 Pattern at 80: each eighth-note Beat lasts 60/80 s, as it did
     // when tempo counted Beats.

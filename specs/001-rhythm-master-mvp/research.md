@@ -775,6 +775,36 @@ into two Beats, which Constitution Principle I forbids without a governance amen
 migration writing the unit into every stored Pattern (unnecessary — the read default is the old behaviour,
 and bumping `CURRENT_VERSION` would lock every store out of an older cached build).
 
+**Amended 2026-11-21 — the unit follows the meter, and the click counts what the musician chooses.**
+The ♩/♪ control is gone. The tempo counts the Beat of the Pattern's first Measure: a quarter note in a /4
+meter, an eighth note in a /8 meter — what the read default above already did. Every Beat still lasts
+its written length against it, so the duration rule this decision made stands unchanged. The control
+was read as choosing what the metronome clicks, which it never did: the maintainer, at ♩ = 150, switched
+to ♪ expecting a click twice as fast and heard everything at half speed, "which sounds odd because I
+would think the pulse would be on eighth notes". What they wanted is a second, separate thing — "this is
+really on the metronome itself. The actual tempo should be based on the time signature."
+
+So the metronome gains its own setting (AC-4.3.7): the Beat (the default, which clicks as before),
+sixteenths, eighths, quarters, halves, wholes or once per Measure, one app-wide preference beside the
+click switch. It restarts at every bar line on the downbeat, so a half-note click in 3/4 sounds on 1 and
+3, and the count-in still counts the first Measure's Beats. The dotted-quarter click declined above was
+declined on a reading of Principle I that took the click for a reading of the meter; Constitution 3.10.1
+states that it is a listening aid and changes nothing else. A ♩. option is still not offered — it was
+not asked for, and in a /4 meter it would cross every Beat.
+
+A unit stored on a Pattern by the old control is dropped when the Pattern is read, and that Pattern then
+counts its first Measure's Beat. Only a Pattern whose unit was switched by hand against its meter changes
+speed; the maintainer was told so and chose this over keeping the control. `tempoUnit` survives only
+inside `core/`, stated on the copy of a layer playing under a composition so a 6/8 layer counts a 4/4
+composition's quarter (AC-19.11.2/3) — it is never written to a store or an export.
+
+**Alternatives considered (2026-11-21)**: keep ♩/♪ beside the new click setting (rejected by the
+maintainer — two controls that look alike and do different things, the confusion that started this);
+a click that runs straight through bar lines (rejected — in 3/4 a half-note click would land on a
+different beat every bar); a count-in that follows the click setting (rejected — a count-in is for
+finding the bar, and AC-4.3.3 already says how long it is); a per-Pattern click value (rejected — the
+click switch is app-wide by AC-4.3.6, and two halves of one control should not differ).
+
 ## Open items deliberately left to implementation
 
 These are genuinely low-stakes and do not need a decision before tasks are written:

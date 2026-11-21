@@ -17,8 +17,7 @@ import {
   countActiveSlots,
   setSwingAmount,
   setSwingFeel,
-  setTempoUnit,
-  withTempoUnit,
+  withoutTempoUnit,
   setPitch,
   append,
   duplicate,
@@ -2060,7 +2059,7 @@ export function loadPattern(pattern, { owned }) {
   }
   // The tempo unit is stated on open, so a later change to Measure 1's meter
   // cannot retime the Pattern through the default (AC-4.2.7/5).
-  state.pattern = withTempoUnit(withCarriedPlayback(pattern));
+  state.pattern = withoutTempoUnit(withCarriedPlayback(pattern));
   // What the next Pattern carries is what this one is sounding at, whether the
   // Musician chose it or it came with the Pattern (AC-4.2.3/4).
   const inEffect = playbackInEffect(state.pattern);
@@ -3376,12 +3375,6 @@ const handlers = {
     restartTransport();
   },
 
-  /** What the composition's tempo counts, ♩ or ♪ (AC-19.11.6/4): the composition's own, as its tempo is. */
-  onComposerTempoUnit(unit) {
-    applyDraft(setTempoUnit, unit);
-    restartTransport();
-  },
-
   onComposerSwing(amount) {
     applyDraft(setSwingAmount, amount);
     restartTransport();
@@ -3527,6 +3520,22 @@ const handlers = {
    * switched under the run without the restart Practice's switch makes, so a
    * recording keeps its place (/3).
    */
+  /**
+   * What the metronome click counts (AC-4.3.7): one app-wide setting. In the
+   * Composer it changes under the run, as the click's switch does there
+   * (/8); in Practice it restarts the run, as every setting there does.
+   */
+  onClickValue(value) {
+    state.settings = settingsStore.save({ clickValue: value });
+    if (state.composer?.mode === 'composer' && state.composer?.draft) {
+      transport.setClickValue(value);
+      if (state.isPlaying) refreshBackgroundAudio();
+    } else {
+      restartTransport();
+    }
+    render();
+  },
+
   onComposerMetronome() {
     state.settings = settingsStore.save({ metronomeEnabled: !state.settings.metronomeEnabled });
     transport.setMetronome(state.settings.metronomeEnabled);
@@ -4482,12 +4491,6 @@ const handlers = {
     }
     if (!(await guardShipped())) return;
     apply(condense, target);
-  },
-
-  /** What the tempo counts per minute, ♩ or ♪ (AC-4.2.7/1). Pattern content, so a shipped one is named first. */
-  async onTempoUnit(unit) {
-    if (!(await guardShipped())) return;
-    apply(setTempoUnit, unit);
   },
 
   onExportMidi() {

@@ -1,6 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 3.10.0 → 3.10.1
+
+3.10.1 — Principle I clarified: the metronome click is a listening aid, not a reading of the
+  meter. The musician may set what the click counts — the Beat (the default), sixteenths,
+  eighths, quarters, halves, wholes, or once per Measure — and the click restarts on every
+  Measure's downbeat. The Beats, their count, the accents, the grid and the count-in are
+  unchanged by it. research.md D-017 had read "No view, export, or playback path may
+  reinterpret a meter into an implied grouping" as forbidding any click but the Beat, and
+  declined a dotted-quarter click on that reading; this states what the sentence protects.
+
+  Asked for on 2026-11-21: "I'd like to be able to do eighth notes, 16th notes, quarter notes,
+  half notes, whole notes, and full measures … this is really on the metronome itself. The
+  actual tempo should be based on the time signature." The maintainer was told before any work
+  that D-017 read the principle as forbidding it, and approved the clarification.
+
+  PATCH rather than MINOR: no requirement is added or relaxed. Beat count still equals the
+  numerator everywhere a Beat is meant; the clause only says the click is not one of those
+  places.
+
+  Templates reviewed: plan-template ✅, spec-template ✅, tasks-template ✅ (none name the click).
+  Follow-up: spec.md AC-4.3.7 added; AC-4.2.7, AC-15.1.20/1, AC-19.6.3/1 and AC-19.11.6/4
+  revised; research.md D-017 amended; plan.md P-011, P-012 and P-058 (T540–T541).
+
 Version change: 3.9.0 → 3.10.0
 
 3.10.0 — Principle V's audio rule admits five more sampled voices, all from the set the guitar
@@ -354,6 +377,11 @@ per-component. This module is the sole arithmetic authority for the entire app.
   Beats grouped 2+2+3. 6/8 is six eighth-note Beats — never two dotted-quarter Beats.
   No view, export, or playback path may reinterpret a meter into an implied grouping
   the user did not author.
+- **The metronome click is a listening aid, not a reading of the meter.** The musician
+  MAY set what it counts — the Beat (the default), sixteenths, eighths, quarters, halves,
+  wholes, or once per Measure. It restarts on every Measure's downbeat, so it never
+  carries a grouping across a bar line, and it changes nothing else: the Beats and their
+  count, the accents, the grid and the count-in stay exactly as authored.
 - **Metric accent defaults MUST be computed, never stored per-Slot.** A Slot's default
   Accent Level is a pure function of its position (which Beat, and where within that
   Beat's Recipe), recomputed on demand. A user override is stored; a default is not.
@@ -693,4 +721,4 @@ table and receive sign-off before work starts.
 and deployment method belong in the plan document, not here. This constitution governs
 behavior and quality bars regardless of stack.
 
-**Version**: 3.10.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-11-15
+**Version**: 3.10.1 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-11-21
