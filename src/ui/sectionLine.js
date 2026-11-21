@@ -1,7 +1,7 @@
 /**
  * The Section line (AC-19.11.10): directly under the record bar, which saved
  * Section is in hand or that it is a new one, with Save section, Rename, New
- * section and Add to section. A pure function of `state.composer` and the
+ * section, Add to section and Delete. A pure function of `state.composer` and the
  * saved Sections; the handlers act.
  */
 import { el } from './controls.js';
@@ -104,6 +104,15 @@ export function renderSectionLine(state, handlers) {
   addTo.dataset.refusal = refusal ?? '';
   addTo.addEventListener('click', () => handlers.onSectionAddTo?.());
   actions.appendChild(addTo);
+  // Delete is here alone, for the Section in hand alone (AC-19.11.4/3): one is
+  // opened before it can be deleted, and it sits last, apart from the rest.
+  if (section.id) {
+    const del = button('section-delete', 'Delete section…', 'section-delete', {
+      title: `Delete the Section "${section.name}". Its parts stay in the library`,
+    });
+    del.addEventListener('click', () => handlers.onSectionDelete?.(section.id));
+    actions.appendChild(del);
+  }
   wrap.appendChild(actions);
 
   // A Pattern is shared by id, never copied (AC-19.11.9/4): a new idea written

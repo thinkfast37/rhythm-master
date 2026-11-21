@@ -112,8 +112,7 @@ export function renderComposer(root, state, handlers) {
       });
       empty.dataset.empty = 'true';
       fresh.appendChild(empty);
-      // Saved Sections can be opened from here too (AC-19.11.1/5, AC-19.11.4/2).
-      if ((state.sections ?? []).length > 0) fresh.appendChild(renderLayers(state, handlers));
+      // No Layers section without a composition: a saved Section is opened from the library (AC-19.11.1/5).
     }
     fresh.appendChild(renderControls(draft, instrument, key, scale, state, handlers));
     const credit = el('p', 'composer-attribution');
