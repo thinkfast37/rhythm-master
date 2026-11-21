@@ -124,13 +124,14 @@ export function renderGoalStrip(root, state, handlers) {
   });
 }
 
-/** The two-way Practice | Composer switch, the mode in force pressed (AC-19.1.1/1). */
+/** The Practice | Composer | Arrange switch, the mode in force pressed (AC-19.1.1/1, AC-20.1.1). */
 function renderModeSwitch(state, handlers) {
   const group = el('div', 'mode-switch', { role: 'group' });
   group.setAttribute('aria-label', 'Mode');
   for (const [mode, label] of [
     ['practice', 'Practice'],
     ['composer', 'Composer'],
+    ['arrange', 'Arrange'],
   ]) {
     const b = el('button', 'mode-option', { type: 'button', textContent: label });
     b.dataset.action = 'set-mode';

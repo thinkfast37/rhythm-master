@@ -142,7 +142,19 @@ import { resolveVoice, normaliseVoice, viewOf, FETCHED, DEFAULT_INSTRUMENT, norm
 import * as instruments from './audio/instruments.js';
 import { playDrum } from './audio/drums.js';
 import { autoDrumNote, normalisePercussion } from './core/drums.js';
-import { toggleType } from './core/libraryTypes.js';
+import { toggleType, patternType, LIBRARY_TYPES } from './core/libraryTypes.js';
+import {
+  createArrangement,
+  addToPalette,
+  removeFromPalette,
+  addEntry as addArrangementEntry,
+  removeEntry as removeArrangementEntry,
+  moveEntry as moveArrangementEntry,
+  setEntryRepeats as setArrangementRepeats,
+  setEntryName as setArrangementEntryName,
+  isEmpty as arrangementIsEmpty,
+} from './core/arrangement.js';
+import * as arrangementStore from './storage/arrangements.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
@@ -311,6 +323,14 @@ const state = {
   },
   /** Every saved Section, read from its store only when it changes (US-19.11). */
   sections: [],
+  /**
+   * Arrange mode (US-20.1): the Arrangement on screen — saved once it has an
+   * id, and saving its own changes from then on — and whether Add from library
+   * is waiting on the library for something to put in the palette. Held for
+   * the session, so the other modes can be visited and come back to it
+   * (AC-20.1.1/2).
+   */
+  arrange: { arrangement: createArrangement(), picking: false },
   /** The Sections the open Pattern is a part of (AC-19.11.9/3). */
   inSections: [],
   /**
@@ -746,6 +766,80 @@ function sectionList() {
     name: a.name,
     parts: [a.compositionId, ...a.layers.map((l) => l.patternId)].map((id) => libraryPattern(id)?.name ?? 'Missing Pattern'),
   }));
+}
+
+/* --- Arrange mode (US-20.1) --------------------------------------------------- */
+
+const TYPE_LABEL = Object.fromEntries(LIBRARY_TYPES.map((t) => [t.id, t.label]));
+
+/** What a palette or sequence entry names, as the library has it now: its name and its type, or that it is gone. */
+function arrangementItem({ kind, id }) {
+  if (kind === 'section') {
+    const section = sectionStore.findById(id);
+    return section ? { name: section.name, typeLabel: 'Section', missing: false } : { name: 'Missing Section', typeLabel: 'Section', missing: true };
+  }
+  if (kind === 'chain') {
+    const chain = chainStore.findById(id);
+    return chain ? { name: chain.name, typeLabel: 'Chain', missing: false } : { name: 'Missing Chain', typeLabel: 'Chain', missing: true };
+  }
+  const pattern = libraryPattern(id);
+  if (!pattern) return { name: 'Missing Pattern', typeLabel: 'Pattern', missing: true };
+  const type = patternType(pattern);
+  // A rhythm in an Arrangement is played on the kit, the drum chosen by the accent (AC-20.1.2/2, US-2.18).
+  return { name: pattern.name, typeLabel: type === 'percussive' ? `${TYPE_LABEL[type]} · drum kit` : TYPE_LABEL[type], missing: false };
+}
+
+/** The Arrangement on screen as the panel draws it: every entry already named (ui/arrange.js). */
+function arrangeView() {
+  const { arrangement, picking } = state.arrange;
+  return {
+    id: arrangement.id,
+    name: arrangement.name,
+    saved: Boolean(arrangement.id),
+    empty: arrangementIsEmpty(arrangement),
+    picking,
+    palette: arrangement.palette.map((p) => ({ ...p, ...arrangementItem(p) })),
+    entries: arrangement.entries.map((e) => {
+      const item = arrangementItem(e);
+      return { ...e, sourceName: item.name, typeLabel: item.typeLabel, missing: item.missing };
+    }),
+  };
+}
+
+/** Change the Arrangement on screen; one already saved is saved as it now is, at once (AC-20.1.4/2). */
+function applyArrangement(mutator, ...args) {
+  const next = mutator(state.arrange.arrangement, ...args);
+  state.arrange = { ...state.arrange, arrangement: next.id ? arrangementStore.upsert(next) : next };
+  render();
+  return next;
+}
+
+/** Put a library entry in the palette and end the choosing (AC-20.1.2/1). */
+function addToArrangement(kind, id) {
+  state.arrange = { ...state.arrange, picking: false };
+  applyArrangement(addToPalette, kind, id);
+  ui?.hideLibrary();
+}
+
+/** An Arrangement never saved that holds something: what leaving it would lose (AC-20.1.4/4, AC-20.1.5/3). */
+const arrangementUnsaved = () => !state.arrange.arrangement.id && !arrangementIsEmpty(state.arrange.arrangement);
+
+/** "X" or "X and Y" or "X, Y and Z", each quoted, for a refusal that names what is in the way. */
+function quotedList(names) {
+  const quoted = names.map((n) => `"${n}"`);
+  return quoted.length < 2 ? quoted.join('') : `${quoted.slice(0, -1).join(', ')} and ${quoted.at(-1)}`;
+}
+
+/** Refuse a deletion that an Arrangement stands in the way of, naming it; true when refused (AC-20.1.4/5). */
+async function refusedByArrangement(kind, id, what) {
+  const using = arrangementStore.referencing(kind, id);
+  if (using.length === 0) return false;
+  await ask({
+    message: `${what} can't be deleted: the Arrangement${using.length > 1 ? 's' : ''} ${quotedList(using)} use${using.length > 1 ? '' : 's'} it. Take it out of ${using.length > 1 ? 'them' : 'it'} first, in Arrange.`,
+    options: [{ label: 'OK', value: true, primary: true }],
+  });
+  render();
+  return true;
 }
 
 /** The Chain under construction for the open Pattern, created on first touch. */
@@ -2422,6 +2516,7 @@ const handlers = {
   async onChainDelete(id) {
     const chain = chainStore.findById(id);
     if (!chain) return;
+    if (await refusedByArrangement('chain', id, `The Chain "${chain.name}"`)) return;
     const proceed = await confirm(`Delete the Chain "${chain.name}" permanently?`, {
       confirmLabel: 'Delete',
     });
@@ -2643,6 +2738,8 @@ const handlers = {
 
   /** The only entry point to audio, and it is a user gesture (FR-010). */
   async onPlay() {
+    // An Arrangement cannot be played yet (AC-20.1.1/4).
+    if (state.composer.mode === 'arrange') return;
     // Inside the gesture, before anything awaits: the silent keep-alive is
     // autoplay-gated exactly as the AudioContext is, and it is what makes a
     // locked phone more willing to leave this run alone (AC-4.1.12/1).
@@ -3487,6 +3584,171 @@ const handlers = {
     return sectionList();
   },
 
+  // --- Arrange (US-20.1) ---
+
+  /** The Arrangement on screen, every entry named, for the panel (ui/arrange.js). */
+  arrangeView() {
+    return arrangeView();
+  },
+
+  /** Every saved Arrangement with the length of its sequence, for the library's first group (AC-20.1.5/1). */
+  arrangementList() {
+    return arrangementStore
+      .loadAll()
+      .map((a) => ({ id: a.id, name: a.name, entries: a.entries.length }))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  },
+
+  /** Add from library (AC-20.1.2/1): the library, opened to choose from; pressed again, the choosing ends. */
+  onArrangeAdd() {
+    const picking = !state.arrange.picking;
+    state.arrange = { ...state.arrange, picking };
+    if (picking) ui?.showLibrary();
+    render();
+  },
+
+  /** A palette entry tapped: laid at the end of the sequence, named after it, once (AC-20.1.3/1). */
+  onArrangeLay(index) {
+    const item = state.arrange.arrangement.palette[index];
+    if (!item) return;
+    const named = arrangementItem(item);
+    if (named.missing) return;
+    applyArrangement(addArrangementEntry, item.kind, item.id, named.name);
+  },
+
+  onArrangePaletteRemove(index) {
+    if (!state.arrange.arrangement.palette[index]) return;
+    applyArrangement(removeFromPalette, index);
+  },
+
+  /**
+   * Edit a palette entry (AC-20.1.2/4): always the Composer. A Section opens
+   * as itself; a Pattern as the Composer opens any Pattern from the library.
+   * The Arrangement stays as it is, to come back to (AC-20.1.1/2).
+   */
+  async onArrangeEdit(index) {
+    const item = state.arrange.arrangement.palette[index];
+    if (!item || item.kind === 'chain' || arrangementItem(item).missing) return;
+    state.arrange = { ...state.arrange, picking: false };
+    if (item.kind === 'section') {
+      state.composer = { ...state.composer, mode: 'practice' };
+      await handlers.onOpenSection(item.id);
+      return;
+    }
+    const owned = patternStore.findById(item.id);
+    const pattern = owned ?? structuredClone(overlayStore.applyPlaybackTo(overlayStore.applyTo(seedStore.findById(item.id))));
+    state.composer = { ...state.composer, mode: 'composer', recording: false, target: null, selected: null };
+    ensureSamplesLoaded();
+    refreshSections();
+    void midiInput.request();
+    render();
+    const opened = await openInComposer(pattern, Boolean(owned), { editOwned: true });
+    // Nothing opened and nothing already there: back where the Edit was pressed.
+    if (!opened && !state.composer.draft) state.composer = { ...state.composer, mode: 'arrange' };
+    render();
+  },
+
+  onArrangeEntryName(index, name) {
+    if (!state.arrange.arrangement.entries[index]) return;
+    applyArrangement(setArrangementEntryName, index, name);
+  },
+
+  onArrangeEntryRepeats(index, repeats) {
+    if (!state.arrange.arrangement.entries[index]) return;
+    applyArrangement(setArrangementRepeats, index, repeats);
+  },
+
+  onArrangeEntryMove(index, direction) {
+    if (!state.arrange.arrangement.entries[index]) return;
+    applyArrangement(moveArrangementEntry, index, direction);
+  },
+
+  onArrangeEntryRemove(index) {
+    if (!state.arrange.arrangement.entries[index]) return;
+    applyArrangement(removeArrangementEntry, index);
+  },
+
+  /** Save under a name, unique among Arrangements (AC-20.1.4/1). From then on it saves itself (/2). */
+  async onArrangeSave() {
+    const current = state.arrange.arrangement;
+    if (current.id || current.entries.length === 0) return;
+    const taken = (n) => arrangementStore.loadAll().some((a) => a.name.trim().toLowerCase() === n.trim().toLowerCase());
+    let suggestion = 'My arrangement';
+    for (let n = 2; taken(suggestion); n++) suggestion = `My arrangement ${n}`;
+    const name = await askNewPatternName(suggestion, (n) => (taken(n) ? `An Arrangement called "${n}" already exists. Choose another name.` : null), {
+      message: 'Name this Arrangement.',
+      confirmLabel: 'Save',
+    });
+    if (name === null) {
+      render();
+      return;
+    }
+    // The prompt was awaited: save the Arrangement as it is now.
+    state.arrange = { ...state.arrange, arrangement: arrangementStore.upsert({ ...state.arrange.arrangement, name }) };
+    render();
+  },
+
+  async onArrangeRename() {
+    const current = state.arrange.arrangement;
+    if (!current.id) return;
+    const taken = (n) => arrangementStore.loadAll().some((a) => a.id !== current.id && a.name.trim().toLowerCase() === n.trim().toLowerCase());
+    const name = await askNewPatternName(current.name, (n) => (taken(n) ? `An Arrangement called "${n}" already exists. Choose another name.` : null), {
+      message: 'Rename this Arrangement.',
+      confirmLabel: 'Rename',
+    });
+    if (name === null || state.arrange.arrangement.id !== current.id) {
+      render();
+      return;
+    }
+    state.arrange = { ...state.arrange, arrangement: arrangementStore.rename(current.id, name) };
+    render();
+  },
+
+  async onArrangeDelete() {
+    const current = state.arrange.arrangement;
+    if (!current.id) return;
+    const proceed = await confirm(`Delete the Arrangement "${current.name}" permanently? What it is made of stays in the library.`, { confirmLabel: 'Delete' });
+    if (!proceed || state.arrange.arrangement.id !== current.id) {
+      render();
+      return;
+    }
+    arrangementStore.remove(current.id);
+    state.arrange = { arrangement: createArrangement(), picking: false };
+    render();
+  },
+
+  /** A fresh, empty Arrangement, asking first when one never saved would be lost (AC-20.1.4/4). */
+  async onArrangeNew() {
+    if (arrangementUnsaved()) {
+      const ok = await confirm('Start a new Arrangement? The one here has not been saved and will be lost.', { confirmLabel: 'Discard and start new', cancelLabel: 'Keep it' });
+      if (!ok) {
+        render();
+        return;
+      }
+    }
+    state.arrange = { arrangement: createArrangement(), picking: false };
+    render();
+  },
+
+  /** Open a saved Arrangement from the library, in Arrange (AC-20.1.5/3). */
+  async onOpenArrangement(id) {
+    if (isPracticeGoal(state.settings.goal)) return;
+    const saved = arrangementStore.findById(id);
+    if (!saved) return;
+    if (state.arrange.arrangement.id !== id && arrangementUnsaved()) {
+      const ok = await confirm(`Open "${saved.name}"? The Arrangement here has not been saved and will be lost.`, { confirmLabel: 'Discard and open', cancelLabel: 'Keep it' });
+      if (!ok) {
+        render();
+        return;
+      }
+    }
+    if (state.composer.mode !== 'arrange') await handlers.onComposerMode('arrange');
+    if (state.composer.mode !== 'arrange') return;
+    state.arrange = { arrangement: structuredClone(saved), picking: false };
+    ui?.hideLibrary();
+    render();
+  },
+
   /** The library groups folded away (AC-5.1.8/3). */
   libraryFolded() {
     return state.settings.libraryFolded ?? [];
@@ -3508,6 +3770,11 @@ const handlers = {
   async onOpenSection(id) {
     if (isPracticeGoal(state.settings.goal)) return;
     if (!sectionStore.findById(id)) return;
+    // In Arrange the library fills the palette (AC-20.1.2/1).
+    if (state.composer.mode === 'arrange') {
+      addToArrangement('section', id);
+      return;
+    }
     if (state.composer.mode !== 'composer') {
       if (state.isPlaying) transport.stop();
       state.composer = { ...state.composer, mode: 'composer', recording: false, target: null, selected: null };
@@ -3540,6 +3807,7 @@ const handlers = {
   async onSectionDelete(id) {
     const section = sectionStore.findById(id);
     if (!section) return;
+    if (await refusedByArrangement('section', id, `The Section "${section.name}"`)) return;
     const proceed = await confirm(`Delete the Section "${section.name}" permanently?`, { confirmLabel: 'Delete' });
     if (!proceed) {
       render();
@@ -3651,6 +3919,11 @@ const handlers = {
     const chain = chainStore.findById(id);
     const patternId = chain?.sections?.[0]?.patternId;
     if (!patternId || state.composer.mode === 'composer') return;
+    // In Arrange the library fills the palette (AC-20.1.2/1).
+    if (state.composer.mode === 'arrange') {
+      addToArrangement('chain', id);
+      return;
+    }
     if (state.pattern.id !== patternId) {
       const owned = Boolean(patternStore.findById(patternId));
       if (!owned && !seedStore.findById(patternId)) return;
@@ -3668,6 +3941,11 @@ const handlers = {
       ? patternStore.findById(id)
       : overlayStore.applyPlaybackTo(overlayStore.applyTo(seedStore.findById(id)));
     if (!pattern) return;
+    // In Arrange the library fills the palette (AC-20.1.2/1).
+    if (state.composer.mode === 'arrange') {
+      addToArrangement('pattern', id);
+      return;
+    }
     // Add layer asked the library for a Pattern: it becomes a layer (AC-19.11.1/2).
     if (state.composer.mode === 'composer' && state.composer.pickingLayer) {
       addLayerById(id);
@@ -3852,6 +4130,8 @@ const handlers = {
 
   async onDelete() {
     if (!state.isOwned) return; // built-in Patterns are never deletable
+    // A Pattern an Arrangement uses stays until the Arrangement lets it go (AC-20.1.4/5).
+    if (await refusedByArrangement('pattern', state.pattern.id, `"${state.pattern.name}"`)) return;
     // A Pattern a Chain plays over stays until the Chain is gone (AC-18.1.4/5).
     const chains = chainStore.referencingPattern(state.pattern.id);
     if (chains.length > 0) {
@@ -4271,7 +4551,7 @@ export function mount(root) {
     familyMembers,
     canUndo,
     fillLabel,
-    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), sections: rawOf(sectionStore.KEY), chains: rawOf(chainStore.KEY) }),
+    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), sections: rawOf(sectionStore.KEY), chains: rawOf(chainStore.KEY), arrangements: rawOf(arrangementStore.KEY) }),
   });
 }
 
@@ -4528,6 +4808,7 @@ if (typeof window !== 'undefined') {
     /** Test seam: the fill and progression catalogues in order, by id (US-2.14). */
     catalogues: () => ({ fills: ARPEGGIOS.map((a) => a.id), progressions: PROGRESSIONS.map((p) => p.id) }),
     chainStore,
+    arrangementStore,
     sectionStore,
     /** Test seam: whether the layers differ from the Section they came from (AC-19.11.4/4). */
     sectionUnsaved: () => sectionUnsaved(state.composer),

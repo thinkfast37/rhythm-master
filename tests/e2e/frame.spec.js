@@ -170,7 +170,7 @@ test('AC-15.1.20/3 — The rhythm band holds the Pattern header, the chord strip
   expect((await rect(page, '.rhythm-band .pattern-view > .brush-hint')).top).toBeGreaterThanOrEqual((await rect(page, '.rhythm-band .grid')).bottom - 1);
 });
 
-test('AC-15.1.20/4 — One work surface under the band holds what the goal is for — the tabbed workbench with Pattern actions and the family members under Lab and the making goals, the settings rail under Practise a rhythm, and the Composer’s panel in Composer mode — and nothing sits beside the band', async ({ page }) => {
+test('AC-15.1.20/4 — One work surface under the band holds what the goal is for — the tabbed workbench with Pattern actions and the family members under Lab and the making goals, the settings rail under Practise a rhythm, the Composer’s panel in Composer mode, and the Arrangement’s panel in Arrange mode — and nothing sits beside the band', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto('/');
   const surface = page.locator('.main-panel > .work-surface');
@@ -195,7 +195,10 @@ test('AC-15.1.20/4 — One work surface under the band holds what the goal is fo
     'rhythm-band',
     'work-surface',
     'composer-panel',
+    // Revised 2026-11-20 with the criterion (US-20.1): the Arrangement's panel, hidden outside Arrange mode.
+    'arrange-panel',
   ]);
+  await expect(page.locator('.main-panel > .arrange-panel')).toBeHidden();
 
   // A making goal: the workbench as the goal names it.
   await chooseGoal(page, 'build');
@@ -222,6 +225,17 @@ test('AC-15.1.20/4 — One work surface under the band holds what the goal is fo
   await page.locator('.goal-strip .mode-switch [data-mode="practice"]').click();
   await expect(page.locator('.main-panel > .rhythm-band')).toBeVisible();
   await expect(surface).toBeVisible();
+  // Arrange mode: the Arrangement's panel in place of the band, the surface and the Composer's panel.
+  await page.locator('.goal-strip .mode-switch [data-mode="arrange"]').click();
+  await expect(page.locator('.shell')).toHaveAttribute('data-mode', 'arrange');
+  await expect(page.locator('.main-panel > .arrange-panel')).toBeVisible();
+  await expect(page.locator('.main-panel > .rhythm-band')).toBeHidden();
+  await expect(surface).toBeHidden();
+  await expect(page.locator('.main-panel > .composer-panel')).toBeHidden();
+  await page.locator('.goal-strip .mode-switch [data-mode="practice"]').click();
+  await expect(page.locator('.main-panel > .rhythm-band')).toBeVisible();
+  await expect(surface).toBeVisible();
+  await expect(page.locator('.main-panel > .arrange-panel')).toBeHidden();
 });
 
 test('AC-15.1.20/5 — The panel is marked with the layout in force: Playback under Practise a rhythm, where on a wide panel the band takes at least the height the rail does and the rail is capped; Design under every other goal, where on a wide panel the band is capped and the work surface takes the rest', async ({ page }) => {

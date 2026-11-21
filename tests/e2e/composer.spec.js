@@ -5,7 +5,7 @@ test.use(launch);
 
 // --- AC-19.1.1: a mode of its own ---------------------------------------------
 
-test('AC-19.1.1/1 — A Practice | Composer switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal', async ({ page }) => {
+test('AC-19.1.1/1 — A Practice | Composer | Arrange switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal', async ({ page }) => {
   await openApp(page);
   for (const width of [390, 900, 1400]) {
     await page.setViewportSize({ width, height: 900 });
@@ -13,6 +13,9 @@ test('AC-19.1.1/1 — A Practice | Composer switch sits in the pinned bar at eve
     await expect(sw).toBeVisible();
     await expect(sw.locator('[data-mode="practice"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(sw.locator('[data-mode="composer"]')).toHaveAttribute('aria-pressed', 'false');
+    // Revised 2026-11-20 with US-20.1: three modes, in this order.
+    await expect(sw.locator('button')).toHaveText(['Practice', 'Composer', 'Arrange']);
+    await expect(sw.locator('[data-mode="arrange"]')).toHaveAttribute('aria-pressed', 'false');
   }
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.evaluate(() => window.__rm.handlers.onGoal('practise'));

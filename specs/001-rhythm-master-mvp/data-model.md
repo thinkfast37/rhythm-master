@@ -522,6 +522,43 @@ loop is, and how many times each layer repeats in it, is derived from the Patter
 deleted while the Section exists (AC-19.11.4/5). A Section is barred from every Pattern
 export and submission (AC-19.11.4/6).
 
+### `rm.arrangements.v2` — Arrangements (US-20.1)
+
+An Arrangement is Sections, Patterns and Chains laid out one after another. It references every one by
+id and carries nothing of them, and is stored apart from every other store (AC-20.1.4/6).
+
+**The key is `v2` on purpose.** `rm.arrangements.v1` is where Sections were kept while they were called
+Arrangements; `storage/sections.js` still moves whatever it finds under that key into `rm.sections.v1`,
+and a backup holding it is read as Sections (AC-19.11.4/8). An Arrangement written there would be turned
+into a broken Section on the next load.
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "arrangements": [
+    {
+      "id": "arrg_1",
+      "name": "Sunday song",
+      "palette": [                                   // what the piece is made of, in the order added; nothing twice
+        { "kind": "section", "id": "arr_1" },        // a Section (its id keeps the `arr_` prefix it has always had)
+        { "kind": "pattern", "id": "s_21" },         // a Pattern, shipped or owned
+        { "kind": "chain",   "id": "song_2" }        // a Chain
+      ],
+      "entries": [                                   // the sequence, in playing order
+        { "kind": "pattern", "id": "s_21",  "name": "Intro",  "repeats": 2 },
+        { "kind": "section", "id": "arr_1", "name": "Verse",  "repeats": 4 }
+      ]
+    }
+  ]
+}
+```
+
+`repeats` is a whole number from 1 to 16. An entry's `name` is the Arrangement's own name for that
+stretch of the piece and changes nothing on what it plays. An entry may name something no longer in the
+palette: the palette is a shortlist, not the sequence's source of truth (AC-20.1.2/3). A Pattern, Section
+or Chain that any Arrangement names, in its palette or its sequence, cannot be deleted while it does
+(AC-20.1.4/5). The whole-library backup carries the store as it does every other (AC-7.6.1/2).
+
 ### Seed file — `data/seed-patterns.json`
 
 ```jsonc

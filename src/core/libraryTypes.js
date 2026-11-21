@@ -13,6 +13,7 @@ export const LIBRARY_TYPES = Object.freeze([
   Object.freeze({ id: 'progression', label: 'Chord progression' }),
   Object.freeze({ id: 'chain', label: 'Chain' }),
   Object.freeze({ id: 'section', label: 'Section' }),
+  Object.freeze({ id: 'arrangement', label: 'Arrangement' }),
 ]);
 
 const IDS = LIBRARY_TYPES.map((t) => t.id);
