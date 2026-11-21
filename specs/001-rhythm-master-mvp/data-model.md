@@ -385,7 +385,8 @@ Owned Patterns need no overlay: their rating and tags live on the Pattern itself
   "composerFretRange": [0, 24],   // AC-19.2.2/5 — lower and upper visible fret, 0–24
   "composerKeys": 49,             // AC-19.3.1/3 — 25 | 37 | 49 | 61 | 76 | 88, the keyboard's key count
   "melodicVoice": "piano",        // AC-2.13.1/2 — an instrument id (AC-19.12.1/1), the voice melodic notes sound with
-  "composerMidiInput": "all"      // AC-19.10.4/3 — "all", or the name of the one MIDI input device whose notes the Composer takes
+  "composerMidiInput": "all",     // AC-19.10.4/3 — "all", or the name of the one MIDI input device whose notes the Composer takes
+  "midiArticulation": "staccato"  // AC-12.5.1/2 — "staccato" | "legato", how long every exported MIDI note lasts
 }
 ```
 

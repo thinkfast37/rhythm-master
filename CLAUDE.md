@@ -286,7 +286,7 @@ npm run check:unwired # every export in src/ is reachable from src/ (§2c)
 `npm run check:trace --silent -- --summary` prints one line per check when you only
 need to know which are red.
 
-**The full browser suite is the pull request's to run, not yours** (T527,
+**The full browser suite is the pull request's to run, not yours** (T531,
 research.md D-008). Every PR runs all of it, on the branch merged with `main`,
 across six runners in about five minutes, and `main` will not take the merge
 without it. Locally it takes about nine minutes on a machine other sessions
@@ -329,7 +329,7 @@ PR (`verify.yml`, Playwright split across six runners), and `main` requires its
 **All gates passed** check, so a PR cannot merge red, however it was run
 locally. `.github/workflows/deploy.yml` fires on push to `main` and publishes to
 Pages straight away; it runs the same gates again alongside, on `main` as it
-actually is, and they report without holding the site (T527). Nothing on a branch is
+actually is, and they report without holding the site (T531). Nothing on a branch is
 visible to the musician, however green it is — so a branch left unmerged is a
 change that, from where they are sitting, did not happen.
 
@@ -399,7 +399,7 @@ Say so in the option text and let them choose. Do not change the default.
 `main`, a test failed, and a test that fails is evidence about the code (§2a)
 — **"flaky" is not a diagnosis.** Read the failing assertion, find the cause,
 fix it, prove it with a run that failed before and passes after, and land that
-fix **at once** — since T527 the site does not wait for `verify`, so whatever
+fix **at once** — since T531 the site does not wait for `verify`, so whatever
 failed is already published, and reverting the merge is the right first move
 when the cause is not found quickly. Only when you have tried
 and genuinely cannot find or fix the cause do you come to the maintainer, and

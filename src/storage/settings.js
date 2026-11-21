@@ -80,6 +80,11 @@ export const DEFAULTS = {
    * Pattern; a name no connected device has takes every device's notes.
    */
   composerMidiInput: 'all',
+  /**
+   * How long exported MIDI notes last (US-12.5): 'staccato', the sixty ticks they
+   * have always had, or 'legato'. One setting for every export (AC-12.5.1/2).
+   */
+  midiArticulation: 'staccato',
 };
 
 export function load() {

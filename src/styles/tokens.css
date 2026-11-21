@@ -2560,6 +2560,16 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
 .arrange-panel button:disabled { opacity: 0.5; cursor: default; }
 .arrange-palette-add { text-align: left; }
 .arrange-add[aria-pressed='true'] { border-color: var(--brand); color: var(--brand); }
+/* The note-length choice beside every MIDI export (AC-12.5.1/1): a two-way switch. */
+.midi-articulation { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
+.midi-articulation-switch { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.midi-articulation .midi-articulation-option {
+  padding: 6px 10px; font: 600 13px/1.2 var(--font-ui);
+  color: var(--ink-dim); background: #1c1f2b;
+  border: 0; border-radius: 0; cursor: pointer;
+}
+.midi-articulation .midi-articulation-option + .midi-articulation-option { border-left: 1px solid var(--line); }
+.midi-articulation .midi-articulation-option[aria-pressed='true'] { color: var(--brand); background: #232738; }
 .composer-panel[hidden] { display: none; }
 .composer-panel {
   display: flex;

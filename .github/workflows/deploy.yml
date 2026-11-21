@@ -1,5 +1,5 @@
 # Build -> publish, with the gates run alongside (research.md D-008, amended
-# 2026-11-20, T527).
+# 2026-11-20, T531).
 #
 # The gate that keeps a red test off the live site is the pull request's: main
 # requires its "All gates passed" check, so nothing reaches this workflow that

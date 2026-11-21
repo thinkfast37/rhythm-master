@@ -10,6 +10,7 @@ import { ARPEGGIOS, hasHarmony, chordNumeral } from '../core/harmony.js';
 import { entryPasses, totalPasses } from '../core/chain.js';
 import { el, rebuild } from './controls.js';
 import { placeHelp } from './help.js';
+import { renderArticulation } from './articulation.js';
 
 export function composeApplies(pattern) {
   return pattern.soundMode === 'melodic' && hasHarmony(pattern);
@@ -180,6 +181,8 @@ function renderSection(pattern, state, handlers) {
   const exportBtn = button('chain-export', 'Export Chain MIDI', 'chain-export', { disabled: empty });
   exportBtn.addEventListener('click', () => handlers.onChainExport());
   actions.appendChild(exportBtn);
+  // Staccato or Legato, beside the export it governs (AC-12.5.1/1).
+  actions.appendChild(renderArticulation(state, handlers));
   // The Chain as a Pattern of its own, to be changed in the Composer (AC-18.1.6).
   const writeOut = button('chain-write-out', 'Write out as Pattern', 'chain-write-out', {
     disabled: empty,

@@ -68,7 +68,8 @@ import {
   entryAt,
   validateChain,
 } from './core/chain.js';
-import { downloadChainMidi, chainMidiFilename, downloadSectionMidi, sectionZipFilename } from './export/midi.js';
+import { downloadChainMidi, chainMidiFilename, downloadSectionMidi, sectionZipFilename, downloadArrangementMidi } from './export/midi.js';
+import { normaliseArticulation } from './core/articulation.js';
 import { renderGrid, moveCursor } from './ui/grid.js';
 import {
   phraseLengthOf,
@@ -878,7 +879,12 @@ function arrangePlayable(entry) {
       .filter((l) => l.pattern);
     const sounding = atArrangeTempo(composition);
     const set = layers.length > 0 ? layered(sounding, layers, { instrument: own }) : sounding;
-    const mark = { voice: own, ownVolume: normaliseVolume(section.volume) };
+    // The export's tracks, one for each part that sounds, in the set's own order (AC-20.3.1/3).
+    const tracks = [
+      { key: `section:${section.id}:${composition.id}`, name: `${section.name} — ${composition.name}`, voice: own },
+      ...layers.map((l) => ({ key: `section:${section.id}:${l.pattern.id}`, name: `${section.name} — ${l.pattern.name}`, voice: l.instrument })),
+    ];
+    const mark = { voice: own, ownVolume: normaliseVolume(section.volume), tracks };
     // Once through a Section is its combined loop (AC-20.2.1/2).
     return { passes: 1, at: (pass) => arranged(set, pass, mark), voices: [own, ...layers.map((l) => l.instrument)] };
   }
@@ -891,12 +897,15 @@ function arrangePlayable(entry) {
     const passes = chainTotalPasses(chain, byId);
     const voice = normaliseVoice(overlayStore.voiceFor(base.id));
     // Each fill for its repeats, its progression from the first chord (AC-20.2.2/4).
-    return { passes, at: (pass) => arranged(chainPlayingAt(chain, byId, pass), entryAt(chain, byId, pass).passInEntry, { voice }), voices: [voice] };
+    const mark = { voice, tracks: [{ key: `chain:${chain.id}`, name: chain.name, voice }] };
+    return { passes, at: (pass) => arranged(chainPlayingAt(chain, byId, pass), entryAt(chain, byId, pass).passInEntry, mark), voices: [voice] };
   }
   const pattern = libraryPattern(entry.id);
   if (!pattern) return null;
   const sounding = atArrangeTempo(pattern);
-  const mark = { voice: normaliseVoice(overlayStore.voiceFor(entry.id)), kit: patternType(pattern) === 'percussive' };
+  const voice = normaliseVoice(overlayStore.voiceFor(entry.id));
+  const kit = patternType(pattern) === 'percussive';
+  const mark = { voice, kit, tracks: [{ key: `pattern:${pattern.id}`, name: pattern.name, voice, kit }] };
   // Once through a Pattern, or one harmonic cycle of its progression (AC-20.2.1/2).
   return { passes: harmonicPasses(pattern), at: (pass) => arranged(sounding, pass, mark), voices: [mark.voice] };
 }
@@ -929,6 +938,15 @@ function arrangePasses() {
 /** Every voice the sequence's entries sound with. */
 function arrangeVoices() {
   return [...new Set(arrangePlayables().flatMap((p) => p?.voices ?? []))];
+}
+
+/**
+ * What a Pattern's or a Chain's MIDI export is written with (US-12.5): the
+ * note-length choice, and the voice Practice remembers for the open Pattern,
+ * which is the instrument Legato lengthens by (AC-12.5.2/6).
+ */
+function exportOptions() {
+  return { articulation: normaliseArticulation(state.settings.midiArticulation), voice: practiceVoice() };
 }
 
 /** An Arrangement never saved that holds something: what leaving it would lose (AC-20.1.4/4, AC-20.1.5/3). */
@@ -2650,7 +2668,7 @@ const handlers = {
   onChainExport() {
     const chain = composeChain();
     if (chain.sections[0].entries.length === 0) return;
-    downloadChainMidi(chain, patternById, state.pattern);
+    downloadChainMidi(chain, patternById, state.pattern, exportOptions());
   },
 
   /**
@@ -3667,7 +3685,7 @@ const handlers = {
       .filter((p) => p.pattern)
       .map((p) => ({ ...p, instrument: p.sounds }));
     const set = layered(all[0].pattern, all.slice(1), { instrument: all[0].sounds });
-    downloadSectionMidi(set, sectionZipFilename(c.section, all[0].pattern));
+    downloadSectionMidi(set, sectionZipFilename(c.section, all[0].pattern), { articulation: exportOptions().articulation });
   },
 
   /** Clear the layers: a new, unsaved Section over the same composition. */
@@ -3809,6 +3827,18 @@ const handlers = {
       void transport.restart(scheduled(), state.settings);
     }
     render();
+  },
+
+  /**
+   * One multi-track MIDI file of the sequence once through (AC-20.3.1): the
+   * very passes Play is handed, in order, so the file is what is heard.
+   */
+  onArrangeExport() {
+    playablesMemo = { arrangement: null, list: [] };
+    const total = arrangePasses();
+    if (total < 1) return;
+    const passes = Array.from({ length: total }, (_, loop) => arrangeAt(loop).playing);
+    downloadArrangementMidi(passes, state.arrange.arrangement, { articulation: exportOptions().articulation });
   },
 
   /** Save under a name, unique among Arrangements (AC-20.1.4/1). From then on it saves itself (/2). */
@@ -4452,7 +4482,13 @@ const handlers = {
   },
 
   onExportMidi() {
-    downloadMidi(state.pattern);
+    downloadMidi(state.pattern, exportOptions());
+  },
+
+  /** Staccato | Legato (AC-12.5.1): one setting for every MIDI export, remembered. */
+  onMidiArticulation(articulation) {
+    state.settings = settingsStore.save({ midiArticulation: normaliseArticulation(articulation) });
+    render();
   },
 
   /** Every store to one file (AC-7.6.1). Changes nothing in the app. */

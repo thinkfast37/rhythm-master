@@ -275,7 +275,7 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
-**Amended 2026-11-20** (T527) — **the deploy no longer waits for a second run of the suite, and
+**Amended 2026-11-20** (T531) — **the deploy no longer waits for a second run of the suite, and
 the full browser suite is the pull request's to run.** This reverses the "verify → build → deploy"
 contract stated below, and was approved by the maintainer before the work ("Yes, go ahead", to a
 plan that named this as its one trade-off). What still holds: a failing AC cannot be *merged*,
@@ -1437,4 +1437,52 @@ Logic opens a kit for it. This is the one trace of a part's instrument in the ex
 does on a real one — per part, so hats on a part of their own choke only each other. The Composer is
 monophonic per part by design (D-019), which is why simultaneous drums are separate parts, and
 why "several drum parts" needed nothing new: any number of parts may be set to one instrument.
+
+## D-030 — Legato export: a note lasts to its part's next note and then for its instrument's ring; an Arrangement is a Format 1 file with a track for each part
+
+**Decision (2026-11-20, T527).** MIDI export gains a note-length choice, Staccato or Legato (US-12.5).
+Staccato is the exporter as it has always been: every note sixty ticks, a thirty-second note. On
+Legato a pitched note's length is
+
+```text
+length = (ticks to the next note of the same part) + ring(instrument, accent) × ticks per second
+```
+
+cut to end one tick before the same pitch is struck again in that part, and never past the end of the
+file. `ticks per second` comes from the file's tempo, so the ring — which the app produces in seconds,
+whatever the tempo — is the same stretch of time at 60 BPM and at 180. The last note of a part lasts
+to the end of the file, then its ring, then the clip.
+
+The ring is what each instrument does in the app (`core/voice.js`, `ringSeconds`):
+
+| Instrument | Ring, Weak / Medium / Strong | Where it comes from |
+|---|---|---|
+| Piano | 0.8 / 1.2 / 1.6 s | `PIANO_HOLD_SECONDS`, the hold the sampled piano is given before its damper |
+| Guitar | 1.2 / 1.6 / 2.0 s | the steel-string samples ring until they die away; these are their audible lengths, by ear |
+| Synth | 0.18 / 0.32 / 0.55 s | the synth envelope's decay per Accent Level (`audio/melodic.js`) |
+| Electric guitar, bass, sax, trumpet, flute | none | the app holds these until the part's next note (AC-19.12.5/3), which is exactly "to the next note" |
+
+Percussive notes and parts on Drums are not lengthened: a drum has no length to give.
+
+**Why this formula.** The maintainer asked for something "as close to what is in the app already" that
+"consider[s] the tempo". In the app a ringing instrument's note overlaps the notes after it by its ring;
+writing each note to its next note *and then* its ring reproduces that overlap in a DAW whose
+instrument releases at note-off, where the staccato file sounds clipped. Proposed to the maintainer in
+those words and accepted: "go ahead with that legato formula".
+
+**Rejected.** *The ring alone, from the note's own start* — truest to the piano's envelope, but at a
+slow tempo a Weak note would end before the next began, which is not what "legato" asks for.
+*A sustain-pedal controller (CC64) over staccato notes* — one event, but it smears every note for the
+whole file and many DAW instruments ignore it. *A fixed multiple of the note value* — ignores both the
+instrument and the tempo, the two things asked for.
+
+**An Arrangement's file (US-20.3)** is Format 1: a first track of tempo and time signatures, then one
+track for each thing that sounds — a Pattern laid in the sequence, each part of a Section, a Chain —
+holding its notes wherever they fall. Format 0 (every other export here) would put a whole piece on
+one track, which is the opposite of what "import directly into my DAW" wants. Tracks follow parts
+rather than sequence entries so that a verse used three times is one track, the way it would be
+recorded. Each pitched track has its own channel and the General MIDI program nearest its instrument
+(piano 1, steel guitar 26, overdriven guitar 30, fingered bass 34, alto sax 66, trumpet 57, flute 74,
+and for the synth, pad 89), skipping channel 10, which the drums keep. The file is built from the same
+`arranged` passes the transport is handed, through the same `timelineOf` — one timeline (Principle III).
 
