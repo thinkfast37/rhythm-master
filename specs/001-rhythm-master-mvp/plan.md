@@ -285,6 +285,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-076** | US-19.14 — Shift a part by an octave | AC-19.14.1–AC-19.14.4 | T499 | T500 |
 | **P-077** | US-19.15 — Choose what a Key change does to the notes | AC-19.15.1–AC-19.15.3 | T501 | T502 |
 | **P-078** | US-2.18 — Hear a Percussive Pattern on a drum kit | AC-2.18.1–AC-2.18.2 | T504 | T505 |
+| **P-079** | US-5.7 — Filter the library by type | AC-5.7.1–AC-5.7.2 | T514 | T515 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

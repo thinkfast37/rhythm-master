@@ -56,6 +56,10 @@ function sameLibrarySignature(a, b) {
     a.overlays === b.overlays &&
     // The Sections section at the pane's head follows its store (AC-19.11.9/1).
     a.sections === b.sections &&
+    // And the Chains group follows its own (AC-5.7.2/1).
+    a.chains === b.chains &&
+    a.types === b.types &&
+    a.composing === b.composing &&
     a.folded === b.folded &&
     a.query === b.query &&
     a.minRating === b.minRating &&
@@ -777,6 +781,9 @@ export function mountShell(root, ctx) {
       query: s.view.query,
       minRating: s.view.minRating,
       tags: s.view.tags.join('\u0000'),
+      // The types chosen, and whether the Chains group is listed at all (US-5.7).
+      types: (s.view.types ?? []).join(' '),
+      composing: s.composer?.mode === 'composer',
       currentId: s.view.currentId,
       // Which groups are folded (AC-5.1.8/3).
       folded: (s.settings.libraryFolded ?? []).join(' '),
