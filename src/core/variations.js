@@ -752,11 +752,16 @@ export function groupReason(group, candidate) {
   return null;
 }
 
+/** How many times one step of a roll is drawn again before it is given up (AC-10.4.6/2). */
+const ROLL_REDRAWS = 32;
+
 /**
  * Roll the dice (AC-10.4.6): one to three techniques drawn from the groups not
  * marked No dice, each available on the candidate as the earlier draws left
  * it, each choice drawn from the options its rule offers. `random()` is the
- * caller's, in [0, 1) — never drawn here (AC-10.4.6/6).
+ * caller's, in [0, 1) — never drawn here (AC-10.4.6/6). Every technique in
+ * the stack changed the candidate it was handed, and the whole differs from
+ * the original (AC-10.4.6/2).
  *
  * @returns {Array<{id: string, choice: object}>} the stack, possibly shorter than drawn when nothing more is available
  */
@@ -764,22 +769,39 @@ export function rollStack(pattern, phraseLength, { noDice = new Set(), random, c
   if (typeof random !== 'function') throw new Error('rollStack needs a random() source');
   const context = withDefaults(ctx);
   const count = 1 + Math.floor(random() * 3);
-  let candidate = freshCandidate(pattern, phraseLength);
+  const original = freshCandidate(pattern, phraseLength);
+  const originalKey = JSON.stringify(original);
+  let candidate = original;
+  let candidateKey = originalKey;
   const stack = [];
   for (let i = 0; i < count; i++) {
     const open = TECHNIQUES.filter((t) => !noDice.has(t.group) && !t.reason(candidate, context));
     if (!open.length) break;
-    const t = open[Math.floor(random() * open.length)];
-    const choice = {};
-    for (;;) {
-      const fields = t.fields(candidate, context, choice);
-      const field = fields.find((f) => choice[f.key] === undefined);
-      if (!field) break;
-      if (!field.options.length) break;
-      choice[field.key] = field.options[Math.floor(random() * field.options.length)].value;
+    /*
+     * A draw that changes nothing is not a variation (AC-10.4.6/2): Rotate by a
+     * whole Beat, or a syllable removed that an earlier draw added. Such a draw
+     * is thrown away and drawn again, from the caller's `random()` still
+     * (AC-10.4.6/6); the bound only stops a source that never moves on.
+     */
+    let drawn = null;
+    for (let attempt = 0; attempt < ROLL_REDRAWS && !drawn; attempt++) {
+      const t = open[Math.floor(random() * open.length)];
+      const choice = {};
+      for (;;) {
+        const fields = t.fields(candidate, context, choice);
+        const field = fields.find((f) => choice[f.key] === undefined);
+        if (!field) break;
+        if (!field.options.length) break;
+        choice[field.key] = field.options[Math.floor(random() * field.options.length)].value;
+      }
+      const next = t.apply(candidate, choice, context);
+      const key = JSON.stringify(next);
+      if (key !== candidateKey && key !== originalKey) drawn = { t, choice, next, key };
     }
-    candidate = t.apply(candidate, choice, context);
-    stack.push({ id: t.id, choice });
+    if (!drawn) break;
+    candidate = drawn.next;
+    candidateKey = drawn.key;
+    stack.push({ id: drawn.t.id, choice: drawn.choice });
   }
   return stack;
 }

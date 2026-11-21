@@ -1667,7 +1667,7 @@ export function labelledGroup(labelText, row) {
  * order, each marked whether any Measure can take it now — a Pattern mixing
  * 4/4 and 6/8 offers both sets (AC-1.3.4, AC-1.3.5).
  */
-function offeredRecipes(pattern) {
+export function offeredRecipes(pattern) {
   const noteValues = [...new Set(pattern.measures.map((m) => beatNoteValue(m.timeSignature)))];
   const seen = new Set();
   const offered = [];
@@ -1696,8 +1696,11 @@ function offeredRecipes(pattern) {
  *
  * A Recipe no Measure can take is disabled rather than hidden, so the palette
  * does not rearrange itself as the Pattern's meters change.
+ *
+ * The Composer shows the same strip over the part on screen (AC-19.5.7/1);
+ * `disabled` is its Score view, where there is no Beat to tap.
  */
-function renderRecipeStrip(pattern, state, handlers) {
+export function renderRecipeStrip(pattern, state, handlers, { disabled = false, title = null } = {}) {
   const group = el('div', 'control-group recipe-strip');
 
   const chips = el('div', 'recipe-chips');
@@ -1709,7 +1712,8 @@ function renderRecipeStrip(pattern, state, handlers) {
     });
     chip.dataset.action = 'arm-recipe';
     chip.dataset.recipe = r.id;
-    chip.disabled = !r.applies;
+    chip.disabled = disabled || !r.applies;
+    if (title) chip.setAttribute('title', title);
     chip.setAttribute('aria-pressed', String(armed));
     chip.addEventListener('click', () => handlers.onArmRecipe(r.id));
     chips.appendChild(chip);

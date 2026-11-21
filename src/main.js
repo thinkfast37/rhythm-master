@@ -24,7 +24,8 @@ import {
   duplicate,
   tagRefusal,
 } from './core/pattern.js';
-import { TIME_SIGNATURES } from './core/meter.js';
+import { TIME_SIGNATURES, beatNoteValue } from './core/meter.js';
+import { isOffered } from './core/recipes.js';
 import { DEFAULT_SCALE } from './core/scales.js';
 import { MAX_MEASURES } from './core/pattern.js';
 import { canCondense, canHalve, condense, condenseTargets } from './core/condense.js';
@@ -2907,6 +2908,8 @@ const handlers = {
     }
     const target = recordTarget(c.draft);
     if (!target) return;
+    // Record is the Composer's note tool: taking it up puts the subdivision brush down (AC-19.5.7/5).
+    state.armedRecipe = null;
     state.composer = { ...c, recording: true, target, selected: null };
     render();
   },
@@ -3017,6 +3020,35 @@ const handlers = {
     const at = { measureIndex, beatIndex, slotIndex };
     applyDraft(cycleSyllable, at);
     const draft = state.composer.draft;
+    if (state.composer.selected && !slotAt(draft, state.composer.selected)?.on) state.composer.selected = null;
+    if (state.composer.recording && state.composer.target && !slotAt(draft, state.composer.target)?.on) {
+      const target = recordTarget(draft);
+      state.composer = { ...state.composer, target, recording: Boolean(target) };
+    }
+    render();
+  },
+
+  /**
+   * The armed subdivision painted onto a Beat of the part on screen (AC-19.5.7).
+   * Practice's rules exactly: a Recipe the Beat's note value cannot take does
+   * nothing (AC-1.3.4, AC-1.3.5), and a Beat with syllables asks first, since
+   * any Recipe change clears it — and here its notes with it (AC-1.3.7, AC-1.3.8).
+   */
+  async onComposerRecipe(measureIndex, beatIndex) {
+    const recipeId = state.armedRecipe;
+    const before = state.composer.draft;
+    const measure = before?.measures[measureIndex];
+    if (!recipeId || !measure?.beats[beatIndex]) return;
+    if (!isOffered(recipeId, beatNoteValue(measure.timeSignature))) return;
+    if (!(await confirmRecipeChange(countActiveSlots(before, measureIndex, beatIndex)))) {
+      render();
+      return;
+    }
+    // The ask is answered later: act only on the composition it was asked about.
+    if (state.composer.draft !== before) return;
+    applyDraft(setRecipe, measureIndex, beatIndex, recipeId);
+    const draft = state.composer.draft;
+    // The Beat is silent now, so a selection or a record target on it has nothing to hold (AC-19.5.7/6).
     if (state.composer.selected && !slotAt(draft, state.composer.selected)?.on) state.composer.selected = null;
     if (state.composer.recording && state.composer.target && !slotAt(draft, state.composer.target)?.on) {
       const target = recordTarget(draft);

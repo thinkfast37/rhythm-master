@@ -4117,6 +4117,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 *(Added 2026-10-18. The maintainer: "if you are not in record mode you can click on a note in the pattern that is a sounded syllable and it will highlight that note and then you can hit a note on the fretboard or piano keyboard and replace the note … you can also change the tempo and the swing values … you can duplicate the pattern — if you duplicate a pattern that already has notes then the duplicated syllables will sound as percussive until notes are assigned … you can also delete a syllable from the pattern and you can add a new syllable to the pattern by clicking on it just like you would when you compose a pattern … the pattern grid will show the note values in the big box at the top and the syllable counting system values in the smaller boxes below … you will need to show a counting system control for that." Measures and subdivisions are not edited here: a rhythm's shape is made in Practice and brought to the Composer; what the Composer edits is which syllables sound and what they sound.)*
 
+*(Revised 2026-11-20 at the maintainer's request, T512. The closing sentence above no longer holds. Measures came to the Composer on 2026-11-13 (AC-19.11.7), and now subdivisions do: "the composer mode currently is stuck on 16th note subdivisions … I can toggle back to practice mode and change the subdivisions and switch back to composer mode and use them but I would like to be able to edit the subdivisions the same way I can in practice mode." AC-19.5.7 is Practice's own brush (AC-1.3.11) on the composing grid: a subdivision is armed on a strip and painted onto a Beat, under the same applicability and the same ask before a Beat with syllables is cleared (AC-1.3.4–AC-1.3.8). Decisions taken without asking: the strip sits among the Composer's controls, above the Measures row; what is armed is the one armed subdivision the app has, so it is still armed on crossing between Practice and the Composer; pressing Record disarms it, as arming a note does in Practice (AC-1.3.11/5), since Record is the Composer's note tool; and the strip is disabled in the Score view, where there is no Beat to tap.)*
+
 **Independent Test**: Load a recorded composition, assert each sounding Slot shows its note above its syllable, select a Slot and tap a key and assert only that Slot's note changes, press Delete and assert it is cleared, tap a syllable box to turn a Slot on and assert it sounds percussively until recorded, press Double Length and assert the copy carries no notes and that Record starts on its first Slot.
 
 **Acceptance Scenarios**:
@@ -4179,6 +4181,20 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.5.6/2** — Confirming clears every Slot's note and keeps every syllable sounding, so the count of notes missing is the count of syllables and Record targets the first
     - **AC-19.5.6/3** — Confirming drops the selection, and the cleared composition counts as an unsaved change
     - **AC-19.5.6/4** — Clear notes is disabled with no note recorded and while recording, and Delete still clears only the selected Slot
+
+- **AC-19.5.7** — A subdivision is armed in the Composer and painted onto any Beat
+  - **Given** a composition in the Composer, in the Grid view
+  - **When** the Composer arms a subdivision on the Subdivision strip among the Composer's controls and taps anywhere within a Beat of the composing grid
+  - **Then** that Beat of the part on screen takes the armed Recipe and is left silent — any Beat of any Measure — under the applicability rules of AC-1.3.4 and AC-1.3.5; a Beat with sounding syllables asks first, since its syllables and their notes are cleared, and an empty Beat changes with no ask; with nothing armed the composing grid selects and cycles exactly as before; a line under the composing grid names the armed subdivision; and pressing Record disarms it
+  - *(Added 2026-11-20 at the maintainer's request, T512 — see this story's revision note.)*
+  - **Cases**:
+    - **AC-19.5.7/1** — A Subdivision strip among the Composer controls offers the Recipes the open meters can take, one armed at a time, tapping the armed chip disarms it, and every chip is disabled in the Score view
+    - **AC-19.5.7/2** — With a subdivision armed, a tap on either box of any Slot gives that Beat alone the armed Recipe and stays armed, and with none armed the boxes select and cycle as before
+    - **AC-19.5.7/3** — A Beat with sounding syllables asks before it is cleared, cancelling leaves the Beat and its notes as they were, and an empty Beat changes with no ask
+    - **AC-19.5.7/4** — A Recipe the tapped Beat cannot take in its meter leaves that Beat unchanged
+    - **AC-19.5.7/5** — A line under the composing grid names the armed subdivision while one is armed, and pressing Record disarms it
+    - **AC-19.5.7/6** — A selection or record target on the changed Beat does not survive it: the selection is dropped and the target moves to the first syllable without a note
+    - **AC-19.5.7/7** — The new Slots are turned on and recorded onto like any others, and a saved composition keeps the changed subdivision
 
 ---
 

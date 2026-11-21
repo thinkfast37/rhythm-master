@@ -380,6 +380,13 @@ export function mountShell(root, ctx) {
 
   // The composing grid's two boxes per Slot (AC-19.5.1), delegated like the grid's.
   composerEl.addEventListener('click', (event) => {
+    // An armed subdivision makes the composing grid a Recipe brush, as it does
+    // Practice's grid: the tap lands on a Slot's box and means its Beat (AC-19.5.7/2).
+    const beatEl = event.target.closest('.composer-grid .beat');
+    if (state.armedRecipe && beatEl) {
+      handlers.onComposerRecipe(Number(beatEl.closest('.measure').dataset.measure), Number(beatEl.dataset.beat));
+      return;
+    }
     const target = event.target.closest('[data-action]');
     if (!target) return;
     const m = Number(target.dataset.measure);
