@@ -7,13 +7,17 @@
 # the same config; only which tests each runner draws differs. coverage:ac and
 # check:trace read test names from the source files, not from Playwright's
 # report, so splitting the run cannot blind them.
+#
+# playwright.config.js sets fullyParallel, so a shard is a share of the tests,
+# not of the files, and the shards finish together (T518). SHARDS and the
+# matrix below must name the same number.
 name: Verify
 
 on:
   workflow_call:
 
 env:
-  SHARDS: 4
+  SHARDS: 6
 
 jobs:
   checks:
@@ -49,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
