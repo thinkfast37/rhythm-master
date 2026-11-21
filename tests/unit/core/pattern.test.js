@@ -4,6 +4,9 @@ import {
   create,
   createMeasure,
   addMeasure,
+  insertMeasure,
+  moveMeasure,
+  movedIndex,
   removeMeasure,
   setTimeSignature,
   setTimeSignatureAll,
@@ -93,29 +96,96 @@ describe('core/pattern — Measures', () => {
     }
   });
 
-  it('AC-1.1.8/1 — The −Measure control is disabled on a one-Measure Pattern: the core refuses to remove the last Measure', () => {
+  it('AC-1.1.8/1 — The Remove control is disabled on a one-Measure Pattern: the core refuses to remove the last Measure', () => {
     let p = addMeasure(create());
     p = removeMeasure(p, 0);
     expect(p.measures).toHaveLength(1);
     expect(() => removeMeasure(p, 0)).toThrow(/at least one Measure/);
   });
 
-  it('AC-1.1.9 — Measure removal is always from the end: the core rule', () => {
+  it('AC-1.1.9 — Remove takes the selected Measure: the core removes from the middle, the rest unchanged in order', () => {
     let p = addMeasure(addMeasure(create()));
     p = setTimeSignature(p, 1, '3/4');
     p = setTimeSignature(p, 2, '7/8');
     p = cycleAccent(p, 0, 1, 0);
-    const kept = structuredClone(p.measures.slice(0, 2));
+    p = cycleAccent(p, 2, 3, 0);
+    const kept = structuredClone([p.measures[0], p.measures[2]]);
 
-    const shorter = removeMeasure(p, p.measures.length - 1);
+    const shorter = removeMeasure(p, 1);
     expect(shorter.measures).toHaveLength(2);
     expect(shorter.measures).toEqual(kept);
+  });
+
+  it('AC-1.1.9 — Remove takes the selected Measure: the core removes the last as before', () => {
+    let p = addMeasure(addMeasure(create()));
+    p = setTimeSignature(p, 2, '7/8');
+    const kept = structuredClone(p.measures.slice(0, 2));
+    expect(removeMeasure(p, 2).measures).toEqual(kept);
+  });
+
+  it("AC-1.1.11/1 — + Before inserts a blank Measure in the selected Measure's Time Signature immediately in front of it, and selects the new Measure: the core insert", () => {
+    let p = addMeasure(addMeasure(create()));
+    p = setTimeSignature(p, 1, '3/4');
+    p = setTimeSignature(p, 2, '7/8');
+    p = cycleAccent(p, 1, 0, 0);
+    const before = insertMeasure(p, 1, 1);
+    expect(before.measures.map((m) => m.timeSignature)).toEqual(['4/4', '3/4', '3/4', '7/8']);
+    expect(before.measures[1]).toEqual(createMeasure('3/4'));
+    expect(before.measures[2]).toEqual(p.measures[1]);
+  });
+
+  it("AC-1.1.11/2 — + After inserts a blank Measure in the selected Measure's Time Signature immediately after it, and selects the new Measure: the core insert", () => {
+    let p = addMeasure(addMeasure(create()));
+    p = setTimeSignature(p, 0, '5/4');
+    const after = insertMeasure(p, 1, 0);
+    expect(after.measures.map((m) => m.timeSignature)).toEqual(['5/4', '5/4', '4/4', '4/4']);
+    expect(after.measures[1]).toEqual(createMeasure('5/4'));
+    // At the head, with nothing before it, the new Measure takes the first's meter.
+    expect(insertMeasure(p, 0).measures[0].timeSignature).toBe('5/4');
+    // The cap refuses an insert as it refuses an append.
+    let full = create();
+    for (let i = 1; i < MAX_MEASURES; i++) full = addMeasure(full);
+    expect(() => insertMeasure(full, 0)).toThrow(/at most 32 Measures/);
+  });
+
+  it('AC-1.1.11/3 — Every other Measure keeps its Time Signature, Beats, Slots and chord overrides, in its order: the core insert', () => {
+    let p = addMeasure(addMeasure(create()));
+    p = setTimeSignature(p, 2, '6/8');
+    p = cycleAccent(p, 0, 2, 0);
+    p = cycleAccent(p, 2, 4, 0);
+    const out = insertMeasure(p, 2, 2);
+    expect([out.measures[0], out.measures[1], out.measures[3]]).toEqual(p.measures);
+  });
+
+  it('AC-1.1.12/2 — The moved Measure carries its Time Signature, Beats, Slots, Accents, Pitches and chord overrides to its new place, every other Measure keeps its own in its order, and the moved Measure stays selected: the core move', () => {
+    let p = addMeasure(addMeasure(addMeasure(create())));
+    p = setTimeSignature(p, 1, '3/4');
+    p = setTimeSignature(p, 3, '7/8');
+    p = cycleAccent(p, 0, 1, 0);
+    p = cycleAccent(p, 1, 2, 0);
+    p = cycleAccent(p, 1, 2, 0); // a second press: an Accent other than the default
+    p = setPitch(p, 1, 2, 0, { degree: '5', octaveOffset: 0 });
+    const [a, b, c, d] = p.measures;
+    expect(b.beats[2].slots[0].pitch).toBeTruthy();
+    // Measure 2 before Measure 4 (gap 3): lands third.
+    expect(moveMeasure(p, 1, 3).measures).toEqual([a, c, b, d]);
+    // Measure 2 after Measure 4 (gap 4): lands last.
+    expect(moveMeasure(p, 1, 4).measures).toEqual([a, c, d, b]);
+    // Measure 4 before Measure 1 (gap 0): lands first.
+    expect(moveMeasure(p, 3, 0).measures).toEqual([d, a, b, c]);
+    expect(movedIndex(1, 3)).toBe(2);
+    expect(movedIndex(3, 0)).toBe(0);
+    // Gaps either side of a Measure leave the order as it is.
+    expect(moveMeasure(p, 1, 1).measures).toEqual(p.measures);
+    expect(moveMeasure(p, 1, 2).measures).toEqual(p.measures);
   });
 
   it('no mutator touches its argument (Principle I: core/ is pure)', () => {
     const p = create();
     const before = structuredClone(p);
     addMeasure(p);
+    insertMeasure(p, 0);
+    moveMeasure(p, 0, 1);
     setTimeSignature(p, 0, '3/4');
     setRecipe(p, 0, 0, 'triplet-8ths');
     cycleAccent(p, 0, 0, 0);

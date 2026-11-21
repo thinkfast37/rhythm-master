@@ -698,7 +698,7 @@ test.describe('AC-10.4.7 — A chord override is Pattern content that travels wi
     expect((await pattern(page)).harmony.overrides).toBeUndefined();
   });
 
-  test('AC-10.4.7/2 — Removing the last Measure drops that Measure’s overrides with it; Double Length copies each Measure’s overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on: on the screen', async ({ page }) => {
+  test('AC-10.4.7/2 — Removing a Measure drops that Measure’s overrides with it; inserting or moving one keeps every override with the Measure it was on; Double Length copies each Measure’s overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on: on the screen', async ({ page }) => {
     await loop(page, { change: 'measure' });
     await open(page);
     await technique(page, 'change-quality').click();
@@ -707,10 +707,26 @@ test.describe('AC-10.4.7 — A chord override is Pattern content that travels wi
     await page.locator('.rhythm-group [data-action="duplicate-pattern"]').click();
     await expect(gridMeasures(page)).toHaveCount(4);
     expect((await pattern(page)).harmony.overrides).toEqual({ 1: { 1: { quality: 'maj7' } }, 3: { 1: { quality: 'maj7' } } });
-    await page.locator('[data-action="remove-measure"]').click();
-    expect((await pattern(page)).harmony.overrides).toEqual({ 1: { 1: { quality: 'maj7' } } });
-    await page.locator('[data-action="remove-measure"]').click();
-    await page.locator('[data-action="remove-measure"]').click();
+    const o = { 1: { quality: 'maj7' } };
+    // Moving Measure 2 before Measure 1 takes its override with it (AC-1.1.12).
+    await page.locator('.measure[data-measure="1"] [data-action="select-measure"]').click();
+    await page.locator('.rhythm-group [data-action="move-measure"]').click();
+    await page.locator('.move-measure-where').selectOption('before');
+    await page.locator('.move-measure-target').selectOption('0');
+    await page.locator('.move-measure-dialog .dialog-button[data-value="move"]').click();
+    expect((await pattern(page)).harmony.overrides).toEqual({ 0: o, 3: o });
+    // + After the moved Measure pushes the later override along (AC-1.1.11).
+    await page.locator('.rhythm-group [data-action="add-measure"]').click();
+    expect((await pattern(page)).harmony.overrides).toEqual({ 0: o, 4: o });
+    // Removing the blank one between them brings it back.
+    await page.locator('.rhythm-group [data-action="remove-measure"]').click();
+    expect((await pattern(page)).harmony.overrides).toEqual({ 0: o, 3: o });
+    // Removing the last drops that Measure's override with it.
+    await page.locator('.rhythm-group [data-action="remove-measure"]').click();
+    expect((await pattern(page)).harmony.overrides).toEqual({ 0: o });
+    // Removing the overridden Measure from the front drops the last of them.
+    await page.locator('.measure[data-measure="0"] [data-action="select-measure"]').click();
+    await page.locator('.rhythm-group [data-action="remove-measure"]').click();
     expect((await pattern(page)).harmony.overrides).toBeUndefined();
   });
 

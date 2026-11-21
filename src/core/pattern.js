@@ -101,13 +101,71 @@ export function create(name = 'Untitled') {
 
 // --- Measures ---------------------------------------------------------------
 
+/**
+ * Which Measure is selected (AC-1.1.10/3): the one chosen, while it is still
+ * there in the Pattern it was chosen in, else the last of `count` — by default
+ * the Pattern's own. `selection` is `{ id, index }` or null, and is never
+ * Pattern content.
+ */
+export function selectedMeasure(pattern, selection, count = pattern.measures.length) {
+  if (selection && selection.id === (pattern.id ?? null) && Number.isInteger(selection.index) && selection.index >= 0 && selection.index < count) {
+    return selection.index;
+  }
+  return count - 1;
+}
+
 /** Append a Measure, inheriting the previous Measure's meter. AC-1.1.2 */
 export function addMeasure(pattern) {
+  return insertMeasure(pattern, pattern.measures.length);
+}
+
+/**
+ * Insert a blank Measure so that it lands at index `at` (0 … length), in the
+ * meter of the Measure at `from` — by default the one it follows, or the first
+ * when it opens the Pattern. + Before passes the selected index for both, + After
+ * the selected index plus one with `from` the selected (AC-1.1.11). Chord
+ * overrides stay with the Measures they were on (AC-10.4.7/2).
+ */
+export function insertMeasure(pattern, at, from = Math.max(0, at - 1)) {
   if (pattern.measures.length >= MAX_MEASURES) {
     throw new Error(`A Pattern may hold at most ${MAX_MEASURES} Measures (AC-1.1.3)`);
   }
-  const inherited = pattern.measures[pattern.measures.length - 1].timeSignature;
-  return { ...clone(pattern), measures: [...clone(pattern.measures), createMeasure(inherited)] };
+  if (!Number.isInteger(at) || at < 0 || at > pattern.measures.length) throw new Error(`No place ${at} to insert a Measure`);
+  const inherited = pattern.measures[Math.min(from, pattern.measures.length - 1)].timeSignature;
+  const measures = clone(pattern.measures);
+  measures.splice(at, 0, createMeasure(inherited));
+  const overrides = mapOverrides(pattern.harmony?.overrides, (m, c) => [m >= at ? m + 1 : m, c]);
+  return withOverrides({ ...clone(pattern), measures }, overrides);
+}
+
+/**
+ * Where the Measure at `from` lands when moved to the gap `to` (0 … length,
+ * "before Measure `to`"; after Measure X is the gap X + 1). Pure arithmetic,
+ * shared by the move and the dialog that asks whether a choice changes anything
+ * (AC-1.1.12/1).
+ */
+export function movedIndex(from, to) {
+  return to > from ? to - 1 : to;
+}
+
+/**
+ * Move one Measure to another place, carrying everything that is its own —
+ * meter, Beats, Slots and chord overrides — while every other Measure keeps
+ * its order (AC-1.1.12/2). The progression is not moved: its chords stay with
+ * the positions they fall on.
+ */
+export function moveMeasure(pattern, from, to) {
+  const n = pattern.measures.length;
+  if (!Number.isInteger(from) || from < 0 || from >= n) throw new Error(`No Measure ${from} to move`);
+  if (!Number.isInteger(to) || to < 0 || to > n) throw new Error(`No place ${to} to move a Measure to`);
+  const dest = movedIndex(from, to);
+  const order = [...Array(n).keys()];
+  order.splice(from, 1);
+  order.splice(dest, 0, from);
+  const measures = order.map((i) => clone(pattern.measures[i]));
+  const newIndexOf = new Map(order.map((oldIndex, newIndex) => [oldIndex, newIndex]));
+  const overrides = mapOverrides(pattern.harmony?.overrides, (m, c) => [newIndexOf.get(m) ?? m, c]);
+  return withOverrides({ ...clone(pattern), measures }, overrides);
 }
 
 export function removeMeasure(pattern, index) {

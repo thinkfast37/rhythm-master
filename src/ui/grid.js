@@ -70,6 +70,14 @@ export function renderGrid(root, pattern, transportPosition = null, options = {}
 
   pattern.measures.forEach((measure, measureIndex) => {
     const row = renderMeasure(measure, measureIndex, pattern, transportPosition, system, readOnly, pattern.key, pass, deal);
+    // Every Measure carries its number (AC-1.1.10/1); where Measures can be
+    // edited the number selects (AC-1.1.10/2), and a read-only grid shows it
+    // with no selection (AC-1.1.10/4).
+    const candidate = options.candidateFrom !== undefined && options.candidateFrom !== null && measureIndex >= options.candidateFrom;
+    const selectable = !readOnly && options.selectable !== false && !candidate;
+    const selected = selectable && options.selectedMeasure === measureIndex;
+    row.prepend(measureNumber(measureIndex, { selectable, selected, action: 'select-measure' }));
+    if (selected) row.classList.add('selected');
     // A candidate variation's Measures, after the Pattern's own, are marked as
     // the candidate (AC-10.4.4/2): heard and seen, written nowhere.
     if (options.candidateFrom !== undefined && options.candidateFrom !== null && measureIndex >= options.candidateFrom) {
@@ -207,6 +215,27 @@ export function meterProminence(measures, index) {
   return measures[index].timeSignature === measures[index - 1].timeSignature
     ? 'dimmed'
     : 'prominent';
+}
+
+/**
+ * A Measure's number, small and muted beside its meter (AC-1.1.10/1): a button
+ * that selects the Measure where its Measures can be edited, a span where they
+ * cannot (AC-1.1.10/4). Shared with the Composer's grid.
+ */
+export function measureNumber(measureIndex, { selectable, selected = false, action }) {
+  const number = document.createElement(selectable ? 'button' : 'span');
+  number.className = `measure-number${selected ? ' selected' : ''}`;
+  number.textContent = String(measureIndex + 1);
+  number.dataset.measure = String(measureIndex);
+  if (selectable) {
+    number.type = 'button';
+    number.dataset.action = action;
+    number.setAttribute('aria-pressed', String(selected));
+    number.setAttribute('aria-label', `Measure ${measureIndex + 1}${selected ? ', selected' : ''}; tap to select`);
+  } else {
+    number.setAttribute('aria-label', `Measure ${measureIndex + 1}`);
+  }
+  return number;
 }
 
 function renderMeasure(measure, measureIndex, pattern, position, system, readOnly, key, pass = 0, deal = null) {

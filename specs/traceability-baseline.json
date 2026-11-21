@@ -1,6 +1,6 @@
 {
   "note": "Traceability findings that pre-date the gate. Reported, but not build-failing. This list may only shrink: `prune-baseline` removes entries that are fixed, and nothing writes new ones. Adding an entry by hand is taking on debt deliberately and needs to be justified in review.",
-  "generated": "2026-11-15",
+  "generated": "2026-11-21",
   "accepted": [
     "T3 T030 names `core/pattern.js`, which does not exist",
     "T3 T035 names `tests/unit/storage/seed-format.test.js`, which does not exist",
@@ -39,7 +39,6 @@
     "T3 T117 names `tests/e2e/us-15-1.spec.js`, which does not exist",
     "T3 T125 names `src/audio/piano.js`, which does not exist",
     "T3 T125 names `tools/fetch-soundfont.js`, which does not exist",
-    "T4 AC-1.1.2",
     "T4 AC-1.2.1",
     "T4 AC-1.2.2",
     "T4 AC-1.2.3",

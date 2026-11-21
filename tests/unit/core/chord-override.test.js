@@ -6,7 +6,7 @@
  * timeline (research.md D-025).
  */
 import { describe, it, expect } from 'vitest';
-import { create, cycleAccent, addMeasure, removeMeasure, duplicate, append, setPitch } from '../../../src/core/pattern.js';
+import { create, cycleAccent, addMeasure, removeMeasure, insertMeasure, moveMeasure, duplicate, append, setPitch } from '../../../src/core/pattern.js';
 import { condense } from '../../../src/core/condense.js';
 import {
   setProgression as chooseProgression,
@@ -55,13 +55,20 @@ describe('US-10.4 — Vary a loop: a chord override is Pattern content that trav
     expect(validate(before).errors).toEqual([]);
   });
 
-  it('AC-10.4.7/2 — Removing the last Measure drops that Measure’s overrides with it; Double Length copies each Measure’s overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on', () => {
+  it('AC-10.4.7/2 — Removing a Measure drops that Measure’s overrides with it; inserting or moving one keeps every override with the Measure it was on; Double Length copies each Measure’s overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on', () => {
     const p = varied();
     const shorter = removeMeasure(p, 1);
     expect(shorter.harmony.overrides).toBeUndefined();
     // Removing an earlier Measure moves the later one's override down with it.
     const first = removeMeasure(p, 0);
     expect(first.harmony.overrides).toEqual({ 0: { 0: { quality: 'm7' } } });
+    // Inserting in front of the overridden Measure moves its override up with it; after it, nothing moves.
+    expect(insertMeasure(p, 0).harmony.overrides).toEqual({ 2: { 0: { quality: 'm7' } } });
+    expect(insertMeasure(p, 2, 1).harmony.overrides).toEqual({ 1: { 0: { quality: 'm7' } } });
+    // Moving the overridden Measure to the front takes its override with it.
+    expect(moveMeasure(p, 1, 0).harmony.overrides).toEqual({ 0: { 0: { quality: 'm7' } } });
+    // Moving another Measure past it shifts it down, still on its own Measure.
+    expect(moveMeasure(p, 0, 2).harmony.overrides).toEqual({ 0: { 0: { quality: 'm7' } } });
     const doubled = duplicate(p);
     expect(doubled.harmony.overrides).toEqual({ 1: { 0: { quality: 'm7' } }, 3: { 0: { quality: 'm7' } } });
     // Condense joins Measures in pairs: the joined Measure takes both's overrides, the first's where they clash.

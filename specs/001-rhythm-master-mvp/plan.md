@@ -212,7 +212,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-002** | Foundational: the pure core and persistence | — | T012–T018, T026–T030 | T019–T025, T031 |
 | **P-003** | US-16.1 — Ship with a seeded Pattern library | AC-16.1.1–AC-16.1.11 | T032 | T033 |
 | **P-004** | US-16.2 — Add Patterns by editing a data file | AC-16.2.1–AC-16.2.4 | T034 | T035 |
-| **P-005** | US-1.1 — Measure sequence & per-Measure Time Signature | AC-1.1.1–AC-1.1.9 | T036–T037, T274 | T038, T275 |
+| **P-005** | US-1.1 — Measure sequence & per-Measure Time Signature | AC-1.1.1–AC-1.1.12 | T036–T037, T274, T560 | T038, T275, T561 |
 | **P-006** | US-1.2 — Time signature support without implied grouping | AC-1.2.1–AC-1.2.4 | T039, T400 | T040, T401 |
 | **P-007** | US-1.3 — Mixed subdivision within a Beat, via Recipes | AC-1.3.1–AC-1.3.12 | T041–T043, T182, T224, T226, T272 | T044, T183, T225, T227, T273 |
 | **P-008** | US-1.4 — Display and change a Measure's Time Signature in the grid | AC-1.4.1–AC-1.4.8 | T045, T400 | T046, T401 |

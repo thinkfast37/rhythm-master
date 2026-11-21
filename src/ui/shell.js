@@ -10,7 +10,7 @@
  * `storeSignature`). Rendering stays a pure function of the Pattern and the
  * transport position (FR-013).
  */
-import { automaticTags } from '../core/pattern.js';
+import { automaticTags, selectedMeasure } from '../core/pattern.js';
 import { surfaceFor } from '../core/goals.js';
 import { buildScore } from '../core/notation.js';
 import { renderGrid, renderChordStrip, moveCursor } from './grid.js';
@@ -386,6 +386,8 @@ export function mountShell(root, ctx) {
       handlers.onStampPitch(m, b, s);
     } else if (target.dataset.action === 'change-time-signature') {
       handlers.onTimeSignature(m);
+    } else if (target.dataset.action === 'select-measure') {
+      handlers.onSelectMeasure(m);
     }
   });
 
@@ -403,7 +405,8 @@ export function mountShell(root, ctx) {
     const m = Number(target.dataset.measure);
     const b = Number(target.dataset.beat);
     const sl = Number(target.dataset.slot);
-    if (target.dataset.action === 'select-note') handlers.onComposerSelect(m, b, sl);
+    if (target.dataset.action === 'composer-select-measure') handlers.onComposerSelectMeasure(m);
+    else if (target.dataset.action === 'select-note') handlers.onComposerSelect(m, b, sl);
     else if (target.dataset.action === 'cycle-syllable') handlers.onComposerSyllable(m, b, sl);
   });
 
@@ -734,11 +737,16 @@ export function mountShell(root, ctx) {
         aids: s.settings.sheetAids,
       });
     } else {
+      // The candidate's Measures follow the Pattern's own (AC-10.4.4/2).
+      const candidateFrom = s.variation?.candidate ? pattern.measures.length - s.variation.candidate.measures.length : null;
       renderGrid(gridEl, pattern, position, {
         countingSystem: s.settings.countingSystem,
         recipeArmed: Boolean(s.armedRecipe),
-        // The candidate's Measures follow the Pattern's own (AC-10.4.4/2).
-        candidateFrom: s.variation?.candidate ? pattern.measures.length - s.variation.candidate.measures.length : null,
+        // The numbers select where the Pattern can be edited (AC-1.1.10/2, /4).
+        selectable: !surface.readOnly,
+        // Counted on the Pattern's own Measures, never a candidate's (AC-10.4.4/2).
+        selectedMeasure: selectedMeasure(pattern, s.measureSelection, candidateFrom ?? pattern.measures.length),
+        candidateFrom,
       });
       // Immediately after the render that built the Beats, and before this task
       // yields to paint, so the one-line fallback is never seen (AC-15.1.14).

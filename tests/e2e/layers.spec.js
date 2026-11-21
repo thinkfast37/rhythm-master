@@ -943,7 +943,7 @@ test(`AC-19.11.7/1 — New layer asks a name, pre-filled with the part on screen
   await expect(page.locator('.composer-layers .layer-pick').last()).toHaveText('My line layer');
 });
 
-test("AC-19.11.7/2 — The Composer's Measures row adds a Measure after the last, in its meter, up to the cap, and removes the last down to one; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass", async ({ page }) => {
+test("AC-19.11.7/2 — The Composer's Measures row selects a Measure, adds one before or after it in its meter up to the cap, removes it down to one and moves it, as Practice's does; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await setTempo(page, 240);
@@ -974,6 +974,41 @@ test("AC-19.11.7/2 — The Composer's Measures row adds a Measure after the last
   await expect(page.locator('.composer-grid .measure')).toHaveCount(1);
   await expect(page.locator('.composer-remove-measure')).toBeDisabled();
   await play(page);
+});
+
+test("AC-19.11.7/2 — The Composer's Measures row selects a Measure, adds one before or after it in its meter up to the cap, removes it down to one and moves it, as Practice's does; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass: insert, move and remove in the middle, the recorded notes travelling", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  await addLayer(page, SON);
+  const midis = async () =>
+    (await composerState(page)).draft.measures.map((m) => m.beats.flatMap((b) => b.slots.filter((s) => s.pitch)).length);
+  const nums = () => page.locator('.composer-grid .measure-number').allTextContents();
+  const selectedNum = () => page.locator('.composer-grid .measure-number.selected').textContent();
+  await page.locator('.composer-add-measure').click();
+  await page.locator('.composer-add-measure').click();
+  expect(await nums()).toEqual(['1', '2', '3']);
+  expect(await selectedNum()).toBe('3');
+  // Select Measure 1, the recorded one, and put a Measure in front of it.
+  await page.locator('.composer-grid .measure[data-measure="0"] [data-action="composer-select-measure"]').click();
+  await expect(page.locator('[data-action="composer-measure-select"]')).toHaveValue('0');
+  await page.locator('.composer-add-measure-before').click();
+  expect(await midis()).toEqual([0, 4, 0, 0]);
+  expect(await selectedNum()).toBe('1');
+  // The picker selects as the number does: Measure 2, the recorded one, after Measure 4.
+  await page.locator('[data-action="composer-measure-select"]').selectOption('1');
+  await page.locator('.composer-move-measure').click();
+  await page.locator('.move-measure-where').selectOption('after');
+  await page.locator('.move-measure-target').selectOption('3');
+  await page.locator('.move-measure-dialog .dialog-button[data-value="move"]').click();
+  expect(await midis()).toEqual([0, 0, 0, 4]);
+  expect(await selectedNum()).toBe('4');
+  // Remove takes the selected Measure from the middle.
+  await page.locator('.composer-grid .measure[data-measure="1"] [data-action="composer-select-measure"]').click();
+  await page.locator('.composer-remove-measure').click();
+  expect(await midis()).toEqual([0, 0, 4]);
+  // The layer is untouched: every change is to the part on screen.
+  expect((await composerState(page)).layers.map((l) => l.patternId)).toEqual([SON]);
 });
 
 test('AC-19.11.7/3 — A saved part on screen is the open Pattern in Practice: Measures, meter and anything else changed there are on screen again on returning to the Composer, the layers kept', async ({ page }) => {

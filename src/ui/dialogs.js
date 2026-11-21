@@ -678,3 +678,104 @@ export function chooseCycleList({ title, groups, picked, searchable = false, onC
     (search ?? done).focus();
   });
 }
+
+/**
+ * Move… (AC-1.1.12/1): the selected Measure, Before or After any other
+ * Measure, Move or Cancel. Resolves to the gap it moves to (0 … count, "before
+ * Measure gap + 1"), or null when cancelled. Move is disabled while the choice
+ * would leave the order as it is — before the next Measure or after the one
+ * before — so a press always does something.
+ *
+ * @param {number} count the Pattern's Measures
+ * @param {number} from the selected Measure, 0-based
+ * @param {(from: number, to: number) => number} movedIndex core's arithmetic
+ */
+export function askMoveMeasure(count, from, movedIndex) {
+  const root = ensureHost();
+  return new Promise((resolve) => {
+    root.innerHTML = '';
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    const box = document.createElement('div');
+    box.className = 'dialog move-measure-dialog';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', `Move Measure ${from + 1}`);
+
+    const text = document.createElement('p');
+    text.className = 'dialog-message';
+    text.textContent = `Move Measure ${from + 1}`;
+    box.appendChild(text);
+
+    const fields = document.createElement('div');
+    fields.className = 'move-measure-fields';
+    const where = document.createElement('select');
+    where.className = 'move-measure-where';
+    where.setAttribute('aria-label', 'Before or after');
+    for (const [value, label] of [['before', 'Before'], ['after', 'After']]) {
+      const o = document.createElement('option');
+      o.value = value;
+      o.textContent = label;
+      where.appendChild(o);
+    }
+    const target = document.createElement('select');
+    target.className = 'move-measure-target';
+    target.setAttribute('aria-label', 'Measure');
+    for (let i = 0; i < count; i++) {
+      if (i === from) continue;
+      const o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = `Measure ${i + 1}`;
+      target.appendChild(o);
+    }
+    // Opening on a choice that moves something: before the first Measure, or —
+    // when the selected one is first — after the last.
+    if (from === 0) {
+      where.value = 'after';
+      target.value = String(count - 1);
+    } else {
+      where.value = 'before';
+      target.value = '0';
+    }
+    fields.append(where, target);
+    box.appendChild(fields);
+
+    const row = document.createElement('div');
+    row.className = 'dialog-actions';
+    const move = document.createElement('button');
+    move.type = 'button';
+    move.className = 'dialog-button primary';
+    move.textContent = 'Move';
+    move.dataset.value = 'move';
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'dialog-button';
+    cancel.textContent = 'Cancel';
+    cancel.dataset.value = 'cancel';
+
+    const gap = () => Number(target.value) + (where.value === 'after' ? 1 : 0);
+    const sync = () => {
+      const still = movedIndex(from, gap()) === from;
+      move.disabled = still;
+      move.title = still ? `Measure ${from + 1} is already there` : '';
+    };
+    where.addEventListener('change', sync);
+    target.addEventListener('change', sync);
+    sync();
+
+    move.addEventListener('click', () => {
+      if (move.disabled) return;
+      const to = gap();
+      root.innerHTML = '';
+      resolve(to);
+    });
+    cancel.addEventListener('click', () => {
+      root.innerHTML = '';
+      resolve(null);
+    });
+    row.append(move, cancel);
+    box.appendChild(row);
+    backdrop.appendChild(box);
+    root.appendChild(backdrop);
+    where.focus();
+  });
+}
