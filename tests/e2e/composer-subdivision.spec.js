@@ -37,11 +37,17 @@ async function loadTwoMeters(page) {
   await expect(page.locator('.composer-grid')).toBeVisible();
 }
 
-test('AC-19.5.7/1 — A Subdivision strip among the Composer controls offers the Recipes the open meters can take, one armed at a time, tapping the armed chip disarms it, and every chip is disabled in the Score view', async ({ page }) => {
+test('AC-19.5.7/1 — A Subdivision strip directly above the composing grid offers the Recipes the open meters can take, one armed at a time, tapping the armed chip disarms it, and every chip is disabled in the Score view', async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
-  // Among the Composer's controls, and the same catalogue Practice's strip holds for 4/4.
-  await expect(page.locator('.composer-controls .recipe-strip')).toBeVisible();
+  // Directly above the composing grid: the element before it, sitting over it, and not among the controls.
+  await expect(strip(page)).toBeVisible();
+  await expect(page.locator('.composer-controls .recipe-strip')).toHaveCount(0);
+  expect(await page.evaluate(() => document.querySelector('.composer-grid').previousElementSibling.classList.contains('recipe-strip'))).toBe(true);
+  const stripBox = await strip(page).boundingBox();
+  const gridBox = await page.locator('.composer-grid').boundingBox();
+  expect(stripBox.y + stripBox.height).toBeLessThanOrEqual(gridBox.y + 1);
+  expect(gridBox.y - (stripBox.y + stripBox.height)).toBeLessThan(40);
   const labels = await strip(page).locator('.recipe-chip').allTextContents();
   expect(labels).toEqual(expect.arrayContaining(['Straight 8ths', 'Straight 16ths', 'Triplet 8ths']));
   // A Recipe no Measure of a 4/4 part can take is there, and disabled.

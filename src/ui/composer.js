@@ -84,6 +84,15 @@ export function renderComposer(root, state, handlers) {
     fresh.appendChild(renderBar(composer, draft, voice, state, handlers));
     fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers, voice));
     if (draft) {
+      // The Subdivision strip, Practice's own (AC-1.3.11), directly above the composing
+      // grid it paints (AC-19.5.7/1). The Score view has no Beat to tap, so nothing can be armed there.
+      const inScore = (state.settings.composerView ?? 'grid') === 'score';
+      const strip = renderRecipeStrip(draft, state, handlers, {
+        disabled: inScore,
+        title: inScore ? 'Switch to the Grid view to change a Beat’s subdivision' : 'Arm a subdivision, then tap a Beat in the grid to apply it',
+      });
+      strip.classList.add('composer-recipe-strip');
+      fresh.appendChild(strip);
       // Grid or Score (AC-19.11.8): the composing grid, or one staff per part.
       if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderSectionScore(state, handlers));
       else {
@@ -612,16 +621,6 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     swing.setAttribute('aria-label', 'Swing');
     swing.addEventListener('input', (e) => handlers.onComposerSwing?.(Number(e.target.value)));
     wrap.appendChild(labelledRow(`Swing ${amount}`, swingEntry, swing));
-
-    // The Subdivision strip, Practice's own (AC-1.3.11), over the part on screen
-    // (AC-19.5.7/1). The Score view has no Beat to tap, so nothing can be armed there.
-    const inScore = (state.settings.composerView ?? 'grid') === 'score';
-    const strip = renderRecipeStrip(draft, state, handlers, {
-      disabled: inScore,
-      title: inScore ? 'Switch to the Grid view to change a Beat’s subdivision' : 'Arm a subdivision, then tap a Beat in the grid to apply it',
-    });
-    strip.classList.add('composer-recipe-strip');
-    wrap.appendChild(strip);
 
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
     dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself, keeping the notes or starting percussive' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
