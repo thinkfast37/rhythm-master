@@ -12,7 +12,8 @@
  * loaded only then, so the free page never even downloads it.
  */
 
-function isNativeShell() {
+/** Whether this is the store shell rather than a web page. Also asked by the newer-build check (AC-21.1.5/3). */
+export function isNativeShell() {
   const cap = typeof window !== 'undefined' ? window.Capacitor : undefined;
   return Boolean(cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform());
 }

@@ -1486,3 +1486,50 @@ recorded. Each pitched track has its own channel and the General MIDI program ne
 and for the synth, pad 89), skipping channel 10, which the drums keep. The file is built from the same
 `arranged` passes the transport is handed, through the same `timelineOf` — one timeline (Principle III).
 
+
+---
+
+## D-031 — Noticing a newer build: the app compares its own stamp with a fresh copy of its page
+
+**Decision (2026-11-21, T533).** The app learns that a newer build has been published by fetching
+its own page from its own origin, past every kept copy (a query that changes each time, and
+`cache: 'no-store'`), and comparing the `build-version` stamp in it with the one it was loaded
+with (US-21.1). A later build time is newer; nothing else is. On opening, before the musician has
+touched anything, the app loads the newer build by itself, once; after that it shows a notice and
+waits for Reload. Reload goes to an address carrying the newer commit, because a plain reload can
+be handed the same kept copy, and the address is tidied afterwards.
+
+**Why it is needed.** GitHub Pages serves the page with `cache-control: max-age=600`, which a
+project cannot change. Each build's page names its own hashed script and stylesheet, so a kept
+page is the whole previous build. On 2026-11-21 five changes merged within forty-five minutes and
+the maintainer, on the live site, reported one of them gone; it was on `main` and in the newest
+build, and a plain navigation in a second browser was shown the build before it while the same
+address with a query was shown the newest. Until T531 the deploy waited eight to ten minutes for
+the suite, which happened to be about the length of the kept copy and hid this.
+
+**The comparison is by build time, never by difference.** A fetched copy that merely differs
+could be an *older* one, served by a part of the host that has not caught up; moving to it would
+take the musician backwards, and from there the next check would bring them forwards again. Only
+a later build time moves or offers anything, and a stamp that cannot be read is not newer.
+
+**Where it lives.** Reading and comparing stamps, and building the reload address, are pure and
+live in `src/core/buildVersion.js`. The request, the timer and the tab's visibility live in
+`src/update/buildCheck.js`; the notice in `src/ui/updateNotice.js`.
+
+**It stays quiet wherever it cannot know.** No stamp on the page (a development server): no
+request. A failed request (offline): nothing shown. Inside the store shell: no request, since a
+store build is updated by its store and the page it would fetch is its own bundle (D-009). On any
+other static host (D-008, 2026-08-18) it works as on Pages, or finds nothing newer and says
+nothing.
+
+**Nothing is sent and nothing is stored.** The request is for the app's own page and carries no
+data; a dismissed notice is remembered only until the page is closed. This adds no backend, no
+dependency and no third party (Constitution Principle V).
+
+**Alternatives considered.** *A service worker that manages the cache* — it would also give
+offline use, but it is a second copy of the app with its own update lifecycle, and a mistake in
+one is served to the musician until the worker itself is replaced. *Reloading whenever a newer
+build is found* — it would interrupt playback and discard an unsaved composition. *Only a notice,
+even on opening* — the maintainer chose the silent move on opening, since nothing can be lost
+there and it is the case that prompted this. *Telling the musician to hard-refresh* — it is what
+this replaces.

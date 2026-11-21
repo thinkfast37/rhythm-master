@@ -39,7 +39,7 @@ in the evening — but separating them keeps each story honest about whose probl
 |---|---|---|
 | **The Composer** | A musician building original rhythmic and melodic Patterns — transcribing pieces they already hear, inventing new ones, varying and combining existing material. Comfortable with time signatures, subdivisions, and scale degrees, and wants precise control without friction. | US-1.1–1.4, US-2.1–2.3, US-2.11, US-2.14, US-3.1, US-4.4, US-7.1–7.6, US-8.1, US-10.1, US-11.1–11.3, US-12.1, US-19.1–19.10 |
 | **The New User** | A musician opening the app for the first time, who does not yet know its vocabulary or which of its controls belong together. Wants to say what they came to do and be shown only that, with a rhythm at their level handed to them. | US-14.1 |
-| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-2.13, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1 |
+| **The Practicing Musician** | A musician, often a student, using the tool to drill and internalise rhythms and melodies on their own instrument, at their own tempo, with practice aids — metronome, count-in, counting syllables. May or may not compose anything themselves. | US-2.4, US-2.12, US-2.13, US-4.1–4.3, US-5.1–5.6, US-6.1, US-12.3, US-15.1, US-15.2, US-16.1, US-17.1, US-21.1 |
 | **The Contributor** | A Composer who wants their own Patterns to become part of the shared library that ships to everyone else. | US-13.1 |
 | **The Maintainer** | Whoever adds Patterns to the shipped library — today the developer, reviewing what Contributors submit. Cares that adding a Pattern is a data edit, not a code change. | US-16.2 |
 
@@ -5458,6 +5458,66 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-20.3.1/4** — Each pitched track is on a channel of its own with the General MIDI program of its instrument, and a rhythm, a percussive part and a part on Drums are on the drum channel
     - **AC-20.3.1/5** — A Percussive Pattern laid in the sequence is written as the drums it plays — Kick, Snare and Floor tom by Accent Level — and a muted part of a Section is left out
     - **AC-20.3.1/6** — The notes of the file are the notes Play sounds, pass for pass, and the file follows the note-length choice as every MIDI export does
+
+---
+
+### User Story 79 - The app notices a newer build and moves to it
+
+*Traceability: `US-21.1` — The app notices a newer build and moves to it*
+
+**As** the Practicing Musician, **I want** the app to notice when a newer build of itself has been published and to move to it, **so that** what I open is what was last shipped, and a change I was told is live is in front of me rather than hidden behind a stale copy of the page.
+
+*(Added 2026-11-21 at the maintainer's request, T533. Several changes had merged within minutes of each other and the maintainer, on the live site, reported one of them gone: "it looks like you may have wiped out pr 184 as i don't see the functionality anymore". Nothing had been lost. The host keeps a copy of the page for ten minutes, each build's page names its own script, and a reload had been handed the copy from before the change. Since T531 a build is published within a minute of its merge, so builds now change faster than that copy expires. Decisions taken with the maintainer before the work: the app moves by itself only on opening, before anything has been touched, and after that only offers; it never moves to an older build; the store builds are left to their stores. research.md D-031.)*
+
+**Independent Test**: Serve the app, and answer its request for a fresh copy of its own page with a page stamped one hour later. Open the app and assert it lands on the later build without a click. Then, in a session already open, answer the next check with a later build still and assert the app stays where it is, shows "A newer version is available" with Reload and Dismiss, keeps playing, and loads the later build only when Reload is pressed.
+
+**Acceptance Scenarios**:
+
+- **AC-21.1.1** — On opening, the app moves to a newer build by itself
+  - **Given** the app is being opened and a later build has been published than the one the browser was handed
+  - **When** the app starts
+  - **Then** it loads the later build at once, before the musician has done anything, and does so once only
+  - **Cases**:
+    - **AC-21.1.1/1** — On opening, the app asks its own address for a fresh copy of its page, past any kept copy, and when that copy is a newer build the app loads it without being asked
+    - **AC-21.1.1/2** — The app moves by itself once per opening: a page loaded for a newer build does not move again by itself, and a build newer still is offered in the notice instead
+    - **AC-21.1.1/3** — When the musician has already pressed a key or a button before the answer arrives, the newer build is offered in the notice instead of loaded
+
+- **AC-21.1.2** — While the app is open, a newer build is offered and never taken
+  - **Given** the app is open and has been used
+  - **When** a later build is published
+  - **Then** the app says so in a notice and waits to be told
+  - **Cases**:
+    - **AC-21.1.2/1** — The app checks again each time its tab is shown again, and every five minutes while it stays shown
+    - **AC-21.1.2/2** — A newer build found after opening shows the notice "A newer version is available" with Reload and Dismiss, and nothing loads until Reload is pressed
+    - **AC-21.1.2/3** — The notice stops nothing: playback goes on while it shows, and the controls of the screen stay in use
+    - **AC-21.1.2/4** — Dismiss hides the notice for that build, a build newer still shows it again, and nothing about it is stored
+
+- **AC-21.1.3** — Reload moves to the newer build, and asks before work is lost
+  - **Given** the notice is showing
+  - **When** the musician presses Reload
+  - **Then** the newer build loads, unless there is unsaved work and the musician would rather keep it
+  - **Cases**:
+    - **AC-21.1.3/1** — Reload loads an address that carries the commit of the newer build, so a kept copy of the page cannot be handed over again, and the address is tidied once the build has loaded
+    - **AC-21.1.3/2** — With unsaved work in the Composer, Reload asks first with the question leaving the Composer asks, and declining keeps the work, the build and the notice as they were
+    - **AC-21.1.3/3** — With an Arrangement that has never been saved, Reload asks first, and declining keeps the Arrangement, the build and the notice as they were
+
+- **AC-21.1.4** — The app only ever moves forwards
+  - **Given** a copy of the page fetched for comparison
+  - **When** its build stamp is compared with the running one
+  - **Then** only a later build time counts as newer
+  - **Cases**:
+    - **AC-21.1.4/1** — A build stamp is a build time in UTC and a commit, and a build is newer only when its build time is later
+    - **AC-21.1.4/2** — The same build time, an earlier build time, and a stamp that cannot be read are none of them newer
+    - **AC-21.1.4/3** — A fetched copy that is the same build, or an older one, loads nothing and shows no notice
+
+- **AC-21.1.5** — When the app cannot check, it says nothing
+  - **Given** the app cannot learn whether a newer build exists
+  - **When** it would have checked
+  - **Then** it carries on as it is, with nothing shown and nothing broken
+  - **Cases**:
+    - **AC-21.1.5/1** — When the request fails, as it does offline, no notice shows, no error is raised, and the app works as before
+    - **AC-21.1.5/2** — A page that carries no build stamp, as a development server serves it, makes no request at all
+    - **AC-21.1.5/3** — Inside the store shell no request is made: a store build is updated by its store
 
 ---
 
