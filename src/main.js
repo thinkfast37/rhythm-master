@@ -197,7 +197,10 @@ import { placeFor, acceptsFrom, ALL_DEVICES } from './core/midi.js';
 import { createMidiInput } from './midi/input.js';
 import { mountShell } from './ui/shell.js';
 import { deriveEntitlement, isEntitled } from './core/entitlement.js';
-import { hasStoreSync, selectBillingAdapter } from './billing/index.js';
+import { hasStoreSync, isNativeShell, selectBillingAdapter } from './billing/index.js';
+import { parseBuildStamp, reloadAddress, tidyAddress, cameForBuild } from './core/buildVersion.js';
+import { createBuildCheck, fetchFreshPage, watchForNewerBuild } from './update/buildCheck.js';
+import { showUpdateNotice, hideUpdateNotice } from './ui/updateNotice.js';
 import { showPaywall, hidePaywall, showPurchases } from './ui/paywall.js';
 
 /** AC-4.1.16/3: what Reset audio says when no page code can bring sound back. */
@@ -4966,6 +4969,80 @@ export function init(root = document.getElementById('app')) {
   });
   promptLibraryDuplicates();
   startBilling(root);
+  startBuildCheck();
+}
+
+/* --- a newer build (US-21.1, research.md D-031) ------------------------------ */
+
+/** The newer build on offer, and the latest one the musician has dismissed. Kept only while the page is open (AC-21.1.2/4). */
+const newerBuild = { offered: null, dismissedTime: 0 };
+
+/** What a reload would lose, in the words leaving would use; null when nothing would be lost (AC-21.1.3/2, /3). */
+function reloadWouldLose() {
+  if (composerUnsaved(state.composer)) return discardMessage();
+  if (arrangementUnsaved()) return 'Reload? The Arrangement here has not been saved and will be lost.';
+  return null;
+}
+
+/** Offer a newer build in the notice, unless this one or a later one was dismissed (AC-21.1.2/2, /4). */
+function offerNewerBuild(found) {
+  if (found.time <= newerBuild.dismissedTime) return;
+  newerBuild.offered = found;
+  showUpdateNotice({
+    async onReload() {
+      const lost = reloadWouldLose();
+      if (lost && !(await confirm(lost, { confirmLabel: 'Discard and reload', cancelLabel: 'Stay' }))) return;
+      location.assign(reloadAddress(location.href, newerBuild.offered.commit));
+    },
+    onDismiss() {
+      newerBuild.dismissedTime = newerBuild.offered.time;
+      newerBuild.offered = null;
+      hideUpdateNotice();
+    },
+  });
+}
+
+/**
+ * Notice a newer build and move to it (US-21.1).
+ *
+ * On opening, before the musician has touched anything, a newer build is loaded
+ * without being asked — nothing can be lost yet (AC-21.1.1/1). That happens
+ * once: a page loaded for a newer build, and any page that has been touched,
+ * is only ever offered one (AC-21.1.1/2, /3; AC-21.1.2).
+ */
+function startBuildCheck() {
+  if (typeof document === 'undefined') return;
+  const running = parseBuildStamp(document.querySelector('meta[name="build-version"]')?.content);
+  // The commit this page was loaded for has done its work; the address goes back to plain (AC-21.1.3/1).
+  const arrivedForBuild = cameForBuild(location.href);
+  const tidy = tidyAddress(location.href);
+  // `window.history`: this module has a `history` of its own, the Undo stack.
+  if (tidy) window.history.replaceState(window.history.state, '', tidy);
+
+  let touched = false;
+  const touch = () => {
+    touched = true;
+  };
+  window.addEventListener('pointerdown', touch, { capture: true, once: true });
+  window.addEventListener('keydown', touch, { capture: true, once: true });
+
+  let opening = true;
+  const checker = createBuildCheck({
+    running,
+    native: isNativeShell(),
+    fetchPage: () => fetchFreshPage(location.href),
+    onNewer(found) {
+      if (opening && !arrivedForBuild && !touched) {
+        location.replace(reloadAddress(location.href, found.commit));
+        return;
+      }
+      offerNewerBuild(found);
+    },
+  });
+  checker.check().finally(() => {
+    opening = false;
+  });
+  watchForNewerBuild(checker);
 }
 
 /** Test seam: lets e2e drive state directly rather than through the DOM. */

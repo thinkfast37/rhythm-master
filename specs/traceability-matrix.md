@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1250 across 77 User Stories
+**Criteria**: 1266 across 78 User Stories
 
-**Coverage**: 1124 of 1250 criteria proven (89.9%)
+**Coverage**: 1140 of 1266 criteria proven (90.0%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1124 | 89.9% |
-| 🟠 Gap — MEDIUM | 50 | 4.0% |
-| 🟡 Gap — LOW | 76 | 6.1% |
+| 🟢 Proven | 1140 | 90.0% |
+| 🟠 Gap — MEDIUM | 50 | 3.9% |
+| 🟡 Gap — LOW | 76 | 6.0% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -134,6 +134,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-20.2 | 14 | **14** | · | · | · | · | · |
 | 🟢 US-12.5 | 9 | **9** | · | · | · | · | · |
 | 🟢 US-20.3 | 6 | **6** | · | · | · | · | · |
+| 🟢 US-21.1 | 16 | **16** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1389,3 +1390,19 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-20.3 | `AC-20.3.1/4` | Each pitched track is on a channel of its own with the General MIDI program of its instrument, and a rhythm, a percussive part and a part on Drums are on the drum channel | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation.test.js`, `articulation-midi.test.js` | 🟢 OK |
 | US-20.3 | `AC-20.3.1/5` | A Percussive Pattern laid in the sequence is written as the drums it plays — Kick, Snare and Floor tom by Accent Level — and a muted part of a Section is left out | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
 | US-20.3 | `AC-20.3.1/6` | The notes of the file are the notes Play sounds, pass for pass, and the file follows the note-length choice as every MIDI export does | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.1/1` | On opening, the app asks its own address for a fresh copy of its page, past any kept copy, and when that copy is a newer build the app loads it without being asked | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.1/2` | The app moves by itself once per opening: a page loaded for a newer build does not move again by itself, and a build newer still is offered in the notice instead | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.1/3` 🖵 | When the musician has already pressed a key or a button before the answer arrives, the newer build is offered in the notice instead of loaded | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.2/1` 🖵 | The app checks again each time its tab is shown again, and every five minutes while it stays shown | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.2/2` 🖵 | A newer build found after opening shows the notice "A newer version is available" with Reload and Dismiss, and nothing loads until Reload is pressed | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.2/3` 🖵 | The notice stops nothing: playback goes on while it shows, and the controls of the screen stay in use | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.2/4` 🖵 | Dismiss hides the notice for that build, a build newer still shows it again, and nothing about it is stored | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.3/1` | Reload loads an address that carries the commit of the newer build, so a kept copy of the page cannot be handed over again, and the address is tidied once the build has loaded | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.3/2` | With unsaved work in the Composer, Reload asks first with the question leaving the Composer asks, and declining keeps the work, the build and the notice as they were | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.3/3` | With an Arrangement that has never been saved, Reload asks first, and declining keeps the Arrangement, the build and the notice as they were | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.4/1` | A build stamp is a build time in UTC and a commit, and a build is newer only when its build time is later | P-084 | T533 (1/1 done) | T534 (1/1 done) | `buildVersion.test.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.4/2` | The same build time, an earlier build time, and a stamp that cannot be read are none of them newer | P-084 | T533 (1/1 done) | T534 (1/1 done) | `buildVersion.test.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.4/3` 🖵 | A fetched copy that is the same build, or an older one, loads nothing and shows no notice | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.5/1` 🖵 | When the request fails, as it does offline, no notice shows, no error is raised, and the app works as before | P-084 | T533 (1/1 done) | T534 (1/1 done) | `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.5/2` 🖵 | A page that carries no build stamp, as a development server serves it, makes no request at all | P-084 | T533 (1/1 done) | T534 (1/1 done) | `buildCheck.test.js`, `newer-build.spec.js` | 🟢 OK |
+| US-21.1 | `AC-21.1.5/3` 🖵 | Inside the store shell no request is made: a store build is updated by its store | P-084 | T533 (1/1 done) | T534 (1/1 done) | `buildCheck.test.js`, `newer-build.spec.js` | 🟢 OK |

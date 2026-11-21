@@ -448,8 +448,12 @@ land any pending change, which retriggers it.
 - **Every deployed build is stamped.** `vite.config.js` injects a
   `<meta name="build-version">` tag — UTC build time to the second, plus the
   commit — into `index.html` at build time. View-source on the live site
-  answers "which version is running?"; nothing is rendered on screen. Do not
-  remove the stamp, and any replacement build pipeline must keep it.
+  answers "which version is running?"; the stamp itself is never rendered on
+  screen. The app reads it to notice a newer build (US-21.1, research.md D-031):
+  it compares its own stamp with a freshly fetched copy of the page, moves to a
+  later build on opening and offers one after that. Do not remove the stamp or
+  change its form without changing `core/buildVersion.js` with it, and any
+  replacement build pipeline must keep it.
 
 ---
 
