@@ -1381,12 +1381,13 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-5.1.8** — The library folds into groups
   - **Given** the library pane
   - **When** the Practicing Musician looks at the list
-  - **Then** it is in groups — Sections, then Chains, then Patterns — each under a heading that says how many entries it shows and folds the group away or opens it again, and what is folded is remembered
+  - **Then** it is in groups — Arrangements, then Sections, then Chains, then Patterns — each under a heading that says how many entries it shows and folds the group away or opens it again, and what is folded is remembered
   - **Cases**:
-    - **AC-5.1.8/1** — The library list is in groups, Sections ahead of Chains ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group and the Chains group are each absent while none is saved
+    - **AC-5.1.8/1** — The library list is in groups, Arrangements ahead of Sections ahead of Chains ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Arrangements, Sections and Chains groups are each absent while none is saved
     - **AC-5.1.8/2** — Tapping a group's heading folds the group, hiding its entries and leaving the heading, and tapping it again opens it; the heading says which it is
     - **AC-5.1.8/3** — Which groups are folded is remembered in `rm.settings.v1` and is in force after a reload
     - **AC-5.1.8/4** — Folding hides and never filters: the search and the Tag filters change a folded group's count as they do an open one's, and Prev/Next step through the Patterns whether or not their group is folded
+  - *(/1 and the Then revised again 2026-11-20 with US-20.1, T519: saved Arrangements are the library's first group (AC-20.1.5/1).)*
   - *(/1 and the Then revised 2026-11-20 with US-5.7, T516: saved Chains joined the library as a group of their own between Sections and Patterns (AC-5.7.2). It read "Sections ahead of Patterns … and the Sections group is absent while no Section is saved".)*
   - *(Added 2026-11-15 at the maintainer's request, T495: "The library should also show sections. The library should allow me to collapse different 'sections' that contain sections or patterns or in future arrangements." The library already listed Sections ahead of the Patterns, AC-19.11.9/1; what is new is the Patterns' own heading and the folding. Decisions taken without asking: the foldable things are called groups here, so that Section means one thing; inside its group the Patterns list is the one unified list it was (AC-5.1.1, AC-5.1.7); every group starts open; a group for Arrangements joins these two when that feature exists.)*
 
@@ -2502,8 +2503,9 @@ field survives showing it.)*
     - **AC-15.1.20/1** — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; while the Composer plays, a Metronome toggle joins Play/Stop; Related is a placeholder, disabled and saying so, until Share and tidy up lands
     - **AC-15.1.20/2** — The goal strip under the pinned bar names the goal and holds its own quick controls: Practise a rhythm's level, Give me one, Pick from the library, Click and Count-in; Lab's Help toggle; and, on every goal but Practise a rhythm, the Practice | Composer switch until Play it in's own screen lands
     - **AC-15.1.20/3** — The rhythm band holds the Pattern header, the chord strip, and the grid or sheet with the View control at its head — Grid | Sheet, with Note aids and Print / PDF while Sheet shows — and the brush line under it, across the panel's full width under every goal
-    - **AC-15.1.20/4** — One work surface under the band holds what the goal is for — the tabbed workbench with Pattern actions and the family members under Lab and the making goals, the settings rail under Practise a rhythm, and the Composer's panel in Composer mode — and nothing sits beside the band
+    - **AC-15.1.20/4** — One work surface under the band holds what the goal is for — the tabbed workbench with Pattern actions and the family members under Lab and the making goals, the settings rail under Practise a rhythm, the Composer's panel in Composer mode, and the Arrangement's panel in Arrange mode — and nothing sits beside the band
     - **AC-15.1.20/5** — The panel is marked with the layout in force: Playback under Practise a rhythm, where on a wide panel the band takes at least the height the rail does and the rail is capped; Design under every other goal, where on a wide panel the band is capped and the work surface takes the rest
+  - *(/4 revised 2026-11-20 with US-20.1, T519: Arrange is a third mode, and its panel stands in for the band and the surface as the Composer's does (AC-20.1.1/1). It read "… and the Composer's panel in Composer mode — and nothing sits beside the band". Found by this criterion's own test, which lists what the frame holds and failed on the new panel; the criterion was revised before the test.)*
   - *(/1 revised 2026-11-15 with AC-19.6.3, T497: the bar held the same five things everywhere. The maintainer asked for the Composer's metronome as "a toggle at the top", was told that meant this criterion, and chose the pinned bar over the record bar. Nothing else joins the bar, and under every goal in Practice it is as it was.)*
   - *(Added 2026-10-24 with T410, research.md D-018 phase 2, from the maintainer's storyboard (boards 0 and 0b): "Every goal is this frame. ① never changes: Play, BPM with its ♩/♪ unit, Prev/Next, Related. ③ is the rhythm as grid or sheet, with the sheet's note aids under Aids. ② and ④ change with the goal." and "Same frame, two proportions. Design gives the tools room; Playback gives the music room, as sheet or as grid." The reason is D-018's: one frame answers the maintainer's consistency ask — "ideally there is some overall consistency across tailored views so the user is not feeling like they are using 10 different apps" — and the per-goal surface the tailoring ask. Two things wait for later phases and are said here so they are not mistaken for dropped: Related opens the family of the rhythm on screen in phase 7, and a making goal dropping into the Playback layout when Play is pressed is each screen's own decision in its phase, since Lab's controls are adjusted while listening (AC-15.1.16) and must not shrink away under it. The Practice | Composer switch is carried in the strip rather than the pinned bar so that nothing the Composer offers is lost before phase 6 makes it the Play it in screen (AC-14.1.2/6).)*
 
@@ -3531,6 +3533,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-18.1.4/5** — Deleting a Pattern that a Chain is composed over is refused with a message naming the Chain or Chains, until they are deleted
     - **AC-18.1.4/6** — A Chain is not Pattern content: saving one changes nothing on the Pattern, auto-saves nothing, prompts a shipped Pattern for no name, and is barred from every Pattern export and submission
     - **AC-18.1.4/7** — Chains are stored separately from Patterns, ratings, added Tags and Keeps, so nothing that happens to those stores can lose a Chain
+  - *(Note 2026-11-20 with US-20.1: a Chain an Arrangement uses cannot be deleted while the Arrangement does (AC-20.1.4/5). /3 stands for every other Chain.)*
 
 - **AC-18.1.5** — Exporting a Chain as MIDI
   - **Given** a Chain with at least one entry
@@ -3765,9 +3768,10 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** one JSON file downloads holding every store the app keeps, exactly as stored, naming its format and carrying a `schemaVersion`; nothing in the app changes
   - **Cases**:
     - **AC-7.6.1/1** — A Back up library control in the library panel, offered under every goal, downloads one JSON file named for the day it was made
-    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Chains, Sections, settings and Local Metadata — each exactly as stored, and a store never written is absent
+    - **AC-7.6.1/2** — The file holds every store the app keeps — Patterns, overlays, Chains, Sections, Arrangements, settings and Local Metadata — each exactly as stored, and a store never written is absent
     - **AC-7.6.1/3** — The file names its format and carries its own schemaVersion and the time it was made
     - **AC-7.6.1/4** — Shipped Patterns are not in the file; the ratings, added Tags and Keeps on them are, in the overlays
+  - *(/2 revised 2026-11-20 with US-20.1, T519: Arrangements, `rm.arrangements.v2`, joined the stores it names. The store is not `rm.arrangements.v1`: that key is where Sections were kept while they were called Arrangements, and whatever is found under it is still moved into Sections (AC-19.11.4/8).)*
   - *(Revised 2026-11-12 with US-19.11: /2 listed the stores by name, and Arrangements, `rm.arrangements.v1`, joined them; the backup copies every store, so the list names it. Nothing else in the criterion changed.)*
 
 - **AC-7.6.2** — Restore replaces the library with the file's
@@ -3922,12 +3926,13 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.1.1** — The Composer is a mode of its own, beside Practice
   - **Given** Lab, at any viewport width
   - **When** the Composer looks at the pinned bar
-  - **Then** a two-way Practice | Composer switch sits in it, and choosing Composer puts the Composer's own panel — the instrument view, the record bar, the composing grid and the Composer's controls — in place of the Pattern pane and the workbench, the library sidebar and its toggle staying where they are; choosing Practice puts the panes back exactly as they were
+  - **Then** a Practice | Composer | Arrange switch sits in it, and choosing Composer puts the Composer's own panel — the instrument view, the record bar, the composing grid and the Composer's controls — in place of the Pattern pane and the workbench, the library sidebar and its toggle staying where they are; choosing Practice puts the panes back exactly as they were
   - **Cases**:
-    - **AC-19.1.1/1** — A Practice | Composer switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal
+    - **AC-19.1.1/1** — A Practice | Composer | Arrange switch sits in the pinned bar at every width, marking the mode in force, and is absent under a practice goal
     - **AC-19.1.1/2** — Choosing Composer shows the Composer's panel — instrument view, record bar, composing grid, controls — in place of the Pattern pane and the workbench, while the library sidebar and its toggle stay
     - **AC-19.1.1/3** — Choosing Practice shows the Pattern pane and the workbench again, with the open Pattern as it was
     - **AC-19.1.1/4** — The mode is a within-session position, not a stored preference: a reload opens in Practice
+  - *(/1 and the Then revised 2026-11-20 with US-20.1, T519: the switch gained a third mode, Arrange, which has its own panel as the Composer has (AC-20.1.1). What Practice and Composer do is unchanged.)*
   - *(Clarified 2026-11-01 (T464) on /3, from the maintainer's Pattern — Em7(no3), Em7(no3), Bm/F♯ in G, with Leap up and step home on the Bm: the 7th that only the Em7 chords have was sorted into Bm's stack beside the 5th it falls back to (AC-2.6.4/2) and took the stack's second position, so every positional fill read the wrong members — F♯ B F♯ F♯ instead of F♯ D B F♯, and Alberti F♯ B F♯ B. The stack a fill deals is the chord's own members from the bass up; a role of the fullest chord that this chord never had is dealt no step at all (AC-2.6.6/5 and AC-2.16.2/1 as revised the same day). Root-position triads were unaffected only because the fallback happened to sort behind the member it fell to.)*
   - *(Clarified 2026-10-24 with T410, D-018 phase 2: the switch sits in the goal strip, the pinned bar's second row, under every goal but Practise a rhythm (AC-15.1.20/2); "the Pattern pane and the workbench" are the frame's rhythm band and work surface (AC-15.1.20/4), which the Composer's panel still stands in for. The mode goes altogether when Play it in becomes the Composer's own screen in phase 6 (AC-14.1.2/6); until then this criterion describes the app as built.)*
 
@@ -4938,6 +4943,7 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-19.11.4/6** — A Section is not Pattern content: saving one changes nothing on any Pattern, and the composition's JSON and MIDI exports and its submission carry nothing of it
     - **AC-19.11.4/7** — Sections are stored in `rm.sections.v1`, apart from Patterns, overlays, Chains, settings and Local Metadata, and the whole-library backup carries the store as it does every other
     - **AC-19.11.4/8** — What was saved under `rm.arrangements.v1` is moved to `rm.sections.v1` on load with every entry kept as it was and the old store cleared, and a backup made before the move restores its entries as Sections
+  - *(Note 2026-11-20 with US-20.1: a Section an Arrangement uses cannot be deleted while the Arrangement does (AC-20.1.4/5). /3 stands for every other Section.)*
   - *(/8 added 2026-11-15 with the rename, T493. A migration of this kind rewrites saved work and cannot be taken back by a later change, which the maintainer was told before choosing it. An entry is never dropped: one whose id the new store already uses is given the next free id.)*
 
 - **AC-19.11.5** — Exporting a Section as MIDI
@@ -5261,10 +5267,11 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **When** the Practicing Musician chooses one or more types
   - **Then** the library shows only entries of the types chosen, in every group, together with whatever the search and the other filters leave
   - **Cases**:
-    - **AC-5.7.1/1** — The library shows a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain and Section — above the rating and Tag filters, with All pressed while no type is chosen
+    - **AC-5.7.1/1** — The library shows a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain, Section and Arrangement — above the rating and Tag filters, with All pressed while no type is chosen
     - **AC-5.7.1/2** — Choosing a type shows only the entries of that type in every group, choosing another adds its entries, choosing a pressed one takes its entries away again, and All clears the choice
     - **AC-5.7.1/3** — The type choice narrows together with the search, the rating filter and the Tag filters, and Prev/Next step through the Patterns it leaves
     - **AC-5.7.1/4** — A Percussive Pattern is of the type Percussive, a Melodic Pattern that carries a progression is a Chord progression, and a Melodic Pattern without one is a Melodic composition
+  - *(/1 revised 2026-11-20 with US-20.1, T519: Arrangement joined the types, as US-5.7 said it would when Arrangements were built (AC-20.1.5/2).)*
 
 - **AC-5.7.2** — Chains are in the library
   - **Given** a saved Chain
@@ -5274,6 +5281,71 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-5.7.2/1** — Saved Chains are a group of the library between Sections and Patterns, under a heading with its count that folds as the other groups do, and the group is not shown in the Composer
     - **AC-5.7.2/2** — A Chain is listed by its name with the name of the Pattern it plays over, and the search matches either
     - **AC-5.7.2/3** — Choosing a Chain opens the Pattern it plays over with the Chain loaded in the Compose group
+
+---
+
+### User Story 75 - Lay Sections and Patterns out as an Arrangement
+
+*Traceability: `US-20.1` — Lay Sections and Patterns out as an Arrangement*
+
+**As** the Composer, **I want** to gather the Sections, Patterns and Chains a piece is made of into a palette, lay them out one after another — each for a number of repeats and under a name of its own — and save the result under a name, **so that** the parts I have composed become a whole piece with an intro, verses and choruses rather than loops I open one at a time.
+
+*(Added 2026-11-15 at the maintainer's request, T519: "an arrangement is a collection of sections. A section could just be a single pattern or multiple layers that are played simultaneously … An arrangement will be laying out sections in sequence. Each section added to the arrangement can be either a pattern or an actual saved section. So I need to pick the patterns and sections from the library when I start creating the arrangement. I want an interface that lets me add sections and patterns to a 'bucket' - we can use a better name like palette … And then what I do is lay out stuff in the palette out in sequence … I can also specify how many times to repeat that section. I can also give the section a name in the arrangement … I need to be able to save arrangements by name. They can also be picked from the library and I need the ability to create a new arrangement." Later the same day: "when I am creating an arrangement I want to be able to quickly edit a section (whether it is a pattern or section). This will always open it in Composer", and a saved Chain may go in the palette too. Rulings on 2026-11-20, each put to the maintainer: Arrange is a third mode beside Practice and Composer, shown as a sketch and chosen over a panel inside the Composer; an Arrangement has one tempo of its own; the builder lands in two changes, this one — building, saving, the library and Edit — and then playing it while it is built, with its tempo. Until that second change lands an Arrangement cannot be heard, and AC-20.1.1/4 says so on screen. Its MIDI export is the change after that.)*
+
+**Independent Test**: With a Section saved, choose Arrange and assert the panel shows an empty palette and an empty sequence; press Add from library and choose the Section, then a Percussive Pattern, and assert both are in the palette, the Pattern marked as playing on the drum kit; tap each to lay it in the sequence, name the first Intro and set the second to four repeats, move the second above the first, and assert the sequence reads so; press Save, name it, reload, and assert the library lists the Arrangement in a group of its own ahead of Sections and that choosing it opens it in Arrange as it was saved; press Edit on the Section in the palette and assert the Composer opens on it, and that going back to Arrange finds the Arrangement as it was left.
+
+**Acceptance Scenarios**:
+
+- **AC-20.1.1** — Arrange is a mode of its own, beside Practice and Composer
+  - **Given** Lab, at any viewport width
+  - **When** the Composer chooses Arrange on the mode switch
+  - **Then** the Arrangement panel stands in for the rhythm band and the work surface, as the Composer's panel does in its mode, and the other two modes are as they were when they are chosen again
+  - **Cases**:
+    - **AC-20.1.1/1** — Choosing Arrange shows the Arrangement panel — its name, the palette and the sequence — in place of the rhythm band and the work surface, while the library sidebar and its toggle stay
+    - **AC-20.1.1/2** — Choosing Practice or Composer puts that mode back as it was, and the Arrangement being built is kept for the session
+    - **AC-20.1.1/3** — The mode is a within-session position, not a stored preference: a reload opens in Practice
+    - **AC-20.1.1/4** — Play is unavailable in Arrange, and says that an Arrangement cannot be played yet
+
+- **AC-20.1.2** — The palette is filled from the library
+  - **Given** the Arrangement panel
+  - **When** the Composer presses Add from library and chooses an entry
+  - **Then** the Pattern, Section or Chain chosen joins the palette, which names each entry and its type and lets it be edited or taken out
+  - **Cases**:
+    - **AC-20.1.2/1** — Add from library opens the library to choose from, and choosing a Pattern, a Section or a Chain puts it in the palette and ends the choosing
+    - **AC-20.1.2/2** — A palette entry shows its name and its type, a Percussive Pattern saying that it plays on the drum kit, and nothing is in the palette twice
+    - **AC-20.1.2/3** — Remove takes an entry out of the palette and leaves every sequence entry made from it
+    - **AC-20.1.2/4** — Edit on a Pattern or a Section in the palette opens it in the Composer, and a Chain has no Edit, saying it is written out as a Pattern first
+
+- **AC-20.1.3** — The sequence is laid out from the palette
+  - **Given** a palette with at least one entry
+  - **When** the Composer taps a palette entry
+  - **Then** it is appended to the sequence as an entry with a name and a number of repeats, which can be renamed, repeated, reordered and removed
+  - **Cases**:
+    - **AC-20.1.3/1** — Tapping a palette entry appends it to the sequence as an entry named after it, played once
+    - **AC-20.1.3/2** — The name of a sequence entry can be changed in place, and its repeats set from 1 to 16
+    - **AC-20.1.3/3** — A sequence entry can be moved up, moved down and removed, and the same palette entry may be in the sequence more than once
+    - **AC-20.1.3/4** — The sequence is an ordered, numbered list showing each entry by its name, what it plays and its repeats, and says when it is empty
+
+- **AC-20.1.4** — Saving an Arrangement
+  - **Given** an Arrangement with at least one sequence entry
+  - **When** the Composer presses Save and gives a name
+  - **Then** the Arrangement is stored under that name, apart from everything it is made of, and saves its own changes from then on
+  - **Cases**:
+    - **AC-20.1.4/1** — Save asks a name, unique among Arrangements, and stores the name, the palette and the sequence in order; it is unavailable while the sequence is empty
+    - **AC-20.1.4/2** — Once an Arrangement is saved, every change to its palette or its sequence saves it in place at once
+    - **AC-20.1.4/3** — A saved Arrangement survives a reload, and can be renamed and deleted, deletion asking first
+    - **AC-20.1.4/4** — New starts an empty Arrangement, asking first when the one on screen has never been saved and is not empty
+    - **AC-20.1.4/5** — Deleting a Pattern, a Section or a Chain that an Arrangement uses is refused with a message naming the Arrangement or Arrangements, until they no longer use it
+    - **AC-20.1.4/6** — Arrangements are stored in `rm.arrangements.v2`, apart from every other store, and an Arrangement holds the ids of what it is made of and never a copy
+
+- **AC-20.1.5** — Arrangements are in the library
+  - **Given** a saved Arrangement
+  - **When** the Composer opens the library
+  - **Then** the Arrangement is listed in a group of its own, counted among the types, and choosing it opens it
+  - **Cases**:
+    - **AC-20.1.5/1** — Saved Arrangements are the first group of the library, ahead of Sections, under a heading with its count that folds as the other groups do, each listed with how many entries its sequence has
+    - **AC-20.1.5/2** — Arrangement is the last of the type pills, and choosing it shows the Arrangements and hides the entries of every type not chosen
+    - **AC-20.1.5/3** — Choosing an Arrangement in the library opens it in Arrange as it was saved, asking first when an Arrangement never saved would be lost
 
 ---
 
@@ -5425,7 +5497,7 @@ specified in the Acceptance Scenarios above.
   2026-11-12 — distinct layers heard together, polyphonic where they coincide, the shorter repeating
   to fill the longer — and US-19.11 admits it as layers under the Composer's composition, saved as
   a Section. Merging accents stays out, as does a Chain over several Patterns.)* *(Revised 2026-10-03: the backup file is in scope —
-  a local file the musician saves and restores, not a sync service (Constitution Principle V).)*
+  a local file the musician saves and restores, not a sync service (Constitution Principle V).)* *(Revised 2026-11-20: laying several Patterns and Sections out one after another is in scope as an Arrangement (US-20.1). A Chain is still fills over one Pattern.)*
   *(Revised 2026-09-20: "a guided tutorial system" stays excluded as a walkthrough; what Epic 14 delivers instead is US-14.1, a goals screen that shows each job its own controls.)* *(Revised 2026-09-13: "multi-section Arrangements" was excluded outright; US-18.1 admits a
   single-layer Song of Chains over one Pattern, which is the maintainer's songwriting workflow, and
   keeps the polyphonic case out.)*

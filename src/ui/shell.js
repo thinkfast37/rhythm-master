@@ -47,6 +47,7 @@ import { placeHelp } from './help.js';
 import { renderLibrary } from './library.js';
 import { renderScore } from './score.js';
 import { renderComposer, moveComposerCursor } from './composer.js';
+import { renderArrange } from './arrange.js';
 
 /** Every field of the library memo key, compared without building a string. */
 function sameLibrarySignature(a, b) {
@@ -58,6 +59,7 @@ function sameLibrarySignature(a, b) {
     a.sections === b.sections &&
     // And the Chains group follows its own (AC-5.7.2/1).
     a.chains === b.chains &&
+    a.arrangements === b.arrangements &&
     a.types === b.types &&
     a.composing === b.composing &&
     a.folded === b.folded &&
@@ -331,7 +333,12 @@ export function mountShell(root, ctx) {
   composerEl.className = 'composer-panel';
   composerEl.dataset.section = 'composer';
   composerEl.hidden = true;
-  main.append(topBarEl, bandEl, surfaceEl, composerEl);
+  // The Arrangement panel, standing in for the band and the surface in Arrange mode (AC-20.1.1/1).
+  const arrangeEl = document.createElement('section');
+  arrangeEl.className = 'arrange-panel';
+  arrangeEl.dataset.section = 'arrange';
+  arrangeEl.hidden = true;
+  main.append(topBarEl, bandEl, surfaceEl, composerEl, arrangeEl);
   shell.append(goalsEl, sidebar, scrim, main);
   root.appendChild(shell);
   // In the tree now, so the panel has a width to be laid out by (AC-15.1.18).
@@ -695,6 +702,7 @@ export function mountShell(root, ctx) {
     shell.dataset.mode = s.composer.mode;
     if (!state.composer.widthPx && composerEl.clientWidth) state.composer.widthPx = composerEl.clientWidth;
     renderComposer(composerEl, s, handlers);
+    renderArrange(arrangeEl, s, handlers);
 
     renderHeader(headerEl, pattern, { ...s, canUndo: canUndo(), currentTags, readOnly: surface.readOnly }, handlers);
     renderChordStrip(chordStripEl, pattern, position);
@@ -790,7 +798,7 @@ export function mountShell(root, ctx) {
       tags: s.view.tags.join('\u0000'),
       // The types chosen, and whether the Chains group is listed at all (US-5.7).
       types: (s.view.types ?? []).join(' '),
-      composing: s.composer?.mode === 'composer',
+      composing: s.composer?.mode ?? 'practice',
       currentId: s.view.currentId,
       // Which groups are folded (AC-5.1.8/3).
       folded: (s.settings.libraryFolded ?? []).join(' '),

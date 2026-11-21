@@ -1449,6 +1449,11 @@ function renderTransport(state, handlers) {
   play.dataset.action = state.isPlaying ? 'stop' : 'play';
   // Audio starts ONLY from this handler — a user gesture (FR-010, FR-011).
   play.addEventListener('click', () => (state.isPlaying ? handlers.onStop() : handlers.onPlay()));
+  // An Arrangement cannot be played yet, and the button says so (AC-20.1.1/4).
+  if (state.composer?.mode === 'arrange') {
+    play.disabled = true;
+    play.title = 'An Arrangement cannot be played yet';
+  }
   group.appendChild(play);
 
   // The Composer's metronome (AC-19.6.3/1): beside Play while it plays, recording

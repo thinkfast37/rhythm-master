@@ -25,6 +25,8 @@ describe('core/libraryTypes', () => {
       ['progression', 'Chord progression'],
       ['chain', 'Chain'],
       ['section', 'Section'],
+      // Revised 2026-11-20 with AC-5.7.1/1: Arrangement joined the types (US-20.1).
+      ['arrangement', 'Arrangement'],
     ]);
   });
 

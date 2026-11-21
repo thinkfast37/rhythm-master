@@ -61,11 +61,11 @@ async function saveChain(page, name = 'Bossa bed') {
 
 // --- AC-5.7.1: the pills -----------------------------------------------------------
 
-test('AC-5.7.1/1 — The library shows a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain and Section — above the rating and Tag filters, with All pressed while no type is chosen', async ({ page }) => {
+test('AC-5.7.1/1 — The library shows a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain, Section and Arrangement — above the rating and Tag filters, with All pressed while no type is chosen', async ({ page }) => {
   await openApp(page);
   await showLibrary(page);
   const row = page.locator('.library .type-row');
-  await expect(row.locator('button')).toHaveText(['All', 'Percussive', 'Melodic composition', 'Chord progression', 'Chain', 'Section']);
+  await expect(row.locator('button')).toHaveText(['All', 'Percussive', 'Melodic composition', 'Chord progression', 'Chain', 'Section', 'Arrangement']);
   await expect(pill(page, 'all')).toHaveAttribute('aria-pressed', 'true');
   await expect(row.locator('[aria-pressed="true"]')).toHaveCount(1);
   // Above the rating filter and the Tag filters.

@@ -14,6 +14,7 @@ import * as patterns from './patterns.js';
 import * as overlays from './overlays.js';
 import * as chains from './chains.js';
 import * as sections from './sections.js';
+import * as arrangements from './arrangements.js';
 import * as settings from './settings.js';
 import * as localMeta from './localMeta.js';
 
@@ -23,6 +24,7 @@ const SHAPES = {
   [overlays.KEY]: { map: 'byPatternId' },
   [chains.KEY]: { list: 'songs' },
   [sections.KEY]: { list: 'sections' },
+  [arrangements.KEY]: { list: 'arrangements' },
   [settings.KEY]: {},
   [localMeta.KEY]: { map: 'byPatternId' },
 };

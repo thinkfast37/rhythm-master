@@ -210,10 +210,40 @@ export function renderLibrary(root, entries, viewState, handlers) {
   for (const { id, label } of LIBRARY_TYPES) typeRow.appendChild(typePill(id, label, chosen.includes(id)));
   root.appendChild(typeRow);
 
-  // Saved Sections, ahead of the Patterns, searched with them (AC-19.11.9/1),
-  // as the first of the library's groups (AC-5.1.8/1).
   const folded = new Set(handlers.libraryFolded?.() ?? []);
   const q = query.trim().toLowerCase();
+
+  // Saved Arrangements, the first of the library's groups (AC-20.1.5/1, AC-5.1.8/1).
+  const allArrangements = handlers.arrangementList?.() ?? [];
+  if (allArrangements.length > 0) {
+    const arrangements = allArrangements.filter((a) => showsType(chosen, 'arrangement') && (!q || a.name.toLowerCase().includes(q)));
+    const arrangementsFolded = folded.has('arrangements');
+    const group = el('div', 'library-arrangements library-sections library-group');
+    group.dataset.group = 'arrangements';
+    group.dataset.folded = String(arrangementsFolded);
+    group.appendChild(groupHeading('arrangements', 'Arrangements', arrangements.length, arrangementsFolded, 'library-sections-title', handlers));
+    if (arrangementsFolded) {
+      // Folded: the heading alone (AC-5.1.8/2).
+    } else if (arrangements.length === 0) {
+      group.appendChild(el('p', 'library-sections-empty library-arrangements-empty', { textContent: 'No Arrangement matches.' }));
+    } else {
+      const list = el('ul', 'section-entries arrangement-entries');
+      for (const a of arrangements) {
+        const item = el('li', 'section-entry arrangement-entry');
+        item.dataset.arrangementId = a.id;
+        const open = el('button', 'section-entry-name arrangement-entry-name', { type: 'button', textContent: a.name });
+        open.dataset.action = 'open-arrangement';
+        open.addEventListener('click', () => handlers.onOpenArrangement?.(a.id));
+        item.appendChild(open);
+        item.appendChild(el('span', 'section-entry-parts arrangement-entry-length', { textContent: `${a.entries} ${a.entries === 1 ? 'entry' : 'entries'}` }));
+        list.appendChild(item);
+      }
+      group.appendChild(list);
+    }
+    root.appendChild(group);
+  }
+
+  // Saved Sections, ahead of the Patterns, searched with them (AC-19.11.9/1).
   const sections = (handlers.sectionList?.() ?? []).filter((a) => {
     if (!showsType(chosen, 'section')) return false;
     if (!q) return true;
