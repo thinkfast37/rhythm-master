@@ -290,6 +290,10 @@ need to know which are red.
 CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
 ```
 
+The suite builds and serves on a free port of its own and never reuses a server that is
+already running, so sessions in separate worktrees can run it at once. `E2E_PORT=4300`
+pins the port when something needs to know it.
+
 **AC coverage must stay at 100%, and `check:trace` must report no new findings.**
 A new AC without a test is an incomplete change, not a passing one — and a new AC
 whose test does not prove it is the same thing wearing a green badge. Commit

@@ -53,6 +53,13 @@ Chromium with `CHROMIUM_PATH`:
 CHROMIUM_PATH=/path/to/chrome npm run test:e2e
 ```
 
+The suite builds the app and serves it on a free port of its own, so two checkouts can run
+it at the same time. To pin the port, set `E2E_PORT`:
+
+```bash
+E2E_PORT=4300 npm run test:e2e
+```
+
 ## Before release
 
 - **Run the 30-minute continuous playback check by hand** (quickstart.md V7). The

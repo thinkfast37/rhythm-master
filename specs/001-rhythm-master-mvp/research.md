@@ -275,6 +275,19 @@ treatment.
 **Decision**: GitHub Pages, published by a GitHub Actions workflow that runs the full test suite
 before building.
 
+**Amended 2026-11-20** (T518): a shard is a share of the *tests*, not of the files, and there are
+six. Split by file, the four shards of one green run took 3.1, 8.0, 2.0 and 4.6 minutes — one drew
+`harmony`, `layers`, `voice` and `cycle-list` together — and a run is as long as its slowest shard.
+`fullyParallel` deals the tests out evenly; it is safe because every test opens its own page on its
+own storage and no file keeps state between its tests. The same change takes the suite off a fixed
+port: it serves on `E2E_PORT`, or on a free port asked of the operating system, and never reuses a
+server that was already listening, since one left by another session serves that session's build.
+The maintainer (2026-11-20): "sometimes I code multiple sessions at once in parallel." *Rejected*:
+making a local run the gate of record in place of CI. Measured on a clean checkout of `main`, the
+full suite took 9.3 minutes on the maintainer's machine with four workers — no faster than CI was,
+on a machine other sessions share — and a cloud session cannot use it at all. The line below
+stands: speed comes from parallelism, never from asking less.
+
 **Amended 2026-10-31** (T460): the same gate set also runs on every pull request, and `main`
 requires it, so a merge cannot be the first time CI sees a change. Playwright is sharded across
 four runners — the same tests, drawn in four parts — because it was ten of the eleven minutes of

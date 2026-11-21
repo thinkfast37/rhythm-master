@@ -179,7 +179,7 @@ tools/
 └── convert-legacy-patterns.js
 
 .github/workflows/
-├── verify.yml              # The gates, reusable: lint/unit/spec gates + 4 Playwright shards (T460)
+├── verify.yml              # The gates, reusable: lint/unit/spec gates + 6 Playwright shards (T460, T518)
 ├── pull-request.yml        # Runs verify on every PR; its `gates` job is required on main
 └── deploy.yml              # verify → build → publish to GitHub Pages
 ```
