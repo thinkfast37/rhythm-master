@@ -48,6 +48,21 @@ const field = (page, index, key) => entries(page).nth(index).locator(`.variation
 const accept = (page) => dialog(page).locator('.variation-accept');
 const again = (page) => dialog(page).locator('.variation-accept-again');
 const close = (page) => dialog(page).locator('.variation-close');
+
+/*
+ * Hold the audition on its first pass (T532). Opening the dialog starts the
+ * loop (AC-10.4.4/4), and with the chord changing every Measure each Measure
+ * names, and is dealt, the chord of the pass being played (AC-2.6.7/3): Am and
+ * F in one pass, C and G in the next. A test that reads the first pass's chords
+ * therefore holds the loop there with the dialog's own Stop, which returns it
+ * to the first pass. Left playing, a pass is six seconds at the default tempo,
+ * and a run slow enough to reach its assertion in the second pass read "G" for
+ * longer than an assertion waits.
+ */
+async function holdAudition(page) {
+  await dialog(page).locator('.variation-play').click();
+  await expect.poll(() => page.evaluate(() => window.__rm.getState().isPlaying)).toBe(false);
+}
 const roll = (page) => dialog(page).locator('.variation-roll');
 const noDice = (page, group) => dialog(page).locator(`.variation-nodice[data-group="${group}"]`);
 const original = (page) => dialog(page).locator('.variation-original-label');
@@ -311,6 +326,7 @@ test.describe('AC-10.4.2 — The original is the Pattern’s first Measures, and
   test('AC-10.4.2/3 — Under a progression that changes every Measure, the copy’s Measures fall over the chords that follow the original’s in the cycle, and the dialog says so; under one that changes every pass, every Measure of a pass shares its chord and the pass simply lengthens', async ({ page }) => {
     await loop(page, { change: 'measure' });
     await open(page);
+    await holdAudition(page);
     await expect(dialog(page).locator('.variation-note')).toContainText('Chords change every Measure');
     await technique(page, 'breathe').click();
     // Measure 1 is over Am and the copy over F in the first pass.
@@ -541,6 +557,7 @@ test.describe('AC-10.4.4 — A candidate is heard before it is written', () => {
   test('AC-10.4.4/6 — A candidate’s chord overrides are heard in the audition exactly as they will sound once accepted: the deal, the note bands, the score and the chord names follow them for the candidate’s Measures', async ({ page }) => {
     await loop(page, { change: 'measure' });
     await open(page);
+    await holdAudition(page);
     await technique(page, 'change-quality').click();
     await field(page, 0, 'chord').selectOption('1');
     await expect(field(page, 0, 'quality')).toHaveValue('maj7');
@@ -700,6 +717,7 @@ test.describe('AC-10.4.7 — A chord override is Pattern content that travels wi
   test('AC-10.4.7/5 — Playback, the grid’s note bands and chord names, the score and MIDI export all follow the override for its Measures, from the one timeline; the MIDI file and the JSON carry no technique name, stack or original length: on the screen', async ({ page }) => {
     await loop(page, { change: 'measure' });
     await open(page);
+    await holdAudition(page);
     await technique(page, 'change-quality').click();
     await field(page, 0, 'chord').selectOption('1');
     await accept(page).click();

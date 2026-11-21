@@ -1,7 +1,16 @@
-# Test -> build -> publish (research.md D-008).
-# A failing check blocks the deploy: FR-014's per-AC suite only has teeth if a
-# red test cannot reach the live site. The checks themselves live in verify.yml,
-# shared with pull-request.yml, so a PR and main are judged alike.
+# Build -> publish, with the gates run alongside (research.md D-008, amended
+# 2026-11-20, T531).
+#
+# The gate that keeps a red test off the live site is the pull request's: main
+# requires its "All gates passed" check, so nothing reaches this workflow that
+# has not passed the whole suite on its merge with main. Publishing therefore no
+# longer waits for a second run of the same suite.
+#
+# `verify` still runs here, on main as it actually is, because the PR check
+# tested the merge as it was when the check ran: two PRs merged minutes apart
+# are first tested together on this run. It reports; it does not hold the site.
+# A red `verify` on main means something broken may already be live, and is to
+# be fixed at once (CLAUDE.md §5).
 name: Deploy
 
 on:
@@ -23,7 +32,6 @@ jobs:
     uses: ./.github/workflows/verify.yml
 
   build:
-    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -274,7 +274,7 @@ Run before every commit. All must pass:
 ```bash
 npm run lint          # includes the core/ purity boundary
 npm test              # Vitest over core/ and storage/
-npm run test:e2e      # Playwright; needs CHROMIUM_PATH (see below)
+npm run test:e2e -- <spec files>   # Playwright: the part of it this change owns (below)
 npm run coverage:ac   # every AC has a test naming it — must be 100%
 npm run trace:matrix  # regenerate the matrix, and commit it (§2b)
 npm run check:trace   # the AC → plan → task → test chain (§2b)
@@ -286,8 +286,25 @@ npm run check:unwired # every export in src/ is reachable from src/ (§2c)
 `npm run check:trace --silent -- --summary` prints one line per check when you only
 need to know which are red.
 
+**The full browser suite is the pull request's to run, not yours** (T531,
+research.md D-008). Every PR runs all of it, on the branch merged with `main`,
+across six runners in about five minutes, and `main` will not take the merge
+without it. Locally it takes about nine minutes on a machine other sessions
+share, and in a cloud session longer, and it proves less: it tests the branch,
+not the merge. So locally, run the browser tests this change **owns**:
+
+- every `tests/e2e/` file the change adds or edits;
+- the file proving any criterion the change touches (`npm run trace:changed`,
+  the **Direct** rows);
+- for a change to `src/` that edits no test, the spec files for the screen or
+  control it changes.
+
+Run the whole suite locally only to chase a failure the PR check reported. This
+is where the tests run, never whether: nothing here permits merging without the
+PR check, and a red PR check is a failing test like any other (§2a).
+
 ```bash
-CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
+CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e -- tests/e2e/grid.spec.js
 ```
 
 The suite builds and serves on a free port of its own and never reuses a server that is
@@ -307,11 +324,12 @@ governs what to do next, and the answer is never to make the gate ask for less.
 ## 5. Landing the work: every change becomes a PR
 
 Work is not delivered when it is committed, and it is not delivered when it is
-pushed. **`main` is the live site.** `.github/workflows/deploy.yml` fires on push
-to `main`, re-runs all the gates (`verify.yml`, Playwright split across four
-runners), and publishes to Pages. `pull-request.yml` runs the same gates on
-every PR, and `main` requires its **All gates passed** check, so a PR cannot
-merge red, however it was run locally. Nothing on a branch is
+pushed. **`main` is the live site.** `pull-request.yml` runs every gate on every
+PR (`verify.yml`, Playwright split across six runners), and `main` requires its
+**All gates passed** check, so a PR cannot merge red, however it was run
+locally. `.github/workflows/deploy.yml` fires on push to `main` and publishes to
+Pages straight away; it runs the same gates again alongside, on `main` as it
+actually is, and they report without holding the site (T531). Nothing on a branch is
 visible to the musician, however green it is — so a branch left unmerged is a
 change that, from where they are sitting, did not happen.
 
@@ -326,7 +344,7 @@ Every change lands the same way:
      maintainer merges.
 
    Ask it **once per change**, at that point. Not again later in the same change.
-3. **Implement**, then run all six gates in §4.
+3. **Implement**, then run the gates in §4.
 4. **Open the PR either way.** The PR is the *record*, not the approval step: it
    carries the spec revisions, the AC IDs and the gate results in one place, so
    the reasoning outlives a compaction and lives somewhere a commit message
@@ -343,12 +361,18 @@ Every change lands the same way:
    GitHub merges the moment the required check passes, and switch on the app's
    CI monitor so a red run wakes the session. Both are allowed in
    `.claude/settings.json`; the repository has auto-merge enabled (T503).
-6. **Watch the deploy, and report what is actually live.** Merging is not
-   landing. `verify` and `build` can both pass and the `deploy` job still fail
-   on its own — a Pages outage, a rate-limited action download — leaving `main`
-   correct and the site stale, which looks from the musician's chair exactly
-   like the work never happened. Check the run. If it is red, say so, name the
-   failure, and do not describe the change as delivered.
+6. **Watch the deploy run to its end, and report what is actually live.**
+   Merging is not landing, and the run now says two separate things:
+   - **`build` and `deploy`** — whether the site was published. The `deploy` job
+     can fail on its own — a Pages outage, a rate-limited action download —
+     leaving `main` correct and the site stale, which looks from the musician's
+     chair exactly like the work never happened.
+   - **`verify`** — whether `main`, as it now is, passes every gate. It finishes
+     *after* the site is live. If it is red, something broken may be in front of
+     the musician right now.
+
+   Check both. If either is red, say so, name the failure, and do not describe
+   the change as delivered.
 
 **A failing or skipped gate stops the merge in either mode.** Auto is permission
 to merge *passing* work without waiting; it is never permission to merge red work
@@ -375,7 +399,9 @@ Say so in the option text and let them choose. Do not change the default.
 `main`, a test failed, and a test that fails is evidence about the code (§2a)
 — **"flaky" is not a diagnosis.** Read the failing assertion, find the cause,
 fix it, prove it with a run that failed before and passes after, and land that
-fix: the next merge to `main` retriggers the deploy. Only when you have tried
+fix **at once** — since T531 the site does not wait for `verify`, so whatever
+failed is already published, and reverting the merge is the right first move
+when the cause is not found quickly. Only when you have tried
 and genuinely cannot find or fix the cause do you come to the maintainer, and
 then with what you tried. *(Added 2026-11-13: the deploy of PR #165 failed on
 two timing tests and the maintainer was asked to press Re-run; three real
