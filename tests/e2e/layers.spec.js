@@ -341,22 +341,26 @@ test(`AC-19.11.3/6 — The cursor runs through the composing grid once per pass 
 
 // --- AC-19.11.4: saving a Section ----------------------------------------------
 
-test(`AC-19.11.4/1 — Save section asks a name, pre-filled with the composition's name and "section", unique among Sections, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why`, async ({ page }) => {
+test(`AC-19.11.4/1 — Save section asks a name, pre-filled with the composition's name and "section", unique among Sections, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; a Section may hold the composition alone; and while a part is not yet in the library the name is held and the Section is stored as soon as every part is saved`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
-  await expect(page.locator('.section-save')).toBeDisabled();
-  await expect(page.locator('.section-save')).toHaveAttribute('title', /Save every part to the library first.*My line/);
-  const id = await saveComposition(page);
-  await expect(page.locator('.section-save')).toBeDisabled();
-  await expect(page.locator('.section-save')).toHaveAttribute('title', /Add a layer first/);
-  await addLayer(page, SON);
-  await addLayer(page, BOSSA);
-  await layerItems(page).nth(1).locator('.layer-mute').click();
+  const all = () => page.evaluate(() => window.__rm.sectionStore.loadAll());
+  // Named before its part is in the library: the name is held, and nothing is stored (revised 2026-11-21, T562).
   await expect(page.locator('.section-save')).toBeEnabled();
   await page.locator('.section-save').click();
   await expect(page.locator('.dialog-input')).toHaveValue('My line section');
   await nameInDialog(page);
-  const stored = await page.evaluate(() => window.__rm.sectionStore.loadAll());
+  await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'waiting');
+  await expect(page.locator('.layers-unsaved')).toContainText('"My line"');
+  expect(await all()).toEqual([]);
+  // Stored as soon as the part is saved: a Section of the composition alone.
+  const id = await saveComposition(page);
+  await expect(page.locator('.layers-saved')).toBeVisible();
+  expect(await all()).toEqual([{ id: 'arr_1', name: 'My line section', compositionId: id, layers: [], active: 0 }]);
+  await addLayer(page, SON);
+  await addLayer(page, BOSSA);
+  await layerItems(page).nth(1).locator('.layer-mute').click();
+  const stored = await all();
   expect(stored).toEqual([
     { id: 'arr_1', name: 'My line section', compositionId: id, layers: [{ patternId: SON, muted: false }, { patternId: BOSSA, muted: true }], active: 0 },
   ]);
@@ -439,7 +443,7 @@ test(`AC-19.11.4/3 — A Section can be renamed and deleted from the Layers sect
   await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'new');
 });
 
-test(`AC-19.11.4/4 — Once a Section is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Section waits, the Layers section naming the part, and saves as soon as that part is saved`, async ({ page }) => {
+test(`AC-19.11.4/4 — Once a Section is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Section waits, the Section line naming the part, and saves as soon as that part is saved`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await saveComposition(page);
@@ -448,7 +452,8 @@ test(`AC-19.11.4/4 — Once a Section is saved, every change to its parts — a 
   await page.locator('.section-save').click();
   await nameInDialog(page, 'Bed');
   await expect(page.locator('.layers-saved')).toBeVisible();
-  await expect(page.locator('.section-save')).toBeDisabled();
+  // Named: there is nothing left to save by hand (AC-19.11.10/2).
+  await expect(page.locator('.section-save')).toHaveCount(0);
   const stored = () => page.evaluate(() => window.__rm.sectionStore.findById('arr_1'));
   // Muting saves at once.
   await layerItems(page).first().locator('.layer-mute').click();
@@ -490,6 +495,12 @@ test(`AC-19.11.4/4 — Once a Section is saved, every change to its parts — a 
   await expect(page.locator('.composer-layers .layer-item')).toHaveCount(3);
   await expect(partRow(page, 'Third part')).toBeVisible();
   await expect(partRow(page, 'Clave line')).toHaveAttribute('data-active', 'true');
+  // Taking the last layers out saves it too, as a Section of one part (revised 2026-11-21, T562).
+  await page.locator('.composer-layers .layer-item:not(.composition) .layer-remove').first().click();
+  await page.locator('.composer-layers .layer-item:not(.composition) .layer-remove').first().click();
+  await expect(layerItems(page)).toHaveCount(0);
+  expect((await stored()).layers).toEqual([]);
+  await expect(page.locator('.layers-saved')).toBeVisible();
 });
 
 test(`AC-19.11.4/5 — Deleting a Pattern that a Section uses, as its composition or as a layer, is refused with a message naming the Section or Sections, until they are deleted`, async ({ page }) => {

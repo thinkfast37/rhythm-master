@@ -14,13 +14,13 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1286 across 78 User Stories
+**Criteria**: 1292 across 78 User Stories
 
-**Coverage**: 1161 of 1286 criteria proven (90.3%)
+**Coverage**: 1167 of 1292 criteria proven (90.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1161 | 90.3% |
+| 🟢 Proven | 1167 | 90.3% |
 | 🟠 Gap — MEDIUM | 49 | 3.8% |
 | 🟡 Gap — LOW | 76 | 5.9% |
 
@@ -123,7 +123,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-2.16 | 17 | **17** | · | · | · | · | · |
 | 🟢 US-2.17 | 9 | **9** | · | · | · | · | · |
 | 🟢 US-10.4 | 61 | **61** | · | · | · | · | · |
-| 🟢 US-19.11 | 46 | **46** | · | · | · | · | · |
+| 🟢 US-19.11 | 52 | **52** | · | · | · | · | · |
 | 🟢 US-19.12 | 21 | **21** | · | · | · | · | · |
 | 🟢 US-19.13 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-19.14 | 11 | **11** | · | · | · | · | · |
@@ -1264,10 +1264,10 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.11 | `AC-19.11.3/4` | A layer that would need more than 32 repeats in the loop, or would make the composition or another layer need more, is refused with a message, and nothing is added | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `section.test.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.3/5` | The Layers section states the loop's length in passes of the composition and each layer's repeats in it | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.3/6` | The cursor runs through the composing grid once per pass of the composition, as many times per combined loop as the composition repeats | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
-| US-19.11 | `AC-19.11.4/1` 🖵 | Save section asks a name, pre-filled with the composition's name and "section", unique among Sections, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; it is unavailable until every part is saved to the library and there is a layer, saying why | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/1` 🖵 | Save section asks a name, pre-filled with the composition's name and "section", unique among Sections, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; a Section may hold the composition alone; and while a part is not yet in the library the name is held and the Section is stored as soon as every part is saved | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `section.test.js`, `layers.spec.js`, `midi-articulation.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.4/2` | A saved Section survives a reload and is listed in the Layers section; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.4/3` | A Section can be renamed and deleted from the Layers section, deletion asking first | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
-| US-19.11 | `AC-19.11.4/4` 🖵 | Once a Section is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Section waits, the Layers section naming the part, and saves as soon as that part is saved | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.4/4` 🖵 | Once a Section is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Section waits, the Section line naming the part, and saves as soon as that part is saved | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.4/5` | Deleting a Pattern that a Section uses, as its composition or as a layer, is refused with a message naming the Section or Sections, until they are deleted | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `section.test.js`, `sections.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.4/6` | A Section is not Pattern content: saving one changes nothing on any Pattern, and the composition's JSON and MIDI exports and its submission carry nothing of it | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.4/7` | Sections are stored in `rm.sections.v1`, apart from Patterns, overlays, Chains, settings and Local Metadata, and the whole-library backup carries the store as it does every other | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `sections.test.js` | 🟢 OK |
@@ -1293,6 +1293,12 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.11 | `AC-19.11.9/2` | Choosing a Section in the library pane, from Practice or from the Composer, opens the Composer on it — the part it was saved on in the composing grid, its layers beneath — asking first when unsaved work would be lost, and closes the pane as opening a Pattern does | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.9/3` 🖵 | In Practice, under a making goal, a Pattern that is a part of any Section shows In sections naming each, and a tap on a name opens the Composer on that Section; the line is absent on a Pattern in none, and under a practice goal | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.9/4` | A Pattern may be a part of any number of Sections and is never copied into one: an edit to the Pattern is heard in every Section it is in, and every Section it is in refuses its deletion | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.10/1` 🖵 | A Section line under the record bar names the saved Section in hand and says it is saved, and reads New section, not saved, when there is none | P-085 | T562 (1/1 done) | T563 (1/1 done) | `section-line.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.10/2` 🖵 | Save section on the line asks a name, unique among Sections, and stores the Section; on a named Section, Rename changes its name in place | P-085 | T562 (1/1 done) | T563 (1/1 done) | `section-line.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.10/3` 🖵 | New section takes every layer out and leaves the part on screen in a new, unnamed Section, the saved Section unchanged, asking first only when layers never saved would be lost | P-085 | T562 (1/1 done) | T563 (1/1 done) | `section-line.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.10/4` 🖵 | Add to section lists the saved Sections, and choosing one adds the part on screen as its last layer and opens that Section with the part still on screen | P-085 | T562 (1/1 done) | T563 (1/1 done) | `section-line.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.10/5` 🖵 | Add to section is unavailable, saying why, while the part on screen is not saved to the library, while the Section in hand has layers or a name, and while no Section is saved; a Section that already holds the Pattern, is at 8 layers or whose loop the part does not fit is refused with a message | P-085 | T562 (1/1 done) | T563 (1/1 done) | `section-line.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.10/6` 🖵 | With a new Section in hand, a part on screen that is a part of saved Sections names each on the line, saying an edit to it is heard in them | P-085 | T562 (1/1 done) | T563 (1/1 done) | `section-line.spec.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.1/1` | The instruments are Piano, Synth, Guitar, Electric guitar, Bass, Sax, Trumpet, Flute and Drums, in that order | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `voice.test.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.1/2` | Guitar and Electric guitar are played on the fretboard, and every other instrument on the keyboard | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `voice.test.js` | 🟢 OK |
 | US-19.12 | `AC-19.12.2/1` 🖵 | In the Layers section every part that can sound a pitched note carries an instrument picker showing its instrument, and a percussive layer carries none | P-074 | T487, T488, T493 (3/3 done) | T489, T494 (2/2 done) | `part-sound.spec.js` | 🟢 OK |

@@ -490,6 +490,10 @@ every Pattern by id — the composition's and each layer's — and carries nothi
 swing and Key are the composition's own, read from the library at play time (AC-19.11.2/3). It is
 stored apart from every other store, as a Song is (AC-19.11.4/7).
 
+*(2026-11-21, T562: `layers` may be empty. A Section of the composition alone is a Section (AC-19.11.4/1),
+where validation used to demand at least one layer. The schema version is unchanged: every stored Section
+still reads as it did.)*
+
 ```jsonc
 {
   "schemaVersion": 1,

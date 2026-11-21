@@ -60,7 +60,7 @@ import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import * as chainStore from './storage/chains.js';
 import * as sectionStore from './storage/sections.js';
-import { layered, arranged, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createSection, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateSection, MAX_LAYERS } from './core/section.js';
+import { layered, arranged, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createSection, addLayer, joinRefusal, removeLayer, setLayerMuted, setLayerSound, soundOf, validateSection, MAX_LAYERS } from './core/section.js';
 import {
   createChain,
   addEntry,
@@ -197,6 +197,7 @@ import {
 import { rangeAfterCapo, clampRange, clampCapo } from './core/fretboard.js';
 import { composerUnsaved } from './ui/composer.js';
 import { sectionUnsaved } from './ui/layers.js';
+import { addToSectionRefusal } from './ui/sectionLine.js';
 import { placeFor, acceptsFrom, ALL_DEVICES } from './core/midi.js';
 import { createMidiInput } from './midi/input.js';
 import { mountShell } from './ui/shell.js';
@@ -1312,10 +1313,15 @@ function adoptOpenPattern(draft) {
  */
 function autosaveSection() {
   const c = state.composer;
-  if (!c.section?.id || !c.draft || c.layers.length === 0) return false;
+  // Named, with or without layers (AC-19.11.4/1); a name held for a Section
+  // not yet stored is stored here, the first time every part is in the library.
+  if (!c.draft || !(c.section?.id || c.section?.name)) return false;
   if (parts().some((p) => !p.id)) return false;
-  if (!sectionUnsaved(c)) return false;
-  const saved = sectionStore.upsert({ ...sectionNow(c.section.name), id: c.section.id });
+  if (c.section.id && !sectionUnsaved(c)) return false;
+  const now = sectionNow(c.section.name);
+  const section = c.section.id ? { ...now, id: c.section.id } : now;
+  if (validateSection(section).length > 0) return false;
+  const saved = sectionStore.upsert(section);
   state.composer = { ...state.composer, section: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
   refreshSections();
   return true;
@@ -3781,29 +3787,28 @@ const handlers = {
     render();
   },
 
-  /** Save the layers as a Section (AC-19.11.4/1), or update the one loaded (/4). */
+  /**
+   * Name the Section in hand (AC-19.11.4/1, AC-19.11.10/2). It is stored at
+   * once when every part is in the library, layers or none; otherwise the name
+   * is held and the Section stored when the last part is saved (`autosaveSection`).
+   */
   async onSectionSave() {
-    const c = state.composer;
-    if (!c.draft || c.layers.length === 0 || parts().some((p) => !p.id || partUnsaved(p))) return;
-    let section = sectionNow(c.section.name);
-    if (c.section.id) section = { ...section, id: c.section.id };
-    else {
-      const taken = (name) =>
-        sectionStore.loadAll().some((a) => a.name === name) ? `A Section called "${name}" already exists. Choose another name.` : null;
-      const base = `${c.draft.name} section`;
-      let suggestion = base;
+    if (!state.composer.draft || state.composer.section.id) return;
+    const taken = (name) =>
+      sectionStore.loadAll().some((a) => a.name === name) ? `A Section called "${name}" already exists. Choose another name.` : null;
+    let suggestion = state.composer.section.name;
+    if (!suggestion) {
+      const base = `${state.composer.draft.name} section`;
+      suggestion = base;
       for (let n = 2; taken(suggestion); n++) suggestion = `${base} ${n}`;
-      const name = await askNewPatternName(suggestion, taken, { message: 'Name the Section.', confirmLabel: 'Save' });
-      if (name === null) {
-        render();
-        return;
-      }
-      section = { ...section, name };
     }
-    if (validateSection(section).length > 0) return;
-    const saved = sectionStore.upsert(section);
-    state.composer = { ...state.composer, section: { id: saved.id, name: saved.name, saved: savedShape(saved) } };
-    refreshSections();
+    const name = await askNewPatternName(suggestion, taken, { message: 'Name the Section.', confirmLabel: 'Save' });
+    if (name === null) {
+      render();
+      return;
+    }
+    state.composer = { ...state.composer, section: { id: null, name, saved: null } };
+    autosaveSection();
     render();
   },
 
@@ -3821,9 +3826,61 @@ const handlers = {
     downloadSectionMidi(set, sectionZipFilename(c.section, all[0].pattern), { articulation: exportOptions().articulation });
   },
 
-  /** Clear the layers: a new, unsaved Section over the same composition. */
-  onSectionNew() {
+  /**
+   * A new, unnamed Section on the part on screen (AC-19.11.10/3): every layer
+   * out, the saved Section left as it is. Asked first only when that would
+   * lose layers the library does not hold as a Section, or a layer's unsaved notes.
+   */
+  async onSectionNew() {
+    const c = state.composer;
+    if (!c.draft) return;
+    const unsavedParts = parts().filter((p) => !p.active && partUnsaved(p));
+    const count = c.layers.length;
+    let message = null;
+    if (unsavedParts.length > 0) {
+      message = `${unsavedParts.map((p) => `"${p.draft.name}"`).join(', ')} ${unsavedParts.length === 1 ? 'holds' : 'hold'} work the library does not. Start a new Section and lose it?`;
+    } else if (!c.section.id && count > 0) {
+      message = `${count === 1 ? 'The layer here was' : `The ${count} layers here were`} never saved as a Section. Start a new Section and take ${count === 1 ? 'it' : 'them'} out?`;
+    }
+    if (message && !(await confirm(message, { confirmLabel: 'New section', cancelLabel: 'Keep these layers' }))) {
+      render();
+      return;
+    }
     state.composer = { ...state.composer, ...noLayers() };
+    syncTransport();
+    render();
+  },
+
+  /**
+   * Add the part on screen to a saved Section, as its last layer, and open
+   * that Section with the part still on screen (AC-19.11.10/4). A Section that
+   * already holds it, is full, or whose loop it does not fit refuses (/5).
+   */
+  async onSectionAddTo() {
+    if (!state.composer.draft || addToSectionRefusal(state.composer, sectionStore.loadAll())) return;
+    const choice = await ask({
+      message: `Add "${state.composer.draft.name}" to which Section?`,
+      options: [...sectionStore.loadAll().map((s) => ({ label: s.name, value: s.id })), { label: 'Cancel', value: null }],
+    });
+    const section = choice ? sectionStore.findById(choice) : null;
+    const c = state.composer;
+    if (!section || !c.draft || addToSectionRefusal(c, sectionStore.loadAll())) {
+      render();
+      return;
+    }
+    const own = [section.compositionId, ...section.layers.map((l) => l.patternId)].map((id) => libraryPattern(id)).filter(Boolean);
+    const notice = joinRefusal(section, own, c.draft, c.savedId);
+    if (notice) {
+      state.composer = { ...c, notice };
+      render();
+      return;
+    }
+    // It joins with the instrument and volume it has on screen (AC-19.12.4).
+    const joined = addLayer(section, c.savedId, { instrument: c.instrument, volume: c.volume });
+    const saved = sectionStore.upsert({ ...joined, active: joined.layers.length });
+    state.composer = { ...state.composer, notice: null, ...partsOf(saved) };
+    ensureSamplesLoaded();
+    refreshSections();
     syncTransport();
     render();
   },

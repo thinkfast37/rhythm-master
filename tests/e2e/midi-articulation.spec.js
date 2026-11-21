@@ -254,3 +254,45 @@ test('AC-20.3.1/3 — Each Pattern laid in the sequence, each part of each Secti
   expect(line.programs).toEqual([{ channel: 0, program: 65 }]);
   expect(under.programs).toEqual([{ channel: 1, program: 33 }]);
 });
+
+// --- AC-19.11.4/1: a Section of one part, everywhere a Section goes ---------------------
+
+test(`AC-19.11.4/1 — Save section asks a name, pre-filled with the composition's name and "section", unique among Sections, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; a Section may hold the composition alone; and while a part is not yet in the library the name is held and the Section is stored as soon as every part is saved: a Section of the composition alone is listed in the library, laid in an Arrangement, played and exported as one track`, async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  await page.locator('.composer-save').click();
+  await expect(page.locator('.composer-save')).toHaveAttribute('data-saved', 'true');
+  await page.locator('.section-save').click();
+  await expect(page.locator('.dialog')).toBeVisible();
+  await page.locator('.dialog-input').fill('Verse');
+  await page.locator('.dialog-button.primary').click();
+  await expect(page.locator('.section-line .layers-saved')).toBeVisible();
+  const section = await page.evaluate(() => window.__rm.sectionStore.loadAll()[0]);
+  expect(section.layers).toEqual([]);
+
+  // In the library's Sections group, named with its one part (AC-19.11.9/1).
+  if (!(await page.locator('.library-sections').isVisible())) await page.locator('.library-toggle').click();
+  const entry = page.locator(`.library-sections .section-entry[data-section-id="${section.id}"]`);
+  await expect(entry.locator('.section-entry-name')).toHaveText('Verse');
+  await expect(entry).toContainText('My line');
+
+  // Into an Arrangement's palette from the library, and laid in its sequence (AC-20.1.2/1, AC-20.1.3/1).
+  await page.locator('.mode-switch [data-mode="arrange"]').click();
+  const panel = page.locator('.arrange-panel');
+  await panel.locator('[data-action="arrange-add"]').click();
+  if (!(await page.locator('.library-sections').isVisible())) await page.locator('.library-toggle').click();
+  await entry.locator('[data-action="open-section"]').click();
+  const item = panel.locator(`.arrange-palette-item[data-kind="section"][data-id="${section.id}"]`);
+  await expect(item).toBeVisible();
+  await item.locator('[data-action="arrange-lay"]').click();
+  await expect(panel.locator('.arrange-entry')).toHaveCount(1);
+  // It plays: one pass of its one part.
+  expect(await page.evaluate(() => window.__rm.arrange.passes())).toBe(1);
+  expect((await page.evaluate(() => window.__rm.arrange.at(0))).name).toContain('My line');
+
+  // One track beside the tempo track, named for the Section and its part (AC-20.3.1/3).
+  const file = readMidi((await downloadFrom(page, panel.locator('[data-action="arrange-export"]'))).bytes);
+  expect(file.tracks.map((x) => x.name)).toEqual([null, 'Verse — My line']);
+  expect(file.tracks[1].notes).toHaveLength(4);
+});

@@ -291,6 +291,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-082** | US-12.5 — Choose how long exported notes last | AC-12.5.1–AC-12.5.2 | T527 | T528 |
 | **P-083** | US-20.3 — Export an Arrangement as one multi-track MIDI file | AC-20.3.1 | T527 | T528 |
 | **P-084** | US-21.1 — The app notices a newer build and moves to it | AC-21.1.1–AC-21.1.5 | T533 | T534 |
+| **P-085** | US-19.11 — The Section in hand, named at the top of the Composer | AC-19.11.10 | T562 | T563 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

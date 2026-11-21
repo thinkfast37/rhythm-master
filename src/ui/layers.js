@@ -2,13 +2,14 @@
  * The Layers section of the Composer (US-19.11): the composition first, then
  * each library Pattern layered under it with its kind, its repeats in the
  * combined loop, Mute and Remove; the loop readout; Add layer; and the saved
- * Sections with Save, New, Load, Rename and Delete. A pure function of
+ * Sections with Load, Rename and Delete. Naming the Section in hand and
+ * starting a new one are the Section line's (`sectionLine.js`). A pure function of
  * `state.composer`, the stores' lists and the Patterns the handlers resolve.
  */
 import { el, valueEntry } from './controls.js';
 import { INSTRUMENTS, MIN_VOLUME, MAX_VOLUME, DEFAULT_VOLUME, normaliseVolume, volumeDb, hasFixedNotes } from '../core/voice.js';
 import { layered, layerKind, MAX_LAYERS } from '../core/section.js';
-import { isComplete, octaveShiftRefusal } from '../core/composer.js';
+import { octaveShiftRefusal } from '../core/composer.js';
 import { renderArticulation } from './articulation.js';
 
 const KIND_LABELS = { rhythm: 'rhythm', melody: 'melody', chords: 'chords' };
@@ -134,28 +135,7 @@ export function renderLayers(state, handlers) {
 
   const head = el('div', 'layers-head');
   head.appendChild(el('h3', 'layers-title', { textContent: 'Layers' }));
-  const section = composer.section;
-  if (section?.id) {
-    const name = el('span', 'layers-section-name', { textContent: section.name });
-    name.dataset.sectionName = section.name;
-    head.appendChild(name);
-  }
-  // A named Section saves on its own (AC-19.11.4/4): it is either saved, or
-  // waiting on a part that is not yet in the library, named here.
-  const waitingOn = section?.id ? (handlers.parts?.() ?? []).filter((p) => !p.id && p.pattern) : [];
-  if (section?.id && waitingOn.length > 0) {
-    const u = el('span', 'layers-unsaved', { textContent: `saves once ${waitingOn.map((p) => `"${p.pattern.name}"`).join(', ')} ${waitingOn.length === 1 ? 'is' : 'are'} saved` });
-    u.dataset.unsaved = 'waiting';
-    head.appendChild(u);
-  } else if (section?.id) {
-    const ok = el('span', 'layers-saved', { textContent: 'saved' });
-    ok.dataset.saved = 'true';
-    head.appendChild(ok);
-  } else if (sectionUnsaved(composer)) {
-    const u = el('span', 'layers-unsaved', { textContent: 'not yet saved' });
-    u.dataset.unsaved = 'new';
-    head.appendChild(u);
-  }
+  // Which Section this is, and whether it is saved, is the Section line's to say (AC-19.11.10/1).
   wrap.appendChild(head);
 
   // Every part in order, the one on screen among them (AC-19.11.6/5); a part
@@ -261,30 +241,7 @@ export function renderLayers(state, handlers) {
     actions.appendChild(cancel);
   }
 
-  const unsavedParts = all.filter((p) => !p.id || (p.draft && (!p.savedId || !isComplete(p.draft))));
-  const saved = unsavedParts.length === 0;
   const hasLayers = (composer.layers?.length ?? 0) > 0;
-  // The first save names it; after that every change saves on its own (AC-19.11.4/4).
-  const named = Boolean(section?.id);
-  const save = button('section-save', named ? 'Section saved' : 'Save section…', 'section-save', {
-    disabled: named || !saved || !hasLayers,
-    title: named
-      ? 'Every change to this Section saves on its own'
-      : !saved
-      ? `Save every part to the library first — a Section names them by id. Not saved: ${unsavedParts.map((p) => p.pattern?.name ?? '?').join(', ')}`
-      : !hasLayers
-        ? 'Add a layer first'
-        : section?.id
-          ? 'Update this Section'
-          : 'Save the composition and its layers under a name',
-  });
-  save.addEventListener('click', () => handlers.onSectionSave?.());
-  actions.appendChild(save);
-  if (section?.id || hasLayers) {
-    const clear = button('section-new', 'Clear layers', 'section-new', { title: 'Take every layer out and start a new Section' });
-    clear.addEventListener('click', () => handlers.onSectionNew?.());
-    actions.appendChild(clear);
-  }
   // One ZIP, one MIDI file per layer, each one combined loop long (AC-19.11.5).
   const exportBtn = button('section-export', 'Export section MIDI', 'section-export', {
     disabled: !hasLayers,
