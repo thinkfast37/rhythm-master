@@ -204,10 +204,41 @@ export function layeredHasHarmony(set) {
 
 /* --- the timeline dispatchers the transport and the renderer call ------------ */
 
-export const timelineOf = (p, pass = 0) => (isLayered(p) ? layeredTimeline(p, pass) : buildTimeline(p, pass));
-export const loopDurationOf = (p) => (isLayered(p) ? layeredLoopDuration(p) : loopDurationSeconds(p));
-export const beatGridOf = (p) => (isLayered(p) ? layeredBeatGrid(p) : buildBeatGrid(p));
-export const anyHarmony = (p) => (isLayered(p) ? layeredHasHarmony(p) : hasHarmony(p));
+/**
+ * One pass of an Arrangement's entry, as the transport is handed it (US-20.2):
+ * a Pattern or a layered set (`inner`) with the pass it is on fixed — counted
+ * from where the entry began, so the transport's own running count, which
+ * spans the whole sequence, never reaches the timeline (AC-20.2.1/3). `mark`
+ * rides on every event: how a bare Pattern sounds, which the event of a
+ * layered set already says for itself.
+ *
+ * It carries what the transport reads off a Pattern — `measures`, `tempo`,
+ * `tempoUnit`, `name` — as a layered set does.
+ */
+export function arranged(inner, pass = 0, mark = {}) {
+  return {
+    arranged: true,
+    inner,
+    pass,
+    mark,
+    name: inner.name,
+    measures: inner.measures,
+    tempo: inner.tempo,
+    tempoUnit: tempoUnitOf(inner),
+    soundMode: inner.soundMode,
+  };
+}
+
+export const isArranged = (p) => Boolean(p?.arranged);
+
+const innerTimeline = (p, pass) => (isLayered(p) ? layeredTimeline(p, pass) : buildTimeline(p, pass));
+
+export const timelineOf = (p, pass = 0) =>
+  isArranged(p) ? innerTimeline(p.inner, p.pass).map((event) => ({ ...event, ...p.mark, arranged: true })) : innerTimeline(p, pass);
+export const loopDurationOf = (p) => (isArranged(p) ? loopDurationOf(p.inner) : isLayered(p) ? layeredLoopDuration(p) : loopDurationSeconds(p));
+export const beatGridOf = (p) => (isArranged(p) ? beatGridOf(p.inner) : isLayered(p) ? layeredBeatGrid(p) : buildBeatGrid(p));
+// An arranged pass is never the pass before it: the transport must not reuse its timeline.
+export const anyHarmony = (p) => (isArranged(p) ? true : isLayered(p) ? layeredHasHarmony(p) : hasHarmony(p));
 
 /* --- the Section: what is saved (AC-19.11.4) ---------------------------- */
 

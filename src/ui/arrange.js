@@ -124,6 +124,11 @@ function renderSequence(view, handlers) {
   view.entries.forEach((entry, index) => {
     const row = el('li', 'arrange-entry');
     row.dataset.index = String(index);
+    // The entry sounding, while the sequence plays (AC-20.2.1/4).
+    if (view.playingIndex === index) {
+      row.classList.add('playing');
+      row.setAttribute('aria-current', 'true');
+    }
     row.dataset.kind = entry.kind;
     row.dataset.id = entry.id;
     row.appendChild(el('span', 'arrange-entry-number', { textContent: `${index + 1}.` }));
@@ -186,8 +191,6 @@ export function renderArrange(root, state, handlers) {
 
   root.innerHTML = '';
   root.appendChild(renderHead(view, handlers));
-  // Until an Arrangement can be played, say so where Play would be looked for (AC-20.1.1/4).
-  root.appendChild(el('p', 'arrange-play-note', { textContent: 'An Arrangement cannot be played yet: build and save it here, and playing it comes next.' }));
   root.appendChild(renderPalette(view, handlers));
   root.appendChild(renderSequence(view, handlers));
 
