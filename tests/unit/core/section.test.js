@@ -25,6 +25,7 @@ import {
   setLayerMuted,
   validateSection,
   usesPattern,
+  joinRefusal,
   setLayerSound,
   soundOf,
   MAX_LAYERS,
@@ -249,6 +250,38 @@ describe('core/section — the Section (AC-19.11.1, AC-19.11.4)', () => {
     expect(layerKind(chords())).toBe('chords');
   });
 
+  it(`AC-19.11.4/1 — Save section asks a name, pre-filled with the composition's name and "section", unique among Sections, and stores the composition's id, its layers in order, which are muted, each part's instrument and volume (AC-19.12.4), and which part is on screen; a Section may hold the composition alone; and while a part is not yet in the library the name is held and the Section is stored as soon as every part is saved: a Section of the composition alone is sound`, () => {
+    // Revised 2026-11-21, T562: this read "A Section needs at least one layer".
+    const alone = createSection('Verse', 'p_1');
+    expect(alone.layers).toEqual([]);
+    expect(validateSection(alone)).toEqual([]);
+    expect(validateSection({ ...alone, layers: undefined })).toContain('A Section needs its layers as a list');
+  });
+
+  const T5 = 'AC-19.11.10/5 — Add to section is unavailable, saying why, while the part on screen is not saved to the library, while the Section in hand has layers or a name, and while no Section is saved; a Section that already holds the Pattern, is at 8 layers or whose loop the part does not fit is refused with a message';
+  it(`${T5}: a Section that already holds the Pattern`, () => {
+    const verse = addLayer(createSection('Verse', 'p_1'), 's_1');
+    const riff = { name: 'Riff' };
+    expect(joinRefusal(verse, [], riff, 'p_1')).toBe('"Riff" is already a part of "Verse".');
+    expect(joinRefusal(verse, [], riff, 's_1')).toBe('"Riff" is already a part of "Verse".');
+  });
+
+  it(`${T5}: a Section at 8 layers`, () => {
+    let full = createSection('Verse', 'p_1');
+    for (let i = 0; i < MAX_LAYERS; i++) full = addLayer(full, `s_${i}`);
+    expect(joinRefusal(full, [], { name: 'Riff' }, 'p_9')).toBe('"Verse" already has 8 layers, the most a Section holds.');
+  });
+
+  it(`${T5}: a Section whose loop the part does not fit`, () => {
+    // A bar of 7/8 against 32 bars of 4/4 would play 256 times in one loop.
+    const long = createSection('Verse', 'long even');
+    const why = joinRefusal(long, [measures(32, 'Long even')], sevenEight('Odd bar'), 'odd bar');
+    expect(why).toMatch(/Odd bar/);
+    expect(why).toMatch(new RegExp(`more than ${MAX_REPEATS} repeats`));
+    // A part that fits, in a Section with room, that does not hold it: nothing to say.
+    expect(joinRefusal(createSection('Verse', 'four'), [fourBeats()], sevenEight(), 'seven')).toBeNull();
+  });
+
   it('AC-19.11.4/5 — Deleting a Pattern that a Section uses, as its composition or as a layer, is refused with a message naming the Section or Sections, until they are deleted: usesPattern', () => {
     const a = addLayer(addLayer(createSection('Bed', 'p_1'), 's_1'), 'p_2');
     expect(usesPattern(a, 'p_1')).toBe(true);
@@ -257,7 +290,6 @@ describe('core/section — the Section (AC-19.11.1, AC-19.11.4)', () => {
     expect(usesPattern(a, 'p_3')).toBe(false);
     expect(validateSection(a)).toEqual([]);
     expect(validateSection({ ...a, name: '' })).toContain('A Section needs a name');
-    expect(validateSection({ ...a, layers: [] })).toContain('A Section needs at least one layer');
     expect(validateSection({ ...a, layers: [{ patternId: 's_1' }, { patternId: 's_1' }] })).toContain('"s_1" is layered twice');
   });
 

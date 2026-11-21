@@ -71,6 +71,17 @@ function describeLength(wholeNotes) {
   return `${n} whole ${n === 1 ? 'note' : 'notes'}`;
 }
 
+/**
+ * Why the Pattern `candidate`, in the library as `id`, cannot join the saved
+ * `section` as its last layer, or null when it can (AC-19.11.10/5).
+ * `patterns` are the Section's own as they resolve, its composition first.
+ */
+export function joinRefusal(section, patterns, candidate, id) {
+  if (usesPattern(section, id)) return `"${candidate.name}" is already a part of "${section.name}".`;
+  if (section.layers.length >= MAX_LAYERS) return `"${section.name}" already has ${MAX_LAYERS} layers, the most a Section holds.`;
+  return refusal(patterns, candidate);
+}
+
 /** The kind a layer is shown as: rhythm, melody or chords (AC-19.11.1/1). */
 export function layerKind(pattern) {
   if (pattern.soundMode !== 'melodic') return 'rhythm';
@@ -294,7 +305,8 @@ export function validateSection(section) {
   if (!section || typeof section !== 'object') return ['A Section must be an object'];
   if (typeof section.name !== 'string' || !section.name.trim()) problems.push('A Section needs a name');
   if (typeof section.compositionId !== 'string' || !section.compositionId) problems.push('A Section needs a composition');
-  if (!Array.isArray(section.layers) || section.layers.length === 0) problems.push('A Section needs at least one layer');
+  // No layers is a Section of the composition alone (AC-19.11.4/1).
+  if (!Array.isArray(section.layers)) problems.push('A Section needs its layers as a list');
   else {
     // The part on screen: the composition (0) or a layer, by position (AC-19.11.6/6).
     const active = section.active ?? 0;

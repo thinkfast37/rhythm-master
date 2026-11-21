@@ -34,6 +34,7 @@ import {
   sameSlot,
 } from '../core/composer.js';
 import { renderLayers } from './layers.js';
+import { renderSectionLine } from './sectionLine.js';
 import { renderScore } from './score.js';
 import { buildScore } from '../core/notation.js';
 import { layered, passesPerLoop } from '../core/section.js';
@@ -83,6 +84,8 @@ export function renderComposer(root, state, handlers) {
 
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderBar(composer, draft, voice, state, handlers));
+    // Which Section is in hand, said before anything else (AC-19.11.10/1).
+    if (draft) fresh.appendChild(renderSectionLine(state, handlers));
     fresh.appendChild(renderInstrument(instrument, key, scale, state, handlers, voice));
     if (draft) {
       // The Subdivision strip, Practice's own (AC-1.3.11), directly above the composing
