@@ -9,6 +9,7 @@ import { el, valueEntry } from './controls.js';
 import { INSTRUMENTS, MIN_VOLUME, MAX_VOLUME, DEFAULT_VOLUME, normaliseVolume, volumeDb, hasFixedNotes } from '../core/voice.js';
 import { layered, layerKind, MAX_LAYERS } from '../core/section.js';
 import { isComplete, octaveShiftRefusal } from '../core/composer.js';
+import { renderArticulation } from './articulation.js';
 
 const KIND_LABELS = { rhythm: 'rhythm', melody: 'melody', chords: 'chords' };
 
@@ -291,6 +292,8 @@ export function renderLayers(state, handlers) {
   });
   exportBtn.addEventListener('click', () => handlers.onSectionExport?.());
   actions.appendChild(exportBtn);
+  // Staccato or Legato, beside the export it governs (AC-12.5.1/1).
+  actions.appendChild(renderArticulation(state, handlers));
   wrap.appendChild(actions);
 
   wrap.appendChild(renderSaved(state, handlers));

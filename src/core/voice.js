@@ -140,3 +140,32 @@ export function pianoSampleFor(midiNote) {
  */
 export const PIANO_HOLD_SECONDS = Object.freeze({ 1: 0.8, 2: 1.2, 3: 1.6 });
 export const PIANO_RELEASE_SECONDS = 0.3;
+
+/* --- what a MIDI export needs to know of an instrument (US-12.5, US-20.3) ----- */
+
+/**
+ * How long an instrument's note rings on in the app after it is struck, in
+ * seconds by Accent Level — what a Legato export adds after a note's part has
+ * moved on (AC-12.5.2/3, research.md D-030). The piano's is the hold its
+ * samples are given; the guitar's the audible length of its samples; the
+ * synth's its envelope's decay. An instrument the app holds until its next
+ * note has no ring of its own, and neither do drums.
+ */
+const RING_SECONDS = Object.freeze({
+  piano: PIANO_HOLD_SECONDS,
+  guitar: Object.freeze({ 1: 1.2, 2: 1.6, 3: 2.0 }),
+  synth: Object.freeze({ 1: 0.18, 2: 0.32, 3: 0.55 }),
+});
+
+/** The ring of `voice` at `accent`, in seconds; 0 for a held instrument, drums, or an accent it has none for. */
+export function ringSeconds(voice, accent) {
+  return RING_SECONDS[normaliseVoice(voice)]?.[accent] ?? 0;
+}
+
+/**
+ * The General MIDI program nearest each pitched instrument, zero-based as a
+ * file carries it, so a multi-track export plays recognisably before a DAW
+ * instrument is chosen (AC-20.3.1/4). Drums have none: they are a channel.
+ */
+export const GM_PROGRAM = Object.freeze({ piano: 0, synth: 88, guitar: 25, electric: 29, bass: 33, sax: 65, trumpet: 56, flute: 73 });
+
