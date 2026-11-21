@@ -3017,3 +3017,8 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
   letter-spacing: 0.02em;
 }
 .piano .key.black .key-drum { fill: #f2f3f7; }
+
+/* The Composer's Subdivision strip (AC-19.5.7/1): one control among the others, so it
+   takes the controls' own padding rather than the workbench strip's. */
+.composer-controls .recipe-strip { padding: 0; }
+.composer-brush-hint { text-align: center; }

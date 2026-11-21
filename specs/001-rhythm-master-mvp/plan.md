@@ -264,7 +264,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-054** | US-19.2 — The guitar view | AC-19.2.1–AC-19.2.4 | T371 | T372 |
 | **P-055** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T373, T475 | T374, T476 |
 | **P-056** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T375 | T376 |
-| **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.6 | T377, T418, T432 | T378, T419, T433 |
+| **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.7 | T377, T418, T432, T512 | T378, T419, T433, T513 |
 | **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.3 | T379, T497 | T380, T498 |
 | **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381, T423 | T382, T424 |
 | **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
@@ -285,7 +285,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-076** | US-19.14 — Shift a part by an octave | AC-19.14.1–AC-19.14.4 | T499 | T500 |
 | **P-077** | US-19.15 — Choose what a Key change does to the notes | AC-19.15.1–AC-19.15.3 | T501 | T502 |
 | **P-078** | US-2.18 — Hear a Percussive Pattern on a drum kit | AC-2.18.1–AC-2.18.2 | T504 | T505 |
-| **P-079** | US-5.7 — Filter the library by type | AC-5.7.1–AC-5.7.2 | T514 | T515 |
+| **P-079** | US-5.7 — Filter the library by type | AC-5.7.1–AC-5.7.2 | T516 | T517 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

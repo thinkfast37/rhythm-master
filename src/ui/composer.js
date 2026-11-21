@@ -8,7 +8,7 @@
  * Composer's controls. Everything here is a pure function of `state.composer`,
  * the settings and the transport position; it holds no state of its own.
  */
-import { el, rebuild, labelled, labelledRow, valueEntry, SWING_FEEL_LABELS } from './controls.js';
+import { el, rebuild, labelled, labelledRow, valueEntry, SWING_FEEL_LABELS, renderRecipeStrip, offeredRecipes } from './controls.js';
 import { renderFretboard } from './fretboard.js';
 import { renderPiano } from './piano.js';
 import { KEYS, resolve } from '../core/pitch.js';
@@ -86,7 +86,11 @@ export function renderComposer(root, state, handlers) {
     if (draft) {
       // Grid or Score (AC-19.11.8): the composing grid, or one staff per part.
       if ((state.settings.composerView ?? 'grid') === 'score') fresh.appendChild(renderSectionScore(state, handlers));
-      else fresh.appendChild(renderComposingGrid(draft, composer, state, handlers));
+      else {
+        fresh.appendChild(renderComposingGrid(draft, composer, state, handlers));
+        const hint = renderComposerBrushHint(draft, state);
+        if (hint) fresh.appendChild(hint);
+      }
       // The layers under it (US-19.11), absent without a composition (AC-19.11.1/5).
       fresh.appendChild(renderLayers(state, handlers));
     } else {
@@ -447,6 +451,23 @@ function renderComposingSlot(draft, measure, measureIndex, beatIndex, slotIndex,
   return cell;
 }
 
+/**
+ * The line under the composing grid while a subdivision is armed (AC-19.5.7/5):
+ * a grid tap then changes a Beat instead of selecting or cycling, so the grid
+ * says so. Absent when nothing is armed — the grid is then as it always was.
+ */
+function renderComposerBrushHint(draft, state) {
+  const label = offeredRecipes(draft).find((r) => r.id === state.armedRecipe)?.label;
+  if (!label) return null;
+  const hint = el('p', 'brush-hint composer-brush-hint', {
+    textContent: `Brush: Subdivision — ${label}. Tap any Beat to apply it. Tap the chip again, or press Record, to switch back.`,
+  });
+  hint.dataset.brush = 'subdivision';
+  hint.dataset.armed = 'true';
+  hint.setAttribute('role', 'status');
+  return hint;
+}
+
 /** `describeNote` wants the MIDI note the stored Pitch sounds. */
 function resolveMidi(pitch, key) {
   return resolve(pitch, key).midiNote;
@@ -591,6 +612,16 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     swing.setAttribute('aria-label', 'Swing');
     swing.addEventListener('input', (e) => handlers.onComposerSwing?.(Number(e.target.value)));
     wrap.appendChild(labelledRow(`Swing ${amount}`, swingEntry, swing));
+
+    // The Subdivision strip, Practice's own (AC-1.3.11), over the part on screen
+    // (AC-19.5.7/1). The Score view has no Beat to tap, so nothing can be armed there.
+    const inScore = (state.settings.composerView ?? 'grid') === 'score';
+    const strip = renderRecipeStrip(draft, state, handlers, {
+      disabled: inScore,
+      title: inScore ? 'Switch to the Grid view to change a Beat’s subdivision' : 'Arm a subdivision, then tap a Beat in the grid to apply it',
+    });
+    strip.classList.add('composer-recipe-strip');
+    wrap.appendChild(strip);
 
     const dup = button('action composer-duplicate', 'Double Length', 'composer-duplicate', { disabled: !canDuplicate(draft) });
     dup.setAttribute('title', canDuplicate(draft) ? 'Repeat the rhythm after itself, keeping the notes or starting percussive' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
