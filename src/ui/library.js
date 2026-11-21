@@ -6,6 +6,7 @@
  * from, so shipped and owned Patterns interleave naturally (US-5.1).
  */
 import { automaticTags } from '../core/pattern.js';
+import { LIBRARY_TYPES, patternType, showsType, chosenTypes } from '../core/libraryTypes.js';
 
 /** Automatic Tags render as outlined chips with no removal control (D-007). */
 export const AUTOMATIC_TAGS = ['built-in', 'custom', 'swing', 'percussive', 'melodic'];
@@ -68,7 +69,7 @@ export const UNRATED = 'unrated';
  * `tags` takes an array; a bare `tag` string is still honoured so a single-Tag
  * caller keeps working.
  */
-export function filterEntries(entries, { query = '', tag = null, tags = null, minRating = 0 } = {}) {
+export function filterEntries(entries, { query = '', tag = null, tags = null, minRating = 0, types = null } = {}) {
   const q = query.trim().toLowerCase();
   const wanted = (tags ?? (tag ? [tag] : [])).map((t) => String(t).toLowerCase());
 
@@ -77,6 +78,8 @@ export function filterEntries(entries, { query = '', tag = null, tags = null, mi
       String(t).toLowerCase()
     );
 
+    // The types chosen narrow with everything else (AC-5.7.1/3).
+    if (!showsType(types, patternType(e.pattern))) return false;
     if (!wanted.every((w) => allTagsOn.includes(w))) return false;
     const rating = e.pattern.rating ?? 0;
     if (minRating === UNRATED ? rating > 0 : minRating > 0 && rating < minRating) return false;
@@ -190,11 +193,29 @@ export function renderLibrary(root, entries, viewState, handlers) {
   backupRow.append(backupButton, restoreButton, restoreFile);
   root.appendChild(backupRow);
 
+  // What kind of thing to show (AC-5.7.1): All, or any of the types, above
+  // every group it narrows.
+  const chosen = chosenTypes(viewState.types);
+  const typeRow = el('div', 'type-row', { role: 'group' });
+  typeRow.setAttribute('aria-label', 'Type');
+  const typePill = (id, label, on) => {
+    const pill = el('button', `type-filter${on ? ' on' : ''}`, { type: 'button', textContent: label });
+    pill.dataset.action = 'filter-type';
+    pill.dataset.type = id ?? 'all';
+    pill.setAttribute('aria-pressed', String(on));
+    pill.addEventListener('click', () => handlers.onTypeFilter?.(id));
+    return pill;
+  };
+  typeRow.appendChild(typePill(null, 'All', chosen.length === 0));
+  for (const { id, label } of LIBRARY_TYPES) typeRow.appendChild(typePill(id, label, chosen.includes(id)));
+  root.appendChild(typeRow);
+
   // Saved Sections, ahead of the Patterns, searched with them (AC-19.11.9/1),
   // as the first of the library's groups (AC-5.1.8/1).
   const folded = new Set(handlers.libraryFolded?.() ?? []);
+  const q = query.trim().toLowerCase();
   const sections = (handlers.sectionList?.() ?? []).filter((a) => {
-    const q = query.trim().toLowerCase();
+    if (!showsType(chosen, 'section')) return false;
     if (!q) return true;
     return a.name.toLowerCase().includes(q) || a.parts.some((n) => n.toLowerCase().includes(q));
   });
@@ -218,6 +239,41 @@ export function renderLibrary(root, entries, viewState, handlers) {
         open.addEventListener('click', () => handlers.onOpenSection?.(a.id));
         item.appendChild(open);
         item.appendChild(el('span', 'section-entry-parts', { textContent: a.parts.join(' · ') }));
+        list.appendChild(item);
+      }
+      group.appendChild(list);
+    }
+    root.appendChild(group);
+  }
+
+  // Saved Chains, between Sections and Patterns (AC-5.7.2/1). The handler
+  // gives none in the Composer, where there is no Compose group to load one into.
+  const allChains = handlers.chainList?.() ?? [];
+  if (allChains.length > 0) {
+    const chains = allChains.filter((c) => {
+      if (!showsType(chosen, 'chain')) return false;
+      if (!q) return true;
+      return c.name.toLowerCase().includes(q) || c.patternName.toLowerCase().includes(q);
+    });
+    const chainsFolded = folded.has('chains');
+    const group = el('div', 'library-chains library-sections library-group');
+    group.dataset.group = 'chains';
+    group.dataset.folded = String(chainsFolded);
+    group.appendChild(groupHeading('chains', 'Chains', chains.length, chainsFolded, 'library-sections-title', handlers));
+    if (chainsFolded) {
+      // Folded: the heading alone (AC-5.1.8/2).
+    } else if (chains.length === 0) {
+      group.appendChild(el('p', 'library-sections-empty library-chains-empty', { textContent: 'No Chain matches.' }));
+    } else {
+      const list = el('ul', 'section-entries chain-entries');
+      for (const c of chains) {
+        const item = el('li', 'section-entry chain-entry');
+        item.dataset.chainId = c.id;
+        const open = el('button', 'section-entry-name chain-entry-name', { type: 'button', textContent: c.name });
+        open.dataset.action = 'open-chain';
+        open.addEventListener('click', () => handlers.onOpenChain?.(c.id));
+        item.appendChild(open);
+        item.appendChild(el('span', 'section-entry-parts chain-entry-pattern', { textContent: `over ${c.patternName}` }));
         list.appendChild(item);
       }
       group.appendChild(list);

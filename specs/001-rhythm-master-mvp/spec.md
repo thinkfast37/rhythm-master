@@ -1381,12 +1381,13 @@ still absent: nothing here ever changes a Slot the Composer did not stamp or fil
 - **AC-5.1.8** — The library folds into groups
   - **Given** the library pane
   - **When** the Practicing Musician looks at the list
-  - **Then** it is in groups — Sections, then Patterns — each under a heading that says how many entries it shows and folds the group away or opens it again, and what is folded is remembered
+  - **Then** it is in groups — Sections, then Chains, then Patterns — each under a heading that says how many entries it shows and folds the group away or opens it again, and what is folded is remembered
   - **Cases**:
-    - **AC-5.1.8/1** — The library list is in groups, Sections ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group is absent while no Section is saved
+    - **AC-5.1.8/1** — The library list is in groups, Sections ahead of Chains ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group and the Chains group are each absent while none is saved
     - **AC-5.1.8/2** — Tapping a group's heading folds the group, hiding its entries and leaving the heading, and tapping it again opens it; the heading says which it is
     - **AC-5.1.8/3** — Which groups are folded is remembered in `rm.settings.v1` and is in force after a reload
     - **AC-5.1.8/4** — Folding hides and never filters: the search and the Tag filters change a folded group's count as they do an open one's, and Prev/Next step through the Patterns whether or not their group is folded
+  - *(/1 and the Then revised 2026-11-20 with US-5.7, T516: saved Chains joined the library as a group of their own between Sections and Patterns (AC-5.7.2). It read "Sections ahead of Patterns … and the Sections group is absent while no Section is saved".)*
   - *(Added 2026-11-15 at the maintainer's request, T495: "The library should also show sections. The library should allow me to collapse different 'sections' that contain sections or patterns or in future arrangements." The library already listed Sections ahead of the Patterns, AC-19.11.9/1; what is new is the Patterns' own heading and the folding. Decisions taken without asking: the foldable things are called groups here, so that Section means one thing; inside its group the Patterns list is the one unified list it was (AC-5.1.1, AC-5.1.7); every group starts open; a group for Arrangements joins these two when that feature exists.)*
 
 ---
@@ -5240,6 +5241,39 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-2.18.2/2** — On Drum kit every note of a Percussive Pattern sounds its drum through the synthesised kit of AC-19.13.1 with no audio file requested, and on Accents every note sounds its accent tone as it always has
     - **AC-2.18.2/3** — The metronome click is the same on Accents and on Drum kit
     - **AC-2.18.2/4** — The offline render of a Percussive Pattern on Drum kit sounds the drums, and on Accents the accent tones
+
+---
+
+### User Story 74 - Filter the library by type
+
+*Traceability: `US-5.7` — Filter the library by type*
+
+**As** the Practicing Musician, **I want** the library to tell apart the kinds of thing it holds — a rhythm, a melody I wrote, a chord progression, a Chain, a Section — and to show me only the kinds I pick, **so that** I can find the Section or the progression I am after without reading past two hundred rhythms.
+
+*(Added 2026-11-15 at the maintainer's request, T516: "it is worth tagging different types of compositions based on what their structure is: Percussive, Melodic Composition, Melodic Chord Progress, Melodic Chain, Percussive Chain (does that exist?), Section, Arrangement. So ideally the library is also organized with all these filters and I can pick what I want." Told the same day: a Percussive Chain does not exist, since a Chain is fills over a chord progression; Arrangement joins the types when Arrangements are built. Shown both, the maintainer chose type pills that filter over splitting the Patterns into a group for each type, so the Patterns keep their one alphabetical order and Prev/Next step through them as they did (AC-5.1.4, AC-5.5.1). A type is worked out from what the entry is and never stored: a Pattern that gains a progression becomes a Chord progression at once, as its automatic Tags follow it (AC-5.3.1).)*
+
+**Independent Test**: With a Section and a Chain saved, open the library and assert a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain, Section — with All pressed, and the groups Sections, Chains and Patterns in that order; choose Chord progression and assert the Patterns listed are exactly the Melodic Patterns that carry a progression and that the Sections and Chains groups show none; add Section and assert the Sections return; choose All and assert everything is back; choose the Chain in the Chains group and assert its Pattern opens with the Chain loaded.
+
+**Acceptance Scenarios**:
+
+- **AC-5.7.1** — Type pills narrow the library
+  - **Given** the library pane
+  - **When** the Practicing Musician chooses one or more types
+  - **Then** the library shows only entries of the types chosen, in every group, together with whatever the search and the other filters leave
+  - **Cases**:
+    - **AC-5.7.1/1** — The library shows a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain and Section — above the rating and Tag filters, with All pressed while no type is chosen
+    - **AC-5.7.1/2** — Choosing a type shows only the entries of that type in every group, choosing another adds its entries, choosing a pressed one takes its entries away again, and All clears the choice
+    - **AC-5.7.1/3** — The type choice narrows together with the search, the rating filter and the Tag filters, and Prev/Next step through the Patterns it leaves
+    - **AC-5.7.1/4** — A Percussive Pattern is of the type Percussive, a Melodic Pattern that carries a progression is a Chord progression, and a Melodic Pattern without one is a Melodic composition
+
+- **AC-5.7.2** — Chains are in the library
+  - **Given** a saved Chain
+  - **When** the Practicing Musician opens the library in Practice
+  - **Then** the Chain is listed in a group of its own, found by its name or its Pattern's, and choosing it opens it
+  - **Cases**:
+    - **AC-5.7.2/1** — Saved Chains are a group of the library between Sections and Patterns, under a heading with its count that folds as the other groups do, and the group is not shown in the Composer
+    - **AC-5.7.2/2** — A Chain is listed by its name with the name of the Pattern it plays over, and the search matches either
+    - **AC-5.7.2/3** — Choosing a Chain opens the Pattern it plays over with the Chain loaded in the Compose group
 
 ---
 

@@ -1040,12 +1040,14 @@ body {
   border: 1px solid var(--line); border-radius: var(--radius);
 }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+/* What kind of thing the library shows (AC-5.7.1): one pill for each type, All first. */
+.type-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 6px; max-width: 100%; }
 .library-count { margin: 0 0 8px; font-size: 11px; color: var(--ink-dim); }
 
 /* Automatic Tags are outlined with no removal control; user Tags are filled
    and carry a "×". Chip treatment carries the distinction, so it survives
    monochrome and colour vision deficiency (D-007). */
-.tag-chip, .tag-filter {
+.tag-chip, .tag-filter, .type-filter {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 999px;
   font: 500 11px/1.4 var(--font-ui);
@@ -1055,7 +1057,7 @@ body {
 .tag-chip.user, .tag-filter.user {
   background: var(--line); color: var(--ink); border-color: var(--line);
 }
-.tag-filter.on { border-color: var(--brand); color: var(--brand); }
+.tag-filter.on, .type-filter.on { border-color: var(--brand); color: var(--brand); }
 .tag-remove {
   padding: 0; border: 0; background: none; cursor: pointer;
   color: inherit; font-size: 13px; line-height: 1;

@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1193 across 72 User Stories
+**Criteria**: 1200 across 73 User Stories
 
-**Coverage**: 1067 of 1193 criteria proven (89.4%)
+**Coverage**: 1074 of 1200 criteria proven (89.5%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1067 | 89.4% |
+| 🟢 Proven | 1074 | 89.5% |
 | 🟠 Gap — MEDIUM | 50 | 4.2% |
-| 🟡 Gap — LOW | 76 | 6.4% |
+| 🟡 Gap — LOW | 76 | 6.3% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -129,6 +129,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.14 | 11 | **11** | · | · | · | · | · |
 | 🟢 US-19.15 | 10 | **10** | · | · | · | · | · |
 | 🟢 US-2.18 | 7 | **7** | · | · | · | · | · |
+| 🟢 US-5.7 | 7 | **7** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -380,7 +381,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-5.1 | `AC-5.1.7/2` 🖵 | A row for a Pattern the musician owns carries a marker reading "Custom" | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.7/3` 🖵 | The marker says which it is in words, never by colour alone | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.7/4` 🖵 | Two Patterns sharing one name, one shipped and one owned, are told apart by their markers, and both still sit in the one unified list | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library.spec.js` | 🟢 OK |
-| US-5.1 | `AC-5.1.8/1` 🖵 | The library list is in groups, Sections ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group is absent while no Section is saved | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library-groups.spec.js` | 🟢 OK |
+| US-5.1 | `AC-5.1.8/1` 🖵 | The library list is in groups, Sections ahead of Chains ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group and the Chains group are each absent while none is saved | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library-groups.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.8/2` 🖵 | Tapping a group's heading folds the group, hiding its entries and leaving the heading, and tapping it again opens it; the heading says which it is | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library-groups.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.8/3` 🖵 | Which groups are folded is remembered in `rm.settings.v1` and is in force after a reload | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library-groups.spec.js` | 🟢 OK |
 | US-5.1 | `AC-5.1.8/4` 🖵 | Folding hides and never filters: the search and the Tag filters change a folded group's count as they do an open one's, and Prev/Next step through the Patterns whether or not their group is folded | P-024 | T087, T316, T495 (3/3 done) | T088, T317, T496 (3/3 done) | `library-groups.spec.js` | 🟢 OK |
@@ -1327,3 +1328,10 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-2.18 | `AC-2.18.2/2` 🖵 | On Drum kit every note of a Percussive Pattern sounds its drum through the synthesised kit of AC-19.13.1 with no audio file requested, and on Accents every note sounds its accent tone as it always has | P-078 | T504 (1/1 done) | T505 (1/1 done) | `percussion.spec.js` | 🟢 OK |
 | US-2.18 | `AC-2.18.2/3` 🖵 | The metronome click is the same on Accents and on Drum kit | P-078 | T504 (1/1 done) | T505 (1/1 done) | `scheduler.test.js`, `percussion.spec.js` | 🟢 OK |
 | US-2.18 | `AC-2.18.2/4` 🖵 | The offline render of a Percussive Pattern on Drum kit sounds the drums, and on Accents the accent tones | P-078 | T504 (1/1 done) | T505 (1/1 done) | `backgroundRender.test.js`, `percussion.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.1/1` 🖵 | The library shows a row of type pills — All, Percussive, Melodic composition, Chord progression, Chain and Section — above the rating and Tag filters, with All pressed while no type is chosen | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.1/2` 🖵 | Choosing a type shows only the entries of that type in every group, choosing another adds its entries, choosing a pressed one takes its entries away again, and All clears the choice | P-079 | T516 (1/1 done) | T517 (1/1 done) | `libraryTypes.test.js`, `library-types.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.1/3` 🖵 | The type choice narrows together with the search, the rating filter and the Tag filters, and Prev/Next step through the Patterns it leaves | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library.test.js`, `library-types.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.1/4` 🖵 | A Percussive Pattern is of the type Percussive, a Melodic Pattern that carries a progression is a Chord progression, and a Melodic Pattern without one is a Melodic composition | P-079 | T516 (1/1 done) | T517 (1/1 done) | `libraryTypes.test.js`, `library-types.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.2/1` 🖵 | Saved Chains are a group of the library between Sections and Patterns, under a heading with its count that folds as the other groups do, and the group is not shown in the Composer | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.2/2` | A Chain is listed by its name with the name of the Pattern it plays over, and the search matches either | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
+| US-5.7 | `AC-5.7.2/3` | Choosing a Chain opens the Pattern it plays over with the Chain loaded in the Compose group | P-079 | T516 (1/1 done) | T517 (1/1 done) | `library-types.spec.js` | 🟢 OK |
