@@ -24,10 +24,10 @@ import {
   duplicate,
   tagRefusal,
 } from './core/pattern.js';
-import { TIME_SIGNATURES, beatNoteValue } from './core/meter.js';
+import { TIME_SIGNATURES, beatNoteValue, quarterSeconds, tempoUnitOf } from './core/meter.js';
 import { isOffered } from './core/recipes.js';
 import { DEFAULT_SCALE } from './core/scales.js';
-import { MAX_MEASURES } from './core/pattern.js';
+import { MAX_MEASURES, DEFAULT_TEMPO } from './core/pattern.js';
 import { canCondense, canHalve, condense, condenseTargets } from './core/condense.js';
 import { buildTimeline, buildBeatGrid, loopDurationSeconds } from './core/timeline.js';
 import {
@@ -57,7 +57,7 @@ import * as seedStore from './storage/seed.js';
 import * as overlayStore from './storage/overlays.js';
 import * as chainStore from './storage/chains.js';
 import * as sectionStore from './storage/sections.js';
-import { layered, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createSection, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateSection, MAX_LAYERS } from './core/section.js';
+import { layered, arranged, underComposition, usesPattern, timelineOf, loopDurationOf, refusal as layerRefusal, layerKind, createSection, addLayer, removeLayer, setLayerMuted, setLayerSound, soundOf, validateSection, MAX_LAYERS } from './core/section.js';
 import {
   createChain,
   addEntry,
@@ -153,7 +153,11 @@ import {
   setEntryRepeats as setArrangementRepeats,
   setEntryName as setArrangementEntryName,
   isEmpty as arrangementIsEmpty,
+  setTempo as setArrangementTempo,
+  normaliseTempo,
+  entryAtPass,
 } from './core/arrangement.js';
+import { totalPasses as chainTotalPasses, playingAt as chainPlayingAt } from './core/chain.js';
 import * as arrangementStore from './storage/arrangements.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
@@ -509,6 +513,8 @@ function progressionIdAt(loop) {
  */
 function cyclePasses() {
   if (composerActive()) return 1;
+  // An Arrangement repeats after its whole sequence (AC-20.2.1/1).
+  if (arranging()) return Math.max(1, arrangePasses());
   const repeats = Math.max(1, state.settings.fillCycleRepeats ?? 4);
   const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
   const lcm = (a, b) => (a / gcd(a, b)) * b;
@@ -541,6 +547,8 @@ const VOICE_WAIT_MS = 3000;
 
 /** Every instrument that sounds in the run as it stands: the live voice, and in the Composer each layer's. */
 function instrumentsInUse() {
+  // Every voice the Arrangement's entries sound with (AC-20.2.2).
+  if (arranging()) return arrangeVoices();
   const used = new Set([currentVoice()]);
   if (composerActive()) for (const sound of layerSounds()) used.add(sound.instrument);
   return [...used];
@@ -708,6 +716,9 @@ function layerSounds() {
 
 /** The instrument an event sounds with: its part's own (AC-19.11.2/2, AC-2.13.3). */
 function instrumentFor(event) {
+  // An Arrangement's event says how it sounds: its part's instrument in a
+  // Section, the Pattern's remembered voice otherwise (AC-20.2.2).
+  if (event.arranged) return normaliseVoice(event.instrument ?? event.voice);
   if (event.composition !== false) return currentVoice();
   const live = layerSounds()[event.layer - 1];
   return normaliseVoice(live?.instrument ?? event.instrument);
@@ -715,6 +726,10 @@ function instrumentFor(event) {
 
 /** The multiplier an event's part puts on its level: 1 in Practice, the part's volume in the Composer (AC-19.12.3/3). */
 function gainOf(event) {
+  // In an Arrangement a Section's part plays at the volume the Section holds
+  // for it, and a bare Pattern at the level a part starts on, so the two sit
+  // together (AC-20.2.2/1).
+  if (event.arranged) return volumeGain(event.layer === undefined ? undefined : event.composition !== false ? event.ownVolume : event.volume);
   if (!composerActive()) return 1;
   if (event.composition !== false) return volumeGain(state.composer.volume);
   return volumeGain(layerSounds()[event.layer - 1]?.volume ?? event.volume);
@@ -798,6 +813,10 @@ function arrangeView() {
     saved: Boolean(arrangement.id),
     empty: arrangementIsEmpty(arrangement),
     picking,
+    tempo: arrangeTempo(),
+    canPlay: arrangePasses() > 0,
+    // The entry sounding, while it plays (AC-20.2.1/4).
+    playingIndex: state.isPlaying && arranging() ? (arrangeAt(state.transportPosition?.loop ?? state.loop)?.index ?? null) : null,
     palette: arrangement.palette.map((p) => ({ ...p, ...arrangementItem(p) })),
     entries: arrangement.entries.map((e) => {
       const item = arrangementItem(e);
@@ -810,6 +829,12 @@ function arrangeView() {
 function applyArrangement(mutator, ...args) {
   const next = mutator(state.arrange.arrangement, ...args);
   state.arrange = { ...state.arrange, arrangement: next.id ? arrangementStore.upsert(next) : next };
+  // Heard from the next pass, with nothing stopped (AC-20.2.1/5); a sequence
+  // left with nothing to play stops.
+  if (state.isPlaying && arranging()) {
+    if (arrangePasses() > 0) syncTransport();
+    else transport.stop();
+  }
   render();
   return next;
 }
@@ -819,6 +844,91 @@ function addToArrangement(kind, id) {
   state.arrange = { ...state.arrange, picking: false };
   applyArrangement(addToPalette, kind, id);
   ui?.hideLibrary();
+}
+
+const arranging = () => state.composer.mode === 'arrange';
+
+/** The Arrangement's tempo, in quarter notes a minute; a new one with nothing laid yet counts as Practice does. */
+const arrangeTempo = () => state.arrange.arrangement.tempo ?? DEFAULT_TEMPO;
+
+/** A Pattern at the Arrangement's tempo, counted in quarters whatever it counts in itself (AC-20.2.3/3). */
+const atArrangeTempo = (pattern) => ({ ...pattern, tempo: arrangeTempo(), tempoUnit: 'quarter' });
+
+/** The tempo an item brings to a new Arrangement, in quarter notes a minute (AC-20.2.3/1). */
+function itemQuarterTempo({ kind, id }) {
+  const pattern =
+    kind === 'section' ? libraryPattern(sectionStore.findById(id)?.compositionId) : kind === 'chain' ? libraryPattern(chainStore.findById(id)?.sections?.[0]?.patternId) : libraryPattern(id);
+  if (!pattern) return DEFAULT_TEMPO;
+  return normaliseTempo(60 / quarterSeconds(pattern.tempo, tempoUnitOf(pattern)));
+}
+
+/**
+ * What one sequence entry plays (US-20.2): how many passes once through it is,
+ * the Pattern or layered set for each of those passes, and the voices it needs
+ * — or null when what it names is gone (AC-20.2.1/6).
+ */
+function arrangePlayable(entry) {
+  if (entry.kind === 'section') {
+    const section = sectionStore.findById(entry.id);
+    const composition = section && libraryPattern(section.compositionId);
+    if (!composition) return null;
+    const own = normaliseVoice(section.instrument ?? overlayStore.voiceFor(section.compositionId));
+    const layers = section.layers
+      .map((l) => ({ pattern: libraryPattern(l.patternId), muted: Boolean(l.muted), instrument: normaliseVoice(l.instrument ?? overlayStore.voiceFor(l.patternId)), volume: normaliseVolume(l.volume) }))
+      .filter((l) => l.pattern);
+    const sounding = atArrangeTempo(composition);
+    const set = layers.length > 0 ? layered(sounding, layers, { instrument: own }) : sounding;
+    const mark = { voice: own, ownVolume: normaliseVolume(section.volume) };
+    // Once through a Section is its combined loop (AC-20.2.1/2).
+    return { passes: 1, at: (pass) => arranged(set, pass, mark), voices: [own, ...layers.map((l) => l.instrument)] };
+  }
+  if (entry.kind === 'chain') {
+    const chain = chainStore.findById(entry.id);
+    const base = chain && libraryPattern(chain.sections?.[0]?.patternId);
+    if (!base) return null;
+    const sounding = atArrangeTempo(base);
+    const byId = (id) => (id === base.id ? sounding : null);
+    const passes = chainTotalPasses(chain, byId);
+    const voice = normaliseVoice(overlayStore.voiceFor(base.id));
+    // Each fill for its repeats, its progression from the first chord (AC-20.2.2/4).
+    return { passes, at: (pass) => arranged(chainPlayingAt(chain, byId, pass), entryAt(chain, byId, pass).passInEntry, { voice }), voices: [voice] };
+  }
+  const pattern = libraryPattern(entry.id);
+  if (!pattern) return null;
+  const sounding = atArrangeTempo(pattern);
+  const mark = { voice: normaliseVoice(overlayStore.voiceFor(entry.id)), kit: patternType(pattern) === 'percussive' };
+  // Once through a Pattern, or one harmonic cycle of its progression (AC-20.2.1/2).
+  return { passes: harmonicPasses(pattern), at: (pass) => arranged(sounding, pass, mark), voices: [mark.voice] };
+}
+
+/**
+ * Every sequence entry as it plays, built once for the Arrangement as it now
+ * stands and again when it changes or Play is pressed — what it names is read
+ * from the library then, and this is asked for at every pass.
+ */
+let playablesMemo = { arrangement: null, list: [] };
+function arrangePlayables() {
+  const { arrangement } = state.arrange;
+  if (playablesMemo.arrangement !== arrangement) playablesMemo = { arrangement, list: arrangement.entries.map(arrangePlayable) };
+  return playablesMemo.list;
+}
+
+/** The sequence entry sounding on pass `loop`, and what it plays there; null when nothing in the sequence can play. */
+function arrangeAt(loop) {
+  const list = arrangePlayables();
+  const at = entryAtPass(state.arrange.arrangement.entries, (_, i) => list[i]?.passes ?? 0, loop);
+  return at ? { ...at, playing: list[at.index].at(at.passInEntry) } : null;
+}
+
+/** How many passes the sequence is, once through — its period (AC-20.2.1/1). */
+function arrangePasses() {
+  const list = arrangePlayables();
+  return state.arrange.arrangement.entries.reduce((sum, e, i) => sum + (list[i]?.passes ?? 0) * e.repeats, 0);
+}
+
+/** Every voice the sequence's entries sound with. */
+function arrangeVoices() {
+  return [...new Set(arrangePlayables().flatMap((p) => p?.voices ?? []))];
 }
 
 /** An Arrangement never saved that holds something: what leaving it would lose (AC-20.1.4/4, AC-20.1.5/3). */
@@ -882,6 +992,8 @@ function fillIdAt(loop) {
  * overlays, so either, neither, or both apply without disturbing the other.
  */
 function playingAt(loop) {
+  // In Arrange the transport plays the sequence, one entry's pass at a time (US-20.2).
+  if (arranging()) return arrangeAt(loop)?.playing ?? state.pattern;
   // In the Composer the transport plays the draft as it stands — pitched Slots
   // melodic, unpitched ones percussive — with no overlay (AC-19.6.1), except a
   // candidate variation being auditioned (AC-10.4.4/1).
@@ -1273,7 +1385,9 @@ const percussionLog = [];
  * plays the accent tone it always has.
  */
 function soundUnpitched(ctx, destination, event, when, level = 1, via = 'live') {
-  const kit = state.composer.mode !== 'composer' && practicePercussion() === 'drums';
+  // In an Arrangement a rhythm laid in the sequence is on the kit, whatever
+  // Practice remembers for it; a Section's percussive part is not (AC-20.2.2/3).
+  const kit = event.arranged ? Boolean(event.kit) : state.composer.mode !== 'composer' && practicePercussion() === 'drums';
   const midiNote = kit ? autoDrumNote(event.accent) : null;
   // `via` tells the live transport's notes from the screen-off render's (AC-2.18.2/4).
   percussionLog.push({ via, mode: midiNote === null ? 'accents' : 'drums', accent: event.accent, midi: midiNote });
@@ -1352,7 +1466,7 @@ function persistDraft() {
  */
 function ensurePianoLoaded() {
   if (!instrumentsInUse().includes('piano')) return;
-  if (state.composer.mode !== 'composer' && state.pattern.soundMode !== 'melodic') return;
+  if (state.composer.mode === 'practice' && state.pattern.soundMode !== 'melodic') return;
   let ctx;
   try {
     ctx = getContext();
@@ -1369,7 +1483,7 @@ function ensurePianoLoaded() {
  * outside the Composer, where the first note under a fetched voice asks.
  */
 function ensureSamplesLoaded() {
-  if (state.composer.mode !== 'composer') return;
+  if (state.composer.mode === 'practice') return;
   const wanted = instrumentsInUse().filter((id) => instruments.isFetched(id));
   if (wanted.length === 0) return;
   let ctx;
@@ -2738,8 +2852,12 @@ const handlers = {
 
   /** The only entry point to audio, and it is a user gesture (FR-010). */
   async onPlay() {
-    // An Arrangement cannot be played yet (AC-20.1.1/4).
-    if (state.composer.mode === 'arrange') return;
+    // Nothing to play in an empty sequence (AC-20.1.1/4). What the entries name
+    // is read from the library afresh at every Play.
+    if (arranging()) {
+      playablesMemo = { arrangement: null, list: [] };
+      if (arrangePasses() < 1) return;
+    }
     // Inside the gesture, before anything awaits: the silent keep-alive is
     // autoplay-gated exactly as the AudioContext is, and it is what makes a
     // locked phone more willing to leave this run alone (AC-4.1.12/1).
@@ -2760,12 +2878,14 @@ const handlers = {
     // inside the gesture, and sounds through the synth until it is ready
     // (AC-2.13.4/1, /2).
     ensurePianoLoaded();
+    // Every instrument the Arrangement's entries need, asked for inside the gesture.
+    if (arranging()) ensureSamplesLoaded();
     state.soundStatus = melodic.getStatus();
     await transport.start(scheduled(), state.settings);
     // Best-effort: lets a browser that supports it keep the audio session
     // alive in the background, and shows the lock screen the Pattern playing
     // (AC-4.1.11).
-    mediaSession.setPlaying(state.pattern.name);
+    mediaSession.setPlaying(arranging() ? state.arrange.arrangement.name || 'Arrangement' : state.pattern.name);
     // Not awaited: the run is already sounding, and this only decides whether
     // the next screen-off has a handover to make (AC-4.1.15/1).
     refreshBackgroundAudio();
@@ -3586,6 +3706,11 @@ const handlers = {
 
   // --- Arrange (US-20.1) ---
 
+  /** What the transport is handed for pass `loop` of the sequence (US-20.2); the screen-off render and the tests read it too. */
+  arrangePlayingAt(loop) {
+    return arrangeAt(loop)?.playing ?? null;
+  },
+
   /** The Arrangement on screen, every entry named, for the panel (ui/arrange.js). */
   arrangeView() {
     return arrangeView();
@@ -3613,7 +3738,8 @@ const handlers = {
     if (!item) return;
     const named = arrangementItem(item);
     if (named.missing) return;
-    applyArrangement(addArrangementEntry, item.kind, item.id, named.name);
+    // The first entry laid gives the Arrangement its tempo (AC-20.2.3/1).
+    applyArrangement((a) => addArrangementEntry(a.tempo === undefined ? setArrangementTempo(a, itemQuarterTempo(item)) : a, item.kind, item.id, named.name));
   },
 
   onArrangePaletteRemove(index) {
@@ -3629,6 +3755,7 @@ const handlers = {
   async onArrangeEdit(index) {
     const item = state.arrange.arrangement.palette[index];
     if (!item || item.kind === 'chain' || arrangementItem(item).missing) return;
+    if (state.isPlaying) transport.stop();
     state.arrange = { ...state.arrange, picking: false };
     if (item.kind === 'section') {
       state.composer = { ...state.composer, mode: 'practice' };
@@ -3666,6 +3793,22 @@ const handlers = {
   onArrangeEntryRemove(index) {
     if (!state.arrange.arrangement.entries[index]) return;
     applyArrangement(removeArrangementEntry, index);
+  },
+
+  /**
+   * The Arrangement's tempo (AC-20.2.3): its own, stored with it, and nothing
+   * it is made of is touched. Playing, the sequence starts again from its
+   * first entry at the new tempo, as a tempo change restarts a Pattern (/4).
+   */
+  onArrangeTempo(bpm) {
+    const next = setArrangementTempo(state.arrange.arrangement, bpm);
+    state.arrange = { ...state.arrange, arrangement: next.id ? arrangementStore.upsert(next) : next };
+    if (state.isPlaying && arranging()) {
+      state.loop = 0;
+      refreshBackgroundAudio();
+      void transport.restart(scheduled(), state.settings);
+    }
+    render();
   },
 
   /** Save under a name, unique among Arrangements (AC-20.1.4/1). From then on it saves itself (/2). */
@@ -3712,6 +3855,7 @@ const handlers = {
       render();
       return;
     }
+    if (state.isPlaying && arranging()) transport.stop();
     arrangementStore.remove(current.id);
     state.arrange = { arrangement: createArrangement(), picking: false };
     render();
@@ -3726,6 +3870,7 @@ const handlers = {
         return;
       }
     }
+    if (state.isPlaying && arranging()) transport.stop();
     state.arrange = { arrangement: createArrangement(), picking: false };
     render();
   },
@@ -3744,6 +3889,7 @@ const handlers = {
     }
     if (state.composer.mode !== 'arrange') await handlers.onComposerMode('arrange');
     if (state.composer.mode !== 'arrange') return;
+    if (state.isPlaying && arranging()) transport.stop();
     state.arrange = { arrangement: structuredClone(saved), picking: false };
     ui?.hideLibrary();
     render();
@@ -4437,6 +4583,15 @@ const transport = createTransport({
     if (crossed) deferFullRender();
   },
   onLoop(loop) {
+    // In Arrange every pass is handed over here, at the boundary and before
+    // the transport takes its next Pattern: the entry in force, on its own
+    // pass (AC-20.2.1/1).
+    if (arranging()) {
+      state.loop = loop;
+      transport.update(playingAt(loop), state.settings);
+      render();
+      return;
+    }
     const previousFill = fillIdAt(state.loop);
     const previousProgression = progressionIdAt(state.loop);
     state.loop = loop;
@@ -4809,6 +4964,26 @@ if (typeof window !== 'undefined') {
     catalogues: () => ({ fills: ARPEGGIOS.map((a) => a.id), progressions: PROGRESSIONS.map((p) => p.id) }),
     chainStore,
     arrangementStore,
+    /** Test seam: the sequence as it plays — its length in passes, and what sounds on a pass (US-20.2). */
+    arrange: {
+      passes: () => arrangePasses(),
+      at: (loop) => {
+        const at = arrangeAt(loop);
+        if (!at) return null;
+        const { playing } = at;
+        return {
+          index: at.index,
+          passInEntry: at.passInEntry,
+          repeat: at.repeat,
+          pass: playing.pass,
+          name: playing.inner.name,
+          tempo: playing.tempo,
+          tempoUnit: playing.tempoUnit,
+          layered: Boolean(playing.inner.layered),
+          arpeggio: playing.inner.harmony?.arpeggio ?? null,
+        };
+      },
+    },
     sectionStore,
     /** Test seam: whether the layers differ from the Section they came from (AC-19.11.4/4). */
     sectionUnsaved: () => sectionUnsaved(state.composer),

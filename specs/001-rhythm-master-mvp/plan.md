@@ -286,7 +286,8 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-077** | US-19.15 — Choose what a Key change does to the notes | AC-19.15.1–AC-19.15.3 | T501 | T502 |
 | **P-078** | US-2.18 — Hear a Percussive Pattern on a drum kit | AC-2.18.1–AC-2.18.2 | T504 | T505 |
 | **P-079** | US-5.7 — Filter the library by type | AC-5.7.1–AC-5.7.2 | T516 | T517 |
-| **P-080** | US-20.1 — Lay Sections and Patterns out as an Arrangement | AC-20.1.1–AC-20.1.5 | T519 | T520 |
+| **P-080** | US-20.1 — Lay Sections and Patterns out as an Arrangement | AC-20.1.1–AC-20.1.5 | T519, T521 | T520, T522 |
+| **P-081** | US-20.2 — Hear an Arrangement while it is built | AC-20.2.1–AC-20.2.3 | T521 | T522 |
 
 **Post-MVP work** extends the plan item it belongs to rather than adding one. A change
 that revises AC-15.1.13 is more of P-036; its tasks are logged in the Post-MVP section of

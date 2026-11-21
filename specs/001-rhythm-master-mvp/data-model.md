@@ -539,6 +539,8 @@ into a broken Section on the next load.
     {
       "id": "arrg_1",
       "name": "Sunday song",
+      "tempo": 96,                                   // quarter notes a minute, 18–300 (AC-20.2.3); absent until the
+                                                     // first entry is laid, when it is taken from that entry
       "palette": [                                   // what the piece is made of, in the order added; nothing twice
         { "kind": "section", "id": "arr_1" },        // a Section (its id keeps the `arr_` prefix it has always had)
         { "kind": "pattern", "id": "s_21" },         // a Pattern, shipped or owned
@@ -553,7 +555,8 @@ into a broken Section on the next load.
 }
 ```
 
-`repeats` is a whole number from 1 to 16. An entry's `name` is the Arrangement's own name for that
+`tempo` is the Arrangement's own, counted in quarter notes whatever unit its entries count in; every
+entry plays at it and nothing it is made of is changed (AC-20.2.3/3). `repeats` is a whole number from 1 to 16. An entry's `name` is the Arrangement's own name for that
 stretch of the piece and changes nothing on what it plays. An entry may name something no longer in the
 palette: the palette is a shortlist, not the sequence's source of truth (AC-20.1.2/3). A Pattern, Section
 or Chain that any Arrangement names, in its palette or its sequence, cannot be deleted while it does

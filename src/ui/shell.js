@@ -641,6 +641,9 @@ export function mountShell(root, ctx) {
      * sounding event for nothing.
      */
     if (kind === 'cursor') {
+      // In Arrange nothing on screen follows the cursor within a pass; the entry
+      // sounding is marked at each pass's start by a full render (AC-20.2.1/4).
+      if (s.composer.mode === 'arrange') return;
       // In the Composer the cursor runs in the composing grid (AC-19.6.1/1).
       if (s.composer.mode === 'composer') {
         moveComposerCursor(composerEl, position);
