@@ -7,13 +7,17 @@
  * stops an edit from forging it (FR-007, data-model §5).
  */
 import { readStore, writeStore } from './keyValue.js';
+import { withoutTempoUnit } from '../core/pattern.js';
 
 export const KEY = 'rm.patterns.v1';
 
 const EMPTY = { patterns: [] };
 
 export function loadAll() {
-  return readStore(KEY, EMPTY).patterns ?? [];
+  const patterns = readStore(KEY, EMPTY).patterns ?? [];
+  // A tempo unit stored by the old ♩/♪ control is never read (AC-4.2.7/5).
+  // The cached array comes back untouched when there is none to drop.
+  return patterns.some((p) => p && 'tempoUnit' in p) ? patterns.map(withoutTempoUnit) : patterns;
 }
 
 export function saveAll(patterns) {
@@ -31,6 +35,7 @@ export function upsert(pattern) {
   // mutating what loadAll handed back would edit the cached value in place and
   // let a later read see a change that was never written.
   const all = [...loadAll()];
+  pattern = withoutTempoUnit(pattern);
   const i = all.findIndex((p) => p.id === pattern.id);
   if (i === -1) all.push(pattern);
   else all[i] = pattern;

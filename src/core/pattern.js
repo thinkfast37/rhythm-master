@@ -10,7 +10,7 @@
  * edits (AC-1.3.7, AC-1.3.8, AC-1.1.7) are UI concerns; callers ask
  * `countActiveSlots` first and decide for themselves.
  */
-import { TIME_SIGNATURES, TEMPO_UNITS, beatCount, beatNoteValue, isSupported, isValidTempoUnit, tempoUnitOf } from './meter.js';
+import { TIME_SIGNATURES, TEMPO_UNITS, beatCount, beatNoteValue, isSupported, isValidTempoUnit } from './meter.js';
 import { defaultRecipeFor, isOffered, slotCount } from './recipes.js';
 import { defaultAccent, nextAccentInCycle, OFF } from './accents.js';
 import { isSupportedKey, MIN_REGISTER, MAX_REGISTER } from './pitch.js';
@@ -249,25 +249,21 @@ export function setSwingFeel(pattern, feel) {
   return { ...clone(pattern), swingFeel: feel };
 }
 
-/** The note value the tempo counts per minute. AC-4.2.7/1 */
-export function setTempoUnit(pattern, unit) {
-  if (!isValidTempoUnit(unit)) {
-    throw new Error(`Tempo unit must be one of ${TEMPO_UNITS.join(', ')}, got ${unit}`);
-  }
-  return { ...clone(pattern), tempoUnit: unit };
-}
-
 /**
- * The Pattern with its tempo unit stated, when it was only implied. AC-4.2.7/5
+ * The Pattern without a tempo unit of its own. AC-4.2.7/5
  *
- * An absent unit reads as Measure 1's Beat, so a later change to Measure 1's
- * meter would retime the whole Pattern through the default. Stating it when the
- * Pattern is opened is what stops that; the same object comes back when it is
- * already stated, so nothing is written for a Pattern that needs nothing.
+ * The tempo counts the first Measure's Beat (AC-4.2.7). A unit stored by the
+ * ♩/♪ control that stood until 2026-11-21 is dropped wherever a Pattern is
+ * read or written, so it counts its Beat like every other. Only `core/` states
+ * one, on the copy of a layer playing under a composition (AC-19.11.2/3), and
+ * that copy is never stored. The same object comes back when there is nothing
+ * to drop.
  */
-export function withTempoUnit(pattern) {
-  if (isValidTempoUnit(pattern.tempoUnit)) return pattern;
-  return { ...pattern, tempoUnit: tempoUnitOf(pattern) };
+export function withoutTempoUnit(pattern) {
+  if (!pattern || !('tempoUnit' in pattern)) return pattern;
+  const rest = { ...pattern };
+  delete rest.tempoUnit;
+  return rest;
 }
 
 // --- whole-Pattern operations -----------------------------------------------

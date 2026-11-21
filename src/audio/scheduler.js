@@ -175,7 +175,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
         settings = pending.settings ?? settings;
         pending = null;
         timeline = buildTimeline(pattern, currentPass());
-        beatGrid = buildBeatGrid(pattern);
+        beatGrid = buildBeatGrid(pattern, settings.clickValue);
         loopDuration = loopDurationSeconds(pattern);
       }
     }
@@ -202,7 +202,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
     loopOffset += nextLoop;
     nextLoop = 0;
     timeline = buildTimeline(pattern, currentPass());
-    beatGrid = buildBeatGrid(pattern);
+    beatGrid = buildBeatGrid(pattern, settings.clickValue);
     nextIndex = firstAtOrAfter(timeline, phase);
     nextBeatIndex = firstAtOrAfter(beatGrid, phase);
   }
@@ -389,7 +389,7 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       }
 
       timeline = buildTimeline(pattern, 0);
-      beatGrid = buildBeatGrid(pattern);
+      beatGrid = buildBeatGrid(pattern, settings.clickValue);
       loopDuration = loopDurationSeconds(pattern);
 
       // A small offset so the first events are scheduled ahead of the clock
@@ -529,6 +529,25 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
     },
 
     /**
+     * What the click counts changed under a run, with nothing stopped or
+     * restarted (AC-4.3.7/8): the click grid is rebuilt for the pass in hand
+     * and its cursor starts at the first click still ahead of the audio clock,
+     * as switching the click on does.
+     */
+    setClickValue(value) {
+      if (pending?.settings) pending.settings = { ...pending.settings, clickValue: value };
+      if (settings.clickValue === value) return;
+      settings = { ...settings, clickValue: value };
+      if (!running || !pattern) return;
+      // Clicks of the old grid already handed to Web Audio will sound; the new
+      // grid starts after the last of them, and never in the audio clock's past.
+      const lastQueued = settings.metronomeEnabled && nextBeatIndex > 0 ? beatGrid[nextBeatIndex - 1].timeSeconds + CUT_EPSILON * 2 : 0;
+      const now = ctx ? ctx.currentTime - eventTime(nextLoop, 0) : 0;
+      beatGrid = buildBeatGrid(pattern, value);
+      nextBeatIndex = firstAtOrAfter(beatGrid, Math.max(0, now, lastQueued));
+    },
+
+    /**
      * A content edit made while playing: the current pass finishes under the
      * Pattern as it sounded, and the next pass plays the edit (AC-4.1.9).
      * Only the latest edit matters — a newer one simply replaces the pending
@@ -566,6 +585,9 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       loopDuration,
       /** Each metronome Beat's onset within a pass, and the count-in's length (AC-4.2.7/4). */
       beatTimes: beatGrid.map((b) => b.timeSeconds),
+      /** Which of those clicks are a Measure's downbeat, sounded accented (AC-4.3.7/5). */
+      clickDownbeats: beatGrid.map((b) => b.isDownbeat),
+      clickValue: settings.clickValue ?? 'beat',
       countInSeconds,
       timelineLength: timeline.length,
       metronomeEnabled: Boolean(settings.metronomeEnabled),

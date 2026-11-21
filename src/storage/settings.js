@@ -27,6 +27,8 @@ export const DEFAULTS = {
   lastTempo: NO_CARRY.tempo,
   metronomeEnabled: false,
   countInEnabled: false,
+  /** What the metronome click counts (AC-4.3.7/1): 'beat', a note value, or 'measure'. One app-wide value (/7). */
+  clickValue: 'beat',
   /** The view the main panel shows the Pattern in: the grid, or the sheet music (AC-12.2.1/1). */
   patternView: 'grid',
   /** Harmonic cycles each fill plays for in cycle mode (AC-2.7.1/2). Cycle mode itself is not stored. */

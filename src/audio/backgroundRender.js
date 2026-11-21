@@ -166,7 +166,7 @@ export async function renderCycle({ patternAt, passes, settings, sampleRate, pre
         else playPercussive(ctx, null, event.accent, when, level);
       }
       if (settings.metronomeEnabled) {
-        for (const beat of buildBeatGrid(pattern)) {
+        for (const beat of buildBeatGrid(pattern, settings.clickValue)) {
           playClick(ctx, null, { downbeat: beat.isDownbeat, when: at + beat.timeSeconds });
         }
       }

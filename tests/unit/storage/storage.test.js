@@ -30,6 +30,17 @@ describe('storage/patterns', () => {
     expect(patterns.loadAll().map((p) => p.id)).toEqual(['p_2']);
   });
 
+  it("AC-4.2.7/5 — A Pattern saved with a tempo unit of its own counts its first Measure's Beat instead, and the stored unit is not written back when it is saved: the store", () => {
+    const p = { ...create('Switched'), id: 'p_1' };
+    // Written by the old ♩/♪ control, straight into storage.
+    useBackingStore(new Map([['rm.patterns.v1', JSON.stringify({ schemaVersion: CURRENT_VERSION, patterns: [{ ...p, tempoUnit: 'eighth' }] })]]));
+    expect('tempoUnit' in patterns.findById('p_1')).toBe(false);
+    expect(patterns.findById('p_1')).toEqual(p);
+    // Saved again, with a unit stated on the copy: none is written.
+    patterns.upsert({ ...p, tempo: 90, tempoUnit: 'eighth' });
+    expect(patterns.loadAll()[0]).toEqual({ ...p, tempo: 90 });
+  });
+
   it('an empty store reads as an empty library, not an error', () => {
     expect(patterns.loadAll()).toEqual([]);
   });

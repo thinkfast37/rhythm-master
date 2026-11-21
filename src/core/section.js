@@ -186,10 +186,10 @@ export function layeredLoopDuration(set) {
 }
 
 /** The metronome's Beats: the composition's, once per pass. */
-export function layeredBeatGrid(set) {
+export function layeredBeatGrid(set, clickValue) {
   const composition = set.layers[0];
   const once = loopDurationSeconds(composition.pattern);
-  const grid = buildBeatGrid(composition.pattern);
+  const grid = buildBeatGrid(composition.pattern, clickValue);
   const beats = [];
   for (let k = 0; k < passesPerLoop(composition); k++) {
     for (const beat of grid) beats.push({ ...beat, timeSeconds: beat.timeSeconds + k * once });
@@ -236,7 +236,7 @@ const innerTimeline = (p, pass) => (isLayered(p) ? layeredTimeline(p, pass) : bu
 export const timelineOf = (p, pass = 0) =>
   isArranged(p) ? innerTimeline(p.inner, p.pass).map((event) => ({ ...event, ...p.mark, arranged: true })) : innerTimeline(p, pass);
 export const loopDurationOf = (p) => (isArranged(p) ? loopDurationOf(p.inner) : isLayered(p) ? layeredLoopDuration(p) : loopDurationSeconds(p));
-export const beatGridOf = (p) => (isArranged(p) ? beatGridOf(p.inner) : isLayered(p) ? layeredBeatGrid(p) : buildBeatGrid(p));
+export const beatGridOf = (p, clickValue) => (isArranged(p) ? beatGridOf(p.inner, clickValue) : isLayered(p) ? layeredBeatGrid(p, clickValue) : buildBeatGrid(p, clickValue));
 // An arranged pass is never the pass before it: the transport must not reuse its timeline.
 export const anyHarmony = (p) => (isArranged(p) ? true : isLayered(p) ? layeredHasHarmony(p) : hasHarmony(p));
 

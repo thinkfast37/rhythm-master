@@ -28,7 +28,7 @@ export const HELP = Object.freeze({
     ['Related', 'Will open the family of the rhythm on screen — its duplicates and variations. Not yet wired.', '.related-button'],
     ['Play / Stop', 'Loops the Pattern from the top until you stop it. Under a cycle, a second Stop starts the cycle over from where turning it on would.', '.transport'],
     ['BPM', 'The exact tempo in beats per minute; type a number, or use the slider and presets in Practice.', '.tempo-unit'],
-    ['♩ / ♪', 'What the tempo counts: quarter notes or eighth notes per minute. Every note lasts its written length either way.', '[data-action="toggle-tempo-unit"]'],
+    ['♩ / ♪', 'What the tempo counts: the Beat of the first Measure, a quarter note in /4 and an eighth note in /8. Every note lasts its written length.', '.tempo-unit-mark'],
     ['Prev / Next', 'Steps to the neighbouring Pattern in the library list as it is filtered now.', '[data-action="next-pattern"]'],
     ['Goals', 'Back to the goals screen, to work a different way or leave Lab.', '.goals-button'],
     ['Practice / Composer', 'Practice is the grid and the workbench; Composer puts a guitar or piano over the rhythm to play a melody in. Play it in will be its own goal.', '.mode-switch'],
@@ -59,6 +59,7 @@ export const HELP = Object.freeze({
   ],
   practice: [
     ['Click / Count-in', 'A metronome under the Pattern, and a bar of clicks before it starts.', '[data-action="toggle-count-in"]'],
+    ['Beat / 8ths / …', 'What the metronome click counts: every Beat, a note value, or once a Measure. It starts again on every downbeat.', '[data-action="set-click-value"]'],
     ['Tempo', 'The slider and presets set the same tempo as the pinned entry.', '.control:has(> .slider-row > .tempo-slider) > .control-label'],
     ['Swing', 'Delays every second note of the chosen feel by the amount; 0 is straight.', '.control:has(> .slider-row > .swing-slider) > .control-label'],
     ['Counting', 'The syllables under each note: takadimi, 1 e & a, or numbers.', '.counting-picker'],

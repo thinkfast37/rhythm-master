@@ -1,6 +1,6 @@
 /**
  * The Composer's metronome toggle (AC-19.6.3): beside Play/Stop in the pinned
- * bar while the Composer plays, the app's one click setting, switched without
+ * bar in the Composer, stopped or playing, the app's one click setting, switched without
  * a restart — proven in the DOM.
  */
 import { test, expect } from '@playwright/test';
@@ -27,7 +27,7 @@ async function savedComposition(page) {
   await expect(page.locator('.composer-save')).toHaveAttribute('data-saved', 'true');
 }
 
-test('AC-19.6.3/1 — While the Composer plays, recording or not, a Metronome toggle sits beside Play/Stop in the pinned bar, marked on or off; it is absent while stopped, and in Practice', async ({ page }) => {
+test('AC-19.6.3/1 — In the Composer, stopped or playing, recording or not, a Metronome toggle sits beside Play/Stop in the pinned bar, marked on or off; switched on while stopped it sounds nothing until Play; it is absent in Practice', async ({ page }) => {
   await openApp(page);
   await makeFourBeats(page);
   // In Practice, stopped and playing: the bar carries none.
@@ -38,30 +38,38 @@ test('AC-19.6.3/1 — While the Composer plays, recording or not, a Metronome to
   await transportButton(page).click();
 
   await enterComposer(page, { load: 'accept', name: 'My line' });
-  // In the Composer, stopped: none.
-  await expect(toggle(page)).toHaveCount(0);
-  await transportButton(page).click();
-  // Playing: beside Play/Stop, in the same group, marked off.
+  // In the Composer, stopped: beside Play, in the same group, marked off,
+  // with what the click counts beside it (AC-4.3.7/1).
   await expect(toggle(page)).toBeVisible();
   await expect(toggle(page)).toHaveText('Metronome');
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
-  expect(await page.locator('.main-top-bar .transport-group > *').evaluateAll((els) => els.map((e) => e.dataset.action))).toEqual(['stop', 'composer-metronome']);
-  const stop = await transportButton(page).boundingBox();
+  expect(await page.locator('.main-top-bar .transport-group > *').evaluateAll((els) => els.map((e) => e.dataset.action))).toEqual(['play', 'composer-metronome', 'set-click-value']);
+  const play = await transportButton(page).boundingBox();
   const box = await toggle(page).boundingBox();
-  expect(box.x).toBeGreaterThanOrEqual(stop.x + stop.width);
-  // Playing and recording: still there, and marked on once switched on.
-  await page.locator('.record').click();
-  await expect(page.locator('.record')).toHaveAttribute('aria-pressed', 'true');
-  expect((await appState(page)).isPlaying).toBe(true);
-  await expect(toggle(page)).toBeVisible();
+  expect(box.x).toBeGreaterThanOrEqual(play.x + play.width);
+  // Switched on while stopped: marked on, and nothing sounds.
   await toggle(page).click();
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
-  await expect(toggle(page)).toHaveClass(/\bon\b/);
+  expect((await appState(page)).settings.metronomeEnabled).toBe(true);
+  expect((await appState(page)).isPlaying).toBe(false);
+  expect(await page.evaluate(() => window.__rm.transport.isRunning)).toBe(false);
+  // Play: the click sounds, the toggle still there and still on.
+  await transportButton(page).click();
+  await expect(transportButton(page)).toHaveText('Stop');
+  await expect.poll(async () => (await snapshot(page)).clicksScheduled).toBeGreaterThan(0);
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  // Playing and recording: still there, and switches off.
+  await page.locator('.record').click();
+  await expect(page.locator('.record')).toHaveAttribute('aria-pressed', 'true');
+  await expect(toggle(page)).toBeVisible();
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(toggle(page)).not.toHaveClass(/\bon\b/);
   expect((await composerState(page)).recording).toBe(true);
-  // Stopped again: gone.
+  // Stopped again: still there.
   await transportButton(page).click();
   await expect(transportButton(page)).toHaveText('Play');
-  await expect(toggle(page)).toHaveCount(0);
+  await expect(toggle(page)).toBeVisible();
 });
 
 test("AC-19.6.3/2 — The toggle is the app's one metronome setting: switched on in the Composer the click sounds on every Beat of the part on screen and is on in Practice afterwards, and switched off it is off in both", async ({ page }) => {
@@ -151,14 +159,15 @@ test('AC-19.6.3/3 — Switching it while playing stops and restarts nothing: the
   await expect(transportButton(page)).toHaveText('Stop');
 });
 
-test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; while the Composer plays, a Metronome toggle joins Play/Stop; Related is a placeholder, disabled and saying so, until Share and tidy up lands: the toggle joins the bar and nothing else does', async ({ page }) => {
+test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, Related, Play/Stop with the tempo entry and its ♩/♪ unit, and Prev/Next, the same under every goal and at every width; in the Composer, a Metronome toggle and its click value join Play/Stop; Related is a placeholder, disabled and saying so, until Share and tidy up lands: the toggle and its click value join the bar and nothing else does', async ({ page }) => {
   await openApp(page);
   await makeFourBeats(page);
   const barOrder = () =>
     page.locator('.main-top-bar > *:not(.goal-strip)').evaluateAll((els) => els.map((e) => e.className.split(' ')[0]));
   const before = await barOrder();
   await enterComposer(page, { load: 'accept', name: 'My line' });
-  await transportButton(page).click();
+  for (const playing of [false, true]) {
+  if (playing) await transportButton(page).click();
   for (const size of [
     { width: 1280, height: 800 },
     { width: 820, height: 1000 },
@@ -171,6 +180,8 @@ test('AC-15.1.20/1 — The pinned bar holds, left to right, ‹ Goals, Library, 
     await expect(page.locator('.main-top-bar .play-controls .tempo-entry'), `${size.width}px`).toBeVisible();
     await expect(page.locator('.main-top-bar .pattern-nav [data-action="next-pattern"]'), `${size.width}px`).toBeVisible();
     // No horizontal scroll from the extra control.
+    await expect(page.locator('.main-top-bar .play-controls [data-action="set-click-value"]'), `${size.width}px`).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${size.width}px`).toBe(true);
+  }
   }
 });

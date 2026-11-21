@@ -592,7 +592,9 @@ test("AC-19.11.2/3 — Every layer plays at the composition's tempo, tempo unit,
   await page.locator('.composer-swing-entry').press('Enter');
   const set = await page.evaluate(() => {
     const s = window.__rm.scheduled();
-    return s.layers.map((l) => ({ tempo: l.pattern.tempo, unit: l.pattern.tempoUnit, swing: l.pattern.swingAmount, key: l.pattern.key ?? null, name: l.pattern.name }));
+    // The unit each plays at: stated on a layer's copy, from its first Measure's Beat otherwise (AC-4.2.7).
+    const unitOf = (p) => p.tempoUnit ?? (p.measures[0].timeSignature.endsWith('/8') ? 'eighth' : 'quarter');
+    return s.layers.map((l) => ({ tempo: l.pattern.tempo, unit: unitOf(l.pattern), swing: l.pattern.swingAmount, key: l.pattern.key ?? null, name: l.pattern.name }));
   });
   expect(set.map((l) => l.tempo)).toEqual([233, 233, 233]);
   expect(set.map((l) => l.unit)).toEqual(['quarter', 'quarter', 'quarter']);
@@ -826,7 +828,7 @@ test('AC-19.11.6/3 — Switching while playing stops and restarts nothing: every
   await play(page);
 });
 
-test("AC-19.11.6/4 — Tempo, tempo unit, swing and Key are the Section's, carried by the part on screen: the Composer's controls show and set them whichever part that is, a part made the one on screen takes them from the part it replaces, and nothing heard changes at the switch", async ({ page }) => {
+test("AC-19.11.6/4 — Tempo, tempo unit, swing and Key are the Section's, carried by the part on screen: the Composer's controls show them, and set the tempo, swing and Key, whichever part that is, a part made the one on screen takes them from the part it replaces, and nothing heard changes at the switch", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   const mine = await saveComposition(page);
@@ -849,7 +851,9 @@ test("AC-19.11.6/4 — Tempo, tempo unit, swing and Key are the Section's, carri
   expect(heardAfter).toEqual(heardBefore.slice().reverse());
   // And setting them here sets them for every part.
   await setTempo(page, 90);
-  expect(await page.evaluate(() => window.__rm.scheduled().layers.map((l) => l.pattern.tempo))).toEqual([90, 90]);
+  expect(await page.evaluate(() => window.__rm.scheduled().layers.map((l) => l.pattern.tempo))).toEqual([90, 90]);  // The unit is shown, the composition's, and is not a control.
+  await expect(page.locator('.play-controls .tempo-unit-mark')).toHaveAttribute('data-unit', 'quarter');
+  await expect(page.locator('.play-controls .tempo-pinned button')).toHaveCount(0);
 });
 
 test("AC-19.11.6/5 — The part on screen is marked in the Layers section and cannot be muted or removed there; each part's repeats in the loop are unchanged by which part is on screen, the loop readout counting in passes of that part", async ({ page }) => {

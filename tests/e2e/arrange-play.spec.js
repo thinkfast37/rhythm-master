@@ -342,7 +342,7 @@ test('AC-20.2.3/2 — In Arrange the tempo entry beside Play shows and sets the 
   await expect(box).toHaveValue('96');
   await expect(page.locator('.play-controls .arrange-tempo')).toBeVisible();
   // No unit to switch: an Arrangement counts quarter notes.
-  await expect(page.locator('.play-controls .tempo-unit-toggle')).toHaveCount(0);
+  await expect(page.locator('.play-controls .tempo-unit-mark')).toHaveCount(0);
   for (const [typed, held] of [
     ['140', 140],
     ['999', 300],

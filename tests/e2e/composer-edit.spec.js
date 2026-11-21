@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { launch, openApp, composerState, loadFourBeats, fret, key, cslot, recordAll } from './composer-helpers.js';
+import { launch, openApp, composerState, appState, loadFourBeats, fret, key, cslot, recordAll } from './composer-helpers.js';
 
 test.use(launch);
 
@@ -395,12 +395,18 @@ test("AC-19.5.5/1 — The tempo entry sets the composition's tempo, and playback
 test("AC-19.5.5/1 — The tempo entry sets the composition's tempo, and playback follows it: the unit beside the pinned entry is the composition's too", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
-  const toggle = page.locator('.play-controls .tempo-unit-toggle');
-  await expect(toggle).toHaveAttribute('data-unit', 'quarter');
-  await toggle.click();
-  await expect(page.locator('.dialog')).toHaveCount(0);
-  await expect(page.locator('.play-controls .tempo-unit-toggle')).toHaveAttribute('data-unit', 'eighth');
-  expect((await composerState(page)).draft.tempoUnit).toBe('eighth');
-  await page.locator('.play-controls .tempo-unit-toggle').click();
-  expect((await composerState(page)).draft.tempoUnit).toBe('quarter');
+  const mark = page.locator('.play-controls .tempo-unit-mark');
+  await expect(mark).toHaveAttribute('data-unit', 'quarter');
+  await expect(mark).toHaveText('♩');
+  // The composition's first Measure to 6/8: the mark follows it (AC-4.2.7/6),
+  // while the Pattern under Practice is still in 4/4.
+  const one = page.evaluate(() => window.__rm.handlers.onComposerTimeSignature(0));
+  await page.locator('.dialog-button', { hasText: '6/8' }).click();
+  const scope = page.locator('.dialog-button', { hasText: /this measure/i });
+  if (await scope.count()) await scope.first().click();
+  await one;
+  await expect(page.locator('.play-controls .tempo-unit-mark')).toHaveAttribute('data-unit', 'eighth');
+  await expect(page.locator('.play-controls .tempo-unit-mark')).toHaveText('♪');
+  expect((await composerState(page)).draft.measures[0].timeSignature).toBe('6/8');
+  expect((await appState(page)).pattern.measures[0].timeSignature).toBe('4/4');
 });

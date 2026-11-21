@@ -4,13 +4,13 @@ import { readFileSync } from 'node:fs';
 test.use({ launchOptions: { executablePath: process.env.CHROMIUM_PATH || undefined } });
 
 /*
- * US-4.2 / AC-4.2.7 — A Pattern says which note its tempo counts, and every
- * note lasts its written length. Driven through the ♩/♪ toggle, the real
- * transport (its own snapshot of what it is playing), the MIDI download and
- * the editor's load path.
+ * US-4.2 / AC-4.2.7 — The tempo counts the first Measure's Beat, and every
+ * note lasts its written length. Driven through the ♩/♪ mark, the real
+ * transport (its own snapshot of what it is playing), the MIDI download, the
+ * store and the editor's load path.
  */
 
-const toggle = (page) => page.locator('[data-action="toggle-tempo-unit"]');
+const mark = (page) => page.locator('.tempo-pinned .tempo-unit-mark');
 const snapshot = (page) => page.evaluate(() => window.__rm.transport._snapshot());
 const pattern = (page) => page.evaluate(() => window.__rm.getState().pattern);
 
@@ -72,47 +72,40 @@ function readMidi(bytes) {
   return { division, meters, tempo };
 }
 
-test('AC-4.2.7/1 — A tempo-unit control beside the BPM entry reads ♩ or ♪ and switches between them; on a shipped Pattern it asks for a name first, as any edit does', async ({ page }) => {
+test('AC-4.2.7/1 — Beside the BPM entry a mark reads ♩ or ♪ for the note the tempo counts; it is not a control, and pressing it changes nothing', async ({ page }) => {
   await page.goto('/');
   await loadMeters(page, ['4/4']);
   // Beside the BPM entry, in the pinned bar.
   const pinned = page.locator('.tempo-pinned');
-  await expect(pinned.locator('[data-action="toggle-tempo-unit"]')).toHaveText('♩');
+  await expect(mark(page)).toHaveText('♩');
   await expect(pinned.locator('.tempo-entry')).toBeVisible();
+  // Not a control: no button, nothing to switch it with.
+  await expect(pinned.locator('button')).toHaveCount(0);
+  await expect(page.locator('[data-action="toggle-tempo-unit"]')).toHaveCount(0);
+  await mark(page).click();
+  await expect(mark(page)).toHaveText('♩');
+  expect((await pattern(page)).tempoUnit).toBeUndefined();
+  expect((await played(page)).beatTimes).toEqual([0, 0.5, 1, 1.5]);
 
-  await toggle(page).click();
-  await expect(toggle(page)).toHaveText('♪');
-  const saved = await page.evaluate(() => window.__rm.patternStore.findById('p_unit').tempoUnit);
-  expect(saved).toBe('eighth');
-  await toggle(page).click();
-  await expect(toggle(page)).toHaveText('♩');
-
-  // Shipped: the naming prompt first; cancelling changes nothing.
-  // A different meter, so the copy duplicates nothing already owned (AC-11.1.3).
-  await loadMeters(page, ['3/4'], { owned: false, id: 's_unit' });
-  await toggle(page).click();
-  await expect(page.locator('.dialog-input')).toBeVisible();
-  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  await expect(toggle(page)).toHaveText('♩');
-  expect((await pattern(page)).tempoUnit).toBe('quarter');
-  await toggle(page).click();
-  await page.locator('.dialog-input').fill('My Eighths');
-  await page.locator('.dialog-button', { hasText: 'Create' }).click();
-  await expect(toggle(page)).toHaveText('♪');
-  expect(await page.evaluate(() => window.__rm.getState().isOwned)).toBe(true);
+  // A /8 first Measure reads ♪.
+  await loadMeters(page, ['6/8'], { id: 'p_six' });
+  await expect(mark(page)).toHaveText('♪');
 });
 
 test('AC-4.2.7/2 — At ♩ = 120 a quarter-note Beat lasts 0.5 s and an eighth-note Beat 0.25 s; at ♪ = 120 an eighth-note Beat lasts 0.5 s and a quarter-note Beat 1 s', async ({ page }) => {
   await page.goto('/');
-  await loadMeters(page, ['1/4', '2/8'], { tempoUnit: 'quarter' });
+  // A /4 first Measure: the tempo counts quarters.
+  await loadMeters(page, ['1/4', '2/8']);
+  await expect(mark(page)).toHaveText('♩');
   let snap = await played(page);
   expect(snap.beatTimes).toEqual([0, 0.5, 0.75]);
   expect(snap.loopDuration).toBeCloseTo(1, 10);
 
-  await toggle(page).click();
-  await expect(toggle(page)).toHaveText('♪');
+  // A /8 first Measure: the tempo counts eighths.
+  await loadMeters(page, ['2/8', '1/4'], { id: 'p_eighths' });
+  await expect(mark(page)).toHaveText('♪');
   snap = await played(page);
-  expect(snap.beatTimes).toEqual([0, 1, 1.5]);
+  expect(snap.beatTimes).toEqual([0, 0.5, 1]);
   expect(snap.loopDuration).toBeCloseTo(2, 10);
 });
 
@@ -135,41 +128,61 @@ test('AC-4.2.7/3 — A 3/8 Measure and a 5/8 Measure together last exactly as lo
   expect(midi.tempo).toBe(600000);
 });
 
-test("AC-4.2.7/4 — The metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length", async ({ page }) => {
+test("AC-4.2.7/4 — With the click counting the Beat, the metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length", async ({ page }) => {
   await page.goto('/');
   // The click and count-in toggles are in the Practice group (AC-15.1.7).
   await page.evaluate(() => window.__rm.handlers.onWorkbenchTab('practice'));
   await page.locator('[data-action="toggle-metronome"]').click();
   await page.locator('[data-action="toggle-count-in"]').click();
-  // 6/8 then 4/4 at ♩ = 120: eighths of 0.25 s, then quarters of 0.5 s.
-  await loadMeters(page, ['6/8', '4/4'], { tempoUnit: 'quarter' });
-  const snap = await played(page);
-  expect(snap.beatTimes).toEqual([0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3]);
-  // Six eighth-note Beats of count-in, not six of the loop's average Beat.
-  expect(snap.countInSeconds).toBeCloseTo(1.5, 10);
+  await expect(page.locator('[data-action="set-click-value"]').first()).toHaveValue('beat');
+  // 4/4 then 6/8 at ♩ = 120: quarters of 0.5 s, then eighths of 0.25 s.
+  await loadMeters(page, ['4/4', '6/8']);
+  let snap = await played(page);
+  expect(snap.beatTimes).toEqual([0, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.75, 3, 3.25]);
+  expect(snap.countInSeconds).toBeCloseTo(2, 10);
+  // 6/8 then 4/4 at ♪ = 120: eighths of 0.5 s, then quarters of 1 s; six
+  // eighth-note Beats of count-in, not six of the loop's average Beat.
+  await loadMeters(page, ['6/8', '4/4'], { id: 'p_six_four' });
+  snap = await played(page);
+  expect(snap.beatTimes).toEqual([0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6]);
+  expect(snap.countInSeconds).toBeCloseTo(3, 10);
 });
 
-test("AC-4.2.7/5 — A Pattern that does not state a unit counts the note value of its first Measure's Beat, so one saved before the unit existed plays as it did whenever its Measures share a note value; opening it in the editor states that unit, so changing the first Measure's meter later does not retime it", async ({ page }) => {
+test("AC-4.2.7/5 — A Pattern saved with a tempo unit of its own counts its first Measure's Beat instead, and the stored unit is not written back when it is saved", async ({ page }) => {
   await page.goto('/');
-  // Saved before the unit existed: 6/8 at 80, no tempoUnit.
+  // Saved by the old ♩/♪ control: 4/4 at 80, switched to ♪ by hand.
   await page.evaluate(() => {
-    const beats = Array.from({ length: 6 }, () => ({ recipe: 'undivided', slots: [{ on: true }] }));
-    window.__rm.patternStore.upsert({ id: 'p_old', name: 'Old Six Eight', soundMode: 'percussive', tempo: 80, tags: [], rating: 0, measures: [{ timeSignature: '6/8', beats }] });
-    window.__rm.loadPattern(window.__rm.patternStore.findById('p_old'), { owned: true });
+    const beats = Array.from({ length: 4 }, () => ({ recipe: 'straight-8ths', slots: [{ on: true }, { on: false }] }));
+    const p = { id: 'p_old', name: 'Old Switched', soundMode: 'percussive', tempo: 80, tempoUnit: 'eighth', tags: [], rating: 0, measures: [{ timeSignature: '4/4', beats }] };
+    // Written raw, as the old control wrote it: saveAll stamps the schema and nothing else.
+    window.__rm.patternStore.saveAll([p]);
   });
-  await expect(toggle(page)).toHaveText('♪');
-  // As it played before: each eighth-note Beat lasts 60/80 s.
+  await page.reload();
+  await page.evaluate(() => window.__rm.loadPattern(window.__rm.patternStore.findById('p_old'), { owned: true }));
+  await expect(mark(page)).toHaveText('♩');
+  // A quarter-note Beat lasts 60/80 s, as ♩ = 80.
   const snap = await played(page);
   expect(snap.beatTimes[1]).toBeCloseTo(60 / 80, 10);
-  expect((await pattern(page)).tempoUnit).toBe('eighth');
+  expect((await pattern(page)).tempoUnit).toBeUndefined();
 
-  // Change Measure 1 to 4/4: still ♪, so a quarter-note Beat now lasts two eighths.
+  // An edit saves it, and the old unit is gone from the store.
   await page.locator('[data-action="change-time-signature"][data-measure="0"]').click();
-  await page.locator('.dialog-button', { hasText: '4/4' }).click();
-  await expect(toggle(page)).toHaveText('♪');
-  const stored = await page.evaluate(() => window.__rm.patternStore.findById('p_old'));
-  expect(stored.measures[0].timeSignature).toBe('4/4');
-  expect(stored.tempoUnit).toBe('eighth');
-  const after = await played(page);
-  expect(after.beatTimes[1]).toBeCloseTo(2 * (60 / 80), 10);
+  await page.locator('.dialog-button', { hasText: '3/4' }).click();
+  const raw = await page.evaluate(() => JSON.parse(localStorage.getItem('rm.patterns.v1')).patterns.find((p) => p.id === 'p_old'));
+  expect(raw.measures[0].timeSignature).toBe('3/4');
+  expect('tempoUnit' in raw).toBe(false);
+});
+
+test('AC-4.2.7/6 — Changing the first Measure between a /4 and a /8 meter changes the note the tempo counts, the number staying as it was', async ({ page }) => {
+  await page.goto('/');
+  await loadMeters(page, ['4/4'], { tempo: 80 });
+  await expect(mark(page)).toHaveText('♩');
+  expect((await played(page)).beatTimes[1]).toBeCloseTo(60 / 80, 10);
+
+  await page.locator('[data-action="change-time-signature"][data-measure="0"]').click();
+  await page.locator('.dialog-button', { hasText: '6/8' }).click();
+  await expect(mark(page)).toHaveText('♪');
+  expect((await pattern(page)).tempo).toBe(80);
+  // Now ♪ = 80: each eighth-note Beat lasts 60/80 s.
+  expect((await played(page)).beatTimes[1]).toBeCloseTo(60 / 80, 10);
 });

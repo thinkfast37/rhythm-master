@@ -410,7 +410,7 @@ describe('core/timeline — every Beat at its written length (AC-4.2.7)', () => 
     expect(buildTimeline(p)[0].timeSeconds).toBeCloseTo(3 * 0.25, 10);
   });
 
-  it("AC-4.2.7/4 — The metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length: the metronome", () => {
+  it("AC-4.2.7/4 — With the click counting the Beat, the metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length: the metronome", () => {
     const grid = buildBeatGrid(meters(['2/4', '3/8'], 120, 'quarter'));
     expect(grid.map((b) => b.timeSeconds)).toEqual([0, 0.5, 1, 1.25, 1.5]);
     const eighths = buildBeatGrid(meters(['2/4', '3/8'], 120, 'eighth'));

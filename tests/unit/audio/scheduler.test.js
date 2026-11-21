@@ -464,7 +464,7 @@ describe('audio/scheduler visuals under a throttled timer', () => {
 });
 
 describe('audio/scheduler — the count-in at written lengths (AC-4.2.7)', () => {
-  it("AC-4.2.7/4 — The metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length: the count-in", async () => {
+  it("AC-4.2.7/4 — With the click counting the Beat, the metronome clicks every Beat at its own length, and the count-in counts the first Measure's Beats at their length: the count-in", async () => {
     // 6/8 then 4/4 at ♩ = 120, nothing sounding: only the count-in clicks.
     let p = { ...create(), tempo: 120, tempoUnit: 'quarter' };
     p = addMeasure(p);
@@ -646,6 +646,49 @@ describe('audio/scheduler — the click switched under a run (AC-19.6.3)', () =>
     // The Pattern's own events went on sounding: the third pass's first Beat.
     expect(starts.length).toBeGreaterThan(offAt);
     expect(transport._eventTime(0, 0)).toBe(origin);
+  });
+});
+
+describe('audio/scheduler — what the click counts, changed under a run (AC-4.3.7)', () => {
+  it('AC-4.3.7/8 — Changing it while the Composer plays stops and restarts nothing: the click counts the new value from the next click: the transport', async () => {
+    // 4/4 at 120, the click on every Beat: 0, 0.5, 1 and 1.5 s of a 2 s pass.
+    await startTransport();
+    const origin = transport._eventTime(0, 0);
+    for (const t of [0.1, 0.2, 0.3]) await tickAt(origin + t);
+    const before = starts.length;
+    transport.setMetronome(true);
+    for (const t of [0.35, 0.4, 0.45]) await tickAt(origin + t);
+    // The Beat at 0.5 s is queued before the change.
+    expect(transport._snapshot().clicksScheduled).toBeGreaterThanOrEqual(1);
+
+    transport.setClickValue('eighth');
+    expect(transport._snapshot().clickValue).toBe('eighth');
+    expect(transport._snapshot().beatTimes).toHaveLength(8);
+    for (let t = 0.5; t < 1.95; t += 0.05) await tickAt(origin + t);
+    // No click lands twice: every onset in the pass is distinct, and after
+    // those already queued they fall every 0.25 s.
+    const clicksAt = starts
+      .slice(before)
+      .map((s) => Math.round((s.when - origin) * 1000) / 1000)
+      .filter((t) => t < 2);
+    const counts = clicksAt.reduce((m, t) => m.set(t, (m.get(t) ?? 0) + 1), new Map());
+    // The Beat queued at 0.5 s sounds once; from the next click on, every 0.25 s.
+    expect(counts.get(0.5)).toBe(1);
+    expect(counts.has(0.625)).toBe(false);
+    for (const t of [0.75, 1, 1.25, 1.5, 1.75]) expect(counts.get(t), `click at ${t}`).toBe(1);
+    // Nothing restarted: the run is anchored where it was, with no edit pending.
+    expect(transport._eventTime(0, 0)).toBe(origin);
+    expect(transport._snapshot().pendingEdit).toBe(false);
+  });
+
+  it('a stopped transport takes the value for its next run, and an unchanged value does nothing', async () => {
+    transport.setClickValue('half');
+    await startTransport();
+    // start() is handed its own settings: the value it was given wins.
+    expect(transport._snapshot().clickValue).toBe('beat');
+    const grid = transport._snapshot().beatTimes;
+    transport.setClickValue('beat');
+    expect(transport._snapshot().beatTimes).toEqual(grid);
   });
 });
 

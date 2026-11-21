@@ -102,6 +102,32 @@ export function beatDurationSeconds(timeSignature, bpm, tempoUnit = 'quarter') {
   return quarterSeconds(bpm, tempoUnit) * QUARTERS[beatNoteValue(timeSignature)];
 }
 
+/**
+ * What the metronome click may count (AC-4.3.7): the Beat, a note value, or
+ * the Measure. A listening aid, not a reading of the meter (Constitution
+ * 3.10.1) — it changes nothing but where the click sounds.
+ */
+export const CLICK_VALUES = ['beat', 'sixteenth', 'eighth', 'quarter', 'half', 'whole', 'measure'];
+export const DEFAULT_CLICK_VALUE = 'beat';
+
+export function isValidClickValue(value) {
+  return CLICK_VALUES.includes(value);
+}
+
+/** Written length in quarter notes of each note value a click may count. */
+const CLICK_QUARTERS = { sixteenth: 0.25, eighth: 0.5, quarter: 1, half: 2, whole: 4 };
+
+/**
+ * Seconds between clicks in one Measure of this meter (AC-4.3.7/2–/4): a Beat
+ * at its own length, a note value at its written length against the tempo,
+ * or the whole Measure. Anything unknown counts the Beat.
+ */
+export function clickIntervalSeconds(timeSignature, bpm, tempoUnit = 'quarter', clickValue = DEFAULT_CLICK_VALUE) {
+  if (clickValue === 'measure') return measureDurationSeconds(timeSignature, bpm, tempoUnit);
+  if (clickValue in CLICK_QUARTERS) return quarterSeconds(bpm, tempoUnit) * CLICK_QUARTERS[clickValue];
+  return beatDurationSeconds(timeSignature, bpm, tempoUnit);
+}
+
 /** Seconds for one whole Measure of this meter at this tempo. */
 export function measureDurationSeconds(timeSignature, bpm, tempoUnit = 'quarter') {
   return beatCount(timeSignature) * beatDurationSeconds(timeSignature, bpm, tempoUnit);
