@@ -365,7 +365,7 @@ test("AC-19.5.5/2 — The swing amount and feel controls set the composition's s
 
 // Reported by the maintainer on 2026-11-21: "if i edit the tempo at the top of the screen it has no
 // effect. i have to edit it at the bottom below in the control panel." The entry pinned beside Play
-// was still the Practice Pattern's in the Composer (T525).
+// was still the Practice Pattern's in the Composer (T529).
 test("AC-19.5.5/1 — The tempo entry sets the composition's tempo, and playback follows it: the entry pinned beside Play", async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);

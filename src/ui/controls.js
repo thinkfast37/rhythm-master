@@ -1567,7 +1567,7 @@ function renderTempoEntry(pattern, handlers, of = 'pattern') {
   // Whose tempo this is, in the markup: a rebuild that would change nothing is
   // skipped (AC-15.1.16/7), and the Pattern's entry and the composition's are
   // the same markup at the same tempo — skipped, the entry kept the other's
-  // handlers, and setting the tempo in the Composer set the Pattern's (T525).
+  // handlers, and setting the tempo in the Composer set the Pattern's (T529).
   group.dataset.of = of;
   group.appendChild(
     valueEntry('tempo-entry', {
