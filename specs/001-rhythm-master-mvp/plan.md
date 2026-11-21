@@ -279,7 +279,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-069** | US-2.16 — Chords with a member left out, and a wider chord catalogue | AC-2.16.1–AC-2.16.4 | T456, T460, T464 | T457, T461, T465 |
 | **P-070** | US-2.17 — Start a chord progression from scratch | AC-2.17.1–AC-2.17.2 | T458 | T459 |
 | **P-071** | US-10.4 — Vary a loop | AC-10.4.1–AC-10.4.8 | T466 | T467 |
-| **P-072** | US-19.11 — Layer Patterns under the composition | AC-19.11.1–AC-19.11.9 | T471, T473, T477, T479, T481, T483, T485, T493 | T472, T474, T478, T480, T482, T484, T486, T494 |
+| **P-072** | US-19.11 — Layer Patterns under the composition | AC-19.11.1–AC-19.11.9 | T471, T473, T477, T479, T481, T483, T485, T493, T564 | T472, T474, T478, T480, T482, T484, T486, T494, T565 |
 | **P-074** | US-19.12 — An instrument and a volume for each part | AC-19.12.1–AC-19.12.5 | T487, T488, T493 | T489, T494 |
 | **P-075** | US-19.13 — A drum part, played on the keyboard | AC-19.13.1–AC-19.13.4 | T490, T493 | T491, T494 |
 | **P-076** | US-19.14 — Shift a part by an octave | AC-19.14.1–AC-19.14.4 | T499 | T500 |

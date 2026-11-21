@@ -67,13 +67,19 @@ async function withSettings(page, partial) {
   await expect(page.locator('.mode-switch')).toBeVisible();
 }
 
+/** Open a saved Section from the library pane, where saved Sections are (AC-19.11.9/2). */
+async function openSaved(page, id = 'arr_1') {
+  if (!(await page.locator('.library-sections').isVisible())) await page.locator('.library-toggle').click();
+  await page.locator(`.library-sections .section-entry[data-section-id="${id}"] [data-action="open-section"]`).click();
+}
+
 /** Reopen the Composer after a reload, declining any prompt, and open the first saved Section. */
 async function reopenSection(page) {
   await page.locator('.mode-switch [data-mode="composer"]').click();
   await expect(page.locator('.composer-panel')).toBeVisible();
   await page.waitForTimeout(300);
   if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  await page.locator('.section-item[data-section-id="arr_1"] .section-load').click();
+  await openSaved(page);
   await expect(page.locator('.composer-layers .layer-item')).toHaveCount(3);
 }
 

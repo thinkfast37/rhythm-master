@@ -4174,7 +4174,8 @@ const handlers = {
     const section = sectionStore.findById(id);
     if (!section) return;
     if (await refusedByArrangement('section', id, `The Section "${section.name}"`)) return;
-    const proceed = await confirm(`Delete the Section "${section.name}" permanently?`, { confirmLabel: 'Delete' });
+    // Only the Section goes: its parts are library Patterns, deleted as Patterns are (AC-19.11.4/3).
+    const proceed = await confirm(`Delete the Section "${section.name}" permanently? Its parts stay in the library — only the Section is deleted.`, { confirmLabel: 'Delete section', cancelLabel: 'Keep it' });
     if (!proceed) {
       render();
       return;

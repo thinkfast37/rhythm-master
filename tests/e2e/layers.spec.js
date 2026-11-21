@@ -28,6 +28,11 @@ async function addLayer(page, id) {
   await page.locator(`.pattern-item[data-pattern-id="${id}"] [data-action="open-pattern"]`).click();
   await expect(page.locator(`.composer-layers .layer-item[data-pattern-id="${id}"]`)).toBeVisible();
 }
+/** Open a saved Section from the library pane, where saved Sections are (AC-19.11.9/2). */
+async function openSaved(page, id = 'arr_1') {
+  if (!(await page.locator('.library-sections').isVisible())) await page.locator('.library-toggle').click();
+  await page.locator(`.library-sections .section-entry[data-section-id="${id}"] [data-action="open-section"]`).click();
+}
 const exact = (name) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
 const partRow = (page, name) => page.locator('.composer-layers .layer-item', { has: page.locator('.layer-pick', { hasText: exact(name) }) });
 /** Record a fret onto every syllable without a note until record mode ends on its own. */
@@ -179,18 +184,19 @@ test(`AC-19.11.1/4 — Mute silences a layer without removing it or changing the
   expect((await composerState(page)).layers[0].muted).toBe(false);
 });
 
-test(`AC-19.11.1/5 — Without a composition the Layers section holds only the saved Sections, to open one from, and is absent when there are none; the layers go when another rhythm is opened into the Composer`, async ({ page }) => {
+test(`AC-19.11.1/5 — Without a composition there is no Layers section, a saved Section being opened from the library pane (AC-19.11.9); the layers go when another rhythm is opened into the Composer`, async ({ page }) => {
   await openApp(page);
   await enterComposer(page);
   await expect(page.locator('.composer-panel [data-empty="true"]')).toBeVisible();
-  // No composition and nothing saved: no section at all.
+  // No composition and nothing saved: no Layers section.
   await expect(layers(page)).toHaveCount(0);
-  // No composition but a saved Section: the section holds only the saved list.
+  // No composition but a saved Section: still none — it is in the library pane, to open from (revised 2026-11-21, T564).
   await page.evaluate(() => window.__rm.sectionStore.upsert({ name: 'Old bed', compositionId: 'p_none', layers: [{ patternId: 's_21', muted: false }] }));
   await page.evaluate(() => window.__rm.handlers.onComposerMode('practice'));
   await enterComposer(page);
-  await expect(layers(page)).toHaveAttribute('data-composition', 'false');
-  await expect(page.locator('.section-item .section-load')).toHaveText('Old bed');
+  await expect(layers(page)).toHaveCount(0);
+  if (!(await page.locator('.library-sections').isVisible())) await page.locator('.library-toggle').click();
+  await expect(page.locator('.library-sections .section-entry-name')).toHaveText('Old bed');
   await expect(page.locator('.layer-item')).toHaveCount(0);
   await expect(page.locator('.layer-add')).toHaveCount(0);
   await page.evaluate(() => window.__rm.sectionStore.remove('arr_1'));
@@ -380,7 +386,7 @@ test(`AC-19.11.4/1 — Save section asks a name, pre-filled with the composition
   expect((await page.evaluate(() => window.__rm.sectionStore.loadAll().map((a) => a.name)))).toEqual(['My line section', 'Second bed']);
 });
 
-test(`AC-19.11.4/2 — A saved Section survives a reload and is listed in the Layers section; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes`, async ({ page }) => {
+test(`AC-19.11.4/2 — A saved Section survives a reload and is listed in the library pane; choosing one opens its composition in the Composer — asking first when unsaved work would be lost — and sets its layers and mutes`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   const id = await saveComposition(page);
@@ -397,16 +403,17 @@ test(`AC-19.11.4/2 — A saved Section survives a reload and is listed in the La
   await expect(page.locator('.composer-panel')).toBeVisible();
   await page.waitForTimeout(300);
   if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  await expect(page.locator('.section-item[data-section-id="arr_1"] .section-load')).toHaveText('Bed');
+  if (!(await page.locator('.library-sections').isVisible())) await page.locator('.library-toggle').click();
+  await expect(page.locator('.library-sections .section-entry[data-section-id="arr_1"] .section-entry-name')).toHaveText('Bed');
   // A different, unsaved composition is open when the Section is chosen: asked first.
   await page.evaluate(() => window.__rm.handlers.onOpen('s_17', false));
   await nameInDialog(page, 'Scratch');
   await expect(layerItems(page)).toHaveCount(0);
-  await page.locator('.section-item[data-section-id="arr_1"] .section-load').click();
+  await openSaved(page);
   await expect(page.locator('.dialog')).toContainText('Scratch');
   await page.locator('.dialog-button', { hasText: 'Keep composing' }).click();
   expect((await composerState(page)).draft.name).toBe('Scratch');
-  await page.locator('.section-item[data-section-id="arr_1"] .section-load').click();
+  await openSaved(page);
   await page.locator('.dialog-button', { hasText: 'Discard and open' }).click();
   await expect(page.locator('.layer-item.composition .layer-name')).toHaveText('My line');
   const c = await composerState(page);
@@ -414,33 +421,42 @@ test(`AC-19.11.4/2 — A saved Section survives a reload and is listed in the La
   expect(c.layers).toEqual([{ patternId: SON, muted: false }, { patternId: BOSSA, muted: true }]);
   expect(c.section.id).toBe('arr_1');
   await expect(layerItems(page).nth(1)).toHaveAttribute('data-muted', 'true');
-  await expect(page.locator('.section-item[data-section-id="arr_1"]')).toHaveClass(/current/);
+  await expect(page.locator('.section-line .layers-section-name')).toHaveText('Bed');
 });
 
-test(`AC-19.11.4/3 — A Section can be renamed and deleted from the Layers section, deletion asking first`, async ({ page }) => {
+test(`AC-19.11.4/3 — The Section in hand can be renamed and deleted from the Section line, deletion asking first and saying its parts stay in the library; deleting a Section deletes no Pattern, and its layers stay on screen`, async ({ page }) => {
   await openApp(page);
   await loadFourBeats(page);
   await saveComposition(page);
   await addLayer(page, SON);
   await page.locator('.section-save').click();
   await nameInDialog(page, 'Bed');
-  await page.locator('.section-item[data-section-id="arr_1"] .section-rename').click();
+  const patterns = () => page.evaluate(() => window.__rm.patternStore.loadAll().map((p) => p.id).sort());
+  const before = await patterns();
+  // Renamed from the Section line.
+  await page.locator('.section-line .section-line-rename').click();
   await expect(page.locator('.dialog-input')).toHaveValue('Bed');
   await nameInDialog(page, 'Better bed');
-  await expect(page.locator('.section-item[data-section-id="arr_1"] .section-load')).toHaveText('Better bed');
   await expect(page.locator('.layers-section-name')).toHaveText('Better bed');
   expect((await page.evaluate(() => window.__rm.sectionStore.findById('arr_1').name))).toBe('Better bed');
-  await page.locator('.section-item[data-section-id="arr_1"] .section-delete').click();
-  await expect(page.locator('.dialog')).toContainText('Delete the Section "Better bed"');
-  await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  await expect(page.locator('.section-item')).toHaveCount(1);
-  await page.locator('.section-item[data-section-id="arr_1"] .section-delete').click();
-  await page.locator('.dialog-button', { hasText: 'Delete' }).click();
+  // One Delete, on the line, and no list of other Sections with their own (revised 2026-11-21, T564).
+  await expect(page.locator('.section-delete')).toHaveCount(1);
   await expect(page.locator('.section-item')).toHaveCount(0);
+  await page.locator('.section-line .section-delete').click();
+  await expect(page.locator('.dialog')).toContainText('Delete the Section "Better bed"');
+  await expect(page.locator('.dialog')).toContainText('Its parts stay in the library');
+  await page.locator('.dialog-button', { hasText: 'Keep it' }).click();
+  expect((await page.evaluate(() => window.__rm.sectionStore.loadAll()))).toHaveLength(1);
+  await page.locator('.section-line .section-delete').click();
+  await page.locator('.dialog-button', { hasText: 'Delete section' }).click();
   expect((await page.evaluate(() => window.__rm.sectionStore.loadAll()))).toEqual([]);
-  // The layers stay on screen; they are simply no longer a saved Section.
+  // No Pattern went with it: the library holds exactly what it held, the composition among them.
+  expect(await patterns()).toEqual(before);
+  expect(before).toContain((await composerState(page)).savedId);
+  // The layers stay on screen; they are simply no longer a saved Section, and there is nothing to delete.
   await expect(layerItems(page)).toHaveCount(1);
   await expect(page.locator('.layers-unsaved')).toHaveAttribute('data-unsaved', 'new');
+  await expect(page.locator('.section-delete')).toHaveCount(0);
 });
 
 test(`AC-19.11.4/4 — Once a Section is saved, every change to its parts — a part added, removed, muted or unmuted, put on screen, or made with New layer — saves it in place at once, as a saved composition saves; while a part is not yet in the library the Section waits, the Section line naming the part, and saves as soon as that part is saved`, async ({ page }) => {
@@ -922,7 +938,7 @@ test('AC-19.11.6/6 — Leaving the Composer, or opening another rhythm, with any
   await expect(page.locator('.composer-panel')).toBeVisible();
   await page.waitForTimeout(300);
   if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Cancel' }).click();
-  await page.locator('.section-item[data-section-id="arr_1"] .section-load').click();
+  await openSaved(page);
   await page.waitForTimeout(300);
   if (await page.locator('.dialog').count()) await page.locator('.dialog-button', { hasText: 'Discard and open' }).click();
   await expect(activeName(page)).toHaveText('Bossa line');

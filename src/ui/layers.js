@@ -1,9 +1,10 @@
 /**
  * The Layers section of the Composer (US-19.11): the composition first, then
  * each library Pattern layered under it with its kind, its repeats in the
- * combined loop, Mute and Remove; the loop readout; Add layer; and the saved
- * Sections with Load, Rename and Delete. Naming the Section in hand and
- * starting a new one are the Section line's (`sectionLine.js`). A pure function of
+ * combined loop, Mute and Remove; the loop readout; and Add layer. Naming,
+ * renaming and deleting the Section in hand and starting a new one are the
+ * Section line's (`sectionLine.js`); saved Sections are opened from the
+ * library pane (AC-19.11.9). A pure function of
  * `state.composer`, the stores' lists and the Patterns the handlers resolve.
  */
 import { el, valueEntry } from './controls.js';
@@ -124,15 +125,6 @@ export function renderLayers(state, handlers) {
   wrap.dataset.layers = String(composer.layers?.length ?? 0);
   wrap.dataset.composition = String(Boolean(draft));
   wrap.setAttribute('aria-label', 'Layers');
-  // No composition: nothing to layer under, only saved Sections to open (AC-19.11.1/5).
-  if (!draft) {
-    const head = el('div', 'layers-head');
-    head.appendChild(el('h3', 'layers-title', { textContent: 'Layers' }));
-    wrap.appendChild(head);
-    wrap.appendChild(renderSaved(state, handlers));
-    return wrap;
-  }
-
   const head = el('div', 'layers-head');
   head.appendChild(el('h3', 'layers-title', { textContent: 'Layers' }));
   // Which Section this is, and whether it is saved, is the Section line's to say (AC-19.11.10/1).
@@ -252,37 +244,5 @@ export function renderLayers(state, handlers) {
   // Staccato or Legato, beside the export it governs (AC-12.5.1/1).
   actions.appendChild(renderArticulation(state, handlers));
   wrap.appendChild(actions);
-
-  wrap.appendChild(renderSaved(state, handlers));
   return wrap;
-}
-
-/** The saved Sections: Load, Rename, Delete (AC-19.11.4/2, /3). Empty when there are none. */
-function renderSaved(state, handlers) {
-  const section = state.composer.section;
-  const all = state.sections ?? [];
-  const savedWrap = el('div', 'sections');
-  if (all.length > 0) {
-    savedWrap.appendChild(el('span', 'layers-label', { textContent: 'Saved Sections' }));
-    const ul = el('ul', 'section-list');
-    for (const a of all) {
-      const item = el('li', `section-item${section?.id === a.id ? ' current' : ''}`);
-      item.dataset.sectionId = a.id;
-      const load = button('section-load', a.name, 'section-load', { title: 'Open this Section: its composition and its layers' });
-      load.dataset.sectionId = a.id;
-      load.addEventListener('click', () => handlers.onSectionLoad?.(a.id));
-      item.appendChild(load);
-      const rename = button('section-rename', 'Rename', 'section-rename');
-      rename.dataset.sectionId = a.id;
-      rename.addEventListener('click', () => handlers.onSectionRename?.(a.id));
-      item.appendChild(rename);
-      const del = button('section-delete', 'Delete', 'section-delete');
-      del.dataset.sectionId = a.id;
-      del.addEventListener('click', () => handlers.onSectionDelete?.(a.id));
-      item.appendChild(del);
-      ul.appendChild(item);
-    }
-    savedWrap.appendChild(ul);
-  }
-  return savedWrap;
 }

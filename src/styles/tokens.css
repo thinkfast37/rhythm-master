@@ -2225,6 +2225,7 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
 .section-line .layers-section-name { font-size: 14px; }
 .section-line button { padding: 6px 10px; }
 .section-line-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.section-line .section-delete { margin-left: 14px; color: var(--ink-dim); }
 .section-line-shared { flex-basis: 100%; font: 500 12px/1.4 var(--font-ui); color: var(--warn, #e0a030); }
 .layer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .layer-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -2239,10 +2240,6 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
 .layer-repeats { font: 600 12px/1.4 var(--font-ui); color: var(--ink-dim); }
 .layers-empty, .layers-loop { margin: 0; font: 500 12px/1.4 var(--font-ui); color: var(--ink-dim); }
 .layers-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.layers-label { font: 600 12px/1.4 var(--font-ui); color: var(--ink-dim); }
-.section-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.section-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
-.section-item.current .section-load { border-color: var(--brand); color: var(--brand); }
 .composer-layers button,
 .section-line button {
   padding: 8px 12px;
