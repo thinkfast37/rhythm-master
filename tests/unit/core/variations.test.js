@@ -581,6 +581,34 @@ describe('US-10.4 — Vary a loop: Roll the dice builds a candidate', () => {
     }
   });
 
+  it('AC-10.4.6/2 — The rolled candidate always differs from the original: every technique in it changed something, by its rule: over many seeds', () => {
+    // One seed proved nothing here: about one roll in 170 drew a choice that changed
+    // nothing — Rotate by a whole Beat, or a syllable added and then removed (T514).
+    for (const p of [chords(), percussive()]) {
+      const original = freshCandidate(p, 1);
+      for (let start = 1; start <= 60; start++) {
+        let seed = start;
+        const random = () => {
+          seed = (seed * 16807) % 2147483647;
+          return (seed - 1) / 2147483646;
+        };
+        for (let i = 0; i < 20; i++) {
+          const stack = rollStack(p, 1, { random });
+          expect(stack.length).toBeGreaterThan(0);
+          // Every technique changed what it was handed, and the whole differs from the original.
+          let before = original;
+          for (let n = 1; n <= stack.length; n++) {
+            const { candidate, dropped } = buildCandidate(p, 1, stack.slice(0, n));
+            expect(dropped).toEqual([]);
+            expect(candidate, `seed ${start}, roll ${i}: ${stack.map((e) => e.id).join(', ')}`).not.toEqual(before);
+            before = candidate;
+          }
+          expect(before, `seed ${start}, roll ${i}: ${stack.map((e) => e.id).join(', ')}`).not.toEqual(original);
+        }
+      }
+    }
+  }, 30_000);
+
   it('AC-10.4.6/4 — Rolling again replaces the whole candidate; the dice are disabled, saying so, when no technique is available outside the groups marked No dice: the pure rule', () => {
     expect(canRoll(chords(), 1)).toBe(true);
     expect(canRoll(chords(), 1, new Set(GROUPS))).toBe(false);
