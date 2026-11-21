@@ -362,3 +362,45 @@ test("AC-19.5.5/2 — The swing amount and feel controls set the composition's s
   await expect.poll(() => page.evaluate(() => window.__rm.transport._snapshot().pattern?.swingAmount)).toBe(40);
   await page.locator('.transport').first().click();
 });
+
+// Reported by the maintainer on 2026-11-21: "if i edit the tempo at the top of the screen it has no
+// effect. i have to edit it at the bottom below in the control panel." The entry pinned beside Play
+// was still the Practice Pattern's in the Composer (T525).
+test("AC-19.5.5/1 — The tempo entry sets the composition's tempo, and playback follows it: the entry pinned beside Play", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const pinned = page.locator('.play-controls .tempo-entry');
+  const own = page.locator('.composer-tempo-entry');
+  // It shows the composition's tempo, as the Composer's own entry does.
+  await expect(pinned).toHaveValue(String((await composerState(page)).draft.tempo));
+  await pinned.fill('132');
+  await pinned.press('Enter');
+  expect((await composerState(page)).draft.tempo).toBe(132);
+  await expect(page.locator('.play-controls .tempo-entry')).toHaveValue('132');
+  await expect(own).toHaveValue('132');
+  // The two are one tempo: set below, it shows above.
+  await own.fill('96');
+  await own.press('Enter');
+  await expect(page.locator('.play-controls .tempo-entry')).toHaveValue('96');
+  // Playback follows the pinned entry, playing or not.
+  await page.locator('.transport').first().click();
+  await expect.poll(() => page.evaluate(() => window.__rm.transport._snapshot().pattern?.tempo)).toBe(96);
+  await page.locator('.play-controls .tempo-entry').fill('150');
+  await page.locator('.play-controls .tempo-entry').press('Enter');
+  await expect.poll(() => page.evaluate(() => window.__rm.transport._snapshot().pattern?.tempo)).toBe(150);
+  expect((await composerState(page)).draft.tempo).toBe(150);
+  await page.locator('.transport').first().click();
+});
+
+test("AC-19.5.5/1 — The tempo entry sets the composition's tempo, and playback follows it: the unit beside the pinned entry is the composition's too", async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  const toggle = page.locator('.play-controls .tempo-unit-toggle');
+  await expect(toggle).toHaveAttribute('data-unit', 'quarter');
+  await toggle.click();
+  await expect(page.locator('.dialog')).toHaveCount(0);
+  await expect(page.locator('.play-controls .tempo-unit-toggle')).toHaveAttribute('data-unit', 'eighth');
+  expect((await composerState(page)).draft.tempoUnit).toBe('eighth');
+  await page.locator('.play-controls .tempo-unit-toggle').click();
+  expect((await composerState(page)).draft.tempoUnit).toBe('quarter');
+});

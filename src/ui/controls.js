@@ -666,7 +666,12 @@ export function renderPlayControls(root, pattern, state, handlers) {
   return rebuild(root, (fresh) => {
     fresh.appendChild(renderTransport(state, handlers));
     // In Arrange the tempo beside Play is the Arrangement's own (AC-20.2.3/2).
-    fresh.appendChild(state.composer?.mode === 'arrange' ? renderArrangeTempo(handlers) : renderTempoEntry(pattern, handlers));
+    if (state.composer?.mode === 'arrange') fresh.appendChild(renderArrangeTempo(handlers));
+    // In the Composer the tempo beside Play is the composition's own, as its
+    // unit is (AC-19.5.5/1, AC-19.11.6/4) — not the Pattern left open in Practice.
+    else if (state.composer?.mode === 'composer' && state.composer.draft) {
+      fresh.appendChild(renderTempoEntry(state.composer.draft, { onTempo: (bpm) => handlers.onComposerTempo(bpm), onTempoUnit: (unit) => handlers.onComposerTempoUnit(unit) }, 'composition'));
+    } else fresh.appendChild(renderTempoEntry(pattern, handlers));
     placeHelp(fresh, 'bar', state);
   });
 }
@@ -1557,8 +1562,13 @@ function renderArrangeTempo(handlers) {
   return group;
 }
 
-function renderTempoEntry(pattern, handlers) {
+function renderTempoEntry(pattern, handlers, of = 'pattern') {
   const group = el('div', 'control-group tempo-pinned');
+  // Whose tempo this is, in the markup: a rebuild that would change nothing is
+  // skipped (AC-15.1.16/7), and the Pattern's entry and the composition's are
+  // the same markup at the same tempo — skipped, the entry kept the other's
+  // handlers, and setting the tempo in the Composer set the Pattern's (T525).
+  group.dataset.of = of;
   group.appendChild(
     valueEntry('tempo-entry', {
       min: MIN_TEMPO,
