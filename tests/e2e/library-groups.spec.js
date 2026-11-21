@@ -34,7 +34,7 @@ async function showLibrary(page) {
   await expect(page.locator('.library .library-group-toggle[data-group="patterns"]')).toBeVisible();
 }
 
-test('AC-5.1.8/1 — The library list is in groups, Sections ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group is absent while no Section is saved', async ({ page }) => {
+test('AC-5.1.8/1 — The library list is in groups, Sections ahead of Chains ahead of Patterns, each under a heading naming the group and how many entries it shows, and the Sections group and the Chains group are each absent while none is saved', async ({ page }) => {
   await openApp(page);
   // No Section saved: the Patterns group alone, counting its rows.
   await expect(heading(page, 'sections')).toHaveCount(0);
@@ -52,6 +52,18 @@ test('AC-5.1.8/1 — The library list is in groups, Sections ahead of Patterns, 
   // Sections first, then Patterns: both headings in the pane, in that order.
   const order = await page.locator('.library .library-group-toggle').evaluateAll((els) => els.map((e) => e.dataset.group));
   expect(order).toEqual(['sections', 'patterns']);
+  // Revised 2026-11-20 with US-5.7: no Chain saved, no Chains group; one saved, it sits between the two.
+  await expect(heading(page, 'chains')).toHaveCount(0);
+  await page.evaluate(() => {
+    const over = window.__rm.seedStore.loadAll().find((x) => x.soundMode === 'melodic' && x.harmony?.chords?.length);
+    window.__rm.chainStore.upsert({ name: 'Bed', sections: [{ patternId: over.id, entries: [{ fill: 'alberti', repeats: 1 }] }] });
+  });
+  await leaveComposer(page);
+  await page.reload();
+  await expect(page.locator('.mode-switch')).toBeVisible();
+  await showLibrary(page);
+  await expect(heading(page, 'chains').locator('.library-group-count')).toHaveText('1');
+  expect(await page.locator('.library .library-group-toggle').evaluateAll((els) => els.map((e) => e.dataset.group))).toEqual(['sections', 'chains', 'patterns']);
   const s = await heading(page, 'sections').boundingBox();
   const p = await heading(page, 'patterns').boundingBox();
   expect(s.y).toBeLessThan(p.y);

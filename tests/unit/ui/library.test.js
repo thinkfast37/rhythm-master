@@ -10,6 +10,7 @@ import {
   UNRATED,
 } from '../../../src/ui/library.js';
 import { create } from '../../../src/core/pattern.js';
+import { setProgression } from '../../../src/core/harmony.js';
 
 const p = (name, extra = {}) => ({ ...create(name), id: name.toLowerCase(), ...extra });
 
@@ -297,3 +298,36 @@ describe('US-5.3 — the limits on a Pattern’s own Tags', () => {
   });
 });
 
+
+describe('ui/library — the types chosen (US-5.7)', () => {
+  const melodic = (name, extra = {}) => p(name, { soundMode: 'melodic', key: 'C', ...extra });
+  const harmony = setProgression(melodic('x'), 'I-IV-V').harmony;
+  const entries = () =>
+    buildEntries(
+      [p('Clave', { tags: ['Latin'] }), melodic('Bossa comp', { harmony, tags: ['Latin'] }), melodic('Blues comp', { harmony })],
+      [melodic('My line', { rating: 4 }), p('My groove', { rating: 5 })]
+    );
+  const names = (list) => sortEntries(list).map((e) => e.pattern.name);
+
+  it('AC-5.7.1/3 — The type choice narrows together with the search, the rating filter and the Tag filters, and Prev/Next step through the Patterns it leaves', () => {
+    // No type chosen: every Pattern.
+    expect(names(filterEntries(entries(), { types: [] }))).toEqual(['Blues comp', 'Bossa comp', 'Clave', 'My groove', 'My line']);
+    // One type, then two.
+    expect(names(filterEntries(entries(), { types: ['progression'] }))).toEqual(['Blues comp', 'Bossa comp']);
+    expect(names(filterEntries(entries(), { types: ['percussive', 'melodic'] }))).toEqual(['Clave', 'My groove', 'My line']);
+    // Only types that are not Patterns: no Pattern is left.
+    expect(filterEntries(entries(), { types: ['chain', 'section'] })).toEqual([]);
+    // With a Tag, the search and the rating, each narrowing what the others left.
+    expect(names(filterEntries(entries(), { types: ['progression'], tags: ['Latin'] }))).toEqual(['Bossa comp']);
+    expect(names(filterEntries(entries(), { types: ['percussive'], tags: ['Latin'] }))).toEqual(['Clave']);
+    expect(names(filterEntries(entries(), { types: ['progression'], query: 'blues' }))).toEqual(['Blues comp']);
+    expect(names(filterEntries(entries(), { types: ['percussive', 'melodic'], minRating: 5 }))).toEqual(['My groove']);
+    expect(filterEntries(entries(), { types: ['progression'], minRating: 3 })).toEqual([]);
+    // Prev/Next step through what the types leave, wrapping within it.
+    const view = { types: ['progression'], currentId: 'bossa comp' };
+    expect(neighbours(entries(), view).next.pattern.name).toBe('Blues comp');
+    expect(neighbours(entries(), view).previous.pattern.name).toBe('Blues comp');
+    // The open Pattern is not of the types chosen: Next is the first that is.
+    expect(neighbours(entries(), { types: ['progression'], currentId: 'clave' }).next.pattern.name).toBe('Blues comp');
+  });
+});

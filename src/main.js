@@ -142,6 +142,7 @@ import { resolveVoice, normaliseVoice, viewOf, FETCHED, DEFAULT_INSTRUMENT, norm
 import * as instruments from './audio/instruments.js';
 import { playDrum } from './audio/drums.js';
 import { autoDrumNote, normalisePercussion } from './core/drums.js';
+import { toggleType } from './core/libraryTypes.js';
 import { getContext, resume as resumeAudio, replace as replaceAudio, clockIsRunning } from './audio/context.js';
 import { midiToFrequency } from './core/pitch.js';
 import {
@@ -268,7 +269,7 @@ const state = {
    */
   goalsOpen: false,
   /** Library view state: search text, Tag and rating filters, and what is open. */
-  view: { query: '', tags: [], minRating: 0, currentId: null },
+  view: { query: '', tags: [], types: [], minRating: 0, currentId: null },
   settings: settingsStore.DEFAULTS,
   /**
    * The Composer mode (US-19.1–US-19.9, research.md D-016). `mode` is a
@@ -3625,6 +3626,43 @@ const handlers = {
     render();
   },
 
+  /** A type pill (AC-5.7.1/2): a type added to the choice or taken from it, and All — `null` — clearing it. */
+  onTypeFilter(type) {
+    state.view = { ...state.view, types: toggleType(state.view.types, type) };
+    render();
+  },
+
+  /**
+   * Every saved Chain with the Pattern it plays over, for the library's Chains
+   * group (AC-5.7.2). None in the Composer: a Chain opens into Practice's
+   * Compose group, and the Composer's library is for what it can open.
+   */
+  chainList() {
+    if (state.composer.mode === 'composer') return [];
+    return chainStore
+      .loadAll()
+      .map((c) => ({ id: c.id, name: c.name, patternId: c.sections?.[0]?.patternId ?? null }))
+      .map((c) => ({ ...c, patternName: (c.patternId && libraryPattern(c.patternId)?.name) || 'Missing Pattern' }))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  },
+
+  /** Open a Chain from the library (AC-5.7.2/3): its Pattern, with the Chain loaded in the Compose group. */
+  onOpenChain(id) {
+    const chain = chainStore.findById(id);
+    const patternId = chain?.sections?.[0]?.patternId;
+    if (!patternId || state.composer.mode === 'composer') return;
+    if (state.pattern.id !== patternId) {
+      const owned = Boolean(patternStore.findById(patternId));
+      if (!owned && !seedStore.findById(patternId)) return;
+      handlers.onOpen(patternId, owned);
+    }
+    if (state.pattern.id !== patternId) return;
+    handlers.onChainLoad(id);
+    state.workbenchTab = 'compose';
+    ui?.hideLibrary();
+    render();
+  },
+
   onOpen(id, owned) {
     const pattern = owned
       ? patternStore.findById(id)
@@ -4233,7 +4271,7 @@ export function mount(root) {
     familyMembers,
     canUndo,
     fillLabel,
-    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), sections: rawOf(sectionStore.KEY) }),
+    storeSignature: () => ({ patterns: rawOf(patternStore.KEY), overlays: rawOf(overlayStore.KEY), sections: rawOf(sectionStore.KEY), chains: rawOf(chainStore.KEY) }),
   });
 }
 
