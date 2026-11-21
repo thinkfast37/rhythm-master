@@ -5305,7 +5305,8 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-20.1.1/1** — Choosing Arrange shows the Arrangement panel — its name, the palette and the sequence — in place of the rhythm band and the work surface, while the library sidebar and its toggle stay
     - **AC-20.1.1/2** — Choosing Practice or Composer puts that mode back as it was, and the Arrangement being built is kept for the session
     - **AC-20.1.1/3** — The mode is a within-session position, not a stored preference: a reload opens in Practice
-    - **AC-20.1.1/4** — Play is unavailable in Arrange, and says that an Arrangement cannot be played yet
+    - **AC-20.1.1/4** — Play is unavailable in Arrange while the sequence is empty, and says that there is nothing to play yet
+  - *(/4 revised 2026-11-20 with US-20.2, T521, the second of the two changes the builder was split into: it read "Play is unavailable in Arrange, and says that an Arrangement cannot be played yet", which was true only until this change. Play now plays the sequence (AC-20.2.1), and is unavailable only when there is nothing in it.)*
 
 - **AC-20.1.2** — The palette is filled from the library
   - **Given** the Arrangement panel
@@ -5347,6 +5348,52 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
     - **AC-20.1.5/1** — Saved Arrangements are the first group of the library, ahead of Sections, under a heading with its count that folds as the other groups do, each listed with how many entries its sequence has
     - **AC-20.1.5/2** — Arrangement is the last of the type pills, and choosing it shows the Arrangements and hides the entries of every type not chosen
     - **AC-20.1.5/3** — Choosing an Arrangement in the library opens it in Arrange as it was saved, asking first when an Arrangement never saved would be lost
+
+---
+
+### User Story 76 - Hear an Arrangement while it is built
+
+*Traceability: `US-20.2` — Hear an Arrangement while it is built*
+
+**As** the Composer, **I want** to press Play in Arrange and hear the sequence from its first entry to its last — every Section on the instruments I gave its parts, every Pattern on its own voice, every rhythm on the drum kit — at one tempo I can change, and to go on adding to it while it plays, **so that** I am arranging by ear rather than by reading a list.
+
+*(Added 2026-11-15 at the maintainer's request, T521: "keep in mind the arrangement builder needs to be able to play while I am adding the arrangement. I should also be able to toggle the tempo." And of how it sounds: "The instrument used for all the instruments in a section will be what was assigned to them in composer. If the section is just a pattern then the instrument is whatever was assigned in practice mode as well. If there is nothing assigned just use piano", and "If I add a percussive pattern it will automatically be treated as an auto-drum pattern". Ruling on 2026-11-20, put to the maintainer: an Arrangement has one tempo of its own, starting from its first entry's, and every entry plays at it; nothing on a Section or a Pattern changes. Decisions taken without asking, each the least surprising reading: the tempo counts quarter notes; each entry keeps its own Key, swing and time signature; one repeat is once through what the entry plays — a Pattern once, or one harmonic cycle when it carries a progression, a Section's combined loop once, a Chain once through — and a progression starts from its first chord each time an entry begins; the sequence loops, as the Pattern does in Practice; a Percussive Pattern laid in the sequence by itself is on the drum kit whatever Practice remembers for it, while a percussive part inside a Section sounds as it does in the Composer; an entry whose Pattern, Section or Chain is no longer in the library is passed over.)*
+
+**Independent Test**: With an Arrangement of a Percussive Pattern twice and then a Section once, press Play and assert the first two passes sound drums chosen by accent and no accent tone, the third sounds the Section's parts each on its own instrument at its own volume, and the fourth is the first entry again; assert the entry sounding is marked in the sequence; set the tempo to 140 and assert every entry plays at 140 while the Pattern and the Section keep the tempos they had; add an entry while it plays and assert nothing stops and the new entry is heard in its turn.
+
+**Acceptance Scenarios**:
+
+- **AC-20.2.1** — Play plays the sequence in order
+  - **Given** an Arrangement with at least one sequence entry, in Arrange
+  - **When** the Composer presses Play
+  - **Then** the entries sound one after another, each for its repeats, and the sequence loops until stopped
+  - **Cases**:
+    - **AC-20.2.1/1** — Play sounds every sequence entry in order, each for its repeats, the next taking over at a pass boundary with nothing stopped, and after the last entry the first sounds again
+    - **AC-20.2.1/2** — One repeat is once through what the entry plays: a Pattern once, or one harmonic cycle when it carries a progression; a Section once through its combined loop; a Chain once through its entries
+    - **AC-20.2.1/3** — A progression starts from its first chord each time an entry begins, whatever was sounding before it
+    - **AC-20.2.1/4** — The sequence entry sounding is marked in the sequence, and the mark is gone when it stops
+    - **AC-20.2.1/5** — Changing the sequence while it plays — an entry added, removed, moved or its repeats — is heard from the next pass with nothing stopped or restarted
+    - **AC-20.2.1/6** — An entry whose Pattern, Section or Chain is no longer in the library is passed over, and the rest of the sequence plays
+
+- **AC-20.2.2** — Each entry sounds as it was composed
+  - **Given** an Arrangement playing
+  - **When** an entry sounds
+  - **Then** a Section sounds as it does in the Composer, a Pattern on the voice Practice remembers for it, and a rhythm on the drum kit
+  - **Cases**:
+    - **AC-20.2.2/1** — A Section sounds every unmuted part together, each on the instrument and at the volume the Section holds for it, and a muted part is silent
+    - **AC-20.2.2/2** — A Melodic Pattern sounds on the voice Practice remembers for it, and on Piano when there is none
+    - **AC-20.2.2/3** — A Percussive Pattern laid in the sequence sounds on the drum kit, the drum chosen by each Accent Level as Drum kit chooses it in Practice, whatever Practice remembers for the Pattern
+    - **AC-20.2.2/4** — A Chain sounds its fills in order over its Pattern, on the voice Practice remembers for that Pattern
+
+- **AC-20.2.3** — One tempo for the whole Arrangement
+  - **Given** an Arrangement
+  - **When** the Composer plays it, or changes its tempo
+  - **Then** every entry plays at the Arrangement's own tempo, which is stored with it and changes nothing it is made of
+  - **Cases**:
+    - **AC-20.2.3/1** — An Arrangement takes its tempo, in quarter notes a minute, from the first entry laid in its sequence, and from then on the tempo is its own
+    - **AC-20.2.3/2** — In Arrange the tempo entry beside Play shows and sets the tempo of the Arrangement, from 18 to 300, and not the tempo of the Pattern open in Practice
+    - **AC-20.2.3/3** — Every entry plays at the tempo of the Arrangement whatever its own, and no Pattern, Section or Chain is changed by it
+    - **AC-20.2.3/4** — The tempo is stored with the Arrangement and is in force when it is opened again, and changing it while playing restarts the sequence from its first entry at the new tempo
 
 ---
 
