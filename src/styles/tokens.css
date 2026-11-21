@@ -3066,7 +3066,8 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
 }
 .piano .key.black .key-drum { fill: #f2f3f7; }
 
-/* The Composer's Subdivision strip (AC-19.5.7/1): one control among the others, so it
-   takes the controls' own padding rather than the workbench strip's. */
-.composer-controls .recipe-strip { padding: 0; }
+/* The Composer's Subdivision strip (AC-19.5.7/1): directly above the composing grid,
+   centred as the grid is, and close enough to read as the grid's own. */
+.composer-recipe-strip { align-items: center; padding: 0; }
+.composer-recipe-strip .control { align-items: center; }
 .composer-brush-hint { text-align: center; }

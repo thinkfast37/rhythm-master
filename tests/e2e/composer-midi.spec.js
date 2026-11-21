@@ -63,6 +63,46 @@ const heard = (page, midi) => page.evaluate((m) => window.__rm.voiceLog().filter
 const litKeys = (page) => page.locator('.piano .key.lit').evaluateAll((ks) => ks.map((k) => Number(k.dataset.midi)));
 const litFrets = (page) =>
   page.locator('.fretboard .note.lit').evaluateAll((ns) => ns.map((n) => `${n.dataset.string}:${n.dataset.fret}`).sort());
+/*
+ * Play a note and watch what lights, all inside the page (T525). A note is lit
+ * for 350 ms; sending it in one round trip and looking in another missed the
+ * whole window when the machine was busy, and the test then failed on a key
+ * that had lit and gone out unseen. Sampled every frame from the instant the
+ * note is sent, nothing can be missed: `sets` is every distinct lit set seen,
+ * in order, and `lastLitAt` the last moment anything was lit.
+ */
+const playAndWatch = (page, notes, kind, device = 'kbd') =>
+  page.evaluate(
+    ([d, ns, k]) =>
+      new Promise((resolve) => {
+        const read = () =>
+          k === 'keys'
+            ? [...document.querySelectorAll('.piano .key.lit')].map((e) => Number(e.dataset.midi))
+            : [...document.querySelectorAll('.fretboard .note.lit')].map((e) => `${e.dataset.string}:${e.dataset.fret}`).sort();
+        const sets = [];
+        let lastLitAt = null;
+        const start = performance.now();
+        window.__fakeMidi.send(d, ...ns.map((n) => [0x90, n, 96]));
+        const sample = () => {
+          const at = performance.now() - start;
+          const lit = read();
+          const text = JSON.stringify(lit);
+          if (sets.length === 0 || JSON.stringify(sets[sets.length - 1]) !== text) sets.push(lit);
+          if (lit.length > 0) lastLitAt = at;
+          if (at < 1200) setTimeout(sample, 10);
+          else resolve({ sets, lastLitAt });
+        };
+        sample();
+      }),
+    [device, notes, kind]
+  );
+/** What lit, and that it had gone out within a second (AC-19.10.2). */
+function expectLitThenOut(watched, expected) {
+  // Lit, the expected set and no other at any instant, then out — and out for good.
+  expect(watched.sets.filter((lit) => lit.length > 0)).toEqual([expected]);
+  expect(watched.sets[watched.sets.length - 1]).toEqual([]);
+  expect(watched.lastLitAt).toBeLessThan(1000);
+}
 const pitches = (page) => page.evaluate(() => window.__rm.composer().draft.measures[0].beats.map((b) => b.slots[0].pitch ?? null));
 const target = async (page) => (await composerState(page)).target;
 const toPiano = (page) => page.locator('.instrument-switch [data-instrument="piano"]').click();
@@ -180,10 +220,9 @@ test('AC-19.10.2/1 — In the Piano view the key for the note lights, and goes o
   await openApp(page);
   await loadFourBeats(page);
   await toPiano(page);
-  await play(page, [67]);
-  // The key for the note, and no other.
-  await expect.poll(() => litKeys(page)).toEqual([67]);
-  await expect.poll(() => litKeys(page), { timeout: 1000 }).toEqual([]);
+  // The key for the note, and no other, out again within a second.
+  expectLitThenOut(await playAndWatch(page, [67], 'keys'), [67]);
+  expect(await litKeys(page)).toEqual([]);
 });
 
 test('AC-19.10.2/2 — In the Guitar view every visible, playable fret that sounds the note lights, and goes out again within a second', async ({ page }) => {
@@ -191,16 +230,14 @@ test('AC-19.10.2/2 — In the Guitar view every visible, playable fret that soun
   await openApp(page);
   await loadFourBeats(page);
   // E4 is open on the top string and at 5, 9, 14, 19 and 24 below it.
-  await play(page, [64]);
-  await expect.poll(() => litFrets(page)).toEqual(['0:0', '1:5', '2:9', '3:14', '4:19', '5:24']);
-  await expect.poll(() => litFrets(page), { timeout: 1000 }).toEqual([]);
+  expectLitThenOut(await playAndWatch(page, [64], 'frets'), ['0:0', '1:5', '2:9', '3:14', '4:19', '5:24']);
+  expect(await litFrets(page)).toEqual([]);
   // With frets 5–12 visible, only the two places on screen light.
   await page.locator('.fret-lower').fill('5');
   await page.locator('.fret-lower').press('Enter');
   await page.locator('.fret-upper').fill('12');
   await page.locator('.fret-upper').press('Enter');
-  await play(page, [64]);
-  await expect.poll(() => litFrets(page)).toEqual(['1:5', '2:9']);
+  expectLitThenOut(await playAndWatch(page, [64], 'frets'), ['1:5', '2:9']);
 });
 
 // --- AC-19.10.3: out of range -----------------------------------------------------
