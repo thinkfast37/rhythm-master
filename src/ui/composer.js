@@ -8,13 +8,14 @@
  * Composer's controls. Everything here is a pure function of `state.composer`,
  * the settings and the transport position; it holds no state of its own.
  */
-import { el, rebuild, labelled, labelledRow, valueEntry, SWING_FEEL_LABELS, renderRecipeStrip, offeredRecipes } from './controls.js';
+import { el, rebuild, labelled, labelledRow, valueEntry, SWING_FEEL_LABELS, renderRecipeStrip, offeredRecipes, measurePicker } from './controls.js';
+import { measureNumber } from './grid.js';
 import { renderFretboard } from './fretboard.js';
 import { renderPiano } from './piano.js';
 import { KEYS, resolve } from '../core/pitch.js';
 import { SCALES, DEFAULT_SCALE } from '../core/scales.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, measureLabels, effectiveSystem, isForcedNumbered } from '../core/counting.js';
-import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
+import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES, selectedMeasure } from '../core/pattern.js';
 import { MIN_SWING, MAX_SWING, DEFAULT_SWING_FEEL } from '../core/swing.js';
 import { beatNoteValue } from '../core/meter.js';
 import { subdivisionGroups } from '../core/recipes.js';
@@ -354,11 +355,14 @@ function renderComposingGrid(draft, composer, state, handlers) {
   grid.dataset.measures = String(draft.measures.length);
   const system = effectiveSystem(draft, state.settings.countingSystem ?? 'takadimi');
   const position = state.isPlaying ? state.transportPosition : null;
+  // The number selects, as in Practice's grid (AC-1.1.10/2, AC-19.11.7/2).
+  const selected = selectedMeasure(draft, composer.measureSelection ?? null);
 
   draft.measures.forEach((measure, measureIndex) => {
-    const row = el('section', 'measure');
+    const row = el('section', measureIndex === selected ? 'measure selected' : 'measure');
     row.dataset.measure = String(measureIndex);
     row.dataset.timeSignature = measure.timeSignature;
+    row.appendChild(measureNumber(measureIndex, { selectable: true, selected: measureIndex === selected, action: 'composer-select-measure' }));
     // The meter label is the Time Signature control, as in Practice's grid (AC-1.4.1, AC-19.11.7/2).
     const meter = el('button', 'measure-meter prominent', { type: 'button', textContent: measure.timeSignature });
     meter.dataset.action = 'composer-time-signature';
@@ -630,16 +634,26 @@ function renderControls(draft, instrument, key, scale, state, handlers) {
     vary.dataset.action = 'add-variation';
     vary.setAttribute('title', canDuplicate(draft) ? 'Append a variation of the original — several techniques at once, heard before it is written' : `A Pattern may hold at most ${MAX_MEASURES} Measures`);
     vary.addEventListener('click', () => handlers.onComposerAddVariation?.(vary));
-    // + Measure and − Measure as Practice's grid offers them (AC-1.1.3, AC-1.1.8, AC-19.11.7/2).
+    // Practice's Measures row, on the part on screen (AC-1.1.9–AC-1.1.12, AC-19.11.7/2).
     const count = draft.measures.length;
-    const addM = button('action composer-add-measure', '+ Measure', 'composer-add-measure', { disabled: count >= MAX_MEASURES });
-    addM.setAttribute('title', count >= MAX_MEASURES ? `A Pattern may hold at most ${MAX_MEASURES} Measures` : 'Add a Measure after the last, in its meter');
+    const sel = selectedMeasure(draft, state.composer.measureSelection ?? null);
+    const full = count >= MAX_MEASURES;
+    const capped = `A Pattern may hold at most ${MAX_MEASURES} Measures`;
+    const picker = measurePicker(count, sel, 'composer-measure-select', (i) => handlers.onComposerSelectMeasure?.(i));
+    const before = button('action composer-add-measure-before', '+ Before', 'composer-add-measure-before', { disabled: full });
+    before.setAttribute('title', full ? capped : `Add a Measure before Measure ${sel + 1}, in its meter`);
+    before.addEventListener('click', () => handlers.onComposerAddMeasureBefore?.());
+    const addM = button('action composer-add-measure', '+ After', 'composer-add-measure', { disabled: full });
+    addM.setAttribute('title', full ? capped : `Add a Measure after Measure ${sel + 1}, in its meter`);
     addM.addEventListener('click', () => handlers.onComposerAddMeasure?.());
-    const removeM = button('action composer-remove-measure', '− Measure', 'composer-remove-measure', { disabled: count <= 1 });
-    removeM.setAttribute('title', count <= 1 ? 'A Pattern keeps at least one Measure' : 'Remove the last Measure');
+    const removeM = button('action composer-remove-measure', 'Remove', 'composer-remove-measure', { disabled: count <= 1 });
+    removeM.setAttribute('title', count <= 1 ? 'A Pattern keeps at least one Measure' : `Remove Measure ${sel + 1}`);
     removeM.addEventListener('click', () => handlers.onComposerRemoveMeasure?.());
+    const moveM = button('action composer-move-measure', 'Move…', 'composer-move-measure', { disabled: count <= 1 });
+    moveM.setAttribute('title', count <= 1 ? 'There is no other Measure to move it past' : `Move Measure ${sel + 1} before or after another`);
+    moveM.addEventListener('click', () => handlers.onComposerMoveMeasure?.());
     const measures = el('div', 'control-group structure-row');
-    measures.append(addM, removeM, vary, dup);
+    measures.append(picker, before, addM, removeM, moveM, vary, dup);
     wrap.appendChild(labelled('Measures', measures));
   }
   return wrap;

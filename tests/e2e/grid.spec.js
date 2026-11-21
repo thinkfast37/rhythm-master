@@ -96,7 +96,7 @@ async function applyRecipe(page, recipeId, measure = 0, beat = 0) {
 
 // --- US-1.1: −Measure, specified in the MVP and built with T274 ---------------
 
-test('AC-1.1.8/1 — The −Measure control is disabled on a one-Measure Pattern', async ({ page }) => {
+test('AC-1.1.8/1 — The Remove control is disabled on a one-Measure Pattern', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
@@ -120,37 +120,54 @@ test('AC-1.1.8/2 — Deleting the whole Pattern remains a separate, explicit act
   await page.goto('/');
   await page.evaluate(() => window.__rm.loadBlank('4/4'));
 
-  // One Measure: −Measure is off, and Delete is on — in the Pattern actions,
+  // One Measure: Remove is off, and Delete is on — in the Pattern actions,
   // not among the Measure controls.
   await expect(page.locator('[data-action="remove-measure"]')).toBeDisabled();
+  await expect(page.locator('[data-action="remove-measure"]')).toHaveText('Remove');
   const del = page.locator('[data-action="delete-pattern"]');
   await expect(del).toBeEnabled();
   await expect(page.locator('[data-section="actions"] [data-action="delete-pattern"]')).toHaveCount(1);
   await expect(page.locator('[data-section="rhythm"] [data-action="delete-pattern"]')).toHaveCount(0);
 });
 
-test('AC-1.1.9 — Measure removal is always from the end', async ({ page }) => {
-  await page.goto('/');
-  await loadMeasures(page, ['4/4', '3/4', '7/8']);
-  // Content in the first two, so "unchanged" is checked against something.
-  await page.locator('.measure[data-measure="0"] .slot[data-beat="1"][data-slot="0"]').click();
-  await page.locator('.measure[data-measure="1"] .slot[data-beat="2"][data-slot="0"]').click();
-
-  await page.locator('[data-action="remove-measure"]').click();
-
-  await expect(page.locator('.measure')).toHaveCount(2);
-  const remaining = await page.evaluate(() =>
+const measureShape = (page) =>
+  page.evaluate(() =>
     window.__rm.getState().pattern.measures.map((m) => ({
       ts: m.timeSignature,
       on: m.beats.flatMap((b, bi) => b.slots.map((s, si) => (s.on ? `${bi}.${si}` : null))).filter(Boolean),
     }))
   );
-  expect(remaining).toEqual([
+
+test('AC-1.1.9 — Remove takes the selected Measure: the one chosen, from the middle', async ({ page }) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '3/4', '7/8']);
+  // Content in every Measure, so "unchanged" is checked against something.
+  await page.locator('.measure[data-measure="0"] .slot[data-beat="1"][data-slot="0"]').click();
+  await page.locator('.measure[data-measure="1"] .slot[data-beat="2"][data-slot="0"]').click();
+  await page.locator('.measure[data-measure="2"] .slot[data-beat="6"][data-slot="0"]').click();
+
+  await page.locator('.measure[data-measure="1"] [data-action="select-measure"]').click();
+  await page.locator('[data-action="remove-measure"]').click();
+
+  await expect(page.locator('.measure')).toHaveCount(2);
+  expect(await measureShape(page)).toEqual([
+    { ts: '4/4', on: ['1.0'] },
+    { ts: '7/8', on: ['6.0'] },
+  ]);
+});
+
+test('AC-1.1.9 — Remove takes the selected Measure: the last when none is chosen', async ({ page }) => {
+  await page.goto('/');
+  await loadMeasures(page, ['4/4', '3/4', '7/8']);
+  await page.locator('.measure[data-measure="0"] .slot[data-beat="1"][data-slot="0"]').click();
+  await page.locator('.measure[data-measure="1"] .slot[data-beat="2"][data-slot="0"]').click();
+
+  await page.locator('[data-action="remove-measure"]').click();
+
+  expect(await measureShape(page)).toEqual([
     { ts: '4/4', on: ['1.0'] },
     { ts: '3/4', on: ['2.0'] },
   ]);
-  // The one taken was the last — the 7/8 — never one from the middle.
-  await expect(page.locator('.measure[data-measure="1"]')).toHaveAttribute('data-time-signature', '3/4');
 });
 
 test('AC-1.4.1 — Time Signature label is itself the picker control: every Measure shows its own current Time Signature', async ({

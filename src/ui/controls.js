@@ -45,7 +45,7 @@ import { PERCUSSION_MODES, normalisePercussion } from '../core/drums.js';
 import { renderArticulation } from './articulation.js';
 import { ATTRIBUTION as PIANO_ATTRIBUTION } from '../audio/pianoSamples.js';
 import { COUNTING_SYSTEMS, COUNTING_LABELS, isForcedNumbered } from '../core/counting.js';
-import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES } from '../core/pattern.js';
+import { MIN_TEMPO, MAX_TEMPO, MAX_MEASURES, selectedMeasure } from '../core/pattern.js';
 import { subdivisionGroups } from '../core/recipes.js';
 import { MIN_SWING, MAX_SWING, DEFAULT_SWING_FEEL } from '../core/swing.js';
 import { renderStars } from './library.js';
@@ -1653,25 +1653,37 @@ function renderTempo(pattern, handlers) {
 
 /**
  * The Measure controls (US-1.1, US-8.1, US-10.1, US-10.2): the ways a Pattern
- * gets longer or shorter, in one row. −Measure takes the last Measure
- * (AC-1.1.9) and is disabled, not hidden, on a one-Measure Pattern
- * (AC-1.1.8/1); Condense is disabled the same way when no halving is possible
- * (AC-10.2.3), so the Composer sees that the option exists.
+ * gets longer, shorter or reordered, in one row. The picker says which Measure
+ * is selected — the last when none is chosen (AC-1.1.10/3) — and + Before,
+ * + After, Remove and Move… act on it (AC-1.1.9, AC-1.1.11, AC-1.1.12).
+ * Remove and Move… are disabled, not hidden, on a one-Measure Pattern
+ * (AC-1.1.8/1, AC-1.1.12/3); Condense is disabled the same way when no halving
+ * is possible (AC-10.2.3), so the Composer sees that the option exists.
  */
 function renderStructure(pattern, state, handlers) {
   const row = el('div', 'control-group structure-row');
   const measures = pattern.measures.length;
+  // The Pattern's own Measures, never an auditioned candidate's (AC-10.4.4/2).
+  const own = state?.pattern ?? pattern;
+  const count = own.measures.length;
+  const selected = selectedMeasure(own, state?.measureSelection ?? null);
 
-  const button = (action, label, onClick, disabled) => {
+  const button = (action, label, onClick, disabled, title = '') => {
     const b = el('button', 'action', { type: 'button', textContent: label, disabled });
     b.dataset.action = action;
+    if (title) b.title = title;
     b.addEventListener('click', onClick);
     row.appendChild(b);
     return b;
   };
 
-  button('remove-measure', '− Measure', () => handlers.onRemoveMeasure(), measures <= 1);
-  button('add-measure', '+ Measure', () => handlers.onAddMeasure(), measures >= MAX_MEASURES);
+  row.appendChild(measurePicker(count, selected, 'measure-select', (i) => handlers.onSelectMeasure(i)));
+  const full = count >= MAX_MEASURES;
+  const capped = `A Pattern may hold at most ${MAX_MEASURES} Measures`;
+  button('add-measure-before', '+ Before', () => handlers.onAddMeasureBefore(), full, full ? capped : `Add a Measure before Measure ${selected + 1}`);
+  button('add-measure', '+ After', () => handlers.onAddMeasure(), full, full ? capped : `Add a Measure after Measure ${selected + 1}`);
+  button('remove-measure', 'Remove', () => handlers.onRemoveMeasure(), count <= 1, count <= 1 ? 'A Pattern keeps at least one Measure' : `Remove Measure ${selected + 1}`);
+  button('move-measure', 'Move…', () => handlers.onMoveMeasure(), count <= 1, count <= 1 ? 'There is no other Measure to move it past' : `Move Measure ${selected + 1} before or after another`);
   // Before Double Length, so Condense still follows Double Length directly (AC-10.2.3).
   addVariationButton(row, pattern, state, handlers);
   button('duplicate-pattern', 'Double Length', () => handlers.onDuplicate(), measures * 2 > MAX_MEASURES);
@@ -1679,6 +1691,23 @@ function renderStructure(pattern, state, handlers) {
   button('append-pattern', 'Append…', () => handlers.onAppendPrompt(), measures >= MAX_MEASURES);
 
   return labelledGroup('Measures', row);
+}
+
+/**
+ * The selected-Measure picker (AC-1.1.10/2): one option per Measure, showing
+ * the selected one, and choosing in it selects as tapping a number does.
+ * Shared with the Composer's Measures row (AC-19.11.7/2).
+ */
+export function measurePicker(count, selected, action, onPick) {
+  const picker = el('select', 'measure-picker');
+  picker.dataset.action = action;
+  picker.setAttribute('aria-label', 'Selected Measure');
+  for (let i = 0; i < count; i++) {
+    picker.appendChild(el('option', null, { value: String(i), textContent: `Measure ${i + 1}` }));
+  }
+  picker.value = String(selected);
+  picker.addEventListener('change', (e) => onPick(Number(e.target.value)));
+  return picker;
 }
 
 /**

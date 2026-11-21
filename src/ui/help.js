@@ -50,7 +50,10 @@ export const HELP = Object.freeze({
   ],
   rhythm: [
     ['Subdivision', 'Arm a Recipe, then tap a Beat in the grid to split it that way.', '.recipe-strip .control-label'],
-    ['− Measure / + Measure', 'Removes the last Measure, or adds one at the end; a Pattern always keeps one.', '[data-action="add-measure"]'],
+    ['Measure', 'Which Measure the buttons beside it act on. Tap a Measure’s number in the grid to choose it; with none chosen it is the last.', '[data-action="measure-select"]'],
+    ['+ Before / + After', 'Adds a blank Measure in front of or after the chosen one, in its time signature.', '[data-action="add-measure"]'],
+    ['Remove', 'Removes the chosen Measure; a Pattern always keeps one.', '[data-action="remove-measure"]'],
+    ['Move…', 'Moves the chosen Measure, with everything in it, before or after another.', '[data-action="move-measure"]'],
     ['Time signature', 'Tap a Measure’s signature in the grid to change it; every Measure can differ.', '.control:has(> .structure-row) > .control-label'],
     ['Double Length', 'Repeats the whole Pattern after itself, to vary the second half.', '[data-action="duplicate-pattern"]'],
     ['Add variation', 'Appends a variation of the original — the first Measures — built from several techniques at once: a chord’s inversion, quality or fill changed in that copy alone, syllables added, moved or removed, a triplet or a 16th fill, the accent shifted. Opening it starts the loop, so you hear the original and then the candidate as you build it; nothing is written until Accept. Each choice is offered, and the dice roll one to three techniques for you.', '[data-action="add-variation"]'],

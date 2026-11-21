@@ -3096,3 +3096,33 @@ button:disabled.palette-fill, .play-chain:disabled, .chain-save:disabled, .chain
 }
 .update-notice-text { margin-right: 4px; }
 .update-notice .dialog-button { flex: none; white-space: nowrap; }
+
+/*
+ * Every Measure carries its number, small and muted, sitting on its top edge
+ * like a bar number on a stave (AC-1.1.10/1) — positioned, so it takes no width
+ * from the Beats. Where Measures can be edited it is the button that selects
+ * one (AC-1.1.10/2), its hit area widened past its small face.
+ */
+.measure { position: relative; }
+.measure-number {
+  position: absolute;
+  top: -8px;
+  left: 6px;
+  z-index: 1;
+  min-width: 16px;
+  padding: 1px 5px;
+  background: var(--panel);
+  color: var(--ink-dim);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 600 10px/1.2 var(--font-mono);
+  text-align: center;
+}
+button.measure-number { cursor: pointer; }
+button.measure-number::after { content: ''; position: absolute; inset: -6px -4px; }
+button.measure-number:hover { color: var(--brand); border-color: var(--brand); }
+.measure-number.selected { background: var(--brand); color: var(--panel); border-color: var(--brand); }
+.measure.selected { outline: 2px solid var(--brand); outline-offset: 1px; }
+.measure.candidate .measure-number { display: none; }
+.measure-picker { font: inherit; }
+.move-measure-fields { display: flex; gap: 8px; margin: 8px 0 12px; }

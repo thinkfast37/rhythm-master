@@ -69,14 +69,15 @@ from this view.)*
 
 - **AC-1.1.2** — Appending inherits the preceding Measure's Time Signature
   - **Given** a Pattern of 2 Measures whose last Measure is 3/4
-  - **When** the Composer taps +Measure
+  - **When** the Composer taps + After with no Measure chosen, so that the last is selected (AC-1.1.10)
   - **Then** a third Measure is appended at the end, set to 3/4, with default Recipe Beats and all Slots off
-  - **And** no control exists to insert a Measure anywhere other than the end
+  - *(Revised 2026-11-21 at the maintainer's request, T560. The And clause read "no control exists to insert a Measure anywhere other than the end". The maintainer: "I want to be able to choose if I am going to add or remove before measure X". Inserting anywhere is AC-1.1.11; appending is now + After with the last Measure selected, which is the selection when none is chosen, so what this criterion asserts is unchanged.)*
 
 - **AC-1.1.3** — 32-Measure cap disables +Measure
   - **Given** a Pattern with exactly 32 Measures
   - **When** the Composer looks at the +Measure control
   - **Then** it is disabled — a Pattern cannot exceed 32 Measures
+  - *(2026-11-21, T560: +Measure is now two controls, + Before and + After (AC-1.1.11); the cap disables both.)*
   - *(Revised 2026-10-23. The cap was 8. The maintainer asked for 32 — a whole tune's form, a
     32-bar AABA or a twelve-bar blues written out with its turnaround, in one Pattern rather than
     a chain or a chord strip carrying it across passes. This reverses D-011's "Kept at 8". 32 is
@@ -126,18 +127,51 @@ from this view.)*
 
 - **AC-1.1.8** — Last remaining Measure can't be removed
   - **Given** a Pattern with exactly one Measure
-  - **When** the Composer looks at the −Measure control
+  - **When** the Composer looks at the Remove control
   - **Then** it is disabled
   - **And** deleting the whole Pattern remains available as a separate, explicit action elsewhere in the UI
   - **Cases**:
-    - **AC-1.1.8/1** — The −Measure control is disabled on a one-Measure Pattern
+    - **AC-1.1.8/1** — The Remove control is disabled on a one-Measure Pattern
     - **AC-1.1.8/2** — Deleting the whole Pattern remains a separate, explicit action elsewhere in the UI
   - *(Cases added 2026-09-13 with T274, which finally builds the control. The criterion was specified in the MVP, its mutator written and unit-tested, and no control ever called it — the finding `check:unwired` was built for (CLAUDE.md §2c). −Measure sits in the Rhythm group beside + Measure (AC-15.1.8).)*
 
-- **AC-1.1.9** — Measure removal is always from the end
+- **AC-1.1.9** — Remove takes the selected Measure
   - **Given** a Pattern with more than one Measure
-  - **When** the Composer taps −Measure
-  - **Then** the last Measure is removed, and every remaining Measure keeps its own Time Signature and content unchanged — removal is always from the end, never from the middle
+  - **When** the Composer taps Remove
+  - **Then** the selected Measure is removed — the last when none is chosen (AC-1.1.10) — and every remaining Measure keeps its own Time Signature and content unchanged, in its order
+  - *(Revised 2026-11-21 at the maintainer's request, T560. This read "Measure removal is always from the end … never from the middle", the control being −Measure. The maintainer: "Right now there is a plus and minus measure option only that allows me to just add and remove from the end … I want to be able to choose if I am going to add or remove before measure X." Read as removing Measure X itself. With no Measure chosen the last is selected, so an untouched Measures row removes from the end as before. The removed Measure's chord overrides go with it (AC-10.4.7/2). The control was renamed Remove in AC-1.1.8/1.)*
+
+- **AC-1.1.10** — Every Measure is numbered, and one is selected
+  - **Given** a Pattern on screen
+  - **When** the musician looks at its Measures
+  - **Then** each carries its number, small and muted beside its Time Signature, wherever the Pattern's grid is shown; where the Measures can be edited, tapping a number selects that Measure and a picker in the Measures row says which is selected and selects as well
+  - **Cases**:
+    - **AC-1.1.10/1** — Every Measure shows its number, counting from 1, in Practice's grid, on a practice goal's read-only grid and in the Composer's grid, and the numbers follow every Measure edit
+    - **AC-1.1.10/2** — Tapping a Measure's number selects it: the Measure and its number are marked, the Measures row's picker shows it, and choosing in the picker selects the same way
+    - **AC-1.1.10/3** — With no Measure chosen, or the chosen one gone, the last Measure is selected; opening another Pattern clears the choice
+    - **AC-1.1.10/4** — A practice goal's read-only grid shows the numbers and offers no selection
+  - *(Added 2026-11-21 at the maintainer's request, T560: "I want to see a measure number for each measure. It should be small but visible." And: "I also want to be able to select a measure". Ruled with the maintainer the same day: the numbers are on the grids only — the Sheet and Score views are unchanged; the number is how a Measure is selected; the last is selected when none is chosen, so the Measures row does what it did before until a Measure is chosen.)*
+
+- **AC-1.1.11** — A Measure is added before or after the selected one
+  - **Given** a Pattern on screen with a Measure selected
+  - **When** the Composer taps + Before or + After
+  - **Then** a blank Measure, in the selected Measure's Time Signature with default Recipe Beats and all Slots off, is inserted immediately before or after it, every other Measure keeping its Time Signature and content in its order, and the new Measure becomes the selected one
+  - **Cases**:
+    - **AC-1.1.11/1** — + Before inserts a blank Measure in the selected Measure's Time Signature immediately in front of it, and selects the new Measure
+    - **AC-1.1.11/2** — + After inserts a blank Measure in the selected Measure's Time Signature immediately after it, and selects the new Measure
+    - **AC-1.1.11/3** — Every other Measure keeps its Time Signature, Beats, Slots and chord overrides, in its order
+  - *(Added 2026-11-21 at the maintainer's request, T560, quoted at AC-1.1.9. The cap disables both controls (AC-1.1.3). Decision taken without asking: the new Measure is selected, so pressing + After again builds forward in order, as + Measure did.)*
+
+- **AC-1.1.12** — A Measure is moved before or after another
+  - **Given** a Pattern of more than one Measure with a Measure selected
+  - **When** the Composer taps Move… and chooses Before or After a Measure
+  - **Then** the selected Measure is moved there carrying everything that is its own, and every other Measure keeps its content in its order
+  - **Cases**:
+    - **AC-1.1.12/1** — Move… opens a dialog naming the selected Measure that offers Before or After and the number of any other Measure, with Move and Cancel; Cancel changes nothing, and Move is disabled while the choice would leave the order as it is
+    - **AC-1.1.12/2** — The moved Measure carries its Time Signature, Beats, Slots, Accents, Pitches and chord overrides to its new place, every other Measure keeps its own in its order, and the moved Measure stays selected
+    - **AC-1.1.12/3** — Move… is disabled on a one-Measure Pattern
+    - **AC-1.1.12/4** — An insert, a removal and a move are each one Undo step, and on a shipped Pattern each asks for a name first, as every edit to one does
+  - *(Added 2026-11-21 at the maintainer's request, T560: "I also want to be able to select a measure and move it before or after measure X." Ruled with the maintainer the same day: the progression is not moved — its chords stay with the positions they fall on, so a moved Measure can land under a different chord — while a Measure's own chord overrides travel with it (AC-10.4.7/2).)*
 
 *(How a Measure's Time Signature is displayed and changed in the grid is specified in US-1.4.)*
 
@@ -4875,12 +4909,13 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - **Then** the override is saved and carried as the chord's own fields are, follows its Measure through every Measure edit, counts as a difference between Patterns, and is heard from the one timeline wherever the Pattern sounds
   - **Cases**:
     - **AC-10.4.7/1** — An override is saved with the Pattern and survives a reload, is carried by the Pattern's JSON export and its submission, and a Pattern saved before overrides existed loads unchanged, with none
-    - **AC-10.4.7/2** — Removing the last Measure drops that Measure's overrides with it; Double Length copies each Measure's overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on
+    - **AC-10.4.7/2** — Removing a Measure drops that Measure’s overrides with it; inserting or moving one keeps every override with the Measure it was on; Double Length copies each Measure’s overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on
     - **AC-10.4.7/3** — Two Patterns whose Measures are the same but whose overrides differ are not duplicates; they are the same Family, as two Patterns with one rhythm and different notes are
     - **AC-10.4.7/4** — Setting the Arpeggio to None drops every fill override as it drops every chord's own fill; removing a chord drops its overrides and the overrides of the chords after it move with their chords; editing a chord's root, quality, bass, omitted members or fill in the chord editor leaves its overrides in place, each read through the same bounds as the chord's own fields so none can name a member the chord lacks
     - **AC-10.4.7/5** — Playback, the grid's note bands and chord names, the score and MIDI export all follow the override for its Measures, from the one timeline; the MIDI file and the JSON carry no technique name, stack or original length
     - **AC-10.4.7/6** — Choosing Progression None bakes the first pass as it sounded, overrides included, and drops them with the progression
-  - *(Cross-references, kept out of the Case wording: /2's edits are AC-1.1.9's, AC-10.1.1's, US-10.2's and AC-1.1.3's; /3 is US-11.1's and US-11.2's comparison; /4's Arpeggio rule is AC-2.15.1/2's; /5's one timeline is FR-013's; /6 follows AC-2.15.2/4.)*
+  - *(/2 revised 2026-11-21, T560: it read "Removing the last Measure"; a Measure can now be removed, inserted and moved anywhere (AC-1.1.9, AC-1.1.11, AC-1.1.12).)*
+  - *(Cross-references, kept out of the Case wording: /2's edits are AC-1.1.9's, AC-1.1.11's, AC-1.1.12's, AC-10.1.1's, US-10.2's and AC-1.1.3's; /3 is US-11.1's and US-11.2's comparison; /4's Arpeggio rule is AC-2.15.1/2's; /5's one timeline is FR-013's; /6 follows AC-2.15.2/4.)*
 
 - **AC-10.4.8** — The Add variation dialog
   - **Given** the grid editor or the Composer
@@ -5005,8 +5040,9 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - *(Added 2026-11-13 at the maintainer's request: "I also want to be able to just create a new pattern as a layer. And when I do that I need to be able to do things like edit the number of measures in it, just like I would be if I am creating a new pattern in the practice view." Decisions taken without asking: the new part is saved at once, as a new Pattern in Practice is (AC-7.1.2), so an Arrangement can name it; it starts silent and one Measure long in the arrangement's meter, tempo, swing and Key; the Measure controls are the Composer's own, for any part on screen, and a part is still the open Pattern in Practice, so whatever Practice offers applies there and comes back.)*
   - **Cases**:
     - **AC-19.11.7/1** — New layer asks a name, pre-filled with the part on screen's name and "layer", creates a one-Measure Pattern in that part's meter, tempo, swing and Key with every Slot silent, saves it to the library, and puts it on screen as the last part, the part it replaces going among the layers
-    - **AC-19.11.7/2** — The Composer's Measures row adds a Measure after the last, in its meter, up to the cap, and removes the last down to one; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass
+    - **AC-19.11.7/2** — The Composer's Measures row selects a Measure, adds one before or after it in its meter up to the cap, removes it down to one and moves it, as Practice's does; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass
     - **AC-19.11.7/3** — A saved part on screen is the open Pattern in Practice: Measures, meter and anything else changed there are on screen again on returning to the Composer, the layers kept
+  - *(AC-19.11.7/2 revised 2026-11-21 at the maintainer's request, T560: it read "adds a Measure after the last, in its meter, up to the cap, and removes the last down to one". The maintainer asked for insert, remove and move "globally - the composer and the practice mode" (AC-1.1.9–AC-1.1.12). A Measure's recorded notes are its Slots' Pitches, so they travel with it. Ruled with the maintainer the same day: the change is to the part on screen alone, as every Measure change there is, so moving or inserting a Measure in one part can put it out of line with the other layers.)*
 
 - **AC-19.11.8** — The Section as sheet music
   - **Given** a composition with layers

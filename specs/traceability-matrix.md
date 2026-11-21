@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1275 across 78 User Stories
+**Criteria**: 1286 across 78 User Stories
 
-**Coverage**: 1149 of 1275 criteria proven (90.1%)
+**Coverage**: 1161 of 1286 criteria proven (90.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1149 | 90.1% |
-| 🟠 Gap — MEDIUM | 50 | 3.9% |
-| 🟡 Gap — LOW | 76 | 6.0% |
+| 🟢 Proven | 1161 | 90.3% |
+| 🟠 Gap — MEDIUM | 49 | 3.8% |
+| 🟡 Gap — LOW | 76 | 5.9% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -50,14 +50,14 @@ cannot be talked down when a deadline is close.
 and MEDIUM may be waived — CRITICAL and HIGH are exactly the states that let unbuilt work
 report as complete, so no reason clears them (Constitution Principle IV).
 
-ᵃ marks a gap accepted as pre-existing debt (126 rows). It is reported but does not
+ᵃ marks a gap accepted as pre-existing debt (125 rows). It is reported but does not
 fail the build, and it is outstanding work — never a settled decision.
 
 ## Coverage by User Story
 
 | User Story | Criteria | 🟢 Proven | 🔵 Waived | 🔴 CRITICAL | 🔴 HIGH | 🟠 MEDIUM | 🟡 LOW |
 |---|---|---|---|---|---|---|---|
-| 🟠 US-1.1 | 11 | 7 | · | · | · | 1 | 3 |
+| 🟡 US-1.1 | 22 | 19 | · | · | · | · | 3 |
 | 🟠 US-1.2 | 4 | 0 | · | · | · | 4 | · |
 | 🟠 US-1.3 | 19 | 9 | · | · | · | 4 | 6 |
 | 🟠 US-1.4 | 8 | 0 | · | · | · | 6 | 2 |
@@ -140,17 +140,28 @@ fail the build, and it is outstanding work — never a settled decision.
 
 | Story | Criterion | What it requires | Plan | Implementation tasks | Test tasks | Proving test | Status |
 |---|---|---|---|---|---|---|---|
-| US-1.1 | `AC-1.1.1` | New Pattern defaults | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `trace-pattern-ops.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
-| US-1.1 | `AC-1.1.3` 🖵 | 32-Measure cap disables +Measure | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.5/1` 🖵 | The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.5/2` 🖵 | A Measure other than the first changes alone, with no prompt | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.6` | Time Signature change resets that Measure's content | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.1 | `AC-1.1.7` | Time Signature reset is undoable | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
-| US-1.1 | `AC-1.1.8/1` 🖵 | The −Measure control is disabled on a one-Measure Pattern | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.8/2` 🖵 | Deleting the whole Pattern remains a separate, explicit action elsewhere in the UI | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `grid.spec.js` | 🟢 OK |
-| US-1.1 | `AC-1.1.9` 🖵 | Measure removal is always from the end | P-005 | T036, T037, T274 (3/3 done) | T038, T275 (2/2 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.1` | New Pattern defaults | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.1 | `AC-1.1.2` 🖵 | Appending inherits the preceding Measure's Time Signature | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `trace-pattern-ops.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.3` 🖵 | 32-Measure cap disables +Measure | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.4` 🖵 | Single-Measure Time Signature change applies immediately | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `trace-pattern-ops.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.5/1` 🖵 | The first Measure's Time Signature change offers Apply to all, This measure only, and Cancel | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.5/2` 🖵 | A Measure other than the first changes alone, with no prompt | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.6` | Time Signature change resets that Measure's content | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.1 | `AC-1.1.7` | Time Signature reset is undoable | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `remaining.spec.js` | 🟡 **LOW** · MISNAMED ᵃ |
+| US-1.1 | `AC-1.1.8/1` 🖵 | The Remove control is disabled on a one-Measure Pattern | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.8/2` 🖵 | Deleting the whole Pattern remains a separate, explicit action elsewhere in the UI | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.9` 🖵 | Remove takes the selected Measure | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `grid.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.10/1` 🖵 | Every Measure shows its number, counting from 1, in Practice's grid, on a practice goal's read-only grid and in the Composer's grid, and the numbers follow every Measure edit | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.10/2` 🖵 | Tapping a Measure's number selects it: the Measure and its number are marked, the Measures row's picker shows it, and choosing in the picker selects the same way | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.10/3` 🖵 | With no Measure chosen, or the chosen one gone, the last Measure is selected; opening another Pattern clears the choice | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.10/4` 🖵 | A practice goal's read-only grid shows the numbers and offers no selection | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.11/1` 🖵 | + Before inserts a blank Measure in the selected Measure's Time Signature immediately in front of it, and selects the new Measure | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.11/2` 🖵 | + After inserts a blank Measure in the selected Measure's Time Signature immediately after it, and selects the new Measure | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.11/3` 🖵 | Every other Measure keeps its Time Signature, Beats, Slots and chord overrides, in its order | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.12/1` 🖵 | Move… opens a dialog naming the selected Measure that offers Before or After and the number of any other Measure, with Move and Cancel; Cancel changes nothing, and Move is disabled while the choice would leave the order as it is | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.12/2` 🖵 | The moved Measure carries its Time Signature, Beats, Slots, Accents, Pitches and chord overrides to its new place, every other Measure keeps its own in its order, and the moved Measure stays selected | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `pattern.test.js`, `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.12/3` 🖵 | Move… is disabled on a one-Measure Pattern | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
+| US-1.1 | `AC-1.1.12/4` 🖵 | An insert, a removal and a move are each one Undo step, and on a shipped Pattern each asks for a name first, as every edit to one does | P-005 | T036, T037, T274, T560 (4/4 done) | T038, T275, T561 (3/3 done) | `measure-arrange.spec.js` | 🟢 OK |
 | US-1.2 | `AC-1.2.1` | Beat count and note-value are independent per Measure | P-006 | T039, T400 (2/2 done) | T040, T401 (2/2 done) | `meter.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.2 | `AC-1.2.2` | Beat count/note-value table for all 14 Time Signatures | P-006 | T039, T400 (2/2 done) | T040, T401 (2/2 done) | `meter.test.js`, `grid.spec.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
 | US-1.2 | `AC-1.2.3` | 7/8 is 7 ungrouped Beats | P-006 | T039, T400 (2/2 done) | T040, T401 (2/2 done) | `meter.test.js` | 🟠 **MEDIUM** · NEEDS CASES ᵃ |
@@ -1224,7 +1235,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-10.4 | `AC-10.4.6/5` 🖵 | Each technique group carries a No dice toggle that keeps the group out of the roll and changes nothing else; the toggles hold for the session and are not Pattern content | P-071 | T466 (1/1 done) | T467 (1/1 done) | `variations.spec.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.6/6` 🖵 | The roll draws no random number of its own inside the musical rules: given the same draws it builds the same candidate | P-071 | T466 (1/1 done) | T467 (1/1 done) | `variations.test.js`, `variations.spec.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.7/1` | An override is saved with the Pattern and survives a reload, is carried by the Pattern's JSON export and its submission, and a Pattern saved before overrides existed loads unchanged, with none | P-071 | T466 (1/1 done) | T467 (1/1 done) | `chord-override.test.js`, `variations.spec.js` | 🟢 OK |
-| US-10.4 | `AC-10.4.7/2` | Removing the last Measure drops that Measure's overrides with it; Double Length copies each Measure's overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on | P-071 | T466 (1/1 done) | T467 (1/1 done) | `chord-override.test.js`, `variations.spec.js` | 🟢 OK |
+| US-10.4 | `AC-10.4.7/2` | Removing a Measure drops that Measure’s overrides with it; inserting or moving one keeps every override with the Measure it was on; Double Length copies each Measure’s overrides onto its mirrored Measure; Condense and Append keep every override with the Measure it was on | P-071 | T466 (1/1 done) | T467 (1/1 done) | `chord-override.test.js`, `variations.spec.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.7/3` | Two Patterns whose Measures are the same but whose overrides differ are not duplicates; they are the same Family, as two Patterns with one rhythm and different notes are | P-071 | T466 (1/1 done) | T467 (1/1 done) | `chord-override.test.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.7/4` | Setting the Arpeggio to None drops every fill override as it drops every chord's own fill; removing a chord drops its overrides and the overrides of the chords after it move with their chords; editing a chord's root, quality, bass, omitted members or fill in the chord editor leaves its overrides in place, each read through the same bounds as the chord's own fields so none can name a member the chord lacks | P-071 | T466 (1/1 done) | T467 (1/1 done) | `chord-override.test.js` | 🟢 OK |
 | US-10.4 | `AC-10.4.7/5` | Playback, the grid's note bands and chord names, the score and MIDI export all follow the override for its Measures, from the one timeline; the MIDI file and the JSON carry no technique name, stack or original length | P-071 | T466 (1/1 done) | T467 (1/1 done) | `chord-override.test.js`, `variations.spec.js` | 🟢 OK |
@@ -1273,7 +1284,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.11 | `AC-19.11.6/5` 🖵 | The part on screen is marked in the Layers section and cannot be muted or removed there; each part's repeats in the loop are unchanged by which part is on screen, the loop readout counting in passes of that part | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.6/6` 🖵 | Leaving the Composer, or opening another rhythm, with any part unsaved asks first, naming every unsaved part; a saved Section remembers which part was on screen and opens on it | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `section.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.7/1` 🖵 | New layer asks a name, pre-filled with the part on screen's name and "layer", creates a one-Measure Pattern in that part's meter, tempo, swing and Key with every Slot silent, saves it to the library, and puts it on screen as the last part, the part it replaces going among the layers | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
-| US-19.11 | `AC-19.11.7/2` 🖵 | The Composer's Measures row adds a Measure after the last, in its meter, up to the cap, and removes the last down to one; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
+| US-19.11 | `AC-19.11.7/2` 🖵 | The Composer's Measures row selects a Measure, adds one before or after it in its meter up to the cap, removes it down to one and moves it, as Practice's does; tapping a Measure's meter in the composing grid sets its Time Signature, the first Measure offering Apply to all as Practice does; every change is to the part on screen and heard from the next pass | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.7/3` 🖵 | A saved part on screen is the open Pattern in Practice: Measures, meter and anything else changed there are on screen again on returning to the Composer, the layers kept | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.8/1` 🖵 | A Grid \| Score switch sits in the record bar, Grid on first use; Score puts one staff per part in the composing grid's place, in the parts' order, each headed by the part's name, the part on screen marked and a muted part marked, each staff one combined loop long with the part repeated as it plays and a progression walking its chords | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `notation.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.11 | `AC-19.11.8/2` 🖵 | While playing, the cursor runs in the part on screen's staff and nowhere else, following the loop through every repeat | P-072 | T471, T473, T477, T479, T481, T483, T485, T493 (8/8 done) | T472, T474, T478, T480, T482, T484, T486, T494 (8/8 done) | `layers.spec.js` | 🟢 OK |

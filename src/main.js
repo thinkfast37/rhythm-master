@@ -9,7 +9,11 @@
 import {
   create,
   addMeasure,
+  insertMeasure,
   removeMeasure,
+  moveMeasure,
+  movedIndex,
+  selectedMeasure,
   setTimeSignature,
   setTimeSignatureAll,
   setRecipe,
@@ -126,6 +130,7 @@ import {
   confirm,
   confirmRecipeChange,
   askApplyToAllMeasures,
+  askMoveMeasure,
   askNewPatternName,
   showDuplicates,
   showSubmission,
@@ -210,6 +215,8 @@ const state = {
   transportPosition: null,
   /** Provenance: true when the Pattern came from the user's own store (data-model §5). */
   isOwned: false,
+  /** The Measure the musician chose, `{ id, index }`, or null for the last (AC-1.1.10/3). Never Pattern data. */
+  measureSelection: null,
   isPlaying: false,
   /** Reset audio's verdict when the replacement's clock is not moving (AC-4.1.16/3), else null. */
   audioNotice: null,
@@ -306,6 +313,8 @@ const state = {
     recording: false,
     target: null,
     selected: null,
+    /** The Measure chosen on the part on screen, `{ id, index }`, or null for the last (AC-1.1.10/3, AC-19.11.7/2). */
+    measureSelection: null,
     notice: null,
     guitar: guitar.getStatus(),
     widthPx: 0,
@@ -1450,6 +1459,40 @@ function applyDraft(mutator, ...args) {
   return next;
 }
 
+/** Choose a Measure in Practice (AC-1.1.10/2), keyed to the Pattern it was chosen in. */
+function selectMeasure(index) {
+  state.measureSelection = { id: state.pattern.id ?? null, index };
+}
+
+/**
+ * Insert, remove or move a Measure of the part on screen (AC-19.11.7/2). The
+ * record target and the re-pitch selection name a Slot by its Measure, so they
+ * follow their Measure through `remap` — or are let go when it is gone — and
+ * the selection becomes `select`, or the last when null (AC-1.1.10/3).
+ */
+function composerMeasureEdit(mutator, args, remap, select) {
+  const c = state.composer;
+  const follow = (at) => {
+    if (!at) return null;
+    const m = remap(at.measureIndex);
+    return m === null ? null : { ...at, measureIndex: m };
+  };
+  const target = follow(c.target);
+  const selected = follow(c.selected);
+  state.composer = {
+    ...c,
+    target,
+    selected,
+    measureSelection: select === null ? null : { id: c.draft.id ?? null, index: select },
+  };
+  const next = applyDraft(mutator, ...args);
+  if (next && state.composer.recording && !(state.composer.target && slotAt(next, state.composer.target)?.on)) {
+    const t = recordTarget(next);
+    state.composer = { ...state.composer, target: t, recording: Boolean(t) };
+    render();
+  }
+}
+
 /**
  * A full render on the next animation frame, coalesced: several requests before it
  * runs are one render, reading state as it is then. Without animation frames it
@@ -2065,6 +2108,8 @@ export function loadPattern(pattern, { owned }) {
   const inEffect = playbackInEffect(state.pattern);
   state.settings = settingsStore.save({ lastTempo: inEffect.tempo });
   state.isOwned = owned;
+  // A chosen Measure belongs to the Pattern it was chosen in (AC-1.1.10/3).
+  state.measureSelection = null;
   state.transportPosition = null;
   state.workbenchTab = null;
   // The Chain belongs to the Pattern it was built over (AC-18.1.4/2).
@@ -2115,20 +2160,57 @@ export function setTransportPosition(position) {
 let ui = null;
 
 const handlers = {
+  /** Tapping a Measure's number, or choosing in the Measures row's picker (AC-1.1.10/2). */
+  onSelectMeasure(index) {
+    selectMeasure(index);
+    render();
+  },
+
+  /** + After: a blank Measure after the selected one, in its meter (AC-1.1.11/2; AC-1.1.2 with none chosen). */
   async onAddMeasure() {
+    if (state.pattern.measures.length >= MAX_MEASURES) return;
+    const at = selectedMeasure(state.pattern, state.measureSelection);
     if (!(await guardShipped())) return;
-    apply(addMeasure);
+    selectMeasure(at + 1);
+    // After the last is the append AC-1.1.2 has always described.
+    if (at === state.pattern.measures.length - 1) apply(addMeasure);
+    else apply(insertMeasure, at + 1, at);
+  },
+
+  /** + Before: a blank Measure in front of the selected one, in its meter (AC-1.1.11/1). */
+  async onAddMeasureBefore() {
+    if (state.pattern.measures.length >= MAX_MEASURES) return;
+    const at = selectedMeasure(state.pattern, state.measureSelection);
+    if (!(await guardShipped())) return;
+    selectMeasure(at);
+    apply(insertMeasure, at, at);
   },
 
   /**
-   * −Measure: always the last one (AC-1.1.9), never the last remaining
-   * (AC-1.1.8). The control is disabled at one Measure; this guard is the
-   * second line, since `removeMeasure` throws rather than empties a Pattern.
+   * Remove: the selected Measure, the last when none is chosen (AC-1.1.9),
+   * never the last remaining (AC-1.1.8). The control is disabled at one
+   * Measure; this guard is the second line, since `removeMeasure` throws
+   * rather than empties a Pattern. The chosen Measure is gone, so the last is
+   * selected after it (AC-1.1.10/3).
    */
   async onRemoveMeasure() {
     if (state.pattern.measures.length <= 1) return;
+    const at = selectedMeasure(state.pattern, state.measureSelection);
     if (!(await guardShipped())) return;
-    apply(removeMeasure, state.pattern.measures.length - 1);
+    state.measureSelection = null;
+    apply(removeMeasure, at);
+  },
+
+  /** Move…: the selected Measure before or after another, still selected (AC-1.1.12). */
+  async onMoveMeasure() {
+    const count = state.pattern.measures.length;
+    if (count <= 1) return;
+    const from = selectedMeasure(state.pattern, state.measureSelection);
+    const to = await askMoveMeasure(count, from, movedIndex);
+    if (to === null || movedIndex(from, to) === from) return;
+    if (!(await guardShipped())) return;
+    selectMeasure(movedIndex(from, to));
+    apply(moveMeasure, from, to);
   },
 
   // --- goals (US-14.1) ---
@@ -3477,17 +3559,50 @@ const handlers = {
     render();
   },
 
-  /** Measures on the part on screen, as Practice's grid offers them (AC-19.11.7/2). */
+  /** Measures on the part on screen, as Practice's Measures row offers them (AC-1.1.9–AC-1.1.12, AC-19.11.7/2). */
+  onComposerSelectMeasure(index) {
+    const draft = state.composer.draft;
+    if (!draft) return;
+    state.composer.measureSelection = { id: draft.id ?? null, index };
+    render();
+  },
+
   onComposerAddMeasure() {
     const draft = state.composer.draft;
     if (!draft || draft.measures.length >= MAX_MEASURES) return;
-    applyDraft(addMeasure);
+    const at = selectedMeasure(draft, state.composer.measureSelection);
+    const remap = (m) => (m > at ? m + 1 : m);
+    if (at === draft.measures.length - 1) composerMeasureEdit(addMeasure, [], remap, at + 1);
+    else composerMeasureEdit(insertMeasure, [at + 1, at], remap, at + 1);
+  },
+
+  onComposerAddMeasureBefore() {
+    const draft = state.composer.draft;
+    if (!draft || draft.measures.length >= MAX_MEASURES) return;
+    const at = selectedMeasure(draft, state.composer.measureSelection);
+    composerMeasureEdit(insertMeasure, [at, at], (m) => (m >= at ? m + 1 : m), at);
   },
 
   onComposerRemoveMeasure() {
     const draft = state.composer.draft;
     if (!draft || draft.measures.length <= 1) return;
-    applyDraft(removeMeasure, draft.measures.length - 1);
+    const at = selectedMeasure(draft, state.composer.measureSelection);
+    composerMeasureEdit(removeMeasure, [at], (m) => (m === at ? null : m > at ? m - 1 : m), null);
+  },
+
+  async onComposerMoveMeasure() {
+    const draft = state.composer.draft;
+    if (!draft || draft.measures.length <= 1) return;
+    const count = draft.measures.length;
+    const from = selectedMeasure(draft, state.composer.measureSelection);
+    const to = await askMoveMeasure(count, from, movedIndex);
+    if (to === null || movedIndex(from, to) === from || state.composer.draft !== draft) return;
+    const dest = movedIndex(from, to);
+    const order = [...Array(count).keys()];
+    order.splice(from, 1);
+    order.splice(dest, 0, from);
+    const newIndexOf = new Map(order.map((oldIndex, newIndex) => [oldIndex, newIndex]));
+    composerMeasureEdit(moveMeasure, [from, to], (m) => newIndexOf.get(m) ?? m, dest);
   },
 
   /** A Measure's Time Signature on the part on screen, the first offering Apply to all (AC-1.1.5, AC-19.11.7/2). */
