@@ -3373,6 +3373,12 @@ const handlers = {
     restartTransport();
   },
 
+  /** What the composition's tempo counts, ♩ or ♪ (AC-19.11.6/4): the composition's own, as its tempo is. */
+  onComposerTempoUnit(unit) {
+    applyDraft(setTempoUnit, unit);
+    restartTransport();
+  },
+
   onComposerSwing(amount) {
     applyDraft(setSwingAmount, amount);
     restartTransport();
