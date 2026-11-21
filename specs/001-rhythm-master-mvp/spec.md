@@ -4190,11 +4190,12 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 
 - **AC-19.5.7** — A subdivision is armed in the Composer and painted onto any Beat
   - **Given** a composition in the Composer, in the Grid view
-  - **When** the Composer arms a subdivision on the Subdivision strip among the Composer's controls and taps anywhere within a Beat of the composing grid
+  - **When** the Composer arms a subdivision on the Subdivision strip directly above the composing grid and taps anywhere within a Beat of the composing grid
   - **Then** that Beat of the part on screen takes the armed Recipe and is left silent — any Beat of any Measure — under the applicability rules of AC-1.3.4 and AC-1.3.5; a Beat with sounding syllables asks first, since its syllables and their notes are cleared, and an empty Beat changes with no ask; with nothing armed the composing grid selects and cycles exactly as before; a line under the composing grid names the armed subdivision; and pressing Record disarms it
   - *(Added 2026-11-20 at the maintainer's request, T512 — see this story's revision note.)*
+  - *(Revised 2026-11-21 at the maintainer's request, T523: "move the subdivision strip directly above the grid". It had been put among the Composer's controls, above the Measures row, a placement taken without asking; the When clause and /1 said so and now say where it is. In the Score view it sits above the staves, disabled as before. Nothing else about the brush changes.)*
   - **Cases**:
-    - **AC-19.5.7/1** — A Subdivision strip among the Composer controls offers the Recipes the open meters can take, one armed at a time, tapping the armed chip disarms it, and every chip is disabled in the Score view
+    - **AC-19.5.7/1** — A Subdivision strip directly above the composing grid offers the Recipes the open meters can take, one armed at a time, tapping the armed chip disarms it, and every chip is disabled in the Score view
     - **AC-19.5.7/2** — With a subdivision armed, a tap on either box of any Slot gives that Beat alone the armed Recipe and stays armed, and with none armed the boxes select and cycle as before
     - **AC-19.5.7/3** — A Beat with sounding syllables asks before it is cleared, cancelling leaves the Beat and its notes as they were, and an empty Beat changes with no ask
     - **AC-19.5.7/4** — A Recipe the tapped Beat cannot take in its meter leaves that Beat unchanged
