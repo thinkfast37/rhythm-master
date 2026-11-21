@@ -8,6 +8,7 @@
  * a store: the view names every palette and sequence entry already.
  */
 import { MIN_REPEATS, MAX_REPEATS } from '../core/arrangement.js';
+import { renderArticulation } from './articulation.js';
 
 function el(tag, className, props = {}) {
   const node = document.createElement(tag);
@@ -23,16 +24,16 @@ function button(className, text, action, props = {}) {
 }
 
 /** The head: which Arrangement this is, whether it is saved, and what can be done with it (AC-20.1.4). */
-function renderHead(view, handlers) {
+function renderHead(view, state, handlers) {
   const head = el('div', 'arrange-head');
   const title = el('h2', 'arrange-title', { textContent: view.name ? `Arrangement — ${view.name}` : 'New Arrangement' });
   head.appendChild(title);
 
-  const state = el('span', 'arrange-state', {
+  const saved = el('span', 'arrange-state', {
     textContent: view.saved ? 'Saved — every change saves' : view.empty ? '' : 'Not saved',
   });
-  state.dataset.saved = String(view.saved);
-  head.appendChild(state);
+  saved.dataset.saved = String(view.saved);
+  head.appendChild(saved);
 
   const actions = el('div', 'arrange-actions');
   if (!view.saved) {
@@ -53,6 +54,15 @@ function renderHead(view, handlers) {
   const fresh = button('arrange-new', 'New Arrangement', 'arrange-new');
   fresh.addEventListener('click', () => handlers.onArrangeNew?.());
   actions.appendChild(fresh);
+  // One multi-track MIDI file of the sequence once through (AC-20.3.1/1), with
+  // the note-length choice every MIDI export has beside it (AC-12.5.1/1).
+  const exportBtn = button('arrange-export', 'Export MIDI', 'arrange-export', {
+    disabled: !view.canPlay,
+    title: view.canPlay ? 'Download one MIDI file with a track for each part' : 'Lay an entry in the sequence first',
+  });
+  exportBtn.addEventListener('click', () => handlers.onArrangeExport?.());
+  actions.appendChild(exportBtn);
+  actions.appendChild(renderArticulation(state, handlers));
   head.appendChild(actions);
   return head;
 }
@@ -190,7 +200,7 @@ export function renderArrange(root, state, handlers) {
   const typing = focused && root.contains(focused) && focused.classList.contains('arrange-entry-name') ? { index: focused.closest('.arrange-entry')?.dataset.index, value: focused.value, at: focused.selectionStart } : null;
 
   root.innerHTML = '';
-  root.appendChild(renderHead(view, handlers));
+  root.appendChild(renderHead(view, state, handlers));
   root.appendChild(renderPalette(view, handlers));
   root.appendChild(renderSequence(view, handlers));
 

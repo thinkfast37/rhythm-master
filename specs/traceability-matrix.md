@@ -14,15 +14,15 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1235 across 75 User Stories
+**Criteria**: 1250 across 77 User Stories
 
-**Coverage**: 1109 of 1235 criteria proven (89.8%)
+**Coverage**: 1124 of 1250 criteria proven (89.9%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1109 | 89.8% |
+| 🟢 Proven | 1124 | 89.9% |
 | 🟠 Gap — MEDIUM | 50 | 4.0% |
-| 🟡 Gap — LOW | 76 | 6.2% |
+| 🟡 Gap — LOW | 76 | 6.1% |
 
 A row is one *criterion*: an Acceptance Criterion that asserts one thing, or one Case of
 an AC that asserts several. 🖵 marks a criterion that describes something a person sees or
@@ -132,6 +132,8 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-5.7 | 7 | **7** | · | · | · | · | · |
 | 🟢 US-20.1 | 21 | **21** | · | · | · | · | · |
 | 🟢 US-20.2 | 14 | **14** | · | · | · | · | · |
+| 🟢 US-12.5 | 9 | **9** | · | · | · | · | · |
+| 🟢 US-20.3 | 6 | **6** | · | · | · | · | · |
 
 ## Every criterion
 
@@ -1372,3 +1374,18 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-20.2 | `AC-20.2.3/2` 🖵 | In Arrange the tempo entry beside Play shows and sets the tempo of the Arrangement, from 18 to 300, and not the tempo of the Pattern open in Practice | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
 | US-20.2 | `AC-20.2.3/3` | Every entry plays at the tempo of the Arrangement whatever its own, and no Pattern, Section or Chain is changed by it | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
 | US-20.2 | `AC-20.2.3/4` | The tempo is stored with the Arrangement and is in force when it is opened again, and changing it while playing restarts the sequence from its first entry at the new tempo | P-081 | T521 (1/1 done) | T522 (1/1 done) | `arrange-play.spec.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.1/1` 🖵 | Beside each MIDI export — of a Pattern, a Chain, a Section and an Arrangement — a note-length choice offers Staccato and Legato, with Staccato chosen until Legato is | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation.test.js`, `midi-articulation.spec.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.1/2` 🖵 | The note-length choice is one setting for every export, remembered in `rm.settings.v1` and in force after a reload | P-082 | T527 (1/1 done) | T528 (1/1 done) | `midi-articulation.spec.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.1/3` 🖵 | On Staccato every exported note is a thirty-second note long, sixty ticks, and the file is byte for byte what it was before the choice existed | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js`, `midi-articulation.spec.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.2/1` | On Legato a pitched note lasts until the next note of its part begins and then for the ring of its instrument, the ring turned from seconds into ticks at the tempo of the file | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation.test.js`, `articulation-midi.test.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.2/2` | A note ends one tick before the same pitch is struck again in its part, the last note of a part lasts to the end of the file and then its ring, and no note runs past the end of the file | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation.test.js`, `articulation-midi.test.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.2/3` | The ring is the instrument's own by Accent Level — the piano's hold, the guitar's and the synth's decay — and nothing for an instrument the app holds until its next note: electric guitar, bass, sax, trumpet and flute | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation.test.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.2/4` | Percussive notes and parts on Drums are the same length on Legato as on Staccato | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.2/5` | Legato changes no note's start, pitch, velocity or channel | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
+| US-12.5 | `AC-12.5.2/6` | A Pattern and a Chain are lengthened by the voice Practice remembers for the Pattern, Piano when there is none, and each part of a Section or an Arrangement by its own instrument | P-082 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js`, `midi-articulation.spec.js` | 🟢 OK |
+| US-20.3 | `AC-20.3.1/1` | Export MIDI in Arrange downloads one MIDI file named after the Arrangement, and is unavailable while nothing in the sequence can play | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js`, `midi-articulation.spec.js` | 🟢 OK |
+| US-20.3 | `AC-20.3.1/2` | The file is a Format 1 file holding the sequence once through, every entry for its repeats, at the tempo of the Arrangement, with the tempo and the time signature of every Measure in a first track of their own | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
+| US-20.3 | `AC-20.3.1/3` | Each Pattern laid in the sequence, each part of each Section and each Chain has one track named for it, carrying its notes wherever in the sequence it sounds, so a Pattern laid twice is one track | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js`, `midi-articulation.spec.js` | 🟢 OK |
+| US-20.3 | `AC-20.3.1/4` | Each pitched track is on a channel of its own with the General MIDI program of its instrument, and a rhythm, a percussive part and a part on Drums are on the drum channel | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation.test.js`, `articulation-midi.test.js` | 🟢 OK |
+| US-20.3 | `AC-20.3.1/5` | A Percussive Pattern laid in the sequence is written as the drums it plays — Kick, Snare and Floor tom by Accent Level — and a muted part of a Section is left out | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
+| US-20.3 | `AC-20.3.1/6` | The notes of the file are the notes Play sounds, pass for pass, and the file follows the note-length choice as every MIDI export does | P-083 | T527 (1/1 done) | T528 (1/1 done) | `articulation-midi.test.js` | 🟢 OK |
