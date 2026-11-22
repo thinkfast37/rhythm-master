@@ -721,3 +721,39 @@ describe('audio/scheduler — an unpitched note sounded another way (US-2.18)', 
     expect(kit.started).toBe(accents.started - heard.length);
   });
 });
+
+describe('audio/scheduler — the cursor on silent Slots (AC-19.6.4)', () => {
+  /** Run two seconds of the fixture and return what sounded and where the cursor stood. */
+  async function run(everySlot) {
+    transport.stop();
+    resetContext();
+    resetNodes();
+    starts = [];
+    const positions = [];
+    transport = createTransport({ everySlot: () => everySlot, onPosition: (p) => positions.push({ ...p, seenAt: ctx.currentTime }) });
+    await startTransport();
+    for (let now = 0.1; now <= 2.0001; now += 0.05) await tickAt(now);
+    return { sounded: starts.map((s) => s.when), positions };
+  }
+
+  it('AC-19.6.4/1 — In the composing grid the cursor marks every Slot of the part on screen in turn, a silent Slot at the time it would sound, and a silent Slot sounds nothing: the transport hands Web Audio the same notes, and reports each silent Slot at its own time', async () => {
+    const plain = await run(false);
+    const every = await run(true);
+    // Nothing more is sounded for the silent Slots.
+    expect(every.sounded).toEqual(plain.sounded);
+    expect(plain.positions.some((p) => p.silent)).toBe(false);
+    // Sixteen Slots at 0.125s from the 0.06s start: 0.06 … 1.935, all inside two seconds.
+    const seen = every.positions.filter((p) => p.loop === 0);
+    expect(seen.map((p) => `${p.beatIndex}:${p.slotIndex}`)).toEqual(
+      [0, 1, 2, 3].flatMap((b) => [0, 1, 2, 3].map((s) => `${b}:${s}`))
+    );
+    expect(seen.map((p) => Boolean(p.silent))).toEqual([...Array(4).fill(false), ...Array(12).fill(true)]);
+    seen.forEach((p, i) => {
+      const due = 0.06 + i * 0.125;
+      // Never before its time, and by the first tick after it.
+      expect(p.seenAt).toBeGreaterThanOrEqual(due - 1e-9);
+      expect(p.seenAt - due).toBeLessThanOrEqual(0.05 + 1e-9);
+    });
+    expect(transport._snapshot().silentLength).toBe(12);
+  });
+});

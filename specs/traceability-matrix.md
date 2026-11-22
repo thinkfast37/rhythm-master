@@ -14,13 +14,13 @@
 -->
 
 **Feature**: specs/001-rhythm-master-mvp/spec.md
-**Criteria**: 1292 across 78 User Stories
+**Criteria**: 1294 across 78 User Stories
 
-**Coverage**: 1167 of 1292 criteria proven (90.3%)
+**Coverage**: 1169 of 1294 criteria proven (90.3%)
 
 | | Criteria | Share |
 |---|---|---|
-| 🟢 Proven | 1167 | 90.3% |
+| 🟢 Proven | 1169 | 90.3% |
 | 🟠 Gap — MEDIUM | 49 | 3.8% |
 | 🟡 Gap — LOW | 76 | 5.9% |
 
@@ -111,7 +111,7 @@ fail the build, and it is outstanding work — never a settled decision.
 | 🟢 US-19.3 | 9 | **9** | · | · | · | · | · |
 | 🟢 US-19.4 | 12 | **12** | · | · | · | · | · |
 | 🟢 US-19.5 | 29 | **29** | · | · | · | · | · |
-| 🟢 US-19.6 | 8 | **8** | · | · | · | · | · |
+| 🟢 US-19.6 | 10 | **10** | · | · | · | · | · |
 | 🟢 US-19.7 | 6 | **6** | · | · | · | · | · |
 | 🟢 US-19.8 | 10 | **10** | · | · | · | · | · |
 | 🟢 US-19.9 | 7 | **7** | · | · | · | · | · |
@@ -1051,14 +1051,16 @@ fail the build, and it is outstanding work — never a settled decision.
 | US-19.5 | `AC-19.5.7/5` 🖵 | A line under the composing grid names the armed subdivision while one is armed, and pressing Record disarms it | P-057 | T377, T418, T432, T512, T523 (5/5 done) | T378, T419, T433, T513, T524 (5/5 done) | `composer-subdivision.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.7/6` 🖵 | A selection or record target on the changed Beat does not survive it: the selection is dropped and the target moves to the first syllable without a note | P-057 | T377, T418, T432, T512, T523 (5/5 done) | T378, T419, T433, T513, T524 (5/5 done) | `composer-subdivision.spec.js` | 🟢 OK |
 | US-19.5 | `AC-19.5.7/7` 🖵 | The new Slots are turned on and recorded onto like any others, and a saved composition keeps the changed subdivision | P-057 | T377, T418, T432, T512, T523 (5/5 done) | T378, T419, T433, T513, T524 (5/5 done) | `composer-subdivision.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.1/1` 🖵 | Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-play.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.1/2` 🖵 | A pitched Slot sounds with the voice of the part's instrument, and an unpitched sounding Slot sounds percussively at its Accent Level | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-play.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.1/3` 🖵 | Switching the instrument while playing changes the voice from the next event without a restart | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-play.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.2/1` | A note recorded while playing is heard from the next pass, and the target moves on as it does at rest | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-play.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.2/2` | Tempo and swing changes while playing take effect as they do in Practice, and no other edit stops or restarts playback | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-play.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.3/1` 🖵 | In the Composer, stopped or playing, recording or not, a Metronome toggle sits beside Play/Stop in the pinned bar, marked on or off; switched on while stopped it sounds nothing until Play; it is absent in Practice | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-metronome.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.3/2` 🖵 | The toggle is the app's one metronome setting: switched on in the Composer the click sounds on every Beat of the part on screen and is on in Practice afterwards, and switched off it is off in both | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `composer-metronome.spec.js` | 🟢 OK |
-| US-19.6 | `AC-19.6.3/3` 🖵 | Switching it while playing stops and restarts nothing: the click begins or ceases from the next Beat and every part carries on | P-058 | T379, T497, T540 (3/3 done) | T380, T498, T541 (3/3 done) | `scheduler.test.js`, `composer-metronome.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.1/1` 🖵 | Play loops the composition, with the playback cursor moving through the composing grid, and Stop stops it | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-play.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.1/2` 🖵 | A pitched Slot sounds with the voice of the part's instrument, and an unpitched sounding Slot sounds percussively at its Accent Level | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-play.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.1/3` 🖵 | Switching the instrument while playing changes the voice from the next event without a restart | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-play.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.2/1` | A note recorded while playing is heard from the next pass, and the target moves on as it does at rest | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-play.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.2/2` | Tempo and swing changes while playing take effect as they do in Practice, and no other edit stops or restarts playback | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-play.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.3/1` 🖵 | In the Composer, stopped or playing, recording or not, a Metronome toggle sits beside Play/Stop in the pinned bar, marked on or off; switched on while stopped it sounds nothing until Play; it is absent in Practice | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-metronome.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.3/2` 🖵 | The toggle is the app's one metronome setting: switched on in the Composer the click sounds on every Beat of the part on screen and is on in Practice afterwards, and switched off it is off in both | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `composer-metronome.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.3/3` 🖵 | Switching it while playing stops and restarts nothing: the click begins or ceases from the next Beat and every part carries on | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `scheduler.test.js`, `composer-metronome.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.4/1` 🖵 | In the composing grid the cursor marks every Slot of the part on screen in turn, a silent Slot at the time it would sound, and a silent Slot sounds nothing | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `scheduler.test.js`, `timeline.test.js`, `composer-play.spec.js` | 🟢 OK |
+| US-19.6 | `AC-19.6.4/2` 🖵 | Under layers the cursor walks every Slot of the part on screen through each of its repeats, and a silent Slot of any other part moves nothing | P-058 | T379, T497, T540, T566 (4/4 done) | T380, T498, T541, T567 (4/4 done) | `section.test.js`, `layers.spec.js` | 🟢 OK |
 | US-19.7 | `AC-19.7.1/1` 🖵 | No guitar sample is requested on page load, in the Composer while no part is on Guitar, or in Practice under another voice; the first showing of the Guitar view, or the first melodic note in Practice under Guitar, requests them once | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
 | US-19.7 | `AC-19.7.1/2` 🖵 | Once loaded, a tapped fret and a pitched Slot played back in Guitar view sound through the sampled guitar at the tapped or stored MIDI note | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |
 | US-19.7 | `AC-19.7.1/3` 🖵 | The attribution — FluidR3_GM by Frank Wen via gleitz/midi-js-soundfonts, CC BY 3.0 — is shown in the Composer | P-059 | T381, T423 (2/2 done) | T382, T424 (2/2 done) | `guitar.test.js`, `composer-guitar.spec.js` | 🟢 OK |

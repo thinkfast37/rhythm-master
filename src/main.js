@@ -4783,10 +4783,15 @@ const transport = createTransport({
   },
   playUnpitched: soundUnpitched,
   gainOf,
+  // In the Composer the cursor stands on every Slot, silent ones too (AC-19.6.4).
+  everySlot: composerActive,
   onPosition(position) {
     // Under layers the cursor is the composition's (AC-19.11.2/5): a layer's
     // event moves nothing on screen.
     if (position.composition === false) return;
+    // The staff follows the notes, as it did (AC-19.11.8/2): a silent Slot is
+    // the composing grid's to mark.
+    if (position.silent && (state.settings.composerView ?? 'grid') === 'score') return;
     // The first sounding event of a pass is the boundary as it is HEARD.
     // `onLoop` below fires when the pass is scheduled, up to the lookahead
     // before it sounds — and the views draw what is sounding, so a full render

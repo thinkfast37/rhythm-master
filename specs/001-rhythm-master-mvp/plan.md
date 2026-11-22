@@ -265,7 +265,7 @@ infrastructure: it asserts no behaviour, so it needs no test task.
 | **P-055** | US-19.3 — The piano view | AC-19.3.1–AC-19.3.4 | T373, T475 | T374, T476 |
 | **P-056** | US-19.4 — Record notes onto the rhythm | AC-19.4.1–AC-19.4.4 | T375 | T376 |
 | **P-057** | US-19.5 — Edit a composition | AC-19.5.1–AC-19.5.7 | T377, T418, T432, T512, T523 | T378, T419, T433, T513, T524 |
-| **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.3 | T379, T497, T540 | T380, T498, T541 |
+| **P-058** | US-19.6 — Play the composition while composing | AC-19.6.1–AC-19.6.4 | T379, T497, T540, T566 | T380, T498, T541, T567 |
 | **P-059** | US-19.7 — Hear a guitar | AC-19.7.1–AC-19.7.2 | T381, T423 | T382, T424 |
 | **P-060** | US-19.8 — Load a rhythm into the Composer | AC-19.8.1–AC-19.8.4 | T383, T398 | T384, T399 |
 | **P-061** | US-19.9 — Save a composition | AC-19.9.1–AC-19.9.3 | T385 | T386 |

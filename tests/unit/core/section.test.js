@@ -395,3 +395,27 @@ describe('core/section — one pass of an Arrangement, as the transport is hande
     expect(first.measures).toBe(p.measures);
   });
 });
+
+describe('core/section — the cursor on every Slot of the part on screen (AC-19.6.4)', () => {
+  it('AC-19.6.4/2 — Under layers the cursor walks every Slot of the part on screen through each of its repeats, and a silent Slot of any other part moves nothing: the combined timeline holds the silent Slots of the composition alone, once per repeat', () => {
+    const composition = fourBeats('Line');
+    const set = layered(composition, [{ pattern: measures(2, 'Under') }]);
+    const slots = composition.measures[0].beats.reduce((n, b) => n + b.slots.length, 0);
+    const every = layeredTimeline(set, 0, { everySlot: true });
+    const silent = every.filter((e) => e.silent);
+    expect(silent.length).toBe((slots - 4) * 2);
+    expect(silent.every((e) => e.composition === true && e.layer === 0)).toBe(true);
+    // The composition's entries, sounding and silent, walk every Slot in order on each repeat.
+    const own = every.filter((e) => e.composition);
+    const once = loopDurationSeconds(composition);
+    for (const k of [0, 1]) {
+      const pass = own.filter((e) => e.repeat === k);
+      expect(pass).toHaveLength(slots);
+      expect(pass.map((e) => e.timeSeconds)).toEqual(buildTimeline(composition, 0, { everySlot: true }).map((e) => e.timeSeconds + k * once));
+    }
+    // Unasked, and through an Arrangement, nothing silent is there.
+    expect(layeredTimeline(set, 0).some((e) => e.silent)).toBe(false);
+    expect(timelineOf(set, 0, { everySlot: true })).toEqual(every);
+    expect(timelineOf({ arranged: true, inner: set, pass: 0, mark: {} }, 0, { everySlot: true }).some((e) => e.silent)).toBe(false);
+  });
+});

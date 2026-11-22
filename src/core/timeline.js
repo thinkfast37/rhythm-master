@@ -41,8 +41,14 @@ import { swungOffsets, swungDelay, DEFAULT_SWING_FEEL } from './swing.js';
  * stays per pass rather than per harmonic cycle — an edit still lands at the
  * next pass (AC-4.1.9), and MIDI export concatenates passes from this one
  * function (AC-2.6.4/6, research.md D-011).
+ *
+ * `everySlot` adds a `silent: true` entry for each off Slot, at the time it
+ * would sound: a place for the cursor to stand, never something to play
+ * (AC-19.6.4). It is asked for by the Composer's transport alone, so every
+ * other reader — the MIDI file, the score, the screen-off render — still gets
+ * no event for silence. The times come out of the one loop below either way.
  */
-export function buildTimeline(pattern, pass = 0) {
+export function buildTimeline(pattern, pass = 0, { everySlot = false } = {}) {
   const events = [];
   let measureStart = 0;
   const feel = pattern.swingFeel ?? DEFAULT_SWING_FEEL;
@@ -109,7 +115,20 @@ export function buildTimeline(pattern, pass = 0) {
 
         group.slotIndices.forEach((slotIndex, withinGroup) => {
           const slot = beat.slots[slotIndex];
-          if (!slot?.on) return;
+          if (!slot?.on) {
+            if (everySlot && slot) {
+              events.push({
+                timeSeconds: groupStart + withinGroup * slotDuration + offsets[withinGroup] + beatDelay,
+                measureIndex,
+                beatIndex,
+                slotIndex,
+                silent: true,
+                pass,
+                chordIndex,
+              });
+            }
+            return;
+          }
 
           const accent = effectiveAccent(measure, beatIndex, slotIndex);
           let pitch = null;
