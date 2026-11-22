@@ -134,3 +134,26 @@ export function fakeSoundfont(notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4',
   const body = notes.map((n) => `"${n}": "${uri}",`).join('\n');
   return `MIDI.Soundfont.acoustic_guitar_steel = {\n${body}\n}`;
 }
+
+/**
+ * Record every Slot the composing grid's cursor stands on, in order, as
+ * `measure:beat:slot` in `window.__cursorSeen` (AC-19.6.4). Watches the whole
+ * document, since a pass boundary rebuilds the grid.
+ */
+export async function watchCursor(page) {
+  await page.evaluate(() => {
+    window.__cursorSeen = [];
+    let last = null;
+    new MutationObserver(() => {
+      const el = document.querySelector('.composer-grid .slot.playing');
+      const at = el ? `${el.dataset.measure}:${el.dataset.beat}:${el.dataset.slot}` : null;
+      if (at === last) return;
+      last = at;
+      if (at) window.__cursorSeen.push(at);
+    }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  });
+}
+
+/** Every Slot of the composing grid in order, as `measure:beat:slot`. */
+export const gridOrder = (page) =>
+  page.evaluate(() => [...document.querySelectorAll('.composer-grid .slot')].map((el) => `${el.dataset.measure}:${el.dataset.beat}:${el.dataset.slot}`));

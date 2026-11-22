@@ -7,7 +7,7 @@
  * melodic) and Rumba Clave 3-2 Mod (s_79, four bars, melodic).
  */
 import { test, expect } from '@playwright/test';
-import { launch, openApp, enterComposer, composerState, appState, loadFourBeats, fret, recordAll } from './composer-helpers.js';
+import { launch, openApp, enterComposer, composerState, appState, loadFourBeats, fret, recordAll, watchCursor, gridOrder } from './composer-helpers.js';
 
 test.use(launch);
 
@@ -342,6 +342,31 @@ test(`AC-19.11.3/6 — The cursor runs through the composing grid once per pass 
   await expect.poll(() => page.evaluate(() => window.__rm.getState().transportPosition?.loop), { timeout: 8000 }).toBe(1);
   const seen = await page.evaluate(() => window.__rm.scheduled().layers[0].repeats);
   expect(seen).toBe(2);
+  await play(page);
+});
+
+test(`AC-19.6.4/2 — Under layers the cursor walks every Slot of the part on screen through each of its repeats, and a silent Slot of any other part moves nothing`, async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await setTempo(page, 160);
+  // Son clave is two Measures: the one-Measure composition plays twice in each loop.
+  await addLayer(page, SON);
+  const order = await gridOrder(page);
+  await watchCursor(page);
+  await play(page);
+  await expect.poll(() => page.evaluate(() => window.__cursorSeen.length), { timeout: 20000 }).toBeGreaterThanOrEqual(order.length * 2);
+  // Repeat 0, then repeat 1, of the one combined loop: every Slot of the part on screen each time.
+  expect((await page.evaluate(() => window.__cursorSeen)).slice(0, order.length * 2)).toEqual([...order, ...order]);
+  // The silent entries the transport holds are the part on screen's alone: the layer's rests are not there to move anything.
+  const held = await page.evaluate(() => {
+    const set = window.__rm.scheduled();
+    const silent = window.__rmTimeline.timelineOf(set, 0, { everySlot: true }).filter((e) => e.silent);
+    return { repeats: set.layers[0].repeats, silent: silent.length, own: silent.every((e) => e.composition === true), inTransport: window.__rm.transport._snapshot().silentLength };
+  });
+  expect(held.repeats).toBe(2);
+  expect(held.own).toBe(true);
+  expect(held.silent).toBe((order.length - 4) * 2);
+  expect(held.inTransport).toBe(held.silent);
   await play(page);
 });
 

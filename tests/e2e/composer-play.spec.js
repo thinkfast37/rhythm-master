@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { launch, openApp, composerState, loadFourBeats, fret, cslot } from './composer-helpers.js';
+import { launch, openApp, composerState, loadFourBeats, fret, cslot, watchCursor, gridOrder } from './composer-helpers.js';
 
 test.use(launch);
 
@@ -156,4 +156,43 @@ test('AC-19.6.2/2 — Tempo and swing changes while playing take effect as they 
   expect(state.loop).toBeGreaterThanOrEqual(loopBefore);
   expect(await page.evaluate(() => window.__pendingAfterDelete)).toBe(true);
   await play(page);
+});
+
+// --- AC-19.6.4: the cursor on every Slot ------------------------------------------------
+
+test('AC-19.6.4/1 — In the composing grid the cursor marks every Slot of the part on screen in turn, a silent Slot at the time it would sound, and a silent Slot sounds nothing', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await page.locator('.composer-tempo-entry').fill('120');
+  await page.locator('.composer-tempo-entry').press('Enter');
+  const order = await gridOrder(page);
+  // The fixture sounds four Slots; the rest hold no syllable.
+  expect(await page.locator('.composer-grid .slot[data-accent="0"]').count()).toBe(order.length - 4);
+  expect(order.length).toBeGreaterThan(4);
+  const soundedBefore = (await page.evaluate(() => window.__rm.percussionLog())).length;
+  await watchCursor(page);
+  await play(page);
+  await expect.poll(() => page.evaluate(() => window.__cursorSeen.length), { timeout: 20000 }).toBeGreaterThanOrEqual(order.length * 3);
+  // What the transport holds: one entry a Slot, the silent ones marked as such.
+  const held = await page.evaluate(() => window.__rm.transport._snapshot());
+  expect(held.timelineLength).toBe(order.length);
+  expect(held.silentLength).toBe(order.length - 4);
+  await play(page);
+  const seen = await page.evaluate(() => window.__cursorSeen);
+  // Every Slot in turn, silent ones included, pass after pass.
+  expect(seen.slice(0, order.length * 3)).toEqual([...order, ...order, ...order]);
+  // Only the four syllables of each pass were sounded: far fewer notes than places the cursor stood.
+  const sounded = (await page.evaluate(() => window.__rm.percussionLog())).length - soundedBefore;
+  expect(sounded).toBeGreaterThanOrEqual(12);
+  expect(sounded).toBeLessThan(seen.length / 2);
+  expect((await page.evaluate(() => window.__rm.voiceLog())).length).toBe(0);
+  // A silent cell under the cursor is marked apart from one at rest (AC-19.5.1/3's fill).
+  const fills = await page.evaluate(() => {
+    const [first, second] = [...document.querySelectorAll('.composer-grid .slot[data-accent="0"]')];
+    first.classList.add('playing');
+    const out = [getComputedStyle(first).backgroundColor, getComputedStyle(second).backgroundColor];
+    first.classList.remove('playing');
+    return out;
+  });
+  expect(fills[0]).not.toBe(fills[1]);
 });

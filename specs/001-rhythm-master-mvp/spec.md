@@ -4301,6 +4301,15 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
   - *(Added 2026-11-15 at the maintainer's request, T497: "I also notice there is no metronome button on the composer. It needs one. ideally just a toggle at the top that appears when it is in play or play and record mode." The click already sounded in the Composer when it was on in Practice; there was no control for it there. It stays the single app-wide setting US-4.3 makes it, so there is no second, Composer-only metronome. Decision taken without asking: in Practice the click's switch restarts the run, as every setting there does; here it does not, because a restart under Record would throw away the place.)*
   - *(AC-19.6.2/2 cites AC-4.2.2 and AC-4.4.5 for what "as they do in Practice" means; the IDs were taken out of the Case's title on 2026-10-18 so a test named for it does not read as claiming them.)*
 
+- **AC-19.6.4** — The cursor passes through every Slot, silent ones included
+  - **Given** the composition playing with the composing grid shown, some of its Slots holding no syllable
+  - **When** playback reaches a Slot that does not sound
+  - **Then** that Slot is marked as the cursor passes it, at the moment it would sound and until the next Slot's moment, and nothing sounds for it: the place in the loop can be followed through every rest without turning a syllable on to hear it
+  - **Cases**:
+    - **AC-19.6.4/1** — In the composing grid the cursor marks every Slot of the part on screen in turn, a silent Slot at the time it would sound, and a silent Slot sounds nothing
+    - **AC-19.6.4/2** — Under layers the cursor walks every Slot of the part on screen through each of its repeats, and a silent Slot of any other part moves nothing
+  - *(Added 2026-11-22 at the maintainer's request, T566: "I can't really tell where I am in the sequence because it only shows you the notes that are played … if I have no syllable on that particular subdivision … I don't want it to make a sound, certainly, but I actually do want a visual representation of where I am, because sometimes I'm laying out where the notes should be … so I have to then just turn on every syllable just to hear where it is, which … creates this constant drum rhythm … It just has to be accurate, obviously, too. And this is only for composer mode. Let's stick with that for now." The cursor was driven by the sounding events alone, so a Slot with no syllable was never given a position. The mark is the one AC-19.5.1/3 already gives the cursor. Scoped by the maintainer to the Composer's grid: Practice, the staff of AC-19.11.8, the MIDI file and the screen-off render are untouched, since the timeline they read still holds no event for a silent Slot unless one is asked for.)*
+
 ---
 
 ### User Story 56 - Hear a guitar

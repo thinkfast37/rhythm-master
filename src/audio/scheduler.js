@@ -13,7 +13,7 @@
 import { beatDurationSeconds, tempoUnitOf } from '../core/meter.js';
 // A layered set (US-19.11) and a Pattern go through the same four dispatchers,
 // so this file never asks which it holds (research.md D-026).
-import { timelineOf as buildTimeline, loopDurationOf as loopDurationSeconds, beatGridOf as buildBeatGrid, anyHarmony as hasHarmony } from '../core/section.js';
+import { timelineOf, loopDurationOf as loopDurationSeconds, beatGridOf as buildBeatGrid, anyHarmony as hasHarmony } from '../core/section.js';
 import { resume, onSuspended, onResumed } from './context.js';
 import { startTicking } from './tickSource.js';
 import { playPercussive, playClick } from './voices.js';
@@ -43,7 +43,14 @@ const CUT_EPSILON = 1e-6;
 /** The same safety offset start() uses, reused when a stall re-anchors. */
 const START_OFFSET_SECONDS = 0.06;
 
-export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null, playUnpitched = null, gainOf = null } = {}) {
+export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResume, playMelodic = null, playUnpitched = null, gainOf = null, everySlot = null } = {}) {
+  /*
+   * `everySlot()` true asks the timeline for the silent Slots too, so the
+   * cursor has a position at each one (AC-19.6.4). They ride the same queue at
+   * their own times and are never handed to Web Audio. Asked at every build,
+   * so it follows the mode in force rather than the one Play was pressed in.
+   */
+  const buildTimeline = (p, pass) => timelineOf(p, pass, { everySlot: Boolean(everySlot?.()) });
   let ctx = null;
   let master = null;
   /** The polling cadence in force, or null when nothing is running
@@ -115,10 +122,13 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
           break;
         }
 
-        if (event.pitch && playMelodic) playMelodic(ctx, master, event, when);
-        // An unpitched note is an accent tone, unless the caller sounds it another way (AC-2.18.2/2).
-        else if (playUnpitched) playUnpitched(ctx, master, event, when, gainOf ? gainOf(event) : 1);
-        else playPercussive(ctx, master, event.accent, when, gainOf ? gainOf(event) : 1);
+        // A silent Slot is a place for the cursor, with nothing to sound (AC-19.6.4/1).
+        if (!event.silent) {
+          if (event.pitch && playMelodic) playMelodic(ctx, master, event, when);
+          // An unpitched note is an accent tone, unless the caller sounds it another way (AC-2.18.2/2).
+          else if (playUnpitched) playUnpitched(ctx, master, event, when, gainOf ? gainOf(event) : 1);
+          else playPercussive(ctx, master, event.accent, when, gainOf ? gainOf(event) : 1);
+        }
 
         pendingVisuals.push({ when, position: { ...event, loop: loopOffset + nextLoop } });
         nextIndex += 1;
@@ -590,6 +600,8 @@ export function createTransport({ onPosition, onLoop, onStop, onSuspend, onResum
       clickValue: settings.clickValue ?? 'beat',
       countInSeconds,
       timelineLength: timeline.length,
+      /** How many of those entries are silent Slots, there for the cursor alone (AC-19.6.4). */
+      silentLength: timeline.filter((e) => e.silent).length,
       metronomeEnabled: Boolean(settings.metronomeEnabled),
       clicksScheduled,
       pendingEdit: Boolean(pending),

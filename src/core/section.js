@@ -157,16 +157,18 @@ export const isLayered = (p) => Boolean(p?.layered);
  * chords across the repeats exactly as it does alone — and offset by the
  * repeat's start. An event says which layer it belongs to and whether that
  * is the composition; the composition's events sort first at a shared instant
- * so the cursor reads the line being written.
+ * so the cursor reads the line being written. `everySlot` adds the silent
+ * Slots of the composition alone — the part on screen, the only one the
+ * cursor follows (AC-19.6.4/2).
  */
-export function layeredTimeline(set, pass = 0) {
+export function layeredTimeline(set, pass = 0, { everySlot = false } = {}) {
   const events = [];
   set.layers.forEach((layer, index) => {
     if (layer.muted) return;
     const once = loopDurationSeconds(layer.pattern);
     const passes = passesPerLoop(layer);
     for (let k = 0; k < passes; k++) {
-      for (const event of buildTimeline(layer.pattern, pass * passes + k)) {
+      for (const event of buildTimeline(layer.pattern, pass * passes + k, { everySlot: everySlot && layer.composition })) {
         events.push({
           ...event,
           timeSeconds: event.timeSeconds + k * once,
@@ -242,10 +244,11 @@ export function arranged(inner, pass = 0, mark = {}) {
 
 export const isArranged = (p) => Boolean(p?.arranged);
 
-const innerTimeline = (p, pass) => (isLayered(p) ? layeredTimeline(p, pass) : buildTimeline(p, pass));
+const innerTimeline = (p, pass, options) => (isLayered(p) ? layeredTimeline(p, pass, options) : buildTimeline(p, pass, options));
 
-export const timelineOf = (p, pass = 0) =>
-  isArranged(p) ? innerTimeline(p.inner, p.pass).map((event) => ({ ...event, ...p.mark, arranged: true })) : innerTimeline(p, pass);
+/** `options.everySlot` (AC-19.6.4) reaches a Pattern or a layered set; an Arrangement's cursor follows no Slot. */
+export const timelineOf = (p, pass = 0, options = {}) =>
+  isArranged(p) ? innerTimeline(p.inner, p.pass).map((event) => ({ ...event, ...p.mark, arranged: true })) : innerTimeline(p, pass, options);
 export const loopDurationOf = (p) => (isArranged(p) ? loopDurationOf(p.inner) : isLayered(p) ? layeredLoopDuration(p) : loopDurationSeconds(p));
 export const beatGridOf = (p, clickValue) => (isArranged(p) ? beatGridOf(p.inner, clickValue) : isLayered(p) ? layeredBeatGrid(p, clickValue) : buildBeatGrid(p, clickValue));
 // An arranged pass is never the pass before it: the transport must not reuse its timeline.

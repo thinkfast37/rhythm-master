@@ -418,3 +418,45 @@ describe('core/timeline — every Beat at its written length (AC-4.2.7)', () => 
   });
 });
 
+
+describe('core/timeline — a place for the cursor on every Slot (AC-19.6.4)', () => {
+  /** Two Measures, 4/4 then 7/8, a triplet Beat, swung, with three syllables on. */
+  function sparse() {
+    let p = addMeasure({ ...create(), tempo: 96 });
+    p = setTimeSignature(p, 1, '7/8');
+    p = setRecipe(p, 0, 2, 'triplet-8ths');
+    p = setSwingAmount(p, 40);
+    p = cycleAccent(p, 0, 0, 0);
+    p = cycleAccent(p, 0, 2, 1);
+    p = cycleAccent(p, 1, 3, 0);
+    return p;
+  }
+  const at = (e) => `${e.measureIndex}:${e.beatIndex}:${e.slotIndex}`;
+
+  it('AC-19.6.4/1 — In the composing grid the cursor marks every Slot of the part on screen in turn, a silent Slot at the time it would sound, and a silent Slot sounds nothing: every Slot has an entry, a silent one at the time it has when turned on', () => {
+    const p = sparse();
+    let full = p;
+    p.measures.forEach((m, mi) => m.beats.forEach((b, bi) => b.slots.forEach((slot, si) => {
+      if (!slot.on) full = cycleAccent(full, mi, bi, si);
+    })));
+    const every = buildTimeline(p, 0, { everySlot: true });
+    const sounding = buildTimeline(full, 0);
+    const slots = p.measures.reduce((n, m) => n + m.beats.reduce((k, b) => k + b.slots.length, 0), 0);
+    expect(every).toHaveLength(slots);
+    expect(every.map((e) => [at(e), e.timeSeconds])).toEqual(sounding.map((e) => [at(e), e.timeSeconds]));
+    expect(every.filter((e) => !e.silent).map(at)).toEqual(['0:0:0', '0:2:1', '1:3:0']);
+    // A silent entry carries nothing to play.
+    for (const e of every.filter((x) => x.silent)) {
+      expect(e.pitch).toBeUndefined();
+      expect(e.accent).toBeUndefined();
+    }
+  });
+
+  it('AC-19.6.4/1 — In the composing grid the cursor marks every Slot of the part on screen in turn, a silent Slot at the time it would sound, and a silent Slot sounds nothing: unasked, the timeline holds no entry for a silent Slot, and the sounding entries are the same either way', () => {
+    const p = sparse();
+    const plain = buildTimeline(p, 0);
+    expect(plain.map(at)).toEqual(['0:0:0', '0:2:1', '1:3:0']);
+    expect(plain.some((e) => e.silent)).toBe(false);
+    expect(buildTimeline(p, 0, { everySlot: true }).filter((e) => !e.silent)).toEqual(plain);
+  });
+});
