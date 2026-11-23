@@ -180,6 +180,58 @@ test('AC-19.5.3/3 — A Slot cycled to off loses its note, and the count of syll
   await expect(page.locator('.composer-missing')).toHaveAttribute('data-missing', '1');
 });
 
+test('AC-19.5.3/4 — Out of record mode, tapping the syllable box selects that Slot when the tap leaves it sounding, so the next fret or key gives it that note, and leaves nothing selected when the tap turns it off', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await recordAll(page);
+  // Another Slot holds the selection first: the tap must take it away.
+  await cslot(page, 0, 1).locator('.cslot-note').click();
+  await expect(cslot(page, 0, 1)).toHaveClass(/selected/);
+  const before = await noteAt(page, 1);
+
+  // A silent Slot tapped on becomes the one selection.
+  const added = cslot(page, 0, 0, 2);
+  await added.locator('.cslot-syllable').click();
+  await expect(added).toHaveClass(/selected/);
+  await expect(page.locator('.composer-grid .slot.selected')).toHaveCount(1);
+  expect((await composerState(page)).selected).toEqual({ measureIndex: 0, beatIndex: 0, slotIndex: 2 });
+
+  // The next fret lands on it, and on nothing else.
+  await fret(page, 1, 3).click();
+  expect(await page.evaluate(() => window.__rm.composer().draft.measures[0].beats[0].slots[2].pitch ?? null)).not.toBeNull();
+  expect(await noteAt(page, 1)).toEqual(before);
+  await expect(added).toHaveClass(/selected/);
+
+  // A sounding Slot tapped to another level is selected too.
+  const other = cslot(page, 0, 2);
+  await other.locator('.cslot-syllable').click();
+  expect(await other.getAttribute('data-accent')).not.toBe('0');
+  await expect(other).toHaveClass(/selected/);
+  await expect(page.locator('.composer-grid .slot.selected')).toHaveCount(1);
+
+  // Tapped off: nothing is selected, here or anywhere.
+  for (let i = 0; i < 4 && (await other.getAttribute('data-accent')) !== '0'; i++) await other.locator('.cslot-syllable').click();
+  expect(await other.getAttribute('data-accent')).toBe('0');
+  expect((await composerState(page)).selected).toBeNull();
+  await expect(page.locator('.composer-grid .slot.selected')).toHaveCount(0);
+});
+
+test('AC-19.5.3/5 — While recording, turning a Slot on by its syllable box selects nothing and leaves the record target where it was', async ({ page }) => {
+  await openApp(page);
+  await loadFourBeats(page);
+  await page.locator('.record').click();
+  await fret(page, 1, 1).click();
+  await expect(cslot(page, 0, 1)).toHaveClass(/target/);
+  await cslot(page, 0, 2, 2).locator('.cslot-syllable').click();
+  expect(await cslot(page, 0, 2, 2).getAttribute('data-accent')).not.toBe('0');
+  const c = await composerState(page);
+  expect(c.recording).toBe(true);
+  expect(c.selected).toBeNull();
+  expect(c.target).toEqual({ measureIndex: 0, beatIndex: 1, slotIndex: 0 });
+  await expect(page.locator('.composer-grid .slot.selected')).toHaveCount(0);
+  await expect(cslot(page, 0, 1)).toHaveClass(/target/);
+});
+
 // --- AC-19.5.6: Clear notes --------------------------------------------------------------
 
 test('AC-19.5.6/1 — Clear notes asks first, and cancelling leaves the composition unchanged', async ({ page }) => {

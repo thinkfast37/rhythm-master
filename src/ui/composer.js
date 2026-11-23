@@ -461,7 +461,7 @@ function renderComposingSlot(draft, measure, measureIndex, beatIndex, slotIndex,
   text.dataset.syllable = label;
   if (!slot.on) text.dataset.rest = 'true';
   syl.append(fill, text);
-  syl.setAttribute('aria-label', `${label}: ${slot.on ? 'sounding' : 'silent'}; tap to change`);
+  syl.setAttribute('aria-label', `${label}: ${slot.on ? 'sounding' : 'silent'}; tap to change and select`);
   cell.appendChild(syl);
   return cell;
 }
