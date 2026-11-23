@@ -4205,11 +4205,14 @@ free trial) and `rm.lifetime` (a one-time purchase). *Entitlement* is one of `no
 - **AC-19.5.3** — Syllables are added and removed as in the grid
   - **Given** a composition in the Composer
   - **When** the Composer taps a Slot's syllable box
-  - **Then** its Accent Level cycles exactly as a grid tap does (US-3.1): a silent Slot comes on with no note yet, sounding percussively until recorded, and a Slot cycled to off loses its note
+  - **Then** its Accent Level cycles exactly as a grid tap does (US-3.1): a silent Slot comes on with no note yet, sounding percussively until recorded, and a Slot cycled to off loses its note; out of record mode the tapped Slot also becomes the selection while it sounds, so the next note played lands on it, and a Slot tapped off leaves nothing selected; while recording nothing is selected and the record target is not drawn to the tapped Slot
+  - *(Revised 2026-11-22: a tap here changed the accent and left the selection where it was, so the next note played re-pitched some other Slot. The maintainer: "if I click on a cell so that I'm adding or removing accents to it, so it becomes a sounded syllable, it should also become selected so I can just hit a key and assign a note to it … even though I'm changing the accent on the syllable, then I try to hit the note, it's actually still on another cell." Recording is left as it was, at the maintainer's choice: the target still walks the syllables without a note in playing order, US-19.4.)*
   - **Cases**:
     - **AC-19.5.3/1** — Tapping the syllable box cycles the Slot's Accent Level exactly as the grid does — off, its default, the other two levels, off
     - **AC-19.5.3/2** — A Slot turned on has no note until one is recorded onto it, and sounds percussively meanwhile
     - **AC-19.5.3/3** — A Slot cycled to off loses its note, and the count of syllables without a note follows
+    - **AC-19.5.3/4** — Out of record mode, tapping the syllable box selects that Slot when the tap leaves it sounding, so the next fret or key gives it that note, and leaves nothing selected when the tap turns it off
+    - **AC-19.5.3/5** — While recording, turning a Slot on by its syllable box selects nothing and leaves the record target where it was
 
 - **AC-19.5.4** — Double Length asks whether the copy keeps the notes
   - **Given** a composition with notes

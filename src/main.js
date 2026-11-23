@@ -3339,14 +3339,22 @@ const handlers = {
     render();
   },
 
-  /** A tap on a syllable box cycles the Slot's accent, as the grid does (AC-19.5.3). */
+  /**
+   * A tap on a syllable box cycles the Slot's accent, as the grid does
+   * (AC-19.5.3), and out of record mode the Slot it changed becomes the
+   * selection — the next note played lands where the Composer just was, or
+   * nowhere if the tap turned it off (AC-19.5.3/4). Recording has no selection,
+   * and its target is not drawn here (AC-19.5.3/5).
+   */
   onComposerSyllable(measureIndex, beatIndex, slotIndex) {
     const c = state.composer;
     if (!c.draft) return;
     const at = { measureIndex, beatIndex, slotIndex };
     applyDraft(cycleSyllable, at);
     const draft = state.composer.draft;
-    if (state.composer.selected && !slotAt(draft, state.composer.selected)?.on) state.composer.selected = null;
+    if (!state.composer.recording) {
+      state.composer = { ...state.composer, selected: slotAt(draft, at)?.on ? at : null };
+    }
     if (state.composer.recording && state.composer.target && !slotAt(draft, state.composer.target)?.on) {
       const target = recordTarget(draft);
       state.composer = { ...state.composer, target, recording: Boolean(target) };
